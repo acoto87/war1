@@ -1,15 +1,16 @@
-#version 140
+#version 150 core
 
 in vec2 position;
-in vec3 color;
 in vec2 texCoord;
 
-out vec3 vColor;
 out vec2 vTexCoord;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 proj;
 
 void main() 
 { 
-	vColor = color;
 	vTexCoord = texCoord;
-	gl_Position = vec4(position, 0, 1); 
+	gl_Position = proj * view * model * vec4(position, 0, 1); 
 }

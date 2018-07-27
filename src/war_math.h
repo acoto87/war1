@@ -1,0 +1,1 @@
+#define clamp(x, a, b) max(min(x, b),a)
