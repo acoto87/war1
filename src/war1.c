@@ -21,12 +21,14 @@
 #include "cglm.h"
 #include "stretchy_buffer.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#if _DEBUG
+    #define STB_IMAGE_WRITE_IMPLEMENTATION
+    #include "stb_image_write.h"
 
-#define STB_IMAGE_RESIZE_IMPLEMENTATION
-#define STBIR_DEFAULT_FILTER_UPSAMPLE STBIR_FILTER_BOX
-#include "stb_image_resize.h"
+    #define STB_IMAGE_RESIZE_IMPLEMENTATION
+    #define STBIR_DEFAULT_FILTER_UPSAMPLE STBIR_FILTER_BOX
+    #include "stb_image_resize.h"
+#endif
 
 #include "utils.h"
 #include "io.h"

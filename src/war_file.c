@@ -8,7 +8,7 @@ WarFile* loadWarFile(char *filePath)
 
     u64 fileLength = flength(file);
 
-    WarFile *warFile = (WarFile*)calloc(1, sizeof(WarFile));
+    WarFile *warFile = (WarFile*)xcalloc(1, sizeof(WarFile));
     warFile->archiveID = fileReadU32(file);
     warFile->numberOfEntries = fileReadU32(file);
 
@@ -76,7 +76,7 @@ WarFile* loadWarFile(char *filePath)
         u32 length = (size & 0x1FFFFFFF);
         bool compressed = (size & 0xE0000000) != 0;
 
-        u8 *data = (u8*)calloc(length, sizeof(u8));
+        u8 *data = (u8*)xcalloc(length, sizeof(u8));
         if (!compressed)
         {
             fileReadBytes(data, length, file);

@@ -75,7 +75,7 @@ internal bool initOpenGL(WarContext *context)
 
 void createEmptyScene(WarContext *context)
 {
-    context->currentScene = (WarScene*)calloc(1, sizeof(WarScene));
+    context->currentScene = (WarScene*)xcalloc(1, sizeof(WarScene));
 
     s32 entityIndex = createEntity(context, WAR_ENTITY_TYPE_IMAGE);    
     addSpriteComponent(context, entityIndex, 458); 
@@ -101,7 +101,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     WarResource *resource = context->resources[levelInfoIndex];
     assert(resource && resource->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    context->map = (WarMap*)calloc(1, sizeof(WarMap));
+    context->map = (WarMap*)xcalloc(1, sizeof(WarMap));
     context->map->levelInfoIndex = levelInfoIndex;
     context->map->tilesetType = MAP_TILESET_FOREST;
     
@@ -119,8 +119,6 @@ bool initGame(WarContext *context)
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    // for opengl 4.3+
-    // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
     context->windowWidth = 640;
     context->windowHeight = 400;
@@ -218,8 +216,41 @@ bool initGame(WarContext *context)
     return true;
 }
 
+vec2 dir;
+vec2 pos;
+s32 scrollSpeed = 200;
+
 void updateGame(WarContext *context)
 {
+    if (glfwGetKey(context->window, GLFW_KEY_LEFT) == GLFW_PRESS)
+    {
+        dir[0] = 1;
+    }
+    else if (glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+    {
+        dir[0] = -1;
+    }
+    else
+    {
+        dir[0] = 0;
+    }
+
+    if (glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        dir[1] = 1;
+    }
+    else if (glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        dir[1] = -1;
+    }
+    else
+    {
+        dir[1] = 0;
+    }
+
+    pos[0] += scrollSpeed * dir[0] * context->deltaTime;
+    pos[1] += scrollSpeed * dir[1] * context->deltaTime;
+
     // WarScene *scene = context->currentScene;
     // for (s32 i = 0; i < MAX_ENTITIES_COUNT; ++i)
     // {
@@ -327,6 +358,12 @@ void renderScene(WarContext *context)
     }
 }
 
+typedef struct
+{
+    vec2 position;
+    vec2 textCoords;
+} VertexData;
+
 void renderMap(WarContext *context)
 {
     WarMap *map = context->map;
@@ -335,28 +372,64 @@ void renderMap(WarContext *context)
     WarResource *levelInfo = context->resources[map->levelInfoIndex];
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    WarResource *levelVisual = context->resources[levelInfo->levelInfo.visualIndex];
+    WarResource *levelVisual = context->resources[63];
     assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
     
-    WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+    WarResource *tileset = context->resources[189];
     assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
     if (!context->textures[map->textureIndex])
     {
         map->textureIndex = createTexture(context);
 
-        // create VBO
-        GLfloat vertexData[] =
-        {
-            // position  // texcoords
-            0,      0,   0.0f, 1.0f,
-            MAP_WIDTH*TILES_WIDTH*2,    0,   1.0f, 1.0f,
-            MAP_WIDTH*TILES_WIDTH*2,  MAP_HEIGHT*TILES_HEIGHT*2,   1.0f, 0.0f,
-            0,    MAP_HEIGHT*TILES_HEIGHT*2,   0.0f, 0.0f
-        };
+        VertexData vertices[MAP_WIDTH * MAP_HEIGHT * 4];
+        GLuint indices[MAP_WIDTH * MAP_HEIGHT * 6];
 
-        // create IBO
-        GLuint indexData[] = { 0, 1, 2, 0, 2, 3 };
+        for(s32 y = 0; y < MAP_HEIGHT; y++)
+        {
+            for(s32 x = 0; x < MAP_WIDTH; x++)
+            {
+                s32 index = y * MAP_WIDTH + x;
+                u16 tileIndex = levelVisual->levelVisual.data[index];
+
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                // vertex 00
+                vertices[index * 4 + 0].position[0] = (x + 0) * MEGA_TILE_WIDTH;
+                vertices[index * 4 + 0].position[1] = (MAP_HEIGHT - y + 0) * MEGA_TILE_HEIGHT;
+                vertices[index * 4 + 0].textCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
+                vertices[index * 4 + 0].textCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
+
+                // vertex 10
+                vertices[index * 4 + 1].position[0] = (x + 1) * MEGA_TILE_WIDTH;
+                vertices[index * 4 + 1].position[1] = (MAP_HEIGHT - y + 0) * MEGA_TILE_HEIGHT;
+                vertices[index * 4 + 1].textCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
+                vertices[index * 4 + 1].textCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
+
+                // vertex 11
+                vertices[index * 4 + 2].position[0] = (x + 1) * MEGA_TILE_WIDTH;
+                vertices[index * 4 + 2].position[1] = (MAP_HEIGHT - y + 1) * MEGA_TILE_HEIGHT;
+                vertices[index * 4 + 2].textCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
+                vertices[index * 4 + 2].textCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
+
+                // vertex 01
+                vertices[index * 4 + 3].position[0] = (x + 0) * MEGA_TILE_WIDTH;
+                vertices[index * 4 + 3].position[1] = (MAP_HEIGHT - y + 1) * MEGA_TILE_HEIGHT;
+                vertices[index * 4 + 3].textCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
+                vertices[index * 4 + 3].textCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
+
+                // indices for 1st triangle
+                indices[index * 6 + 0] = index * 4 + 0;
+                indices[index * 6 + 1] = index * 4 + 1;
+                indices[index * 6 + 2] = index * 4 + 2;
+
+                // indices for 2nd triangle
+                indices[index * 6 + 3] = index * 4 + 0;
+                indices[index * 6 + 4] = index * 4 + 2;
+                indices[index * 6 + 5] = index * 4 + 3;
+            }
+        }
 
         // if this isn't generated glEnableVertexAttribArray set GL_INVALID_OPERATION error.
         glGenVertexArrays(1, &map->vao);
@@ -364,11 +437,11 @@ void renderMap(WarContext *context)
         
         glGenBuffers(1, &map->vbo);
         glBindBuffer(GL_ARRAY_BUFFER, map->vbo);
-        glBufferData(GL_ARRAY_BUFFER, 7 * 4 * sizeof(GLfloat), vertexData, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, MAP_WIDTH * MAP_HEIGHT * 4 * sizeof(VertexData), vertices, GL_STATIC_DRAW);
 
         glGenBuffers(1, &map->ibo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, map->ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indexData, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,  MAP_WIDTH * MAP_HEIGHT * 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(context->positionLocation);
         glVertexAttribPointer(context->positionLocation, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
@@ -381,49 +454,15 @@ void renderMap(WarContext *context)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
-
-        memset(map->data, 0, sizeof(map->data));
-
-        char fp[30];
-
-        for(s32 tileYIndex = 0; tileYIndex < MAP_HEIGHT; tileYIndex++)
-        {
-            for(s32 tileXIndex = 0; tileXIndex < MAP_WIDTH; tileXIndex++)
-            {
-                u16 tilesetIndex = levelVisual->levelVisual.data[tileYIndex * MAP_WIDTH + tileXIndex];
-                WarTilesetTile *tilesetTile = &tileset->tilesetData.tiles[tilesetIndex];
-
-                // algo está mal porque estas imágenes no coinciden con lo que debería verse
-                // chequear otra vez la generación de los tiles en los recursos
-                // sprintf(fp, "output_%d_%d.bmp", tileYIndex, tileXIndex);
-                // stbi_write_bmp(fp, 16, 16, 4, tilesetTile->tilesetData);
-
-                for(s32 y = 0; y < 16; y++)
-                {
-                    for(s32 x = 0; x < 16; x++)
-                    {
-                        s32 idxs = (y * 16 + x) * 4;
-                        s32 idxd = (tileYIndex * MAP_WIDTH + tileXIndex + y * 16 + x) * 4;
-
-                        map->data[idxd + 0] = tilesetTile->tilesetData[idxs + 0];
-                        map->data[idxd + 1] = tilesetTile->tilesetData[idxs + 1];
-                        map->data[idxd + 2] = tilesetTile->tilesetData[idxs + 2];
-                        map->data[idxd + 3] = tilesetTile->tilesetData[idxs + 3];
-                    }
-                }
-            }        
-        }
     }
 
     mat4 model;
     glm_mat4_identity(model);
-    glm_translate(model, (vec2){0, 0});
+    glm_translate(model, pos);
     glUniformMatrix4fv(context->modelLocation, 1, GL_FALSE, (f32*)model);
 
-    WarResource *tiles = context->resources[levelInfo->levelInfo.tilesIndex];
-
     glBindTexture(GL_TEXTURE_2D, context->textures[map->textureIndex]);
-    setTextureData(context, map->textureIndex, MAP_WIDTH*TILES_WIDTH*2, MAP_HEIGHT*TILES_HEIGHT*2, map->data);
+    setTextureData(context, map->textureIndex, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, tileset->tilesetData.data);
 
     glBindVertexArray(map->vao);
     glBindBuffer(GL_ARRAY_BUFFER, map->vbo);
@@ -432,7 +471,7 @@ void renderMap(WarContext *context)
     glEnableVertexAttribArray(context->positionLocation);
     glEnableVertexAttribArray(context->texCoordLocation);
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, null);
+    glDrawElements(GL_TRIANGLES, MAP_WIDTH * MAP_HEIGHT * 6, GL_UNSIGNED_INT, null);
 
     glDisableVertexAttribArray(context->texCoordLocation);
     glDisableVertexAttribArray(context->positionLocation);
@@ -443,12 +482,11 @@ void renderMap(WarContext *context)
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-
     
-    for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
-    {
-        renderEntity(context, &map->entities[i]);
-    }
+    // for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+    // {
+    //     renderEntity(context, &map->entities[i]);
+    // }
 }
 
 void renderGame(WarContext *context)

@@ -122,7 +122,7 @@ WarResource* getOrCreateResource(WarContext *context, s32 index)
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
     if (!context->resources[index])
     {
-        context->resources[index] = (WarResource*)calloc(1, sizeof(WarResource));
+        context->resources[index] = (WarResource*)xcalloc(1, sizeof(WarResource));
     }
     return context->resources[index];
 }
@@ -134,7 +134,7 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.length < PALETTE_LENGTH)
     {
-        rawResource.data = (u8*)realloc(rawResource.data, PALETTE_LENGTH);
+        rawResource.data = (u8*)xrealloc(rawResource.data, PALETTE_LENGTH);
         memset(rawResource.data + rawResource.length, 0, PALETTE_LENGTH - rawResource.length);
     }
 
@@ -160,7 +160,7 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     u16 width = readu16(rawResource.data, 0);
     u16 height = readu16(rawResource.data, 2);
 
-    u8 *pixels = (u8*)malloc(width * height * 4);
+    u8 *pixels = (u8*)xmalloc(width * height * 4);
     for (int i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
@@ -200,7 +200,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
         frame->w = readu8(rawResource.data, 4 + i * 8 + 2);
         frame->h = readu8(rawResource.data, 4 + i * 8 + 3);
         frame->off = readu32(rawResource.data, 4 + i * 8 + 4);
-        frame->data = (u8*)calloc(frameWidth * frameHeight * 4, sizeof(u8));
+        frame->data = (u8*)xcalloc(frameWidth * frameHeight * 4, sizeof(u8));
 
         // found in war1tool.c, don't know if is needed
         // if (off < 0) {  // High bit of width
@@ -346,7 +346,6 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
     if (nextLevelIndex = 0 || nextLevelIndex == 0xFFFF) nextLevelIndex = 0;
     resource->levelInfo.nextLevelIndex = nextLevelIndex;
 
-    // Here are some chunk numbers, please see Terrain Data.
     // Chunk number seem to be off (+2). Probably array base trouble.
     // 0x00D0 - 0x00D1: Word: Chunk number with terrain tile data.
     // 0x00D2 - 0x00D3: Word: Chunk number with terrain flags information.
@@ -501,27 +500,12 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
 
-    WarResource *resource = getOrCreateResource(context, index);
-    resource->type = WAR_RESOURCE_TYPE_TILESET;
-    resource->tilesetData.tilesCount = rawResource.length / 8;
-
     WarResource *tiles = getOrCreateResource(context, entry->param1);
 
-    u8 paletteData[PALETTE_LENGTH];
-    getPalette(context, tiles->tilesData.pal1, tiles->tilesData.pal2, paletteData);
-
-#define TILES_PER_ROW 16
-
-    s32 numtiles = resource->tilesetData.tilesCount;
-    s32 w = TILES_PER_ROW * 16;
-    s32 h = ((numtiles + TILES_PER_ROW - 1) / TILES_PER_ROW) * 16;
-    u8 *data1 = (u8*)calloc(w * h, sizeof(u8));
-
-    for(s32 i = 0; i < numtiles; i++)
+    u8 *data = (u8*)xcalloc(TILESET_WIDTH_PX * TILESET_HEIGHT_PX, sizeof(u8));
+    u32 tilesCount = rawResource.length / 8;
+    for(s32 i = 0; i < tilesCount; i++)
     {
-        WarTilesetTile *tilesetTile = &resource->tilesetData.tiles[i];
-        memset(tilesetTile->tilesetData, 0, sizeof(tilesetTile->tilesetData));
-
         for(s32 my = 0; my < 2; my++)
         {
             for(s32 mx = 0; mx < 2; mx++)
@@ -531,98 +515,53 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
                 bool flipY = (offset & 0x01);
                 offset = (u16)((offset & 0xFFFC) << 1);
 
-
- 
-                static const s32 flip[] = {
+                local const s32 flip[] = {
                     7, 6, 5, 4, 3, 2, 1, 0, 8
                 };
 
-                s32 ix = mx + (i % TILES_PER_ROW) * 2;
-                s32 iy = my + (i / TILES_PER_ROW) * 2;
+                s32 ix = mx + (i % TILESET_TILES_PER_ROW) * 2;
+                s32 iy = my + (i / TILESET_TILES_PER_ROW) * 2;
 
-                for (s32 y = 0; y < 8; ++y) {
-                    for (s32 x = 0; x < 8; ++x) {
-                        data1[(y + iy * 8) * w + ix * 8 + x] = tiles->tilesData.data[offset + (flipY ? flip[y] : y) * 8 + (flipX ? flip[x] : x)];
+                for (s32 y = 0; y < 8; ++y) 
+                {
+                    for (s32 x = 0; x < 8; ++x) 
+                    {
+                        s32 fy = (flipY ? flip[y] : y);
+                        s32 fx = (flipX ? flip[x] : x);
+                        s32 srcValueIndex = offset + fy * 8 + fx;
+                        s32 destValueIndex = (y + iy * 8) * TILESET_WIDTH_PX + ix * 8 + x;
+                        data[destValueIndex] = tiles->tilesData.data[srcValueIndex];
                     }
                 }
-
-
-
-
-                // for (s32 py = 0; py < 8; py++)
-                // {
-                //     for (s32 px = 0; px < 8; px++)
-                //     {
-                //         u8 ci = tiles->tilesData.data[offset++];
-                        
-                //         u8 r = paletteData[ci * 3 + 0];
-                //         u8 g = paletteData[ci * 3 + 1];
-                //         u8 b = paletteData[ci * 3 + 2];
-                //         u8 a = 255;
-
-                //         s32 xPos = (flipX ? (mx * 8) + ((7 + (mx * 8)) - px) : px);
-                //         s32 yPos = (flipY ? (my * 8) + ((7 + (my * 8)) - py) : py);
-
-                //         tilesetTile->tilesetData[((my*8 + yPos) * 16 + (mx*8 + xPos)) * 4 + 0] = r;
-                //         tilesetTile->tilesetData[((my*8 + yPos) * 16 + (mx*8 + xPos)) * 4 + 1] = g;
-                //         tilesetTile->tilesetData[((my*8 + yPos) * 16 + (mx*8 + xPos)) * 4 + 2] = b;
-                //         tilesetTile->tilesetData[((my*8 + yPos) * 16 + (mx*8 + xPos)) * 4 + 3] = a;
-
-
-                //         // s32 z1 = offset / (TILES_WIDTH * TILES_HEIGHT);
-                //         // s32 z2 = (py * 8 + px) * 4;
-
-                //         // u8 r = tiles->tilesData.tiles[z1][z2 + 0];
-                //         // u8 g = tiles->tilesData.tiles[z1][z2 + 1];
-                //         // u8 b = tiles->tilesData.tiles[z1][z2 + 2];
-                //         // u8 a = tiles->tilesData.tiles[z1][z2 + 3];
-
-                //         // s32 xPos = (flipX ? (mx * 8) + ((7 + (mx * 8)) - px) : px);
-                //         // s32 yPos = (flipY ? (my * 8) + ((7 + (my * 8)) - py) : py);
-
-                //         // tilesetTile->tilesetData[((my*8 + yPos) * 16 + (mx*8 + xPos)) * 4 + 0] = r;
-                //         // tilesetTile->tilesetData[((my*8 + yPos) * 16 + (mx*8 + xPos)) * 4 + 1] = g;
-                //         // tilesetTile->tilesetData[((my*8 + yPos) * 16 + (mx*8 + xPos)) * 4 + 2] = b;
-                //         // tilesetTile->tilesetData[((my*8 + yPos) * 16 + (mx*8 + xPos)) * 4 + 3] = a;
-                //     }
-                // }
             }
         }
     }
 
-    u8 *data2 = (u8*)calloc(w * h * 4, sizeof(u8));
-    
-    for(s32 i = 0; i < w * h; i++)
-    {
-        data2[i * 4 + 0] = paletteData[data1[i] * 3 + 0];
-        data2[i * 4 + 1] = paletteData[data1[i] * 3 + 1];
-        data2[i * 4 + 2] = paletteData[data1[i] * 3 + 2];
+    u8 paletteData[PALETTE_LENGTH];
+    getPalette(context, tiles->tilesData.palette1, tiles->tilesData.palette2, paletteData);
 
-        if (data1[i] > 0)
-        {
-            data2[i * 4 + 3] = 255;
-        }
+    WarResource *resource = getOrCreateResource(context, index);
+    resource->type = WAR_RESOURCE_TYPE_TILESET;
+    resource->tilesetData.tilesCount = rawResource.length / 8;
+
+    for(s32 i = 0; i < TILESET_WIDTH_PX * TILESET_HEIGHT_PX; i++)
+    {
+        resource->tilesetData.data[i * 4 + 0] = paletteData[data[i] * 3 + 0];
+        resource->tilesetData.data[i * 4 + 1] = paletteData[data[i] * 3 + 1];
+        resource->tilesetData.data[i * 4 + 2] = paletteData[data[i] * 3 + 2];
+        resource->tilesetData.data[i * 4 + 3] = data[i] > 0 ? 255 : 0;
     }
     
+    free(data);
 
-    //if (index == 189 && i < 10)
+#if _DEBUG
     {
         char fp[30];
-        sprintf(fp, "output_%d.bmp", index);
+        sprintf(fp, "output_%d.png", index);
 
-        u8 *output_pixels = (u8*)calloc(w*2*h*2*4, sizeof(u8));
-        stbir_resize_uint8(
-            data2, w, h , 0,
-            output_pixels, w*2, h*2, 
-            0, 4);
-
-        stbi_write_bmp(fp, w*2, h*2, 4, output_pixels);
-
-        free(output_pixels);
+        stbi_write_png(fp, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, 4, resource->tilesetData.data, TILESET_WIDTH_PX * 4);
     }
-
-    free(data1);
-    free(data2);
+#endif
 }
 
 void loadTiles(WarContext *context, DatabaseEntry *entry)
@@ -635,42 +574,8 @@ void loadTiles(WarContext *context, DatabaseEntry *entry)
 
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TILES;
-    resource->tilesData.tilesCount = rawResource.length / (TILES_WIDTH * TILES_HEIGHT);
-
-    resource->tilesData.pal1 = entry->param1;
-    resource->tilesData.pal2 = entry->param2;
-    resource->tilesData.data = (u8*)calloc(rawResource.length, sizeof(u8));
+    resource->tilesData.palette1 = entry->param1;
+    resource->tilesData.palette2 = entry->param2;
+    resource->tilesData.data = (u8*)xcalloc(rawResource.length, sizeof(u8));
     memcpy(resource->tilesData.data, rawResource.data, rawResource.length);
-    
-    for(s32 i = 0; i < resource->tilesData.tilesCount; i++)
-    {
-        for(s32 j = 0; j < TILES_WIDTH * TILES_HEIGHT; j++)
-        {
-            u32 colorIndex = readu8(rawResource.data, i * 64 + j);
-            resource->tilesData.tiles[i][j * 4 + 0] = paletteData[colorIndex * 3 + 0];
-            resource->tilesData.tiles[i][j * 4 + 1] = paletteData[colorIndex * 3 + 1];
-            resource->tilesData.tiles[i][j * 4 + 2] = paletteData[colorIndex * 3 + 2];
-
-            if (resource->tilesData.tiles[i][j * 4 + 0] > 0 ||
-                resource->tilesData.tiles[i][j * 4 + 1] > 0 ||
-                resource->tilesData.tiles[i][j * 4 + 2] > 0)
-            {
-                resource->tilesData.tiles[i][j * 4 + 3] = 255;
-            }
-        }
-
-        //if (i < 50)
-        // {
-        //     char fp[30];
-        //     sprintf(fp, "output_%d.bmp", i);
-
-        //     u8 output_pixels[128*128*4];
-        //     stbir_resize_uint8(
-        //         resource->tilesData.tiles[i] , 8, 8 , 0,
-        //         output_pixels, 128, 128, 
-        //         0, 4);
-
-        //     stbi_write_bmp(fp, 128, 128, 4, output_pixels);
-        // }
-    }
 }

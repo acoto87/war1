@@ -35,6 +35,58 @@ typedef size_t size32;
 #define reads32(arr, index) (*(s32*)(rawResource.data + (index)))
 #define readu32(arr, index) (*(u32*)(rawResource.data + (index)))
 
+void* xmalloc(size32 size, char *file, s32 line)
+{
+    void *ptr = malloc(size);
+    if (!ptr)
+    {
+        perror("war1: xmalloc failed!");
+        if (file)
+        {
+            fprintf(stderr, "  at file %s (%d)\n", file, line);
+        }
+        exit(1);
+    }
+
+    return ptr;
+}
+
+void* xcalloc(size32 count, size32 size, char *file, s32 line)
+{
+    void *ptr = calloc(count, size);
+    if (!ptr)
+    {
+        perror("war1: xcalloc failed!");
+        if (file)
+        {
+            fprintf(stderr, "  at file %s (%d)\n", file, line);
+        }
+        exit(1);
+    }
+
+    return ptr;
+}
+
+void* xrealloc(void *ptr, size32 size, char *file, s32 line)
+{
+    ptr = realloc(ptr, size);
+    if (!ptr)
+    {
+        perror("war1: xrealloc failed!");
+        if (file)
+        {
+            fprintf(stderr, "  at file %s (%d)\n", file, line);
+        }
+        exit(1);
+    }
+
+    return ptr;
+}
+
+#define xmalloc(size) xmalloc(size, __FILE__, __LINE__)
+#define xcalloc(count, size) xcalloc(count, size, __FILE__, __LINE__)
+#define xrealloc(ptr, size) xrealloc(ptr, size, __FILE__, __LINE__)
+
 /* time stuff */
 // global s64 globalPerfCountFrequency;
 // global LARGE_INTEGER initialCounter;

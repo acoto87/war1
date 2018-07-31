@@ -71,11 +71,11 @@ inline TextFile* fileReadAllText(char *filePath)
         return null;
     }
 
-    TextFile *textFile = (TextFile*)malloc(sizeof(TextFile));
+    TextFile *textFile = (TextFile*)xmalloc(sizeof(TextFile));
     textFile->length = fileLength;
     if (textFile->length > 0)
     {
-        textFile->contents = (char*)calloc(textFile->length, 1);
+        textFile->contents = (char*)xcalloc(textFile->length, 1);
         fileReadBytes(textFile->contents, textFile->length, file);
     }
     

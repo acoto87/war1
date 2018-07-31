@@ -30,7 +30,7 @@ void printProgramLog(GLuint program)
         
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
         
-        char* infoLog = (char*)malloc(maxLength);
+        char* infoLog = (char*)xmalloc(maxLength);
         
         glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
         if(infoLogLength > 0)
@@ -55,7 +55,7 @@ void printShaderLog(GLuint shader)
         
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
         
-        char* infoLog = (char*)malloc(maxLength);
+        char* infoLog = (char*)xmalloc(maxLength);
         
         glGetShaderInfoLog(shader, maxLength, &infoLogLength, infoLog);
         if(infoLogLength > 0)

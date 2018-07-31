@@ -6,10 +6,16 @@
 #define MAX_SPRITE_FRAME_COUNT 100
 #define PALETTE_LENGTH 768
 
-#define MAP_TILE_WIDTH 16
-#define MAP_TILE_HEIGHT 16
+#define MINI_TILE_WIDTH 8
+#define MINI_TILE_HEIGHT 8
+#define MEGA_TILE_WIDTH (MINI_TILE_WIDTH * 2)
+#define MEGA_TILE_HEIGHT (MINI_TILE_HEIGHT * 2)
 #define MAP_WIDTH 64
 #define MAP_HEIGHT 64
+
+#define TILESET_WIDTH_PX 512
+#define TILESET_HEIGHT_PX 256
+#define TILESET_TILES_PER_ROW (TILESET_WIDTH_PX/MEGA_TILE_WIDTH)
 
 #define MAX_OBJECTIVES_LENGTH 512
 #define MAX_PLAYERS_COUNT 5
@@ -17,8 +23,6 @@
 #define MAX_UPGRADES_COUNT 10
 #define MAX_CONSTRUCTS_COUNT 100
 #define MAX_TILES_COUNT 1024
-#define TILES_WIDTH 8
-#define TILES_HEIGHT 8
 
 typedef struct 
 {
@@ -213,8 +217,6 @@ typedef struct
         bool flipX;
         bool flipY;
     } tiles[4];
-    
-    u8 tilesetData[TILES_WIDTH*2 * TILES_HEIGHT*2 * 4];
 } WarTilesetTile;
 
 typedef struct 
@@ -286,15 +288,13 @@ typedef struct
         struct 
         {
             u16 tilesCount;
-            WarTilesetTile tiles[MAX_TILES_COUNT];
+            u8 data[TILESET_WIDTH_PX * TILESET_HEIGHT_PX * 4];
         } tilesetData;
 
         struct
         {
-            u16 tilesCount;
-            u16 pal1, pal2;
+            u16 palette1, palette2;
             u8 *data;
-            u8 tiles[MAX_TILES_COUNT][TILES_WIDTH * TILES_HEIGHT];
         } tilesData;
     };
 } WarResource;
@@ -377,12 +377,12 @@ typedef enum
 typedef struct
 {
     s32 levelInfoIndex;
+
+    u32 textureIndex;
+    GLuint vao, vbo, ibo;
+
     WarMapTilesetType tilesetType;
     WarMapTileState tileStates[MAP_WIDTH * MAP_HEIGHT];
-
-    s32 textureIndex;
-    GLuint vao, vbo, ibo;
-    u8 data[MAP_WIDTH*MAP_HEIGHT*TILES_WIDTH*2*TILES_HEIGHT*2*4];
 
     WarEntity entities[MAX_ENTITIES_COUNT];
     bool selectedEntities[MAX_ENTITIES_COUNT];
