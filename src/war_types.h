@@ -176,6 +176,14 @@ typedef enum
     WAR_UNIT_ORC_CORPSE,
 } WarUnitType;
 
+typedef struct
+{
+    s32 textureIndex;
+    u32 width, height;
+    s32 count;
+    GLuint vao, vbo, ibo;
+} WarSprite;
+
 typedef struct 
 {
     u8 dx;
@@ -287,7 +295,7 @@ typedef struct
 
         struct 
         {
-            u16 tilesCount;
+            u32 tilesCount;
             u8 data[TILESET_WIDTH_PX * TILESET_HEIGHT_PX * 4];
         } tilesetData;
 
@@ -319,10 +327,9 @@ typedef struct
 typedef struct
 {
     bool enabled;
-    s32 textureIndex;
     s32 resourceIndex;
     s32 frameIndex;
-    GLuint vao, vbo, ibo;
+    WarSprite sprite;
 } WarSpriteComponent;
 
 typedef struct
@@ -339,9 +346,10 @@ typedef struct
     WarUnitType type;
     WarUnitDirection direction;
 
-    f32 x, y;
     s32 tilex, tiley;
     s32 sizex, sizey;
+    u8 player;
+    u16 value;
 } WarUnitComponent;
 
 typedef struct
@@ -378,13 +386,15 @@ typedef struct
 {
     s32 levelInfoIndex;
 
-    u32 textureIndex;
-    GLuint vao, vbo, ibo;
+    WarSprite sprite;
+
+    s32 scrollSpeed;
+    vec2 pos, dir;
 
     WarMapTilesetType tilesetType;
     WarMapTileState tileStates[MAP_WIDTH * MAP_HEIGHT];
 
-    WarEntity entities[MAX_ENTITIES_COUNT];
+    WarEntity* entities[MAX_ENTITIES_COUNT];
     bool selectedEntities[MAX_ENTITIES_COUNT];
 } WarMap;
 
@@ -422,3 +432,9 @@ typedef struct
     WarScene *currentScene;
     WarMap *map;
 } WarContext;
+
+typedef struct
+{
+    vec2 position;
+    vec2 texCoords;
+} WarVertex;

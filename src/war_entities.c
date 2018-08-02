@@ -1,65 +1,36 @@
-s32 createEntity(WarContext *context, WarEntityType type)
+WarEntity* createEntity(WarContext *context, WarEntityType type)
 {
-    WarScene *scene = context->currentScene;
-    for (s32 i = 0; i < MAX_ENTITIES_COUNT; ++i)
-    {
-        if (scene->entities[i].id == 0)
-        {
-            context->staticEntityId++;
-            scene->entities[i].id = context->staticEntityId;
-            scene->entities[i].enabled = true;
-            scene->entities[i].type = type;
+    WarEntity *entity = (WarEntity*)xcalloc(1, sizeof(WarEntity));
+    entity->id = ++context->staticEntityId;
+    entity->type = type;
+    entity->enabled = true;
+    
+    // transform component
+    entity->transform = (WarTransformComponent){0};
+    entity->transform.enabled = true;
 
-            // transform component
-            scene->entities[i].transform = (WarTransformComponent){0};
-            scene->entities[i].transform.enabled = true;
+    // clear all other components
+    entity->sprite = (WarSpriteComponent){0};
+    entity->anim = (WarAnimationComponent){0};
 
-            // clear all other components
-            scene->entities[i].sprite = (WarSpriteComponent){0};
-            scene->entities[i].anim = (WarAnimationComponent){0};
-            return i;
-        }
-    }
-
-    printf("Can't create new entities!!");
-    return -1;
+    return entity;
 }
 
-void destroyEntityByIndex(WarContext *context, s32 index)
+void addTransformComponent(WarContext *context, WarEntity *entity, vec2 position)
 {
-    WarScene *scene = context->currentScene;
-    scene->entities[index].id = 0;
+    entity->transform = (WarTransformComponent){0};
+    entity->transform.enabled = true;
+    entity->transform.position[0] = position[0];
+    entity->transform.position[1] = position[1];
 }
 
-void destroyEntityById(WarContext *context, WarEntityId id)
+void addSpriteComponent(WarContext *context, WarEntity *entity, s32 resourceIndex)
 {
-    WarScene *scene = context->currentScene;
-    for (s32 i = 0; i < MAX_ENTITIES_COUNT; ++i)
-    {
-        if (scene->entities[i].id == id)
-        {
-            destroyEntityById(context, i);
-            break;
-        }
-    }
-}
-
-void addTransformComponent(WarContext *context, s32 entityIndex, vec2 position)
-{
-    WarScene *scene = context->currentScene;
-    scene->entities[entityIndex].transform = (WarTransformComponent){0};
-    scene->entities[entityIndex].transform.enabled = true;
-    scene->entities[entityIndex].transform.position[0] = position[0];
-    scene->entities[entityIndex].transform.position[1] = position[1];
-}
-
-void addSpriteComponent(WarContext *context, s32 entityIndex, s32 resourceIndex)
-{
-    WarScene *scene = context->currentScene;
     WarResource *resource = getOrCreateResource(context, resourceIndex);
     if (resource->type != WAR_RESOURCE_TYPE_IMAGE && 
         resource->type != WAR_RESOURCE_TYPE_SPRITE)
     {
+        fprintf(stderr, "Resource type not supported in sprite components: %d\n", resource->type);
         return;
     }
 
@@ -80,68 +51,114 @@ void addSpriteComponent(WarContext *context, s32 entityIndex, s32 resourceIndex)
             h = resource->spriteData.frameHeight;
             break;
         }
+
+        default:
+        {
+            fprintf(stderr, "Unkown resource type: %d\n", resource->type);
+            return;
+        }
     }
 
-    // create texture for the image
-    s32 textureIndex = createTexture(context);
-    
     // create VBO
-    GLfloat vertexData[] =
+    WarVertex vertices[] = 
     {
-        // position  // texcoords
-        0,      0,   0.0f, 1.0f,
-        w*2,    0,   1.0f, 1.0f,
-        w*2,  h*2,   1.0f, 0.0f,
-        0,    h*2,   0.0f, 0.0f
+        {{0, 0}, {0.0f, 1.0f}},
+        {{w, 0}, {1.0f, 1.0f}},
+        {{w, h}, {1.0f, 0.0f}},
+        {{0, h}, {0.0f, 0.0f}}
     };
 
     // create IBO
-    GLuint indexData[] = { 0, 1, 2, 0, 2, 3 };
+    GLuint indices[] = { 0, 1, 2, 0, 2, 3 };
 
-    // create VAO, VBO and IBO
-    GLuint vao, vbo, ibo;
-
-    // if this isn't generated glEnableVertexAttribArray set GL_INVALID_OPERATION error.
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, 7 * 4 * sizeof(GLfloat), vertexData, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indexData, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(context->positionLocation);
-    glVertexAttribPointer(context->positionLocation, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-    glDisableVertexAttribArray(context->positionLocation);
-
-    glEnableVertexAttribArray(context->texCoordLocation);
-    glVertexAttribPointer(context->texCoordLocation, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
-    glDisableVertexAttribArray(context->texCoordLocation);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    // sprite component
-    scene->entities[entityIndex].sprite = (WarSpriteComponent){0};
-    scene->entities[entityIndex].sprite.enabled = true;
-    scene->entities[entityIndex].sprite.resourceIndex = resourceIndex;
-    scene->entities[entityIndex].sprite.textureIndex = textureIndex;
-    scene->entities[entityIndex].sprite.frameIndex = 0;
-    scene->entities[entityIndex].sprite.vao = vao;
-    scene->entities[entityIndex].sprite.vbo = vbo;
-    scene->entities[entityIndex].sprite.ibo = ibo;
+    entity->sprite = (WarSpriteComponent){0};
+    entity->sprite.enabled = true;
+    entity->sprite.resourceIndex = resourceIndex;
+    entity->sprite.frameIndex = 0;
+    entity->sprite.sprite = createSprite(context, 1, w, h, vertices, 4, indices, 6);
 }
 
-void addAnimationComponent(WarContext *context, s32 entityIndex, f32 duration, bool loop)
+void addUnitComponent(WarContext *context, WarEntity *entity, WarUnitType type, s32 x, s32 y, u8 player, u16 value)
 {
-    WarScene *scene = context->currentScene;
-    scene->entities[entityIndex].anim = (WarAnimationComponent){0};
-    scene->entities[entityIndex].anim.enabled = true;
-    scene->entities[entityIndex].anim.loop = loop;
-    scene->entities[entityIndex].anim.duration = duration;
-    scene->entities[entityIndex].anim.offset = 0;
+    entity->unit = (WarUnitComponent){0};
+    entity->unit.enabled = true;
+    entity->unit.type = type;
+    entity->unit.direction = WAR_DIRECTION_NORTH;
+    entity->unit.tilex = x;
+    entity->unit.tiley = y;
+    entity->unit.sizex = unitsData[type * 4 + 2];
+    entity->unit.sizey = unitsData[type * 4 + 3];
+    entity->unit.player = player;
+    entity->unit.value = value;
+
+    s32 spriteIndex = unitsData[type * 4 + 1];
+    if (spriteIndex == 0)
+    {
+        fprintf(stderr, "Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
+        spriteIndex = 279;
+    }
+    addSpriteComponent(context, entity, spriteIndex);
+}
+
+void addAnimationComponent(WarContext *context, WarEntity *entity, f32 duration, bool loop)
+{
+    entity->anim = (WarAnimationComponent){0};
+    entity->anim.enabled = true;
+    entity->anim.loop = loop;
+    entity->anim.duration = duration;
+    entity->anim.offset = 0;
+}
+
+void renderEntity(WarContext *context, WarEntity *entity, mat4 baseTransform)
+{
+    if (entity->id && entity->enabled)
+    {
+        mat4 model;
+        glm_mat4_identity(model);
+        glm_mat4_mul(baseTransform, model, model);
+
+        WarTransformComponent transform = entity->transform;
+        if (transform.enabled)
+        {
+            glm_translate(model, (vec4){transform.position[0], transform.position[1], 0.0f, 0.0f});
+
+            if (entity->type == WAR_ENTITY_TYPE_UNIT)
+            {
+                WarUnitComponent unit = entity->unit;
+                glm_translate(model, (vec4){-unit.sizex * MEGA_TILE_WIDTH * 0.5f, -unit.sizey * MEGA_TILE_HEIGHT * 0.5f, 0.0f, 0.0f});
+            }
+
+            glUniformMatrix4fv(context->modelLocation, 1, GL_FALSE, (f32*)model);
+        }
+
+        WarSpriteComponent sprite = entity->sprite;
+        if (sprite.enabled)
+        {
+            u8 *pixels;
+
+            WarResource *resource = getOrCreateResource(context, sprite.resourceIndex);
+            switch(resource->type)
+            {
+                case WAR_RESOURCE_TYPE_IMAGE:
+                {
+                    pixels = resource->imageData.pixels;
+                    break;
+                }
+
+                case WAR_RESOURCE_TYPE_SPRITE:
+                {
+                    pixels = resource->spriteData.frames[sprite.frameIndex].data;
+                    break;
+                }
+
+                default:
+                {
+                    fprintf(stderr, "Sprite component is enabled in a non-rendereable entity");
+                    return;
+                }
+            }
+
+            renderSprite(context, &sprite.sprite, pixels, model);
+        }
+    }
 }

@@ -1,21 +1,21 @@
 typedef struct
 {
-    u64 length;
-    char *contents;
+    u32 length;
+    uchar *contents;
 } TextFile;
 
-inline u64 flength(FILE *file)
+inline u32 flength(FILE *file)
 {
-    u64 pos = ftell(file);
+    u32 pos = ftell(file);
     fseek(file, 0, SEEK_END);
-    u64 length = ftell(file);
+    u32 length = ftell(file);
     fseek(file, pos, SEEK_SET);
     return length;
 }
 
 inline void fileReadBytes(u8 *bytes, u32 length, FILE *file)
 {
-    char buffer[DEFAULT_BUFFER_SIZE];
+    u8 buffer[DEFAULT_BUFFER_SIZE];
 
     size32 total = 0;
     size32 sz = min(length, DEFAULT_BUFFER_SIZE);
@@ -62,7 +62,7 @@ inline TextFile* fileReadAllText(char *filePath)
         return null;
     }
 
-    u64 fileLength = flength(file);
+    u32 fileLength = flength(file);
     fclose(file);
 
     file = fopen(filePath, "r");
@@ -75,7 +75,7 @@ inline TextFile* fileReadAllText(char *filePath)
     textFile->length = fileLength;
     if (textFile->length > 0)
     {
-        textFile->contents = (char*)xcalloc(textFile->length, 1);
+        textFile->contents = (uchar*)xcalloc(textFile->length, 1);
         fileReadBytes(textFile->contents, textFile->length, file);
     }
     

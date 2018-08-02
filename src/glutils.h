@@ -14,6 +14,7 @@ GLenum glCheckError_(const char *file, int line)
             case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
             case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
             case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+            default: error = ""; break;
         }
         printf("%s in file %s (%d)\n", error, file, line);
     }
@@ -104,7 +105,7 @@ GLuint loadShaderFromFile(char *shaderFilePath, GLenum shaderType)
         return 0;
     }
 
-    char *shaderSource = shaderFile->contents;
+    const uchar *shaderSource = shaderFile->contents;
     
     glShaderSource(shader, 1, &shaderSource, null);
     glCheckError();

@@ -36,7 +36,7 @@ WarFile* loadWarFile(char *filePath)
 
     fileReadBytes((u8*)warFile->offsets, warFile->numberOfEntries * sizeof(u32), file);
 
-    for (int i = 0; i < warFile->numberOfEntries; ++i)
+    for (s32 i = 0; i < warFile->numberOfEntries; ++i)
     {
         // placeholders in demo versions
         if (warFile->offsets[i] == 0xFFFFFFFF ||

@@ -25,9 +25,9 @@ typedef struct
     s32 index;
     DatabaseEntryType type;
     char *name;
-    u32 param1;
-    u32 param2;
-    u32 param3;
+    u16 param1;
+    u16 param2;
+    u16 param3;
 } DatabaseEntry;
 
 DatabaseEntry assets[] = 
@@ -223,7 +223,7 @@ DatabaseEntry assets[] =
     { 293, DB_ENTRY_TYPE_SPRITE,            "medivh",                                       191, 217, 0 },
     { 294, DB_ENTRY_TYPE_SPRITE,            "lothar",                                       191, 217, 0 },
     { 295, DB_ENTRY_TYPE_SPRITE,            "wounded",                                      191, 217, 0 },
-    { 296, DB_ENTRY_TYPE_SPRITE,            "garana",                                       191, 217, 0 },
+    { 296, DB_ENTRY_TYPE_SPRITE,            "garona",                                       191, 217, 0 },
     { 297, DB_ENTRY_TYPE_SPRITE,            "giant",                                        191, 217, 0 },
     { 298, DB_ENTRY_TYPE_SPRITE,            "spider",                                       191, 217, 0 },
     { 299, DB_ENTRY_TYPE_SPRITE,            "slime",                                        191, 217, 0 },

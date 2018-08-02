@@ -37,13 +37,14 @@
 #include "war_math.h"
 #include "war_database.h"
 #include "war_file.c"
+#include "war_sprites.c"
 #include "war_resources.c"
 #include "war_entities.c"
 #include "war_game.c"
 
 internal void glfwErrorCallback(int error, const char* description)
 {
-    printf("Error: %s\n", description);
+    fprintf(stderr, "Error: %d, %s\n", error, description);
 }
 
 int main(int argc, char *argv[]) 

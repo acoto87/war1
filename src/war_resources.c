@@ -29,7 +29,8 @@ const char* features[MAX_FEATURES_COUNT*2] = {
 	"unit-wall", "unit-wall"
 };
 
-const char* upgradeNames[MAX_UPGRADES_COUNT*2] = {
+const char* upgradeNames[MAX_UPGRADES_COUNT*2] = 
+{
     // Basic upgrades
     "upgrade-spear", "upgrade-arrow",
     "upgrade-axe", "upgrade-sword",
@@ -43,6 +44,75 @@ const char* upgradeNames[MAX_UPGRADES_COUNT*2] = {
     "upgrade-unholy-armor", "upgrade-invisibility",
     // Shield upgrades
     "upgrade-orc-shield", "upgrade-human-shield"
+};
+
+const s32 unitsData[] = 
+{
+    // units
+    WAR_UNIT_FOOTMAN,                   279, 1, 1,
+    WAR_UNIT_GRUNT,                     280, 1, 1,
+    WAR_UNIT_PEASANT,                   281, 1, 1,
+    WAR_UNIT_PEON,                      282, 1, 1,
+    WAR_UNIT_CATAPULT_HUMANS,           283, 1, 1,
+    WAR_UNIT_CATAPULT_ORCS,             284, 1, 1,
+    WAR_UNIT_KNIGHT,                    285, 1, 1,
+    WAR_UNIT_RAIDER,                    286, 1, 1,
+    WAR_UNIT_ARCHER,                    287, 1, 1,
+    WAR_UNIT_SPEARMAN,                  288, 1, 1,
+    WAR_UNIT_CONJURER,                  289, 1, 1,
+    WAR_UNIT_WARLOCK,                   290, 1, 1,
+    WAR_UNIT_CLERIC,                    291, 1, 1,
+    WAR_UNIT_NECROLYTE,                 292, 1, 1,
+    WAR_UNIT_MEDIVH,                    293, 1, 1,
+    WAR_UNIT_LOTHAR,                    294, 1, 1,
+    WAR_UNIT_WOUNDED,                   295, 1, 1,
+    WAR_UNIT_GRIZELDA,                  296, 1, 1,
+    WAR_UNIT_GARONA,                    296, 1, 1,
+    WAR_UNIT_OGRE,                      297, 1, 1,
+    WAR_UNIT_20,                          0, 0, 0,
+    WAR_UNIT_SPIDER,                      0, 0, 0,
+    WAR_UNIT_SLIME,                       0, 0, 0,
+    WAR_UNIT_FIREELEMENTAL,               0, 0, 0,
+    WAR_UNIT_SCORPION,                    0, 0, 0,
+    WAR_UNIT_BRIGAND,                     0, 0, 0,
+    WAR_UNIT_26,                          0, 0, 0,
+    WAR_UNIT_SKELETON,                    0, 0, 0,
+    WAR_UNIT_DAEMON,                      0, 0, 0,
+    WAR_UNIT_DRAGON_CYCLOPS_GIANT,        0, 0, 0,
+    WAR_UNIT_30,                          0, 0, 0,
+    WAR_UNIT_WATERELEMENTAL,              0, 0, 0,
+
+    // buildings
+    WAR_UNIT_FARM_HUMANS,               307, 2, 2,
+    WAR_UNIT_FARM_ORCS,                 308, 2, 2,
+    WAR_UNIT_BARRACKS_HUMANS,           309, 3, 3,
+    WAR_UNIT_BARRACKS_ORCS,             310, 3, 3,
+    WAR_UNIT_CHURCH,                    311, 2, 2,
+    WAR_UNIT_TEMPLE,                    312, 2, 2,
+    WAR_UNIT_TOWER_HUMANS,              313, 2, 2,
+    WAR_UNIT_TOWER_ORCS,                314, 2, 2,
+    WAR_UNIT_TOWNHALL_HUMANS,           315, 3, 3,
+    WAR_UNIT_TOWNHALL_ORCS,             316, 3, 3,
+    WAR_UNIT_LUMBERMILL_HUMANS,         317, 3, 3,
+    WAR_UNIT_LUMBERMILL_ORCS,           318, 3, 3,
+    WAR_UNIT_STABLES,                   319, 3, 3,
+    WAR_UNIT_KENNEL,                    320, 3, 3,
+    WAR_UNIT_BLACKSMITH_HUMANS,         321, 3, 3,
+    WAR_UNIT_BLACKSMITH_ORCS,           322, 3, 3,
+    WAR_UNIT_STORMWIND,                 323, 4, 4,
+    WAR_UNIT_BLACKROCK,                 324, 4, 4,
+
+    // neutral
+    WAR_UNIT_GOLDMINE,                  325, 4, 4,
+
+	WAR_UNIT_51,                          0, 0, 0,
+	WAR_UNIT_PEASANT_WITH_WOOD,           0, 0, 0,
+	WAR_UNIT_PEON_WITH_WOOD,              0, 0, 0,
+    WAR_UNIT_PEASANT_WITH_GOLD,           0, 0, 0,
+	WAR_UNIT_PEON_WITH_GOLD,              0, 0, 0,
+
+    // others
+    WAR_UNIT_ORC_CORPSE,                  0, 0, 0
 };
 
 s32 createTexture(WarContext *context)
@@ -69,11 +139,6 @@ s32 createTexture(WarContext *context)
     return textureIndex;
 }
 
-void setTextureData(WarContext *context, u32 textureIndex, u32 width, u32 height, u8* pixels)
-{
-    assert(textureIndex >= 0 && textureIndex < context->texturesCount);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-}
 
 void getPalette(WarContext *context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
 {
@@ -341,47 +406,50 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
         strcpy(resource->levelInfo.objectives, (char*)(rawResource.data + objectivesOffset));
     }
 
-    // next level resource index
+    // next level resource index: *0xCA - 2
     u16 nextLevelIndex = readu16(rawResource.data, 0xCA);
-    if (nextLevelIndex = 0 || nextLevelIndex == 0xFFFF) nextLevelIndex = 0;
-    resource->levelInfo.nextLevelIndex = nextLevelIndex;
+    if (nextLevelIndex != 0 && nextLevelIndex != 0xFFFF)
+    {
+        resource->levelInfo.nextLevelIndex = nextLevelIndex - 2;
+    } 
 
-    // Chunk number seem to be off (+2). Probably array base trouble.
-    // 0x00D0 - 0x00D1: Word: Chunk number with terrain tile data.
-    // 0x00D2 - 0x00D3: Word: Chunk number with terrain flags information.
-    // 0x00D4 - 0x00D6: Word: Chunk number of tileset palette.
-    // 0x00D6 - 0x00D7: Word: Chunk number of tileset info.
-    // 0x00D8 - 0x00D9: Word: Chunk number of tileset image data.
-
-    // visual resource index
+    // visual resource index: *0xD0 - 2
     u16 visualIndex = readu16(rawResource.data, 0xD0);
-    if (visualIndex == 0 || visualIndex == 0xFFFF) visualIndex = 0;
-    resource->levelInfo.visualIndex = visualIndex;
+    if (visualIndex != 0 && visualIndex != 0xFFFF) 
+    {
+        resource->levelInfo.visualIndex = visualIndex - 2;
+    }
 
-    // passable resource index
+    // passable resource index: *0xD2 - 2
     u16 passableIndex = readu16(rawResource.data, 0xD2);
-    if (passableIndex == 0 || passableIndex == 0xFFFF) passableIndex = 0;
-    resource->levelInfo.passableIndex = passableIndex;
+    if (passableIndex != 0 && passableIndex != 0xFFFF)
+    {
+        resource->levelInfo.passableIndex = passableIndex - 2;
+    }
 
-    // palette resource index
-    u16 paletteIndex = readu16(rawResource.data, 0xD4);
-    if (paletteIndex == 0 || paletteIndex == 0xFFFF) paletteIndex = 0;
-    resource->levelInfo.paletteIndex = paletteIndex;
+    // tileset resource index: *0xD4 - 2
+    u16 tilesetIndex = readu16(rawResource.data, 0xD4);
+    if (tilesetIndex != 0 && tilesetIndex != 0xFFFF)
+    {
+        resource->levelInfo.tilesetIndex = tilesetIndex - 2;
+    }
 
-    // tileset resource index
-    u16 tilesetIndex = readu16(rawResource.data, 0xD6);
-    if (tilesetIndex == 0 || tilesetIndex == 0xFFFF) tilesetIndex = 0;
-    resource->levelInfo.tilesetIndex = tilesetIndex;
+    // tiles resource index: *0xD6 - 2
+    u16 tilesIndex = readu16(rawResource.data, 0xD6);
+    if (tilesIndex != 0 && tilesIndex != 0xFFFF)
+    {
+        resource->levelInfo.tilesIndex = tilesIndex - 2;
+    }
 
-    // tiles resource index
-    u16 tilesIndex = readu16(rawResource.data, 0xD8);
-    if (tilesIndex == 0 || tilesIndex == 0xFFFF) tilesIndex = 0;
-    resource->levelInfo.tilesIndex = tilesIndex;
+    // palette resource index: *0xD8 - 2
+    u16 paletteIndex = readu16(rawResource.data, 0xD8);
+    if (paletteIndex != 0 && paletteIndex != 0xFFFF)
+    {
+        resource->levelInfo.paletteIndex = paletteIndex - 2;
+    }
 
-    // 0xE3 start of dynamic data
-    // TODO: Needs figuring out how this is actually stored and what the data means
-    // For now, just search for the next chunk
-    int offset = 0xE3;
+    // dynamic data: 0xE3
+    s32 offset = 0xE3;
     while (readu32(rawResource.data, offset) != 0xFFFFFFFF) 
     {
         offset++;
@@ -389,10 +457,12 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
 
     // skip marker 0xFFFF
     offset += 4;
+
+    // offset of the units and construction information
     offset = readu16(rawResource.data, offset);
 
     // starting units
-    resource->levelInfo.startEntitiesCount = 0;
+    u32 startEntitiesCount = 0;
     while (offset < rawResource.length)
     {
         u16 val = readu16(rawResource.data, offset);
@@ -401,7 +471,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
             break;
         }
 
-        WarLevelUnit *startEntity = &resource->levelInfo.startEntities[resource->levelInfo.startEntitiesCount];
+        WarLevelUnit *startEntity = &resource->levelInfo.startEntities[startEntitiesCount];
         startEntity->x = readu8(rawResource.data, offset + 0) / 2;
         startEntity->y = readu8(rawResource.data, offset + 1) / 2;
         startEntity->type = readu8(rawResource.data, offset + 2);
@@ -415,8 +485,10 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
             offset += 2;
         }
 
-        resource->levelInfo.startEntitiesCount++;
+        startEntitiesCount++;
     }
+
+    resource->levelInfo.startEntitiesCount = startEntitiesCount;
 
     // skip marker 0xFFFF
     offset += 2;

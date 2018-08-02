@@ -73,27 +73,6 @@ internal bool initOpenGL(WarContext *context)
     return true;
 }
 
-void createEmptyScene(WarContext *context)
-{
-    context->currentScene = (WarScene*)xcalloc(1, sizeof(WarScene));
-
-    s32 entityIndex = createEntity(context, WAR_ENTITY_TYPE_IMAGE);    
-    addSpriteComponent(context, entityIndex, 458); 
-
-    // s32 entityIndex = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-    // addTransformComponent(context, entityIndex, (vec2){100, 100});
-    // addSpriteComponent(context, entityIndex, 279);
-    // addAnimationComponent(context, entityIndex, 10.0f, true);
-
-    // for(s32 i = 0; i < 68; i++)
-    // {
-    //     entityIndex = createEntity(context, WAR_ENTITY_TYPE_SPRITE);
-    //     addTransformComponent(context, entityIndex, (vec2){(i%10) * 100, ((s32)(i/10))*100});
-    //     addSpriteComponent(context, entityIndex, 279 + i);
-    //     addAnimationComponent(context, entityIndex, 10.0f, true);
-    // }
-}
-
 void createMap(WarContext *context, s32 levelInfoIndex)
 {
     assert(levelInfoIndex >= 0 && levelInfoIndex < MAX_RESOURCES_COUNT);
@@ -101,15 +80,104 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     WarResource *resource = context->resources[levelInfoIndex];
     assert(resource && resource->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    context->map = (WarMap*)xcalloc(1, sizeof(WarMap));
-    context->map->levelInfoIndex = levelInfoIndex;
-    context->map->tilesetType = MAP_TILESET_FOREST;
+    WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
+    map->levelInfoIndex = levelInfoIndex;
+    map->tilesetType = MAP_TILESET_FOREST;
+    map->scrollSpeed = 200;
     
-    for(s32 i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
+    WarResource *levelInfo = context->resources[map->levelInfoIndex];
+    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+    // create the map sprite
     {
-        context->map->tileStates[i] = MAP_TILE_STATE_UNKOWN;
+        WarResource *levelVisual = context->resources[levelInfo->levelInfo.visualIndex];
+        assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+        
+        WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+        assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
+
+        WarVertex vertices[MAP_WIDTH * MAP_HEIGHT * 4];
+        GLuint indices[MAP_WIDTH * MAP_HEIGHT * 6];
+
+        for(s32 y = 0; y < MAP_HEIGHT; y++)
+        {
+            for(s32 x = 0; x < MAP_WIDTH; x++)
+            {
+                s32 index = y * MAP_WIDTH + x;
+                u16 tileIndex = levelVisual->levelVisual.data[index];
+
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                // vertex 00
+                vertices[index * 4 + 0].position[0] = (f32)(x + 0) * MEGA_TILE_WIDTH;
+                vertices[index * 4 + 0].position[1] = (f32)(MAP_HEIGHT - 1 - y + 0) * MEGA_TILE_HEIGHT;
+                vertices[index * 4 + 0].texCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
+                vertices[index * 4 + 0].texCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
+
+                // vertex 10
+                vertices[index * 4 + 1].position[0] = (f32)(x + 1) * MEGA_TILE_WIDTH;
+                vertices[index * 4 + 1].position[1] = (f32)(MAP_HEIGHT - 1 - y + 0) * MEGA_TILE_HEIGHT;
+                vertices[index * 4 + 1].texCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
+                vertices[index * 4 + 1].texCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
+
+                // vertex 11
+                vertices[index * 4 + 2].position[0] = (f32)(x + 1) * MEGA_TILE_WIDTH;
+                vertices[index * 4 + 2].position[1] = (f32)(MAP_HEIGHT - 1 - y + 1) * MEGA_TILE_HEIGHT;
+                vertices[index * 4 + 2].texCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
+                vertices[index * 4 + 2].texCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
+
+                // vertex 01
+                vertices[index * 4 + 3].position[0] = (f32)(x + 0) * MEGA_TILE_WIDTH;
+                vertices[index * 4 + 3].position[1] = (f32)(MAP_HEIGHT - 1 - y + 1) * MEGA_TILE_HEIGHT;
+                vertices[index * 4 + 3].texCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
+                vertices[index * 4 + 3].texCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
+
+                // indices for 1st triangle
+                indices[index * 6 + 0] = index * 4 + 0;
+                indices[index * 6 + 1] = index * 4 + 1;
+                indices[index * 6 + 2] = index * 4 + 2;
+
+                // indices for 2nd triangle
+                indices[index * 6 + 3] = index * 4 + 0;
+                indices[index * 6 + 4] = index * 4 + 2;
+                indices[index * 6 + 5] = index * 4 + 3;
+            }
+        }
+
+        map->sprite = createSprite(context, 
+            MAP_WIDTH * MAP_HEIGHT, 
+            TILESET_WIDTH_PX, 
+            TILESET_HEIGHT_PX, 
+            vertices, 
+            MAP_WIDTH * MAP_HEIGHT * 4, 
+            indices, 
+            MAP_WIDTH * MAP_HEIGHT * 6);
     }
-    
+
+    // create the starting entities
+    {
+        for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
+        {
+            WarLevelUnit unit = levelInfo->levelInfo.startEntities[i];
+
+            WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
+            addTransformComponent(context, entity, (vec2){unit.x * MEGA_TILE_WIDTH, (MAP_HEIGHT - unit.y) * MEGA_TILE_HEIGHT});
+            addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.value);
+
+            map->entities[i] = entity;
+        }
+    }
+
+    // set the initial state for the tiles
+    {
+        for(s32 i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
+        {
+            map->tileStates[i] = MAP_TILE_STATE_UNKOWN;
+        }
+    }
+
+    context->map = map;
 }
 
 bool initGame(WarContext *context)
@@ -120,8 +188,8 @@ bool initGame(WarContext *context)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    context->windowWidth = 640;
-    context->windowHeight = 400;
+    context->windowWidth = 320;
+    context->windowHeight = 200;
     context->windowTitle = "War 1";
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, null, null);
     if (!context->window)
@@ -206,50 +274,55 @@ bool initGame(WarContext *context)
                 loadTiles(context, &entry);
                 break;
             }
+
+            default:
+            {
+                printf("DB entries of type %d aren't handled yet\n", entry.type);
+                break;
+            }
         }
     }
 
     //createEmptyScene(context);
     createMap(context, 117);
     
-    context->time = glfwGetTime();
+    context->time = (f32)glfwGetTime();
     return true;
 }
 
-vec2 dir;
-vec2 pos;
-s32 scrollSpeed = 200;
-
 void updateGame(WarContext *context)
 {
+    WarMap *map = context->map;
+    if (!map) return;
+
     if (glfwGetKey(context->window, GLFW_KEY_LEFT) == GLFW_PRESS)
     {
-        dir[0] = 1;
+        map->dir[0] = 1;
     }
     else if (glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_PRESS)
     {
-        dir[0] = -1;
+        map->dir[0] = -1;
     }
     else
     {
-        dir[0] = 0;
+        map->dir[0] = 0;
     }
 
     if (glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        dir[1] = 1;
+        map->dir[1] = 1;
     }
     else if (glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS)
     {
-        dir[1] = -1;
+        map->dir[1] = -1;
     }
     else
     {
-        dir[1] = 0;
+        map->dir[1] = 0;
     }
 
-    pos[0] += scrollSpeed * dir[0] * context->deltaTime;
-    pos[1] += scrollSpeed * dir[1] * context->deltaTime;
+    map->pos[0] += map->scrollSpeed * map->dir[0] * context->deltaTime;
+    map->pos[1] += map->scrollSpeed * map->dir[1] * context->deltaTime;
 
     // WarScene *scene = context->currentScene;
     // for (s32 i = 0; i < MAX_ENTITIES_COUNT; ++i)
@@ -278,215 +351,49 @@ void updateGame(WarContext *context)
     // }
 }
 
-void renderEntity(WarContext *context, WarEntity *entity)
-{
-    if (entity->id && entity->enabled)
-    {
-        WarTransformComponent transform = entity->transform;
-        if (transform.enabled)
-        {
-            mat4 model;
-            glm_mat4_identity(model);
-            glm_translate(model, transform.position);
-            glUniformMatrix4fv(context->modelLocation, 1, GL_FALSE, (f32*)model);
-        }
-
-        WarSpriteComponent sprite = entity->sprite;
-        if (sprite.enabled)
-        {
-            u32 w, h;
-            u8 *pixels;
-
-            WarResource *resource = getOrCreateResource(context, sprite.resourceIndex);
-            switch(resource->type)
-            {
-                case WAR_RESOURCE_TYPE_IMAGE:
-                {
-                    w = resource->imageData.width;
-                    h = resource->imageData.height;
-                    pixels = resource->imageData.pixels;
-                    break;
-                }
-
-                case WAR_RESOURCE_TYPE_SPRITE:
-                {
-                    w = resource->spriteData.frameWidth;
-                    h = resource->spriteData.frameHeight;
-                    pixels = resource->spriteData.frames[sprite.frameIndex].data;
-                    break;
-                }
-
-                default:
-                {
-                    printf("Sprite component is enabled in a non-rendereable entity");
-                    break;
-                }
-            }
-
-            glBindTexture(GL_TEXTURE_2D, context->textures[sprite.textureIndex]);
-            setTextureData(context, sprite.textureIndex, w, h, pixels);
-
-            glBindVertexArray(sprite.vao);
-            glBindBuffer(GL_ARRAY_BUFFER, sprite.vbo);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sprite.ibo);
-
-            glEnableVertexAttribArray(context->positionLocation);
-            glEnableVertexAttribArray(context->texCoordLocation);
-
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, null);
-
-            glDisableVertexAttribArray(context->texCoordLocation);
-            glDisableVertexAttribArray(context->positionLocation);
-
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindVertexArray(0);
-
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
-    }
-}
-
 void renderScene(WarContext *context)
 {
-    WarScene *scene = context->currentScene;
-    if (!scene) return;
+    // WarScene *scene = context->currentScene;
+    // if (!scene) return;
     
-    for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
-    {
-        renderEntity(context, &scene->entities[i]);
-    }
+    // for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+    // {
+    //     renderEntity(context, &scene->entities[i]);
+    // }
 }
-
-typedef struct
-{
-    vec2 position;
-    vec2 textCoords;
-} VertexData;
 
 void renderMap(WarContext *context)
 {
     WarMap *map = context->map;
     if (!map) return;
-    
+
     WarResource *levelInfo = context->resources[map->levelInfoIndex];
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    WarResource *levelVisual = context->resources[63];
-    assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-    
-    WarResource *tileset = context->resources[189];
-    assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
-
-    if (!context->textures[map->textureIndex])
-    {
-        map->textureIndex = createTexture(context);
-
-        VertexData vertices[MAP_WIDTH * MAP_HEIGHT * 4];
-        GLuint indices[MAP_WIDTH * MAP_HEIGHT * 6];
-
-        for(s32 y = 0; y < MAP_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_WIDTH; x++)
-            {
-                s32 index = y * MAP_WIDTH + x;
-                u16 tileIndex = levelVisual->levelVisual.data[index];
-
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                // vertex 00
-                vertices[index * 4 + 0].position[0] = (x + 0) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 0].position[1] = (MAP_HEIGHT - y + 0) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 0].textCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 0].textCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
-
-                // vertex 10
-                vertices[index * 4 + 1].position[0] = (x + 1) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 1].position[1] = (MAP_HEIGHT - y + 0) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 1].textCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 1].textCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
-
-                // vertex 11
-                vertices[index * 4 + 2].position[0] = (x + 1) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 2].position[1] = (MAP_HEIGHT - y + 1) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 2].textCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 2].textCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
-
-                // vertex 01
-                vertices[index * 4 + 3].position[0] = (x + 0) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 3].position[1] = (MAP_HEIGHT - y + 1) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 3].textCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 3].textCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
-
-                // indices for 1st triangle
-                indices[index * 6 + 0] = index * 4 + 0;
-                indices[index * 6 + 1] = index * 4 + 1;
-                indices[index * 6 + 2] = index * 4 + 2;
-
-                // indices for 2nd triangle
-                indices[index * 6 + 3] = index * 4 + 0;
-                indices[index * 6 + 4] = index * 4 + 2;
-                indices[index * 6 + 5] = index * 4 + 3;
-            }
-        }
-
-        // if this isn't generated glEnableVertexAttribArray set GL_INVALID_OPERATION error.
-        glGenVertexArrays(1, &map->vao);
-        glBindVertexArray(map->vao);
-        
-        glGenBuffers(1, &map->vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, map->vbo);
-        glBufferData(GL_ARRAY_BUFFER, MAP_WIDTH * MAP_HEIGHT * 4 * sizeof(VertexData), vertices, GL_STATIC_DRAW);
-
-        glGenBuffers(1, &map->ibo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, map->ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,  MAP_WIDTH * MAP_HEIGHT * 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-
-        glEnableVertexAttribArray(context->positionLocation);
-        glVertexAttribPointer(context->positionLocation, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-        glDisableVertexAttribArray(context->positionLocation);
-
-        glEnableVertexAttribArray(context->texCoordLocation);
-        glVertexAttribPointer(context->texCoordLocation, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
-        glDisableVertexAttribArray(context->texCoordLocation);
-        
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-    }
-
     mat4 model;
     glm_mat4_identity(model);
-    glm_translate(model, pos);
-    glUniformMatrix4fv(context->modelLocation, 1, GL_FALSE, (f32*)model);
+    glm_translate(model, map->pos);
 
-    glBindTexture(GL_TEXTURE_2D, context->textures[map->textureIndex]);
-    setTextureData(context, map->textureIndex, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, tileset->tilesetData.data);
+    // render terrain
+    {
+        WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+        assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
-    glBindVertexArray(map->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, map->vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, map->ibo);
+        renderSprite(context, &map->sprite, tileset->tilesetData.data, model);
+    }
 
-    glEnableVertexAttribArray(context->positionLocation);
-    glEnableVertexAttribArray(context->texCoordLocation);
+    // render entities
+    {
+        for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+        {
+            if (map->entities[i])
+            {
+                renderEntity(context, map->entities[i], model);
+            }
 
-    glDrawElements(GL_TRIANGLES, MAP_WIDTH * MAP_HEIGHT * 6, GL_UNSIGNED_INT, null);
-
-    glDisableVertexAttribArray(context->texCoordLocation);
-    glDisableVertexAttribArray(context->positionLocation);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    
-    // for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
-    // {
-    //     renderEntity(context, &map->entities[i]);
-    // }
+            break;
+        }
+    }
 }
 
 void renderGame(WarContext *context)
@@ -509,8 +416,11 @@ void renderGame(WarContext *context)
     // {   0,   0,  0,  0 }
     // {   0,   0,  0,  1 }
     //
-    glm_ortho(0.0f, context->windowWidth, 0.0f, context->windowHeight, -1.0f, 1.0f, proj);
+    glm_ortho(0.0f, (f32)context->windowWidth, 0.0f, (f32)context->windowHeight, -1.0f, 1.0f, proj);
     glUniformMatrix4fv(context->projLocation, 1, GL_FALSE, (f32*)proj);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     renderScene(context);
     renderMap(context);
@@ -529,7 +439,7 @@ void presentGame(WarContext *context)
     // force to 60 fps
     while (context->deltaTime <= (1.0f/60.0f))
     {
-        currentTime = glfwGetTime();
+        currentTime = (f32)glfwGetTime();
         context->deltaTime = (currentTime - context->time);
     }
 
