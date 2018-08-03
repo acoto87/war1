@@ -73,113 +73,6 @@ internal bool initOpenGL(WarContext *context)
     return true;
 }
 
-void createMap(WarContext *context, s32 levelInfoIndex)
-{
-    assert(levelInfoIndex >= 0 && levelInfoIndex < MAX_RESOURCES_COUNT);
-
-    WarResource *resource = context->resources[levelInfoIndex];
-    assert(resource && resource->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
-
-    WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
-    map->levelInfoIndex = levelInfoIndex;
-    map->tilesetType = MAP_TILESET_FOREST;
-    map->scrollSpeed = 200;
-    
-    WarResource *levelInfo = context->resources[map->levelInfoIndex];
-    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
-
-    // create the map sprite
-    {
-        WarResource *levelVisual = context->resources[levelInfo->levelInfo.visualIndex];
-        assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-        
-        WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
-        assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
-
-        WarVertex vertices[MAP_WIDTH * MAP_HEIGHT * 4];
-        GLuint indices[MAP_WIDTH * MAP_HEIGHT * 6];
-
-        for(s32 y = 0; y < MAP_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_WIDTH; x++)
-            {
-                s32 index = y * MAP_WIDTH + x;
-                u16 tileIndex = levelVisual->levelVisual.data[index];
-
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                // vertex 00
-                vertices[index * 4 + 0].position[0] = (f32)(x + 0) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 0].position[1] = (f32)(MAP_HEIGHT - 1 - y + 0) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 0].texCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 0].texCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
-
-                // vertex 10
-                vertices[index * 4 + 1].position[0] = (f32)(x + 1) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 1].position[1] = (f32)(MAP_HEIGHT - 1 - y + 0) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 1].texCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 1].texCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
-
-                // vertex 11
-                vertices[index * 4 + 2].position[0] = (f32)(x + 1) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 2].position[1] = (f32)(MAP_HEIGHT - 1 - y + 1) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 2].texCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 2].texCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
-
-                // vertex 01
-                vertices[index * 4 + 3].position[0] = (f32)(x + 0) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 3].position[1] = (f32)(MAP_HEIGHT - 1 - y + 1) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 3].texCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 3].texCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
-
-                // indices for 1st triangle
-                indices[index * 6 + 0] = index * 4 + 0;
-                indices[index * 6 + 1] = index * 4 + 1;
-                indices[index * 6 + 2] = index * 4 + 2;
-
-                // indices for 2nd triangle
-                indices[index * 6 + 3] = index * 4 + 0;
-                indices[index * 6 + 4] = index * 4 + 2;
-                indices[index * 6 + 5] = index * 4 + 3;
-            }
-        }
-
-        map->sprite = createSprite(context, 
-            MAP_WIDTH * MAP_HEIGHT, 
-            TILESET_WIDTH_PX, 
-            TILESET_HEIGHT_PX, 
-            vertices, 
-            MAP_WIDTH * MAP_HEIGHT * 4, 
-            indices, 
-            MAP_WIDTH * MAP_HEIGHT * 6);
-    }
-
-    // create the starting entities
-    {
-        for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
-        {
-            WarLevelUnit unit = levelInfo->levelInfo.startEntities[i];
-
-            WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-            addTransformComponent(context, entity, (vec2){unit.x * MEGA_TILE_WIDTH, (MAP_HEIGHT - unit.y) * MEGA_TILE_HEIGHT});
-            addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.value);
-
-            map->entities[i] = entity;
-        }
-    }
-
-    // set the initial state for the tiles
-    {
-        for(s32 i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
-        {
-            map->tileStates[i] = MAP_TILE_STATE_UNKOWN;
-        }
-    }
-
-    context->map = map;
-}
-
 bool initGame(WarContext *context)
 {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -188,8 +81,9 @@ bool initGame(WarContext *context)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    context->windowWidth = 320;
-    context->windowHeight = 200;
+    context->globalScale = 4;
+    context->windowWidth = 320 * context->globalScale;
+    context->windowHeight = 200 * context->globalScale;
     context->windowTitle = "War 1";
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, null, null);
     if (!context->window)
@@ -372,6 +266,7 @@ void renderMap(WarContext *context)
 
     mat4 model;
     glm_mat4_identity(model);
+    glm_scale(model, (vec3){context->globalScale, context->globalScale, 1.0f});
     glm_translate(model, map->pos);
 
     // render terrain
@@ -382,16 +277,27 @@ void renderMap(WarContext *context)
         renderSprite(context, &map->sprite, tileset->tilesetData.data, model);
     }
 
-    // render entities
+    // render roads
     {
         for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
         {
-            if (map->entities[i])
+            WarEntity *entity = map->entities[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
             {
-                renderEntity(context, map->entities[i], model);
+                renderEntity(context, entity, model);
             }
+        }
+    }
 
-            break;
+    // render units
+    {
+        for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+        {
+            WarEntity *entity = map->entities[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+            {
+                renderEntity(context, entity, model);
+            }
         }
     }
 }

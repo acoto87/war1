@@ -4,6 +4,7 @@
 #define MAX_TEXTURES_COUNT 583
 #define MAX_ENTITIES_COUNT 100
 #define MAX_SPRITE_FRAME_COUNT 100
+#define MAX_CONSTRUCTS_COUNT 100
 #define PALETTE_LENGTH 768
 
 #define MINI_TILE_WIDTH 8
@@ -21,7 +22,6 @@
 #define MAX_PLAYERS_COUNT 5
 #define MAX_FEATURES_COUNT 32
 #define MAX_UPGRADES_COUNT 10
-#define MAX_CONSTRUCTS_COUNT 100
 #define MAX_TILES_COUNT 1024
 
 typedef struct 
@@ -314,7 +314,35 @@ typedef enum
     WAR_ENTITY_TYPE_NONE,
     WAR_ENTITY_TYPE_IMAGE,
     WAR_ENTITY_TYPE_UNIT,
+    WAR_ENTITY_TYPE_ROAD,
+    WAR_ENTITY_TYPE_WALL
 } WarEntityType;
+
+typedef enum
+{
+    WAR_ROAD_PIECE_LEFT,
+    WAR_ROAD_PIECE_TOP,
+    WAR_ROAD_PIECE_RIGHT,
+    WAR_ROAD_PIECE_BOTTOM,
+    WAR_ROAD_PIECE_BOTTOM_LEFT,
+    WAR_ROAD_PIECE_VERTICAL,
+    WAR_ROAD_PIECE_BOTTOM_RIGHT,
+    WAR_ROAD_PIECE_T_LEFT,
+    WAR_ROAD_PIECE_T_BOTTOM,
+    WAR_ROAD_PIECE_T_RIGHT,
+    WAR_ROAD_PIECE_CROSS,
+    WAR_ROAD_PIECE_TOP_LEFT,
+    WAR_ROAD_PIECE_HORIZONTAL,
+    WAR_ROAD_PIECE_T_TOP,
+    WAR_ROAD_PIECE_TOP_RIGHT,
+} WarRoadPieceType;
+
+typedef struct
+{
+    WarRoadPieceType type;
+    u8 tilex, tiley;
+    u8 player;
+} WarRoadPiece;
 
 typedef struct
 {
@@ -355,12 +383,19 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    WarRoadPiece *pieces;
+} WarRoadComponent;
+
+typedef struct
+{
+    bool enabled;
     WarEntityId id;
     WarEntityType type;
     WarTransformComponent transform;
     WarSpriteComponent sprite;
     WarAnimationComponent anim;
     WarUnitComponent unit;
+    WarRoadComponent road;
 } WarEntity;
 
 typedef struct
@@ -386,10 +421,10 @@ typedef struct
 {
     s32 levelInfoIndex;
 
-    WarSprite sprite;
-
     s32 scrollSpeed;
     vec2 pos, dir;
+
+    WarSprite sprite;
 
     WarMapTilesetType tilesetType;
     WarMapTileState tileStates[MAP_WIDTH * MAP_HEIGHT];
@@ -403,6 +438,8 @@ typedef struct
     f32 time;
     f32 deltaTime;
     u32 fps;
+
+    f32 globalScale;
 
     u32 windowWidth;
     u32 windowHeight;

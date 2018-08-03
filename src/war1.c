@@ -40,6 +40,7 @@
 #include "war_sprites.c"
 #include "war_resources.c"
 #include "war_entities.c"
+#include "war_map.c"
 #include "war_game.c"
 
 internal void glfwErrorCallback(int error, const char* description)

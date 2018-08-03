@@ -48,71 +48,91 @@ const char* upgradeNames[MAX_UPGRADES_COUNT*2] =
 
 const s32 unitsData[] = 
 {
-    // units
-    WAR_UNIT_FOOTMAN,                   279, 1, 1,
-    WAR_UNIT_GRUNT,                     280, 1, 1,
-    WAR_UNIT_PEASANT,                   281, 1, 1,
-    WAR_UNIT_PEON,                      282, 1, 1,
-    WAR_UNIT_CATAPULT_HUMANS,           283, 1, 1,
-    WAR_UNIT_CATAPULT_ORCS,             284, 1, 1,
-    WAR_UNIT_KNIGHT,                    285, 1, 1,
-    WAR_UNIT_RAIDER,                    286, 1, 1,
-    WAR_UNIT_ARCHER,                    287, 1, 1,
-    WAR_UNIT_SPEARMAN,                  288, 1, 1,
-    WAR_UNIT_CONJURER,                  289, 1, 1,
-    WAR_UNIT_WARLOCK,                   290, 1, 1,
-    WAR_UNIT_CLERIC,                    291, 1, 1,
-    WAR_UNIT_NECROLYTE,                 292, 1, 1,
-    WAR_UNIT_MEDIVH,                    293, 1, 1,
-    WAR_UNIT_LOTHAR,                    294, 1, 1,
-    WAR_UNIT_WOUNDED,                   295, 1, 1,
-    WAR_UNIT_GRIZELDA,                  296, 1, 1,
-    WAR_UNIT_GARONA,                    296, 1, 1,
-    WAR_UNIT_OGRE,                      297, 1, 1,
-    WAR_UNIT_20,                          0, 0, 0,
-    WAR_UNIT_SPIDER,                      0, 0, 0,
-    WAR_UNIT_SLIME,                       0, 0, 0,
-    WAR_UNIT_FIREELEMENTAL,               0, 0, 0,
-    WAR_UNIT_SCORPION,                    0, 0, 0,
-    WAR_UNIT_BRIGAND,                     0, 0, 0,
-    WAR_UNIT_26,                          0, 0, 0,
-    WAR_UNIT_SKELETON,                    0, 0, 0,
-    WAR_UNIT_DAEMON,                      0, 0, 0,
-    WAR_UNIT_DRAGON_CYCLOPS_GIANT,        0, 0, 0,
-    WAR_UNIT_30,                          0, 0, 0,
-    WAR_UNIT_WATERELEMENTAL,              0, 0, 0,
+    // units                            // resource index   // size x in tiles  // size y in tiles
+    WAR_UNIT_FOOTMAN,                   279,                1,                  1,
+    WAR_UNIT_GRUNT,                     280,                1,                  1,
+    WAR_UNIT_PEASANT,                   281,                1,                  1,
+    WAR_UNIT_PEON,                      282,                1,                  1,
+    WAR_UNIT_CATAPULT_HUMANS,           283,                1,                  1,
+    WAR_UNIT_CATAPULT_ORCS,             284,                1,                  1,
+    WAR_UNIT_KNIGHT,                    285,                1,                  1,
+    WAR_UNIT_RAIDER,                    286,                1,                  1,
+    WAR_UNIT_ARCHER,                    287,                1,                  1,
+    WAR_UNIT_SPEARMAN,                  288,                1,                  1,
+    WAR_UNIT_CONJURER,                  289,                1,                  1,
+    WAR_UNIT_WARLOCK,                   290,                1,                  1,
+    WAR_UNIT_CLERIC,                    291,                1,                  1,
+    WAR_UNIT_NECROLYTE,                 292,                1,                  1,
+    WAR_UNIT_MEDIVH,                    293,                1,                  1,
+    WAR_UNIT_LOTHAR,                    294,                1,                  1,
+    WAR_UNIT_WOUNDED,                   295,                1,                  1,
+    WAR_UNIT_GRIZELDA,                  296,                1,                  1,
+    WAR_UNIT_GARONA,                    296,                1,                  1,
+    WAR_UNIT_OGRE,                      297,                1,                  1,
+    WAR_UNIT_20,                          0,                0,                  0,
+    WAR_UNIT_SPIDER,                      0,                0,                  0,
+    WAR_UNIT_SLIME,                       0,                0,                  0,
+    WAR_UNIT_FIREELEMENTAL,               0,                0,                  0,
+    WAR_UNIT_SCORPION,                    0,                0,                  0,
+    WAR_UNIT_BRIGAND,                     0,                0,                  0,
+    WAR_UNIT_26,                          0,                0,                  0,
+    WAR_UNIT_SKELETON,                    0,                0,                  0,
+    WAR_UNIT_DAEMON,                      0,                0,                  0,
+    WAR_UNIT_DRAGON_CYCLOPS_GIANT,        0,                0,                  0,
+    WAR_UNIT_30,                          0,                0,                  0,
+    WAR_UNIT_WATERELEMENTAL,              0,                0,                  0,
 
     // buildings
-    WAR_UNIT_FARM_HUMANS,               307, 2, 2,
-    WAR_UNIT_FARM_ORCS,                 308, 2, 2,
-    WAR_UNIT_BARRACKS_HUMANS,           309, 3, 3,
-    WAR_UNIT_BARRACKS_ORCS,             310, 3, 3,
-    WAR_UNIT_CHURCH,                    311, 2, 2,
-    WAR_UNIT_TEMPLE,                    312, 2, 2,
-    WAR_UNIT_TOWER_HUMANS,              313, 2, 2,
-    WAR_UNIT_TOWER_ORCS,                314, 2, 2,
-    WAR_UNIT_TOWNHALL_HUMANS,           315, 3, 3,
-    WAR_UNIT_TOWNHALL_ORCS,             316, 3, 3,
-    WAR_UNIT_LUMBERMILL_HUMANS,         317, 3, 3,
-    WAR_UNIT_LUMBERMILL_ORCS,           318, 3, 3,
-    WAR_UNIT_STABLES,                   319, 3, 3,
-    WAR_UNIT_KENNEL,                    320, 3, 3,
-    WAR_UNIT_BLACKSMITH_HUMANS,         321, 3, 3,
-    WAR_UNIT_BLACKSMITH_ORCS,           322, 3, 3,
-    WAR_UNIT_STORMWIND,                 323, 4, 4,
-    WAR_UNIT_BLACKROCK,                 324, 4, 4,
+    WAR_UNIT_FARM_HUMANS,               307,                2,                  2,
+    WAR_UNIT_FARM_ORCS,                 308,                2,                  2,
+    WAR_UNIT_BARRACKS_HUMANS,           309,                3,                  3,
+    WAR_UNIT_BARRACKS_ORCS,             310,                3,                  3,
+    WAR_UNIT_CHURCH,                    311,                2,                  2,
+    WAR_UNIT_TEMPLE,                    312,                2,                  2,
+    WAR_UNIT_TOWER_HUMANS,              313,                2,                  2,
+    WAR_UNIT_TOWER_ORCS,                314,                2,                  2,
+    WAR_UNIT_TOWNHALL_HUMANS,           315,                3,                  3,
+    WAR_UNIT_TOWNHALL_ORCS,             316,                3,                  3,
+    WAR_UNIT_LUMBERMILL_HUMANS,         317,                3,                  3,
+    WAR_UNIT_LUMBERMILL_ORCS,           318,                3,                  3,
+    WAR_UNIT_STABLES,                   319,                3,                  3,
+    WAR_UNIT_KENNEL,                    320,                3,                  3,
+    WAR_UNIT_BLACKSMITH_HUMANS,         321,                3,                  3,
+    WAR_UNIT_BLACKSMITH_ORCS,           322,                3,                  3,
+    WAR_UNIT_STORMWIND,                 323,                4,                  4,
+    WAR_UNIT_BLACKROCK,                 324,                4,                  4,
 
     // neutral
-    WAR_UNIT_GOLDMINE,                  325, 4, 4,
+    WAR_UNIT_GOLDMINE,                  325,                3,                  3,
 
-	WAR_UNIT_51,                          0, 0, 0,
-	WAR_UNIT_PEASANT_WITH_WOOD,           0, 0, 0,
-	WAR_UNIT_PEON_WITH_WOOD,              0, 0, 0,
-    WAR_UNIT_PEASANT_WITH_GOLD,           0, 0, 0,
-	WAR_UNIT_PEON_WITH_GOLD,              0, 0, 0,
+	WAR_UNIT_51,                          0,                0,                  0,
+	WAR_UNIT_PEASANT_WITH_WOOD,           0,                0,                  0,
+	WAR_UNIT_PEON_WITH_WOOD,              0,                0,                  0,
+    WAR_UNIT_PEASANT_WITH_GOLD,           0,                0,                  0,
+	WAR_UNIT_PEON_WITH_GOLD,              0,                0,                  0,
 
     // others
-    WAR_UNIT_ORC_CORPSE,                  0, 0, 0
+    WAR_UNIT_ORC_CORPSE,                  0,                0,                  0
+};
+
+const s32 roadsData[] =
+{
+    // road piece type                  // tile index forest         // tile index swamp
+    WAR_ROAD_PIECE_LEFT,                56,                          57,
+    WAR_ROAD_PIECE_TOP,                 57,                          58,
+    WAR_ROAD_PIECE_RIGHT,               58,                          59,    
+    WAR_ROAD_PIECE_BOTTOM,              59,                          60,    
+    WAR_ROAD_PIECE_BOTTOM_LEFT,         60,                          61,        
+    WAR_ROAD_PIECE_VERTICAL,            61,                          62,        
+    WAR_ROAD_PIECE_BOTTOM_RIGHT,        62,                          63,            
+    WAR_ROAD_PIECE_T_LEFT,              63,                          64,        
+    WAR_ROAD_PIECE_T_BOTTOM,            64,                          65,    
+    WAR_ROAD_PIECE_T_RIGHT,             65,                          66,    
+    WAR_ROAD_PIECE_CROSS,               66,                          67,    
+    WAR_ROAD_PIECE_TOP_LEFT,            67,                          68,        
+    WAR_ROAD_PIECE_HORIZONTAL,          68,                          69,    
+    WAR_ROAD_PIECE_T_TOP,               69,                          70,        
+    WAR_ROAD_PIECE_TOP_RIGHT,           70,                          71        
 };
 
 s32 createTexture(WarContext *context)
@@ -138,7 +158,6 @@ s32 createTexture(WarContext *context)
     context->texturesCount++;
     return textureIndex;
 }
-
 
 void getPalette(WarContext *context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
 {

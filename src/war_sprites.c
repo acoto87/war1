@@ -1,10 +1,14 @@
-WarSprite createSprite(WarContext *context, s32 count, u32 width, u32 height, WarVertex vertices[], s32 verticesCount, GLuint indices[], s32 indicesCount)
+WarSprite createSprite(WarContext *context, s32 count, u32 width, u32 height, WarVertex vertices[], s32 verticesCount, GLuint indices[], s32 indicesCount, s32 textureIndex)
 {
     WarSprite sprite = (WarSprite){0};
-    sprite.textureIndex = createTexture(context);
     sprite.count = count;
     sprite.width = width;
     sprite.height = height;
+
+    if (textureIndex < 0)
+    {
+        sprite.textureIndex = createTexture(context);
+    }
 
     // if this isn't generated glEnableVertexAttribArray set GL_INVALID_OPERATION error.
     glGenVertexArrays(1, &sprite.vao);
