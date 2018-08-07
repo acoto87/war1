@@ -12,3 +12,9 @@
  * c = sign(c)
 */
 #define sign(x) (((x) > 0) - ((x) < 0))
+
+typedef struct
+{
+    s32 x, y;
+    s32 width, height;
+} Rect;

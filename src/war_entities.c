@@ -118,9 +118,10 @@ void addAnimationComponent(WarContext *context, WarEntity *entity, f32 duration,
     entity->anim.offset = 0;
 }
 
-void addRoadComponent(WarContext *context, WarEntity *entity, WarRoadPiece *pieces)
+void addRoadComponent(WarContext *context, WarEntity *entity)
 {
-    s32 count = sb_count(pieces);
+    WarRoadPieceList *pieces = &entity->road.pieces;
+    s32 count = pieces->count;
 
     WarVertex *vertices = (WarVertex*)xcalloc(count * 4, sizeof(WarVertex));
     GLuint *indices = (GLuint*)xcalloc(count * 6, sizeof(GLuint));
@@ -128,20 +129,20 @@ void addRoadComponent(WarContext *context, WarEntity *entity, WarRoadPiece *piec
     for(s32 i = 0; i < count; i++)
     {
         s32 tileIndex = 0;
-        s32 x = pieces[i].tilex;
-        s32 y = pieces[i].tiley;
+        s32 x = pieces->items[i].tilex;
+        s32 y = pieces->items[i].tiley;
         
         switch (context->map->tilesetType)
         {
             case MAP_TILESET_FOREST:
             {
-                tileIndex = roadsData[pieces[i].type * 3 + 1];
+                tileIndex = roadsData[pieces->items[i].type * 3 + 1];
                 break;
             }
         
             case MAP_TILESET_SWAMP:
             {
-                tileIndex = roadsData[pieces[i].type * 3 + 2];
+                tileIndex = roadsData[pieces->items[i].type * 3 + 2];
                 break;
             }
 
@@ -192,7 +193,6 @@ void addRoadComponent(WarContext *context, WarEntity *entity, WarRoadPiece *piec
 
     entity->road = (WarRoadComponent){0};
     entity->road.enabled = true;
-    entity->road.pieces = pieces;
 
     s32 textureIndex = context->map->sprite.textureIndex;
     WarSprite sprite = createSprite(context, count, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, vertices, count * 4, indices, count * 6, textureIndex);

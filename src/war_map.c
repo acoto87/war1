@@ -1,4 +1,4 @@
-WarRoadPiece* createRoads(WarRoadPiece *pieces, WarLevelConstruct *construct)
+void createRoads(WarRoadPieceList *pieces, WarLevelConstruct *construct)
 {
     s32 x1 = construct->x1;
     s32 y1 = construct->y1;
@@ -24,7 +24,7 @@ WarRoadPiece* createRoads(WarRoadPiece *pieces, WarLevelConstruct *construct)
         piece.tilex = x;
         piece.tiley = y;
 
-        sb_push(pieces, piece);
+        WarRoadPieceListAdd(pieces, piece);
 
         x += dx;
     }
@@ -34,7 +34,7 @@ WarRoadPiece* createRoads(WarRoadPiece *pieces, WarLevelConstruct *construct)
     piece.tilex = x;
     piece.tiley = y;
 
-    sb_push(pieces, piece);
+    WarRoadPieceListAdd(pieces, piece);
 
     while (y != y2)
     {
@@ -43,7 +43,7 @@ WarRoadPiece* createRoads(WarRoadPiece *pieces, WarLevelConstruct *construct)
         piece.tilex = x;
         piece.tiley = y;
 
-        sb_push(pieces, piece);
+        WarRoadPieceListAdd(pieces, piece);
 
         y += dy;
     }
@@ -53,14 +53,12 @@ WarRoadPiece* createRoads(WarRoadPiece *pieces, WarLevelConstruct *construct)
     piece.tilex = x;
     piece.tiley = y;
 
-    sb_push(pieces, piece);
-
-    return pieces;
+    WarRoadPieceListAdd(pieces, piece);
 }
 
-void determineRoadTypes(WarRoadPiece *pieces)
+void determineRoadTypes(WarRoadPieceList *pieces)
 {
-    s32 count = sb_count(pieces);
+    s32 count = pieces->count;
     for(s32 i = 0; i < count; i++)
     {
         bool left = false, 
@@ -72,55 +70,55 @@ void determineRoadTypes(WarRoadPiece *pieces)
         {
             if (i == j) continue;
 
-            if (pieces[j].tilex == pieces[i].tilex - 1 && pieces[j].tiley == pieces[i].tiley)
+            if (pieces->items[j].tilex == pieces->items[i].tilex - 1 && pieces->items[j].tiley == pieces->items[i].tiley)
                 left = true;
-            else if(pieces[j].tilex == pieces[i].tilex + 1 && pieces[j].tiley == pieces[i].tiley)
+            else if(pieces->items[j].tilex == pieces->items[i].tilex + 1 && pieces->items[j].tiley == pieces->items[i].tiley)
                 right = true;
-            else if (pieces[j].tilex == pieces[i].tilex && pieces[j].tiley == pieces[i].tiley - 1)
+            else if (pieces->items[j].tilex == pieces->items[i].tilex && pieces->items[j].tiley == pieces->items[i].tiley - 1)
                 top = true;
-            else if (pieces[j].tilex == pieces[i].tilex && pieces[j].tiley == pieces[i].tiley + 1)
+            else if (pieces->items[j].tilex == pieces->items[i].tilex && pieces->items[j].tiley == pieces->items[i].tiley + 1)
                 bottom = true;
         }
 
         // Endpieces
         if (top && !bottom && !left && !right)
-            pieces[i].type = WAR_ROAD_PIECE_BOTTOM;
+            pieces->items[i].type = WAR_ROAD_PIECE_BOTTOM;
         if (!top && bottom && !left && !right)
-            pieces[i].type = WAR_ROAD_PIECE_TOP;
+            pieces->items[i].type = WAR_ROAD_PIECE_TOP;
         if (!top && !bottom && !left && right)
-            pieces[i].type = WAR_ROAD_PIECE_LEFT;
+            pieces->items[i].type = WAR_ROAD_PIECE_LEFT;
         if (!top && !bottom && left && !right)
-            pieces[i].type = WAR_ROAD_PIECE_RIGHT;
+            pieces->items[i].type = WAR_ROAD_PIECE_RIGHT;
 
         // Corner pieces
         if (top && !bottom && left && !right)
-            pieces[i].type = WAR_ROAD_PIECE_TOP_LEFT;
+            pieces->items[i].type = WAR_ROAD_PIECE_TOP_LEFT;
         if (!top && bottom && left && !right)
-            pieces[i].type = WAR_ROAD_PIECE_BOTTOM_LEFT;
+            pieces->items[i].type = WAR_ROAD_PIECE_BOTTOM_LEFT;
         if (top && !bottom && !left && right)
-            pieces[i].type = WAR_ROAD_PIECE_TOP_RIGHT;
+            pieces->items[i].type = WAR_ROAD_PIECE_TOP_RIGHT;
         if (!top && bottom && !left && right)
-            pieces[i].type = WAR_ROAD_PIECE_BOTTOM_RIGHT;
+            pieces->items[i].type = WAR_ROAD_PIECE_BOTTOM_RIGHT;
 
         // Middle pieces
         if (!top && !bottom && left && right)
-            pieces[i].type = WAR_ROAD_PIECE_HORIZONTAL;
+            pieces->items[i].type = WAR_ROAD_PIECE_HORIZONTAL;
         if (top && bottom && !left && !right)
-            pieces[i].type = WAR_ROAD_PIECE_VERTICAL;
+            pieces->items[i].type = WAR_ROAD_PIECE_VERTICAL;
 
         // Quad piece
         if (top && bottom && left && right)
-            pieces[i].type = WAR_ROAD_PIECE_CROSS;
+            pieces->items[i].type = WAR_ROAD_PIECE_CROSS;
 
         // T-Corners
         if (top && bottom && left && !right)
-            pieces[i].type = WAR_ROAD_PIECE_T_RIGHT;
+            pieces->items[i].type = WAR_ROAD_PIECE_T_RIGHT;
         if (top && bottom && !left && right)
-            pieces[i].type = WAR_ROAD_PIECE_T_LEFT;
+            pieces->items[i].type = WAR_ROAD_PIECE_T_LEFT;
         if (!top && bottom && left && right)
-            pieces[i].type = WAR_ROAD_PIECE_T_TOP;
+            pieces->items[i].type = WAR_ROAD_PIECE_T_TOP;
         if (top && !bottom && left && right)
-            pieces[i].type = WAR_ROAD_PIECE_T_BOTTOM;
+            pieces->items[i].type = WAR_ROAD_PIECE_T_BOTTOM;
     }
 }
 
@@ -136,6 +134,14 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     map->tilesetType = MAP_TILESET_FOREST;
     map->scrollSpeed = 200;
     
+    map->leftTopPanel = (Rect){0, 128, 72, 72};
+    map->leftBottomPanel = (Rect){0, 0, 72, 128};
+    map->rightPanel = (Rect){312, 0, 8, 200};
+    map->topPanel = (Rect){72, 188, 240, 12};
+    map->bottomPanel = (Rect){72, 0, 240, 12};
+    map->mapPanel = (Rect){72, 12, 240, 176};
+    map->minimapPanel = (Rect){0, 0, 128, 128};
+
     context->map = map;
 
     WarResource *levelInfo = context->resources[map->levelInfoIndex];
@@ -210,21 +216,19 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the starting roads
     {
-        WarRoadPiece *pieces = null;
+        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
 
         for(s32 i = 0; i < levelInfo->levelInfo.startRoadsCount; i++)
         {
             WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
             if (construct->type == WAR_CONSTRUCT_ROAD)
             {
-                pieces = createRoads(pieces, construct);
+                createRoads(&entity->road.pieces, construct);
             }
         }
 
-        determineRoadTypes(pieces);
-
-        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
-        addRoadComponent(context, entity, pieces);
+        determineRoadTypes(&entity->road.pieces);
+        addRoadComponent(context, entity);
 
         map->entities[entitiesCount++] = entity;
     }
@@ -242,6 +246,41 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         }
     }
 
+    // add ui entities
+    {
+        WarEntity *entity;
+        
+        // left bottom panel
+        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+        addTransformComponent(context, entity, (vec2){map->leftBottomPanel.x, map->leftBottomPanel.y});
+        addSpriteComponentFromResource(context, entity, 226);
+        map->entities[entitiesCount++] = entity;
+
+        // left top panel (minimap)
+        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+        addTransformComponent(context, entity, (vec2){map->leftTopPanel.x, map->leftTopPanel.y});
+        addSpriteComponentFromResource(context, entity, 224);
+        map->entities[entitiesCount++] = entity;
+        
+        // top panel
+        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+        addTransformComponent(context, entity, (vec2){map->topPanel.x, map->topPanel.y});
+        addSpriteComponentFromResource(context, entity, 218);
+        map->entities[entitiesCount++] = entity;
+
+        // right panel
+        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+        addTransformComponent(context, entity, (vec2){map->rightPanel.x, map->rightPanel.y});
+        addSpriteComponentFromResource(context, entity, 220);
+        map->entities[entitiesCount++] = entity;
+
+        // bottom panel
+        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+        addTransformComponent(context, entity, (vec2){map->bottomPanel.x, map->bottomPanel.y});
+        addSpriteComponentFromResource(context, entity, 222);
+        map->entities[entitiesCount++] = entity;
+    }
+
     // set the initial state for the tiles
     {
         for(s32 i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
@@ -249,5 +288,74 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             map->tileStates[i] = MAP_TILE_STATE_UNKOWN;
         }
     }
+}
 
+void renderMap(WarContext *context)
+{
+    WarMap *map = context->map;
+    if (!map) return;
+
+    WarResource *levelInfo = context->resources[map->levelInfoIndex];
+    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+    mat4 baseTransform;
+    glm_mat4_identity(baseTransform);
+    glm_scale(baseTransform, (vec3){context->globalScale, context->globalScale, 1.0f});
+
+    // render map
+    {
+        mat4 mapTransform;
+        glm_mat4_identity(mapTransform);
+        glm_mat4_mul(baseTransform, mapTransform, mapTransform);
+        glm_translate(mapTransform, (vec4){map->mapPanel.x, map->mapPanel.y, 0.0f, 0.0f});
+        glm_translate(mapTransform, (vec4){map->pos[0], map->pos[1], 0.0f, 0.0f});
+        
+        // render terrain
+        {
+            WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+            assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
+
+            renderSprite(context, &map->sprite, tileset->tilesetData.data, mapTransform);
+        }
+
+        // render roads
+        {
+            for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+            {
+                WarEntity *entity = map->entities[i];
+                if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
+                {
+                    renderEntity(context, entity, mapTransform);
+                }
+            }
+        }
+
+        // render units
+        {
+            for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+            {
+                WarEntity *entity = map->entities[i];
+                if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+                {
+                    renderEntity(context, entity, mapTransform);
+                }
+            }
+        }
+    }
+
+    // render ui
+    {
+        mat4 uiTransform;
+        glm_mat4_identity(uiTransform);
+        glm_mat4_mul(baseTransform, uiTransform, uiTransform);
+
+        for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+        {
+            WarEntity *entity = map->entities[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_IMAGE)
+            {
+                renderEntity(context, entity, uiTransform);
+            }
+        }
+    }
 }

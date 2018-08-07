@@ -81,14 +81,16 @@ bool initGame(WarContext *context)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    context->globalScale = 4;
-    context->windowWidth = 320 * context->globalScale;
-    context->windowHeight = 200 * context->globalScale;
+    context->globalScale = 2;
+    context->originalWindowWidth = 320;
+    context->originalWindowHeight = 200;
+    context->windowWidth = context->originalWindowWidth * context->globalScale;
+    context->windowHeight = context->originalWindowHeight * context->globalScale;
     context->windowTitle = "War 1";
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, null, null);
     if (!context->window)
     {
-        printf("GLFW window could not be created!");
+        fprintf(stderr, "GLFW window could not be created!");
         glfwTerminate();
         return false;
     }
@@ -99,11 +101,14 @@ bool initGame(WarContext *context)
     GLenum glewError = glewInit();
     if (glewError != GLEW_OK)
     {
-        printf("Error initializing GLEW! %s\n", glewGetErrorString(glewError));
+        fprintf(stderr, "Error initializing GLEW! %s\n", glewGetErrorString(glewError));
         glfwDestroyWindow(context->window);
         glfwTerminate();
         return false;
     }
+
+    // GLEW generates GL error because it calls glGetString(GL_EXTENSIONS), we'll consume it here.
+	glGetError();
 
     if (!initOpenGL(context))
     {
@@ -169,6 +174,12 @@ bool initGame(WarContext *context)
                 break;
             }
 
+            case DB_ENTRY_TYPE_TEXT:
+            {
+                loadText(context, &entry);
+                break;
+            }
+
             default:
             {
                 printf("DB entries of type %d aren't handled yet\n", entry.type);
@@ -216,7 +227,10 @@ void updateGame(WarContext *context)
     }
 
     map->pos[0] += map->scrollSpeed * map->dir[0] * context->deltaTime;
+    map->pos[0] = clamp(map->pos[0], -(MAP_WIDTH_PX - map->mapPanel.width), 0.0f);
+
     map->pos[1] += map->scrollSpeed * map->dir[1] * context->deltaTime;
+    map->pos[1] = clamp(map->pos[1], -(MAP_HEIGHT_PX - map->mapPanel.height), 0.0f);
 
     // WarScene *scene = context->currentScene;
     // for (s32 i = 0; i < MAX_ENTITIES_COUNT; ++i)
@@ -256,56 +270,9 @@ void renderScene(WarContext *context)
     // }
 }
 
-void renderMap(WarContext *context)
-{
-    WarMap *map = context->map;
-    if (!map) return;
-
-    WarResource *levelInfo = context->resources[map->levelInfoIndex];
-    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
-
-    mat4 model;
-    glm_mat4_identity(model);
-    glm_scale(model, (vec3){context->globalScale, context->globalScale, 1.0f});
-    glm_translate(model, map->pos);
-
-    // render terrain
-    {
-        WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
-        assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
-
-        renderSprite(context, &map->sprite, tileset->tilesetData.data, model);
-    }
-
-    // render roads
-    {
-        for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
-        {
-            WarEntity *entity = map->entities[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
-            {
-                renderEntity(context, entity, model);
-            }
-        }
-    }
-
-    // render units
-    {
-        for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
-        {
-            WarEntity *entity = map->entities[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
-            {
-                renderEntity(context, entity, model);
-            }
-        }
-    }
-}
-
 void renderGame(WarContext *context)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glUseProgram(context->shaderProgram);
 
     mat4 view;

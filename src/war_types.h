@@ -13,6 +13,8 @@
 #define MEGA_TILE_HEIGHT (MINI_TILE_HEIGHT * 2)
 #define MAP_WIDTH 64
 #define MAP_HEIGHT 64
+#define MAP_WIDTH_PX (MAP_WIDTH*MEGA_TILE_WIDTH)
+#define MAP_HEIGHT_PX (MAP_HEIGHT*MEGA_TILE_HEIGHT)
 
 #define TILESET_WIDTH_PX 512
 #define TILESET_HEIGHT_PX 256
@@ -304,6 +306,12 @@ typedef struct
             u16 palette1, palette2;
             u8 *data;
         } tilesData;
+
+        struct
+        {
+            u32 length;
+            char *text;
+        } textData;
     };
 } WarResource;
 
@@ -344,6 +352,15 @@ typedef struct
     u8 player;
 } WarRoadPiece;
 
+internal bool roadPieceEquals(WarRoadPiece p1, WarRoadPiece p2)
+{
+    return p1.type == p2.type && p1.player == p2.player &&
+           p1.tilex == p2.tilex && p1.tiley == p2.tiley;
+}
+
+shlDeclareList(WarRoadPieceList, WarRoadPiece)
+shlDefineList(WarRoadPieceList, WarRoadPiece, roadPieceEquals, (WarRoadPiece){0})
+
 typedef struct
 {
     bool enabled;
@@ -383,7 +400,7 @@ typedef struct
 typedef struct
 {
     bool enabled;
-    WarRoadPiece *pieces;
+    WarRoadPieceList pieces;
 } WarRoadComponent;
 
 typedef struct
@@ -423,6 +440,14 @@ typedef struct
 
     s32 scrollSpeed;
     vec2 pos, dir;
+    
+    Rect leftTopPanel;
+    Rect leftBottomPanel;
+    Rect topPanel;
+    Rect bottomPanel;
+    Rect rightPanel;
+    Rect mapPanel;
+    Rect minimapPanel;
 
     WarSprite sprite;
 
@@ -441,6 +466,8 @@ typedef struct
 
     f32 globalScale;
 
+    u32 originalWindowWidth;
+    u32 originalWindowHeight;
     u32 windowWidth;
     u32 windowHeight;
     char *windowTitle;

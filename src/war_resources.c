@@ -670,3 +670,15 @@ void loadTiles(WarContext *context, DatabaseEntry *entry)
     resource->tilesData.data = (u8*)xcalloc(rawResource.length, sizeof(u8));
     memcpy(resource->tilesData.data, rawResource.data, rawResource.length);
 }
+
+void loadText(WarContext *context, DatabaseEntry *entry)
+{
+    s32 index = entry->index;
+    WarRawResource rawResource = context->warFile->resources[index];
+
+    WarResource *resource = getOrCreateResource(context, index);
+    resource->type = WAR_RESOURCE_TYPE_TEXT;
+    resource->textData.length = rawResource.length;
+    resource->textData.text = (char *)xcalloc(resource->textData.length, sizeof(char));
+    memcpy(resource->textData.text, rawResource.data, resource->textData.length);
+}

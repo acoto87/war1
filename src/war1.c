@@ -19,7 +19,6 @@
 #include <GLFW/glfw3.h>
 
 #include "cglm.h"
-#include "stretchy_buffer.h"
 
 #if _DEBUG
     #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -30,11 +29,13 @@
     #include "stb_image_resize.h"
 #endif
 
+#include "list.h"
+
 #include "utils.h"
 #include "io.h"
 #include "glutils.h"
-#include "war_types.h"
 #include "war_math.h"
+#include "war_types.h"
 #include "war_database.h"
 #include "war_file.c"
 #include "war_sprites.c"
