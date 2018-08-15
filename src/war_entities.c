@@ -80,9 +80,9 @@ void addSpriteComponentFromResource(WarContext *context, WarEntity *entity, s32 
     // create IBO
     GLuint indices[] = { 0, 1, 2, 0, 2, 3 };
 
-    WarSprite sprite = createSprite(context, 1, w, h, vertices, 4, indices, 6, -1);
-    addSpriteComponent(context, entity, sprite);
-    entity->sprite.resourceIndex = resourceIndex;
+    // WarSprite sprite = createSprite(context, 1, w, h, vertices, 4, indices, 6, -1);
+    // addSpriteComponent(context, entity, sprite);
+    // entity->sprite.resourceIndex = resourceIndex;
 }
 
 void addUnitComponent(WarContext *context, WarEntity *entity, WarUnitType type, s32 x, s32 y, u8 player, u16 value)
@@ -195,8 +195,8 @@ void addRoadComponent(WarContext *context, WarEntity *entity)
     entity->road.enabled = true;
 
     s32 textureIndex = context->map->sprite.textureIndex;
-    WarSprite sprite = createSprite(context, count, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, vertices, count * 4, indices, count * 6, textureIndex);
-    addSpriteComponent(context, entity, sprite);
+    // WarSprite sprite = createSprite(context, count, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, vertices, count * 4, indices, count * 6, textureIndex);
+    // addSpriteComponent(context, entity, sprite);
 
     free(vertices);
     free(indices);
@@ -251,7 +251,7 @@ void renderImage(WarContext *context, WarEntity *entity, mat4 baseTransform)
             glUniformMatrix4fv(context->modelLocation, 1, GL_FALSE, (f32*)model);
         }
 
-        renderSprite(context, &sprite.sprite, pixels, model);
+        // renderSprite(context, &sprite.sprite, pixels, model);
     }
 }
 
@@ -272,7 +272,7 @@ void renderRoad(WarContext *context, WarEntity *entity, mat4 baseTransform)
             glUniformMatrix4fv(context->modelLocation, 1, GL_FALSE, (f32*)model);
         }
 
-        renderSprite(context, &sprite.sprite, null, model);
+        // renderSprite(context, &sprite.sprite, null, model);
     }
 }
 
@@ -332,7 +332,7 @@ void renderUnit(WarContext *context, WarEntity *entity, mat4 baseTransform)
             glUniformMatrix4fv(context->modelLocation, 1, GL_FALSE, (f32*)model);
         }
 
-        renderSprite(context, &sprite.sprite, pixels, model);
+        // renderSprite(context, &sprite.sprite, pixels, model);
     }
 }
 

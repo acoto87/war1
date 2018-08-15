@@ -31,6 +31,8 @@ typedef size_t size32;
 
 #define DEFAULT_BUFFER_SIZE 1024
 
+#define NOT_IMPLEMENTED fprintf(stderr, "Not implemented at %s (%d)", __FILE__, __LINE__)
+
 #define readu8(arr, index) (arr[index])
 #define reads16(arr, index) (*(s16*)(rawResource.data + (index)))
 #define readu16(arr, index) (*(u16*)(rawResource.data + (index)))
@@ -88,29 +90,3 @@ void* xrealloc(void *ptr, size32 size, char *file, s32 line)
 #define xmalloc(size) xmalloc(size, __FILE__, __LINE__)
 #define xcalloc(count, size) xcalloc(count, size, __FILE__, __LINE__)
 #define xrealloc(ptr, size) xrealloc(ptr, size, __FILE__, __LINE__)
-
-/* time stuff */
-// global s64 globalPerfCountFrequency;
-// global LARGE_INTEGER initialCounter;
-
-// inline LARGE_INTEGER getWallClock(void)
-// {
-//     LARGE_INTEGER result;
-//     QueryPerformanceCounter(&result);
-//     return result;
-// }
-
-// inline f32 getSecondsElapsed(LARGE_INTEGER start, LARGE_INTEGER end)
-// {
-//     f32 result = ((f32)(end.QuadPart - start.QuadPart) / (f32)globalPerfCountFrequency);
-//     return result;
-// }
-
-// inline void initWallClock()
-// {
-//     LARGE_INTEGER perfCountFrequencyResult;
-//     QueryPerformanceFrequency(&perfCountFrequencyResult);
-
-//     globalPerfCountFrequency = perfCountFrequencyResult.QuadPart;
-//     initialCounter = getWallClock();
-// }

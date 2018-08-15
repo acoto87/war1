@@ -67,7 +67,7 @@ internal bool initOpenGL(WarContext *context)
         printf("tex is not a valid glsl program variable!\n");
     }
 
-    glClearColor(0.5f, 0.0f, 0.0f, 1.0);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth(1.0f);
 
     return true;
@@ -110,86 +110,86 @@ bool initGame(WarContext *context)
     // GLEW generates GL error because it calls glGetString(GL_EXTENSIONS), we'll consume it here.
 	glGetError();
 
-    if (!initOpenGL(context))
-    {
-        printf("Unable to initialize OpenGL!\n");
-        glfwDestroyWindow(context->window);
-        glfwTerminate();
-        return false;
-    }
+    // if (!initOpenGL(context))
+    // {
+    //     printf("Unable to initialize OpenGL!\n");
+    //     glfwDestroyWindow(context->window);
+    //     glfwTerminate();
+    //     return false;
+    // }
 
-    context->warFilePath = ".\\Build\\DATA.WAR";
-    context->warFile = loadWarFile(context->warFilePath);
+    // context->warFilePath = ".\\Build\\DATA.WAR";
+    // context->warFile = loadWarFile(context->warFilePath);
 
-    for (int i = 0; i < arrayLength(assets); ++i)
-    {
-        DatabaseEntry entry = assets[i];
-        switch (entry.type)
-        {
-            case DB_ENTRY_TYPE_PALETTE:
-            {
-                loadPaletteResource(context, &entry);
-                break;
-            }
+    // for (int i = 0; i < arrayLength(assets); ++i)
+    // {
+    //     DatabaseEntry entry = assets[i];
+    //     switch (entry.type)
+    //     {
+    //         case DB_ENTRY_TYPE_PALETTE:
+    //         {
+    //             loadPaletteResource(context, &entry);
+    //             break;
+    //         }
 
-            case DB_ENTRY_TYPE_IMAGE:
-            {
-                loadImageResource(context, &entry);
-                break;
-            }
+    //         case DB_ENTRY_TYPE_IMAGE:
+    //         {
+    //             loadImageResource(context, &entry);
+    //             break;
+    //         }
 
-            case DB_ENTRY_TYPE_SPRITE:
-            {
-                loadSpriteResource(context, &entry);
-                break;
-            }
+    //         case DB_ENTRY_TYPE_SPRITE:
+    //         {
+    //             loadSpriteResource(context, &entry);
+    //             break;
+    //         }
 
-            case DB_ENTRY_TYPE_LEVEL_INFO:
-            {
-                loadLevelInfo(context, &entry);
-                break;
-            }
+    //         case DB_ENTRY_TYPE_LEVEL_INFO:
+    //         {
+    //             loadLevelInfo(context, &entry);
+    //             break;
+    //         }
 
-            case DB_ENTRY_TYPE_LEVEL_VISUAL:
-            {
-                loadLevelVisual(context, &entry);
-                break;
-            }
+    //         case DB_ENTRY_TYPE_LEVEL_VISUAL:
+    //         {
+    //             loadLevelVisual(context, &entry);
+    //             break;
+    //         }
 
-            case DB_ENTRY_TYPE_LEVEL_PASSABLE:
-            {
-                loadLevelPassable(context, &entry);
-                break;
-            }
+    //         case DB_ENTRY_TYPE_LEVEL_PASSABLE:
+    //         {
+    //             loadLevelPassable(context, &entry);
+    //             break;
+    //         }
 
-            case DB_ENTRY_TYPE_TILESET:
-            {
-                loadTileset(context, &entry);
-                break;
-            }
+    //         case DB_ENTRY_TYPE_TILESET:
+    //         {
+    //             loadTileset(context, &entry);
+    //             break;
+    //         }
 
-            case DB_ENTRY_TYPE_TILES:
-            {
-                loadTiles(context, &entry);
-                break;
-            }
+    //         case DB_ENTRY_TYPE_TILES:
+    //         {
+    //             loadTiles(context, &entry);
+    //             break;
+    //         }
 
-            case DB_ENTRY_TYPE_TEXT:
-            {
-                loadText(context, &entry);
-                break;
-            }
+    //         case DB_ENTRY_TYPE_TEXT:
+    //         {
+    //             loadText(context, &entry);
+    //             break;
+    //         }
 
-            default:
-            {
-                printf("DB entries of type %d aren't handled yet\n", entry.type);
-                break;
-            }
-        }
-    }
+    //         default:
+    //         {
+    //             printf("DB entries of type %d aren't handled yet\n", entry.type);
+    //             break;
+    //         }
+    //     }
+    // }
 
-    //createEmptyScene(context);
-    createMap(context, 117);
+    // //createEmptyScene(context);
+    // createMap(context, 117);
     
     context->time = (f32)glfwGetTime();
     return true;

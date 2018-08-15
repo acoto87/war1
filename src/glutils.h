@@ -1,23 +1,32 @@
 GLenum glCheckError_(const char *file, int line)
 {
-    char *error;
-
-    GLenum errorCode;
-    while ((errorCode = glGetError()) != GL_NO_ERROR)
+    GLenum errorCode = glGetError();
+    if (errorCode != GL_NO_ERROR)
     {
-        switch (errorCode)
+        while (errorCode != GL_NO_ERROR)
         {
-            case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
-            case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
-            case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
-            case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
-            case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
-            case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
-            case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
-            default: error = ""; break;
+            char *error;
+            switch (errorCode)
+            {
+                case GL_INVALID_ENUM:                  error = "INVALID_ENUM";                  break;
+                case GL_INVALID_VALUE:                 error = "INVALID_VALUE";                 break;
+                case GL_INVALID_OPERATION:             error = "INVALID_OPERATION";             break;
+                case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW";                break;
+                case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW";               break;
+                case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY";                 break;
+                case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+                default:                               error = "UNKOWN ERROR";                  break;
+            }
+            fprintf(stderr, "%s in file %s (%d)\n", error, file, line);
+
+            errorCode = glGetError();
         }
-        printf("%s in file %s (%d)\n", error, file, line);
     }
+    else
+    {
+        printf("NO ERROR\n");
+    }
+
     return errorCode;
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
@@ -91,7 +100,7 @@ GLuint loadShaderFromFile(char *shaderFilePath, GLenum shaderType)
     GLuint shader = glCreateShader(shaderType);
     if (shader <= 0)
     {
-        glCheckError();
+        // glCheckError();
         printf("Unable to create new shader of type: %d\n", shaderType);
         return 0;
     }
@@ -108,10 +117,10 @@ GLuint loadShaderFromFile(char *shaderFilePath, GLenum shaderType)
     const uchar *shaderSource = shaderFile->contents;
     
     glShaderSource(shader, 1, &shaderSource, null);
-    glCheckError();
+    // glCheckError();
 
     glCompileShader(shader);
-    glCheckError();
+    // glCheckError();
 
     if (!checkShaderCompilationStatus(shader))
     {

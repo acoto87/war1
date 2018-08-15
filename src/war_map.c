@@ -201,15 +201,15 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             }
         }
 
-        map->sprite = createSprite(context, 
-            MAP_WIDTH * MAP_HEIGHT, 
-            TILESET_WIDTH_PX, 
-            TILESET_HEIGHT_PX, 
-            vertices, 
-            MAP_WIDTH * MAP_HEIGHT * 4, 
-            indices, 
-            MAP_WIDTH * MAP_HEIGHT * 6,
-            -1);
+        // map->sprite = createSprite(context, 
+        //     MAP_WIDTH * MAP_HEIGHT, 
+        //     TILESET_WIDTH_PX, 
+        //     TILESET_HEIGHT_PX, 
+        //     vertices, 
+        //     MAP_WIDTH * MAP_HEIGHT * 4, 
+        //     indices, 
+        //     MAP_WIDTH * MAP_HEIGHT * 6,
+        //     -1);
     }
 
     s32 entitiesCount = 0;
@@ -315,7 +315,7 @@ void renderMap(WarContext *context)
             WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
             assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
-            renderSprite(context, &map->sprite, tileset->tilesetData.data, mapTransform);
+            // renderSprite(context, &map->sprite, tileset->tilesetData.data, mapTransform);
         }
 
         // render roads

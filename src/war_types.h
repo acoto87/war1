@@ -473,32 +473,15 @@ typedef struct
     char *windowTitle;
     GLFWwindow *window;
 
-    GLuint shaderProgram;
-    GLuint vertexShader;
-    GLuint fragmentShader;
-    GLint positionLocation;
-    GLint texCoordLocation;
-    GLint modelLocation;
-    GLint viewLocation;
-    GLint projLocation;
-    GLint texLocation;
-
     char *warFilePath;
     WarFile *warFile;
 
     u32 resourcesCount;
     WarResource *resources[MAX_RESOURCES_COUNT];
 
-    u32 texturesCount;
-    GLuint textures[MAX_TEXTURES_COUNT];
+    NVGcontext *gfx;
 
     u32 staticEntityId;
     WarScene *currentScene;
     WarMap *map;
 } WarContext;
-
-typedef struct
-{
-    vec2 position;
-    vec2 texCoords;
-} WarVertex;
