@@ -134,11 +134,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     map->tilesetType = MAP_TILESET_FOREST;
     map->scrollSpeed = 200;
     
-    map->leftTopPanel = (Rect){0, 128, 72, 72};
-    map->leftBottomPanel = (Rect){0, 0, 72, 128};
+    map->leftTopPanel = (Rect){0, 0, 72, 72};
+    map->leftBottomPanel = (Rect){0, 72, 72, 128};
     map->rightPanel = (Rect){312, 0, 8, 200};
-    map->topPanel = (Rect){72, 188, 240, 12};
-    map->bottomPanel = (Rect){72, 0, 240, 12};
+    map->topPanel = (Rect){72, 0, 240, 12};
+    map->bottomPanel = (Rect){72, 188, 240, 12};
     map->mapPanel = (Rect){72, 12, 240, 176};
     map->minimapPanel = (Rect){0, 0, 128, 128};
 
@@ -149,67 +149,10 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the map sprite
     {
-        WarResource *levelVisual = context->resources[levelInfo->levelInfo.visualIndex];
-        assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-        
-        WarVertex vertices[MAP_WIDTH * MAP_HEIGHT * 4];
-        GLuint indices[MAP_WIDTH * MAP_HEIGHT * 6];
+        WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+        assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
-        for(s32 y = 0; y < MAP_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_WIDTH; x++)
-            {
-                s32 index = y * MAP_WIDTH + x;
-                u16 tileIndex = levelVisual->levelVisual.data[index];
-
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                // vertex 00
-                vertices[index * 4 + 0].position[0] = (f32)(x + 0) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 0].position[1] = (f32)(MAP_HEIGHT - 1 - y + 0) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 0].texCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 0].texCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
-
-                // vertex 10
-                vertices[index * 4 + 1].position[0] = (f32)(x + 1) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 1].position[1] = (f32)(MAP_HEIGHT - 1 - y + 0) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 1].texCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 1].texCoords[1] = (f32)(tilePixelY + MEGA_TILE_HEIGHT) / TILESET_HEIGHT_PX;
-
-                // vertex 11
-                vertices[index * 4 + 2].position[0] = (f32)(x + 1) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 2].position[1] = (f32)(MAP_HEIGHT - 1 - y + 1) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 2].texCoords[0] = (f32)(tilePixelX + MEGA_TILE_WIDTH) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 2].texCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
-
-                // vertex 01
-                vertices[index * 4 + 3].position[0] = (f32)(x + 0) * MEGA_TILE_WIDTH;
-                vertices[index * 4 + 3].position[1] = (f32)(MAP_HEIGHT - 1 - y + 1) * MEGA_TILE_HEIGHT;
-                vertices[index * 4 + 3].texCoords[0] = (f32)(tilePixelX) / TILESET_WIDTH_PX;
-                vertices[index * 4 + 3].texCoords[1] = (f32)(tilePixelY) / TILESET_HEIGHT_PX;
-
-                // indices for 1st triangle
-                indices[index * 6 + 0] = index * 4 + 0;
-                indices[index * 6 + 1] = index * 4 + 1;
-                indices[index * 6 + 2] = index * 4 + 2;
-
-                // indices for 2nd triangle
-                indices[index * 6 + 3] = index * 4 + 0;
-                indices[index * 6 + 4] = index * 4 + 2;
-                indices[index * 6 + 5] = index * 4 + 3;
-            }
-        }
-
-        // map->sprite = createSprite(context, 
-        //     MAP_WIDTH * MAP_HEIGHT, 
-        //     TILESET_WIDTH_PX, 
-        //     TILESET_HEIGHT_PX, 
-        //     vertices, 
-        //     MAP_WIDTH * MAP_HEIGHT * 4, 
-        //     indices, 
-        //     MAP_WIDTH * MAP_HEIGHT * 6,
-        //     -1);
+        map->sprite = createSprite(context, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, tileset->tilesetData.data);
     }
 
     s32 entitiesCount = 0;
@@ -250,16 +193,16 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     {
         WarEntity *entity;
         
-        // left bottom panel
-        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
-        addTransformComponent(context, entity, (vec2){map->leftBottomPanel.x, map->leftBottomPanel.y});
-        addSpriteComponentFromResource(context, entity, 226);
-        map->entities[entitiesCount++] = entity;
-
         // left top panel (minimap)
         entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
         addTransformComponent(context, entity, (vec2){map->leftTopPanel.x, map->leftTopPanel.y});
         addSpriteComponentFromResource(context, entity, 224);
+        map->entities[entitiesCount++] = entity;
+
+        // left bottom panel
+        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+        addTransformComponent(context, entity, (vec2){map->leftBottomPanel.x, map->leftBottomPanel.y});
+        addSpriteComponentFromResource(context, entity, 226);
         map->entities[entitiesCount++] = entity;
         
         // top panel
@@ -295,27 +238,51 @@ void renderMap(WarContext *context)
     WarMap *map = context->map;
     if (!map) return;
 
+    NVGcontext *gfx = context->gfx;
+
     WarResource *levelInfo = context->resources[map->levelInfoIndex];
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    mat4 baseTransform;
-    glm_mat4_identity(baseTransform);
-    glm_scale(baseTransform, (vec3){context->globalScale, context->globalScale, 1.0f});
+    nvgScale(gfx, context->globalScale, context->globalScale);
 
     // render map
     {
-        mat4 mapTransform;
-        glm_mat4_identity(mapTransform);
-        glm_mat4_mul(baseTransform, mapTransform, mapTransform);
-        glm_translate(mapTransform, (vec4){map->mapPanel.x, map->mapPanel.y, 0.0f, 0.0f});
-        glm_translate(mapTransform, (vec4){map->pos[0], map->pos[1], 0.0f, 0.0f});
+        nvgSave(gfx);
+
+        nvgTranslate(gfx, map->mapPanel.x, map->mapPanel.y);
+        nvgTranslate(gfx, map->pos[0], map->pos[1]);
         
         // render terrain
         {
+            WarResource *levelVisual = context->resources[levelInfo->levelInfo.visualIndex];
+            assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+
             WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
             assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
+            
+            for(s32 y = 0; y < MAP_HEIGHT; y++)
+            {
+                for(s32 x = 0; x < MAP_WIDTH; x++)
+                {
+                    s32 index = y * MAP_WIDTH + x;
+                    u16 tileIndex = levelVisual->levelVisual.data[index];
 
-            // renderSprite(context, &map->sprite, tileset->tilesetData.data, mapTransform);
+                    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                    nvgSave(gfx);
+                    nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                    renderSubSprite(context, &map->sprite, null, tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+
+                    nvgBeginPath(gfx);
+                    nvgRect(gfx, 0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgStrokeWidth(gfx, 0.5f);
+                    nvgStrokeColor(gfx, nvgRGBA(255, 255, 255, 255));
+                    nvgStroke(gfx);
+
+                    nvgRestore(gfx);
+                }
+            }
         }
 
         // render roads
@@ -325,7 +292,7 @@ void renderMap(WarContext *context)
                 WarEntity *entity = map->entities[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
                 {
-                    renderEntity(context, entity, mapTransform);
+                    renderEntity(context, entity);
                 }
             }
         }
@@ -337,25 +304,46 @@ void renderMap(WarContext *context)
                 WarEntity *entity = map->entities[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
                 {
-                    renderEntity(context, entity, mapTransform);
+                    renderEntity(context, entity);
                 }
             }
         }
+
+        // render grid (debug)
+        {
+            for(s32 y = 0; y < MAP_HEIGHT; y++)
+            {
+                for(s32 x = 0; x < MAP_WIDTH; x++)
+                {
+                    nvgSave(gfx);
+
+                    nvgBeginPath(gfx);
+                    nvgRect(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgStrokeWidth(gfx, 0.5f);
+                    nvgStrokeColor(gfx, nvgRGBA(255, 255, 255, 255));
+                    nvgStroke(gfx);
+
+                    nvgRestore(gfx);
+                }
+            }
+        }
+
+        nvgRestore(gfx);
     }
 
     // render ui
     {
-        mat4 uiTransform;
-        glm_mat4_identity(uiTransform);
-        glm_mat4_mul(baseTransform, uiTransform, uiTransform);
+        nvgSave(gfx);
 
         for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
         {
             WarEntity *entity = map->entities[i];
             if (entity && entity->type == WAR_ENTITY_TYPE_IMAGE)
             {
-                renderEntity(context, entity, uiTransform);
+                renderEntity(context, entity);
             }
         }
+
+        nvgRestore(gfx);
     }
 }

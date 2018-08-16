@@ -1,78 +1,3 @@
-internal bool initOpenGL(WarContext *context)
-{
-    context->vertexShader = loadShaderFromFile(".\\src\\basic.vert", GL_VERTEX_SHADER);
-    if (!context->vertexShader)
-    {
-        printf("Unable to load the vertex shader!\n");
-        return false;
-    }
-
-    context->fragmentShader = loadShaderFromFile(".\\src\\basic.frag", GL_FRAGMENT_SHADER);
-    if (!context->fragmentShader)
-    {
-        printf("Unable to load the fragment shader!\n");
-        return false;
-    }
-
-    context->shaderProgram = glCreateProgram();
-
-    // Since a fragment shader is allowed to write to multiple buffers, you need to explicitly specify which output is written to which buffer. 
-    // This needs to happen before linking the program. However, since this is 0 by default and there's only one output right now, 
-    // the following line of code is not really necessary
-    glBindFragDataLocation(context->shaderProgram, 0, "fragColor");
-
-    glAttachShader(context->shaderProgram, context->vertexShader);
-    glAttachShader(context->shaderProgram, context->fragmentShader);
-    glLinkProgram(context->shaderProgram);
-    if (!checkProgramLinkStatus(context->shaderProgram))
-    {
-        printProgramLog(context->shaderProgram);
-        printf("Error linking program %d!\n", context->shaderProgram);
-        return false;   
-    }
-
-    context->positionLocation = glGetAttribLocation(context->shaderProgram, "position");
-    if (context->positionLocation == -1)
-    {
-        printf("position is not a valid glsl program variable!\n");
-    }
-
-    context->texCoordLocation = glGetAttribLocation(context->shaderProgram, "texCoord");
-    if (context->texCoordLocation == -1)
-    {
-        printf("texCoord is not a valid glsl program variable!\n");
-    }
-
-    context->modelLocation = glGetUniformLocation(context->shaderProgram, "model");
-    if (context->modelLocation == -1)
-    {
-        printf("model is not a valid glsl program variable!\n");
-    }
-
-    context->viewLocation = glGetUniformLocation(context->shaderProgram, "view");
-    if (context->viewLocation == -1)
-    {
-        printf("view is not a valid glsl program variable!\n");
-    }
-
-    context->projLocation = glGetUniformLocation(context->shaderProgram, "proj");
-    if (context->projLocation == -1)
-    {
-        printf("proj is not a valid glsl program variable!\n");
-    }
-
-    context->texLocation = glGetUniformLocation(context->shaderProgram, "tex");
-    if (context->texLocation == -1)
-    {
-        printf("tex is not a valid glsl program variable!\n");
-    }
-
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-
-    return true;
-}
-
 bool initGame(WarContext *context)
 {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -81,11 +6,11 @@ bool initGame(WarContext *context)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    context->globalScale = 2;
+    context->globalScale = 4;
     context->originalWindowWidth = 320;
     context->originalWindowHeight = 200;
-    context->windowWidth = context->originalWindowWidth * context->globalScale;
-    context->windowHeight = context->originalWindowHeight * context->globalScale;
+    context->windowWidth = (u32)(context->originalWindowWidth * context->globalScale);
+    context->windowHeight = (u32)(context->originalWindowHeight * context->globalScale);
     context->windowTitle = "War 1";
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, null, null);
     if (!context->window)
@@ -94,6 +19,10 @@ bool initGame(WarContext *context)
         glfwTerminate();
         return false;
     }
+
+    glfwGetWindowSize(context->window, &context->windowWidth, &context->windowHeight);
+    glfwGetFramebufferSize(context->window, &context->framebufferWidth, &context->framebufferHeight);
+    context->devicePixelRatio = (f32)context->framebufferWidth / (f32)context->windowWidth;
 
     glfwMakeContextCurrent(context->window);
 
@@ -110,86 +39,90 @@ bool initGame(WarContext *context)
     // GLEW generates GL error because it calls glGetString(GL_EXTENSIONS), we'll consume it here.
 	glGetError();
 
-    // if (!initOpenGL(context))
-    // {
-    //     printf("Unable to initialize OpenGL!\n");
-    //     glfwDestroyWindow(context->window);
-    //     glfwTerminate();
-    //     return false;
-    // }
+    context->gfx = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_DEBUG);
+    if (!context->gfx) 
+    {
+		fprintf(stderr, "Could not init nanovg.\n");
+        glfwDestroyWindow(context->window);
+        glfwTerminate();
+		return -1;
+	}
 
-    // context->warFilePath = ".\\Build\\DATA.WAR";
-    // context->warFile = loadWarFile(context->warFilePath);
+    glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    // for (int i = 0; i < arrayLength(assets); ++i)
-    // {
-    //     DatabaseEntry entry = assets[i];
-    //     switch (entry.type)
-    //     {
-    //         case DB_ENTRY_TYPE_PALETTE:
-    //         {
-    //             loadPaletteResource(context, &entry);
-    //             break;
-    //         }
+    context->warFilePath = ".\\Build\\DATA.WAR";
+    context->warFile = loadWarFile(context->warFilePath);
 
-    //         case DB_ENTRY_TYPE_IMAGE:
-    //         {
-    //             loadImageResource(context, &entry);
-    //             break;
-    //         }
+    for (int i = 0; i < arrayLength(assets); ++i)
+    {
+        DatabaseEntry entry = assets[i];
+        switch (entry.type)
+        {
+            case DB_ENTRY_TYPE_PALETTE:
+            {
+                loadPaletteResource(context, &entry);
+                break;
+            }
 
-    //         case DB_ENTRY_TYPE_SPRITE:
-    //         {
-    //             loadSpriteResource(context, &entry);
-    //             break;
-    //         }
+            case DB_ENTRY_TYPE_IMAGE:
+            {
+                loadImageResource(context, &entry);
+                break;
+            }
 
-    //         case DB_ENTRY_TYPE_LEVEL_INFO:
-    //         {
-    //             loadLevelInfo(context, &entry);
-    //             break;
-    //         }
+            case DB_ENTRY_TYPE_SPRITE:
+            {
+                loadSpriteResource(context, &entry);
+                break;
+            }
 
-    //         case DB_ENTRY_TYPE_LEVEL_VISUAL:
-    //         {
-    //             loadLevelVisual(context, &entry);
-    //             break;
-    //         }
+            case DB_ENTRY_TYPE_LEVEL_INFO:
+            {
+                loadLevelInfo(context, &entry);
+                break;
+            }
 
-    //         case DB_ENTRY_TYPE_LEVEL_PASSABLE:
-    //         {
-    //             loadLevelPassable(context, &entry);
-    //             break;
-    //         }
+            case DB_ENTRY_TYPE_LEVEL_VISUAL:
+            {
+                loadLevelVisual(context, &entry);
+                break;
+            }
 
-    //         case DB_ENTRY_TYPE_TILESET:
-    //         {
-    //             loadTileset(context, &entry);
-    //             break;
-    //         }
+            case DB_ENTRY_TYPE_LEVEL_PASSABLE:
+            {
+                loadLevelPassable(context, &entry);
+                break;
+            }
 
-    //         case DB_ENTRY_TYPE_TILES:
-    //         {
-    //             loadTiles(context, &entry);
-    //             break;
-    //         }
+            case DB_ENTRY_TYPE_TILESET:
+            {
+                loadTileset(context, &entry);
+                break;
+            }
 
-    //         case DB_ENTRY_TYPE_TEXT:
-    //         {
-    //             loadText(context, &entry);
-    //             break;
-    //         }
+            case DB_ENTRY_TYPE_TILES:
+            {
+                loadTiles(context, &entry);
+                break;
+            }
 
-    //         default:
-    //         {
-    //             printf("DB entries of type %d aren't handled yet\n", entry.type);
-    //             break;
-    //         }
-    //     }
-    // }
+            case DB_ENTRY_TYPE_TEXT:
+            {
+                loadText(context, &entry);
+                break;
+            }
 
-    // //createEmptyScene(context);
-    // createMap(context, 117);
+            default:
+            {
+                printf("DB entries of type %d aren't handled yet\n", entry.type);
+                break;
+            }
+        }
+    }
+
+    //createEmptyScene(context);
+    createMap(context, 117);
     
     context->time = (f32)glfwGetTime();
     return true;
@@ -215,11 +148,11 @@ void updateGame(WarContext *context)
 
     if (glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        map->dir[1] = 1;
+        map->dir[1] = -1;
     }
     else if (glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS)
     {
-        map->dir[1] = -1;
+        map->dir[1] = 1;
     }
     else
     {
@@ -272,33 +205,17 @@ void renderScene(WarContext *context)
 
 void renderGame(WarContext *context)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(context->shaderProgram);
+    NVGcontext *gfx = context->gfx;
+    
+    glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    mat4 view;
-    glm_mat4_identity(view);
-    glUniformMatrix4fv(context->viewLocation, 1, GL_FALSE, (f32*)view);
-
-    mat4 proj;
-    glm_mat4_identity(proj);
-
-    // this is a projection matrix to allow specify image dimensions in screen coordinates
-    //
-    // { 2/w,   0,  0, -1 }
-    // {   0, 2/h,  0, -1 }
-    // {   0,   0,  0,  0 }
-    // {   0,   0,  0,  1 }
-    //
-    glm_ortho(0.0f, (f32)context->windowWidth, 0.0f, (f32)context->windowHeight, -1.0f, 1.0f, proj);
-    glUniformMatrix4fv(context->projLocation, 1, GL_FALSE, (f32*)proj);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    nvgBeginFrame(gfx, (f32)context->windowWidth, (f32)context->windowHeight, context->devicePixelRatio);
 
     renderScene(context);
     renderMap(context);
 
-    glUseProgram(0);
+    nvgEndFrame(gfx);
 }
 
 void presentGame(WarContext *context)

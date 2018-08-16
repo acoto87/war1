@@ -135,28 +135,37 @@ const s32 roadsData[] =
     WAR_ROAD_PIECE_TOP_RIGHT,           70,                          71        
 };
 
-s32 createTexture(WarContext *context)
+WarSprite createSprite(WarContext *context, s32 width, s32 height, u8 data[])
 {
-    if (context->texturesCount >= MAX_TEXTURES_COUNT)
+    WarSprite sprite = (WarSprite){0};
+
+    sprite.width = width;
+    sprite.height = height;
+    sprite.imageId = nvgCreateImageRGBA(context->gfx, width, height, NVG_IMAGE_NEAREST, data);
+
+    return sprite;
+}
+
+void renderSubSprite(WarContext *context, WarSprite *sprite, u8 *updateData,
+                     s32 sx, s32 sy, s32 sw, s32 sh)
+{
+    NVGcontext *gfx = context->gfx;
+
+    if (updateData)
     {
-        printf("Max textures count reached!\n");
-        return -1;
+        nvgUpdateImage(gfx, sprite->imageId, updateData);
     }
 
-    s32 textureIndex = context->texturesCount;
+    NVGpaint pattern = nvgImagePattern(gfx, -sx, -sy, sprite->width, sprite->height, 0, sprite->imageId, 1.0f);
+    nvgBeginPath(gfx);
+    nvgRect(gfx, 0, 0, sw, sh);
+    nvgFillPaint(gfx, pattern);
+    nvgFill(gfx);
+}
 
-    GLuint tex;
-    glGenTextures(1, &tex);
-
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    context->textures[textureIndex] = tex;
-    context->texturesCount++;
-    return textureIndex;
+void renderSprite(WarContext *context, WarSprite *sprite, u8 *updateData)
+{
+    renderSubSprite(context, sprite, updateData, 0, 0, sprite->width, sprite->height);
 }
 
 void getPalette(WarContext *context, s32 palette1Index, s32 palette2Index, u8 *paletteData)

@@ -180,10 +180,8 @@ typedef enum
 
 typedef struct
 {
-    s32 textureIndex;
     u32 width, height;
-    s32 count;
-    GLuint vao, vbo, ibo;
+    s32 imageId;
 } WarSprite;
 
 typedef struct 
@@ -470,6 +468,9 @@ typedef struct
     u32 originalWindowHeight;
     u32 windowWidth;
     u32 windowHeight;
+    u32 framebufferWidth;
+    u32 framebufferHeight;
+    f32 devicePixelRatio;
     char *windowTitle;
     GLFWwindow *window;
 
