@@ -75,6 +75,7 @@ void addSpriteComponentFromResource(WarContext *context, WarEntity *entity, s32 
 
     WarSprite sprite = createSprite(context, w, h, pixels);
     addSpriteComponent(context, entity, sprite);
+    entity->sprite.resourceIndex = resourceIndex;
 }
 
 void addUnitComponent(WarContext *context, WarEntity *entity, WarUnitType type, s32 x, s32 y, u8 player, u16 value)
@@ -110,13 +111,11 @@ void addAnimationComponent(WarContext *context, WarEntity *entity, f32 duration,
     entity->anim.offset = 0;
 }
 
-void addRoadComponent(WarContext *context, WarEntity *entity)
+void addRoadComponent(WarContext *context, WarEntity *entity, WarRoadPieceList pieces)
 {
-    WarRoadPieceList *pieces = &entity->road.pieces;
-    s32 count = pieces->count;
-
     entity->road = (WarRoadComponent){0};
     entity->road.enabled = true;
+    entity->road.pieces = pieces;
 
     addSpriteComponent(context, entity, context->map->sprite);
 }
@@ -160,6 +159,7 @@ void renderRoad(WarContext *context, WarEntity *entity)
 
     WarTransformComponent transform = entity->transform;
     WarSpriteComponent sprite = entity->sprite;
+    WarRoadComponent road = entity->road;
 
     if (sprite.enabled)
     {
@@ -168,7 +168,47 @@ void renderRoad(WarContext *context, WarEntity *entity)
             nvgTranslate(gfx, transform.position[0], transform.position[1]);
         }
 
-        renderSubSprite(context, &sprite.sprite, null, 0, 0, 16, 16);
+        if (road.enabled)
+        {
+            WarRoadPieceList *pieces = &road.pieces;
+
+            for(s32 i = 0; i < road.pieces.count; i++)
+            {
+                s32 tileIndex = 0;
+
+                s32 x = pieces->items[i].tilex;
+                s32 y = pieces->items[i].tiley;
+
+                switch (context->map->tilesetType)
+                {
+                    case MAP_TILESET_FOREST:
+                    {
+                        tileIndex = roadsData[pieces->items[i].type * 3 + 1];
+                        break;
+                    }
+                
+                    case MAP_TILESET_SWAMP:
+                    {
+                        tileIndex = roadsData[pieces->items[i].type * 3 + 2];
+                        break;
+                    }
+        
+                    default:
+                    {
+                        fprintf(stderr, "Unkown tileset for a road: %d\n", context->map->tilesetType);
+                        return;
+                    }
+                }
+
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                nvgSave(gfx);
+                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                renderSubSprite(context, &sprite.sprite, null, tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRestore(gfx);
+            }
+        }
     }
 }
 
@@ -202,12 +242,13 @@ void renderUnit(WarContext *context, WarEntity *entity)
             nvgTranslate(gfx, transform.position[0], transform.position[1]);
         }
 
-        nvgBeginPath(gfx);
-        nvgRect(gfx, 0, 0, unit.sizex * MEGA_TILE_WIDTH, unit.sizey * MEGA_TILE_HEIGHT);
-        nvgFillColor(gfx, nvgRGBA(120, 120, 120, 120));
-        nvgFill(gfx);
+        // DEBUG
+        // nvgBeginPath(gfx);
+        // nvgRect(gfx, 0, 0, unit.sizex * MEGA_TILE_WIDTH, unit.sizey * MEGA_TILE_HEIGHT);
+        // nvgFillColor(gfx, nvgRGBA(120, 120, 120, 120));
+        // nvgFill(gfx);
 
-        renderSubSprite(context, &sprite.sprite, pixels, 0, 0, unit.sizex * MEGA_TILE_WIDTH, unit.sizey * MEGA_TILE_HEIGHT);
+        //renderSubSprite(context, &sprite.sprite, pixels, 0, 0, unit.sizex * MEGA_TILE_WIDTH, unit.sizey * MEGA_TILE_HEIGHT);
         renderSprite(context, &sprite.sprite, pixels);
     }
 }

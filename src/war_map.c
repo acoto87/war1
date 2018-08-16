@@ -159,19 +159,22 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the starting roads
     {
-        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
+        WarRoadPieceList pieces;
+        WarRoadPieceListInit(&pieces);
 
         for(s32 i = 0; i < levelInfo->levelInfo.startRoadsCount; i++)
         {
             WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
             if (construct->type == WAR_CONSTRUCT_ROAD)
             {
-                createRoads(&entity->road.pieces, construct);
+                createRoads(&pieces, construct);
             }
         }
 
-        determineRoadTypes(&entity->road.pieces);
-        addRoadComponent(context, entity);
+        determineRoadTypes(&pieces);
+
+        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
+        addRoadComponent(context, entity, pieces);
 
         map->entities[entitiesCount++] = entity;
     }
@@ -273,13 +276,6 @@ void renderMap(WarContext *context)
                     nvgSave(gfx);
                     nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                     renderSubSprite(context, &map->sprite, null, tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-
-                    nvgBeginPath(gfx);
-                    nvgRect(gfx, 0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgStrokeWidth(gfx, 0.5f);
-                    nvgStrokeColor(gfx, nvgRGBA(255, 255, 255, 255));
-                    nvgStroke(gfx);
-
                     nvgRestore(gfx);
                 }
             }
@@ -309,23 +305,24 @@ void renderMap(WarContext *context)
             }
         }
 
-        // render grid (debug)
+        // DEBUG
+        // render grid
         {
-            for(s32 y = 0; y < MAP_HEIGHT; y++)
-            {
-                for(s32 x = 0; x < MAP_WIDTH; x++)
-                {
-                    nvgSave(gfx);
+            // for(s32 y = 0; y < MAP_HEIGHT; y++)
+            // {
+            //     for(s32 x = 0; x < MAP_WIDTH; x++)
+            //     {
+            //         nvgSave(gfx);
 
-                    nvgBeginPath(gfx);
-                    nvgRect(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgStrokeWidth(gfx, 0.5f);
-                    nvgStrokeColor(gfx, nvgRGBA(255, 255, 255, 255));
-                    nvgStroke(gfx);
+            //         nvgBeginPath(gfx);
+            //         nvgRect(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            //         nvgStrokeWidth(gfx, 0.5f);
+            //         nvgStrokeColor(gfx, nvgRGBA(255, 255, 255, 255));
+            //         nvgStroke(gfx);
 
-                    nvgRestore(gfx);
-                }
-            }
+            //         nvgRestore(gfx);
+            //     }
+            // }
         }
 
         nvgRestore(gfx);
