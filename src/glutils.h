@@ -116,7 +116,7 @@ GLuint loadShaderFromFile(char *shaderFilePath, GLenum shaderType)
 
     const uchar *shaderSource = shaderFile->contents;
     
-    glShaderSource(shader, 1, &shaderSource, null);
+    glShaderSource(shader, 1, &shaderSource, NULL);
     // glCheckError();
 
     glCompileShader(shader);

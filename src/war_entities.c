@@ -45,7 +45,7 @@ void addSpriteComponentFromResource(WarContext *context, WarEntity *entity, s32 
         return;
     }
 
-    u8 *pixels = null;
+    u8 *pixels = NULL;
     u32 w, h;
 
     switch(resource->type)
@@ -129,7 +129,7 @@ void renderImage(WarContext *context, WarEntity *entity)
 
     if (sprite.enabled)
     {
-        u8 *pixels = null;
+        u8 *pixels = NULL;
         s32 dx = 0, dy = 0;
 
         if (sprite.resourceIndex)
@@ -149,7 +149,7 @@ void renderImage(WarContext *context, WarEntity *entity)
             nvgTranslate(gfx, transform.position[0], transform.position[1]);
         }
 
-        renderSprite(context, &sprite.sprite, pixels);
+        renderSprite(context, &sprite.sprite, 0, 0);
     }
 }
 
@@ -171,6 +171,8 @@ void renderRoad(WarContext *context, WarEntity *entity)
         if (road.enabled)
         {
             WarRoadPieceList *pieces = &road.pieces;
+
+            NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite.sprite.image, road.pieces.count);
 
             for(s32 i = 0; i < road.pieces.count; i++)
             {
@@ -205,9 +207,13 @@ void renderRoad(WarContext *context, WarEntity *entity)
 
                 nvgSave(gfx);
                 nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                renderSubSprite(context, &sprite.sprite, null, tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, batch, 
+                    tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT, 
+                    0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 nvgRestore(gfx);
             }
+
+            nvgEndImageBatch(gfx, batch);
         }
     }
 }
@@ -222,7 +228,7 @@ void renderUnit(WarContext *context, WarEntity *entity)
 
     if (sprite.enabled)
     {
-        u8 *pixels = null;
+        u8 *pixels = NULL;
         s32 dx = 0, dy = 0;
 
         if (sprite.resourceIndex)
@@ -248,8 +254,8 @@ void renderUnit(WarContext *context, WarEntity *entity)
         // nvgFillColor(gfx, nvgRGBA(120, 120, 120, 120));
         // nvgFill(gfx);
 
-        //renderSubSprite(context, &sprite.sprite, pixels, 0, 0, unit.sizex * MEGA_TILE_WIDTH, unit.sizey * MEGA_TILE_HEIGHT);
-        renderSprite(context, &sprite.sprite, pixels);
+        updateSprite(context, &sprite.sprite, pixels);
+        renderSprite(context, &sprite.sprite, 0, 0);
     }
 }
 

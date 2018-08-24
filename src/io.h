@@ -59,7 +59,7 @@ inline TextFile* fileReadAllText(char *filePath)
     file = fopen(filePath, "rb");
     if (!file)
     {
-        return null;
+        return NULL;
     }
 
     u32 fileLength = flength(file);
@@ -68,7 +68,7 @@ inline TextFile* fileReadAllText(char *filePath)
     file = fopen(filePath, "r");
     if (!file) 
     {
-        return null;
+        return NULL;
     }
 
     TextFile *textFile = (TextFile*)xmalloc(sizeof(TextFile));
@@ -88,7 +88,7 @@ inline void fileDispose(TextFile *file)
     if (file->contents)
     {
         free(file->contents);
-        file->contents = null;
+        file->contents = NULL;
     }
 
     free(file);

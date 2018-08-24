@@ -1,10 +1,131 @@
-#include <stdio.h>
-#include <string.h>
+typedef struct
+{
+    s32 image;
+    s32 cimages;
+    s32 nvertices;
+    s32 cvertices;
+    NVGvertex *vertices;
+} NVGimageBatch;
 
-#include <glew.h>
-#include "cglm.h"
+NVGimageBatch* nvgBeginImageBatch(NVGcontext *gfx, s32 image, s32 cimages)
+{
+    NVGimageBatch* batch = (NVGimageBatch*)xmalloc(sizeof(NVGimageBatch));
+    batch->image = image;
+    batch->cimages = cimages;
+    batch->nvertices = 0;
+    batch->cvertices = cimages * 6;
+    batch->vertices = (NVGvertex *)xcalloc(batch->cvertices, sizeof(NVGvertex));
+    return batch;
+}
 
-#include "utils.h"
+void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, f32 sx, f32 sy, f32 sw, f32 sh, f32 dx, f32 dy, f32 dw, f32 dh)
+{
+    f32 x, y;
+    s32 iw, ih;
+    f32 tx, ty;
+    NVGstate *state;
+    NVGvertex *vertex;
+    
+    if (batch->nvertices >= batch->cvertices)
+    {
+        fprintf(stderr, "Can't print more images in this batch: (%d, %d)\n", batch->nvertices, batch->cvertices);
+        return;
+    }
+
+    state = nvg__getState(gfx);
+    
+    nvgImageSize(gfx, batch->image, &iw, &ih);
+
+    tx = sx / iw;
+    ty = sy / ih;
+
+    // first triangle
+    vertex = &batch->vertices[batch->nvertices];
+    nvgTransformPoint(&x, &y, state->xform, dx, dy);
+    nvg__vset(vertex, x, y, tx, ty);
+    batch->nvertices++;
+
+    vertex = &batch->vertices[batch->nvertices];
+    nvgTransformPoint(&x, &y, state->xform, dx, dy + dh);
+    nvg__vset(vertex, x, y, tx, ty + sh / ih);
+    batch->nvertices++;
+
+    vertex = &batch->vertices[batch->nvertices];
+    nvgTransformPoint(&x, &y, state->xform, dx + dw, dy);
+    nvg__vset(vertex, x, y, tx + sw / iw, ty);
+    batch->nvertices++;
+
+    // second triangle
+    vertex = &batch->vertices[batch->nvertices];
+    nvgTransformPoint(&x, &y, state->xform, dx + dw, dy);
+    nvg__vset(vertex, x, y, tx + sw / iw, ty);
+    batch->nvertices++;
+
+    vertex = &batch->vertices[batch->nvertices];
+    nvgTransformPoint(&x, &y, state->xform, dx, dy + dh);
+    nvg__vset(vertex, x, y, tx, ty + sh / ih);
+    batch->nvertices++;
+
+    vertex = &batch->vertices[batch->nvertices];
+    nvgTransformPoint(&x, &y, state->xform, dx + dw, dy + dh);
+    nvg__vset(vertex, x, y, tx + sw / iw, ty + sh / ih);
+    batch->nvertices++;
+}
+
+void nvgEndImageBatch(NVGcontext *gfx, NVGimageBatch* batch)
+{
+    NVGstate* state = nvg__getState(gfx);
+    NVGpaint paint = state->fill;
+
+    paint.image = batch->image;
+    paint.innerColor.a *= state->alpha;
+    paint.outerColor.a *= state->alpha;
+
+	gfx->params.renderTriangles(gfx->params.userPtr, &paint, state->compositeOperation, &state->scissor, batch->vertices, batch->nvertices);
+	gfx->drawCallCount++;
+	gfx->textTriCount += batch->nvertices/3;
+
+    free(batch->vertices);
+    free(batch);
+}
+
+void nvgRenderSubImage(NVGcontext *gfx, s32 image, f32 sx, f32 sy, f32 sw, f32 sh, f32 dx, f32 dy, f32 dw, f32 dh)
+{
+    NVGimageBatch* batch = nvgBeginImageBatch(gfx, image, 1);
+    nvgRenderBatchImage(gfx, batch, sx, sy, sw, sh, dx, dy, dw, dh);
+    nvgEndImageBatch(gfx, batch);
+}
+
+void nvgRenderImage(NVGcontext *gfx, s32 image, f32 x, f32 y, f32 w, f32 h)
+{
+    nvgRenderSubImage(gfx, image, 0, 0, w, h, x, y, w, h);
+}
+
+WarSprite createSprite(WarContext *context, s32 width, s32 height, u8 data[])
+{
+    WarSprite sprite = (WarSprite){0};
+    sprite.width = width;
+    sprite.height = height;
+    sprite.image = nvgCreateImageRGBA(context->gfx, width, height, NVG_IMAGE_NEAREST, data);
+    return sprite;
+}
+
+void updateSprite(WarContext *context, WarSprite *sprite, u8 data[])
+{
+    nvgUpdateImage(context->gfx, sprite->image, data);
+}
+
+void renderSubSprite(WarContext *context, WarSprite *sprite, f32 sx, f32 sy, f32 sw, f32 sh, f32 dx, f32 dy, f32 dw, f32 dh)
+{
+    nvgRenderSubImage(context->gfx, sprite->image, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
+void renderSprite(WarContext *context, WarSprite *sprite, f32 x, f32 y)
+{
+    nvgRenderSubImage(context->gfx, sprite->image, 0, 0, sprite->width, sprite->height, x, y, sprite->width, sprite->height);
+}
+
+/* Intent of implementation of a graphics API
 
 #define MAX_RENDERING_CONTEXT_STATES 256
 #define MAX_GRADIENT_STOPS_COUNT 256
@@ -196,7 +317,7 @@ WarRenderingContext2D* create(u32 width, u32 height)
     if (!initOpenGL1(ctx))
     {
         free(ctx);
-        return null;
+        return NULL;
     }
     
     for(s32 i = 0; i < MAX_TEXTURES_COUNT; i++)
@@ -383,7 +504,7 @@ void fillRect(WarRenderingContext2D* ctx, s32 x, s32 y, u32 w, u32 h)
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glDrawElements(GL_TRIANGLES, 2 * 6, GL_UNSIGNED_INT, null);
+    glDrawElements(GL_TRIANGLES, 2 * 6, GL_UNSIGNED_INT, NULL);
 
     glDisableVertexAttribArray(colorLoc);
     glDisableVertexAttribArray(texCoordLoc);
@@ -470,7 +591,7 @@ void strokeRect(WarRenderingContext2D* ctx, s32 x, s32 y, u32 w, u32 h)
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glDrawElements(GL_TRIANGLES, 8 * 6, GL_UNSIGNED_INT, null);
+    glDrawElements(GL_TRIANGLES, 8 * 6, GL_UNSIGNED_INT, NULL);
 
     glDisableVertexAttribArray(colorLoc);
     glDisableVertexAttribArray(texCoordLoc);
@@ -565,7 +686,7 @@ void drawSubImage(WarRenderingContext2D* ctx, WarImageSource image, s32 sx, s32 
 
     glBindTexture(GL_TEXTURE_2D, ctx->textures[textureIndex]);
 
-    glDrawElements(GL_TRIANGLES, 2 * 6, GL_UNSIGNED_INT, null);
+    glDrawElements(GL_TRIANGLES, 2 * 6, GL_UNSIGNED_INT, NULL);
 
     glDisableVertexAttribArray(colorLoc);
     glDisableVertexAttribArray(texCoordLoc);
@@ -613,3 +734,4 @@ WarImageData createImageData(WarRenderingContext2D* ctx, u32 sw, u32 sh)
     return imageData;
 }
 
+*/

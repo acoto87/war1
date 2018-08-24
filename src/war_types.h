@@ -5,20 +5,46 @@
 #define MAX_ENTITIES_COUNT 100
 #define MAX_SPRITE_FRAME_COUNT 100
 #define MAX_CONSTRUCTS_COUNT 100
+
+// all palettes have 768 colors
 #define PALETTE_LENGTH 768
 
+// size of mini-tiles from the tiles resources
 #define MINI_TILE_WIDTH 8
 #define MINI_TILE_HEIGHT 8
+
+// size of the mega-tiles (2x2 mini-tiles) from the tileset
 #define MEGA_TILE_WIDTH (MINI_TILE_WIDTH * 2)
 #define MEGA_TILE_HEIGHT (MINI_TILE_HEIGHT * 2)
-#define MAP_WIDTH 64
-#define MAP_HEIGHT 64
-#define MAP_WIDTH_PX (MAP_WIDTH*MEGA_TILE_WIDTH)
-#define MAP_HEIGHT_PX (MAP_HEIGHT*MEGA_TILE_HEIGHT)
 
-#define TILESET_WIDTH_PX 512
-#define TILESET_HEIGHT_PX 256
-#define TILESET_TILES_PER_ROW (TILESET_WIDTH_PX/MEGA_TILE_WIDTH)
+// size of the map in pixels
+#define MAP_WIDTH (64*MEGA_TILE_WIDTH)
+#define MAP_HEIGHT (64*MEGA_TILE_HEIGHT)
+
+// size of the map in tiles
+#define MAP_TILES_WIDTH (MAP_WIDTH/MEGA_TILE_WIDTH)
+#define MAP_TILES_HEIGHT (MAP_HEIGHT/MEGA_TILE_HEIGHT)
+
+// size of the viewport of the map in pixels
+#define MAP_VIEWPORT_WIDTH 240
+#define MAP_VIEWPORT_HEIGHT 176
+
+// size of the minimap in pixels
+#define MINIMAP_WIDTH 64
+#define MINIMAP_HEIGHT 64
+
+// ratio of the minimap and map sizes
+#define MINIMAP_MAP_WIDTH_RATIO ((f32)MINIMAP_WIDTH/MAP_WIDTH)
+#define MINIMAP_MAP_HEIGHT_RATIO ((f32)MINIMAP_HEIGHT/MAP_HEIGHT)
+
+// size of the viewport of the minimap in pixels
+#define MINIMAP_VIEWPORT_WIDTH (MAP_VIEWPORT_WIDTH*MINIMAP_MAP_WIDTH_RATIO)
+#define MINIMAP_VIEWPORT_HEIGHT (MAP_VIEWPORT_HEIGHT*MINIMAP_MAP_HEIGHT_RATIO)
+
+// size of the tileset for the terrain of the maps
+#define TILESET_WIDTH 512
+#define TILESET_HEIGHT 256
+#define TILESET_TILES_PER_ROW (TILESET_WIDTH/MEGA_TILE_WIDTH)
 
 #define MAX_OBJECTIVES_LENGTH 512
 #define MAX_PLAYERS_COUNT 5
@@ -180,8 +206,8 @@ typedef enum
 
 typedef struct
 {
+    s32 image;
     u32 width, height;
-    s32 imageId;
 } WarSprite;
 
 typedef struct 
@@ -285,18 +311,18 @@ typedef struct
 
         struct
         {
-            u16 data[MAP_WIDTH * MAP_HEIGHT];
+            u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
         } levelVisual;
 
         struct
         {
-            u16 data[MAP_WIDTH * MAP_HEIGHT];
+            u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
         } levelPassable;
 
         struct 
         {
             u32 tilesCount;
-            u8 data[TILESET_WIDTH_PX * TILESET_HEIGHT_PX * 4];
+            u8 data[TILESET_WIDTH * TILESET_HEIGHT * 4];
         } tilesetData;
 
         struct
@@ -435,9 +461,9 @@ typedef enum
 typedef struct
 {
     s32 levelInfoIndex;
-
     s32 scrollSpeed;
-    vec2 pos, dir;
+
+    Rect viewport;
     
     Rect leftTopPanel;
     Rect leftBottomPanel;
@@ -448,13 +474,39 @@ typedef struct
     Rect minimapPanel;
 
     WarSprite sprite;
+    WarSprite minimapSprite;
 
     WarMapTilesetType tilesetType;
-    WarMapTileState tileStates[MAP_WIDTH * MAP_HEIGHT];
+    WarMapTileState tileStates[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
 
     WarEntity* entities[MAX_ENTITIES_COUNT];
     bool selectedEntities[MAX_ENTITIES_COUNT];
 } WarMap;
+
+typedef enum
+{
+    WAR_MOUSE_LEFT,
+    WAR_MOUSE_RIGHT,
+
+    WAR_MOUSE_COUNT
+} WarMouseButtons;
+
+typedef enum
+{
+    WAR_KEY_LEFT,
+    WAR_KEY_RIGHT,
+    WAR_KEY_DOWN,
+    WAR_KEY_UP,
+
+    WAR_KEY_COUNT
+} WarKeys;
+
+typedef struct
+{
+    f32 x, y;
+    bool buttons[WAR_MOUSE_COUNT];
+    bool keys[WAR_KEY_COUNT];
+} WarInput;
 
 typedef struct 
 {
@@ -477,7 +529,6 @@ typedef struct
     char *warFilePath;
     WarFile *warFile;
 
-    u32 resourcesCount;
     WarResource *resources[MAX_RESOURCES_COUNT];
 
     NVGcontext *gfx;
@@ -485,4 +536,6 @@ typedef struct
     u32 staticEntityId;
     WarScene *currentScene;
     WarMap *map;
+
+    WarInput input;
 } WarContext;

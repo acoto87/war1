@@ -23,7 +23,7 @@ typedef unsigned char uchar;
 
 typedef size_t size32;
 
-#define null 0
+#define NULL 0
 
 #define internal static
 #define global static

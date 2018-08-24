@@ -81,6 +81,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
+        inputGame(&context);
         updateGame(&context);
         renderGame(&context);
         presentGame(&context);

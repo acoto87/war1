@@ -18,3 +18,19 @@ typedef struct
     s32 x, y;
     s32 width, height;
 } Rect;
+
+bool rectContains(Rect rect, s32 x, s32 y)
+{
+    return x >= rect.x && x <= rect.x + rect.width &&
+           y >= rect.y && y <= rect.y + rect.height;
+}
+
+Rect scaleRect(Rect rect, f32 scale)
+{
+    return (Rect){
+        rect.x * scale, 
+        rect.y * scale, 
+        rect.width * scale, 
+        rect.height * scale
+    };
+}

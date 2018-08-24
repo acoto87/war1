@@ -133,14 +133,16 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     map->levelInfoIndex = levelInfoIndex;
     map->tilesetType = MAP_TILESET_FOREST;
     map->scrollSpeed = 200;
-    
+
     map->leftTopPanel = (Rect){0, 0, 72, 72};
     map->leftBottomPanel = (Rect){0, 72, 72, 128};
     map->rightPanel = (Rect){312, 0, 8, 200};
     map->topPanel = (Rect){72, 0, 240, 12};
     map->bottomPanel = (Rect){72, 188, 240, 12};
-    map->mapPanel = (Rect){72, 12, 240, 176};
-    map->minimapPanel = (Rect){0, 0, 128, 128};
+    map->mapPanel = (Rect){72, 12, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT};
+    map->minimapPanel = (Rect){3, 6, MINIMAP_WIDTH, MINIMAP_HEIGHT};
+
+    map->viewport = (Rect){0, 0, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT};
 
     context->map = map;
 
@@ -152,7 +154,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
         assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
-        map->sprite = createSprite(context, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, tileset->tilesetData.data);
+        map->sprite = createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
     }
 
     s32 entitiesCount = 0;
@@ -229,7 +231,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // set the initial state for the tiles
     {
-        for(s32 i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
+        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         {
             map->tileStates[i] = MAP_TILE_STATE_UNKOWN;
         }
@@ -253,7 +255,7 @@ void renderMap(WarContext *context)
         nvgSave(gfx);
 
         nvgTranslate(gfx, map->mapPanel.x, map->mapPanel.y);
-        nvgTranslate(gfx, map->pos[0], map->pos[1]);
+        nvgTranslate(gfx, -map->viewport.x, -map->viewport.y);
         
         // render terrain
         {
@@ -262,12 +264,14 @@ void renderMap(WarContext *context)
 
             WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
             assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
-            
-            for(s32 y = 0; y < MAP_HEIGHT; y++)
+
+            NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+
+            for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
             {
-                for(s32 x = 0; x < MAP_WIDTH; x++)
+                for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
                 {
-                    s32 index = y * MAP_WIDTH + x;
+                    s32 index = y * MAP_TILES_WIDTH + x;
                     u16 tileIndex = levelVisual->levelVisual.data[index];
 
                     s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
@@ -275,10 +279,16 @@ void renderMap(WarContext *context)
 
                     nvgSave(gfx);
                     nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                    renderSubSprite(context, &map->sprite, null, tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+
+                    nvgRenderBatchImage(gfx, batch, 
+                        tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT,
+                        0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+
                     nvgRestore(gfx);
                 }
             }
+
+            nvgEndImageBatch(gfx, batch);
         }
 
         // render roads
@@ -308,9 +318,9 @@ void renderMap(WarContext *context)
         // DEBUG
         // render grid
         {
-            // for(s32 y = 0; y < MAP_HEIGHT; y++)
+            // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
             // {
-            //     for(s32 x = 0; x < MAP_WIDTH; x++)
+            //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             //     {
             //         nvgSave(gfx);
 
@@ -339,6 +349,70 @@ void renderMap(WarContext *context)
             {
                 renderEntity(context, entity);
             }
+        }
+
+        // DEBUG
+        // render minimap position
+        {
+            // nvgSave(gfx);
+
+            // nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
+
+            // nvgBeginPath(gfx);
+            // nvgRect(gfx, 0, 0, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+            // nvgFillColor(gfx, nvgRGBA(120, 120, 120, 120));
+            // nvgFill(gfx);
+
+            // nvgRestore(gfx);
+        }
+
+        // render minimap
+        {
+            // nvgSave(gfx);
+
+            // WarResource *levelVisual = context->resources[levelInfo->levelInfo.visualIndex];
+            // assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+
+            // WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+            // assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
+
+            // u8 *minimapData = (u8*)calloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
+            // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+            // {
+            //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            //     {
+            //         s32 index = y * MAP_TILES_WIDTH + x;
+            //         u16 tileIndex = levelVisual->levelVisual.data[index];
+
+            //         s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+            //         s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+            //         nvgSave(gfx);
+            //         nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            //         renderSubSprite(context, &map->sprite, NULL, tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            //         nvgRestore(gfx);
+            //     }
+            // }
+
+            // renderSprite(context, &map->minimapSprite, minimapData);
+
+            // nvgRestore(gfx);
+        }
+
+        // render minimap viewport
+        {
+            nvgSave(gfx);
+
+            nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
+            nvgTranslate(gfx, map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
+
+            nvgBeginPath(gfx);
+            nvgRect(gfx, 0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
+            nvgStrokeWidth(gfx, 1.0f/context->globalScale);
+            nvgStrokeColor(gfx, nvgRGBA(255, 255, 255, 255));
+            nvgStroke(gfx);
+
+            nvgRestore(gfx);
         }
 
         nvgRestore(gfx);

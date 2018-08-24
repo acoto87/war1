@@ -135,39 +135,6 @@ const s32 roadsData[] =
     WAR_ROAD_PIECE_TOP_RIGHT,           70,                          71        
 };
 
-WarSprite createSprite(WarContext *context, s32 width, s32 height, u8 data[])
-{
-    WarSprite sprite = (WarSprite){0};
-
-    sprite.width = width;
-    sprite.height = height;
-    sprite.imageId = nvgCreateImageRGBA(context->gfx, width, height, NVG_IMAGE_NEAREST, data);
-
-    return sprite;
-}
-
-void renderSubSprite(WarContext *context, WarSprite *sprite, u8 *updateData,
-                     s32 sx, s32 sy, s32 sw, s32 sh)
-{
-    NVGcontext *gfx = context->gfx;
-
-    if (updateData)
-    {
-        nvgUpdateImage(gfx, sprite->imageId, updateData);
-    }
-
-    NVGpaint pattern = nvgImagePattern(gfx, -sx, -sy, sprite->width, sprite->height, 0, sprite->imageId, 1.0f);
-    nvgBeginPath(gfx);
-    nvgRect(gfx, 0, 0, sw, sh);
-    nvgFillPaint(gfx, pattern);
-    nvgFill(gfx);
-}
-
-void renderSprite(WarContext *context, WarSprite *sprite, u8 *updateData)
-{
-    renderSubSprite(context, sprite, updateData, 0, 0, sprite->width, sprite->height);
-}
-
 void getPalette(WarContext *context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
 {
     memset(paletteData, 0, PALETTE_LENGTH);
@@ -238,8 +205,6 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
     {
         resource->paletteData.colors[i] = rawResource.data[i] * 4;
     }
-
-    context->resourcesCount++;
 }
 
 void loadImageResource(WarContext *context, DatabaseEntry *entry)
@@ -268,8 +233,6 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     resource->imageData.width = width;
     resource->imageData.height = height;
     resource->imageData.pixels = pixels;
-
-    context->resourcesCount++;       
 }
 
 void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
@@ -342,8 +305,6 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     resource->spriteData.framesCount = framesCount;
     resource->spriteData.frameWidth = frameWidth;
     resource->spriteData.frameHeight = frameHeight;
-    
-    context->resourcesCount++;
 }
 
 void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
@@ -576,7 +537,7 @@ void loadLevelVisual(WarContext *context, DatabaseEntry *entry)
 
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_VISUAL;
-    for(s32 i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
+    for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
         resource->levelVisual.data[i] = readu16(rawResource.data, i * 2);
     }
@@ -589,7 +550,7 @@ void loadLevelPassable(WarContext *context, DatabaseEntry *entry)
 
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_PASSABLE;
-    for(s32 i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
+    for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
         resource->levelPassable.data[i] = readu16(rawResource.data, i * 2);
     }
@@ -602,7 +563,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
 
     WarResource *tiles = getOrCreateResource(context, entry->param1);
 
-    u8 *data = (u8*)xcalloc(TILESET_WIDTH_PX * TILESET_HEIGHT_PX, sizeof(u8));
+    u8 *data = (u8*)xcalloc(TILESET_WIDTH * TILESET_HEIGHT, sizeof(u8));
     u32 tilesCount = rawResource.length / 8;
     for(s32 i = 0; i < tilesCount; i++)
     {
@@ -629,7 +590,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
                         s32 fy = (flipY ? flip[y] : y);
                         s32 fx = (flipX ? flip[x] : x);
                         s32 srcValueIndex = offset + fy * 8 + fx;
-                        s32 destValueIndex = (y + iy * 8) * TILESET_WIDTH_PX + ix * 8 + x;
+                        s32 destValueIndex = (y + iy * 8) * TILESET_WIDTH + ix * 8 + x;
                         data[destValueIndex] = tiles->tilesData.data[srcValueIndex];
                     }
                 }
@@ -644,7 +605,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
     resource->type = WAR_RESOURCE_TYPE_TILESET;
     resource->tilesetData.tilesCount = rawResource.length / 8;
 
-    for(s32 i = 0; i < TILESET_WIDTH_PX * TILESET_HEIGHT_PX; i++)
+    for(s32 i = 0; i < TILESET_WIDTH * TILESET_HEIGHT; i++)
     {
         resource->tilesetData.data[i * 4 + 0] = paletteData[data[i] * 3 + 0];
         resource->tilesetData.data[i * 4 + 1] = paletteData[data[i] * 3 + 1];
@@ -659,7 +620,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
         char fp[30];
         sprintf(fp, "output_%d.png", index);
 
-        stbi_write_png(fp, TILESET_WIDTH_PX, TILESET_HEIGHT_PX, 4, resource->tilesetData.data, TILESET_WIDTH_PX * 4);
+        stbi_write_png(fp, TILESET_WIDTH, TILESET_HEIGHT, 4, resource->tilesetData.data, TILESET_WIDTH * 4);
     }
 #endif
 }

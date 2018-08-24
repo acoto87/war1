@@ -6,13 +6,13 @@ bool initGame(WarContext *context)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    context->globalScale = 4;
+    context->globalScale = 3;
     context->originalWindowWidth = 320;
     context->originalWindowHeight = 200;
     context->windowWidth = (u32)(context->originalWindowWidth * context->globalScale);
     context->windowHeight = (u32)(context->originalWindowHeight * context->globalScale);
     context->windowTitle = "War 1";
-    context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, null, null);
+    context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, NULL, NULL);
     if (!context->window)
     {
         fprintf(stderr, "GLFW window could not be created!");
@@ -128,68 +128,68 @@ bool initGame(WarContext *context)
     return true;
 }
 
+void inputGame(WarContext *context)
+{
+    f64 xpos, ypos;
+    glfwGetCursorPos(context->window, &xpos, &ypos);
+
+    context->input.x = floorf((f32)xpos);
+    context->input.y = floorf((f32)ypos);
+    
+    // mouse buttons
+    context->input.buttons[WAR_MOUSE_LEFT] = glfwGetMouseButton(context->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+    context->input.buttons[WAR_MOUSE_RIGHT] = glfwGetMouseButton(context->window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+    
+    // keyboard keys
+    context->input.keys[WAR_KEY_LEFT] = glfwGetKey(context->window, GLFW_KEY_LEFT) == GLFW_PRESS;
+    context->input.keys[WAR_KEY_RIGHT] = glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_PRESS;
+    context->input.keys[WAR_KEY_UP] = glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS;
+    context->input.keys[WAR_KEY_DOWN] = glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS;
+}
+
 void updateGame(WarContext *context)
 {
     WarMap *map = context->map;
     if (!map) return;
 
-    if (glfwGetKey(context->window, GLFW_KEY_LEFT) == GLFW_PRESS)
+    WarInput *input = &context->input;
+
+    f32 dirX = 0, dirY = 0;
+
+    if (input->keys[WAR_KEY_LEFT])
+        dirX = -1;
+    else if (input->keys[WAR_KEY_RIGHT])
+        dirX = 1;
+
+    if (input->keys[WAR_KEY_DOWN])
+        dirY = 1;
+    else if (input->keys[WAR_KEY_UP])
+        dirY = -1;
+
+    map->viewport.x += map->scrollSpeed * dirX * context->deltaTime;
+    map->viewport.x = clamp(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
+
+    map->viewport.y += map->scrollSpeed * dirY * context->deltaTime;
+    map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
+
+    if (input->buttons[WAR_MOUSE_LEFT])
     {
-        map->dir[0] = 1;
+        f32 scale = context->globalScale;
+        Rect scaledMinimapPanel = scaleRect(map->minimapPanel, scale);
+        if (rectContains(scaledMinimapPanel, input->x, input->y))
+        {
+            f32 offsetx = input->x - scaledMinimapPanel.x;
+            offsetx -= MINIMAP_VIEWPORT_WIDTH * scale/2;
+            offsetx = clamp(offsetx, 0, scaledMinimapPanel.width - MINIMAP_VIEWPORT_WIDTH * scale);
+
+            f32 offsety = input->y - scaledMinimapPanel.y;
+            offsety -= MINIMAP_VIEWPORT_HEIGHT * scale/2;
+            offsety = clamp(offsety, 0, scaledMinimapPanel.height - MINIMAP_VIEWPORT_HEIGHT * scale);
+
+            map->viewport.x = offsetx * 1024 / (64 * scale);
+            map->viewport.y = offsety * 1024 / (64 * scale);
+        }
     }
-    else if (glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    {
-        map->dir[0] = -1;
-    }
-    else
-    {
-        map->dir[0] = 0;
-    }
-
-    if (glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
-        map->dir[1] = -1;
-    }
-    else if (glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
-        map->dir[1] = 1;
-    }
-    else
-    {
-        map->dir[1] = 0;
-    }
-
-    map->pos[0] += map->scrollSpeed * map->dir[0] * context->deltaTime;
-    map->pos[0] = clamp(map->pos[0], -(MAP_WIDTH_PX - map->mapPanel.width), 0.0f);
-
-    map->pos[1] += map->scrollSpeed * map->dir[1] * context->deltaTime;
-    map->pos[1] = clamp(map->pos[1], -(MAP_HEIGHT_PX - map->mapPanel.height), 0.0f);
-
-    // WarScene *scene = context->currentScene;
-    // for (s32 i = 0; i < MAX_ENTITIES_COUNT; ++i)
-    // {
-    //     if (scene->entities[i].id && scene->entities[i].enabled)
-    //     {
-    //         // if (scene->entities[i].transform.enabled)
-    //         // {
-    //         //     scene->entities[i].transform.position[1] += 100*context->deltaTime;
-    //         // }
-
-    //         if (scene->entities[i].anim.enabled)
-    //         {
-    //             scene->entities[i].anim.offset += context->deltaTime * (1 / scene->entities[i].anim.duration);
-    //             scene->entities[i].anim.offset = clamp(scene->entities[i].anim.offset, 0, 1);
-
-    //             if (scene->entities[i].anim.offset == 1 && scene->entities[i].anim.loop)
-    //             {
-    //                 scene->entities[i].anim.offset = 0;
-    //             }
-
-    //             WarResource *resource = getOrCreateResource(context, scene->entities[i].sprite.resourceIndex);
-    //             scene->entities[i].sprite.frameIndex = (s32)(scene->entities[i].anim.offset * (resource->spriteData.framesCount-1));
-    //         }
-    //     }
-    // }
 }
 
 void renderScene(WarContext *context)
