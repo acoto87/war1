@@ -186,8 +186,8 @@ void updateGame(WarContext *context)
             offsety -= MINIMAP_VIEWPORT_HEIGHT * scale/2;
             offsety = clamp(offsety, 0, scaledMinimapPanel.height - MINIMAP_VIEWPORT_HEIGHT * scale);
 
-            map->viewport.x = offsetx * 1024 / (64 * scale);
-            map->viewport.y = offsety * 1024 / (64 * scale);
+            map->viewport.x = offsetx * MAP_WIDTH / (MINIMAP_WIDTH * scale);
+            map->viewport.y = offsety * MAP_HEIGHT / (MINIMAP_HEIGHT * scale);
         }
     }
 }
