@@ -1,3 +1,74 @@
+inline vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    f32 scale = context->globalScale;
+
+    rect mapPanel = rectScalef(map->mapPanel, scale);
+    rect viewport = rectScalef(map->viewport, scale);
+
+    v = vec2Translatef(v, -mapPanel.x, -mapPanel.y);
+    v = vec2Translatef(v, viewport.x, viewport.y);
+    return v;
+}
+
+inline vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    f32 scale = context->globalScale;
+
+    rect minimapPanel = rectScalef(map->minimapPanel, scale);
+    vec2 minimapPanelSize = vec2i(minimapPanel.width, minimapPanel.height);
+
+    vec2 minimapViewportSize = vec2i(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
+    minimapViewportSize = vec2Scalef(minimapViewportSize, scale);
+
+    v = vec2Translatef(v, -minimapPanel.x, -minimapPanel.y);
+    v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
+    v = vec2Clampv(v, VEC2_ZERO, vec2Subv(minimapPanelSize, minimapViewportSize));
+    return v;
+}
+
+inline rect rectScreenToMapCoordinates(WarContext* context, rect r)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    f32 scale = context->globalScale;
+    
+    rect mapPanel = rectScalef(map->mapPanel, scale);
+    rect viewport = rectScalef(map->viewport, scale);
+
+    r = rectTranslatef(r, -mapPanel.x, -mapPanel.y);
+    r = rectTranslatef(r, viewport.x, viewport.y);
+    return r;
+}
+
+inline vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    v = vec2Translatef(v, -map->viewport.x, -map->viewport.y);
+    v = vec2Translatef(v, map->mapPanel.x, map->mapPanel.y);
+    v = vec2Scalef(v, context->globalScale);
+    return v;
+}
+
+inline rect rectMapToScreenCoordinates(WarContext* context, rect r)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    r = rectTranslatef(r, -map->viewport.x, -map->viewport.y);
+    r = rectTranslatef(r, map->mapPanel.x, map->mapPanel.y);
+    r = rectScalef(r, context->globalScale);
+    return r;
+}
+
 void createRoads(WarRoadPieceList *pieces, WarLevelConstruct *construct)
 {
     s32 x1 = construct->x1;
@@ -340,6 +411,24 @@ void renderMap(WarContext *context)
         nvgRestore(gfx);
     }
 
+    // render select rect
+    {
+        nvgSave(gfx);
+
+        if (context->input.dragging)
+        {
+            rect pointerRect = rectpf(context->input.dragStartX, context->input.dragStartY, context->input.x, context->input.y);
+            pointerRect = rectScalef(pointerRect, 1/context->globalScale);
+
+            nvgBeginPath(gfx);
+            nvgRect(gfx, pointerRect.x, pointerRect.y, pointerRect.width, pointerRect.height);
+            nvgStrokeColor(gfx, NVG_WHITE);
+            nvgStroke(gfx);
+        }
+
+        nvgRestore(gfx);
+    }
+
     // render ui
     {
         nvgSave(gfx);
@@ -421,75 +510,4 @@ void renderMap(WarContext *context)
     }
 
     nvgRestore(gfx);
-}
-
-inline vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    f32 scale = context->globalScale;
-
-    rect mapPanel = rectScalef(map->mapPanel, scale);
-    rect viewport = rectScalef(map->viewport, scale);
-
-    v = vec2Translatef(v, -mapPanel.x, -mapPanel.y);
-    v = vec2Translatef(v, viewport.x, viewport.y);
-    return v;
-}
-
-inline vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    f32 scale = context->globalScale;
-
-    rect minimapPanel = rectScalef(map->minimapPanel, scale);
-    vec2 minimapPanelSize = vec2i(minimapPanel.width, minimapPanel.height);
-
-    vec2 minimapViewportSize = vec2i(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
-    minimapViewportSize = vec2Scalef(minimapViewportSize, scale);
-
-    v = vec2Translatef(v, -minimapPanel.x, -minimapPanel.y);
-    v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
-    v = vec2Clampv(v, VEC2_ZERO, vec2Subv(minimapPanelSize, minimapViewportSize));
-    return v;
-}
-
-inline rect rectScreenToMapCoordinates(WarContext* context, rect r)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    f32 scale = context->globalScale;
-    
-    rect mapPanel = rectScalef(map->mapPanel, scale);
-    rect viewport = rectScalef(map->viewport, scale);
-
-    r = rectTranslatef(r, -mapPanel.x, -mapPanel.y);
-    r = rectTranslatef(r, viewport.x, viewport.y);
-    return r;
-}
-
-inline vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    v = vec2Translatef(v, -map->viewport.x, -map->viewport.y);
-    v = vec2Translatef(v, map->mapPanel.x, map->mapPanel.y);
-    v = vec2Scalef(v, context->globalScale);
-    return v;
-}
-
-inline rect rectMapToScreenCoordinates(WarContext* context, rect r)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    r = rectTranslatef(r, -map->viewport.x, -map->viewport.y);
-    r = rectTranslatef(r, map->mapPanel.x, map->mapPanel.y);
-    r = rectScalef(r, context->globalScale);
-    return r;
 }

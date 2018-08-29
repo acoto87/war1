@@ -232,12 +232,7 @@ void updateGame(WarContext *context)
         // check if the click is inside the map panel
         if(rectContainsf(mapPanel, input->x, input->y))
         {
-            rect pointerRect;
-            pointerRect.x = fminf(input->dragStartX, input->x);
-            pointerRect.y = fminf(input->dragStartY, input->y);
-            pointerRect.width = fabsf(input->dragStartX - input->x);
-            pointerRect.height = fabsf(input->dragStartY - input->y);
-
+            rect pointerRect = rectpf(input->dragStartX, input->dragStartY, input->x, input->y);
             pointerRect = rectScreenToMapCoordinates(context, pointerRect);
 
             for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)

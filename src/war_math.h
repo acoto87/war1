@@ -137,6 +137,15 @@ rect recti(s32 x, s32 y, s32 width, s32 height)
     return (rect){(f32)x, (f32)y, (f32)width, (f32)height}; 
 }
 
+rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2)
+{
+    return rectf(
+        fminf(x1, x2),
+        fminf(y1, y2),
+        fabsf(x1 - x2), 
+        fabsf(y1 - y2));
+}
+
 bool rectContainsf(rect r, f32 x, f32 y)
 {
     return x >= r.x && x <= r.x + r.width &&
@@ -163,4 +172,14 @@ rect rectTranslatef(rect r, f32 x, f32 y)
     r.x += x;
     r.y += y;
     return r;
+}
+
+inline void vec2Print(vec2 v)
+{
+    printf("(%f, %f)\n", v.x, v.y);
+}
+
+inline void rectPrint(rect r)
+{
+    printf("(%f, %f, %f, %f)\n", r.x, r.y, r.width, r.height);
 }
