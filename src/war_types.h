@@ -463,15 +463,15 @@ typedef struct
     s32 levelInfoIndex;
     s32 scrollSpeed;
 
-    Rect viewport;
+    rect viewport;
     
-    Rect leftTopPanel;
-    Rect leftBottomPanel;
-    Rect topPanel;
-    Rect bottomPanel;
-    Rect rightPanel;
-    Rect mapPanel;
-    Rect minimapPanel;
+    rect leftTopPanel;
+    rect leftBottomPanel;
+    rect topPanel;
+    rect bottomPanel;
+    rect rightPanel;
+    rect mapPanel;
+    rect minimapPanel;
 
     WarSprite sprite;
     WarSprite minimapSprite;
@@ -493,6 +493,8 @@ typedef enum
 
 typedef enum
 {
+    WAR_KEY_CTRL,
+    WAR_KEY_SHIFT,
     WAR_KEY_LEFT,
     WAR_KEY_RIGHT,
     WAR_KEY_DOWN,
@@ -503,9 +505,27 @@ typedef enum
 
 typedef struct
 {
+    // indicates if the key is pressed in the current frame
+    bool pressed; 
+
+    // indicate if the key was pressed in the previous frame
+    bool wasPressed; 
+} WarKeyButtonState;
+
+typedef struct
+{
+    // mouse position
     f32 x, y;
-    bool buttons[WAR_MOUSE_COUNT];
-    bool keys[WAR_KEY_COUNT];
+
+    // state of the mouse buttons
+    WarKeyButtonState buttons[WAR_MOUSE_COUNT];
+
+    // state of the keys
+    WarKeyButtonState keys[WAR_KEY_COUNT];
+
+    // drag
+    bool dragging;
+    f32 dragStartX, dragStartY;
 } WarInput;
 
 typedef struct 

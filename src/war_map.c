@@ -126,7 +126,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 {
     assert(levelInfoIndex >= 0 && levelInfoIndex < MAX_RESOURCES_COUNT);
 
-    WarResource *resource = context->resources[levelInfoIndex];
+    WarResource *resource = getOrCreateResource(context, levelInfoIndex);
     assert(resource && resource->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
     WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
@@ -134,24 +134,24 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     map->tilesetType = MAP_TILESET_FOREST;
     map->scrollSpeed = 200;
 
-    map->leftTopPanel = (Rect){0, 0, 72, 72};
-    map->leftBottomPanel = (Rect){0, 72, 72, 128};
-    map->rightPanel = (Rect){312, 0, 8, 200};
-    map->topPanel = (Rect){72, 0, 240, 12};
-    map->bottomPanel = (Rect){72, 188, 240, 12};
-    map->mapPanel = (Rect){72, 12, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT};
-    map->minimapPanel = (Rect){3, 6, MINIMAP_WIDTH, MINIMAP_HEIGHT};
+    map->leftTopPanel = recti(0, 0, 72, 72);
+    map->leftBottomPanel = recti(0, 72, 72, 128);
+    map->rightPanel = recti(312, 0, 8, 200);
+    map->topPanel = recti(72, 0, 240, 12);
+    map->bottomPanel = recti(72, 188, 240, 12);
+    map->mapPanel = recti(72, 12, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
+    map->minimapPanel = recti(3, 6, MINIMAP_WIDTH, MINIMAP_HEIGHT);
 
-    map->viewport = (Rect){0, 0, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT};
+    map->viewport = recti(0, 0, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
     context->map = map;
 
-    WarResource *levelInfo = context->resources[map->levelInfoIndex];
+    WarResource *levelInfo = getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
     // create the map sprite
     {
-        WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+        WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
         assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
         map->sprite = createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
@@ -245,8 +245,10 @@ void renderMap(WarContext *context)
 
     NVGcontext *gfx = context->gfx;
 
-    WarResource *levelInfo = context->resources[map->levelInfoIndex];
+    WarResource *levelInfo = getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+    nvgSave(gfx);
 
     nvgScale(gfx, context->globalScale, context->globalScale);
 
@@ -259,10 +261,10 @@ void renderMap(WarContext *context)
         
         // render terrain
         {
-            WarResource *levelVisual = context->resources[levelInfo->levelInfo.visualIndex];
+            WarResource *levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
             assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-            WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+            WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
             assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
@@ -298,7 +300,7 @@ void renderMap(WarContext *context)
                 WarEntity *entity = map->entities[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
                 {
-                    renderEntity(context, entity);
+                    renderEntity(context, entity, false);
                 }
             }
         }
@@ -310,7 +312,7 @@ void renderMap(WarContext *context)
                 WarEntity *entity = map->entities[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
                 {
-                    renderEntity(context, entity);
+                    renderEntity(context, entity, map->selectedEntities[i]);
                 }
             }
         }
@@ -327,7 +329,7 @@ void renderMap(WarContext *context)
             //         nvgBeginPath(gfx);
             //         nvgRect(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             //         nvgStrokeWidth(gfx, 0.5f);
-            //         nvgStrokeColor(gfx, nvgRGBA(255, 255, 255, 255));
+            //         nvgStrokeColor(gfx, NVG_WHITE);
             //         nvgStroke(gfx);
 
             //         nvgRestore(gfx);
@@ -347,7 +349,7 @@ void renderMap(WarContext *context)
             WarEntity *entity = map->entities[i];
             if (entity && entity->type == WAR_ENTITY_TYPE_IMAGE)
             {
-                renderEntity(context, entity);
+                renderEntity(context, entity, false);
             }
         }
 
@@ -360,7 +362,7 @@ void renderMap(WarContext *context)
 
             // nvgBeginPath(gfx);
             // nvgRect(gfx, 0, 0, MINIMAP_WIDTH, MINIMAP_HEIGHT);
-            // nvgFillColor(gfx, nvgRGBA(120, 120, 120, 120));
+            // nvgFillColor(gfx, NVG_GRAY_TRANSPARENT);
             // nvgFill(gfx);
 
             // nvgRestore(gfx);
@@ -370,10 +372,10 @@ void renderMap(WarContext *context)
         {
             // nvgSave(gfx);
 
-            // WarResource *levelVisual = context->resources[levelInfo->levelInfo.visualIndex];
+            // WarResource *levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
             // assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-            // WarResource *tileset = context->resources[levelInfo->levelInfo.tilesetIndex];
+            // WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
             // assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
             // u8 *minimapData = (u8*)calloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
@@ -409,7 +411,7 @@ void renderMap(WarContext *context)
             nvgBeginPath(gfx);
             nvgRect(gfx, 0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
             nvgStrokeWidth(gfx, 1.0f/context->globalScale);
-            nvgStrokeColor(gfx, nvgRGBA(255, 255, 255, 255));
+            nvgStrokeColor(gfx, NVG_WHITE);
             nvgStroke(gfx);
 
             nvgRestore(gfx);
@@ -417,4 +419,77 @@ void renderMap(WarContext *context)
 
         nvgRestore(gfx);
     }
+
+    nvgRestore(gfx);
+}
+
+inline vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    f32 scale = context->globalScale;
+
+    rect mapPanel = rectScalef(map->mapPanel, scale);
+    rect viewport = rectScalef(map->viewport, scale);
+
+    v = vec2Translatef(v, -mapPanel.x, -mapPanel.y);
+    v = vec2Translatef(v, viewport.x, viewport.y);
+    return v;
+}
+
+inline vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    f32 scale = context->globalScale;
+
+    rect minimapPanel = rectScalef(map->minimapPanel, scale);
+    vec2 minimapPanelSize = vec2i(minimapPanel.width, minimapPanel.height);
+
+    vec2 minimapViewportSize = vec2i(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
+    minimapViewportSize = vec2Scalef(minimapViewportSize, scale);
+
+    v = vec2Translatef(v, -minimapPanel.x, -minimapPanel.y);
+    v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
+    v = vec2Clampv(v, VEC2_ZERO, vec2Subv(minimapPanelSize, minimapViewportSize));
+    return v;
+}
+
+inline rect rectScreenToMapCoordinates(WarContext* context, rect r)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    f32 scale = context->globalScale;
+    
+    rect mapPanel = rectScalef(map->mapPanel, scale);
+    rect viewport = rectScalef(map->viewport, scale);
+
+    r = rectTranslatef(r, -mapPanel.x, -mapPanel.y);
+    r = rectTranslatef(r, viewport.x, viewport.y);
+    return r;
+}
+
+inline vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    v = vec2Translatef(v, -map->viewport.x, -map->viewport.y);
+    v = vec2Translatef(v, map->mapPanel.x, map->mapPanel.y);
+    v = vec2Scalef(v, context->globalScale);
+    return v;
+}
+
+inline rect rectMapToScreenCoordinates(WarContext* context, rect r)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    r = rectTranslatef(r, -map->viewport.x, -map->viewport.y);
+    r = rectTranslatef(r, map->mapPanel.x, map->mapPanel.y);
+    r = rectScalef(r, context->globalScale);
+    return r;
 }

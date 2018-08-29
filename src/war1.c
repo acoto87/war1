@@ -18,8 +18,6 @@
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
-#include "cglm.h"
-
 #include "nanovg.c"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.h"

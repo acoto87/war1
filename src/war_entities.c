@@ -22,8 +22,8 @@ void addTransformComponent(WarContext *context, WarEntity *entity, vec2 position
 {
     entity->transform = (WarTransformComponent){0};
     entity->transform.enabled = true;
-    entity->transform.position[0] = position[0];
-    entity->transform.position[1] = position[1];
+    entity->transform.position.x = position.x;
+    entity->transform.position.y = position.y;
 }
 
 void addSpriteComponent(WarContext *context, WarEntity *entity, WarSprite sprite)
@@ -91,7 +91,7 @@ void addUnitComponent(WarContext *context, WarEntity *entity, WarUnitType type, 
     entity->unit.player = player;
     entity->unit.value = value;
 
-    addTransformComponent(context, entity, (vec2){x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT});
+    addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
 
     s32 spriteIndex = unitsData[type * 4 + 1];
     if (spriteIndex == 0)
@@ -120,6 +120,23 @@ void addRoadComponent(WarContext *context, WarEntity *entity, WarRoadPieceList p
     addSpriteComponent(context, entity, context->map->sprite);
 }
 
+rect getUnitRect(WarContext *context, WarEntity* entity)
+{
+    WarTransformComponent transform = entity->transform;
+    WarUnitComponent unit = entity->unit;
+
+    f32 scale = context->globalScale;
+
+    rect unitRect = rectf(
+        transform.position.x,
+        transform.position.y,
+        unit.sizex * MEGA_TILE_WIDTH,
+        unit.sizey * MEGA_TILE_HEIGHT);
+
+    unitRect = rectScalef(unitRect, scale);
+    return unitRect;
+}
+
 void renderImage(WarContext *context, WarEntity *entity)
 {
     NVGcontext *gfx = context->gfx;
@@ -146,7 +163,7 @@ void renderImage(WarContext *context, WarEntity *entity)
         if (transform.enabled)
         {
             nvgTranslate(gfx, -dx, -dy);
-            nvgTranslate(gfx, transform.position[0], transform.position[1]);
+            nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
 
         renderSprite(context, &sprite.sprite, 0, 0);
@@ -165,7 +182,7 @@ void renderRoad(WarContext *context, WarEntity *entity)
     {
         if (transform.enabled)
         {
-            nvgTranslate(gfx, transform.position[0], transform.position[1]);
+            nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
 
         if (road.enabled)
@@ -218,7 +235,7 @@ void renderRoad(WarContext *context, WarEntity *entity)
     }
 }
 
-void renderUnit(WarContext *context, WarEntity *entity)
+void renderUnit(WarContext *context, WarEntity *entity, bool selected)
 {
     NVGcontext *gfx = context->gfx;
 
@@ -230,6 +247,7 @@ void renderUnit(WarContext *context, WarEntity *entity)
     {
         u8 *pixels = NULL;
         s32 dx = 0, dy = 0;
+        s32 w, h;
 
         if (sprite.resourceIndex)
         {
@@ -239,27 +257,31 @@ void renderUnit(WarContext *context, WarEntity *entity)
                 pixels = resource->spriteData.frames[sprite.frameIndex].data;
                 dx = resource->spriteData.frames[sprite.frameIndex].dx;
                 dy = resource->spriteData.frames[sprite.frameIndex].dy;
+                w = resource->spriteData.frames[sprite.frameIndex].w;
+                h = resource->spriteData.frames[sprite.frameIndex].h;
             }
         }
 
         if (transform.enabled)
         {
             nvgTranslate(gfx, -dx, -dy);
-            nvgTranslate(gfx, transform.position[0], transform.position[1]);
+            nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
 
-        // DEBUG
-        // nvgBeginPath(gfx);
-        // nvgRect(gfx, 0, 0, unit.sizex * MEGA_TILE_WIDTH, unit.sizey * MEGA_TILE_HEIGHT);
-        // nvgFillColor(gfx, nvgRGBA(120, 120, 120, 120));
-        // nvgFill(gfx);
+        if (selected)
+        {
+            nvgBeginPath(gfx);
+            nvgRect(gfx, dx, dy, w, h);
+            nvgStrokeColor(gfx, NVG_WHITE);
+            nvgStroke(gfx);
+        }
 
         updateSprite(context, &sprite.sprite, pixels);
         renderSprite(context, &sprite.sprite, 0, 0);
     }
 }
 
-void renderEntity(WarContext *context, WarEntity *entity)
+void renderEntity(WarContext *context, WarEntity *entity, bool selected)
 {
     NVGcontext *gfx = context->gfx;
 
@@ -277,7 +299,7 @@ void renderEntity(WarContext *context, WarEntity *entity)
 
             case WAR_ENTITY_TYPE_UNIT:
             {
-                renderUnit(context, entity);
+                renderUnit(context, entity, selected);
                 break;
             }
 

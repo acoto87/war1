@@ -135,13 +135,25 @@ const s32 roadsData[] =
     WAR_ROAD_PIECE_TOP_RIGHT,           70,                          71        
 };
 
+WarResource* getOrCreateResource(WarContext *context, s32 index)
+{
+    assert(index >= 0 && index < MAX_RESOURCES_COUNT);
+    if (!context->resources[index])
+    {
+        printf("Creating resource: %d\n", index);
+        context->resources[index] = (WarResource*)xcalloc(1, sizeof(WarResource));
+    }
+    return context->resources[index];
+}
+
 void getPalette(WarContext *context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
 {
     memset(paletteData, 0, PALETTE_LENGTH);
 
     if (palette1Index)
     {
-        u8 *palette1Data = context->resources[palette1Index]->paletteData.colors;
+        WarResource* palette1 = getOrCreateResource(context, palette1Index);
+        u8 *palette1Data = palette1->paletteData.colors;
         memcpy(paletteData, palette1Data, PALETTE_LENGTH);
     }
 
@@ -149,7 +161,8 @@ void getPalette(WarContext *context, s32 palette1Index, s32 palette2Index, u8 *p
     // for now leave it whenevenr there is specified a second palette on the entry
     if (palette2Index)
     {
-        u8 *palette2Data = context->resources[palette2Index]->paletteData.colors;
+        WarResource* palette2 = getOrCreateResource(context, palette2Index);
+        u8 *palette2Data = palette2->paletteData.colors;
         
         for (s32 i = 0; i < 128; ++i)
         {
@@ -175,16 +188,6 @@ void getPalette(WarContext *context, s32 palette1Index, s32 palette2Index, u8 *p
             }
         }
     }
-}
-
-WarResource* getOrCreateResource(WarContext *context, s32 index)
-{
-    assert(index >= 0 && index < MAX_RESOURCES_COUNT);
-    if (!context->resources[index])
-    {
-        context->resources[index] = (WarResource*)xcalloc(1, sizeof(WarResource));
-    }
-    return context->resources[index];
 }
 
 void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
