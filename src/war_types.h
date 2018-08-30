@@ -52,6 +52,11 @@
 #define MAX_UPGRADES_COUNT 10
 #define MAX_TILES_COUNT 1024
 
+#define isButtonPressed(input, btn) (input->buttons[btn].pressed)
+#define wasButtonPressed(input, btn) (input->buttons[btn].wasPressed)
+#define isKeyPressed(input, key) (input->keys[key].pressed)
+#define wasKeyPressed(input, key) (input->keys[key].wasPressed)
+
 typedef struct 
 {
     bool placeholder;
@@ -202,6 +207,8 @@ typedef enum
 
     // others
     WAR_UNIT_ORC_CORPSE,
+
+    WAR_UNIT_COUNT
 } WarUnitType;
 
 typedef struct
@@ -404,14 +411,6 @@ typedef struct
 typedef struct
 {
     bool enabled;
-    bool loop;
-    f32 offset;
-    f32 duration;
-} WarAnimationComponent;
-
-typedef struct
-{
-    bool enabled;
     WarUnitType type;
     WarUnitDirection direction;
 
@@ -424,8 +423,24 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    bool moving;
+    bool movingToAttack;
+    vec2 target;
+} WarMovementComponent;
+
+typedef struct
+{
+    bool enabled;
     WarRoadPieceList pieces;
 } WarRoadComponent;
+
+typedef struct
+{
+    bool enabled;
+    bool loop;
+    f32 offset;
+    f32 duration;
+} WarAnimationComponent;
 
 typedef struct
 {
@@ -434,9 +449,10 @@ typedef struct
     WarEntityType type;
     WarTransformComponent transform;
     WarSpriteComponent sprite;
-    WarAnimationComponent anim;
-    WarUnitComponent unit;
     WarRoadComponent road;
+    WarUnitComponent unit;
+    WarMovementComponent movement;
+    WarAnimationComponent anim;
 } WarEntity;
 
 typedef struct
@@ -463,8 +479,11 @@ typedef struct
     s32 levelInfoIndex;
     s32 scrollSpeed;
 
+    // viewport in map coordinates, 
+    // this is the portion of the map that the player see
     rect viewport;
     
+    // panels of the ui, in screen coordinates
     rect leftTopPanel;
     rect leftBottomPanel;
     rect topPanel;
@@ -515,7 +534,7 @@ typedef struct
 typedef struct
 {
     // mouse position
-    f32 x, y;
+    vec2 pos;
 
     // state of the mouse buttons
     WarKeyButtonState buttons[WAR_MOUSE_COUNT];
@@ -525,7 +544,7 @@ typedef struct
 
     // drag
     bool dragging;
-    f32 dragStartX, dragStartY;
+    vec2 dragPos;
 } WarInput;
 
 typedef struct 

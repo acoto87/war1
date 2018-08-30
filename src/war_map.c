@@ -3,10 +3,8 @@ inline vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
     WarMap* map = context->map;
     assert(map);
 
-    f32 scale = context->globalScale;
-
-    rect mapPanel = rectScalef(map->mapPanel, scale);
-    rect viewport = rectScalef(map->viewport, scale);
+    rect mapPanel = map->mapPanel;
+    rect viewport = map->viewport;
 
     v = vec2Translatef(v, -mapPanel.x, -mapPanel.y);
     v = vec2Translatef(v, viewport.x, viewport.y);
@@ -18,13 +16,10 @@ inline vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
     WarMap* map = context->map;
     assert(map);
 
-    f32 scale = context->globalScale;
+    rect minimapPanel = map->minimapPanel;
+    vec2 minimapPanelSize = vec2f(minimapPanel.width, minimapPanel.height);
 
-    rect minimapPanel = rectScalef(map->minimapPanel, scale);
-    vec2 minimapPanelSize = vec2i(minimapPanel.width, minimapPanel.height);
-
-    vec2 minimapViewportSize = vec2i(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
-    minimapViewportSize = vec2Scalef(minimapViewportSize, scale);
+    vec2 minimapViewportSize = vec2f(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
 
     v = vec2Translatef(v, -minimapPanel.x, -minimapPanel.y);
     v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
@@ -37,10 +32,8 @@ inline rect rectScreenToMapCoordinates(WarContext* context, rect r)
     WarMap* map = context->map;
     assert(map);
 
-    f32 scale = context->globalScale;
-    
-    rect mapPanel = rectScalef(map->mapPanel, scale);
-    rect viewport = rectScalef(map->viewport, scale);
+    rect mapPanel = map->mapPanel;
+    rect viewport = map->viewport;
 
     r = rectTranslatef(r, -mapPanel.x, -mapPanel.y);
     r = rectTranslatef(r, viewport.x, viewport.y);
@@ -54,7 +47,6 @@ inline vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
 
     v = vec2Translatef(v, -map->viewport.x, -map->viewport.y);
     v = vec2Translatef(v, map->mapPanel.x, map->mapPanel.y);
-    v = vec2Scalef(v, context->globalScale);
     return v;
 }
 
@@ -65,7 +57,6 @@ inline rect rectMapToScreenCoordinates(WarContext* context, rect r)
 
     r = rectTranslatef(r, -map->viewport.x, -map->viewport.y);
     r = rectTranslatef(r, map->mapPanel.x, map->mapPanel.y);
-    r = rectScalef(r, context->globalScale);
     return r;
 }
 
@@ -195,10 +186,8 @@ void determineRoadTypes(WarRoadPieceList *pieces)
 
 void createMap(WarContext *context, s32 levelInfoIndex)
 {
-    assert(levelInfoIndex >= 0 && levelInfoIndex < MAX_RESOURCES_COUNT);
-
-    WarResource *resource = getOrCreateResource(context, levelInfoIndex);
-    assert(resource && resource->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+    WarResource *levelInfo = getOrCreateResource(context, levelInfoIndex);
+    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
     WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
@@ -213,12 +202,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     map->mapPanel = recti(72, 12, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
     map->minimapPanel = recti(3, 6, MINIMAP_WIDTH, MINIMAP_HEIGHT);
 
-    map->viewport = recti(0, 0, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
+    s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
+    s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
+    map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
     context->map = map;
-
-    WarResource *levelInfo = getOrCreateResource(context, map->levelInfoIndex);
-    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
     // create the map sprite
     {
@@ -248,6 +236,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
         WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
         addRoadComponent(context, entity, pieces);
+        addSpriteComponent(context, entity, map->sprite);
 
         map->entities[entitiesCount++] = entity;
     }
@@ -260,6 +249,20 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
             addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.value);
+            addTransformComponent(context, entity, vec2i(unit.x * MEGA_TILE_WIDTH, unit.y * MEGA_TILE_HEIGHT));
+
+            s32 spriteIndex = unitsData[unit.type * 4 + 1];
+            if (spriteIndex == 0)
+            {
+                fprintf(stderr, "Sprite for unit of type %d is not configure properly. Default to footman sprite.", unit.type);
+                spriteIndex = 279;
+            }
+            addSpriteComponentFromResource(context, entity, spriteIndex);
+
+            if (isDudeUnit(unit.type))
+            {
+                addMovementComponent(context, entity);
+            }
 
             map->entities[entitiesCount++] = entity;
         }
@@ -344,19 +347,18 @@ void renderMap(WarContext *context)
             {
                 for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
                 {
-                    s32 index = y * MAP_TILES_WIDTH + x;
-                    u16 tileIndex = levelVisual->levelVisual.data[index];
+                    // index of the tile in the tilesheet
+                    u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
 
+                    // coordinates in pixels of the terrain tile
                     s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
                     s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
                     nvgSave(gfx);
                     nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-
                     nvgRenderBatchImage(gfx, batch, 
                         tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT,
                         0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-
                     nvgRestore(gfx);
                 }
             }
@@ -411,27 +413,23 @@ void renderMap(WarContext *context)
         nvgRestore(gfx);
     }
 
-    // render select rect
-    {
-        nvgSave(gfx);
-
-        if (context->input.dragging)
-        {
-            rect pointerRect = rectpf(context->input.dragStartX, context->input.dragStartY, context->input.x, context->input.y);
-            pointerRect = rectScalef(pointerRect, 1/context->globalScale);
-
-            nvgBeginPath(gfx);
-            nvgRect(gfx, pointerRect.x, pointerRect.y, pointerRect.width, pointerRect.height);
-            nvgStrokeColor(gfx, NVG_WHITE);
-            nvgStroke(gfx);
-        }
-
-        nvgRestore(gfx);
-    }
-
     // render ui
     {
         nvgSave(gfx);
+
+        // render selection rect
+        {
+            WarInput* input = &context->input;
+            if (input->dragging)
+            {
+                rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
+
+                nvgBeginPath(gfx);
+                nvgRect(gfx, pointerRect.x, pointerRect.y, pointerRect.width, pointerRect.height);
+                nvgStrokeColor(gfx, NVG_GREEN_SELECTION);
+                nvgStroke(gfx);
+            }
+        }
 
         for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
         {

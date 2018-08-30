@@ -22,8 +22,9 @@ void addTransformComponent(WarContext *context, WarEntity *entity, vec2 position
 {
     entity->transform = (WarTransformComponent){0};
     entity->transform.enabled = true;
-    entity->transform.position.x = position.x;
-    entity->transform.position.y = position.y;
+    entity->transform.position = position;
+    entity->transform.rotation = VEC2_ZERO;
+    entity->transform.scale = VEC2_ONE;
 }
 
 void addSpriteComponent(WarContext *context, WarEntity *entity, WarSprite sprite)
@@ -37,13 +38,10 @@ void addSpriteComponent(WarContext *context, WarEntity *entity, WarSprite sprite
 
 void addSpriteComponentFromResource(WarContext *context, WarEntity *entity, s32 resourceIndex)
 {
+    assert(resourceIndex);
+
     WarResource *resource = getOrCreateResource(context, resourceIndex);
-    if (resource->type != WAR_RESOURCE_TYPE_IMAGE && 
-        resource->type != WAR_RESOURCE_TYPE_SPRITE)
-    {
-        fprintf(stderr, "Resource type not supported in sprite components: %d\n", resource->type);
-        return;
-    }
+    assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || resource->type == WAR_RESOURCE_TYPE_SPRITE);
 
     u8 *pixels = NULL;
     u32 w, h;
@@ -65,12 +63,6 @@ void addSpriteComponentFromResource(WarContext *context, WarEntity *entity, s32 
             h = resource->spriteData.frameHeight;
             break;
         }
-
-        default:
-        {
-            fprintf(stderr, "Unkown resource type: %d\n", resource->type);
-            return;
-        }
     }
 
     WarSprite sprite = createSprite(context, w, h, pixels);
@@ -90,16 +82,19 @@ void addUnitComponent(WarContext *context, WarEntity *entity, WarUnitType type, 
     entity->unit.sizey = unitsData[type * 4 + 3];
     entity->unit.player = player;
     entity->unit.value = value;
+}
 
-    addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
+void addMovementComponent(WarContext* context, WarEntity* entity)
+{
+    entity->movement = (WarMovementComponent){0};
+    entity->movement.enabled = true;
+}
 
-    s32 spriteIndex = unitsData[type * 4 + 1];
-    if (spriteIndex == 0)
-    {
-        fprintf(stderr, "Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
-        spriteIndex = 279;
-    }
-    addSpriteComponentFromResource(context, entity, spriteIndex);
+void addRoadComponent(WarContext *context, WarEntity *entity, WarRoadPieceList pieces)
+{
+    entity->road = (WarRoadComponent){0};
+    entity->road.enabled = true;
+    entity->road.pieces = pieces;
 }
 
 void addAnimationComponent(WarContext *context, WarEntity *entity, f32 duration, bool loop)
@@ -111,21 +106,10 @@ void addAnimationComponent(WarContext *context, WarEntity *entity, f32 duration,
     entity->anim.offset = 0;
 }
 
-void addRoadComponent(WarContext *context, WarEntity *entity, WarRoadPieceList pieces)
-{
-    entity->road = (WarRoadComponent){0};
-    entity->road.enabled = true;
-    entity->road.pieces = pieces;
-
-    addSpriteComponent(context, entity, context->map->sprite);
-}
-
 rect getUnitRect(WarContext *context, WarEntity* entity)
 {
     WarTransformComponent transform = entity->transform;
     WarUnitComponent unit = entity->unit;
-
-    f32 scale = context->globalScale;
 
     rect unitRect = rectf(
         transform.position.x,
@@ -133,8 +117,89 @@ rect getUnitRect(WarContext *context, WarEntity* entity)
         unit.sizex * MEGA_TILE_WIDTH,
         unit.sizey * MEGA_TILE_HEIGHT);
 
-    unitRect = rectScalef(unitRect, scale);
     return unitRect;
+}
+
+WarSpriteFrame getSpriteFrame(WarContext* context, WarSpriteComponent sprite)
+{
+    assert(sprite.resourceIndex);
+
+    WarResource* resource = getOrCreateResource(context, sprite.resourceIndex);
+    assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || resource->type == WAR_RESOURCE_TYPE_SPRITE);
+
+    WarSpriteFrame frame = (WarSpriteFrame){0};
+    
+    switch (resource->type)
+    {
+        case WAR_RESOURCE_TYPE_IMAGE:
+            frame.data = resource->imageData.pixels;
+            frame.w = resource->imageData.width;
+            frame.h = resource->imageData.height;
+            break;
+
+        case WAR_RESOURCE_TYPE_SPRITE:
+        {
+            frame = resource->spriteData.frames[sprite.frameIndex];
+            break;
+        }
+    }
+
+    return frame;
+}
+
+inline bool isDudeUnit(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_PEASANT:
+        case WAR_UNIT_PEON:
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_CATAPULT_ORCS:
+        case WAR_UNIT_KNIGHT:
+        case WAR_UNIT_RAIDER:
+        case WAR_UNIT_ARCHER:
+        case WAR_UNIT_SPEARMAN:
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_NECROLYTE:
+        case WAR_UNIT_MEDIVH:
+            return true;
+    
+        default:
+            return false;
+    }
+}
+
+inline bool isBuildingUnit(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_FARM_HUMANS:
+        case WAR_UNIT_FARM_ORCS:
+        case WAR_UNIT_BARRACKS_HUMANS:
+        case WAR_UNIT_BARRACKS_ORCS:
+        case WAR_UNIT_CHURCH:
+        case WAR_UNIT_TEMPLE:
+        case WAR_UNIT_TOWER_HUMANS:
+        case WAR_UNIT_TOWER_ORCS:
+        case WAR_UNIT_TOWNHALL_HUMANS:
+        case WAR_UNIT_TOWNHALL_ORCS:
+        case WAR_UNIT_LUMBERMILL_HUMANS:
+        case WAR_UNIT_LUMBERMILL_ORCS:
+        case WAR_UNIT_STABLES:
+        case WAR_UNIT_KENNEL:
+        case WAR_UNIT_BLACKSMITH_HUMANS:
+        case WAR_UNIT_BLACKSMITH_ORCS:
+        case WAR_UNIT_STORMWIND:
+        case WAR_UNIT_BLACKROCK:
+            return true;
+    
+        default: 
+            return false;
+    }
 }
 
 void renderImage(WarContext *context, WarEntity *entity)
@@ -146,23 +211,11 @@ void renderImage(WarContext *context, WarEntity *entity)
 
     if (sprite.enabled)
     {
-        u8 *pixels = NULL;
-        s32 dx = 0, dy = 0;
-
-        if (sprite.resourceIndex)
-        {
-            WarResource *resource = getOrCreateResource(context, sprite.resourceIndex);
-            if (resource->type == WAR_RESOURCE_TYPE_SPRITE)
-            {
-                pixels = resource->spriteData.frames[sprite.frameIndex].data;
-                dx = resource->spriteData.frames[sprite.frameIndex].dx;
-                dy = resource->spriteData.frames[sprite.frameIndex].dy;
-            }
-        }
+        WarSpriteFrame frame = getSpriteFrame(context, sprite);
 
         if (transform.enabled)
         {
-            nvgTranslate(gfx, -dx, -dy);
+            nvgTranslate(gfx, -frame.dx, -frame.dy);
             nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
 
@@ -191,34 +244,28 @@ void renderRoad(WarContext *context, WarEntity *entity)
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite.sprite.image, road.pieces.count);
 
+            if (context->map->tilesetType != MAP_TILESET_FOREST &&
+                context->map->tilesetType != MAP_TILESET_SWAMP)
+            {
+                fprintf(stderr, "Unkown tileset for a road: %d\n", context->map->tilesetType);
+                return;
+            }
+
+            // this is the column index in the array roadsData
+            // later is used and determine the tileIndex for each piece of the road
+            s32 roadsDataIndex = (context->map->tilesetType + 1);
+
             for(s32 i = 0; i < road.pieces.count; i++)
             {
-                s32 tileIndex = 0;
+                // get the index of the tile in the spritesheet of the map, 
+                // corresponding to the current tileset type (forest, swamp)
+                s32 tileIndex = roadsData[pieces->items[i].type * 3 + roadsDataIndex];
 
+                // the position in the world of the road piece tile
                 s32 x = pieces->items[i].tilex;
                 s32 y = pieces->items[i].tiley;
 
-                switch (context->map->tilesetType)
-                {
-                    case MAP_TILESET_FOREST:
-                    {
-                        tileIndex = roadsData[pieces->items[i].type * 3 + 1];
-                        break;
-                    }
-                
-                    case MAP_TILESET_SWAMP:
-                    {
-                        tileIndex = roadsData[pieces->items[i].type * 3 + 2];
-                        break;
-                    }
-        
-                    default:
-                    {
-                        fprintf(stderr, "Unkown tileset for a road: %d\n", context->map->tilesetType);
-                        return;
-                    }
-                }
-
+                // coordinates in pixels of the road piece tile
                 s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
                 s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
@@ -245,39 +292,24 @@ void renderUnit(WarContext *context, WarEntity *entity, bool selected)
 
     if (sprite.enabled)
     {
-        u8 *pixels = NULL;
-        s32 dx = 0, dy = 0;
-        s32 w, h;
-
-        if (sprite.resourceIndex)
-        {
-            WarResource *resource = getOrCreateResource(context, sprite.resourceIndex);
-            if (resource->type == WAR_RESOURCE_TYPE_SPRITE)
-            {
-                pixels = resource->spriteData.frames[sprite.frameIndex].data;
-                dx = resource->spriteData.frames[sprite.frameIndex].dx;
-                dy = resource->spriteData.frames[sprite.frameIndex].dy;
-                w = resource->spriteData.frames[sprite.frameIndex].w;
-                h = resource->spriteData.frames[sprite.frameIndex].h;
-            }
-        }
+        WarSpriteFrame frame = getSpriteFrame(context, sprite);
 
         if (transform.enabled)
         {
-            nvgTranslate(gfx, -dx, -dy);
+            nvgTranslate(gfx, -frame.dx, -frame.dy);
             nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
+
+        updateSprite(context, &sprite.sprite, frame.data);
+        renderSprite(context, &sprite.sprite, 0, 0);
 
         if (selected)
         {
             nvgBeginPath(gfx);
-            nvgRect(gfx, dx, dy, w, h);
-            nvgStrokeColor(gfx, NVG_WHITE);
+            nvgRect(gfx, frame.dx, frame.dy, frame.w, frame.h);
+            nvgStrokeColor(gfx, NVG_GREEN_SELECTION);
             nvgStroke(gfx);
         }
-
-        updateSprite(context, &sprite.sprite, pixels);
-        renderSprite(context, &sprite.sprite, 0, 0);
     }
 }
 

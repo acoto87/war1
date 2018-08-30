@@ -128,12 +128,12 @@ bool initGame(WarContext *context)
     return true;
 }
 
-void setInputButton(WarContext* context, s32 key, bool pressed)
+void setInputButton(WarContext* context, s32 button, bool pressed)
 {
     WarInput* input = &context->input;
 
-    input->buttons[key].wasPressed = input->buttons[key].pressed && !pressed;
-    input->buttons[key].pressed = pressed;
+    input->buttons[button].wasPressed = input->buttons[button].pressed && !pressed;
+    input->buttons[button].pressed = pressed;
 }
 
 void setInputKey(WarContext* context, s32 key, bool pressed)
@@ -146,12 +146,13 @@ void setInputKey(WarContext* context, s32 key, bool pressed)
 
 void inputGame(WarContext *context)
 {
+    // mouse position
     f64 xpos, ypos;
     glfwGetCursorPos(context->window, &xpos, &ypos);
 
-    // mouse position
-    context->input.x = floorf((f32)xpos);
-    context->input.y = floorf((f32)ypos);
+    vec2 pos = vec2f((f32)floor(xpos), (f32)floor(ypos));
+    pos = vec2Scalef(pos, 1/context->globalScale);
+    context->input.pos = pos;
     
     // mouse buttons
     setInputButton(context, WAR_MOUSE_LEFT, glfwGetMouseButton(context->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
@@ -168,71 +169,97 @@ void inputGame(WarContext *context)
     setInputKey(context, WAR_KEY_DOWN, glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS);
 }
 
+void updateViewport(WarContext *context)
+{
+    WarMap *map = context->map;
+    WarInput *input = &context->input;
+
+    vec2 dir = VEC2_ZERO;
+
+    if (isKeyPressed(input, WAR_KEY_LEFT))
+        dir.x = -1;
+    else if (isKeyPressed(input, WAR_KEY_RIGHT))
+        dir.x = 1;
+
+    if (isKeyPressed(input, WAR_KEY_DOWN))
+        dir.y = 1;
+    else if (isKeyPressed(input, WAR_KEY_UP))
+        dir.y = -1;
+
+    dir = vec2Normalize(dir);
+
+    map->viewport.x += map->scrollSpeed * dir.x * context->deltaTime;
+    map->viewport.x = clamp(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
+
+    map->viewport.y += map->scrollSpeed * dir.y * context->deltaTime;
+    map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
+}
+
 void updateGame(WarContext *context)
 {
     WarMap *map = context->map;
-    if (!map) return;
-
     WarInput *input = &context->input;
 
-    f32 dirX = 0, dirY = 0;
+    updateViewport(context);
 
-    if (input->keys[WAR_KEY_LEFT].pressed)
-        dirX = -1;
-    else if (input->keys[WAR_KEY_RIGHT].pressed)
-        dirX = 1;
-
-    if (input->keys[WAR_KEY_DOWN].pressed)
-        dirY = 1;
-    else if (input->keys[WAR_KEY_UP].pressed)
-        dirY = -1;
-
-    map->viewport.x += map->scrollSpeed * dirX * context->deltaTime;
-    map->viewport.x = clamp(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
-
-    map->viewport.y += map->scrollSpeed * dirY * context->deltaTime;
-    map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
-
-    if (input->buttons[WAR_MOUSE_LEFT].pressed)
+    // process all moving entities
+    for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
     {
-        f32 scale = context->globalScale;
+        WarEntity* entity = map->entities[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        {
+            WarTransformComponent* transform = &entity->transform;
+            WarMovementComponent* movement = &entity->movement;
+            if (transform->enabled && movement->enabled)
+            {
+                if (movement->moving)
+                {
+                    vec2 dir = vec2Normalize(vec2Subv(movement->target, transform->position));
+                    transform->position = vec2Addv(transform->position, vec2Mulf(dir, 150 * context->deltaTime));
 
-        rect minimapPanel = rectScalef(map->minimapPanel, scale);
-        rect mapPanel = rectScalef(map->mapPanel, scale);
+                    if (vec2Length(vec2Subv(movement->target, transform->position)) < 5)
+                    {
+                        movement->target = VEC2_ZERO;
+                        movement->moving = false;
+                    }
+                }
+            }
+        }
+    }
+
+    if (isButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        rect minimapPanel = map->minimapPanel;
+        rect mapPanel = map->mapPanel;
 
         // check if the click is inside the minimap panel        
-        if (rectContainsf(minimapPanel, input->x, input->y))
+        if (rectContainsf(minimapPanel, input->pos.x, input->pos.y))
         {
             vec2 minimapSize = vec2i(MINIMAP_WIDTH, MINIMAP_HEIGHT);
-            minimapSize = vec2Scalef(minimapSize, scale);
-
-            vec2 offset = vec2ScreenToMinimapCoordinates(context, vec2f(input->x, input->y));
+            vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
 
             map->viewport.x = offset.x * MAP_WIDTH / minimapSize.x;
             map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
         }
         // check if the click is inside the map panel
-        else if(rectContainsf(mapPanel, input->x, input->y))
+        else if(rectContainsf(mapPanel, input->pos.x, input->pos.y))
         {
             if (!input->dragging)
             {
-                input->dragStartX = input->x;
-                input->dragStartY = input->y;
+                input->dragPos = input->pos;
                 input->dragging = true;
             }
         }
     }
-    else if(input->buttons[WAR_MOUSE_LEFT].wasPressed)
+    else if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        f32 scale = context->globalScale;
-
-        rect minimapPanel = rectScalef(map->minimapPanel, scale);
-        rect mapPanel = rectScalef(map->mapPanel, scale);
+        rect minimapPanel = map->minimapPanel;
+        rect mapPanel = map->mapPanel;
 
         // check if the click is inside the map panel
-        if(rectContainsf(mapPanel, input->x, input->y))
+        if(input->dragging || rectContainsf(mapPanel, input->pos.x, input->pos.y))
         {
-            rect pointerRect = rectpf(input->dragStartX, input->dragStartY, input->x, input->y);
+            rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
             pointerRect = rectScreenToMapCoordinates(context, pointerRect);
 
             for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
@@ -253,13 +280,42 @@ void updateGame(WarContext *context)
                         else if (!input->keys[WAR_KEY_CTRL].pressed)
                         {
                             map->selectedEntities[i] = false;
-                        }   
+                        }
                     }
                 }
             }
         }
 
         input->dragging = false;
+    }
+
+    if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
+    {
+        WarEntity* selEntity = NULL;
+        
+        for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+        {
+            WarEntity* entity = map->entities[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_UNIT && map->selectedEntities[i])
+            {
+                selEntity = entity;
+                break;
+            }
+        }
+
+        if (selEntity)
+        {
+            WarUnitComponent* unit = &selEntity->unit;
+            if (isDudeUnit(unit->type))
+            {
+                WarMovementComponent* movement = &selEntity->movement;
+                if (movement->enabled)
+                {
+                    movement->target = vec2ScreenToMapCoordinates(context, input->pos);
+                    movement->moving = true;
+                }
+            }
+        }
     }
 }
 
