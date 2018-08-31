@@ -108,14 +108,14 @@ inline vec2 vec2Inverse(vec2 v)
     };
 }
 
-inline f32 vec2LengthSq(vec2 v)
+inline f32 vec2LengthSqr(vec2 v)
 {
     return v.x * v.x + v.y * v.y;
 }
 
 inline f32 vec2Length(vec2 v)
 {
-    return sqrtf(v.x * v.x + v.y * v.y);
+    return sqrtf(vec2LengthSqr(v));
 }
 
 inline vec2 vec2Normalize(vec2 v)

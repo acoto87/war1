@@ -214,6 +214,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
         map->sprite = createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
+        map->minimapSprite = createSprite(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, NULL);
     }
 
     s32 entitiesCount = 0;
@@ -419,6 +420,8 @@ void renderMap(WarContext *context)
 
         // render selection rect
         {
+            nvgSave(gfx);
+
             WarInput* input = &context->input;
             if (input->dragging)
             {
@@ -429,63 +432,119 @@ void renderMap(WarContext *context)
                 nvgStrokeColor(gfx, NVG_GREEN_SELECTION);
                 nvgStroke(gfx);
             }
+
+            nvgRestore(gfx);
         }
 
-        for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+        // render images
         {
-            WarEntity *entity = map->entities[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_IMAGE)
+            nvgSave(gfx);
+
+            for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
             {
-                renderEntity(context, entity, false);
+                WarEntity *entity = map->entities[i];
+                if (entity && entity->type == WAR_ENTITY_TYPE_IMAGE)
+                {
+                    renderEntity(context, entity, false);
+                }
             }
+
+            nvgRestore(gfx);
         }
-
-        // DEBUG
-        // render minimap position
-        {
-            // nvgSave(gfx);
-
-            // nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
-
-            // nvgBeginPath(gfx);
-            // nvgRect(gfx, 0, 0, MINIMAP_WIDTH, MINIMAP_HEIGHT);
-            // nvgFillColor(gfx, NVG_GRAY_TRANSPARENT);
-            // nvgFill(gfx);
-
-            // nvgRestore(gfx);
-        }
-
+        
         // render minimap
         {
-            // nvgSave(gfx);
+            nvgSave(gfx);
 
-            // WarResource *levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-            // assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+            WarResource *levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+            assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-            // WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
-            // assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
+            WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
+            assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
-            // u8 *minimapData = (u8*)calloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
-            // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-            // {
-            //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            //     {
-            //         s32 index = y * MAP_TILES_WIDTH + x;
-            //         u16 tileIndex = levelVisual->levelVisual.data[index];
+            u8 *minimapData = (u8*)calloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
+            for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+            {
+                for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+                {
+                    s32 index = y * MAP_TILES_WIDTH + x;
+                    u16 tileIndex = levelVisual->levelVisual.data[index];
 
-            //         s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-            //         s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+                    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            //         nvgSave(gfx);
-            //         nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-            //         renderSubSprite(context, &map->sprite, NULL, tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            //         nvgRestore(gfx);
-            //     }
-            // }
+                    s32 r = 0, g = 0, b = 0;
 
-            // renderSprite(context, &map->minimapSprite, minimapData);
+                    for(s32 ty = 0; ty < MEGA_TILE_HEIGHT; ty++)
+                    {
+                        for(s32 tx = 0; tx < MEGA_TILE_WIDTH; tx++)
+                        {
+                            s32 pixel = (tilePixelY + ty) * TILESET_WIDTH + (tilePixelX + tx);
+                            r += tileset->tilesetData.data[pixel * 4 + 0];
+                            g += tileset->tilesetData.data[pixel * 4 + 1];
+                            b += tileset->tilesetData.data[pixel * 4 + 2];
+                        }
+                    }
 
-            // nvgRestore(gfx);
+                    r /= 256;
+                    g /= 256;
+                    b /= 256;
+
+                    minimapData[index * 4 + 0] = (u8)r;
+                    minimapData[index * 4 + 1] = (u8)g;
+                    minimapData[index * 4 + 2] = (u8)b;
+                    minimapData[index * 4 + 3] = 255;
+                }
+            }
+            
+            for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+            {
+                u8 r = 211, g = 211, b = 211;
+
+                WarEntity* entity = map->entities[i];
+                if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+                {
+                    WarUnitComponent unit = entity->unit;
+
+                    if (unit.type == WAR_UNIT_TOWNHALL_HUMANS || 
+                        unit.type == WAR_UNIT_TOWNHALL_ORCS)
+                    {
+                        r = 255; g = 255; b = 0;
+                    }
+                    else if(unit.player == 0)
+                    {
+                        r = 0; g = 199; b = 0;
+                    }
+                    else if(unit.player < 4)
+                    {
+                        r = 199; g = 0; b = 0;
+                    }
+
+                    WarTransformComponent transform = entity->transform;
+                    s32 tileX = (s32)(transform.position.x/MEGA_TILE_WIDTH);
+                    s32 tileY = (s32)(transform.position.y/MEGA_TILE_HEIGHT);
+
+                    for(s32 y = 0; y < unit.sizey; y++)
+                    {
+                        for(s32 x = 0; x < unit.sizex; x++)
+                        {
+                            s32 pixel = (tileY + y) * MINIMAP_WIDTH + (tileX + x);
+                            minimapData[pixel * 4 + 0] = r;
+                            minimapData[pixel * 4 + 1] = g;
+                            minimapData[pixel * 4 + 2] = b;
+                        }
+                    }
+                }
+            }
+
+            nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
+
+            updateSprite(context, &map->minimapSprite, minimapData);
+            renderSprite(context, &map->minimapSprite, 0, 0);
+
+            free(minimapData);
+
+            nvgRestore(gfx);
         }
 
         // render minimap viewport

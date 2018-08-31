@@ -343,7 +343,7 @@ void renderEntity(WarContext *context, WarEntity *entity, bool selected)
 
             default:
             {
-                fprintf(stderr, "Entity of type %d can't be redered.\n", entity->type);
+                fprintf(stderr, "Entity of type %d can't be rendered.\n", entity->type);
                 break;
             }
         }
