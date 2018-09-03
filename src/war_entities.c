@@ -14,6 +14,7 @@ WarEntity* createEntity(WarContext *context, WarEntityType type)
     entity->anim = (WarAnimationComponent){0};
     entity->unit = (WarUnitComponent){0};
     entity->road = (WarRoadComponent){0};
+    entity->movement = (WarMovementComponent){0};
 
     return entity;
 }
@@ -43,29 +44,30 @@ void addSpriteComponentFromResource(WarContext *context, WarEntity *entity, s32 
     WarResource *resource = getOrCreateResource(context, resourceIndex);
     assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || resource->type == WAR_RESOURCE_TYPE_SPRITE);
 
-    u8 *pixels = NULL;
-    u32 w, h;
+    WarSprite sprite;
 
     switch(resource->type)
     {
         case WAR_RESOURCE_TYPE_IMAGE:
         {
-            pixels = resource->imageData.pixels;
-            w = resource->imageData.width;
-            h = resource->imageData.height;
+            u32 width = resource->imageData.width;
+            u32 height = resource->imageData.height;
+            u8* data = resource->imageData.pixels;
+            sprite = createSprite(context, width, height, data);
             break;
         }
 
         case WAR_RESOURCE_TYPE_SPRITE:
         {
-            pixels = resource->spriteData.frames[0].data;
-            w = resource->spriteData.frameWidth;
-            h = resource->spriteData.frameHeight;
+            u32 frameWidth = resource->spriteData.frameWidth;
+            u32 frameHeight = resource->spriteData.frameHeight;
+            u32 frameCount = resource->spriteData.framesCount;
+            WarSpriteFrame* frames = resource->spriteData.frames;
+            sprite = createSpriteFrames(context, frameWidth, frameHeight, frameCount, frames);
             break;
         }
     }
 
-    WarSprite sprite = createSprite(context, w, h, pixels);
     addSpriteComponent(context, entity, sprite);
     entity->sprite.resourceIndex = resourceIndex;
 }
@@ -118,33 +120,6 @@ rect getUnitRect(WarContext *context, WarEntity* entity)
         unit.sizey * MEGA_TILE_HEIGHT);
 
     return unitRect;
-}
-
-WarSpriteFrame getSpriteFrame(WarContext* context, WarSpriteComponent sprite)
-{
-    assert(sprite.resourceIndex);
-
-    WarResource* resource = getOrCreateResource(context, sprite.resourceIndex);
-    assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || resource->type == WAR_RESOURCE_TYPE_SPRITE);
-
-    WarSpriteFrame frame = (WarSpriteFrame){0};
-    
-    switch (resource->type)
-    {
-        case WAR_RESOURCE_TYPE_IMAGE:
-            frame.data = resource->imageData.pixels;
-            frame.w = resource->imageData.width;
-            frame.h = resource->imageData.height;
-            break;
-
-        case WAR_RESOURCE_TYPE_SPRITE:
-        {
-            frame = resource->spriteData.frames[sprite.frameIndex];
-            break;
-        }
-    }
-
-    return frame;
 }
 
 inline bool isDudeUnit(WarUnitType type)
@@ -211,7 +186,7 @@ void renderImage(WarContext *context, WarEntity *entity)
 
     if (sprite.enabled)
     {
-        WarSpriteFrame frame = getSpriteFrame(context, sprite);
+        WarSpriteFrame frame = sprite.sprite.frames[0];
 
         if (transform.enabled)
         {
@@ -292,7 +267,7 @@ void renderUnit(WarContext *context, WarEntity *entity, bool selected)
 
     if (sprite.enabled)
     {
-        WarSpriteFrame frame = getSpriteFrame(context, sprite);
+        WarSpriteFrame frame = sprite.sprite.frames[sprite.frameIndex];
 
         if (transform.enabled)
         {
@@ -300,7 +275,7 @@ void renderUnit(WarContext *context, WarEntity *entity, bool selected)
             nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
 
-        updateSprite(context, &sprite.sprite, frame.data);
+        updateSpriteImage(context, &sprite.sprite, frame.data);
         renderSprite(context, &sprite.sprite, 0, 0);
 
         if (selected)

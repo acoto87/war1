@@ -106,16 +106,54 @@ void nvgRenderImage(NVGcontext *gfx, s32 image, f32 x, f32 y, f32 w, f32 h)
     nvgRenderSubImage(gfx, image, 0, 0, w, h, x, y, w, h);
 }
 
-WarSprite createSprite(WarContext *context, s32 width, s32 height, u8 data[])
+WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
 {
     WarSprite sprite = (WarSprite){0};
-    sprite.width = width;
-    sprite.height = height;
+    sprite.frameWidth = width;
+    sprite.frameHeight = height;
+    sprite.framesCount = 1;
+    
     sprite.image = nvgCreateImageRGBA(context->gfx, width, height, NVG_IMAGE_NEAREST, data);
+
+    sprite.frames[0].dx = 0;
+    sprite.frames[0].dy = 0;
+    sprite.frames[0].w = width;
+    sprite.frames[0].h = height;
+    sprite.frames[0].off = 0;
+    sprite.frames[0].data = (u8*)malloc(width * height * 4);
+
+    if (data)
+        memcpy(sprite.frames[0].data, data, width * height * 4);
+    
     return sprite;
 }
 
-void updateSprite(WarContext *context, WarSprite *sprite, u8 data[])
+WarSprite createSpriteFrames(WarContext *context, u32 frameWidth, u32 frameHeight, u32 frameCount, WarSpriteFrame frames[])
+{
+    WarSprite sprite = (WarSprite){0};
+    sprite.frameWidth = frameWidth;
+    sprite.frameHeight = frameHeight;
+    sprite.framesCount = frameCount;
+
+    sprite.image = nvgCreateImageRGBA(context->gfx, frameWidth, frameHeight, NVG_IMAGE_NEAREST, NULL);
+
+    for(s32 i = 0; i < frameCount; i++)
+    {
+        sprite.frames[i].dx = frames[i].dx;
+        sprite.frames[i].dy = frames[i].dy;
+        sprite.frames[i].w = frames[i].w;
+        sprite.frames[i].h = frames[i].h;
+        sprite.frames[i].off = 0;
+        sprite.frames[i].data = (u8*)malloc(frameWidth * frameHeight * 4);
+
+        if (frames[i].data)
+            memcpy(sprite.frames[i].data, frames[i].data, frameWidth * frameHeight * 4);
+    }
+    
+    return sprite;
+}
+
+void updateSpriteImage(WarContext *context, WarSprite *sprite, u8 data[])
 {
     nvgUpdateImage(context->gfx, sprite->image, data);
 }
@@ -127,7 +165,9 @@ void renderSubSprite(WarContext *context, WarSprite *sprite, f32 sx, f32 sy, f32
 
 void renderSprite(WarContext *context, WarSprite *sprite, f32 x, f32 y)
 {
-    nvgRenderSubImage(context->gfx, sprite->image, 0, 0, sprite->width, sprite->height, x, y, sprite->width, sprite->height);
+    u32 w = sprite->frameWidth;
+    u32 h = sprite->frameHeight;
+    nvgRenderSubImage(context->gfx, sprite->image, 0, 0, w, h, x, y, w, h);
 }
 
 /* Intent of implementation of a graphics API

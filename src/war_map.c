@@ -210,11 +210,69 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the map sprite
     {
+        WarResource *levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+        assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+
         WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
         assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
         map->sprite = createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
-        map->minimapSprite = createSprite(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, NULL);
+
+        // the minimap sprite will be a 2 frames sprite
+        // the first one will be the frame that actually render
+        // the second one will be the minimap for the terrain, created at startup time, 
+        // that way I only have to memcpy to the first frame and do the work only for the units
+        // that way I also don't have to allocate memory for the minimap each frame
+        WarSpriteFrame minimapFrames[2];
+        
+        for(s32 i = 0; i < 2; i++)
+        {
+            minimapFrames[i].dx = 0;
+            minimapFrames[i].dy = 0;
+            minimapFrames[i].w = MINIMAP_WIDTH;
+            minimapFrames[i].h = MINIMAP_HEIGHT;
+            minimapFrames[i].off = 0;
+            minimapFrames[i].data = (u8*)calloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
+        }
+        
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        {
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            {
+                s32 index = y * MAP_TILES_WIDTH + x;
+                u16 tileIndex = levelVisual->levelVisual.data[index];
+
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                s32 r = 0, g = 0, b = 0;
+
+                for(s32 ty = 0; ty < MEGA_TILE_HEIGHT; ty++)
+                {
+                    for(s32 tx = 0; tx < MEGA_TILE_WIDTH; tx++)
+                    {
+                        s32 pixel = (tilePixelY + ty) * TILESET_WIDTH + (tilePixelX + tx);
+                        r += tileset->tilesetData.data[pixel * 4 + 0];
+                        g += tileset->tilesetData.data[pixel * 4 + 1];
+                        b += tileset->tilesetData.data[pixel * 4 + 2];
+                    }
+                }
+
+                r /= 256;
+                g /= 256;
+                b /= 256;
+
+                for(s32 i = 0; i < 2; i++)
+                {
+                    minimapFrames[i].data[index * 4 + 0] = (u8)r;
+                    minimapFrames[i].data[index * 4 + 1] = (u8)g;
+                    minimapFrames[i].data[index * 4 + 2] = (u8)b;
+                    minimapFrames[i].data[index * 4 + 3] = 255;   
+                }
+            }
+        }
+
+        map->minimapSprite = createSpriteFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, 2, minimapFrames);
     }
 
     s32 entitiesCount = 0;
@@ -456,47 +514,9 @@ void renderMap(WarContext *context)
         {
             nvgSave(gfx);
 
-            WarResource *levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-            assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+            // copy the minimap base to the first frame which is the one that will be rendered
+            memcpy(map->minimapSprite.frames[0].data, map->minimapSprite.frames[1].data, MINIMAP_WIDTH * MINIMAP_HEIGHT * 4);
 
-            WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
-            assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
-
-            u8 *minimapData = (u8*)calloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
-            for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-            {
-                for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-                {
-                    s32 index = y * MAP_TILES_WIDTH + x;
-                    u16 tileIndex = levelVisual->levelVisual.data[index];
-
-                    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                    s32 r = 0, g = 0, b = 0;
-
-                    for(s32 ty = 0; ty < MEGA_TILE_HEIGHT; ty++)
-                    {
-                        for(s32 tx = 0; tx < MEGA_TILE_WIDTH; tx++)
-                        {
-                            s32 pixel = (tilePixelY + ty) * TILESET_WIDTH + (tilePixelX + tx);
-                            r += tileset->tilesetData.data[pixel * 4 + 0];
-                            g += tileset->tilesetData.data[pixel * 4 + 1];
-                            b += tileset->tilesetData.data[pixel * 4 + 2];
-                        }
-                    }
-
-                    r /= 256;
-                    g /= 256;
-                    b /= 256;
-
-                    minimapData[index * 4 + 0] = (u8)r;
-                    minimapData[index * 4 + 1] = (u8)g;
-                    minimapData[index * 4 + 2] = (u8)b;
-                    minimapData[index * 4 + 3] = 255;
-                }
-            }
-            
             for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
             {
                 u8 r = 211, g = 211, b = 211;
@@ -529,9 +549,9 @@ void renderMap(WarContext *context)
                         for(s32 x = 0; x < unit.sizex; x++)
                         {
                             s32 pixel = (tileY + y) * MINIMAP_WIDTH + (tileX + x);
-                            minimapData[pixel * 4 + 0] = r;
-                            minimapData[pixel * 4 + 1] = g;
-                            minimapData[pixel * 4 + 2] = b;
+                            map->minimapSprite.frames[0].data[pixel * 4 + 0] = r;
+                            map->minimapSprite.frames[0].data[pixel * 4 + 1] = g;
+                            map->minimapSprite.frames[0].data[pixel * 4 + 2] = b;
                         }
                     }
                 }
@@ -539,10 +559,8 @@ void renderMap(WarContext *context)
 
             nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
 
-            updateSprite(context, &map->minimapSprite, minimapData);
+            updateSpriteImage(context, &map->minimapSprite, map->minimapSprite.frames[0].data);
             renderSprite(context, &map->minimapSprite, 0, 0);
-
-            free(minimapData);
 
             nvgRestore(gfx);
         }

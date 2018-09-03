@@ -211,12 +211,6 @@ typedef enum
     WAR_UNIT_COUNT
 } WarUnitType;
 
-typedef struct
-{
-    s32 image;
-    u32 width, height;
-} WarSprite;
-
 typedef struct 
 {
     u8 dx;
@@ -226,6 +220,15 @@ typedef struct
     u32 off;
     u8 *data;
 } WarSpriteFrame;
+
+typedef struct
+{
+    s32 image;
+    u32 frameWidth;
+    u32 frameHeight;
+    u32 framesCount;
+    WarSpriteFrame frames[MAX_SPRITE_FRAME_COUNT];
+} WarSprite;
 
 typedef struct
 {
