@@ -5,6 +5,9 @@
 #define clearBitFlag(v, f) (*(v) = *(v) ^ (*(v) & (1 << (f))))
 
 #define arrayLength(arr) (sizeof(arr) / sizeof(*arr))
+#define chance(p) ((rand() % 100) < p)
+
+#define inRange(x, a, b) ((x) >= (a) && (x) < (b))
 
 typedef int8_t s8;
 typedef int16_t s16;

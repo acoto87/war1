@@ -11,15 +11,14 @@ WarEntity* createEntity(WarContext *context, WarEntityType type)
 
     // clear all other components
     entity->sprite = (WarSpriteComponent){0};
-    entity->anim = (WarAnimationComponent){0};
     entity->unit = (WarUnitComponent){0};
     entity->road = (WarRoadComponent){0};
-    entity->movement = (WarMovementComponent){0};
+    entity->stateMachine = (WarStateMachineComponent){0};
 
     return entity;
 }
 
-void addTransformComponent(WarContext *context, WarEntity *entity, vec2 position)
+void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
     entity->transform = (WarTransformComponent){0};
     entity->transform.enabled = true;
@@ -28,16 +27,18 @@ void addTransformComponent(WarContext *context, WarEntity *entity, vec2 position
     entity->transform.scale = VEC2_ONE;
 }
 
-void addSpriteComponent(WarContext *context, WarEntity *entity, WarSprite sprite)
+void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite)
 {
     entity->sprite = (WarSpriteComponent){0};
     entity->sprite.enabled = true;
+    entity->sprite.animationsEnabled = false;
     entity->sprite.resourceIndex = 0;
-    entity->sprite.frameIndex = 0;
     entity->sprite.sprite = sprite;
+
+    WarSpriteAnimationListInit(&entity->sprite.animations);
 }
 
-void addSpriteComponentFromResource(WarContext *context, WarEntity *entity, s32 resourceIndex)
+void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 resourceIndex)
 {
     assert(resourceIndex);
 
@@ -72,7 +73,7 @@ void addSpriteComponentFromResource(WarContext *context, WarEntity *entity, s32 
     entity->sprite.resourceIndex = resourceIndex;
 }
 
-void addUnitComponent(WarContext *context, WarEntity *entity, WarUnitType type, s32 x, s32 y, u8 player, u16 value)
+void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, s32 x, s32 y, u8 player, u16 value)
 {
     entity->unit = (WarUnitComponent){0};
     entity->unit.enabled = true;
@@ -86,41 +87,22 @@ void addUnitComponent(WarContext *context, WarEntity *entity, WarUnitType type, 
     entity->unit.value = value;
 }
 
-void addMovementComponent(WarContext* context, WarEntity* entity)
-{
-    entity->movement = (WarMovementComponent){0};
-    entity->movement.enabled = true;
-}
-
-void addRoadComponent(WarContext *context, WarEntity *entity, WarRoadPieceList pieces)
+void addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces)
 {
     entity->road = (WarRoadComponent){0};
     entity->road.enabled = true;
     entity->road.pieces = pieces;
 }
 
-void addAnimationComponent(WarContext *context, WarEntity *entity, f32 duration, bool loop)
+void addStateMachineComponent(WarContext* context, WarEntity* entity)
 {
-    entity->anim = (WarAnimationComponent){0};
-    entity->anim.enabled = true;
-    entity->anim.loop = loop;
-    entity->anim.duration = duration;
-    entity->anim.offset = 0;
+    entity->stateMachine = (WarStateMachineComponent){0};
+    entity->stateMachine.enabled = true;
 }
 
-rect getUnitRect(WarContext *context, WarEntity* entity)
-{
-    WarTransformComponent transform = entity->transform;
-    WarUnitComponent unit = entity->unit;
-
-    rect unitRect = rectf(
-        transform.position.x,
-        transform.position.y,
-        unit.sizex * MEGA_TILE_WIDTH,
-        unit.sizey * MEGA_TILE_HEIGHT);
-
-    return unitRect;
-}
+#define isNeutral(player) (player == 4)
+#define isEnemy(player) (player != 0 && !isNeutral(player))
+#define isHuman(player) (player == 0)
 
 inline bool isDudeUnit(WarUnitType type)
 {
@@ -177,52 +159,52 @@ inline bool isBuildingUnit(WarUnitType type)
     }
 }
 
-void renderImage(WarContext *context, WarEntity *entity)
+void renderImage(WarContext* context, WarEntity* entity)
 {
-    NVGcontext *gfx = context->gfx;
+    NVGcontext* gfx = context->gfx;
 
     WarTransformComponent transform = entity->transform;
-    WarSpriteComponent sprite = entity->sprite;
+    WarSpriteComponent* sprite = &entity->sprite;
 
-    if (sprite.enabled)
+    if (sprite->enabled)
     {
-        WarSpriteFrame frame = sprite.sprite.frames[0];
+        WarSpriteFrame* frame = getSpriteFrame(context, sprite);
 
         if (transform.enabled)
         {
-            nvgTranslate(gfx, -frame.dx, -frame.dy);
+            nvgTranslate(gfx, -frame->dx, -frame->dy);
             nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
 
-        renderSprite(context, &sprite.sprite, 0, 0);
+        renderSprite(context, &sprite->sprite, VEC2_ZERO, false, false);
     }
 }
 
-void renderRoad(WarContext *context, WarEntity *entity)
+void renderRoad(WarContext* context, WarEntity* entity)
 {
-    NVGcontext *gfx = context->gfx;
+    NVGcontext* gfx = context->gfx;
 
     WarTransformComponent transform = entity->transform;
-    WarSpriteComponent sprite = entity->sprite;
-    WarRoadComponent road = entity->road;
+    WarSpriteComponent* sprite = &entity->sprite;
+    WarRoadComponent* road = &entity->road;
 
-    if (sprite.enabled)
+    if (sprite->enabled)
     {
         if (transform.enabled)
         {
             nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
 
-        if (road.enabled)
+        if (road->enabled)
         {
-            WarRoadPieceList *pieces = &road.pieces;
+            WarRoadPieceList *pieces = &road->pieces;
 
-            NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite.sprite.image, road.pieces.count);
+            NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, road->pieces.count);
 
             if (context->map->tilesetType != MAP_TILESET_FOREST &&
                 context->map->tilesetType != MAP_TILESET_SWAMP)
             {
-                fprintf(stderr, "Unkown tileset for a road: %d\n", context->map->tilesetType);
+                logError("Unkown tileset for a road: %d\n", context->map->tilesetType);
                 return;
             }
 
@@ -230,7 +212,7 @@ void renderRoad(WarContext *context, WarEntity *entity)
             // later is used and determine the tileIndex for each piece of the road
             s32 roadsDataIndex = (context->map->tilesetType + 1);
 
-            for(s32 i = 0; i < road.pieces.count; i++)
+            for(s32 i = 0; i < road->pieces.count; i++)
             {
                 // get the index of the tile in the spritesheet of the map, 
                 // corresponding to the current tileset type (forest, swamp)
@@ -246,9 +228,11 @@ void renderRoad(WarContext *context, WarEntity *entity)
 
                 nvgSave(gfx);
                 nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, batch, 
-                    tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT, 
-                    0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, batch, rs, rd, false, false);
+
                 nvgRestore(gfx);
             }
 
@@ -257,40 +241,42 @@ void renderRoad(WarContext *context, WarEntity *entity)
     }
 }
 
-void renderUnit(WarContext *context, WarEntity *entity, bool selected)
+void renderUnit(WarContext* context, WarEntity* entity, bool selected)
 {
-    NVGcontext *gfx = context->gfx;
+    NVGcontext* gfx = context->gfx;
 
     WarTransformComponent transform = entity->transform;
-    WarSpriteComponent sprite = entity->sprite;
-    WarUnitComponent unit = entity->unit;
+    WarSpriteComponent* sprite = &entity->sprite;
 
-    if (sprite.enabled)
+    if (sprite->enabled)
     {
-        WarSpriteFrame frame = sprite.sprite.frames[sprite.frameIndex];
+        WarSpriteAnimation* anim = getCurrentAnimation(sprite);
+
+        updateAnimation(context, sprite);
+        WarSpriteFrame* frame = getSpriteFrame(context, sprite);
 
         if (transform.enabled)
         {
-            nvgTranslate(gfx, -frame.dx, -frame.dy);
+            nvgTranslate(gfx, -frame->dx, -frame->dy);
             nvgTranslate(gfx, transform.position.x, transform.position.y);
         }
 
-        updateSpriteImage(context, &sprite.sprite, frame.data);
-        renderSprite(context, &sprite.sprite, 0, 0);
+        updateSpriteImage(context, &sprite->sprite, frame->data);
+        renderSprite(context, &sprite->sprite, VEC2_ZERO, anim && anim->flipX, anim && anim->flipY);
 
         if (selected)
         {
             nvgBeginPath(gfx);
-            nvgRect(gfx, frame.dx, frame.dy, frame.w, frame.h);
+            nvgRect(gfx, frame->dx, frame->dy, frame->w, frame->h);
             nvgStrokeColor(gfx, NVG_GREEN_SELECTION);
             nvgStroke(gfx);
         }
     }
 }
 
-void renderEntity(WarContext *context, WarEntity *entity, bool selected)
+void renderEntity(WarContext* context, WarEntity* entity, bool selected)
 {
-    NVGcontext *gfx = context->gfx;
+    NVGcontext* gfx = context->gfx;
 
     if (entity->id && entity->enabled)
     {
@@ -318,7 +304,7 @@ void renderEntity(WarContext *context, WarEntity *entity, bool selected)
 
             default:
             {
-                fprintf(stderr, "Entity of type %d can't be rendered.\n", entity->type);
+                logError("Entity of type %d can't be rendered.\n", entity->type);
                 break;
             }
         }

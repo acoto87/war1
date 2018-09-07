@@ -313,14 +313,62 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             s32 spriteIndex = unitsData[unit.type * 4 + 1];
             if (spriteIndex == 0)
             {
-                fprintf(stderr, "Sprite for unit of type %d is not configure properly. Default to footman sprite.", unit.type);
+                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", unit.type);
                 spriteIndex = 279;
             }
             addSpriteComponentFromResource(context, entity, spriteIndex);
 
             if (isDudeUnit(unit.type))
             {
-                addMovementComponent(context, entity);
+                // WarSpriteAnimation* idleAnim = addSpriteAnimation(entity, "Idle", 0.5f, true);
+                // addAnimationFrame(idleAnim, 0);
+                // addAnimationFrame(idleAnim, 1);
+                // addAnimationFrame(idleAnim, 2);
+                // addAnimationFrame(idleAnim, 3);
+                // addAnimationFrame(idleAnim, 4);
+
+                // walk anims
+                for(s32 i = 0; i < 8; i++)
+                {
+                    char* animName = (char*)xmalloc(6 * sizeof(char));
+                    sprintf(animName, "Walk%d", i);
+
+                    WarSpriteAnimation* anim = addSpriteAnimation(entity, animName, 0.2f, true);
+                    anim->flipX = (i >= 5);
+
+                    //               0   1   2   3   4   5   6   7
+                    s32 base[] =  { 15, 30, 15,  0, 55, 45, 55,  0 };
+                    
+                    for(s32 j = 0; j < 8; j++)
+                    {
+                        if (anim->flipX)
+                        {
+                            addAnimationFrame(anim, base[j] + (8-i));
+                        }
+                        else
+                        {
+                            addAnimationFrame(anim, base[j] + i); 
+                        }
+                    }                    
+                }
+                
+                // WarSpriteAnimation* death1Anim = addSpriteAnimation(entity, "Death1", 0.5f, true);
+                // addAnimationFrame(death1Anim, 10);
+                // addAnimationFrame(death1Anim, 25);
+                // addAnimationFrame(death1Anim, 40);
+
+                // WarSpriteAnimation* death2Anim = addSpriteAnimation(entity, "Death2", 0.5f, true);
+                // addAnimationFrame(death2Anim, 12);
+                // addAnimationFrame(death2Anim, 27);
+                // addAnimationFrame(death2Anim, 42);
+
+                setSpriteAnimation(context, entity, "Walk7");
+                enableAnimations(entity);
+                
+                // addStateMachineComponent(context, entity);
+
+                // WarState* idleState = createIdleState(true);
+                // changeState(&entity->stateMachine, idleState);
             }
 
             map->entities[entitiesCount++] = entity;
@@ -415,9 +463,11 @@ void renderMap(WarContext *context)
 
                     nvgSave(gfx);
                     nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                    nvgRenderBatchImage(gfx, batch, 
-                        tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT,
-                        0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+
+                    rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgRenderBatchImage(gfx, batch, rs, rd, false, false);
+
                     nvgRestore(gfx);
                 }
             }
@@ -560,7 +610,7 @@ void renderMap(WarContext *context)
             nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
 
             updateSpriteImage(context, &map->minimapSprite, map->minimapSprite.frames[0].data);
-            renderSprite(context, &map->minimapSprite, 0, 0);
+            renderSprite(context, &map->minimapSprite, VEC2_ZERO, false, false);
 
             nvgRestore(gfx);
         }

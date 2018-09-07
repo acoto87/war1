@@ -6,6 +6,8 @@ bool initGame(WarContext *context)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
+    initLog(LOG_SEVERITY_DEBUG);
+
     context->globalScale = 3;
     context->originalWindowWidth = 320;
     context->originalWindowHeight = 200;
@@ -13,9 +15,10 @@ bool initGame(WarContext *context)
     context->windowHeight = (u32)(context->originalWindowHeight * context->globalScale);
     context->windowTitle = "War 1";
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, NULL, NULL);
+
     if (!context->window)
     {
-        fprintf(stderr, "GLFW window could not be created!");
+        logError("GLFW window could not be created!");
         glfwTerminate();
         return false;
     }
@@ -30,7 +33,7 @@ bool initGame(WarContext *context)
     GLenum glewError = glewInit();
     if (glewError != GLEW_OK)
     {
-        fprintf(stderr, "Error initializing GLEW! %s\n", glewGetErrorString(glewError));
+        logError("Error initializing GLEW! %s", glewGetErrorString(glewError));
         glfwDestroyWindow(context->window);
         glfwTerminate();
         return false;
@@ -42,7 +45,7 @@ bool initGame(WarContext *context)
     context->gfx = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_DEBUG);
     if (!context->gfx) 
     {
-		fprintf(stderr, "Could not init nanovg.\n");
+        logError("Could not init nanovg.");
         glfwDestroyWindow(context->window);
         glfwTerminate();
 		return -1;
@@ -115,7 +118,7 @@ bool initGame(WarContext *context)
 
             default:
             {
-                printf("DB entries of type %d aren't handled yet\n", entry.type);
+                logInfo("DB entries of type %d aren't handled yet", entry.type);
                 break;
             }
         }
@@ -195,37 +198,22 @@ void updateViewport(WarContext *context)
     map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
 }
 
-void updateGame(WarContext *context)
+void updateGame(WarContext* context)
 {
-    WarMap *map = context->map;
-    WarInput *input = &context->input;
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
 
     updateViewport(context);
 
-    // process all moving entities
-    for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
-    {
-        WarEntity* entity = map->entities[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
-        {
-            WarTransformComponent* transform = &entity->transform;
-            WarMovementComponent* movement = &entity->movement;
-            if (transform->enabled && movement->enabled)
-            {
-                if (movement->moving)
-                {
-                    vec2 dir = vec2Normalize(vec2Subv(movement->target, transform->position));
-                    transform->position = vec2Addv(transform->position, vec2Mulf(dir, 150 * context->deltaTime));
-
-                    if (vec2Length(vec2Subv(movement->target, transform->position)) < 5)
-                    {
-                        movement->target = VEC2_ZERO;
-                        movement->moving = false;
-                    }
-                }
-            }
-        }
-    }
+    // process all state machines
+    // for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+    // {
+    //     WarEntity* entity = map->entities[i];
+    //     if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+    //     {
+    //         updateStateMachine(context, entity);
+    //     }
+    // }
 
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
@@ -271,7 +259,11 @@ void updateGame(WarContext *context)
                     WarUnitComponent unit = entity->unit;
                     if (transform.enabled && unit.enabled)
                     {
-                        rect unitRect = getUnitRect(context, entity);
+                        rect unitRect = rectf(
+                                transform.position.x,
+                                transform.position.y,
+                                unit.sizex * MEGA_TILE_WIDTH,
+                                unit.sizey * MEGA_TILE_HEIGHT);
 
                         if (rectIntersects(pointerRect, unitRect))
                         {
@@ -308,12 +300,7 @@ void updateGame(WarContext *context)
             WarUnitComponent* unit = &selEntity->unit;
             if (isDudeUnit(unit->type))
             {
-                WarMovementComponent* movement = &selEntity->movement;
-                if (movement->enabled)
-                {
-                    movement->target = vec2ScreenToMapCoordinates(context, input->pos);
-                    movement->moving = true;
-                }
+                // movement stuff
             }
         }
     }

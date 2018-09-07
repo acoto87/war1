@@ -140,7 +140,7 @@ WarResource* getOrCreateResource(WarContext *context, s32 index)
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
     if (!context->resources[index])
     {
-        printf("Creating resource: %d\n", index);
+        logInfo("Creating resource: %d", index);
         context->resources[index] = (WarResource*)xcalloc(1, sizeof(WarResource));
     }
     return context->resources[index];

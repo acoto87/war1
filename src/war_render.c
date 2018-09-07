@@ -23,11 +23,12 @@ NVGimageBatch* nvgBeginImageBatch(NVGcontext *gfx, s32 image, s32 cimages)
     return batch;
 }
 
-void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, f32 sx, f32 sy, f32 sw, f32 sh, f32 dx, f32 dy, f32 dw, f32 dh)
+void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, rect rs, rect rd, bool flipX, bool flipY)
 {
     f32 x, y;
     s32 iw, ih;
     f32 tx, ty;
+    f32 sx, sy;
     NVGstate *state;
     NVGvertex *vertex;
     
@@ -41,39 +42,46 @@ void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, f32 sx, f32 sy, 
     
     nvgImageSize(gfx, batch->image, &iw, &ih);
 
-    tx = sx / iw;
-    ty = sy / ih;
+    tx = rs.x / iw;
+    ty = rs.y / ih;
+
+    sx = flipX ? -1 : 1;
+    sy = flipY ? -1 : 1;
+
+    nvgTranslate(gfx, rd.width/2, rd.height/2);
+    nvgScale(gfx, sx, sy);
+    nvgTranslate(gfx, -rd.width/2, -rd.height/2);
 
     // first triangle
     vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, dx, dy);
+    nvgTransformPoint(&x, &y, state->xform, rd.x, rd.y);
     nvg__vset(vertex, x, y, tx, ty);
     batch->nvertices++;
 
     vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, dx, dy + dh);
-    nvg__vset(vertex, x, y, tx, ty + sh / ih);
+    nvgTransformPoint(&x, &y, state->xform, rd.x, rd.y + rd.height);
+    nvg__vset(vertex, x, y, tx, ty + rs.height / ih);
     batch->nvertices++;
 
     vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, dx + dw, dy);
-    nvg__vset(vertex, x, y, tx + sw / iw, ty);
+    nvgTransformPoint(&x, &y, state->xform, rd.x + rd.width, rd.y);
+    nvg__vset(vertex, x, y, tx + rs.width / iw, ty);
     batch->nvertices++;
 
     // second triangle
     vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, dx + dw, dy);
-    nvg__vset(vertex, x, y, tx + sw / iw, ty);
+    nvgTransformPoint(&x, &y, state->xform, rd.x + rd.width, rd.y);
+    nvg__vset(vertex, x, y, tx + rs.width / iw, ty);
     batch->nvertices++;
 
     vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, dx, dy + dh);
-    nvg__vset(vertex, x, y, tx, ty + sh / ih);
+    nvgTransformPoint(&x, &y, state->xform, rd.x, rd.y + rd.height);
+    nvg__vset(vertex, x, y, tx, ty + rs.height / ih);
     batch->nvertices++;
 
     vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, dx + dw, dy + dh);
-    nvg__vset(vertex, x, y, tx + sw / iw, ty + sh / ih);
+    nvgTransformPoint(&x, &y, state->xform, rd.x + rd.width, rd.y + rd.height);
+    nvg__vset(vertex, x, y, tx + rs.width / iw, ty + rs.height / ih);
     batch->nvertices++;
 }
 
@@ -94,80 +102,17 @@ void nvgEndImageBatch(NVGcontext *gfx, NVGimageBatch* batch)
     free(batch);
 }
 
-void nvgRenderSubImage(NVGcontext *gfx, s32 image, f32 sx, f32 sy, f32 sw, f32 sh, f32 dx, f32 dy, f32 dw, f32 dh)
+void nvgRenderSubImage(NVGcontext *gfx, s32 image, rect rs, rect rd, bool flipX, bool flipY)
 {
     NVGimageBatch* batch = nvgBeginImageBatch(gfx, image, 1);
-    nvgRenderBatchImage(gfx, batch, sx, sy, sw, sh, dx, dy, dw, dh);
+    nvgRenderBatchImage(gfx, batch, rs, rd, flipX, flipY);
     nvgEndImageBatch(gfx, batch);
 }
 
-void nvgRenderImage(NVGcontext *gfx, s32 image, f32 x, f32 y, f32 w, f32 h)
+void nvgRenderImage(NVGcontext *gfx, s32 image, rect rd, bool flipX, bool flipY)
 {
-    nvgRenderSubImage(gfx, image, 0, 0, w, h, x, y, w, h);
-}
-
-WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
-{
-    WarSprite sprite = (WarSprite){0};
-    sprite.frameWidth = width;
-    sprite.frameHeight = height;
-    sprite.framesCount = 1;
-    
-    sprite.image = nvgCreateImageRGBA(context->gfx, width, height, NVG_IMAGE_NEAREST, data);
-
-    sprite.frames[0].dx = 0;
-    sprite.frames[0].dy = 0;
-    sprite.frames[0].w = width;
-    sprite.frames[0].h = height;
-    sprite.frames[0].off = 0;
-    sprite.frames[0].data = (u8*)malloc(width * height * 4);
-
-    if (data)
-        memcpy(sprite.frames[0].data, data, width * height * 4);
-    
-    return sprite;
-}
-
-WarSprite createSpriteFrames(WarContext *context, u32 frameWidth, u32 frameHeight, u32 frameCount, WarSpriteFrame frames[])
-{
-    WarSprite sprite = (WarSprite){0};
-    sprite.frameWidth = frameWidth;
-    sprite.frameHeight = frameHeight;
-    sprite.framesCount = frameCount;
-
-    sprite.image = nvgCreateImageRGBA(context->gfx, frameWidth, frameHeight, NVG_IMAGE_NEAREST, NULL);
-
-    for(s32 i = 0; i < frameCount; i++)
-    {
-        sprite.frames[i].dx = frames[i].dx;
-        sprite.frames[i].dy = frames[i].dy;
-        sprite.frames[i].w = frames[i].w;
-        sprite.frames[i].h = frames[i].h;
-        sprite.frames[i].off = 0;
-        sprite.frames[i].data = (u8*)malloc(frameWidth * frameHeight * 4);
-
-        if (frames[i].data)
-            memcpy(sprite.frames[i].data, frames[i].data, frameWidth * frameHeight * 4);
-    }
-    
-    return sprite;
-}
-
-void updateSpriteImage(WarContext *context, WarSprite *sprite, u8 data[])
-{
-    nvgUpdateImage(context->gfx, sprite->image, data);
-}
-
-void renderSubSprite(WarContext *context, WarSprite *sprite, f32 sx, f32 sy, f32 sw, f32 sh, f32 dx, f32 dy, f32 dw, f32 dh)
-{
-    nvgRenderSubImage(context->gfx, sprite->image, sx, sy, sw, sh, dx, dy, dw, dh);
-}
-
-void renderSprite(WarContext *context, WarSprite *sprite, f32 x, f32 y)
-{
-    u32 w = sprite->frameWidth;
-    u32 h = sprite->frameHeight;
-    nvgRenderSubImage(context->gfx, sprite->image, 0, 0, w, h, x, y, w, h);
+    rect rs = rectf(0, 0, rd.width, rd.height);
+    nvgRenderSubImage(gfx, image, rs, rd, flipX, flipY);
 }
 
 /* Intent of implementation of a graphics API

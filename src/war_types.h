@@ -218,7 +218,7 @@ typedef struct
     u8 w;
     u8 h;
     u32 off;
-    u8 *data;
+    u8* data;
 } WarSpriteFrame;
 
 typedef struct
@@ -229,6 +229,35 @@ typedef struct
     u32 framesCount;
     WarSpriteFrame frames[MAX_SPRITE_FRAME_COUNT];
 } WarSprite;
+
+typedef enum
+{
+    WAR_ANIM_STATUS_NOT_STARTED,
+    WAR_ANIM_STATUS_RUNNING,
+    WAR_ANIM_STATUS_FINISHED
+} WarAnimationStatus;
+
+typedef struct
+{
+    char* name;
+    bool loop;
+    bool flipX;
+    bool flipY;
+    WarAnimationStatus status;
+    f32 frameDelay;
+    s32 frameCount;
+    s32 frames[MAX_SPRITE_FRAME_COUNT];
+
+    f32 animTime;
+} WarSpriteAnimation;
+
+internal bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
+{
+    return strcmp(anim1->name, anim2->name) == 0;
+}
+
+shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
+shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*, equalsSpriteAnimation, NULL)
 
 typedef struct
 {
@@ -278,7 +307,7 @@ typedef struct
         {
             u16 width;
             u16 height;
-            u8 *pixels;
+            u8* pixels;
         } imageData;
 
         struct
@@ -338,13 +367,13 @@ typedef struct
         struct
         {
             u16 palette1, palette2;
-            u8 *data;
+            u8* data;
         } tilesData;
 
         struct
         {
             u32 length;
-            char *text;
+            char* text;
         } textData;
     };
 } WarResource;
@@ -386,7 +415,7 @@ typedef struct
     u8 player;
 } WarRoadPiece;
 
-internal bool roadPieceEquals(WarRoadPiece p1, WarRoadPiece p2)
+internal bool roadPieceEquals(const WarRoadPiece p1, const WarRoadPiece p2)
 {
     return p1.type == p2.type && p1.player == p2.player &&
            p1.tilex == p2.tilex && p1.tiley == p2.tiley;
@@ -394,6 +423,51 @@ internal bool roadPieceEquals(WarRoadPiece p1, WarRoadPiece p2)
 
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarRoadPieceList, WarRoadPiece, roadPieceEquals, (WarRoadPiece){0})
+
+typedef enum
+{
+    WAR_STATE_IDLE,
+    WAR_STATE_MOVE,
+    WAR_STATE_ATTACK,
+    WAR_STATE_ATTACK_MOVE,
+    WAR_STATE_BUILD,
+    WAR_STATE_TO_MINE,
+    WAR_STATE_MINING,
+    WAR_STATE_TO_CHOP,
+    WAR_STATE_CHOPPING,
+    WAR_STATE_BACK_RESOURCES,
+    WAR_STATE_DEAD
+} WarStateType;
+
+typedef struct
+{
+    WarStateType type;
+    s32 entityIndex;
+
+    union
+    {
+        struct
+        {
+            bool lookAround;
+        } idle;
+
+        struct
+        {
+            f32 x, y;
+        } move;
+
+        struct
+        {
+            s32 targetIndex;
+        } attack;
+
+        struct
+        {
+            s32 targetIndex;
+            s32 x, y;
+        } attackMove;
+    };
+} WarState;
 
 typedef struct
 {
@@ -406,8 +480,10 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    bool animationsEnabled;
     s32 resourceIndex;
-    s32 frameIndex;
+    s32 currentAnimIndex;
+    WarSpriteAnimationList animations;
     WarSprite sprite;
 } WarSpriteComponent;
 
@@ -426,24 +502,15 @@ typedef struct
 typedef struct
 {
     bool enabled;
-    bool moving;
-    bool movingToAttack;
-    vec2 target;
-} WarMovementComponent;
-
-typedef struct
-{
-    bool enabled;
     WarRoadPieceList pieces;
 } WarRoadComponent;
 
 typedef struct
 {
     bool enabled;
-    bool loop;
-    f32 offset;
-    f32 duration;
-} WarAnimationComponent;
+    f32 nextUpdateTime;
+    WarState* currentState;
+} WarStateMachineComponent;
 
 typedef struct
 {
@@ -454,8 +521,7 @@ typedef struct
     WarSpriteComponent sprite;
     WarRoadComponent road;
     WarUnitComponent unit;
-    WarMovementComponent movement;
-    WarAnimationComponent anim;
+    WarStateMachineComponent stateMachine;
 } WarEntity;
 
 typedef struct
@@ -476,6 +542,13 @@ typedef enum
     MAP_TILE_STATE_FOG,
     MAP_TILE_STATE_VISIBLE
 } WarMapTileState;
+
+typedef struct
+{
+    s32 index;
+    u32 gold;
+    u32 wood;
+} WarPlayerInfo;
 
 typedef struct
 {
@@ -503,6 +576,8 @@ typedef struct
 
     WarEntity* entities[MAX_ENTITIES_COUNT];
     bool selectedEntities[MAX_ENTITIES_COUNT];
+
+    WarPlayerInfo players[MAX_PLAYERS_COUNT];
 } WarMap;
 
 typedef enum
@@ -565,19 +640,19 @@ typedef struct
     u32 framebufferWidth;
     u32 framebufferHeight;
     f32 devicePixelRatio;
-    char *windowTitle;
-    GLFWwindow *window;
+    char* windowTitle;
+    GLFWwindow* window;
 
-    char *warFilePath;
-    WarFile *warFile;
+    char* warFilePath;
+    WarFile* warFile;
 
     WarResource *resources[MAX_RESOURCES_COUNT];
 
-    NVGcontext *gfx;
+    NVGcontext* gfx;
 
     u32 staticEntityId;
-    WarScene *currentScene;
-    WarMap *map;
+    WarScene* currentScene;
+    WarMap* map;
 
     WarInput input;
 } WarContext;

@@ -33,6 +33,7 @@
 
 #include "list.h"
 
+#include "log.h"
 #include "utils.h"
 #include "io.h"
 #include "glutils.h"
@@ -41,30 +42,34 @@
 #include "war_database.h"
 #include "war_file.c"
 #include "war_render.c"
+#include "war_sprites.c"
 #include "war_resources.c"
+// #include "war_state_machine.c"
 #include "war_entities.c"
 #include "war_map.c"
 #include "war_game.c"
 
 internal void glfwErrorCallback(int error, const char* description)
 {
-    fprintf(stderr, "Error: %d, %s\n", error, description);
+    logError("Error: %d, %s", error, description);
 }
 
 int main(int argc, char *argv[]) 
 {
+    srand(time(NULL));
+
     glfwSetErrorCallback(glfwErrorCallback);
 
     if (!glfwInit())
     {
-        printf("Error initializing GLFW!");
+        logError("Error initializing GLFW!");
         return -1;
     }
 
     WarContext context = {0};
     if (!initGame(&context))
     {
-        printf("Can't initialize the game!\n");
+        logError("Can't initialize the game!");
         return -1;
     }
 
