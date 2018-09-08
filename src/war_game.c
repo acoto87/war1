@@ -215,6 +215,16 @@ void updateGame(WarContext* context)
     //     }
     // }
 
+    // process all animations
+    for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+    {
+        WarEntity* entity = map->entities[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        {
+            updateAnimation(context, entity);
+        }
+    }
+
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
         rect minimapPanel = map->minimapPanel;
@@ -260,10 +270,10 @@ void updateGame(WarContext* context)
                     if (transform.enabled && unit.enabled)
                     {
                         rect unitRect = rectf(
-                                transform.position.x,
-                                transform.position.y,
-                                unit.sizex * MEGA_TILE_WIDTH,
-                                unit.sizey * MEGA_TILE_HEIGHT);
+                            transform.position.x,
+                            transform.position.y,
+                            unit.sizex * MEGA_TILE_WIDTH,
+                            unit.sizey * MEGA_TILE_HEIGHT);
 
                         if (rectIntersects(pointerRect, unitRect))
                         {

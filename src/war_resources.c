@@ -135,6 +135,40 @@ const s32 roadsData[] =
     WAR_ROAD_PIECE_TOP_RIGHT,           70,                          71        
 };
 
+typedef struct
+{
+    WarUnitType type;
+    WarUnitDirection direction;
+    char* name;
+    s32 frames[20];
+} WarUnitAnimationData;
+
+const WarUnitAnimationData animationsData[] = 
+{
+    // footman idle
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH,      "Idle", { 0 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH_EAST, "Idle", { 1 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_EAST,       "Idle", { 2 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH_EAST, "Idle", { 3 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH,      "Idle", { 4 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH_WEST, "Idle", { 3 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_WEST,       "Idle", { 2 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH_WEST, "Idle", { 1 } },
+
+
+    // footman walk
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH,      "Walk", { 15, 30, 15,  0, 55, 45, 55,  0 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH_EAST, "Walk", { 16, 31, 16,  1, 56, 46, 56,  1 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_EAST,       "Walk", { 17, 32, 17,  2, 57, 47, 57,  2 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH_EAST, "Walk", { 18, 33, 18,  3, 58, 48, 58,  3 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH,      "Walk", { 19, 34, 19,  4, 59, 49, 59,  4 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH_WEST, "Walk", { 18, 33, 18,  3, 58, 48, 58,  3 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_WEST,       "Walk", { 17, 32, 17,  2, 57, 47, 57,  2 } },
+    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH_WEST, "Walk", { 16, 31, 16,  1, 56, 46, 56,  1 } },
+
+
+};
+
 WarResource* getOrCreateResource(WarContext *context, s32 index)
 {
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);

@@ -224,9 +224,9 @@ typedef struct
 typedef struct
 {
     s32 image;
-    u32 frameWidth;
-    u32 frameHeight;
-    u32 framesCount;
+    s32 frameWidth;
+    s32 frameHeight;
+    s32 framesCount;
     WarSpriteFrame frames[MAX_SPRITE_FRAME_COUNT];
 } WarSprite;
 

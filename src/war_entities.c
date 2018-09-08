@@ -170,13 +170,10 @@ void renderImage(WarContext* context, WarEntity* entity)
     {
         WarSpriteFrame* frame = getSpriteFrame(context, sprite);
 
-        if (transform.enabled)
-        {
-            nvgTranslate(gfx, -frame->dx, -frame->dy);
-            nvgTranslate(gfx, transform.position.x, transform.position.y);
-        }
+        nvgTranslate(gfx, -frame->dx, -frame->dy);
+        nvgTranslate(gfx, transform.position.x, transform.position.y);
 
-        renderSprite(context, &sprite->sprite, VEC2_ZERO, false, false);
+        renderSprite(context, &sprite->sprite, VEC2_ZERO, VEC2_ONE);
     }
 }
 
@@ -190,10 +187,7 @@ void renderRoad(WarContext* context, WarEntity* entity)
 
     if (sprite->enabled)
     {
-        if (transform.enabled)
-        {
-            nvgTranslate(gfx, transform.position.x, transform.position.y);
-        }
+        nvgTranslate(gfx, transform.position.x, transform.position.y);
 
         if (road->enabled)
         {
@@ -231,7 +225,7 @@ void renderRoad(WarContext* context, WarEntity* entity)
 
                 rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, batch, rs, rd, false, false);
+                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
 
                 nvgRestore(gfx);
             }
@@ -245,31 +239,40 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
 {
     NVGcontext* gfx = context->gfx;
 
-    WarTransformComponent transform = entity->transform;
+    WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
+    WarUnitComponent* unit = &entity->unit;
 
     if (sprite->enabled)
     {
-        WarSpriteAnimation* anim = getCurrentAnimation(sprite);
+        // size of the original sprite
+        vec2 frameSize = vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
 
-        updateAnimation(context, sprite);
+        // size of the unit
+        vec2 unitSize = vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
+
+        // position of the unit in the map 
+        vec2 position = transform->position;
+
+        // scale of the unit
+        // this is modified by animations when the animation indicates that it 
+        // should flip horizontally or vertically or both
+        vec2 scale = transform->scale;
+
+        // DEBUG
+        // nvgFillRect(gfx, rectv(position, unitSize), NVG_GRAY_TRANSPARENT);
+
+        nvgTranslate(gfx, -frameSize.x * 0.5f, -frameSize.y * 0.5f);
+        nvgTranslate(gfx, position.x + unitSize.x * 0.5f, position.y + unitSize.y * 0.5f);
+
         WarSpriteFrame* frame = getSpriteFrame(context, sprite);
-
-        if (transform.enabled)
-        {
-            nvgTranslate(gfx, -frame->dx, -frame->dy);
-            nvgTranslate(gfx, transform.position.x, transform.position.y);
-        }
-
         updateSpriteImage(context, &sprite->sprite, frame->data);
-        renderSprite(context, &sprite->sprite, VEC2_ZERO, anim && anim->flipX, anim && anim->flipY);
+        renderSprite(context, &sprite->sprite, VEC2_ZERO, scale);
 
         if (selected)
         {
-            nvgBeginPath(gfx);
-            nvgRect(gfx, frame->dx, frame->dy, frame->w, frame->h);
-            nvgStrokeColor(gfx, NVG_GREEN_SELECTION);
-            nvgStroke(gfx);
+            rect selr = rectf((frameSize.x - unitSize.x) / 2, (frameSize.y - unitSize.y) / 2, unitSize.x, unitSize.y);
+            nvgStrokeRect(gfx, selr, NVG_GREEN_SELECTION);
         }
     }
 }

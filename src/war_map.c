@@ -349,7 +349,32 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                         {
                             addAnimationFrame(anim, base[j] + i); 
                         }
-                    }                    
+                    }
+                }
+
+                // attack anims
+                for(s32 i = 0; i < 8; i++)
+                {
+                    char* animName = (char*)xmalloc(6 * sizeof(char));
+                    sprintf(animName, "Attack%d", i);
+
+                    WarSpriteAnimation* anim = addSpriteAnimation(entity, animName, 0.2f, true);
+                    anim->flipX = (i >= 5) && (i < 8);
+
+                    //               0   1   2   3   4   5   6   7
+                    s32 base[] =  { 5, 20, 35, 50, 60, 50, 35, 20, 5, 0 };
+                    
+                    for(s32 j = 0; j < 10; j++)
+                    {
+                        if (anim->flipX)
+                        {
+                            addAnimationFrame(anim, base[j] + (8-i));
+                        }
+                        else
+                        {
+                            addAnimationFrame(anim, base[j] + i); 
+                        }
+                    }
                 }
                 
                 // WarSpriteAnimation* death1Anim = addSpriteAnimation(entity, "Death1", 0.5f, true);
@@ -362,7 +387,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 // addAnimationFrame(death2Anim, 27);
                 // addAnimationFrame(death2Anim, 42);
 
-                setSpriteAnimation(context, entity, "Walk7");
+                setSpriteAnimation(context, entity, "Attack2");
                 enableAnimations(entity);
                 
                 // addStateMachineComponent(context, entity);
@@ -466,7 +491,7 @@ void renderMap(WarContext *context)
 
                     rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                     rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgRenderBatchImage(gfx, batch, rs, rd, false, false);
+                    nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
 
                     nvgRestore(gfx);
                 }
@@ -610,7 +635,7 @@ void renderMap(WarContext *context)
             nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
 
             updateSpriteImage(context, &map->minimapSprite, map->minimapSprite.frames[0].data);
-            renderSprite(context, &map->minimapSprite, VEC2_ZERO, false, false);
+            renderSprite(context, &map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
             nvgRestore(gfx);
         }

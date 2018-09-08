@@ -12,7 +12,7 @@ typedef struct
     NVGvertex *vertices;
 } NVGimageBatch;
 
-NVGimageBatch* nvgBeginImageBatch(NVGcontext *gfx, s32 image, s32 cimages)
+NVGimageBatch* nvgBeginImageBatch(NVGcontext* gfx, s32 image, s32 cimages)
 {
     NVGimageBatch* batch = (NVGimageBatch*)xmalloc(sizeof(NVGimageBatch));
     batch->image = image;
@@ -23,7 +23,7 @@ NVGimageBatch* nvgBeginImageBatch(NVGcontext *gfx, s32 image, s32 cimages)
     return batch;
 }
 
-void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, rect rs, rect rd, bool flipX, bool flipY)
+void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, rect rs, rect rd, vec2 scale)
 {
     f32 x, y;
     s32 iw, ih;
@@ -45,12 +45,9 @@ void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, rect rs, rect rd
     tx = rs.x / iw;
     ty = rs.y / ih;
 
-    sx = flipX ? -1 : 1;
-    sy = flipY ? -1 : 1;
-
-    nvgTranslate(gfx, rd.width/2, rd.height/2);
-    nvgScale(gfx, sx, sy);
-    nvgTranslate(gfx, -rd.width/2, -rd.height/2);
+    nvgTranslate(gfx, rd.width * 0.5f, rd.height * 0.5f);
+    nvgScale(gfx, scale.x, scale.y);
+    nvgTranslate(gfx, -rd.width * 0.5f, -rd.height * 0.5f);
 
     // first triangle
     vertex = &batch->vertices[batch->nvertices];
@@ -85,7 +82,7 @@ void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, rect rs, rect rd
     batch->nvertices++;
 }
 
-void nvgEndImageBatch(NVGcontext *gfx, NVGimageBatch* batch)
+void nvgEndImageBatch(NVGcontext* gfx, NVGimageBatch* batch)
 {
     NVGstate* state = nvg__getState(gfx);
     NVGpaint paint = state->fill;
@@ -102,17 +99,37 @@ void nvgEndImageBatch(NVGcontext *gfx, NVGimageBatch* batch)
     free(batch);
 }
 
-void nvgRenderSubImage(NVGcontext *gfx, s32 image, rect rs, rect rd, bool flipX, bool flipY)
+void nvgRenderSubImage(NVGcontext* gfx, s32 image, rect rs, rect rd, vec2 scale)
 {
     NVGimageBatch* batch = nvgBeginImageBatch(gfx, image, 1);
-    nvgRenderBatchImage(gfx, batch, rs, rd, flipX, flipY);
+    nvgRenderBatchImage(gfx, batch, rs, rd, scale);
     nvgEndImageBatch(gfx, batch);
 }
 
-void nvgRenderImage(NVGcontext *gfx, s32 image, rect rd, bool flipX, bool flipY)
+void nvgRenderImage(NVGcontext* gfx, s32 image, rect rd, vec2 scale)
 {
     rect rs = rectf(0, 0, rd.width, rd.height);
-    nvgRenderSubImage(gfx, image, rs, rd, flipX, flipY);
+    nvgRenderSubImage(gfx, image, rs, rd, scale);
+}
+
+void nvgFillRect(NVGcontext* gfx, rect r, NVGcolor color)
+{
+    nvgSave(gfx);
+    nvgBeginPath(gfx);
+    nvgRect(gfx, r.x, r.y, r.width, r.height);
+    nvgFillColor(gfx, color);
+    nvgFill(gfx);
+    nvgRestore(gfx);
+}
+
+void nvgStrokeRect(NVGcontext* gfx, rect r, NVGcolor color)
+{
+    nvgSave(gfx);
+    nvgBeginPath(gfx);
+    nvgRect(gfx, r.x, r.y, r.width, r.height);
+    nvgStrokeColor(gfx, color);
+    nvgStroke(gfx);
+    nvgRestore(gfx);
 }
 
 /* Intent of implementation of a graphics API

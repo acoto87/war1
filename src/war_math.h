@@ -182,6 +182,11 @@ inline rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2)
         fabsf(y1 - y2));
 }
 
+inline rect rectv(vec2 pos, vec2 size)
+{
+    return (rect){pos.x, pos.y, size.x, size.y}; 
+}
+
 inline bool rectContainsf(rect r, f32 x, f32 y)
 {
     return x >= r.x && x <= r.x + r.width &&

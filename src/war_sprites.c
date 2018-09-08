@@ -50,16 +50,16 @@ void updateSpriteImage(WarContext *context, WarSprite *sprite, u8 data[])
     nvgUpdateImage(context->gfx, sprite->image, data);
 }
 
-void renderSubSprite(WarContext *context, WarSprite *sprite, rect rs, rect rd, bool flipX, bool flipY)
+void renderSubSprite(WarContext *context, WarSprite *sprite, rect rs, rect rd, vec2 scale)
 {
-    nvgRenderSubImage(context->gfx, sprite->image, rs, rd, flipX, flipY);
+    nvgRenderSubImage(context->gfx, sprite->image, rs, rd, scale);
 }
 
-void renderSprite(WarContext *context, WarSprite *sprite, vec2 pos, bool flipX, bool flipY)
+void renderSprite(WarContext *context, WarSprite *sprite, vec2 pos, vec2 scale)
 {
     rect rs = rectf(0, 0, sprite->frameWidth, sprite->frameHeight);
     rect rd = rectf(pos.x, pos.y, sprite->frameWidth, sprite->frameHeight);
-    nvgRenderSubImage(context->gfx, sprite->image, rs, rd, flipX, flipY);
+    nvgRenderSubImage(context->gfx, sprite->image, rs, rd, scale);
 }
 
 WarSpriteAnimation* getCurrentAnimation(WarSpriteComponent* sprite)
@@ -119,27 +119,40 @@ void addAnimationFrame(WarSpriteAnimation* anim, s32 frameIndex)
     }
 }
 
-void updateAnimation(WarContext* context, WarSpriteComponent* sprite)
+void addAnimationFrames(WarSpriteAnimation* anim, s32 count, s32 frameIndices[])
 {
-    if (!sprite->animationsEnabled)
-        return;
-
-    WarSpriteAnimation* anim = sprite->animations.items[sprite->currentAnimIndex];
-    if (anim->status == WAR_ANIM_STATUS_FINISHED)
-        return;
-
-    anim->status = WAR_ANIM_STATUS_RUNNING;
-    anim->animTime += (context->deltaTime / (anim->frameDelay * anim->frameCount));
-
-    if (anim->animTime >= 1)
+    for(s32 i = 0; i < count; i++)
     {
-        anim->animTime = 1;
-        anim->status = WAR_ANIM_STATUS_FINISHED;
+        addAnimationFrame(anim, frameIndices[i]);
+    }
+}
 
-        if(anim->loop)
+void updateAnimation(WarContext* context, WarEntity* entity)
+{
+    WarSpriteComponent* sprite = &entity->sprite;
+    WarTransformComponent* transform = &entity->transform;
+    if (sprite->enabled && sprite->animationsEnabled)
+    {
+        WarSpriteAnimation* anim = getCurrentAnimation(sprite);
+        if (!anim || anim->status == WAR_ANIM_STATUS_FINISHED)
+            return;
+
+        anim->status = WAR_ANIM_STATUS_RUNNING;
+        anim->animTime += (context->deltaTime / (anim->frameDelay * anim->frameCount));
+
+        if (anim->animTime >= 1)
         {
-            resetAnimation(anim);
+            anim->animTime = 1;
+            anim->status = WAR_ANIM_STATUS_FINISHED;
+
+            if(anim->loop)
+            {
+                resetAnimation(anim);
+            }
         }
+
+        transform->scale.x = anim->flipX ? -1 : 1;
+        transform->scale.y = anim->flipY ? -1 : 1;
     }
 }
 
