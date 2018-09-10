@@ -57,6 +57,14 @@
 #define isKeyPressed(input, key) (input->keys[key].pressed)
 #define wasKeyPressed(input, key) (input->keys[key].wasPressed)
 
+internal bool equalsS32(const s32 a, const s32 b)
+{
+    return a == b;
+}
+
+shlDeclareList(WarS32List, s32)
+shlDefineList(WarS32List, s32, equalsS32, 0)
+
 typedef struct 
 {
     bool placeholder;
@@ -138,6 +146,8 @@ typedef enum
     WAR_DIRECTION_SOUTH_WEST,
     WAR_DIRECTION_WEST,
     WAR_DIRECTION_NORTH_WEST,
+
+    WAR_DIRECTION_COUNT
 } WarUnitDirection;
 
 typedef enum
@@ -245,8 +255,7 @@ typedef struct
     bool flipY;
     WarAnimationStatus status;
     f32 frameDelay;
-    s32 frameCount;
-    s32 frames[MAX_SPRITE_FRAME_COUNT];
+    WarS32List frames;
 
     f32 animTime;
 } WarSpriteAnimation;

@@ -7,7 +7,20 @@ List of thing to do in no particular order
   * Manage the gold in the mines and explode it when the gold is over
   * Add explosion animations for the buildings
   * Add animations data for each entity type
-  * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, etc.
+  * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
+  * Manage components with a dictionary and not each entity having all the components
+  * Map scroll with the mouse cursor at the edge
+* Animations
+  * (done) Switch animations without reseting the new animation to the start. This will allow have one animation for each orientation of then switch to the correct one depending of the orientation but conserving the state.
+  * (done) Have a giant table with animations data for each entity type.
+    * Instead an `addAnimations` function was written that assign the animations to the entities. This was because multiple entity types have the same animations data.
+* State machine
+  * Idle behaviour
+  * Move behaviour
+  * Move attack behaviour
+  * Build behaviour
+  * Patrol behaviour?
+  * Gathering resources behaviour
 * Path finding
 * Collision system
 * UI system

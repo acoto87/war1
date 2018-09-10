@@ -135,39 +135,195 @@ const s32 roadsData[] =
     WAR_ROAD_PIECE_TOP_RIGHT,           70,                          71        
 };
 
-typedef struct
+void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAnim)
 {
-    WarUnitType type;
-    WarUnitDirection direction;
-    char* name;
-    s32 frames[20];
-} WarUnitAnimationData;
+    WarUnitComponent* unit = &entity->unit;
+    
+    switch (unit->type)
+    {
+        case WAR_UNIT_PEASANT:
+        case WAR_UNIT_PEON:
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_MEDIVH:
+        case WAR_UNIT_LOTHAR:
+        {
+            // idle
+            {
+                const char* idleName = "Idle";
+                const f32 idleFrameDelay = 0.5f;
+                const bool idleLoop = true;
+                const s32 idleFrameIndices[] = { 0 };
 
-const WarUnitAnimationData animationsData[] = 
-{
-    // footman idle
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH,      "Idle", { 0 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH_EAST, "Idle", { 1 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_EAST,       "Idle", { 2 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH_EAST, "Idle", { 3 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH,      "Idle", { 4 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH_WEST, "Idle", { 3 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_WEST,       "Idle", { 2 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH_WEST, "Idle", { 1 } },
+                for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
+                {
+                    WarSpriteAnimation* anim = addSpriteAnimation(entity, idleName, idleFrameDelay, idleLoop);
+                    anim->flipX = (i >= 5);
 
+                    for(s32 j = 0; j < arrayLength(idleFrameIndices); j++)
+                    {
+                        s32 frameIndex = anim->flipX 
+                            ? idleFrameIndices[j] + (WAR_DIRECTION_COUNT - i) 
+                            : idleFrameIndices[j] + i;
 
-    // footman walk
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH,      "Walk", { 15, 30, 15,  0, 55, 45, 55,  0 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH_EAST, "Walk", { 16, 31, 16,  1, 56, 46, 56,  1 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_EAST,       "Walk", { 17, 32, 17,  2, 57, 47, 57,  2 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH_EAST, "Walk", { 18, 33, 18,  3, 58, 48, 58,  3 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH,      "Walk", { 19, 34, 19,  4, 59, 49, 59,  4 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_SOUTH_WEST, "Walk", { 18, 33, 18,  3, 58, 48, 58,  3 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_WEST,       "Walk", { 17, 32, 17,  2, 57, 47, 57,  2 } },
-    { WAR_UNIT_FOOTMAN, WAR_DIRECTION_NORTH_WEST, "Walk", { 16, 31, 16,  1, 56, 46, 56,  1 } },
+                        addAnimationFrame(anim, frameIndex);
+                    }
+                }      
+            }
+              
+            // walk
+            {
+                const char* walkName = "Walk";
+                const f32 walkFrameDelay = 0.2f;
+                const bool walkLoop = true;
+                const s32 walkFrameIndices[] = { 15, 30, 15, 0, 55, 45, 55, 0 };
 
+                for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
+                {
+                    WarSpriteAnimation* anim = addSpriteAnimation(entity, walkName, walkFrameDelay, walkLoop);
+                    anim->flipX = (i >= 5);
 
-};
+                    for(s32 j = 0; j < arrayLength(walkFrameIndices); j++)
+                    {
+                        s32 frameIndex = anim->flipX 
+                            ? walkFrameIndices[j] + (WAR_DIRECTION_COUNT - i) 
+                            : walkFrameIndices[j] + i;
+
+                        addAnimationFrame(anim, frameIndex);
+                    }
+                }
+            }
+
+            // attack
+            {
+                const char* attackName = "Attack";
+                const f32 attackFrameDelay = 0.2f;
+                const bool attackLoop = true;
+                const s32 attackFrameIndices[] = { 5, 20, 35, 50, 60, 50, 35, 20 };
+
+                for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
+                {
+                    WarSpriteAnimation* anim = addSpriteAnimation(entity, attackName, attackFrameDelay, attackLoop);
+                    anim->flipX = (i >= 5);
+
+                    for(s32 j = 0; j < arrayLength(attackFrameIndices); j++)
+                    {
+                        s32 frameIndex = anim->flipX 
+                            ? attackFrameIndices[j] + (WAR_DIRECTION_COUNT - i) 
+                            : attackFrameIndices[j] + i;
+
+                        addAnimationFrame(anim, frameIndex);
+                    }
+                }
+            }
+
+            // death
+            {
+                const char* deathName = "Death";
+                const f32 deathFrameDelay = 0.5f;
+                const bool deathLoop = true;
+
+                WarSpriteAnimation* anim = addSpriteAnimation(entity, deathName, deathFrameDelay, deathLoop);
+                addAnimationFrame(anim, 10);
+                addAnimationFrame(anim, 25);
+                addAnimationFrame(anim, 40);
+            }
+
+            break;
+        }
+
+        case WAR_UNIT_SPEARMAN:
+        {
+            // idle
+            {
+                const char* idleName = "Idle";
+                const f32 idleFrameDelay = 0.5f;
+                const bool idleLoop = true;
+                const s32 idleFrameIndices[] = { 0 };
+
+                for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
+                {
+                    WarSpriteAnimation* anim = addSpriteAnimation(entity, idleName, idleFrameDelay, idleLoop);
+                    anim->flipX = (i >= 5);
+
+                    for(s32 j = 0; j < arrayLength(idleFrameIndices); j++)
+                    {
+                        s32 frameIndex = anim->flipX 
+                            ? idleFrameIndices[j] + (WAR_DIRECTION_COUNT - i) 
+                            : idleFrameIndices[j] + i;
+
+                        addAnimationFrame(anim, frameIndex);
+                    }
+                }      
+            }
+
+            // walk
+            {
+                const char* walkName = "Walk";
+                const f32 walkFrameDelay = 0.2f;
+                const bool walkLoop = true;
+                const s32 walkFrameIndices[] = { 15, 30, 15, 0, 45, 40, 45, 0 };
+
+                for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
+                {
+                    WarSpriteAnimation* anim = addSpriteAnimation(entity, walkName, walkFrameDelay, walkLoop);
+                    anim->flipX = (i >= 5);
+
+                    for(s32 j = 0; j < arrayLength(walkFrameIndices); j++)
+                    {
+                        s32 frameIndex = anim->flipX 
+                            ? walkFrameIndices[j] + (WAR_DIRECTION_COUNT - i) 
+                            : walkFrameIndices[j] + i;
+
+                        addAnimationFrame(anim, frameIndex);
+                    }
+                }
+            }
+
+            // attack
+            {
+                const char* attackName = "Attack";
+                const f32 attackFrameDelay = 0.2f;
+                const bool attackLoop = true;
+                const s32 attackFrameIndices[] = { 5, 20, 0 };
+
+                for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
+                {
+                    WarSpriteAnimation* anim = addSpriteAnimation(entity, attackName, attackFrameDelay, attackLoop);
+                    anim->flipX = (i >= 5);
+
+                    for(s32 j = 0; j < arrayLength(attackFrameIndices); j++)
+                    {
+                        s32 frameIndex = anim->flipX 
+                            ? attackFrameIndices[j] + (WAR_DIRECTION_COUNT - i) 
+                            : attackFrameIndices[j] + i;
+
+                        addAnimationFrame(anim, frameIndex);
+                    }
+                }
+            }
+
+            // death
+            {
+                const char* deathName = "Death";
+                const f32 deathFrameDelay = 0.5f;
+                const bool deathLoop = true;
+
+                WarSpriteAnimation* anim = addSpriteAnimation(entity, deathName, deathFrameDelay, deathLoop);
+                addAnimationFrame(anim, 10);
+                addAnimationFrame(anim, 25);
+                addAnimationFrame(anim, 35);
+            }
+
+            break;
+        }
+    
+        default:
+            break;
+    }
+
+    setSpriteAnimation(context, entity, defaultAnim, true);
+}
 
 WarResource* getOrCreateResource(WarContext *context, s32 index)
 {

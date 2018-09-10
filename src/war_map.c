@@ -318,83 +318,15 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             }
             addSpriteComponentFromResource(context, entity, spriteIndex);
 
-            if (isDudeUnit(unit.type))
-            {
-                // WarSpriteAnimation* idleAnim = addSpriteAnimation(entity, "Idle", 0.5f, true);
-                // addAnimationFrame(idleAnim, 0);
-                // addAnimationFrame(idleAnim, 1);
-                // addAnimationFrame(idleAnim, 2);
-                // addAnimationFrame(idleAnim, 3);
-                // addAnimationFrame(idleAnim, 4);
+            // this will be done when the state machine first state enters
+            // for now keep it here to test the animations
+            addAnimations(context, entity, "Attack");
+            enableAnimations(entity);
 
-                // walk anims
-                for(s32 i = 0; i < 8; i++)
-                {
-                    char* animName = (char*)xmalloc(6 * sizeof(char));
-                    sprintf(animName, "Walk%d", i);
+            // addStateMachineComponent(context, entity);
 
-                    WarSpriteAnimation* anim = addSpriteAnimation(entity, animName, 0.2f, true);
-                    anim->flipX = (i >= 5);
-
-                    //               0   1   2   3   4   5   6   7
-                    s32 base[] =  { 15, 30, 15,  0, 55, 45, 55,  0 };
-                    
-                    for(s32 j = 0; j < 8; j++)
-                    {
-                        if (anim->flipX)
-                        {
-                            addAnimationFrame(anim, base[j] + (8-i));
-                        }
-                        else
-                        {
-                            addAnimationFrame(anim, base[j] + i); 
-                        }
-                    }
-                }
-
-                // attack anims
-                for(s32 i = 0; i < 8; i++)
-                {
-                    char* animName = (char*)xmalloc(6 * sizeof(char));
-                    sprintf(animName, "Attack%d", i);
-
-                    WarSpriteAnimation* anim = addSpriteAnimation(entity, animName, 0.2f, true);
-                    anim->flipX = (i >= 5) && (i < 8);
-
-                    //               0   1   2   3   4   5   6   7
-                    s32 base[] =  { 5, 20, 35, 50, 60, 50, 35, 20, 5, 0 };
-                    
-                    for(s32 j = 0; j < 10; j++)
-                    {
-                        if (anim->flipX)
-                        {
-                            addAnimationFrame(anim, base[j] + (8-i));
-                        }
-                        else
-                        {
-                            addAnimationFrame(anim, base[j] + i); 
-                        }
-                    }
-                }
-                
-                // WarSpriteAnimation* death1Anim = addSpriteAnimation(entity, "Death1", 0.5f, true);
-                // addAnimationFrame(death1Anim, 10);
-                // addAnimationFrame(death1Anim, 25);
-                // addAnimationFrame(death1Anim, 40);
-
-                // WarSpriteAnimation* death2Anim = addSpriteAnimation(entity, "Death2", 0.5f, true);
-                // addAnimationFrame(death2Anim, 12);
-                // addAnimationFrame(death2Anim, 27);
-                // addAnimationFrame(death2Anim, 42);
-
-                setSpriteAnimation(context, entity, "Attack2");
-                enableAnimations(entity);
-                
-                // addStateMachineComponent(context, entity);
-
-                // WarState* idleState = createIdleState(true);
-                // changeState(&entity->stateMachine, idleState);
-            }
+            // WarState* idleState = createIdleState(true);
+            // changeState(&entity->stateMachine, idleState);
 
             map->entities[entitiesCount++] = entity;
         }

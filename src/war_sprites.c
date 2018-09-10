@@ -79,8 +79,12 @@ WarSpriteFrame* getSpriteFrame(WarContext* context, WarSpriteComponent* sprite)
     if (sprite->animationsEnabled)
     {
         WarSpriteAnimation* anim = getCurrentAnimation(sprite);
-        s32 animFrameIndex = (s32)(anim->animTime * (anim->frameCount - 1));
-        spriteFrameIndex = anim->frames[animFrameIndex];
+        if (anim)
+        {
+            s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
+            animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+            spriteFrameIndex = anim->frames.items[animFrameIndex];
+        }
     }
     
     return &sprite->sprite.frames[spriteFrameIndex];
@@ -101,9 +105,9 @@ WarSpriteAnimation* addSpriteAnimation(WarEntity* entity, char* name, f32 frameD
     anim->flipX = false;
     anim->flipY = false;
     anim->frameDelay = frameDelay;
-    anim->frameCount = 0;
-
-    resetAnimation(anim);
+    anim->animTime = 0;
+    anim->status = WAR_ANIM_STATUS_NOT_STARTED;
+    WarS32ListInit(&anim->frames);
 
     WarSpriteAnimationListAdd(&entity->sprite.animations, anim);
 
@@ -112,11 +116,7 @@ WarSpriteAnimation* addSpriteAnimation(WarEntity* entity, char* name, f32 frameD
 
 void addAnimationFrame(WarSpriteAnimation* anim, s32 frameIndex)
 {
-    if (anim->frameCount < MAX_SPRITE_FRAME_COUNT)
-    {
-        anim->frames[anim->frameCount] = frameIndex;
-        anim->frameCount++;    
-    }
+    WarS32ListAdd(&anim->frames, frameIndex);
 }
 
 void addAnimationFrames(WarSpriteAnimation* anim, s32 count, s32 frameIndices[])
@@ -135,10 +135,12 @@ void updateAnimation(WarContext* context, WarEntity* entity)
     {
         WarSpriteAnimation* anim = getCurrentAnimation(sprite);
         if (!anim || anim->status == WAR_ANIM_STATUS_FINISHED)
+        {
             return;
+        }
 
         anim->status = WAR_ANIM_STATUS_RUNNING;
-        anim->animTime += (context->deltaTime / (anim->frameDelay * anim->frameCount));
+        anim->animTime += (context->deltaTime / (anim->frameDelay * anim->frames.count));
 
         if (anim->animTime >= 1)
         {
@@ -156,7 +158,7 @@ void updateAnimation(WarContext* context, WarEntity* entity)
     }
 }
 
-void setSpriteAnimation(WarContext* context, WarEntity* entity, const char* name)
+void setSpriteAnimation(WarContext* context, WarEntity* entity, const char* name, bool reset)
 {
     WarSpriteComponent* sprite = &entity->sprite;
     
@@ -174,7 +176,11 @@ void setSpriteAnimation(WarContext* context, WarEntity* entity, const char* name
     
     if (anim && animIndex >= 0)
     {
-        resetAnimation(anim);
+        if (reset)
+        {
+            resetAnimation(anim);
+        }
+
         sprite->currentAnimIndex = animIndex;
     }
 }
