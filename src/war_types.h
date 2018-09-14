@@ -62,24 +62,6 @@
 shlDefineCreateArray(s32, s32)
 shlDefineFreeArray(s32, s32)
 
-void printArray(s32 m, s32 n, s32** arr)
-{
-    for(int i = 0; i < m; i++)
-    {
-        printf("{ ");
-
-        for(int j = 0; j < n; j++)
-        {
-            if (j > 0)
-                printf(", ");
-
-            printf("%d", arr[i][j]);
-        }
-
-        printf(" }\n");
-    }
-}
-
 internal bool equalsS32(const s32 a, const s32 b)
 {
     return a == b;
