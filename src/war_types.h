@@ -57,6 +57,29 @@
 #define isKeyPressed(input, key) (input->keys[key].pressed)
 #define wasKeyPressed(input, key) (input->keys[key].wasPressed)
 
+#define directionByIndex(i) ((WarUnitDirection)(WAR_DIRECTION_NORTH + i))
+
+shlDefineCreateArray(s32, s32)
+shlDefineFreeArray(s32, s32)
+
+void printArray(s32 m, s32 n, s32** arr)
+{
+    for(int i = 0; i < m; i++)
+    {
+        printf("{ ");
+
+        for(int j = 0; j < n; j++)
+        {
+            if (j > 0)
+                printf(", ");
+
+            printf("%d", arr[i][j]);
+        }
+
+        printf(" }\n");
+    }
+}
+
 internal bool equalsS32(const s32 a, const s32 b)
 {
     return a == b;
@@ -65,6 +88,9 @@ internal bool equalsS32(const s32 a, const s32 b)
 shlDeclareList(WarS32List, s32)
 shlDefineList(WarS32List, s32, equalsS32, 0)
 
+//
+// Resources
+//
 typedef struct 
 {
     bool placeholder;
@@ -216,6 +242,7 @@ typedef enum
 	WAR_UNIT_PEON_WITH_GOLD,
 
     // others
+    WAR_UNIT_HUMAN_CORPSE,
     WAR_UNIT_ORC_CORPSE,
 
     WAR_UNIT_COUNT
@@ -253,6 +280,7 @@ typedef struct
     bool loop;
     bool flipX;
     bool flipY;
+    WarUnitDirection direction;
     WarAnimationStatus status;
     f32 frameDelay;
     WarS32List frames;
@@ -387,6 +415,9 @@ typedef struct
     };
 } WarResource;
 
+//
+// Entities
+//
 typedef u32 WarEntityId;
 
 typedef enum
@@ -432,6 +463,68 @@ internal bool roadPieceEquals(const WarRoadPiece p1, const WarRoadPiece p2)
 
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarRoadPieceList, WarRoadPiece, roadPieceEquals, (WarRoadPiece){0})
+
+typedef enum
+{
+    WAR_ACTION_STEP_NONE,
+    WAR_ACTION_STEP_UNBREAKABLE,
+    WAR_ACTION_STEP_FRAME,
+    WAR_ACTION_STEP_WAIT,
+    WAR_ACTION_STEP_MOVE,
+    WAR_ACTION_STEP_ATTACK,
+    WAR_ACTION_STEP_SOUND_SWORD,
+    WAR_ACTION_STEP_SOUND_FIST,
+    WAR_ACTION_STEP_SOUND_FIREBALL,
+    WAR_ACTION_STEP_SOUND_CHOPPING,
+    WAR_ACTION_STEP_SOUND_CATAPULT,
+    WAR_ACTION_STEP_SOUND_ARROW,
+    WAR_ACTION_STEP_SOUND_LIGHTNING,
+} WarUnitActionStepType;
+
+typedef enum
+{
+    WAR_UNBREAKABLE_BEGIN,
+    WAR_UNBREAKABLE_END,
+} WarUnbreakableParam;
+
+typedef struct
+{
+    WarUnitActionStepType type;
+    s32 param;
+} WarUnitActionStep;
+
+internal bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep step2)
+{
+    return step1.type == step2.type && step1.param == step2.param;
+}
+
+shlDeclareList(WarUnitActionStepList, WarUnitActionStep)
+shlDefineList(WarUnitActionStepList, WarUnitActionStep, equalsActionStep, (WarUnitActionStep){WAR_ACTION_STEP_NONE})
+
+typedef enum
+{
+    WAR_ACTION_TYPE_IDLE,
+    WAR_ACTION_TYPE_WALK,
+    WAR_ACTION_TYPE_ATTACK,
+    WAR_ACTION_TYPE_DEATH,
+    WAR_ACTION_TYPE_HARVEST,
+    WAR_ACTION_TYPE_REPAIR,
+} WarUnitActionType;
+
+typedef struct
+{
+    WarUnitActionType type;
+    s32 currentIndex;
+    WarUnitActionStepList steps;
+} WarUnitAction;
+
+internal bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
+{
+    return a1->type == a2->type;
+}
+
+shlDeclareList(WarUnitActionList, WarUnitAction*)
+shlDefineList(WarUnitActionList, WarUnitAction*, equalsAction, NULL)
 
 typedef enum
 {
@@ -505,7 +598,12 @@ typedef struct
     s32 tilex, tiley;
     s32 sizex, sizey;
     u8 player;
+
+    // this is for gold mines and trees
     u16 value;
+
+    s32 currentActionIndex;
+    WarUnitActionList actions;
 } WarUnitComponent;
 
 typedef struct

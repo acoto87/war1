@@ -135,7 +135,231 @@ const s32 roadsData[] =
     WAR_ROAD_PIECE_TOP_RIGHT,           70,                          71        
 };
 
-void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAnim)
+#define MAX_ANIMATION_FRAMES 12
+
+typedef struct
+{
+    char* name;
+    f32 frameDelay;
+    bool loop;
+    s32 framesIndices[MAX_ANIMATION_FRAMES];
+} WarAnimationData;
+
+typedef struct
+{
+    WarUnitType type;
+    WarAnimationData idle;
+    WarAnimationData walk;
+    WarAnimationData attack;
+    WarAnimationData death;
+    WarAnimationData repair;
+    WarAnimationData harvestWood;
+} WarAnimationsData;
+
+const WarAnimationsData animationFramesData[] = 
+{
+    { 
+        WAR_UNIT_PEASANT,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } },
+        { "Repair",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "HarvestWood",    0.2f, true, { 5, 20, 35, 50 } },
+    },
+    { 
+        WAR_UNIT_PEON,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } },
+        { "Repair",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "HarvestWood",    0.2f, true, { 5, 20, 35, 50 } },
+    },
+    { 
+        WAR_UNIT_FOOTMAN,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } }
+    },
+    { 
+        WAR_UNIT_GRUNT,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } }
+    },
+    { 
+        WAR_UNIT_CATAPULT_HUMANS,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 0, 15, 0, 15, 0, 15, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 30, 40, 45, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 35 } }
+    },
+    { 
+        WAR_UNIT_CATAPULT_ORCS,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 0, 15, 0, 15, 0, 15, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 30, 40, 45, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 35 } }
+    },
+    { 
+        WAR_UNIT_ARCHER,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 45, 40, 45, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 35 } }
+    },
+    { 
+        WAR_UNIT_SPEARMAN,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 45, 40, 45, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 35 } }
+    },
+    { 
+        WAR_UNIT_KNIGHT,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55, 70 } }
+    },
+    { 
+        WAR_UNIT_RAIDER,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55, 70 } }
+    },
+    { 
+        WAR_UNIT_CLERIC,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } }
+    },
+    { 
+        WAR_UNIT_NECROLYTE,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 65, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55 } }
+    },
+    { 
+        WAR_UNIT_CONJURER,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55 } }
+    },
+    { 
+        WAR_UNIT_WARLOCK,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } }
+    },
+    { 
+        WAR_UNIT_MEDIVH,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } }
+    },
+    { 
+        WAR_UNIT_LOTHAR,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } }
+    },
+    { 
+        WAR_UNIT_BRIGAND,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 45, 40, 45, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 0 } },
+        { "Death",          0.5f, true, { 10, 25 } }
+    },
+    { 
+        WAR_UNIT_SPIDER,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55, 65 } }
+    },
+    { 
+        WAR_UNIT_WATERELEMENTAL,
+        { "Idle",           0.5f, true, { 1, 5, 15, 30 } },
+        { "Walk",           0.2f, true, { 15, 0, 30, 0, 15, 0, 30, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 45, 50, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } }
+    },
+    { 
+        WAR_UNIT_FIREELEMENTAL,
+        { "Idle",           0.5f, true, { 5, 15, 25, 35, 50 } },
+        { "Walk",           0.2f, true, { 10, 20, 10, 0, 40, 30, 40, 0 } },
+        { "Attack",         0.2f, true, { 5, 15, 25, 35, 45, 0 } },
+        { "Death",          0.5f, true, { 0 } }
+    },
+    { 
+        WAR_UNIT_GRIZELDA,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 10, 20, 10, 0, 35, 30, 35, 0 } },
+        { "Death",          0.5f, true, { 5, 15, 25 } }
+    },
+    { 
+        WAR_UNIT_GARONA,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 10, 20, 10, 0, 35, 30, 35, 0 } },
+        { "Death",          0.5f, true, { 5, 15, 25 } }
+    },
+    { 
+        WAR_UNIT_SLIME,
+        { "Idle",           0.5f, true, { 0, 65, 70, 75, 80, 85, 90 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 55, 45, 55, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 60, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40 } }
+    },
+    { 
+        WAR_UNIT_DAEMON,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 65, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55, 70 } }
+    },
+    { 
+        WAR_UNIT_OGRE,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 65, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55, 70 } }
+    },
+    { 
+        WAR_UNIT_SKELETON,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 65, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55, 70 } }
+    },
+    { 
+        WAR_UNIT_SCORPION,
+        { "Idle",           0.5f, true, { 0 } },
+        { "Walk",           0.2f, true, { 15, 30, 15, 0, 60, 45, 60, 0 } },
+        { "Attack",         0.2f, true, { 5, 20, 35, 50, 65, 0 } },
+        { "Death",          0.5f, true, { 10, 25, 40, 55, 70 } }
+    },
+    { 
+        WAR_UNIT_HUMAN_CORPSE,
+        { "Death",          0.5f, true, { 0, 10, 15, 20 } }
+    },
+    { 
+        WAR_UNIT_ORC_CORPSE,
+        { "Death",          0.5f, true, { 5, 10, 15, 20 } }
+    },
+};
+
+void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAnim, const WarUnitDirection defaultDirection)
 {
     WarUnitComponent* unit = &entity->unit;
     
@@ -158,6 +382,7 @@ void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAn
                 for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
                 {
                     WarSpriteAnimation* anim = addSpriteAnimation(entity, idleName, idleFrameDelay, idleLoop);
+                    anim->direction = directionByIndex(i);
                     anim->flipX = (i >= 5);
 
                     for(s32 j = 0; j < arrayLength(idleFrameIndices); j++)
@@ -181,6 +406,7 @@ void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAn
                 for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
                 {
                     WarSpriteAnimation* anim = addSpriteAnimation(entity, walkName, walkFrameDelay, walkLoop);
+                    anim->direction = directionByIndex(i);
                     anim->flipX = (i >= 5);
 
                     for(s32 j = 0; j < arrayLength(walkFrameIndices); j++)
@@ -199,11 +425,12 @@ void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAn
                 const char* attackName = "Attack";
                 const f32 attackFrameDelay = 0.2f;
                 const bool attackLoop = true;
-                const s32 attackFrameIndices[] = { 5, 20, 35, 50, 60, 50, 35, 20 };
+                const s32 attackFrameIndices[] = { 5, 20, 35, 50, 60, 0 };
 
                 for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
                 {
                     WarSpriteAnimation* anim = addSpriteAnimation(entity, attackName, attackFrameDelay, attackLoop);
+                    anim->direction = directionByIndex(i);
                     anim->flipX = (i >= 5);
 
                     for(s32 j = 0; j < arrayLength(attackFrameIndices); j++)
@@ -228,6 +455,57 @@ void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAn
                 addAnimationFrame(anim, 25);
                 addAnimationFrame(anim, 40);
             }
+            
+            if (unit->type == WAR_UNIT_PEASANT || unit->type == WAR_UNIT_PEON)
+            {
+                // harvest wood
+                {
+                    const char* harvestWoodName = "HarvestWood";
+                    const f32 harvestWoodFrameDelay = 0.2f;
+                    const bool harvestWoodLoop = true;
+                    const s32 harvestWoodFrameIndices[] = { 5, 20, 35, 50 };
+
+                    for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
+                    {
+                        WarSpriteAnimation* anim = addSpriteAnimation(entity, harvestWoodName, harvestWoodFrameDelay, harvestWoodLoop);
+                        anim->direction = directionByIndex(i);
+                        anim->flipX = (i >= 5);
+
+                        for(s32 j = 0; j < arrayLength(harvestWoodFrameIndices); j++)
+                        {
+                            s32 frameIndex = anim->flipX 
+                                ? harvestWoodFrameIndices[j] + (WAR_DIRECTION_COUNT - i) 
+                                : harvestWoodFrameIndices[j] + i;
+
+                            addAnimationFrame(anim, frameIndex);
+                        }
+                    }
+                }
+
+                // repair
+                {
+                    const char* repairName = "Repair";
+                    const f32 repairFrameDelay = 0.2f;
+                    const bool repairLoop = true;
+                    const s32 repairFrameIndices[] = { 5, 20, 35, 50, 60, 0 };
+
+                    for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
+                    {
+                        WarSpriteAnimation* anim = addSpriteAnimation(entity, repairName, repairFrameDelay, repairLoop);
+                        anim->direction = directionByIndex(i);
+                        anim->flipX = (i >= 5);
+
+                        for(s32 j = 0; j < arrayLength(repairFrameIndices); j++)
+                        {
+                            s32 frameIndex = anim->flipX 
+                                ? repairFrameIndices[j] + (WAR_DIRECTION_COUNT - i) 
+                                : repairFrameIndices[j] + i;
+
+                            addAnimationFrame(anim, frameIndex);
+                        }
+                    }
+                }
+            }
 
             break;
         }
@@ -244,6 +522,7 @@ void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAn
                 for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
                 {
                     WarSpriteAnimation* anim = addSpriteAnimation(entity, idleName, idleFrameDelay, idleLoop);
+                    anim->direction = directionByIndex(i);
                     anim->flipX = (i >= 5);
 
                     for(s32 j = 0; j < arrayLength(idleFrameIndices); j++)
@@ -267,6 +546,7 @@ void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAn
                 for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
                 {
                     WarSpriteAnimation* anim = addSpriteAnimation(entity, walkName, walkFrameDelay, walkLoop);
+                    anim->direction = directionByIndex(i);
                     anim->flipX = (i >= 5);
 
                     for(s32 j = 0; j < arrayLength(walkFrameIndices); j++)
@@ -290,6 +570,7 @@ void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAn
                 for(s32 i = 0; i < WAR_DIRECTION_COUNT; i++)
                 {
                     WarSpriteAnimation* anim = addSpriteAnimation(entity, attackName, attackFrameDelay, attackLoop);
+                    anim->direction = directionByIndex(i);
                     anim->flipX = (i >= 5);
 
                     for(s32 j = 0; j < arrayLength(attackFrameIndices); j++)
@@ -322,7 +603,7 @@ void addAnimations(WarContext* context, WarEntity* entity, const char* defaultAn
             break;
     }
 
-    setSpriteAnimation(context, entity, defaultAnim, true);
+    setDirectionalAnimation(context, entity, defaultAnim, defaultDirection, true);
 }
 
 WarResource* getOrCreateResource(WarContext *context, s32 index)

@@ -85,6 +85,8 @@ void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, 
     entity->unit.sizey = unitsData[type * 4 + 3];
     entity->unit.player = player;
     entity->unit.value = value;
+    entity->unit.currentActionIndex = 0;
+    WarUnitActionListInit(&entity->unit.actions);
 }
 
 void addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces)

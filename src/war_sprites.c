@@ -158,24 +158,33 @@ void updateAnimation(WarContext* context, WarEntity* entity)
     }
 }
 
-void setSpriteAnimation(WarContext* context, WarEntity* entity, const char* name, bool reset)
+s32 findAnimation(WarSpriteComponent* sprite, const char* name, WarUnitDirection direction)
 {
-    WarSpriteComponent* sprite = &entity->sprite;
-    
-    s32 animIndex = -1;
-    WarSpriteAnimation* anim = NULL;
+    s32 index = -1;
+
     for(s32 i = 0; i < sprite->animations.count; i++)
     {
-        anim = sprite->animations.items[i];
-        if (strcmp(anim->name, name) == 0)
+        WarSpriteAnimation* anim = sprite->animations.items[i];
+        if (strcmp(anim->name, name) == 0 && anim->direction == direction)
         {
-            animIndex = i;
+            index = i;
             break;
         }
     }
+
+    return index;
+}
+
+void setDirectionalAnimation(WarContext* context, WarEntity* entity, const char* name, WarUnitDirection direction, bool reset)
+{
+    WarSpriteComponent* sprite = &entity->sprite;
     
-    if (anim && animIndex >= 0)
+    s32 animIndex = findAnimation(sprite, name, direction);
+    if (animIndex >= 0)
     {
+        WarSpriteAnimation* anim = sprite->animations.items[animIndex];
+        assert(anim);
+        
         if (reset)
         {
             resetAnimation(anim);
@@ -183,6 +192,11 @@ void setSpriteAnimation(WarContext* context, WarEntity* entity, const char* name
 
         sprite->currentAnimIndex = animIndex;
     }
+}
+
+void setAnimation(WarContext* context, WarEntity* entity, const char* name, bool reset)
+{
+    setDirectionalAnimation(context, entity, name, WAR_DIRECTION_NORTH, reset);
 }
 
 inline void enableAnimations(WarEntity* entity)

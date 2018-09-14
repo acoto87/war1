@@ -14,6 +14,31 @@ List of thing to do in no particular order
   * (done) Switch animations without reseting the new animation to the start. This will allow have one animation for each orientation of then switch to the correct one depending of the orientation but conserving the state.
   * (done) Have a giant table with animations data for each entity type.
     * Instead an `addAnimations` function was written that assign the animations to the entities. This was because multiple entity types have the same animations data.
+  * Change the concept of animations by a sequence of frames, to a more complex but powerful system of actions. Each unit can have several actions, which can have steps and the steps of the actions describe what the unit does. For example, this is the `Attack` action of the footman:
+  ```
+  Attack={
+    "unbreakable begin",
+    "frame 5",
+    "wait 5",
+    "frame 20",
+    "wait 5",
+    "frame 35",
+    "attack",
+    "sound sword attack",
+    "wait 5",
+    "frame 50",
+    "wait 5",
+    "frame 60",
+    "wait 5",
+    "wait 0",
+    "frame 0",
+    "wait 1",
+    "unbreakable end",
+    "frame 0",
+    "wait 1" 
+  }
+  ```
+  
 * State machine
   * Idle behaviour
   * Move behaviour

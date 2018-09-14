@@ -320,7 +320,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
             // this will be done when the state machine first state enters
             // for now keep it here to test the animations
-            addAnimations(context, entity, "Attack");
+            addAnimations(context, entity, "Attack", WAR_DIRECTION_SOUTH_WEST);
             enableAnimations(entity);
 
             // addStateMachineComponent(context, entity);
