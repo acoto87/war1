@@ -13,7 +13,16 @@
 */
 #define sign(x) (((x) > 0) - ((x) < 0))
 
-#define absf(x) x
+#define mini(a, b) min(a, b)
+#define maxi(a, b) max(a, b)
+
+#define minf(a, b) fminf(a, b)
+#define maxf(a, b) fmaxf(a, b)
+
+#define absi(x) abs(x)
+#define absf(x) fabsf(x)
+#define halfi(x) ((x)/2)
+#define halff(x) ((x)*0.5f)
 
 /*
  * vec2 types and functions
@@ -176,10 +185,10 @@ inline rect recti(s32 x, s32 y, s32 width, s32 height)
 inline rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2)
 {
     return rectf(
-        fminf(x1, x2),
-        fminf(y1, y2),
-        fabsf(x1 - x2), 
-        fabsf(y1 - y2));
+        minf(x1, x2),
+        minf(y1, y2),
+        absf(x1 - x2), 
+        absf(y1 - y2));
 }
 
 inline rect rectv(vec2 pos, vec2 size)

@@ -216,12 +216,22 @@ void updateGame(WarContext* context)
     // }
 
     // process all animations
+    // for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+    // {
+    //     WarEntity* entity = map->entities[i];
+    //     if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+    //     {
+    //         updateAnimation(context, entity);
+    //     }
+    // }
+
+    // process all actions
     for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
     {
         WarEntity* entity = map->entities[i];
         if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
         {
-            updateAnimation(context, entity);
+            updateAction(context, entity);
         }
     }
 

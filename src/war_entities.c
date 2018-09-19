@@ -31,11 +31,9 @@ void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite
 {
     entity->sprite = (WarSpriteComponent){0};
     entity->sprite.enabled = true;
-    entity->sprite.animationsEnabled = false;
+    entity->sprite.frameIndex = 0;
     entity->sprite.resourceIndex = 0;
     entity->sprite.sprite = sprite;
-
-    WarSpriteAnimationListInit(&entity->sprite.animations);
 }
 
 void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 resourceIndex)
@@ -73,18 +71,19 @@ void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 
     entity->sprite.resourceIndex = resourceIndex;
 }
 
-void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, s32 x, s32 y, u8 player, u16 value)
+void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, s32 x, s32 y, u8 player, WarResourceKind resourceKind, u32 amount)
 {
     entity->unit = (WarUnitComponent){0};
     entity->unit.enabled = true;
     entity->unit.type = type;
-    entity->unit.direction = WAR_DIRECTION_NORTH;
+    entity->unit.direction = rand() % WAR_DIRECTION_COUNT;
     entity->unit.tilex = x;
     entity->unit.tiley = y;
     entity->unit.sizex = unitsData[type * 4 + 2];
     entity->unit.sizey = unitsData[type * 4 + 3];
     entity->unit.player = player;
-    entity->unit.value = value;
+    entity->unit.resourceKind = resourceKind;
+    entity->unit.amount = amount;
     entity->unit.currentActionIndex = 0;
     WarUnitActionListInit(&entity->unit.actions);
 }
@@ -100,6 +99,20 @@ void addStateMachineComponent(WarContext* context, WarEntity* entity)
 {
     entity->stateMachine = (WarStateMachineComponent){0};
     entity->stateMachine.enabled = true;
+}
+
+void removeSpriteComponent(WarContext* context, WarEntity* entity)
+{
+    WarSpriteComponent* sprite = &entity->sprite;
+    for(s32 i = 0; i < sprite->sprite.framesCount; i++)
+    {
+        u8* data = sprite->sprite.frames[i].data;
+        if (data) free(data);
+    }
+
+    nvgDeleteImage(context->gfx, sprite->sprite.image);
+
+    *sprite = (WarSpriteComponent){0};
 }
 
 #define isNeutral(player) (player == 4)
@@ -256,16 +269,15 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
         // position of the unit in the map 
         vec2 position = transform->position;
 
-        // scale of the unit
-        // this is modified by animations when the animation indicates that it 
+        // scale of the unit: this is modified by animations when the animation indicates that it 
         // should flip horizontally or vertically or both
         vec2 scale = transform->scale;
 
         // DEBUG
         // nvgFillRect(gfx, rectv(position, unitSize), NVG_GRAY_TRANSPARENT);
 
-        nvgTranslate(gfx, -frameSize.x * 0.5f, -frameSize.y * 0.5f);
-        nvgTranslate(gfx, position.x + unitSize.x * 0.5f, position.y + unitSize.y * 0.5f);
+        nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
+        nvgTranslate(gfx, position.x + halff(unitSize.x), position.y + halff(unitSize.y));
 
         WarSpriteFrame* frame = getSpriteFrame(context, sprite);
         updateSpriteImage(context, &sprite->sprite, frame->data);
@@ -273,7 +285,7 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
 
         if (selected)
         {
-            rect selr = rectf((frameSize.x - unitSize.x) / 2, (frameSize.y - unitSize.y) / 2, unitSize.x, unitSize.y);
+            rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
             nvgStrokeRect(gfx, selr, NVG_GREEN_SELECTION);
         }
     }

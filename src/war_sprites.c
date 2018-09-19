@@ -62,149 +62,147 @@ void renderSprite(WarContext *context, WarSprite *sprite, vec2 pos, vec2 scale)
     nvgRenderSubImage(context->gfx, sprite->image, rs, rd, scale);
 }
 
-WarSpriteAnimation* getCurrentAnimation(WarSpriteComponent* sprite)
-{
-    if (!inRange(sprite->currentAnimIndex, 0, sprite->animations.count))
-    {
-        return NULL;
-    }
+// WarSpriteAnimation* getCurrentAnimation(WarSpriteComponent* sprite)
+// {
+//     if (!inRange(sprite->currentAnimIndex, 0, sprite->animations.count))
+//     {
+//         return NULL;
+//     }
     
-    return sprite->animations.items[sprite->currentAnimIndex];
-}
+//     return sprite->animations.items[sprite->currentAnimIndex];
+// }
 
 WarSpriteFrame* getSpriteFrame(WarContext* context, WarSpriteComponent* sprite)
 {
-    s32 spriteFrameIndex = 0;
+    s32 spriteFrameIndex = sprite->frameIndex;
 
-    if (sprite->animationsEnabled)
-    {
-        WarSpriteAnimation* anim = getCurrentAnimation(sprite);
-        if (anim)
-        {
-            s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
-            animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
-            spriteFrameIndex = anim->frames.items[animFrameIndex];
-        }
-    }
     
+
+
     return &sprite->sprite.frames[spriteFrameIndex];
 }
 
-void resetAnimation(WarSpriteAnimation* anim)
-{
-    anim->animTime = 0;
-    anim->status = WAR_ANIM_STATUS_NOT_STARTED;
-}
+// void resetAnimation(WarSpriteAnimation* anim)
+// {
+//     anim->animTime = 0;
+//     anim->status = WAR_ANIM_STATUS_NOT_STARTED;
+// }
 
-WarSpriteAnimation* addSpriteAnimation(WarEntity* entity, char* name, f32 frameDelay, bool loop)
-{
-    WarSpriteAnimation* anim = (WarSpriteAnimation*)xmalloc(sizeof(WarSpriteAnimation));
-    anim->name = name;
-    anim->status = WAR_ANIM_STATUS_NOT_STARTED;
-    anim->loop = loop;
-    anim->flipX = false;
-    anim->flipY = false;
-    anim->frameDelay = frameDelay;
-    anim->animTime = 0;
-    anim->status = WAR_ANIM_STATUS_NOT_STARTED;
-    WarS32ListInit(&anim->frames);
+// WarSpriteAnimation* addSpriteAnimation(WarEntity* entity, char* name, f32 frameDelay, bool loop)
+// {
+//     WarSpriteAnimation* anim = (WarSpriteAnimation*)xmalloc(sizeof(WarSpriteAnimation));
+//     anim->name = name;
+//     anim->status = WAR_ANIM_STATUS_NOT_STARTED;
+//     anim->loop = loop;
+//     anim->flipX = false;
+//     anim->flipY = false;
+//     anim->frameDelay = frameDelay;
+//     anim->animTime = 0;
+//     anim->status = WAR_ANIM_STATUS_NOT_STARTED;
+//     WarS32ListInit(&anim->frames);
 
-    WarSpriteAnimationListAdd(&entity->sprite.animations, anim);
+//     WarSpriteAnimationListAdd(&entity->sprite.animations, anim);
 
-    return anim;
-}
+//     return anim;
+// }
 
-void addAnimationFrame(WarSpriteAnimation* anim, s32 frameIndex)
-{
-    WarS32ListAdd(&anim->frames, frameIndex);
-}
+// void addAnimationFrame(WarSpriteAnimation* anim, s32 frameIndex)
+// {
+//     WarS32ListAdd(&anim->frames, frameIndex);
+// }
 
-void addAnimationFrames(WarSpriteAnimation* anim, s32 count, s32 frameIndices[])
-{
-    for(s32 i = 0; i < count; i++)
-    {
-        addAnimationFrame(anim, frameIndices[i]);
-    }
-}
+// void addAnimationFrames(WarSpriteAnimation* anim, s32 count, s32 frameIndices[])
+// {
+//     for(s32 i = 0; i < count; i++)
+//     {
+//         addAnimationFrame(anim, frameIndices[i]);
+//     }
+// }
 
-void updateAnimation(WarContext* context, WarEntity* entity)
-{
-    WarSpriteComponent* sprite = &entity->sprite;
-    WarTransformComponent* transform = &entity->transform;
-    if (sprite->enabled && sprite->animationsEnabled)
-    {
-        WarSpriteAnimation* anim = getCurrentAnimation(sprite);
-        if (!anim || anim->status == WAR_ANIM_STATUS_FINISHED)
-        {
-            return;
-        }
+// void updateAnimation(WarContext* context, WarEntity* entity)
+// {
+//     WarSpriteComponent* sprite = &entity->sprite;
+//     WarTransformComponent* transform = &entity->transform;
+//     if (sprite->enabled && sprite->animationsEnabled)
+//     {
+//         WarSpriteAnimation* anim = getCurrentAnimation(sprite);
+//         if (!anim || anim->status == WAR_ANIM_STATUS_FINISHED)
+//         {
+//             return;
+//         }
 
-        anim->status = WAR_ANIM_STATUS_RUNNING;
-        anim->animTime += (context->deltaTime / (anim->frameDelay * anim->frames.count));
+//         anim->status = WAR_ANIM_STATUS_RUNNING;
+//         anim->animTime += (context->deltaTime / (anim->frameDelay * anim->frames.count));
 
-        if (anim->animTime >= 1)
-        {
-            anim->animTime = 1;
-            anim->status = WAR_ANIM_STATUS_FINISHED;
+//         if (anim->animTime >= 1)
+//         {
+//             anim->animTime = 1;
+//             anim->status = WAR_ANIM_STATUS_FINISHED;
 
-            if(anim->loop)
-            {
-                resetAnimation(anim);
-            }
-        }
+//             if(anim->loop)
+//             {
+//                 resetAnimation(anim);
+//             }
+//         }
 
-        transform->scale.x = anim->flipX ? -1 : 1;
-        transform->scale.y = anim->flipY ? -1 : 1;
-    }
-}
+//         transform->scale.x = anim->flipX ? -1 : 1;
+//         transform->scale.y = anim->flipY ? -1 : 1;
+//     }
+// }
 
-s32 findAnimation(WarSpriteComponent* sprite, const char* name, WarUnitDirection direction)
-{
-    s32 index = -1;
+// s32 findAnimation(WarSpriteComponent* sprite, const char* name, WarUnitDirection direction)
+// {
+//     s32 index = -1;
 
-    for(s32 i = 0; i < sprite->animations.count; i++)
-    {
-        WarSpriteAnimation* anim = sprite->animations.items[i];
-        if (strcmp(anim->name, name) == 0 && anim->direction == direction)
-        {
-            index = i;
-            break;
-        }
-    }
+//     for(s32 i = 0; i < sprite->animations.count; i++)
+//     {
+//         WarSpriteAnimation* anim = sprite->animations.items[i];
+//         if (strcmp(anim->name, name) == 0 && anim->direction == direction)
+//         {
+//             index = i;
+//             break;
+//         }
+//     }
 
-    return index;
-}
+//     return index;
+// }
 
-void setDirectionalAnimation(WarContext* context, WarEntity* entity, const char* name, WarUnitDirection direction, bool reset)
-{
-    WarSpriteComponent* sprite = &entity->sprite;
+// void setDirectionalAnimation(WarContext* context, WarEntity* entity, const char* name, WarUnitDirection direction, bool reset)
+// {
+//     WarSpriteComponent* sprite = &entity->sprite;
     
-    s32 animIndex = findAnimation(sprite, name, direction);
-    if (animIndex >= 0)
-    {
-        WarSpriteAnimation* anim = sprite->animations.items[animIndex];
-        assert(anim);
+//     s32 animIndex = findAnimation(sprite, name, direction);
+//     if (animIndex >= 0)
+//     {
+//         WarSpriteAnimation* anim = sprite->animations.items[animIndex];
+//         assert(anim);
         
-        if (reset)
-        {
-            resetAnimation(anim);
-        }
+//         if (reset)
+//         {
+//             resetAnimation(anim);
+//         }
 
-        sprite->currentAnimIndex = animIndex;
-    }
-}
+//         sprite->currentAnimIndex = animIndex;
+//     }
+// }
 
-void setAnimation(WarContext* context, WarEntity* entity, const char* name, bool reset)
-{
-    setDirectionalAnimation(context, entity, name, WAR_DIRECTION_NORTH, reset);
-}
+// void setAnimation(WarContext* context, WarEntity* entity, const char* name, bool reset)
+// {
+//     setDirectionalAnimation(context, entity, name, WAR_DIRECTION_NORTH, reset);
+// }
 
-inline void enableAnimations(WarEntity* entity)
-{
-    entity->sprite.animationsEnabled = true;
-}
+// inline void enableAnimations(WarEntity* entity)
+// {
+//     entity->sprite.animationsEnabled = true;
+// }
 
-inline void disableAnimations(WarEntity* entity)
-{
-    entity->sprite.animationsEnabled = true;
-}
+// inline void disableAnimations(WarEntity* entity)
+// {
+//     entity->sprite.animationsEnabled = true;
+// }
+
+
+
+
+
+

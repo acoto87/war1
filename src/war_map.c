@@ -307,7 +307,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             WarLevelUnit unit = levelInfo->levelInfo.startEntities[i];
 
             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-            addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.value);
+            addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.resourceKind, unit.amount);
             addTransformComponent(context, entity, vec2i(unit.x * MEGA_TILE_WIDTH, unit.y * MEGA_TILE_HEIGHT));
 
             s32 spriteIndex = unitsData[unit.type * 4 + 1];
@@ -318,10 +318,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             }
             addSpriteComponentFromResource(context, entity, spriteIndex);
 
-            // this will be done when the state machine first state enters
-            // for now keep it here to test the animations
-            addAnimations(context, entity, "Attack", WAR_DIRECTION_SOUTH_WEST);
-            enableAnimations(entity);
+            buildUnitActions(entity);
+            setAction(context, entity, WAR_ACTION_TYPE_WALK, true);
 
             // addStateMachineComponent(context, entity);
 

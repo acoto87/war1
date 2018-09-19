@@ -181,18 +181,18 @@ typedef enum
     WAR_UNIT_GRIZELDA,
     WAR_UNIT_GARONA,
     WAR_UNIT_OGRE,
-    WAR_UNIT_20,
     WAR_UNIT_SPIDER,
     WAR_UNIT_SLIME,
     WAR_UNIT_FIREELEMENTAL,
     WAR_UNIT_SCORPION,
     WAR_UNIT_BRIGAND,
-    WAR_UNIT_26,
+    WAR_UNIT_THE_DEAD,
     WAR_UNIT_SKELETON,
     WAR_UNIT_DAEMON,
-    WAR_UNIT_DRAGON_CYCLOPS_GIANT,
-    WAR_UNIT_30,
     WAR_UNIT_WATERELEMENTAL,
+    WAR_UNIT_DRAGON_CYCLOPS_GIANT,
+    WAR_UNIT_26,
+    WAR_UNIT_30,
 
     // buildings
     WAR_UNIT_FARM_HUMANS,
@@ -218,10 +218,6 @@ typedef enum
     WAR_UNIT_GOLDMINE,
 
 	WAR_UNIT_51,
-	WAR_UNIT_PEASANT_WITH_WOOD,
-	WAR_UNIT_PEON_WITH_WOOD,
-    WAR_UNIT_PEASANT_WITH_GOLD,
-	WAR_UNIT_PEON_WITH_GOLD,
 
     // others
     WAR_UNIT_HUMAN_CORPSE,
@@ -262,7 +258,6 @@ typedef struct
     bool loop;
     bool flipX;
     bool flipY;
-    WarUnitDirection direction;
     WarAnimationStatus status;
     f32 frameDelay;
     WarS32List frames;
@@ -278,12 +273,20 @@ internal bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSp
 shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
 shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*, equalsSpriteAnimation, NULL)
 
+typedef enum
+{
+    WAR_RESOURCE_NONE,
+    WAR_RESOURCE_GOLD,
+    WAR_RESOURCE_WOOD
+} WarResourceKind;
+
 typedef struct
 {
     u8 x, y;
     WarUnitType type;
     u8 player;
-    u16 value;
+    WarResourceKind resourceKind;
+    u16 amount;
 } WarLevelUnit;
 
 typedef enum
@@ -496,7 +499,10 @@ typedef enum
 typedef struct
 {
     WarUnitActionType type;
-    s32 currentIndex;
+    bool unbreakable;
+    bool directional;
+    s32 waitCount;
+    s32 currentStepIndex;
     WarUnitActionStepList steps;
 } WarUnitAction;
 
@@ -564,10 +570,8 @@ typedef struct
 typedef struct
 {
     bool enabled;
-    bool animationsEnabled;
     s32 resourceIndex;
-    s32 currentAnimIndex;
-    WarSpriteAnimationList animations;
+    s32 frameIndex;
     WarSprite sprite;
 } WarSpriteComponent;
 
@@ -577,12 +581,18 @@ typedef struct
     WarUnitType type;
     WarUnitDirection direction;
 
+    // position in tiles
     s32 tilex, tiley;
+    // size in tiles
     s32 sizex, sizey;
+
+    // index of the player this unit belongs to
     u8 player;
 
-    // this is for gold mines and trees
-    u16 value;
+    // the units that can carry resources are
+    // peasants, peons, goldmines and trees
+    WarResourceKind resourceKind;
+    u32 amount;
 
     s32 currentActionIndex;
     WarUnitActionList actions;
