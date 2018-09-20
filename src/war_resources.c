@@ -1,143 +1,8 @@
-const char* features[MAX_FEATURES_COUNT*2] = {
-	// Units. 0 - 6
-	"unit-footman", "unit-grunt",
-	"unit-peasant", "unit-peon",
-	"unit-human-catapult", "unit-orc-catapult",
-	"unit-knight", "unit-raider",
-	"unit-archer", "unit-spearman",
-	"unit-conjurer", "unit-warlock",
-	"unit-cleric", "unit-necrolyte",
-	// Constructing buildings. 7 - 14
-	"unit-human-farm", "unit-orc-farm",
-	"unit-human-barracks", "unit-orc-barracks",
-	"unit-human-church", "unit-orc-temple",
-	"unit-human-tower", "unit-orc-tower",
-	"unit-human-town-hall", "unit-orc-town-hall",
-	"unit-human-lumber-mill", "unit-orc-lumber-mill",
-	"unit-human-stable", "unit-orc-kennel",
-	"unit-human-blacksmith", "unit-orc-blacksmith",
-	// Cleric/Necrolyte spells. 15 - 17
-	"upgrade-healing", "upgrade-raise-dead",
-	"upgrade-holy-vision", "upgrade-dark-vision",
-	"upgrade-invisibility", "upgrade-unholy-armor",
-	// Conjurer/Warlock spells. 18 - 20
-	"upgrade-scorpion", "upgrade-spider",
-	"upgrade-rain-of-fire", "upgrade-poison-cloud",
-	"upgrade-water-elemental", "upgrade-daemon",
-	// Roads and walls. 21 - 22
-	"unit-road", "unit-road",
-	"unit-wall", "unit-wall"
-};
+#define BUILDING_DAMAGE_1_RESOURCE 352
+#define BUILDING_DAMAGE_2_RESOURCE 353
+#define BUILDING_COLLAPSE_RESOURCE 356
 
-const char* upgradeNames[MAX_UPGRADES_COUNT*2] = 
-{
-    // Basic upgrades
-    "upgrade-spear", "upgrade-arrow",
-    "upgrade-axe", "upgrade-sword",
-    "upgrade-wolves", "upgrade-horse",
-    // Spells and summons
-    "upgrade-spider", "upgrade-scorpion",
-    "upgrade-poison-cloud", "upgrade-rain-of-fire",
-    "upgrade-daemon", "upgrade-water-elemental",
-    "upgrade-raise-dead", "upgrade-healing",
-    "upgrade-dark-vision", "upgrade-far-seeing",
-    "upgrade-unholy-armor", "upgrade-invisibility",
-    // Shield upgrades
-    "upgrade-orc-shield", "upgrade-human-shield"
-};
-
-const s32 unitsData[] = 
-{
-    // units                            // resource index   // size x in tiles  // size y in tiles
-    WAR_UNIT_FOOTMAN,                   279,                1,                  1,
-    WAR_UNIT_GRUNT,                     280,                1,                  1,
-    WAR_UNIT_PEASANT,                   281,                1,                  1,
-    WAR_UNIT_PEON,                      282,                1,                  1,
-    WAR_UNIT_CATAPULT_HUMANS,           283,                1,                  1,
-    WAR_UNIT_CATAPULT_ORCS,             284,                1,                  1,
-    WAR_UNIT_KNIGHT,                    285,                1,                  1,
-    WAR_UNIT_RAIDER,                    286,                1,                  1,
-    WAR_UNIT_ARCHER,                    287,                1,                  1,
-    WAR_UNIT_SPEARMAN,                  288,                1,                  1,
-    WAR_UNIT_CONJURER,                  289,                1,                  1,
-    WAR_UNIT_WARLOCK,                   290,                1,                  1,
-    WAR_UNIT_CLERIC,                    291,                1,                  1,
-    WAR_UNIT_NECROLYTE,                 292,                1,                  1,
-    WAR_UNIT_MEDIVH,                    293,                1,                  1,
-    WAR_UNIT_LOTHAR,                    294,                1,                  1,
-    WAR_UNIT_WOUNDED,                   295,                1,                  1,
-    WAR_UNIT_GRIZELDA,                  296,                1,                  1,
-    WAR_UNIT_GARONA,                    296,                1,                  1,
-    WAR_UNIT_OGRE,                      297,                1,                  1,
-    WAR_UNIT_SPIDER,                    298,                1,                  1,
-    WAR_UNIT_SLIME,                     299,                1,                  1,
-    WAR_UNIT_FIREELEMENTAL,             300,                1,                  1,
-    WAR_UNIT_SCORPION,                  301,                1,                  1,
-    WAR_UNIT_BRIGAND,                   302,                1,                  1,
-    WAR_UNIT_THE_DEAD,                  303,                1,                  1,
-    WAR_UNIT_SKELETON,                  304,                1,                  1,
-    WAR_UNIT_DAEMON,                    305,                1,                  1,
-    WAR_UNIT_WATERELEMENTAL,            306,                1,                  1,
-    WAR_UNIT_DRAGON_CYCLOPS_GIANT,        0,                0,                  0,
-    WAR_UNIT_26,                          0,                0,                  0,
-    WAR_UNIT_30,                          0,                0,                  0,
-
-    // buildings
-    WAR_UNIT_FARM_HUMANS,               307,                2,                  2,
-    WAR_UNIT_FARM_ORCS,                 308,                2,                  2,
-    WAR_UNIT_BARRACKS_HUMANS,           309,                3,                  3,
-    WAR_UNIT_BARRACKS_ORCS,             310,                3,                  3,
-    WAR_UNIT_CHURCH,                    311,                2,                  2,
-    WAR_UNIT_TEMPLE,                    312,                2,                  2,
-    WAR_UNIT_TOWER_HUMANS,              313,                2,                  2,
-    WAR_UNIT_TOWER_ORCS,                314,                2,                  2,
-    WAR_UNIT_TOWNHALL_HUMANS,           315,                3,                  3,
-    WAR_UNIT_TOWNHALL_ORCS,             316,                3,                  3,
-    WAR_UNIT_LUMBERMILL_HUMANS,         317,                3,                  3,
-    WAR_UNIT_LUMBERMILL_ORCS,           318,                3,                  3,
-    WAR_UNIT_STABLES,                   319,                3,                  3,
-    WAR_UNIT_KENNEL,                    320,                3,                  3,
-    WAR_UNIT_BLACKSMITH_HUMANS,         321,                3,                  3,
-    WAR_UNIT_BLACKSMITH_ORCS,           322,                3,                  3,
-    WAR_UNIT_STORMWIND,                 323,                4,                  4,
-    WAR_UNIT_BLACKROCK,                 324,                4,                  4,
-
-    // neutral
-    WAR_UNIT_GOLDMINE,                  325,                3,                  3,
-
-    // ??
-	WAR_UNIT_51,                          0,                0,                  0,
-
-    // others
-    WAR_UNIT_ORC_CORPSE,                  0,                0,                  0
-};
-
-const s32 peasantWithWood   = 327;
-const s32 peonWithWood      = 328;
-const s32 peasantWithGold   = 329;
-const s32 peonWithGold      = 330;
-
-const s32 roadsData[] =
-{
-    // road piece type                  // tile index forest         // tile index swamp
-    WAR_ROAD_PIECE_LEFT,                56,                          57,
-    WAR_ROAD_PIECE_TOP,                 57,                          58,
-    WAR_ROAD_PIECE_RIGHT,               58,                          59,    
-    WAR_ROAD_PIECE_BOTTOM,              59,                          60,    
-    WAR_ROAD_PIECE_BOTTOM_LEFT,         60,                          61,        
-    WAR_ROAD_PIECE_VERTICAL,            61,                          62,        
-    WAR_ROAD_PIECE_BOTTOM_RIGHT,        62,                          63,            
-    WAR_ROAD_PIECE_T_LEFT,              63,                          64,        
-    WAR_ROAD_PIECE_T_BOTTOM,            64,                          65,    
-    WAR_ROAD_PIECE_T_RIGHT,             65,                          66,    
-    WAR_ROAD_PIECE_CROSS,               66,                          67,    
-    WAR_ROAD_PIECE_TOP_LEFT,            67,                          68,        
-    WAR_ROAD_PIECE_HORIZONTAL,          68,                          69,    
-    WAR_ROAD_PIECE_T_TOP,               69,                          70,        
-    WAR_ROAD_PIECE_TOP_RIGHT,           70,                          71        
-};
-
-WarResource* getOrCreateResource(WarContext *context, s32 index)
+WarResource* getOrCreateResource(WarContext* context, s32 index)
 {
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
     if (!context->resources[index])
@@ -148,7 +13,7 @@ WarResource* getOrCreateResource(WarContext *context, s32 index)
     return context->resources[index];
 }
 
-void getPalette(WarContext *context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
+void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
 {
     memset(paletteData, 0, PALETTE_LENGTH);
 

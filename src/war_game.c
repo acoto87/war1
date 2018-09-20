@@ -235,6 +235,15 @@ void updateGame(WarContext* context)
         }
     }
 
+    for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+    {
+        WarEntity* entity = map->entities[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        {
+            updateAnimations(context, entity);
+        }
+    }
+
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
         rect minimapPanel = map->minimapPanel;

@@ -20,7 +20,7 @@ WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
     return sprite;
 }
 
-WarSprite createSpriteFrames(WarContext *context, u32 frameWidth, u32 frameHeight, u32 frameCount, WarSpriteFrame frames[])
+WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameHeight, u32 frameCount, WarSpriteFrame frames[])
 {
     WarSprite sprite = (WarSprite){0};
     sprite.frameWidth = frameWidth;
@@ -43,6 +43,44 @@ WarSprite createSpriteFrames(WarContext *context, u32 frameWidth, u32 frameHeigh
     }
     
     return sprite;
+}
+
+WarSprite createSpriteFromResource(WarContext* context, WarResource* resource)
+{
+    assert(resource);
+    assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || resource->type == WAR_RESOURCE_TYPE_SPRITE);
+
+    WarSprite sprite;
+
+    switch(resource->type)
+    {
+        case WAR_RESOURCE_TYPE_IMAGE:
+        {
+            u32 width = resource->imageData.width;
+            u32 height = resource->imageData.height;
+            u8* data = resource->imageData.pixels;
+            sprite = createSprite(context, width, height, data);
+            break;
+        }
+
+        case WAR_RESOURCE_TYPE_SPRITE:
+        {
+            u32 frameWidth = resource->spriteData.frameWidth;
+            u32 frameHeight = resource->spriteData.frameHeight;
+            u32 frameCount = resource->spriteData.framesCount;
+            WarSpriteFrame* frames = resource->spriteData.frames;
+            sprite = createSpriteFromFrames(context, frameWidth, frameHeight, frameCount, frames);
+            break;
+        }
+    }
+
+    return sprite;
+}
+
+WarSprite createSpriteFromResourceIndex(WarContext* context, s32 resourceIndex)
+{
+    WarResource* resource = getOrCreateResource(context, resourceIndex);
+    return createSpriteFromResource(context, resource);
 }
 
 void updateSpriteImage(WarContext *context, WarSprite *sprite, u8 data[])

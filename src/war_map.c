@@ -232,7 +232,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             minimapFrames[i].w = MINIMAP_WIDTH;
             minimapFrames[i].h = MINIMAP_HEIGHT;
             minimapFrames[i].off = 0;
-            minimapFrames[i].data = (u8*)calloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
+            minimapFrames[i].data = (u8*)xcalloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
         }
         
         for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
@@ -272,7 +272,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             }
         }
 
-        map->minimapSprite = createSpriteFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, 2, minimapFrames);
+        map->minimapSprite = createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, 2, minimapFrames);
     }
 
     s32 entitiesCount = 0;
@@ -310,7 +310,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.resourceKind, unit.amount);
             addTransformComponent(context, entity, vec2i(unit.x * MEGA_TILE_WIDTH, unit.y * MEGA_TILE_HEIGHT));
 
-            s32 spriteIndex = unitsData[unit.type * 4 + 1];
+            WarUnitsData unitData = getUnitsData(unit.type);
+            s32 spriteIndex = unitData.resourceIndex;
             if (spriteIndex == 0)
             {
                 logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", unit.type);
@@ -319,7 +320,20 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             addSpriteComponentFromResource(context, entity, spriteIndex);
 
             buildUnitActions(entity);
-            setAction(context, entity, WAR_ACTION_TYPE_WALK, true);
+            setAction(context, entity, WAR_ACTION_TYPE_IDLE, true);
+
+            if (isBuildingUnit(unit.type))
+            {
+                addAnimationsComponent(context, entity);
+
+                WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_1_RESOURCE);
+                WarSpriteAnimation* anim = createAnimation("littleDamage", sprite, 0.2f, true);
+                
+                for(s32 i = 0; i < 4; i++)
+                    addAnimationFrame(anim, i);
+                
+                addAnimation(entity, anim);
+            }
 
             // addStateMachineComponent(context, entity);
 
@@ -379,9 +393,9 @@ void renderMap(WarContext *context)
     WarMap *map = context->map;
     if (!map) return;
 
-    NVGcontext *gfx = context->gfx;
+    NVGcontext* gfx = context->gfx;
 
-    WarResource *levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
     nvgSave(gfx);
@@ -397,10 +411,10 @@ void renderMap(WarContext *context)
         
         // render terrain
         {
-            WarResource *levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+            WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
             assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-            WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
+            WarResource* tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
             assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);

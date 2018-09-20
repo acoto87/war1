@@ -4,7 +4,9 @@
 #define setBitFlag(v, f) (*(v) = (*(v) | (1 << (f))))
 #define clearBitFlag(v, f) (*(v) = *(v) ^ (*(v) & (1 << (f))))
 
-#define arrayLength(arr) (sizeof(arr) / sizeof(*arr))
+#define arrayInit(type, ...) ((type[]){__VA_ARGS__})
+#define arrayArg(type, ...) arrayInit(type, __VA_ARGS__)
+#define arrayLength(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define chance(p) ((rand() % 100) < p)
 
 #define inRange(x, a, b) ((x) >= (a) && (x) < (b))

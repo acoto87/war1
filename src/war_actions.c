@@ -13,24 +13,6 @@ typedef struct
     s32 deathFrames[5];
 } WarUnitFrameNumbers;
 
-typedef struct
-{
-    s32 walkSpeed;
-    s32 attackSpeed;
-    s32 coolOffTime;
-    s32 attackSound;
-    s32 waitTime;
-    bool directional;
-    WarUnitAction* walkAction;
-    WarUnitAction* attackAction;
-    WarUnitAction* deathAction;
-    WarUnitAction* harvestAction;
-    WarUnitAction* repairAction;
-    WarUnitAction* idleAction;
-} WarUnitActionOptions;
-
-#define DEFAULT_WAR_ACTION_OPTIONS (WarUnitActionOptions){0}
-
 WarUnitFrameNumbers getFrameNumbers(s32 nbdir, s32 initCounter[])
 {
     initCounter[0]--;
@@ -183,7 +165,7 @@ WarUnitAction* buildWalkAction(s32 nframes, s32 frames[], s32 walkSpeed, bool di
     return action;
 }
 
-WarUnitAction* buildAttackAction(s32 nframes, s32* frames, s32 attackSpeed, s32 attackSound, s32 coolOffTime, bool directional)
+WarUnitAction* buildAttackAction(s32 nframes, s32 frames[], s32 attackSpeed, s32 attackSound, s32 coolOffTime, bool directional)
 {
     WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_ATTACK);
     action->directional = directional;
@@ -217,7 +199,7 @@ WarUnitAction* buildAttackAction(s32 nframes, s32* frames, s32 attackSpeed, s32 
     return action;
 }
 
-WarUnitAction* buildHarvestAction(s32 nframes, s32* frames, s32 attackSpeed, WarUnitActionStepType attackSound, bool directional)
+WarUnitAction* buildHarvestAction(s32 nframes, s32 frames[], s32 attackSpeed, WarUnitActionStepType attackSound, bool directional)
 {
     WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_HARVEST);
     action->directional = directional;
@@ -243,7 +225,7 @@ WarUnitAction* buildHarvestAction(s32 nframes, s32* frames, s32 attackSpeed, War
     return action;
 }
 
-WarUnitAction* buildDeathAction(s32 nframes, s32* frames, s32 waitTime, bool directional, bool doWait101Step)
+WarUnitAction* buildDeathAction(s32 nframes, s32 frames[], s32 waitTime, bool directional, bool doWait101Step)
 {   
     WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_DEATH);
     action->directional = directional;
@@ -265,10 +247,11 @@ WarUnitAction* buildDeathAction(s32 nframes, s32* frames, s32 waitTime, bool dir
     return action;
 }
 
-WarUnitAction* buildIdleAction(s32 nframes, s32* frames, s32 waitTime, bool directional)
+WarUnitAction* buildBuildAction(s32 nframes, s32 frames[], s32 waitTime)
 {
-    WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_IDLE);
-    action->directional = directional;
+    WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_BUILD);
+
+    addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
     
     for(s32 i = 0; i < nframes; i++)
     {
@@ -276,6 +259,28 @@ WarUnitAction* buildIdleAction(s32 nframes, s32* frames, s32 waitTime, bool dire
         addActionStep(action, WAR_ACTION_STEP_WAIT, waitTime);
     }
     
+    addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
+    addActionStep(action, WAR_ACTION_STEP_WAIT, 1);
+
+    return action;
+}
+
+WarUnitAction* buildIdleAction(s32 nframes, s32 frames[], s32 waitTime, bool directional)
+{
+    WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_IDLE);
+    action->directional = directional;
+    
+    addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
+
+    for(s32 i = 0; i < nframes; i++)
+    {
+        addActionStep(action, WAR_ACTION_STEP_FRAME, frames[i]);
+        addActionStep(action, WAR_ACTION_STEP_WAIT, waitTime);
+    }
+    
+    addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
+    addActionStep(action, WAR_ACTION_STEP_WAIT, 1);
+
     return action;
 }
 
@@ -283,49 +288,6 @@ WarUnitAction* buildDefaultIdleAction(s32 waitTime, bool directional)
 {
     s32 idleFrames[] = {0};
     return buildIdleAction(1, idleFrames, waitTime, directional);
-}
-
-void buildActions(WarEntity* entity, WarUnitFrameNumbers frames, WarUnitActionOptions options)
-{
-    WarUnitComponent* unit = &entity->unit;
-
-    if (!options.walkSpeed)
-        options.walkSpeed = 6;
-
-    if (!options.attackSpeed)
-        options.attackSpeed = 6;
-
-    if (!options.coolOffTime)
-        options.coolOffTime = 1;
-
-    if (!options.attackSound)
-        options.attackSound = WAR_ACTION_STEP_SOUND_SWORD;
-
-    if (!options.walkAction)
-        options.walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, options.walkSpeed, options.directional);
-
-    if (!options.attackAction)
-        options.attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, options.attackSpeed, options.attackSound, options.coolOffTime, options.directional);
-
-    if (!options.deathAction)
-        options.deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, 3, false, true);
-
-    if (!options.idleAction)
-    {
-        s32 idleFrames[] = {0};
-        options.idleAction = buildIdleAction(1, idleFrames, 3, options.directional);
-    }
-
-    WarUnitActionListAdd(&unit->actions, options.walkAction);
-    WarUnitActionListAdd(&unit->actions, options.attackAction);
-    WarUnitActionListAdd(&unit->actions, options.deathAction);
-    WarUnitActionListAdd(&unit->actions, options.idleAction);
-
-    if (options.harvestAction)
-        WarUnitActionListAdd(&unit->actions, options.harvestAction);
-
-    if (options.repairAction)
-        WarUnitActionListAdd(&unit->actions, options.repairAction);
 }
 
 void addActions(WarEntity* entity, s32 count, ...)
@@ -346,31 +308,18 @@ void addActions(WarEntity* entity, s32 count, ...)
 
 void buildUnitActions(WarEntity* entity)
 {
-    s32 arr_5_5_5[] = {5, 5, 5};
-    s32 arr_5_5_4[] = {5, 5, 4};
-    s32 arr_5_5_3[] = {5, 5, 3};
-    s32 arr_5_4_5[] = {5, 4, 5};
-    s32 arr_5_4_4[] = {5, 4, 4};
-    s32 arr_5_4_3[] = {5, 4, 3};
-    s32 arr_5_3_2[] = {5, 3, 2};
-    s32 arr_5_2_3[] = {5, 2, 3};
-    s32 arr_3_5_3[] = {3, 5, 3};
-    s32 arr_2_5_3[] = {2, 5, 3};
-    s32 arr_4_3_3[] = {4, 3, 3};
-    s32 arr_5_5_0[] = {5, 5, 0};
-
-    WarUnitFrameNumbers frameNumbers_5_5_5_5 = getFrameNumbers(5, arr_5_5_5);
-    WarUnitFrameNumbers frameNumbers_5_5_5_4 = getFrameNumbers(5, arr_5_5_4);
-    WarUnitFrameNumbers frameNumbers_5_5_5_3 = getFrameNumbers(5, arr_5_5_3);
-    WarUnitFrameNumbers frameNumbers_5_5_4_5 = getFrameNumbers(5, arr_5_4_5);
-    WarUnitFrameNumbers frameNumbers_5_5_4_4 = getFrameNumbers(5, arr_5_4_4);
-    WarUnitFrameNumbers frameNumbers_5_5_4_3 = getFrameNumbers(5, arr_5_4_3);
-    WarUnitFrameNumbers frameNumbers_5_5_3_2 = getFrameNumbers(5, arr_5_3_2);
-    WarUnitFrameNumbers frameNumbers_5_5_2_3 = getFrameNumbers(5, arr_5_2_3);
-    WarUnitFrameNumbers frameNumbers_5_3_5_3 = getFrameNumbers(5, arr_3_5_3);
-    WarUnitFrameNumbers frameNumbers_5_2_5_3 = getFrameNumbers(5, arr_2_5_3);
-    WarUnitFrameNumbers frameNumbers_5_4_3_3 = getFrameNumbers(5, arr_4_3_3);
-    WarUnitFrameNumbers frameNumbers_5_5_5_0 = getFrameNumbers(5, arr_5_5_0);
+    WarUnitFrameNumbers frameNumbers_5_5_5_5 = getFrameNumbers(5, arrayArg(s32, 5, 5, 5));
+    WarUnitFrameNumbers frameNumbers_5_5_5_4 = getFrameNumbers(5, arrayArg(s32, 5, 5, 4));
+    WarUnitFrameNumbers frameNumbers_5_5_5_3 = getFrameNumbers(5, arrayArg(s32, 5, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_4_5 = getFrameNumbers(5, arrayArg(s32, 5, 4, 5));
+    WarUnitFrameNumbers frameNumbers_5_5_4_4 = getFrameNumbers(5, arrayArg(s32, 5, 4, 4));
+    WarUnitFrameNumbers frameNumbers_5_5_4_3 = getFrameNumbers(5, arrayArg(s32, 5, 4, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_3_2 = getFrameNumbers(5, arrayArg(s32, 5, 3, 2));
+    WarUnitFrameNumbers frameNumbers_5_5_2_3 = getFrameNumbers(5, arrayArg(s32, 5, 2, 3));
+    WarUnitFrameNumbers frameNumbers_5_3_5_3 = getFrameNumbers(5, arrayArg(s32, 3, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_2_5_3 = getFrameNumbers(5, arrayArg(s32, 2, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_4_3_3 = getFrameNumbers(5, arrayArg(s32, 4, 3, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_5_0 = getFrameNumbers(5, arrayArg(s32, 5, 5, 0));
 
     s32 walkSpeed = 6;
     s32 attackSpeed = 6;
@@ -754,21 +703,6 @@ void buildUnitActions(WarEntity* entity)
             break;
         }
 
-        case WAR_UNIT_26:
-        {
-            break;
-        }
-
-        case WAR_UNIT_DRAGON_CYCLOPS_GIANT:
-        {
-            break;
-        }
-
-        case WAR_UNIT_30:
-        {
-            break;
-        }
-
         // buildings
         case WAR_UNIT_FARM_HUMANS:
         case WAR_UNIT_FARM_ORCS:
@@ -786,9 +720,22 @@ void buildUnitActions(WarEntity* entity)
         case WAR_UNIT_KENNEL:
         case WAR_UNIT_BLACKSMITH_HUMANS:
         case WAR_UNIT_BLACKSMITH_ORCS:
+        {
+            s32 idleFrames[] = {0};
+            WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, 5, false);
+
+            s32 deathFrames[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
+            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 10, false, false);
+
+            s32 buildFrames[] = {0, 1, 2};
+            WarUnitAction* buildAction = buildBuildAction(arrayLength(buildFrames), buildFrames, 50);
+
+            addActions(entity, 3, idleAction, buildAction, deathAction);
+            break;
+        }
+
         case WAR_UNIT_STORMWIND:
         case WAR_UNIT_BLACKROCK:
-        case WAR_UNIT_GOLDMINE:
         {
             s32 idleFrames[] = {0};
             WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, 5, false);
@@ -800,13 +747,17 @@ void buildUnitActions(WarEntity* entity)
             break;
         }
 
-        // neutral
+        case WAR_UNIT_GOLDMINE:
         {
+            s32 idleFrames[] = {0};
+            WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, 5, false);
+
+            s32 deathFrames[] = {0};
+            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 1, false, false);
+
+            addActions(entity, 2, idleAction, deathAction);
             break;
         }
-
-        // ??
-        case WAR_UNIT_51: break;
 
         // others
         case WAR_UNIT_HUMAN_CORPSE:
@@ -829,7 +780,7 @@ void buildUnitActions(WarEntity* entity)
 
         default:
         {
-            logError("Unkown unit type: %d", unit->type);
+            logError("Type doesn't have any defined actions: %d", unit->type);
             break;
         }
     }
@@ -941,7 +892,7 @@ void updateAction(WarContext* context, WarEntity* entity)
                     //
                     // ... 4 - abs(4 - d)
 
-                    frameIndex += (4 - abs(4 - unit->direction));
+                    frameIndex += (4 - absi(4 - unit->direction));
 
                     if (inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT))
                     {
@@ -965,3 +916,11 @@ void updateAction(WarContext* context, WarEntity* entity)
 
     action->waitCount = step.param;
 }
+
+// peasant: 40s
+// farm: 30s
+
+
+// farm 1000 => 80s
+// peasant 750  => 60s
+// footman 600  => 48s

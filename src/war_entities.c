@@ -14,6 +14,7 @@ WarEntity* createEntity(WarContext *context, WarEntityType type)
     entity->unit = (WarUnitComponent){0};
     entity->road = (WarRoadComponent){0};
     entity->stateMachine = (WarStateMachineComponent){0};
+    entity->animations = (WarAnimationsComponent){0};
 
     return entity;
 }
@@ -38,49 +39,23 @@ void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite
 
 void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 resourceIndex)
 {
-    assert(resourceIndex);
-
-    WarResource *resource = getOrCreateResource(context, resourceIndex);
-    assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || resource->type == WAR_RESOURCE_TYPE_SPRITE);
-
-    WarSprite sprite;
-
-    switch(resource->type)
-    {
-        case WAR_RESOURCE_TYPE_IMAGE:
-        {
-            u32 width = resource->imageData.width;
-            u32 height = resource->imageData.height;
-            u8* data = resource->imageData.pixels;
-            sprite = createSprite(context, width, height, data);
-            break;
-        }
-
-        case WAR_RESOURCE_TYPE_SPRITE:
-        {
-            u32 frameWidth = resource->spriteData.frameWidth;
-            u32 frameHeight = resource->spriteData.frameHeight;
-            u32 frameCount = resource->spriteData.framesCount;
-            WarSpriteFrame* frames = resource->spriteData.frames;
-            sprite = createSpriteFrames(context, frameWidth, frameHeight, frameCount, frames);
-            break;
-        }
-    }
-
+    WarSprite sprite = createSpriteFromResourceIndex(context, resourceIndex);
     addSpriteComponent(context, entity, sprite);
     entity->sprite.resourceIndex = resourceIndex;
 }
 
 void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, s32 x, s32 y, u8 player, WarResourceKind resourceKind, u32 amount)
 {
+    WarUnitsData unitData = getUnitsData(type);
+
     entity->unit = (WarUnitComponent){0};
     entity->unit.enabled = true;
     entity->unit.type = type;
     entity->unit.direction = rand() % WAR_DIRECTION_COUNT;
     entity->unit.tilex = x;
     entity->unit.tiley = y;
-    entity->unit.sizex = unitsData[type * 4 + 2];
-    entity->unit.sizey = unitsData[type * 4 + 3];
+    entity->unit.sizex = unitData.sizex;
+    entity->unit.sizey = unitData.sizey;
     entity->unit.player = player;
     entity->unit.resourceKind = resourceKind;
     entity->unit.amount = amount;
@@ -113,6 +88,13 @@ void removeSpriteComponent(WarContext* context, WarEntity* entity)
     nvgDeleteImage(context->gfx, sprite->sprite.image);
 
     *sprite = (WarSpriteComponent){0};
+}
+
+void addAnimationsComponent(WarContext* context, WarEntity* entity)
+{
+    entity->animations = (WarAnimationsComponent){0};
+    entity->animations.enabled = true;
+    WarSpriteAnimationListInit(&entity->animations.animations);
 }
 
 #define isNeutral(player) (player == 4)
@@ -217,15 +199,14 @@ void renderRoad(WarContext* context, WarEntity* entity)
                 return;
             }
 
-            // this is the column index in the array roadsData
-            // later is used and determine the tileIndex for each piece of the road
-            s32 roadsDataIndex = (context->map->tilesetType + 1);
+            WarMapTilesetType tilesetType = context->map->tilesetType;
 
             for(s32 i = 0; i < road->pieces.count; i++)
             {
                 // get the index of the tile in the spritesheet of the map, 
                 // corresponding to the current tileset type (forest, swamp)
-                s32 tileIndex = roadsData[pieces->items[i].type * 3 + roadsDataIndex];
+                WarRoadsData roadData = getRoadsData(pieces->items[i].type);
+                s32 tileIndex = tilesetType == MAP_TILESET_FOREST ? roadData.tileIndexForest : roadData.tileIndexSwamp;
 
                 // the position in the world of the road piece tile
                 s32 x = pieces->items[i].tilex;
@@ -257,6 +238,7 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarUnitComponent* unit = &entity->unit;
+    WarAnimationsComponent* animations = &entity->animations;
 
     if (sprite->enabled)
     {
@@ -274,14 +256,38 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
         vec2 scale = transform->scale;
 
         // DEBUG
-        // nvgFillRect(gfx, rectv(position, unitSize), NVG_GRAY_TRANSPARENT);
+        nvgFillRect(gfx, rectv(position, unitSize), NVG_GRAY_TRANSPARENT);
+
 
         nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
         nvgTranslate(gfx, position.x + halff(unitSize.x), position.y + halff(unitSize.y));
 
+        nvgFillRect(gfx, rectv(VEC2_ZERO, vec2Muli(VEC2_ONE, 2)), nvgRGB(255, 0, 0));
+
+
         WarSpriteFrame* frame = getSpriteFrame(context, sprite);
         updateSpriteImage(context, &sprite->sprite, frame->data);
         renderSprite(context, &sprite->sprite, VEC2_ZERO, scale);
+
+        if (animations->enabled)
+        {
+            for(s32 i = 0; i < animations->animations.count; i++)
+            {
+                WarSpriteAnimation* anim = animations->animations.items[i];
+                if (anim->status == WAR_ANIM_STATUS_RUNNING)
+                {
+                    s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
+                    animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+
+                    s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
+                    assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
+
+                    WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
+                    updateSpriteImage(context, &anim->sprite, frame.data);
+                    renderSprite(context, &anim->sprite, anim->offset, anim->scale);
+                }
+            }
+        }
 
         if (selected)
         {

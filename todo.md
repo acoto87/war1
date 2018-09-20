@@ -3,7 +3,7 @@
 List of thing to do in no particular order
 
 * Bugs
-  * nothing
+  * nothing yet
 
 * General
   * Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over
@@ -16,7 +16,8 @@ List of thing to do in no particular order
 
 * Animations/actions
   * (done) Add actions for the peasant and peon when carrying gold or wood.
-  * Add actions for the buildings.
+  * > Add actions for the buildings.
+  * (done) Add animation system, again
   * (done) Switch animations without reseting the new animation to the start. This will allow have one animation for each orientation of then switch to the correct one depending of the orientation but conserving the state.
   * (done) Change the concept of animations by a sequence of frames, to a more complex but powerful system of actions. Each unit can have several actions, which can have steps and the steps of the actions describe what the unit does. For example, this is the `Attack` action of the footman:
   ```

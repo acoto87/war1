@@ -256,13 +256,16 @@ typedef struct
 {
     char* name;
     bool loop;
-    bool flipX;
-    bool flipY;
-    WarAnimationStatus status;
+
+    vec2 offset;
+    vec2 scale;
+
     f32 frameDelay;
     WarS32List frames;
+    WarSprite sprite;
 
     f32 animTime;
+    WarAnimationStatus status;
 } WarSpriteAnimation;
 
 internal bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
@@ -494,6 +497,7 @@ typedef enum
     WAR_ACTION_TYPE_DEATH,
     WAR_ACTION_TYPE_HARVEST,
     WAR_ACTION_TYPE_REPAIR,
+    WAR_ACTION_TYPE_BUILD
 } WarUnitActionType;
 
 typedef struct
@@ -592,11 +596,23 @@ typedef struct
     // the units that can carry resources are
     // peasants, peons, goldmines and trees
     WarResourceKind resourceKind;
-    u32 amount;
+    s32 amount;
+
+    bool building;
+  
+    // hit points
+    s32 hp;
+    s32 maxhp;
 
     s32 currentActionIndex;
     WarUnitActionList actions;
 } WarUnitComponent;
+
+typedef struct
+{
+    bool enabled;
+    WarSpriteAnimationList animations;
+} WarAnimationsComponent;
 
 typedef struct
 {
@@ -621,6 +637,7 @@ typedef struct
     WarRoadComponent road;
     WarUnitComponent unit;
     WarStateMachineComponent stateMachine;
+    WarAnimationsComponent animations;
 } WarEntity;
 
 typedef struct
