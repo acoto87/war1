@@ -240,60 +240,72 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
     WarUnitComponent* unit = &entity->unit;
     WarAnimationsComponent* animations = &entity->animations;
 
+    // size of the original sprite
+    vec2 frameSize = getUnitFrameSize(entity);
+
+    // size of the unit
+    vec2 unitSize = getUnitSpriteSize(entity);
+
+    // position of the unit in the map 
+    vec2 position = transform->position;
+
+    // scale of the unit: this is modified by animations when the animation indicates that it 
+    // should flip horizontally or vertically or both
+    vec2 scale = transform->scale;
+
+    nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
+    nvgTranslate(gfx, halff(unitSize.x), halff(unitSize.y));
+    nvgTranslate(gfx, position.x, position.y);
+
+    // DEBUG
+    // nvgFillRect(gfx, getUnitFrameRect(entity), nvgRGBA(0, 0, 128, 128));
+    // nvgFillRect(gfx, getUnitSpriteRect(entity), NVG_GRAY_TRANSPARENT);
+    // nvgFillRect(gfx, rectv(getUnitCenterPoint(entity), VEC2_ONE), nvgRGB(255, 0, 0));
+
     if (sprite->enabled)
     {
-        // size of the original sprite
-        vec2 frameSize = vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-
-        // size of the unit
-        vec2 unitSize = vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
-
-        // position of the unit in the map 
-        vec2 position = transform->position;
-
-        // scale of the unit: this is modified by animations when the animation indicates that it 
-        // should flip horizontally or vertically or both
-        vec2 scale = transform->scale;
-
-        // DEBUG
-        nvgFillRect(gfx, rectv(position, unitSize), NVG_GRAY_TRANSPARENT);
-
-
-        nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
-        nvgTranslate(gfx, position.x + halff(unitSize.x), position.y + halff(unitSize.y));
-
-        nvgFillRect(gfx, rectv(VEC2_ZERO, vec2Muli(VEC2_ONE, 2)), nvgRGB(255, 0, 0));
-
-
         WarSpriteFrame* frame = getSpriteFrame(context, sprite);
         updateSpriteImage(context, &sprite->sprite, frame->data);
         renderSprite(context, &sprite->sprite, VEC2_ZERO, scale);
+    }
 
-        if (animations->enabled)
+    if (animations->enabled)
+    {
+        for(s32 i = 0; i < animations->animations.count; i++)
         {
-            for(s32 i = 0; i < animations->animations.count; i++)
+            WarSpriteAnimation* anim = animations->animations.items[i];
+            if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
-                WarSpriteAnimation* anim = animations->animations.items[i];
-                if (anim->status == WAR_ANIM_STATUS_RUNNING)
-                {
-                    s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
-                    animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+                s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
+                animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
 
-                    s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-                    assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
+                s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
+                assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
 
-                    WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
-                    updateSpriteImage(context, &anim->sprite, frame.data);
-                    renderSprite(context, &anim->sprite, anim->offset, anim->scale);
-                }
+                // size of the original sprite
+                vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+
+                nvgSave(gfx);
+
+                nvgTranslate(gfx, anim->offset.x, anim->offset.y);
+                nvgScale(gfx, anim->scale.x, anim->scale.y);
+
+                // DEBUG
+                // nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
+
+                WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
+                updateSpriteImage(context, &anim->sprite, frame.data);
+                renderSprite(context, &anim->sprite, VEC2_ZERO, VEC2_ONE);
+
+                nvgRestore(gfx);
             }
         }
+    }
 
-        if (selected)
-        {
-            rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
-            nvgStrokeRect(gfx, selr, NVG_GREEN_SELECTION);
-        }
+    if (selected)
+    {
+        rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
+        nvgStrokeRect(gfx, selr, NVG_GREEN_SELECTION);
     }
 }
 

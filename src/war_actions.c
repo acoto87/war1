@@ -56,9 +56,12 @@ WarUnitAction* createUnitAction(WarUnitActionType type)
 {
     WarUnitAction* action = (WarUnitAction*)xmalloc(sizeof(WarUnitAction));
     action->type = type;
+    action->loop = true;
+    action->status = WAR_ACTION_NOT_STARTED;
+    WarUnitActionStepListInit(&action->steps);
+
     action->waitCount = 0;
     action->currentStepIndex = -1;
-    WarUnitActionStepListInit(&action->steps);
     return action;
 }
 
@@ -725,7 +728,8 @@ void buildUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, 5, false);
 
             s32 deathFrames[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
-            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 10, false, false);
+            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 4, false, false);
+            deathAction->loop = false;
 
             s32 buildFrames[] = {0, 1, 2};
             WarUnitAction* buildAction = buildBuildAction(arrayLength(buildFrames), buildFrames, 50);
@@ -807,9 +811,10 @@ s32 findAction(WarEntity* entity, WarUnitActionType type)
 void resetAction(WarUnitAction* action)
 {
     action->currentStepIndex = 0;
+    action->status = WAR_ACTION_NOT_STARTED;
 }
 
-void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool defaultToIdle)
+void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, bool defaultToIdle)
 {
     WarUnitComponent* unit = &entity->unit;
     if (unit)
@@ -827,6 +832,11 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
         }
 
         unit->currentActionIndex = actionIndex;
+
+        if (reset)
+        {
+            resetAction(unit->actions.items[unit->currentActionIndex]);
+        }
     }
 }
 
@@ -843,10 +853,15 @@ void updateAction(WarContext* context, WarEntity* entity)
     if (!action)
         return;
 
+    if (action->status == WAR_ACTION_FINISHED)
+        return;
+
     if (action->currentStepIndex < 0)
     {
         resetAction(action);
     }
+
+    action->status = WAR_ACTION_RUNNING;
 
     WarUnitActionStep step = action->steps.items[action->currentStepIndex];
     if (step.type == WAR_ACTION_STEP_WAIT)
@@ -856,7 +871,19 @@ void updateAction(WarContext* context, WarEntity* entity)
             return;
         
         action->waitCount = 0;
-        action->currentStepIndex = (action->currentStepIndex + 1) % action->steps.count;
+
+        action->currentStepIndex++;
+        if (action->currentStepIndex >= action->steps.count)
+        {
+            if (!action->loop)
+            {
+                action->status = WAR_ACTION_FINISHED;
+                return;
+            }
+            
+            action->currentStepIndex = 0;
+        }
+
         step = action->steps.items[action->currentStepIndex];
     }
 
@@ -910,7 +937,18 @@ void updateAction(WarContext* context, WarEntity* entity)
             }
         }
 
-        action->currentStepIndex = (action->currentStepIndex + 1) % action->steps.count;
+        action->currentStepIndex++;
+        if (action->currentStepIndex >= action->steps.count)
+        {
+            if (!action->loop)
+            {
+                action->status = WAR_ACTION_FINISHED;
+                return;
+            }
+                
+            action->currentStepIndex = 0;
+        }
+
         step = action->steps.items[action->currentStepIndex];
     }
 

@@ -93,12 +93,32 @@ s32 findAnimation(WarContext* context, WarEntity* entity, const char* name)
     return index;
 }
 
+bool containsAnimation(WarContext* context, WarEntity* entity, const char* name)
+{
+    return findAnimation(context, entity, name) >= 0;
+}
+
+void freeAnimation(WarSpriteAnimation* animation)
+{
+    // here it crash, this doesn't need to be freed if is assigned like animation->name = "anim"?
+    // free(animation->name);
+
+    WarS32ListFree(&animation->frames);
+    
+    WarSprite* sprite = &animation->sprite;
+    for(s32 i = 0; i < sprite->framesCount; i++)
+        free(sprite->frames[i].data);
+
+    free(animation);
+}
+
 void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
 {
     s32 index = findAnimation(context, entity, name);
     if (index >= 0)
     {
         WarAnimationsComponent* animations = &entity->animations;
-        WarSpriteAnimationListRemoveAt(&animations->animations, index);
+        WarSpriteAnimation* animation = WarSpriteAnimationListRemoveAt(&animations->animations, index);
+        freeAnimation(animation);
     }
 }

@@ -500,14 +500,24 @@ typedef enum
     WAR_ACTION_TYPE_BUILD
 } WarUnitActionType;
 
+typedef enum
+{
+    WAR_ACTION_NOT_STARTED,
+    WAR_ACTION_RUNNING,
+    WAR_ACTION_FINISHED,
+} WarUnitActionStatus;
+
 typedef struct
 {
     WarUnitActionType type;
     bool unbreakable;
     bool directional;
+    bool loop;
+    WarUnitActionStatus status;
+    WarUnitActionStepList steps;
+    
     s32 waitCount;
     s32 currentStepIndex;
-    WarUnitActionStepList steps;
 } WarUnitAction;
 
 internal bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)

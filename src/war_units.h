@@ -322,3 +322,36 @@ inline WarBuildingStats getBuildingStatsIndex(WarUnitType type)
     assert(index < length);
     return buildingStats[index];
 }
+
+inline vec2 getUnitFrameSize(WarEntity* entity)
+{
+    WarSpriteComponent* sprite = &entity->sprite;
+    return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
+}
+
+inline rect getUnitFrameRect(WarEntity* entity)
+{
+    return rectv(VEC2_ZERO, getUnitFrameSize(entity));
+}
+
+inline vec2 getUnitSpriteSize(WarEntity* entity)
+{
+    WarUnitComponent* unit = &entity->unit;
+    return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
+}
+
+inline rect getUnitSpriteRect(WarEntity* entity)
+{
+    vec2 frameSize = getUnitFrameSize(entity);
+    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 pos = vec2Mulf(vec2Subv(frameSize, unitSize), 0.5f);
+    return rectv(pos, unitSize);
+}
+
+inline vec2 getUnitCenterPoint(WarEntity* entity)
+{
+    vec2 frameSize = getUnitFrameSize(entity);
+    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 pos = vec2Mulf(vec2Subv(frameSize, unitSize), 0.5f);
+    return vec2Addv(pos, vec2Mulf(unitSize, 0.5f));
+}

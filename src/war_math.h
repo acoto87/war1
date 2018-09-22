@@ -239,11 +239,43 @@ inline vec2 vec2Addv(vec2 a, vec2 b)
     };
 }
 
+inline vec2 vec2Addi(vec2 v, s32 x)
+{
+    return (vec2){
+        v.x + x,
+        v.y + x
+    };
+}
+
+inline vec2 vec2Addf(vec2 v, f32 x)
+{
+    return (vec2){
+        v.x + x,
+        v.y + x
+    };
+}
+
 inline vec2 vec2Subv(vec2 a, vec2 b)
 {
     return (vec2){
         a.x - b.x,
         a.y - b.y
+    };
+}
+
+inline vec2 vec2Subi(vec2 v, s32 x)
+{
+    return (vec2){
+        v.x - x,
+        v.y - x
+    };
+}
+
+inline vec2 vec2Subf(vec2 v, f32 x)
+{
+    return (vec2){
+        v.x - x,
+        v.y - x
     };
 }
 
@@ -289,6 +321,11 @@ inline vec2 vec2Scalef(vec2 v, f32 scale)
 inline vec2 vec2Scalei(vec2 v, s32 scale)
 {
     return (vec2){v.x * (f32)scale, v.y * (f32)scale};
+}
+
+inline vec2 vec2Scalev(vec2 v, vec2 scale)
+{
+    return (vec2){v.x * scale.x, v.y * scale.y};
 }
 
 inline vec2 vec2Inverse(vec2 v)
@@ -376,6 +413,11 @@ inline rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2)
 inline rect rectv(vec2 pos, vec2 size)
 {
     return (rect){pos.x, pos.y, size.x, size.y}; 
+}
+
+inline rect rects(vec2 size)
+{
+    return (rect){0.0f, 0.0f, size.x, size.y}; 
 }
 
 inline bool rectContainsf(rect r, f32 x, f32 y)

@@ -310,8 +310,9 @@ void updateGame(WarContext* context)
         input->dragging = false;
     }
 
-    if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
+        s32 selIndex = -1;
         WarEntity* selEntity = NULL;
         
         for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
@@ -319,6 +320,7 @@ void updateGame(WarContext* context)
             WarEntity* entity = map->entities[i];
             if (entity && entity->type == WAR_ENTITY_TYPE_UNIT && map->selectedEntities[i])
             {
+                selIndex = i;
                 selEntity = entity;
                 break;
             }
@@ -330,6 +332,82 @@ void updateGame(WarContext* context)
             if (isDudeUnit(unit->type))
             {
                 // movement stuff
+            }
+
+            if (isBuildingUnit(unit->type))
+            {
+                unit->hp -= unit->maxhp * 0.1f;
+                if (unit->hp < 0) unit->hp = 0;
+
+                f32 p = (f32)unit->hp / unit->maxhp;
+                if (p <= 0)
+                {
+                    if (!containsAnimation(context, selEntity, "collapse"))
+                    {
+                        removeAnimation(context, selEntity, "hugeDamage");
+
+                        selEntity->sprite.enabled = false;
+
+                        vec2 frameSize = getUnitFrameSize(selEntity);
+                        vec2 unitSize = getUnitSpriteSize(selEntity);
+
+                        WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_COLLAPSE_RESOURCE);
+                        WarSpriteAnimation* anim = createAnimation("collapse", sprite, 0.1f, false);
+
+                        vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+
+                        // this is the scale of the explosion animation sprites with respect to the size of the building
+                        f32 animScale = unitSize.x / animFrameSize.x;
+
+                        // if the offset is based on the size of the frame, and it's scaled, then the offset must take into
+                        // account the scale to make the calculations
+                        f32 offsetx = halff(frameSize.x - unitSize.x);
+                        f32 offsety = halff(frameSize.y - unitSize.y) - (animFrameSize.y * animScale - unitSize.y);
+
+                        anim->scale = vec2f(animScale, animScale);
+                        anim->offset = vec2f(offsetx, offsety);
+
+                        for(s32 i = 0; i < 17; i++)
+                            addAnimationFrame(anim, i);
+                        
+                        addAnimation(selEntity, anim);
+
+                        // deselect the entity and remove it!
+                        map->selectedEntities[selIndex] = false;
+                        // removeEntity(context, selEntity);
+                    }
+                }
+                else if (p < 0.3f)
+                {
+                    if (!containsAnimation(context, selEntity, "hugeDamage"))
+                    {
+                        removeAnimation(context, selEntity, "littleDamage");
+
+                        WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_2_RESOURCE);
+                        WarSpriteAnimation* anim = createAnimation("hugeDamage", sprite, 0.2f, true);
+                        anim->offset = vec2Subv(getUnitCenterPoint(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+                        
+                        for(s32 i = 0; i < 4; i++)
+                            addAnimationFrame(anim, i);
+                        
+                        addAnimation(selEntity, anim);
+                    }
+                }
+                else if(p < 0.7f)
+                {
+                    if (!containsAnimation(context, selEntity, "littleDamage"))
+                    {
+                        WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_1_RESOURCE);
+                        WarSpriteAnimation* anim = createAnimation("littleDamage", sprite, 0.2f, true);
+                        anim->offset = vec2Subv(getUnitCenterPoint(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+                        
+                        for(s32 i = 0; i < 4; i++)
+                            addAnimationFrame(anim, i);
+                        
+                        addAnimation(selEntity, anim);
+                    }
+                }
+                
             }
         }
     }

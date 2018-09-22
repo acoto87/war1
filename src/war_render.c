@@ -45,9 +45,9 @@ void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, rect rs, rect rd
     tx = rs.x / iw;
     ty = rs.y / ih;
 
-    nvgTranslate(gfx, rd.width * 0.5f, rd.height * 0.5f);
+    nvgTranslate(gfx, halff(rd.width), halff(rd.height));
     nvgScale(gfx, scale.x, scale.y);
-    nvgTranslate(gfx, -rd.width * 0.5f, -rd.height * 0.5f);
+    nvgTranslate(gfx, -halff(rd.width), -halff(rd.height));
 
     // first triangle
     vertex = &batch->vertices[batch->nvertices];

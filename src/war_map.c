@@ -305,7 +305,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit unit = levelInfo->levelInfo.startEntities[i];
-
+            
             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
             addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.resourceKind, unit.amount);
             addTransformComponent(context, entity, vec2i(unit.x * MEGA_TILE_WIDTH, unit.y * MEGA_TILE_HEIGHT));
@@ -320,19 +320,14 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             addSpriteComponentFromResource(context, entity, spriteIndex);
 
             buildUnitActions(entity);
-            setAction(context, entity, WAR_ACTION_TYPE_IDLE, true);
+            setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, true);
 
             if (isBuildingUnit(unit.type))
             {
                 addAnimationsComponent(context, entity);
 
-                WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_1_RESOURCE);
-                WarSpriteAnimation* anim = createAnimation("littleDamage", sprite, 0.2f, true);
-                
-                for(s32 i = 0; i < 4; i++)
-                    addAnimationFrame(anim, i);
-                
-                addAnimation(entity, anim);
+                entity->unit.maxhp = 100;
+                entity->unit.hp = 100;
             }
 
             // addStateMachineComponent(context, entity);
