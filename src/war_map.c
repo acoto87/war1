@@ -184,6 +184,24 @@ void determineRoadTypes(WarRoadPieceList *pieces)
     }
 }
 
+internal inline void addEntityToSelection(WarContext* context, WarEntityId id)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    // subtitute this with a set data structure that doesn't allow duplicates
+    if (!WarEntityIdListContains(&map->selectedEntities, id))
+        WarEntityIdListAdd(&map->selectedEntities, id);
+}
+
+internal inline void removeEntityFromSelection(WarContext* context, WarEntityId id)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    WarEntityIdListRemove(&map->selectedEntities, id);
+}
+
 void createMap(WarContext *context, s32 levelInfoIndex)
 {
     WarResource *levelInfo = getOrCreateResource(context, levelInfoIndex);
@@ -205,6 +223,9 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
+
+    WarEntityListInit(&map->entities);
+    WarEntityIdListInit(&map->selectedEntities);
 
     context->map = map;
 
@@ -275,8 +296,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         map->minimapSprite = createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, 2, minimapFrames);
     }
 
-    s32 entitiesCount = 0;
-
     // create the starting roads
     {
         WarRoadPieceList pieces;
@@ -296,8 +315,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
         addRoadComponent(context, entity, pieces);
         addSpriteComponent(context, entity, map->sprite);
-
-        map->entities[entitiesCount++] = entity;
     }
 
     // create the starting entities
@@ -320,7 +337,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             addSpriteComponentFromResource(context, entity, spriteIndex);
 
             buildUnitActions(entity);
-            setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, true);
 
             if (isBuildingUnit(unit.type))
             {
@@ -329,13 +345,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 entity->unit.maxhp = 100;
                 entity->unit.hp = 100;
             }
+            
+            addStateMachineComponent(context, entity);
 
-            // addStateMachineComponent(context, entity);
-
-            // WarState* idleState = createIdleState(true);
-            // changeState(&entity->stateMachine, idleState);
-
-            map->entities[entitiesCount++] = entity;
+            WarState* idleState = createIdleState(context, entity, isDudeUnit(unit.type));
+            changeNextState(context, entity, idleState);
         }
     }
 
@@ -347,31 +361,26 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
         addTransformComponent(context, entity, (vec2){map->leftTopPanel.x, map->leftTopPanel.y});
         addSpriteComponentFromResource(context, entity, 224);
-        map->entities[entitiesCount++] = entity;
 
         // left bottom panel
         entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
         addTransformComponent(context, entity, (vec2){map->leftBottomPanel.x, map->leftBottomPanel.y});
         addSpriteComponentFromResource(context, entity, 226);
-        map->entities[entitiesCount++] = entity;
         
         // top panel
         entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
         addTransformComponent(context, entity, (vec2){map->topPanel.x, map->topPanel.y});
         addSpriteComponentFromResource(context, entity, 218);
-        map->entities[entitiesCount++] = entity;
 
         // right panel
         entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
         addTransformComponent(context, entity, (vec2){map->rightPanel.x, map->rightPanel.y});
         addSpriteComponentFromResource(context, entity, 220);
-        map->entities[entitiesCount++] = entity;
 
         // bottom panel
         entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
         addTransformComponent(context, entity, (vec2){map->bottomPanel.x, map->bottomPanel.y});
         addSpriteComponentFromResource(context, entity, 222);
-        map->entities[entitiesCount++] = entity;
     }
 
     // set the initial state for the tiles
@@ -379,6 +388,250 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         {
             map->tileStates[i] = MAP_TILE_STATE_UNKOWN;
+        }
+    }
+}
+
+internal void updateViewport(WarContext *context)
+{
+    WarMap *map = context->map;
+    WarInput *input = &context->input;
+
+    vec2 dir = VEC2_ZERO;
+
+    if (isKeyPressed(input, WAR_KEY_LEFT))
+        dir.x = -1;
+    else if (isKeyPressed(input, WAR_KEY_RIGHT))
+        dir.x = 1;
+
+    if (isKeyPressed(input, WAR_KEY_DOWN))
+        dir.y = 1;
+    else if (isKeyPressed(input, WAR_KEY_UP))
+        dir.y = -1;
+
+    dir = vec2Normalize(dir);
+
+    map->viewport.x += map->scrollSpeed * dir.x * context->deltaTime;
+    map->viewport.x = clamp(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
+
+    map->viewport.y += map->scrollSpeed * dir.y * context->deltaTime;
+    map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
+}
+
+void updateMap(WarContext* context)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    WarInput* input = &context->input;
+
+    updateViewport(context);
+
+    // process all state machines
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        {
+            updateStateMachine(context, entity);
+        }
+    }
+
+    // update all actions
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        {
+            updateAction(context, entity);
+        }
+    }
+
+    // update all animations
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        {
+            updateAnimations(context, entity);
+        }
+    }
+
+    if (isButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        rect minimapPanel = map->minimapPanel;
+        rect mapPanel = map->mapPanel;
+
+        // check if the click is inside the minimap panel        
+        if (rectContainsf(minimapPanel, input->pos.x, input->pos.y))
+        {
+            vec2 minimapSize = vec2i(MINIMAP_WIDTH, MINIMAP_HEIGHT);
+            vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
+
+            map->viewport.x = offset.x * MAP_WIDTH / minimapSize.x;
+            map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
+        }
+        // check if the click is inside the map panel
+        else if(rectContainsf(mapPanel, input->pos.x, input->pos.y))
+        {
+            if (!input->dragging)
+            {
+                input->dragPos = input->pos;
+                input->dragging = true;
+            }
+        }
+    }
+    else if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        rect minimapPanel = map->minimapPanel;
+        rect mapPanel = map->mapPanel;
+
+        // check if the click is inside the map panel
+        if(input->dragging || rectContainsf(mapPanel, input->pos.x, input->pos.y))
+        {
+            rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
+            pointerRect = rectScreenToMapCoordinates(context, pointerRect);
+
+            for(s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity* entity = map->entities.items[i];
+                if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+                {
+                    WarTransformComponent transform = entity->transform;
+                    WarUnitComponent unit = entity->unit;
+                    if (transform.enabled && unit.enabled)
+                    {
+                        rect unitRect = rectf(
+                            transform.position.x,
+                            transform.position.y,
+                            unit.sizex * MEGA_TILE_WIDTH,
+                            unit.sizey * MEGA_TILE_HEIGHT);
+
+                        if (rectIntersects(pointerRect, unitRect))
+                        {
+                            addEntityToSelection(context, entity->id);
+                        }
+                        else if (!input->keys[WAR_KEY_CTRL].pressed)
+                        {
+                            removeEntityFromSelection(context, entity->id);
+                        }
+                    }
+                }
+            }
+        }
+
+        input->dragging = false;
+    }
+
+    if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
+    {
+        WarEntity* selEntity = NULL;
+
+        if (map->selectedEntities.count > 0)
+        {
+            WarEntityId selEntityId = map->selectedEntities.items[0];
+            s32 selEntityIndex = findEntity(context, selEntityId);
+            if (selEntityIndex >= 0)
+                selEntity = map->entities.items[selEntityIndex];
+        }
+
+        if (selEntity)
+        {
+            WarUnitComponent* unit = &selEntity->unit;
+            if (isDudeUnit(unit->type))
+            {
+                WarTransformComponent* transform = &selEntity->transform;
+                vec2 unitCenterPoint = vec2Mulf(getUnitSpriteSize(selEntity), 0.5f);
+                vec2 position = vec2Addv(transform->position, unitCenterPoint);
+                vec2 mapPosition = vec2ScreenToMapCoordinates(context, input->pos);
+                WarState* patrolState = createPatrolState(context, selEntity, position, mapPosition);
+                changeNextState(context, selEntity, patrolState);
+            }
+
+            if (isBuildingUnit(unit->type))
+            {
+                unit->hp -= unit->maxhp * 0.1f;
+                if (unit->hp < 0) unit->hp = 0;
+
+                f32 p = (f32)unit->hp / unit->maxhp;
+                if (p <= 0)
+                {
+                    if (!containsAnimation(context, selEntity, "collapse"))
+                    {
+                        removeAnimation(context, selEntity, "hugeDamage");
+
+                        selEntity->sprite.enabled = false;
+
+                        vec2 frameSize = getUnitFrameSize(selEntity);
+                        vec2 unitSize = getUnitSpriteSize(selEntity);
+
+                        WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_COLLAPSE_RESOURCE);
+                        WarSpriteAnimation* anim = createAnimation("collapse", sprite, 0.1f, false);
+
+                        vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+
+                        // this is the scale of the explosion animation sprites with respect to the size of the building
+                        f32 animScale = unitSize.x / animFrameSize.x;
+
+                        // if the offset is based on the size of the frame, and it's scaled, then the offset must take into
+                        // account the scale to make the calculations
+                        f32 offsetx = halff(frameSize.x - unitSize.x);
+                        f32 offsety = halff(frameSize.y - unitSize.y) - (animFrameSize.y * animScale - unitSize.y);
+
+                        anim->scale = vec2f(animScale, animScale);
+                        anim->offset = vec2f(offsetx, offsety);
+
+                        for(s32 i = 0; i < 17; i++)
+                            addAnimationFrame(anim, i);
+                        
+                        addAnimation(selEntity, anim);
+
+                        // deselect the entity and remove it!
+                        removeEntityFromSelection(context, selEntity->id);
+
+                        // if the entity is removed here, then the collapse animation doesn't show
+                        // this is because the animation is tied to the entity
+                        // for this two solutions:
+                        //   1. delay the removing of the entity until the animation is finished
+                        //   2. the collapse animation is not tied to the entity
+                        // I need to know when the animation finish to spawn a ruins entity,
+                        // or the ruins entity spawn at this same moment.
+                        //
+                        // removeEntityById(context, selEntity->id);
+                    }
+                }
+                else if (p < 0.3f)
+                {
+                    if (!containsAnimation(context, selEntity, "hugeDamage"))
+                    {
+                        removeAnimation(context, selEntity, "littleDamage");
+
+                        WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_2_RESOURCE);
+                        WarSpriteAnimation* anim = createAnimation("hugeDamage", sprite, 0.2f, true);
+                        anim->offset = vec2Subv(getUnitCenterPoint(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+                        
+                        for(s32 i = 0; i < 4; i++)
+                            addAnimationFrame(anim, i);
+                        
+                        addAnimation(selEntity, anim);
+                    }
+                }
+                else if(p < 0.7f)
+                {
+                    if (!containsAnimation(context, selEntity, "littleDamage"))
+                    {
+                        WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_1_RESOURCE);
+                        WarSpriteAnimation* anim = createAnimation("littleDamage", sprite, 0.2f, true);
+                        anim->offset = vec2Subv(getUnitCenterPoint(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+                        
+                        for(s32 i = 0; i < 4; i++)
+                            addAnimationFrame(anim, i);
+                        
+                        addAnimation(selEntity, anim);
+                    }
+                }
+                
+            }
         }
     }
 }
@@ -441,9 +694,9 @@ void renderMap(WarContext *context)
 
         // render roads
         {
-            for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+            for(s32 i = 0; i < map->entities.count; i++)
             {
-                WarEntity *entity = map->entities[i];
+                WarEntity *entity = map->entities.items[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
                 {
                     renderEntity(context, entity, false);
@@ -453,12 +706,13 @@ void renderMap(WarContext *context)
 
         // render units
         {
-            for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+            for(s32 i = 0; i < map->entities.count; i++)
             {
-                WarEntity *entity = map->entities[i];
+                WarEntity *entity = map->entities.items[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
                 {
-                    renderEntity(context, entity, map->selectedEntities[i]);
+                    bool selected = WarEntityIdListContains(&map->selectedEntities, entity->id);
+                    renderEntity(context, entity, selected);
                 }
             }
         }
@@ -512,9 +766,9 @@ void renderMap(WarContext *context)
         {
             nvgSave(gfx);
 
-            for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+            for(s32 i = 0; i < map->entities.count; i++)
             {
-                WarEntity *entity = map->entities[i];
+                WarEntity *entity = map->entities.items[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_IMAGE)
                 {
                     renderEntity(context, entity, false);
@@ -531,11 +785,11 @@ void renderMap(WarContext *context)
             // copy the minimap base to the first frame which is the one that will be rendered
             memcpy(map->minimapSprite.frames[0].data, map->minimapSprite.frames[1].data, MINIMAP_WIDTH * MINIMAP_HEIGHT * 4);
 
-            for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+            for(s32 i = 0; i < map->entities.count; i++)
             {
                 u8 r = 211, g = 211, b = 211;
 
-                WarEntity* entity = map->entities[i];
+                WarEntity* entity = map->entities.items[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
                 {
                     WarUnitComponent unit = entity->unit;

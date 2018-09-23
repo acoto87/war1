@@ -355,3 +355,27 @@ inline vec2 getUnitCenterPoint(WarEntity* entity)
     vec2 pos = vec2Mulf(vec2Subv(frameSize, unitSize), 0.5f);
     return vec2Addv(pos, vec2Mulf(unitSize, 0.5f));
 }
+
+internal WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
+{
+    if (x < 0 && y < 0)
+        return WAR_DIRECTION_NORTH_WEST;
+    if (x == 0 && y < 0)
+        return WAR_DIRECTION_NORTH;
+    if (x > 0 && y < 0)
+        return WAR_DIRECTION_NORTH_EAST;
+
+    if (x < 0 && y == 0)
+        return WAR_DIRECTION_WEST;
+    if (x > 0 && y == 0)
+        return WAR_DIRECTION_EAST;
+
+    if (x < 0 && y > 0)
+        return WAR_DIRECTION_SOUTH_WEST;
+    if (x == 0 && y > 0)
+        return WAR_DIRECTION_SOUTH;
+    if (x > 0 && y > 0)
+        return WAR_DIRECTION_SOUTH_EAST;
+
+    return WAR_DIRECTION_NORTH;
+}

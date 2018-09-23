@@ -727,39 +727,21 @@ void buildUnitActions(WarEntity* entity)
             s32 idleFrames[] = {0};
             WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, 5, false);
 
-            s32 deathFrames[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
-            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 4, false, false);
-            deathAction->loop = false;
-
             s32 buildFrames[] = {0, 1, 2};
             WarUnitAction* buildAction = buildBuildAction(arrayLength(buildFrames), buildFrames, 50);
 
-            addActions(entity, 3, idleAction, buildAction, deathAction);
+            addActions(entity, 2, idleAction, buildAction);
             break;
         }
 
         case WAR_UNIT_STORMWIND:
         case WAR_UNIT_BLACKROCK:
-        {
-            s32 idleFrames[] = {0};
-            WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, 5, false);
-
-            s32 deathFrames[] = {0};
-            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 1, false, false);
-
-            addActions(entity, 2, idleAction, deathAction);
-            break;
-        }
-
         case WAR_UNIT_GOLDMINE:
         {
             s32 idleFrames[] = {0};
             WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, 5, false);
 
-            s32 deathFrames[] = {0};
-            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 1, false, false);
-
-            addActions(entity, 2, idleAction, deathAction);
+            addActions(entity, 1, idleAction);
             break;
         }
 

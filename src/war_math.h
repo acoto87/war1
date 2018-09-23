@@ -346,6 +346,18 @@ inline f32 vec2Length(vec2 v)
     return sqrtf(vec2LengthSqr(v));
 }
 
+inline f32 vec2DistanceSqr(vec2 v1, vec2 v2)
+{
+    f32 xx = (v1.x - v2.x);
+    f32 yy = (v1.y - v2.y);
+    return xx * xx + yy * yy;
+}
+
+inline f32 vec2Distance(vec2 v1, vec2 v2)
+{
+    return sqrtf(vec2DistanceSqr(v1, v2));
+}
+
 inline vec2 vec2Normalize(vec2 v)
 {
     f32 len = vec2Length(v);

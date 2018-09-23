@@ -113,9 +113,7 @@ void renderSprite(WarContext *context, WarSprite *sprite, vec2 pos, vec2 scale)
 WarSpriteFrame* getSpriteFrame(WarContext* context, WarSpriteComponent* sprite)
 {
     s32 spriteFrameIndex = sprite->frameIndex;
-
-    
-
+    assert(spriteFrameIndex >= 0 && spriteFrameIndex < MAX_SPRITE_FRAME_COUNT);
 
     return &sprite->sprite.frames[spriteFrameIndex];
 }

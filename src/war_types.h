@@ -408,6 +408,14 @@ typedef struct
 //
 typedef u32 WarEntityId;
 
+internal bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
+{
+    return id1 == id2;
+}
+
+shlDeclareList(WarEntityIdList, WarEntityId)
+shlDefineList(WarEntityIdList, WarEntityId, equalsEntityId, 0)
+
 typedef enum
 {
     WAR_ENTITY_TYPE_NONE,
@@ -443,14 +451,14 @@ typedef struct
     u8 player;
 } WarRoadPiece;
 
-internal bool roadPieceEquals(const WarRoadPiece p1, const WarRoadPiece p2)
+internal bool equalsRoadPiece(const WarRoadPiece p1, const WarRoadPiece p2)
 {
     return p1.type == p2.type && p1.player == p2.player &&
            p1.tilex == p2.tilex && p1.tiley == p2.tiley;
 }
 
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
-shlDefineList(WarRoadPieceList, WarRoadPiece, roadPieceEquals, (WarRoadPiece){0})
+shlDefineList(WarRoadPieceList, WarRoadPiece, equalsRoadPiece, (WarRoadPiece){0})
 
 typedef enum
 {
@@ -532,6 +540,7 @@ typedef enum
 {
     WAR_STATE_IDLE,
     WAR_STATE_MOVE,
+    WAR_STATE_PATROL,
     WAR_STATE_ATTACK,
     WAR_STATE_ATTACK_MOVE,
     WAR_STATE_BUILD,
@@ -546,7 +555,9 @@ typedef enum
 typedef struct
 {
     WarStateType type;
-    s32 entityIndex;
+    s32 entityId;
+    f32 updateFrequency;
+    f32 nextUpdateTime;
 
     union
     {
@@ -557,19 +568,25 @@ typedef struct
 
         struct
         {
-            f32 x, y;
+            vec2 target;
         } move;
 
         struct
         {
-            s32 targetIndex;
-        } attack;
+            vec2 from, to;
+            s32 dir;
+        } patrol;
 
-        struct
-        {
-            s32 targetIndex;
-            s32 x, y;
-        } attackMove;
+        // struct
+        // {
+        //     s32 targetIndex;
+        // } attack;
+
+        // struct
+        // {
+        //     s32 targetIndex;
+        //     s32 x, y;
+        // } attackMove;
     };
 } WarState;
 
@@ -633,8 +650,8 @@ typedef struct
 typedef struct
 {
     bool enabled;
-    f32 nextUpdateTime;
     WarState* currentState;
+    WarState* nextState;
 } WarStateMachineComponent;
 
 typedef struct
@@ -650,10 +667,21 @@ typedef struct
     WarAnimationsComponent animations;
 } WarEntity;
 
-typedef struct
+internal inline s32 hashEntityId(const WarEntityId id)
 {
-    WarEntity entities[MAX_ENTITIES_COUNT];
-} WarScene;
+    return id;
+}
+
+shlDeclareMap(WarEntityMap, WarEntityId, WarEntity*)
+shlDefineMap(WarEntityMap, WarEntityId, WarEntity*, hashEntityId, equalsEntityId, NULL)
+
+internal inline bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
+{
+    return e1->id == e2->id;
+}
+
+shlDeclareList(WarEntityList, WarEntity*)
+shlDefineList(WarEntityList, WarEntity*, equalsEntity, NULL)
 
 typedef enum
 {
@@ -700,8 +728,8 @@ typedef struct
     WarMapTilesetType tilesetType;
     WarMapTileState tileStates[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
 
-    WarEntity* entities[MAX_ENTITIES_COUNT];
-    bool selectedEntities[MAX_ENTITIES_COUNT];
+    WarEntityList entities;
+    WarEntityIdList selectedEntities;
 
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
 } WarMap;
@@ -772,12 +800,10 @@ typedef struct
     char* warFilePath;
     WarFile* warFile;
 
-    WarResource *resources[MAX_RESOURCES_COUNT];
+    s32 staticEntityId;
 
     NVGcontext* gfx;
-
-    u32 staticEntityId;
-    WarScene* currentScene;
+    WarResource *resources[MAX_RESOURCES_COUNT];
     WarMap* map;
 
     WarInput input;

@@ -8,6 +8,7 @@
 #define arrayArg(type, ...) arrayInit(type, __VA_ARGS__)
 #define arrayLength(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define chance(p) ((rand() % 100) < p)
+#define random(a, b) (a + (rand() % (b - a)))
 
 #define inRange(x, a, b) ((x) >= (a) && (x) < (b))
 

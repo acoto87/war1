@@ -8,18 +8,18 @@ List of thing to do in no particular order
 * General
   * Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over
   * Manage the gold in the mines and explode it when the gold is over
-  * (done) Add animations data for each unit type
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
-  * Manage components with a dictionary and not each entity having all the components
   * Map scroll with the mouse cursor at the edge
-  * Write a detailed description of the actions system, maybe as comments in the `war_actions.h` file?
+  * Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
   * Add ruins to collapsed buildings
   * Add explosion animation to living npc units when clicking to many times
+  * Manage components with a dictionary and not each entity having all the components
   * Create EntityManager to manage entities
 
 * Animations/actions
+  * (done) Add animations data for each unit type
   * (done) Add actions for the peasant and peon when carrying gold or wood.
-  * > Add actions for the buildings.
+  * (done) Add actions for the buildings.
   * (done) Add little damage, huge damage and collapse animations to buildings
   * (done) Add animation system, again
   * (done) Switch animations without reseting the new animation to the start. This will allow have one animation for each orientation of then switch to the correct one depending of the orientation but conserving the state.
@@ -49,14 +49,15 @@ List of thing to do in no particular order
   ```
   
 * State machine
-  * Idle behaviour
-  * Move behaviour
-  * Move attack behaviour
-  * Build behaviour
-  * Patrol behaviour?
-  * Gathering resources behaviour
+  * > Idle state
+  * > Move state
+  * > Patrol state
+  * Move attack state
+  * Build state
+  * Gathering resources state
 
 * Path finding
+  * Add path finding algorithm to move the entities
 
 * Collision system
 
