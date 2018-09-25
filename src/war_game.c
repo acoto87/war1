@@ -200,7 +200,7 @@ void presentGame(WarContext *context)
     context->deltaTime = (currentTime - context->time);
 
     // force to 60 fps
-    while (context->deltaTime <= (1.0f/60.0f))
+    while (context->deltaTime <= SECONDS_PER_FRAME)
     {
         currentTime = (f32)glfwGetTime();
         context->deltaTime = (currentTime - context->time);

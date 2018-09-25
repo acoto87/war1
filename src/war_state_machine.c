@@ -10,6 +10,15 @@ WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 
 void freeState(WarState* state)
 {
+    if (!state)
+        return;
+
+    if (state->type == WAR_STATE_MOVE)
+    {
+        if (state->move.path.nodes)
+            free(state->move.path.nodes);
+    }
+
     free(state);
 }
 
@@ -22,19 +31,20 @@ WarState* createIdleState(WarContext* context, WarEntity* entity, bool lookAroun
     return state;
 }
 
-WarState* createMoveState(WarContext* context, WarEntity* entity, vec2 target)
+WarState* createMoveState(WarContext* context, WarEntity* entity, WarMapPath path)
 {
     WarState* state = createState(context, entity, WAR_STATE_MOVE);
-    state->updateFrequency = (1.0f/60.0f);
+    state->updateFrequency = SECONDS_PER_FRAME;
     state->nextUpdateTime = 0;
-    state->move.target = target;
+    state->move.path = path;
+    state->move.index = 0;
     return state;
 }
 
 WarState* createPatrolState(WarContext* context, WarEntity* entity, vec2 from, vec2 to)
 {
     WarState* state = createState(context, entity, WAR_STATE_PATROL);
-    state->updateFrequency = (1.0f/60.0f);
+    state->updateFrequency = SECONDS_PER_FRAME;
     state->nextUpdateTime = 0;
     state->patrol.from = from;
     state->patrol.to = to;
@@ -66,10 +76,18 @@ void enterState(WarContext* context, WarEntity* entity)
             WarTransformComponent* transform = &entity->transform;
             vec2 unitCenterPoint = vec2Mulf(getUnitSpriteSize(entity), 0.5f);
             vec2 position = vec2Addv(transform->position, unitCenterPoint);
-            vec2 target = currentState->move.target;
+
+            s32 index = currentState->move.index;
+            vec2 target = currentState->move.path.nodes[index];
+            target.x = target.x * MEGA_TILE_WIDTH + halfi(MEGA_TILE_WIDTH);
+            target.y = target.y * MEGA_TILE_HEIGHT + halfi(MEGA_TILE_HEIGHT);
 
             WarUnitComponent* unit = &entity->unit;
             unit->direction = getDirectionFromDiff(target.x - position.x, target.y - position.y);
+            vec2Print(position);
+            vec2Print(target);
+            vec2Print(vec2Subv(target, position));
+            printDirection(unit->direction);
 
             setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
             break;
@@ -84,6 +102,7 @@ void enterState(WarContext* context, WarEntity* entity)
 
             WarUnitComponent* unit = &entity->unit;
             unit->direction = getDirectionFromDiff(target.x - position.x, target.y - position.y);
+            
 
             setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
             break;
@@ -128,10 +147,15 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
 
 void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    s32 index = state->move.index;
+    WarMapPath path = state->move.path;
+
     WarTransformComponent* transform = &entity->transform;
     vec2 unitCenterPoint = vec2Mulf(getUnitSpriteSize(entity), 0.5f);
     vec2 position = vec2Addv(transform->position, unitCenterPoint);
-    vec2 target = state->move.target;
+    vec2 target = path.nodes[index];
+    target.x = target.x * MEGA_TILE_WIDTH + halfi(MEGA_TILE_WIDTH);
+    target.y = target.y * MEGA_TILE_HEIGHT + halfi(MEGA_TILE_HEIGHT);
     vec2 direction = vec2Normalize(vec2Subv(target, position));
     vec2 step = vec2Mulf(direction, 20 * context->deltaTime);
     position = vec2Addv(position, step);
@@ -140,8 +164,28 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     {
         position = target;
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState);
+        index++;
+
+        if (index < path.count)
+        {
+            target = path.nodes[index];
+            target.x = target.x * MEGA_TILE_WIDTH + halfi(MEGA_TILE_WIDTH);
+            target.y = target.y * MEGA_TILE_HEIGHT + halfi(MEGA_TILE_HEIGHT);
+            
+            WarUnitComponent* unit = &entity->unit;
+            unit->direction = getDirectionFromDiff(target.x - position.x, target.y - position.y);
+            vec2Print(position);
+            vec2Print(target);
+            vec2Print(vec2Subv(target, position));
+            printDirection(unit->direction);
+
+            state->move.index = index;
+        }
+        else
+        {
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState);
+        }
     }
 
     transform->position = vec2Subv(position, unitCenterPoint);

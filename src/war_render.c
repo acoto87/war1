@@ -132,6 +132,18 @@ void nvgStrokeRect(NVGcontext* gfx, rect r, NVGcolor color)
     nvgRestore(gfx);
 }
 
+void nvgStrokeLine(NVGcontext* gfx, vec2 p1, vec2 p2, NVGcolor color, f32 width)
+{
+    nvgSave(gfx);
+    nvgBeginPath(gfx);
+    nvgMoveTo(gfx, p1.x, p1.y);
+    nvgLineTo(gfx, p2.x, p2.y);
+    nvgStrokeColor(gfx, color);
+    nvgStrokeWidth(gfx, width);
+    nvgStroke(gfx);
+    nvgRestore(gfx);
+}
+
 /* Intent of implementation of a graphics API
 
 #define MAX_RENDERING_CONTEXT_STATES 256

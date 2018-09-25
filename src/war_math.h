@@ -389,9 +389,33 @@ inline vec2 vec2Clampv(vec2 v, vec2 a, vec2 b)
     };
 }
 
+inline vec2 vec2Floor(vec2 v)
+{
+    return (vec2){
+        floorf(v.x),
+        floorf(v.y)
+    };
+}
+
+inline vec2 vec2Ceil(vec2 v)
+{
+    return (vec2){
+        ceilf(v.x),
+        ceilf(v.y)
+    };
+}
+
+inline vec2 vec2Round(vec2 v)
+{
+    return (vec2){
+        roundf(v.x),
+        roundf(v.y)
+    };
+}
+
 inline void vec2Print(vec2 v)
 {
-    printf("(%f, %f)\n", v.x, v.y);
+    logDebug("(%f, %f)", v.x, v.y);
 }
 
 /*

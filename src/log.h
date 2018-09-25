@@ -27,7 +27,7 @@ inline void initLog(LogSeverity severity)
 
 static void __logInternal(LogSeverity severity, const char* message, ...)
 {
-    if (severity < __log.severity)
+    if (severity <= __log.severity)
     {
         time_t t = time(NULL);
         struct tm* timeInfo = localtime(&t);

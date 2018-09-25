@@ -14,8 +14,8 @@
 #define MINI_TILE_HEIGHT 8
 
 // size of the mega-tiles (2x2 mini-tiles) from the tileset
-#define MEGA_TILE_WIDTH (MINI_TILE_WIDTH * 2)
-#define MEGA_TILE_HEIGHT (MINI_TILE_HEIGHT * 2)
+#define MEGA_TILE_WIDTH (MINI_TILE_WIDTH*2)
+#define MEGA_TILE_HEIGHT (MINI_TILE_HEIGHT*2)
 
 // size of the map in pixels
 #define MAP_WIDTH (64*MEGA_TILE_WIDTH)
@@ -536,6 +536,26 @@ internal bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
 shlDeclareList(WarUnitActionList, WarUnitAction*)
 shlDefineList(WarUnitActionList, WarUnitAction*, equalsAction, NULL)
 
+typedef struct
+{
+    s32 count;
+    vec2* nodes;
+} WarMapPath;
+
+typedef enum
+{
+    PATH_FINDING_BFS,
+    PATH_FINDING_DFS,
+    PATH_FINDING_ASTAR
+} PathFindingType;
+
+typedef struct
+{
+    PathFindingType type;
+    s32 width, height;
+    u16* data;
+} WarPathFinder;
+
 typedef enum
 {
     WAR_STATE_IDLE,
@@ -568,7 +588,8 @@ typedef struct
 
         struct
         {
-            vec2 target;
+            s32 index;
+            WarMapPath path;
         } move;
 
         struct
@@ -730,6 +751,8 @@ typedef struct
 
     WarEntityList entities;
     WarEntityIdList selectedEntities;
+
+    WarPathFinder finder;
 
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
 } WarMap;

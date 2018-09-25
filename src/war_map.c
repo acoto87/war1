@@ -204,8 +204,11 @@ internal inline void removeEntityFromSelection(WarContext* context, WarEntityId 
 
 void createMap(WarContext *context, s32 levelInfoIndex)
 {
-    WarResource *levelInfo = getOrCreateResource(context, levelInfoIndex);
+    WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+    WarResource* levelPassable = getOrCreateResource(context, levelInfo->levelInfo.passableIndex);
+    assert(levelPassable && levelPassable->type == WAR_RESOURCE_TYPE_LEVEL_PASSABLE);
 
     WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
@@ -226,6 +229,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     WarEntityListInit(&map->entities);
     WarEntityIdListInit(&map->selectedEntities);
+
+    map->finder = initPathFinder(PATH_FINDING_BFS, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
 
     context->map = map;
 
@@ -345,11 +350,13 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 entity->unit.maxhp = 100;
                 entity->unit.hp = 100;
             }
-            
+
             addStateMachineComponent(context, entity);
 
             WarState* idleState = createIdleState(context, entity, isDudeUnit(unit.type));
             changeNextState(context, entity, idleState);
+
+            setBlockTiles(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey);
         }
     }
 
@@ -510,6 +517,7 @@ void updateMap(WarContext* context)
                         if (rectIntersects(pointerRect, unitRect))
                         {
                             addEntityToSelection(context, entity->id);
+                            vec2Print(transform.position);
                         }
                         else if (!input->keys[WAR_KEY_CTRL].pressed)
                         {
@@ -543,9 +551,24 @@ void updateMap(WarContext* context)
                 WarTransformComponent* transform = &selEntity->transform;
                 vec2 unitCenterPoint = vec2Mulf(getUnitSpriteSize(selEntity), 0.5f);
                 vec2 position = vec2Addv(transform->position, unitCenterPoint);
-                vec2 mapPosition = vec2ScreenToMapCoordinates(context, input->pos);
-                WarState* patrolState = createPatrolState(context, selEntity, position, mapPosition);
-                changeNextState(context, selEntity, patrolState);
+                vec2 target = vec2ScreenToMapCoordinates(context, input->pos);
+                vec2Print(target);
+
+                s32 startX = (s32)(position.x / MEGA_TILE_WIDTH);
+                s32 startY = (s32)(position.y / MEGA_TILE_HEIGHT);
+
+                s32 endX = (s32)(target.x / MEGA_TILE_WIDTH);
+                s32 endY = (s32)(target.y / MEGA_TILE_HEIGHT);
+                
+                WarMapPath path = findPath(map->finder, startX, startY, endX, endY);
+                if (path.count > 0)
+                {
+                    WarState* moveState = createMoveState(context, selEntity, path);
+                    changeNextState(context, selEntity, moveState);
+                }
+
+                // WarState* patrolState = createPatrolState(context, selEntity, position, mapPosition);
+                // changeNextState(context, selEntity, patrolState);
             }
 
             if (isBuildingUnit(unit->type))
@@ -715,6 +738,49 @@ void renderMap(WarContext *context)
                     renderEntity(context, entity, selected);
                 }
             }
+        }
+
+        // DEBUG
+        // render paths
+        {
+            // for(s32 i = 0; i < map->entities.count; i++)
+            // {
+            //     WarEntity *entity = map->entities.items[i];
+            //     if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+            //     {
+            //         WarStateMachineComponent* stateMachine = &entity->stateMachine;
+            //         if (stateMachine->currentState && stateMachine->currentState->type == WAR_STATE_MOVE)
+            //         {
+            //             s32 index = stateMachine->currentState->move.index;
+            //             WarMapPath path = stateMachine->currentState->move.path;
+            //             for(s32 i = 0; i < path.count; i++)
+            //             {
+            //                 vec2 pos = path.nodes[i];
+            //                 pos.x = pos.x * MEGA_TILE_WIDTH + halfi(MEGA_TILE_WIDTH);
+            //                 pos.y = pos.y * MEGA_TILE_HEIGHT + halfi(MEGA_TILE_HEIGHT);
+
+            //                 nvgFillRect(gfx, rectv(pos, VEC2_ONE), i == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
+            //             }
+            //         }
+            //     }
+            // }
+        }
+
+        // DEBUG
+        // render passable info
+        {
+            // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+            // {
+            //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            //     {
+            //         if (map->finder.data[y * MAP_TILES_WIDTH + x])
+            //         {
+            //             vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            //             vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            //             nvgFillRect(gfx, rectv(pos, size), nvgRGBA(40, 40, 40, 180));
+            //         }
+            //     }
+            // }
         }
 
         // DEBUG
