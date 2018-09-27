@@ -55,9 +55,15 @@ List of thing to do in no particular order
   * Move attack state
   * Build state
   * Gathering resources state
+  * (done) Make a Leave function when the states are leaving, and not just free them. Let that responsibility to the state itself.
 
 * Path finding
-  * Add path finding algorithm to move the entities
+  * (done) Add path finding algorithm to move the entities
+    * For now BFS is implemented.
+  * > Update the map in each interation of the state machines to support updating the paths when moving units
+  * (done) Include the current position of the unit in the path to support the patrol behaviour
+  * When right click in the minimap, the selected unit should go there
+  * Implement A* algorithm for path finding
 
 * Collision system
 

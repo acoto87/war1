@@ -1,65 +1,3 @@
-inline vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    rect mapPanel = map->mapPanel;
-    rect viewport = map->viewport;
-
-    v = vec2Translatef(v, -mapPanel.x, -mapPanel.y);
-    v = vec2Translatef(v, viewport.x, viewport.y);
-    return v;
-}
-
-inline vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    rect minimapPanel = map->minimapPanel;
-    vec2 minimapPanelSize = vec2f(minimapPanel.width, minimapPanel.height);
-
-    vec2 minimapViewportSize = vec2f(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
-
-    v = vec2Translatef(v, -minimapPanel.x, -minimapPanel.y);
-    v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
-    v = vec2Clampv(v, VEC2_ZERO, vec2Subv(minimapPanelSize, minimapViewportSize));
-    return v;
-}
-
-inline rect rectScreenToMapCoordinates(WarContext* context, rect r)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    rect mapPanel = map->mapPanel;
-    rect viewport = map->viewport;
-
-    r = rectTranslatef(r, -mapPanel.x, -mapPanel.y);
-    r = rectTranslatef(r, viewport.x, viewport.y);
-    return r;
-}
-
-inline vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    v = vec2Translatef(v, -map->viewport.x, -map->viewport.y);
-    v = vec2Translatef(v, map->mapPanel.x, map->mapPanel.y);
-    return v;
-}
-
-inline rect rectMapToScreenCoordinates(WarContext* context, rect r)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    r = rectTranslatef(r, -map->viewport.x, -map->viewport.y);
-    r = rectTranslatef(r, map->mapPanel.x, map->mapPanel.y);
-    return r;
-}
-
 void createRoads(WarRoadPieceList *pieces, WarLevelConstruct *construct)
 {
     s32 x1 = construct->x1;
@@ -508,16 +446,11 @@ void updateMap(WarContext* context)
                     WarUnitComponent unit = entity->unit;
                     if (transform.enabled && unit.enabled)
                     {
-                        rect unitRect = rectf(
-                            transform.position.x,
-                            transform.position.y,
-                            unit.sizex * MEGA_TILE_WIDTH,
-                            unit.sizey * MEGA_TILE_HEIGHT);
+                        rect unitRect = rectv(transform.position, getUnitSpriteSize(entity));
 
                         if (rectIntersects(pointerRect, unitRect))
                         {
                             addEntityToSelection(context, entity->id);
-                            vec2Print(transform.position);
                         }
                         else if (!input->keys[WAR_KEY_CTRL].pressed)
                         {
@@ -552,28 +485,28 @@ void updateMap(WarContext* context)
                 vec2 unitCenterPoint = vec2Mulf(getUnitSpriteSize(selEntity), 0.5f);
                 vec2 position = vec2Addv(transform->position, unitCenterPoint);
                 vec2 target = vec2ScreenToMapCoordinates(context, input->pos);
-                vec2Print(target);
 
-                s32 startX = (s32)(position.x / MEGA_TILE_WIDTH);
-                s32 startY = (s32)(position.y / MEGA_TILE_HEIGHT);
-
-                s32 endX = (s32)(target.x / MEGA_TILE_WIDTH);
-                s32 endY = (s32)(target.y / MEGA_TILE_HEIGHT);
+                position = vec2MapToTileCoordinates(position);
+                target = vec2MapToTileCoordinates(target);
                 
-                WarMapPath path = findPath(map->finder, startX, startY, endX, endY);
-                if (path.count > 0)
+                WarMapPath path = findPath(map->finder, (s32)position.x, (s32)position.y, (s32)target.x, (s32)target.y);
+                if (path.nodes.count > 0)
                 {
-                    WarState* moveState = createMoveState(context, selEntity, path);
-                    changeNextState(context, selEntity, moveState);
-                }
+                    // WarState* moveState = createMoveState(context, selEntity, path);
+                    // changeNextState(context, selEntity, moveState);
 
-                // WarState* patrolState = createPatrolState(context, selEntity, position, mapPosition);
-                // changeNextState(context, selEntity, patrolState);
+                    WarState* patrolState = createPatrolState(context, selEntity, path);
+                    changeNextState(context, selEntity, patrolState);
+                }
+                else
+                {
+                    freePath(path);
+                }
             }
 
             if (isBuildingUnit(unit->type))
             {
-                unit->hp -= unit->maxhp * 0.1f;
+                unit->hp -= (s32)(unit->maxhp * 0.1f);
                 if (unit->hp < 0) unit->hp = 0;
 
                 f32 p = (f32)unit->hp / unit->maxhp;
@@ -631,7 +564,7 @@ void updateMap(WarContext* context)
 
                         WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_2_RESOURCE);
                         WarSpriteAnimation* anim = createAnimation("hugeDamage", sprite, 0.2f, true);
-                        anim->offset = vec2Subv(getUnitCenterPoint(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+                        anim->offset = vec2Subv(getUnitSpriteCenter(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
                         
                         for(s32 i = 0; i < 4; i++)
                             addAnimationFrame(anim, i);
@@ -645,7 +578,7 @@ void updateMap(WarContext* context)
                     {
                         WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_1_RESOURCE);
                         WarSpriteAnimation* anim = createAnimation("littleDamage", sprite, 0.2f, true);
-                        anim->offset = vec2Subv(getUnitCenterPoint(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+                        anim->offset = vec2Subv(getUnitSpriteCenter(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
                         
                         for(s32 i = 0; i < 4; i++)
                             addAnimationFrame(anim, i);
@@ -727,6 +660,85 @@ void renderMap(WarContext *context)
             }
         }
 
+#ifdef DEBUG_RENDER_UNIT_PATHS
+        for(s32 i = 0; i < map->entities.count; i++)
+        {
+            WarEntity *entity = map->entities.items[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+            {
+                WarStateMachineComponent* stateMachine = &entity->stateMachine;
+                WarState* currentState = stateMachine->currentState;
+                if (currentState)
+                {
+                    s32 index = -1;
+                    WarMapPath path;
+                    
+                    if (currentState->type == WAR_STATE_MOVE)
+                    {
+                        index = currentState->move.index;
+                        path = stateMachine->currentState->move.path;
+                    }
+                    else if(currentState->type == WAR_STATE_PATROL)
+                    {
+                        index = currentState->patrol.index;
+                        path = stateMachine->currentState->patrol.path;
+                    }
+                    
+                    if (index >= 0)
+                    {
+                        vec2 prevPos;
+                        for(s32 i = 0; i < path.nodes.count; i++)
+                        {
+                            vec2 pos = path.nodes.items[i];
+                            pos.x = pos.x * MEGA_TILE_WIDTH + halfi(MEGA_TILE_WIDTH);
+                            pos.y = pos.y * MEGA_TILE_HEIGHT + halfi(MEGA_TILE_HEIGHT);
+
+                            if (i > 0)
+                                nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
+
+                            nvgFillRect(gfx, rectv(pos, VEC2_ONE), i == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
+
+                            prevPos = pos;
+                        }
+                    }
+                }
+            }
+        }
+#endif
+
+#ifdef DEBUG_RENDER_PASSABLE_INFO
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        {
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            {
+                if (map->finder.data[y * MAP_TILES_WIDTH + x])
+                {
+                    vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                    vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(200, 0, 0, 100));
+                }
+            }
+        }
+#endif
+
+#ifdef DEBUG_RENDER_MAP_GRID
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        {
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            {
+                nvgSave(gfx);
+
+                nvgBeginPath(gfx);
+                nvgRect(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgStrokeWidth(gfx, 0.5f);
+                nvgStrokeColor(gfx, NVG_WHITE);
+                nvgStroke(gfx);
+
+                nvgRestore(gfx);
+            }
+        }
+#endif
+
         // render units
         {
             for(s32 i = 0; i < map->entities.count; i++)
@@ -738,69 +750,6 @@ void renderMap(WarContext *context)
                     renderEntity(context, entity, selected);
                 }
             }
-        }
-
-        // DEBUG
-        // render paths
-        {
-            // for(s32 i = 0; i < map->entities.count; i++)
-            // {
-            //     WarEntity *entity = map->entities.items[i];
-            //     if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
-            //     {
-            //         WarStateMachineComponent* stateMachine = &entity->stateMachine;
-            //         if (stateMachine->currentState && stateMachine->currentState->type == WAR_STATE_MOVE)
-            //         {
-            //             s32 index = stateMachine->currentState->move.index;
-            //             WarMapPath path = stateMachine->currentState->move.path;
-            //             for(s32 i = 0; i < path.count; i++)
-            //             {
-            //                 vec2 pos = path.nodes[i];
-            //                 pos.x = pos.x * MEGA_TILE_WIDTH + halfi(MEGA_TILE_WIDTH);
-            //                 pos.y = pos.y * MEGA_TILE_HEIGHT + halfi(MEGA_TILE_HEIGHT);
-
-            //                 nvgFillRect(gfx, rectv(pos, VEC2_ONE), i == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
-            //             }
-            //         }
-            //     }
-            // }
-        }
-
-        // DEBUG
-        // render passable info
-        {
-            // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-            // {
-            //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            //     {
-            //         if (map->finder.data[y * MAP_TILES_WIDTH + x])
-            //         {
-            //             vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-            //             vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            //             nvgFillRect(gfx, rectv(pos, size), nvgRGBA(40, 40, 40, 180));
-            //         }
-            //     }
-            // }
-        }
-
-        // DEBUG
-        // render grid
-        {
-            // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-            // {
-            //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            //     {
-            //         nvgSave(gfx);
-
-            //         nvgBeginPath(gfx);
-            //         nvgRect(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            //         nvgStrokeWidth(gfx, 0.5f);
-            //         nvgStrokeColor(gfx, NVG_WHITE);
-            //         nvgStroke(gfx);
-
-            //         nvgRestore(gfx);
-            //     }
-            // }
         }
 
         nvgRestore(gfx);

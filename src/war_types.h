@@ -70,6 +70,14 @@ internal bool equalsS32(const s32 a, const s32 b)
 shlDeclareList(WarS32List, s32)
 shlDefineList(WarS32List, s32, equalsS32, 0)
 
+internal bool equalsVec2(const vec2 v1, const vec2 v2)
+{
+    return v1.x == v2.x && v1.y == v2.y;
+}
+
+shlDeclareList(Vec2List, vec2)
+shlDefineList(Vec2List, vec2, equalsVec2, VEC2_ZERO)
+
 //
 // Resources
 //
@@ -538,8 +546,7 @@ shlDefineList(WarUnitActionList, WarUnitAction*, equalsAction, NULL)
 
 typedef struct
 {
-    s32 count;
-    vec2* nodes;
+    Vec2List nodes;
 } WarMapPath;
 
 typedef enum
@@ -594,8 +601,8 @@ typedef struct
 
         struct
         {
-            vec2 from, to;
-            s32 dir;
+            s32 index, dir;
+            WarMapPath path;
         } patrol;
 
         // struct
@@ -773,6 +780,7 @@ typedef enum
     WAR_KEY_RIGHT,
     WAR_KEY_DOWN,
     WAR_KEY_UP,
+    WAR_KEY_P,
 
     WAR_KEY_COUNT
 } WarKeys;
@@ -807,6 +815,8 @@ typedef struct
     f32 time;
     f32 deltaTime;
     u32 fps;
+
+    bool paused;
 
     f32 globalScale;
 

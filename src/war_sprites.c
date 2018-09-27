@@ -95,8 +95,9 @@ void renderSubSprite(WarContext *context, WarSprite *sprite, rect rs, rect rd, v
 
 void renderSprite(WarContext *context, WarSprite *sprite, vec2 pos, vec2 scale)
 {
-    rect rs = rectf(0, 0, sprite->frameWidth, sprite->frameHeight);
-    rect rd = rectf(pos.x, pos.y, sprite->frameWidth, sprite->frameHeight);
+    vec2 frameSize = vec2i(sprite->frameWidth, sprite->frameHeight);
+    rect rs = rectv(VEC2_ZERO, frameSize);
+    rect rd = rectv(pos, frameSize);
     nvgRenderSubImage(context->gfx, sprite->image, rs, rd, scale);
 }
 

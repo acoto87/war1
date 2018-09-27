@@ -93,10 +93,10 @@ void addStateMachineComponent(WarContext* context, WarEntity* entity)
 void removeStateMachineComponent(WarContext* context, WarEntity* entity)
 {
     if (entity->stateMachine.nextState)
-        freeState(entity->stateMachine.nextState);
+        leaveState(context, entity, entity->stateMachine.nextState);
 
     if (entity->stateMachine.currentState)
-        freeState(entity->stateMachine.currentState);
+        leaveState(context, entity, entity->stateMachine.currentState);
 
     entity->stateMachine = (WarStateMachineComponent){0};
 }
@@ -331,10 +331,11 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
     nvgTranslate(gfx, halff(unitSize.x), halff(unitSize.y));
     nvgTranslate(gfx, position.x, position.y);
 
-    // DEBUG
-    // nvgFillRect(gfx, getUnitFrameRect(entity), nvgRGBA(0, 0, 128, 128));
-    // nvgFillRect(gfx, getUnitSpriteRect(entity), NVG_GRAY_TRANSPARENT);
-    // nvgFillRect(gfx, rectv(getUnitCenterPoint(entity), VEC2_ONE), nvgRGB(255, 0, 0));
+#ifdef DEBUG_RENDER_UNIT_INFO
+    nvgFillRect(gfx, getUnitFrameRect(entity), nvgRGBA(0, 0, 128, 128));
+    nvgFillRect(gfx, getUnitSpriteRect(entity), NVG_GRAY_TRANSPARENT);
+    nvgFillRect(gfx, rectv(getUnitSpriteCenter(entity), VEC2_ONE), nvgRGB(255, 0, 0));
+#endif
 
     if (sprite->enabled)
     {
@@ -370,8 +371,9 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
                 nvgTranslate(gfx, anim->offset.x, anim->offset.y);
                 nvgScale(gfx, anim->scale.x, anim->scale.y);
 
-                // DEBUG
-                // nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
+#ifdef DEBUG_RENDER_UNIT_ANIMATIONS
+                nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
+#endif
 
                 WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
                 updateSpriteImage(context, &anim->sprite, frame.data);

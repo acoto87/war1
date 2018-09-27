@@ -10,18 +10,18 @@ uniform sampler2D tex;
 
 void main() 
 {
-	vec4 texColor = vec4(1, 1, 1, 1);
-	if (useTex == 1)
-	{
-		texColor = texture(tex, vTexCoord);
-	}
+    vec4 texColor = vec4(1, 1, 1, 1);
+    if (useTex == 1)
+    {
+        texColor = texture(tex, vTexCoord);
+    }
 
-	texColor *= vColor;
-    
-	if (texColor.a == 0)
-	{
-		discard;
-	}
-	
-	fragColor = texColor;
+    texColor *= vColor;
+
+    if (texColor.a == 0)
+    {
+        discard;
+    }
+
+    fragColor = texColor;
 }

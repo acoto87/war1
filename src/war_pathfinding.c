@@ -13,6 +13,10 @@ internal bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
 shlDeclareList(WarMapNodeList, WarMapNode)
 shlDefineList(WarMapNodeList, WarMapNode, equalsMapNode, (WarMapNode){0})
 
+internal const s32 dirC = 8;
+internal const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
+internal const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
+
 internal WarMapNode createNode(s32 x, s32 y)
 {
     return (WarMapNode){x, y, 0, -1};
@@ -62,12 +66,15 @@ void setBlockTiles(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 
     setValueTiles(finder, startX, startY, width, height, 1);
 }
 
+u16 getTileValue(WarPathFinder finder, s32 x, s32 y)
+{
+    assert(inRange(x, 0, finder.width));
+    assert(inRange(y, 0, finder.height));
+    return finder.data[y * finder.width + x];
+}
+
 WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
-    const s32 dirC = 8;
-    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
-    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
-
     WarMapNodeList nodes;
     WarMapNodeListInit(&nodes);
 
@@ -81,17 +88,15 @@ WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 
     {
         WarMapNode node = nodes.items[i];
         if (equalsMapNode(node, endNode))
-        {
             break;
-        }
 
         for(s32 d = 0; d < dirC; d++)
         {
             s32 xx = node.x + dirX[d];
             s32 yy = node.y + dirY[d];
-            WarMapNode newNode = createNode(xx, yy);
-            if (inRange(newNode.x, 0, finder.width) && inRange(newNode.y, 0, finder.height))
+            if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
+                WarMapNode newNode = createNode(xx, yy);
                 if (finder.data[yy * finder.width + xx] == 0 || equalsMapNode(newNode, endNode))
                 {
                     if (!WarMapNodeListContains(&nodes, newNode))
@@ -102,29 +107,32 @@ WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 
                     }
                 }
             }
-
-        }        
+        }
     }
 
     WarMapPath path = (WarMapPath){0};
+    Vec2ListInit(&path.nodes);
 
     if (i < nodes.count)
     {
         WarMapNode node = nodes.items[i];
-
-        path.count = node.level;
-        path.nodes = (WarMapNode*)xcalloc(path.count, sizeof(WarMapNode));
+        Vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
         
-        for(s32 i = path.count - 1; i >= 0; i--)
+        while (node.parent >= 0)
         {
-            path.nodes[i] = vec2i(node.x, node.y);
-
-            if (node.parent >= 0)
-                node = nodes.items[node.parent];
+            node = nodes.items[node.parent];
+            Vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
         }
+
+        Vec2ListReverse(&path.nodes);
     }
 
     WarMapNodeListFree(&nodes);
 
     return path;
+}
+
+void freePath(WarMapPath path)
+{
+    Vec2ListFree(&path.nodes);
 }

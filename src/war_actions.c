@@ -903,9 +903,6 @@ void updateAction(WarContext* context, WarEntity* entity)
 
                     frameIndex += (4 - absi(4 - unit->direction));
 
-                    if (action->type == WAR_ACTION_TYPE_WALK)
-                        logDebug("framIndex: %d", frameIndex);
-
                     if (inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT))
                     {
                         transform->scale.x = -1;

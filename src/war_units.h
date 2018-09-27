@@ -301,7 +301,7 @@ inline WarRoadsData getRoadsData(WarRoadPieceType type)
     return roadsData[index];
 }
 
-inline WarUnitStats getUnitStatsIndex(WarUnitType type)
+inline WarUnitStats getUnitStats(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(unitStats);
@@ -312,7 +312,7 @@ inline WarUnitStats getUnitStatsIndex(WarUnitType type)
     return unitStats[index];
 }
 
-inline WarBuildingStats getBuildingStatsIndex(WarUnitType type)
+inline WarBuildingStats getBuildingStats(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(buildingStats);
@@ -321,6 +321,12 @@ inline WarBuildingStats getBuildingStatsIndex(WarUnitType type)
 
     assert(index < length);
     return buildingStats[index];
+}
+
+inline vec2 getUnitSize(WarEntity* entity)
+{
+    WarUnitComponent* unit = &entity->unit;
+    return vec2i(unit->sizex, unit->sizey);
 }
 
 inline vec2 getUnitFrameSize(WarEntity* entity)
@@ -348,12 +354,41 @@ inline rect getUnitSpriteRect(WarEntity* entity)
     return rectv(pos, unitSize);
 }
 
-inline vec2 getUnitCenterPoint(WarEntity* entity)
+inline vec2 getUnitSpriteCenter(WarEntity* entity)
 {
     vec2 frameSize = getUnitFrameSize(entity);
     vec2 unitSize = getUnitSpriteSize(entity);
     vec2 pos = vec2Mulf(vec2Subv(frameSize, unitSize), 0.5f);
     return vec2Addv(pos, vec2Mulf(unitSize, 0.5f));
+}
+
+inline vec2 getUnitCenterPosition(WarEntity* entity)
+{
+    WarTransformComponent* transform = &entity->transform;
+    vec2 spriteSize = getUnitSpriteSize(entity);
+    vec2 unitCenter = vec2Mulf(spriteSize, 0.5f);
+    vec2 position = vec2Addv(transform->position, unitCenter);
+    return position;
+}
+
+inline void setUnitCenterPosition(WarEntity* entity, vec2 position)
+{
+    WarTransformComponent* transform = &entity->transform;
+    vec2 spriteSize = getUnitSpriteSize(entity);
+    vec2 unitCenter = vec2Mulf(spriteSize, 0.5f);
+    transform->position = vec2Subv(position, unitCenter);
+}
+
+inline WarUnitDirection getUnitDirection(WarEntity* entity)
+{
+    WarUnitComponent* unit = &entity->unit;
+    return unit->direction;
+}
+
+inline void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
+{
+    WarUnitComponent* unit = &entity->unit;
+    unit->direction = direction;
 }
 
 internal WarUnitDirection getDirectionFromDiff(f32 x, f32 y)

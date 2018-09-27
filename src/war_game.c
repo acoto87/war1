@@ -8,7 +8,7 @@ bool initGame(WarContext *context)
 
     initLog(LOG_SEVERITY_DEBUG);
 
-    context->globalScale = 3;
+    context->globalScale = 4;
     context->originalWindowWidth = 320;
     context->originalWindowHeight = 200;
     context->windowWidth = (u32)(context->originalWindowWidth * context->globalScale);
@@ -170,11 +170,21 @@ void inputGame(WarContext *context)
     setInputKey(context, WAR_KEY_RIGHT, glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_UP, glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_DOWN, glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_P, glfwGetKey(context->window, GLFW_KEY_P) == GLFW_PRESS);
 }
 
 void updateGame(WarContext* context)
 {
-    updateMap(context);
+    WarInput* input = &context->input;
+    if (wasKeyPressed(input, WAR_KEY_P))
+    {
+        context->paused = !context->paused;
+    }
+
+    if (!context->paused)
+    {
+        updateMap(context);
+    }
 }
 
 void renderGame(WarContext *context)
