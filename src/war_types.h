@@ -595,13 +595,16 @@ typedef struct
 
         struct
         {
-            s32 index;
+            s32 currentIndex;
+            s32 nextIndex;
             WarMapPath path;
         } move;
 
         struct
         {
-            s32 index, dir;
+            s32 currentIndex;
+            s32 nextIndex;
+            s32 dir;
             WarMapPath path;
         } patrol;
 

@@ -675,12 +675,12 @@ void renderMap(WarContext *context)
                     
                     if (currentState->type == WAR_STATE_MOVE)
                     {
-                        index = currentState->move.index;
+                        index = currentState->move.currentIndex;
                         path = stateMachine->currentState->move.path;
                     }
                     else if(currentState->type == WAR_STATE_PATROL)
                     {
-                        index = currentState->patrol.index;
+                        index = currentState->patrol.currentIndex;
                         path = stateMachine->currentState->patrol.path;
                     }
                     

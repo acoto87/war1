@@ -8,7 +8,7 @@ bool initGame(WarContext *context)
 
     initLog(LOG_SEVERITY_DEBUG);
 
-    context->globalScale = 4;
+    context->globalScale = 3;
     context->originalWindowWidth = 320;
     context->originalWindowHeight = 200;
     context->windowWidth = (u32)(context->originalWindowWidth * context->globalScale);
