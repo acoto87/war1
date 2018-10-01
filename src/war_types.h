@@ -576,7 +576,10 @@ typedef enum
     WAR_STATE_TO_CHOP,
     WAR_STATE_CHOPPING,
     WAR_STATE_BACK_RESOURCES,
-    WAR_STATE_DEAD
+    WAR_STATE_DEAD,
+    WAR_STATE_WAIT,
+
+    WAR_STATE_COUNT
 } WarStateType;
 
 typedef struct
@@ -597,6 +600,7 @@ typedef struct
         {
             s32 currentIndex;
             s32 nextIndex;
+            s32 waitCount;
             WarMapPath path;
         } move;
 
@@ -605,8 +609,15 @@ typedef struct
             s32 currentIndex;
             s32 nextIndex;
             s32 dir;
+            s32 waitCount;
             WarMapPath path;
         } patrol;
+
+        struct
+        {
+            f32 waitTime;
+            struct WarState* nextState;
+        } wait;
 
         // struct
         // {
@@ -683,6 +694,8 @@ typedef struct
     bool enabled;
     WarState* currentState;
     WarState* nextState;
+    bool leaveState;
+    bool enterState;
 } WarStateMachineComponent;
 
 typedef struct

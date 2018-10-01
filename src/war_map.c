@@ -292,7 +292,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             addStateMachineComponent(context, entity);
 
             WarState* idleState = createIdleState(context, entity, isDudeUnit(unit.type));
-            changeNextState(context, entity, idleState);
+            changeNextState(context, entity, idleState, true, true);
 
             setBlockTiles(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey);
         }
@@ -493,10 +493,10 @@ void updateMap(WarContext* context)
                 if (path.nodes.count > 0)
                 {
                     // WarState* moveState = createMoveState(context, selEntity, path);
-                    // changeNextState(context, selEntity, moveState);
+                    // changeNextState(context, selEntity, moveState, true, true);
 
                     WarState* patrolState = createPatrolState(context, selEntity, path);
-                    changeNextState(context, selEntity, patrolState);
+                    changeNextState(context, selEntity, patrolState, true, true);
                 }
                 else
                 {

@@ -385,12 +385,6 @@ inline WarUnitDirection getUnitDirection(WarEntity* entity)
     return unit->direction;
 }
 
-inline void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
-{
-    WarUnitComponent* unit = &entity->unit;
-    unit->direction = direction;
-}
-
 internal WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
 {
     if (x < 0 && y < 0)
@@ -413,4 +407,16 @@ internal WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
         return WAR_DIRECTION_SOUTH_EAST;
 
     return WAR_DIRECTION_NORTH;
+}
+
+inline void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
+{
+    WarUnitComponent* unit = &entity->unit;
+    unit->direction = direction;
+}
+
+inline void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
+{
+    WarUnitDirection direction = getDirectionFromDiff(dx, dy);
+    setUnitDirection(entity, direction);
 }

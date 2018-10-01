@@ -73,6 +73,11 @@ u16 getTileValue(WarPathFinder finder, s32 x, s32 y)
     return finder.data[y * finder.width + x];
 }
 
+void freePath(WarMapPath path)
+{
+    Vec2ListFree(&path.nodes);
+}
+
 WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
     WarMapNodeList nodes;
@@ -132,7 +137,37 @@ WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 
     return path;
 }
 
-void freePath(WarMapPath path)
+bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIndex)
 {
-    Vec2ListFree(&path.nodes);
+    assert(inRange(fromIndex, 0, path->nodes.count));
+    assert(inRange(toIndex, 0, path->nodes.count));
+    assert(fromIndex != toIndex);
+
+    bool result = false;
+
+    vec2 fromNode = path->nodes.items[fromIndex];
+    vec2 toNode = path->nodes.items[toIndex];
+
+    // find a new path from the current position to the destination
+    WarMapPath newPath = findPath(finder, (s32)fromNode.x, (s32)fromNode.y, (s32)toNode.x, (s32)toNode.y);
+
+    if (newPath.nodes.count > 0)
+    {
+        s32 minIndex = min(fromIndex, toIndex);
+        s32 maxIndex = max(fromIndex, toIndex);
+
+        // remove the nodes in the range [fromIndex, toIndex] or [toIndex, fromIndex] from current to last remaining nodes of the current path 
+        // TODO: make a RemoveRange function for lists
+        for(s32 i = maxIndex; i >= minIndex; i--)
+            Vec2ListRemoveAt(&path->nodes, i);
+
+        // if a path was found subsitute the portion of the path with the new one
+        for(s32 i = 0; i < newPath.nodes.count; i++)
+            Vec2ListInsert(&path->nodes, minIndex + i, newPath.nodes.items[i]);
+
+        result = true;
+    }
+
+    freePath(newPath);
+    return result;
 }

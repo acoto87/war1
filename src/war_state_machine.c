@@ -25,6 +25,7 @@ WarState* createMoveState(WarContext* context, WarEntity* entity, WarMapPath pat
     state->move.path = path;
     state->move.currentIndex = 0;
     state->move.nextIndex = 1;
+    state->move.waitCount = 0;
     return state;
 }
 
@@ -37,13 +38,32 @@ WarState* createPatrolState(WarContext* context, WarEntity* entity, WarMapPath p
     state->patrol.currentIndex = 0;
     state->patrol.nextIndex = 1;
     state->patrol.dir = 1;
+    state->patrol.waitCount = 0;
     return state;
 }
 
-void changeNextState(WarContext* context, WarEntity* entity, WarState* state)
+WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime, WarState* nextState)
+{
+    WarState* state = createState(context, entity, WAR_STATE_WAIT);
+    state->updateFrequency = SECONDS_PER_FRAME;
+    state->nextUpdateTime = 0;
+    state->wait.waitTime = waitTime;
+    state->wait.nextState = nextState;
+    return state;
+}
+
+void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
     stateMachine->nextState = state;
+    stateMachine->leaveState = leaveState;
+    stateMachine->enterState = enterState;
+}
+
+bool hasNextState(WarContext* context, WarEntity* entity, WarStateType type)
+{
+    WarStateMachineComponent* stateMachine = &entity->stateMachine;
+    return stateMachine->nextState && stateMachine->nextState->type == type;
 }
 
 void enterState(WarContext* context, WarEntity* entity, WarState* state)
@@ -54,7 +74,11 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
     switch (state->type)
     {
         case WAR_STATE_IDLE:
+        case WAR_STATE_WAIT:
         {
+            vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+            setBlockTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+
             setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, false);
             break;
         }
@@ -63,6 +87,7 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
         {
             s32 currentIndex = state->move.currentIndex;
             s32 nextIndex = state->move.nextIndex;
+            s32 waitCount = state->move.waitCount;
             WarMapPath* path = &state->move.path;
 
             assert(path->nodes.count > 1);
@@ -70,47 +95,14 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             assert(inRange(nextIndex, 0, path->nodes.count));
 
             vec2 currentNode = path->nodes.items[currentIndex];
+            setBlockTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
+
             vec2 nextNode = path->nodes.items[nextIndex];
+            if (waitCount == 0)
+                setBlockTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
-            if (getTileValue(map->finder, nextNode.x, nextNode.y))
-            {
-                vec2 lastNode = path->nodes.items[path->nodes.count - 1];
-
-                WarMapPath newPath = findPath(map->finder, currentNode.x, currentNode.y, lastNode.x, lastNode.y);
-
-                // remove the remaining nodes of the current path (make a RemoveRange function for lists)
-                for(s32 i = path->nodes.count - 1; i > currentIndex; i--)
-                    Vec2ListRemoveAt(&path->nodes, i);
-
-                if (newPath.nodes.count > 0)
-                {
-                    // if a path was found subsitute the rest of the current path for the new one
-                    for(s32 i = 1; i < newPath.nodes.count; i++)
-                        Vec2ListAdd(&path->nodes, newPath.nodes.items[i]);
-
-                    currentNode = path->nodes.items[currentIndex];
-                    nextNode = path->nodes.items[nextIndex];
-                }
-
-                freePath(newPath);
-            }
-
-            if (path->nodes.count > 1)
-            {
-                setBlockTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
-                setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
-
-                WarUnitDirection direction = getDirectionFromDiff(nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-                setUnitDirection(entity, direction);
-
-                setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
-            }
-            else
-            {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState);
-            }
-            
+            setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+            setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
             break;
         }
 
@@ -118,6 +110,7 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
         {
             s32 currentIndex = state->patrol.currentIndex;
             s32 nextIndex = state->patrol.nextIndex;
+            s32 waitCount = state->patrol.waitCount;
             WarMapPath* path = &state->patrol.path;
 
             assert(path->nodes.count > 1);
@@ -125,47 +118,14 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             assert(inRange(nextIndex, 0, path->nodes.count));
 
             vec2 currentNode = path->nodes.items[currentIndex];
+            setBlockTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
+
             vec2 nextNode = path->nodes.items[nextIndex];
+            if (waitCount == 0)
+                setBlockTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
-            if (getTileValue(map->finder, nextNode.x, nextNode.y))
-            {
-                vec2 lastNode = path->nodes.items[path->nodes.count - 1];
-
-                WarMapPath newPath = findPath(map->finder, currentNode.x, currentNode.y, lastNode.x, lastNode.y);
-
-                // remove the remaining nodes of the current path (make a RemoveRange function for lists)
-                for(s32 i = path->nodes.count - 1; i > currentIndex; i--)
-                    Vec2ListRemoveAt(&path->nodes, i);
-
-                if (newPath.nodes.count > 0)
-                {
-                    // if a path was found subsitute the rest of the current path for the new one
-                    for(s32 i = 1; i < newPath.nodes.count; i++)
-                        Vec2ListAdd(&path->nodes, newPath.nodes.items[i]);
-
-                    currentNode = path->nodes.items[currentIndex];
-                    nextNode = path->nodes.items[nextIndex];
-                }
-
-                freePath(newPath);
-            }
-
-            if (path->nodes.count > 1)
-            {
-                setBlockTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
-                setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
-
-                WarUnitDirection direction = getDirectionFromDiff(nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-                setUnitDirection(entity, direction);
-
-                setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
-            }
-            else
-            {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState);
-            }
-
+            setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+            setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
             break;
         }
 
@@ -182,17 +142,56 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
     if (!state)
         return;
     
+    WarMap* map = context->map;
+    vec2 unitSize = getUnitSize(entity);
+
     switch (state->type)
     {
+        case WAR_STATE_IDLE:
+        case WAR_STATE_WAIT:
+        {
+            vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+            setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+            break;
+        }
+
         case WAR_STATE_MOVE:
         {
-            freePath(state->move.path);
+            WarMapPath* path = &state->move.path;
+
+            if (inRange(state->move.currentIndex, 0, path->nodes.count))
+            {
+                vec2 currentNode = path->nodes.items[state->move.currentIndex];
+                setFreeTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
+            }
+
+            if (inRange(state->move.nextIndex, 0, path->nodes.count))
+            {
+                vec2 nextNode = path->nodes.items[state->move.nextIndex];
+                setFreeTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+            }
+
+            freePath(*path);
             break;
         }
 
         case WAR_STATE_PATROL:
         {
-            freePath(state->patrol.path);
+            WarMapPath* path = &state->patrol.path;
+
+            if (inRange(state->patrol.currentIndex, 0, path->nodes.count))
+            {
+                vec2 currentNode = path->nodes.items[state->patrol.currentIndex];
+                setFreeTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
+            }
+
+            if (inRange(state->patrol.nextIndex, 0, path->nodes.count))
+            {
+                vec2 nextNode = path->nodes.items[state->patrol.nextIndex];
+                setFreeTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+            }
+
+            freePath(*path);
             break;
         }
     }
@@ -232,17 +231,52 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
 void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-
-    s32 currentIndex = state->move.currentIndex;
-    s32 nextIndex = state->move.nextIndex;
     WarMapPath* path = &state->move.path;
 
     assert(path->nodes.count > 1);
-    assert(inRange(currentIndex, 0, path->nodes.count));
-    assert(inRange(nextIndex, 0, path->nodes.count));
+    assert(inRange(state->move.currentIndex, 0, path->nodes.count));
+    assert(inRange(state->move.nextIndex, 0, path->nodes.count));
 
-    vec2 currentNode = path->nodes.items[currentIndex];
-    vec2 nextNode = path->nodes.items[nextIndex];
+    vec2 currentNode = path->nodes.items[state->move.currentIndex];
+    vec2 nextNode = path->nodes.items[state->move.nextIndex];
+
+    vec2 unitSize = getUnitSize(entity);
+
+    // if this unit is waiting
+    if (state->move.waitCount > 0)
+    {
+        if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
+        {
+            // wait for a number of times before re-route
+            if (state->move.waitCount < MOVE_WAIT_INTENTS)
+            {
+                state->move.waitCount++;
+
+                WarState* waitState = createWaitState(context, entity, MOVE_WAIT_TIME, state);
+                changeNextState(context, entity, waitState, false, true);
+                return;
+            }
+
+            state->move.waitCount = 0;
+
+            // if there is no re-routing possible, go to idle
+            if (!reRoutePath(map->finder, path, state->move.currentIndex, path->nodes.count - 1))
+            {
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+                return;
+            }
+
+            nextNode = path->nodes.items[state->move.nextIndex];
+        }
+        else
+        {
+            state->move.waitCount = 0;
+        }
+
+        setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+    }
 
     vec2 position = getUnitCenterPosition(entity);
     vec2 target = vec2TileToMapCoordinates(nextNode, true);
@@ -251,95 +285,97 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 step = vec2Mulf(direction, 20 * context->deltaTime);
     vec2 newPosition = vec2Addv(position, step);
 
+    setUnitCenterPosition(entity, newPosition);
+
     f32 distance = vec2Distance(newPosition, target);
-    if (distance < 0.1f)
+    if (distance < MOVE_EPSILON)
     {
         newPosition = target;
-
-        vec2 unitSize = getUnitSize(entity);
+        setUnitCenterPosition(entity, newPosition);
 
         setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
         setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
-        currentIndex++;
-        nextIndex++;
+        state->move.currentIndex++;
+        state->move.nextIndex++;
 
-        currentNode = path->nodes.items[currentIndex];
-
-        setBlockTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
-
-        // if there is nodes left, check to see if the next one is occupied
-        if (nextIndex < path->nodes.count)
-        {
-            nextNode = path->nodes.items[nextIndex];
-            
-            if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
-            {
-                // get the destination position of current path
-                s32 lastIndex = path->nodes.count - 1;
-                vec2 lastNode = path->nodes.items[lastIndex];
-
-                // find a new path from the current position to the destination
-                WarMapPath newPath = findPath(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)lastNode.x, (s32)lastNode.y);
-                
-                // remove the remaining nodes of the current path (make a RemoveRange function for lists)
-                for(s32 i = path->nodes.count - 1; i > currentIndex; i--)
-                    Vec2ListRemoveAt(&path->nodes, i);
-
-                if (newPath.nodes.count > 0)
-                {
-                    // if a path was found subsitute the rest of the current path for the new one
-                    for(s32 i = 1; i < newPath.nodes.count; i++)
-                        Vec2ListAdd(&path->nodes, newPath.nodes.items[i]);
-                }
-
-                freePath(newPath);
-            }
-
-            if (nextIndex < path->nodes.count)
-            {
-                nextNode = path->nodes.items[nextIndex];
-
-                setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
-
-                WarUnitDirection direction = getDirectionFromDiff(nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-                setUnitDirection(entity, direction);
-
-                state->move.currentIndex = currentIndex;
-                state->move.nextIndex = nextIndex;
-            }
-            else
-            {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState);
-            }
-        }
-        else
+        // if there is no more path nodes to check, go to idle
+        if (state->move.nextIndex >= path->nodes.count)
         {
             WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState);
+            changeNextState(context, entity, idleState, true, true);
+            return;
         }
-    }
 
-    setUnitCenterPosition(entity, newPosition);
+        currentNode = path->nodes.items[state->move.currentIndex];
+        setBlockTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
+
+        nextNode = path->nodes.items[state->move.nextIndex];
+
+        // if the next node is occupied, check if the unit have to wait to re-route if necessary
+        if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
+        {
+            state->move.waitCount++;
+
+            WarState* waitState = createWaitState(context, entity, MOVE_WAIT_TIME, state);
+            changeNextState(context, entity, waitState, false, true);
+            return;
+        }
+
+        setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+    }
 }
 
 void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-
-    s32 currentIndex = state->patrol.currentIndex;
-    s32 nextIndex = state->patrol.nextIndex;
-    s32 dir = state->patrol.dir;
     WarMapPath* path = &state->patrol.path;
 
     assert(path->nodes.count > 1);
-    assert(inRange(currentIndex, 0, path->nodes.count));
-    assert(inRange(nextIndex, 0, path->nodes.count));
-    assert(inRange(dir, -1, 2));
+    assert(inRange(state->patrol.currentIndex, 0, path->nodes.count));
+    assert(inRange(state->patrol.nextIndex, 0, path->nodes.count));
 
-    vec2 currentNode = path->nodes.items[currentIndex];
-    vec2 nextNode = path->nodes.items[nextIndex];
+    vec2 currentNode = path->nodes.items[state->patrol.currentIndex];
+    vec2 nextNode = path->nodes.items[state->patrol.nextIndex];
+
+    vec2 unitSize = getUnitSize(entity);
+
+    // if this unit is waiting
+    if (state->patrol.waitCount > 0)
+    {
+        if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
+        {
+            // wait for a number of times before re-route
+            if (state->patrol.waitCount < MOVE_WAIT_INTENTS)
+            {
+                state->patrol.waitCount++;
+
+                WarState* waitState = createWaitState(context, entity, MOVE_WAIT_TIME, state);
+                changeNextState(context, entity, waitState, false, true);
+                return;
+            }
+
+            state->patrol.waitCount = 0;
+
+            // if there is no re-routing possible, go to idle
+            if (!reRoutePath(map->finder, path, state->patrol.currentIndex, state->patrol.dir > 0 ? path->nodes.count - 1 : 0))
+            {
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+                return;
+            }
+
+            nextNode = path->nodes.items[state->patrol.nextIndex];
+        }
+        else
+        {
+            state->patrol.waitCount = 0;
+        }
+
+        setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+    }
 
     vec2 position = getUnitCenterPosition(entity);
     vec2 target = vec2TileToMapCoordinates(nextNode, true);
@@ -348,87 +384,59 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 step = vec2Mulf(direction, 20 * context->deltaTime);
     vec2 newPosition = vec2Addv(position, step);
 
+    setUnitCenterPosition(entity, newPosition);
+
     f32 distance = vec2Distance(newPosition, target);
-    logDebug("%d, %f", entity->id, distance);
-    if (distance < 0.2f)
+    if (distance < MOVE_EPSILON)
     {
         newPosition = target;
-
-        vec2 unitSize = getUnitSize(entity);
+        setUnitCenterPosition(entity, newPosition);
 
         setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
         setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
-        currentIndex += dir;
-        if (currentIndex == 0 || currentIndex == path->nodes.count - 1)
-            dir *= -1;
+        state->patrol.currentIndex += state->patrol.dir;
+        if (state->patrol.currentIndex == 0 || state->patrol.currentIndex == path->nodes.count - 1)
+            state->patrol.dir *= -1;
 
-        nextIndex += dir;
+        state->patrol.nextIndex += state->patrol.dir;
 
-        currentNode = path->nodes.items[currentIndex];
-        nextNode = path->nodes.items[nextIndex];
-
+        currentNode = path->nodes.items[state->patrol.currentIndex];
         setBlockTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
-        
+
+        nextNode = path->nodes.items[state->patrol.nextIndex];
+
+        // if the next node is occupied, check if the unit have to wait to re-route if necessary
         if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
         {
-            // get the destination position of current path
-            s32 lastIndex = dir > 0 ? path->nodes.count - 1 : 0;
-            vec2 lastNode = path->nodes.items[lastIndex];
+            state->patrol.waitCount++;
 
-            // find a new path from the current position to the destination
-            WarMapPath newPath = findPath(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)lastNode.x, (s32)lastNode.y);
-            
-            if (dir > 0)
-            {
-                // remove the remaining nodes of the current path (make a RemoveRange function for lists)
-                for(s32 i = path->nodes.count - 1; i > currentIndex; i--)
-                    Vec2ListRemoveAt(&path->nodes, i);
-
-                if (newPath.nodes.count > 0)
-                {
-                    // if a path was found subsitute the rest of the current path for the new one
-                    for(s32 i = 1; i < newPath.nodes.count; i++)
-                        Vec2ListAdd(&path->nodes, newPath.nodes.items[i]);
-                }
-            }
-            else
-            {
-                for(s32 i = nextIndex; i >= 0; i--)
-                    Vec2ListRemoveAt(&path->nodes, i);
-
-                if (newPath.nodes.count > 0)
-                {
-                    // if a path was found subsitute the rest of the current path for the new one
-                    for(s32 i = 1; i < newPath.nodes.count; i++)
-                        Vec2ListInsert(&path->nodes, 0, newPath.nodes.items[i]);
-                }   
-            }
-
-            freePath(newPath);
+            WarState* waitState = createWaitState(context, entity, MOVE_WAIT_TIME, state);
+            changeNextState(context, entity, waitState, false, true);
+            return;
         }
 
-        if (inRange(nextIndex, 0, path->nodes.count))
+        setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+    }
+}
+
+void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
+{
+    state->wait.waitTime -= context->deltaTime;
+
+    if (state->wait.waitTime < 0)
+    {
+        if (state->wait.nextState)
         {
-            nextNode = path->nodes.items[nextIndex];
-
-            setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
-
-            WarUnitDirection direction = getDirectionFromDiff(nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-            setUnitDirection(entity, direction);
-
-            state->patrol.currentIndex = currentIndex;
-            state->patrol.nextIndex = nextIndex;
-            state->patrol.dir = dir;
+            changeNextState(context, entity, state->wait.nextState, true, true);
         }
         else
         {
             WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState);
+            changeNextState(context, entity, idleState, true, true);
         }
     }
-
-    setUnitCenterPosition(entity, newPosition);
 }
 
 void updateStateMachine(WarContext* context, WarEntity* entity)
@@ -439,12 +447,14 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
         // the enterState could potentially change state if it determine that is not ready to start the current state
         while (stateMachine->nextState)
         {
-            leaveState(context, entity, stateMachine->currentState);
+            if (stateMachine->leaveState)
+                leaveState(context, entity, stateMachine->currentState);
             
             stateMachine->currentState = stateMachine->nextState;
             stateMachine->nextState = NULL;
 
-            enterState(context, entity, stateMachine->currentState);
+            if (stateMachine->enterState)
+                enterState(context, entity, stateMachine->currentState);
         }
 
         WarState* currentState = stateMachine->currentState;
@@ -468,6 +478,12 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
                 case WAR_STATE_PATROL:
                 {
                     updatePatrolState(context, entity, currentState);
+                    break;
+                }
+
+                case WAR_STATE_WAIT:
+                {
+                    updateWaitState(context, entity, currentState);
                     break;
                 }
             
