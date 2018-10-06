@@ -165,10 +165,20 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
-    WarEntityListInit(&map->entities);
-    WarEntityIdListInit(&map->selectedEntities);
+    WarEntityListOptions entityListOptions;
+    entityListOptions.defaultValue = NULL;
+    entityListOptions.equalsFn = equalsEntity;
+    entityListOptions.freeFn = free;
 
-    map->finder = initPathFinder(PATH_FINDING_BFS, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
+    WarEntityListInit(&map->entities, entityListOptions);
+
+    WarEntityIdListOptions entityIdListOptions;
+    entityIdListOptions.defaultValue = 0;
+    entityIdListOptions.equalsFn = equalsEntityId;
+
+    WarEntityIdListInit(&map->selectedEntities, entityIdListOptions);
+
+    map->finder = initPathFinder(PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
 
     context->map = map;
 
@@ -241,8 +251,12 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the starting roads
     {
+        WarRoadPieceListOptions options;
+        options.defaultValue = (WarRoadPiece){0};
+        options.equalsFn = equalsRoadPiece;
+
         WarRoadPieceList pieces;
-        WarRoadPieceListInit(&pieces);
+        WarRoadPieceListInit(&pieces, options);
 
         for(s32 i = 0; i < levelInfo->levelInfo.startRoadsCount; i++)
         {
@@ -287,14 +301,14 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
                 entity->unit.maxhp = 100;
                 entity->unit.hp = 100;
+
+                setStaticEntity(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey);
             }
 
             addStateMachineComponent(context, entity);
 
             WarState* idleState = createIdleState(context, entity, isDudeUnit(unit.type));
             changeNextState(context, entity, idleState, true, true);
-
-            setBlockTiles(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey);
         }
     }
 

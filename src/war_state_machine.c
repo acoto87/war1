@@ -60,6 +60,12 @@ void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bo
     stateMachine->enterState = enterState;
 }
 
+bool hasState(WarContext* context, WarEntity* entity, WarStateType type)
+{
+    WarStateMachineComponent* stateMachine = &entity->stateMachine;
+    return stateMachine->currentState && stateMachine->currentState->type == type;
+}
+
 bool hasNextState(WarContext* context, WarEntity* entity, WarStateType type)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
@@ -77,7 +83,7 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
         case WAR_STATE_WAIT:
         {
             vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-            setBlockTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+            setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
             setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, false);
             break;
@@ -95,11 +101,11 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             assert(inRange(nextIndex, 0, path->nodes.count));
 
             vec2 currentNode = path->nodes.items[currentIndex];
-            setBlockTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
+            setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
             vec2 nextNode = path->nodes.items[nextIndex];
             if (waitCount == 0)
-                setBlockTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
+                setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
             setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
             setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
@@ -118,11 +124,11 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             assert(inRange(nextIndex, 0, path->nodes.count));
 
             vec2 currentNode = path->nodes.items[currentIndex];
-            setBlockTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
+            setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
             vec2 nextNode = path->nodes.items[nextIndex];
             if (waitCount == 0)
-                setBlockTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
+                setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
             setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
             setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
@@ -245,7 +251,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     // if this unit is waiting
     if (state->move.waitCount > 0)
     {
-        if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
+        if (!isEmpty(map->finder, (s32)nextNode.x, (s32)nextNode.y))
         {
             // wait for a number of times before re-route
             if (state->move.waitCount < MOVE_WAIT_INTENTS)
@@ -274,7 +280,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             state->move.waitCount = 0;
         }
 
-        setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
 
@@ -308,12 +314,12 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
         }
 
         currentNode = path->nodes.items[state->move.currentIndex];
-        setBlockTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
 
         nextNode = path->nodes.items[state->move.nextIndex];
 
         // if the next node is occupied, check if the unit have to wait to re-route if necessary
-        if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
+        if (!isEmpty(map->finder, (s32)nextNode.x, (s32)nextNode.y))
         {
             state->move.waitCount++;
 
@@ -322,7 +328,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             return;
         }
 
-        setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
 }
@@ -344,7 +350,7 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     // if this unit is waiting
     if (state->patrol.waitCount > 0)
     {
-        if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
+        if (!isEmpty(map->finder, (s32)nextNode.x, (s32)nextNode.y))
         {
             // wait for a number of times before re-route
             if (state->patrol.waitCount < MOVE_WAIT_INTENTS)
@@ -373,7 +379,7 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
             state->patrol.waitCount = 0;
         }
 
-        setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
 
@@ -402,12 +408,12 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
         state->patrol.nextIndex += state->patrol.dir;
 
         currentNode = path->nodes.items[state->patrol.currentIndex];
-        setBlockTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
 
         nextNode = path->nodes.items[state->patrol.nextIndex];
 
         // if the next node is occupied, check if the unit have to wait to re-route if necessary
-        if (getTileValue(map->finder, (s32)nextNode.x, (s32)nextNode.y))
+        if (!isEmpty(map->finder, (s32)nextNode.x, (s32)nextNode.y))
         {
             state->patrol.waitCount++;
 
@@ -416,7 +422,7 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
             return;
         }
 
-        setBlockTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
 }

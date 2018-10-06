@@ -15,6 +15,8 @@ List of thing to do in no particular order
   * Add explosion animation to living npc units when clicking to many times
   * Manage components with a dictionary and not each entity having all the components
   * Create EntityManager to manage entities
+  * > Test the new implementation for lists
+  * > Make some inline functions to create options for lists creations
 
 * Animations/actions
   * (done) Add animations data for each unit type
@@ -57,13 +59,14 @@ List of thing to do in no particular order
   * Gathering resources state
   * (done) Make a Leave function when the states are leaving, and not just free them. Let that responsibility to the state itself.
 
-* Path finding
-  * (done) Add path finding algorithm to move the entities
-    * For now BFS is implemented.
-  * > Update the map in each interation of the state machines to support updating the paths when moving units
+* Pathfinding
+  * > Add path finding algorithm to move the entities
+    * (done) For now BFS is implemented.
+    * (done) Implement A* algorithm for pathfinding
+    * > Test the implementation of the A* algorithm for pathfinding
+  * (done) Update the map in each interation of the state machines to support updating the paths when moving units
   * (done) Include the current position of the unit in the path to support the patrol behaviour
   * When right click in the minimap, the selected unit should go there
-  * Implement A* algorithm for path finding
 
 * Collision system
 

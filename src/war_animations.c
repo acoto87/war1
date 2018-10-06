@@ -8,7 +8,12 @@ WarSpriteAnimation* createAnimation(char* name, WarSprite sprite, f32 frameDelay
     anim->frameDelay = frameDelay;
 
     anim->sprite = sprite;
-    WarS32ListInit(&anim->frames);
+
+    s32ListOptions options = {0};
+    options.defaultValue = 0;
+    options.equalsFn = equalsS32;
+
+    s32ListInit(&anim->frames,options);
 
     anim->animTime = 0;
     anim->status = WAR_ANIM_STATUS_NOT_STARTED;
@@ -23,7 +28,7 @@ void addAnimation(WarEntity* entity, WarSpriteAnimation* animation)
 
 void addAnimationFrame(WarSpriteAnimation* anim, s32 frameIndex)
 {
-    WarS32ListAdd(&anim->frames, frameIndex);
+    s32ListAdd(&anim->frames, frameIndex);
 }
 
 void addAnimationFrames(WarSpriteAnimation* anim, s32 count, s32 frameIndices[])
@@ -103,7 +108,7 @@ void freeAnimation(WarSpriteAnimation* animation)
     // here it crash, this doesn't need to be freed if is assigned like animation->name = "anim"?
     // free(animation->name);
 
-    WarS32ListFree(&animation->frames);
+    s32ListFree(&animation->frames);
     
     WarSprite* sprite = &animation->sprite;
     for(s32 i = 0; i < sprite->framesCount; i++)
@@ -118,7 +123,6 @@ void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
     if (index >= 0)
     {
         WarAnimationsComponent* animations = &entity->animations;
-        WarSpriteAnimation* animation = WarSpriteAnimationListRemoveAt(&animations->animations, index);
-        freeAnimation(animation);
+        WarSpriteAnimationListRemoveAt(&animations->animations, index);
     }
 }

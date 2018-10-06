@@ -60,7 +60,12 @@ void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, 
     entity->unit.resourceKind = resourceKind;
     entity->unit.amount = amount;
     entity->unit.currentActionIndex = 0;
-    WarUnitActionListInit(&entity->unit.actions);
+
+    WarUnitActionListOptions options = {0};
+    options.defaultValue = NULL;
+    options.equalsFn = equalsAction;
+
+    WarUnitActionListInit(&entity->unit.actions, options);
 }
 
 void removeUnitComponent(WarContext* context, WarEntity* entity)
@@ -105,7 +110,13 @@ void addAnimationsComponent(WarContext* context, WarEntity* entity)
 {
     entity->animations = (WarAnimationsComponent){0};
     entity->animations.enabled = true;
-    WarSpriteAnimationListInit(&entity->animations.animations);
+
+    WarSpriteAnimationListOptions options = {0};
+    options.defaultValue = NULL;
+    options.equalsFn = equalsSpriteAnimation;
+    options.freeFn = freeAnimation;
+
+    WarSpriteAnimationListInit(&entity->animations.animations, options);
 }
 
 void removeAnimationsComponent(WarContext* context, WarEntity* entity)
@@ -217,8 +228,8 @@ inline void removeEntityById(WarContext* context, WarEntityId id)
     assert(map);
     
     s32 index = findEntity(context, id);
-    WarEntity* entity = WarEntityListRemoveAt(&map->entities, index);
-
+    WarEntity* entity = map->entities.items[index];
+    
     removeTransformComponent(context, entity);
     removeSpriteComponent(context, entity);
     removeRoadComponent(context, entity);
@@ -226,7 +237,7 @@ inline void removeEntityById(WarContext* context, WarEntityId id)
     removeStateMachineComponent(context, entity);
     removeAnimationsComponent(context, entity);
 
-    free(entity);
+    WarEntityListRemoveAt(&map->entities, index);
 }
 
 // Render entities

@@ -423,7 +423,9 @@ void loadLevelPassable(WarContext *context, DatabaseEntry *entry)
     resource->type = WAR_RESOURCE_TYPE_LEVEL_PASSABLE;
     for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
-        resource->levelPassable.data[i] = readu16(rawResource.data, i * 2);
+        // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
+        u16 data = readu16(rawResource.data, i * 2);
+        resource->levelPassable.data[i] = data > 0 ? PATH_FINDER_DATA_STATIC : PATH_FINDER_DATA_EMPTY;
     }
 }
 

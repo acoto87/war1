@@ -67,16 +67,16 @@ internal bool equalsS32(const s32 a, const s32 b)
     return a == b;
 }
 
-shlDeclareList(WarS32List, s32)
-shlDefineList(WarS32List, s32, equalsS32, 0)
+shlDeclareList(s32List, s32)
+shlDefineList(s32List, s32)
 
 internal bool equalsVec2(const vec2 v1, const vec2 v2)
 {
     return v1.x == v2.x && v1.y == v2.y;
 }
 
-shlDeclareList(Vec2List, vec2)
-shlDefineList(Vec2List, vec2, equalsVec2, VEC2_ZERO)
+shlDeclareList(vec2List, vec2)
+shlDefineList(vec2List, vec2)
 
 //
 // Resources
@@ -269,7 +269,7 @@ typedef struct
     vec2 scale;
 
     f32 frameDelay;
-    WarS32List frames;
+    s32List frames;
     WarSprite sprite;
 
     f32 animTime;
@@ -282,7 +282,7 @@ internal bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSp
 }
 
 shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
-shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*, equalsSpriteAnimation, NULL)
+shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
 
 typedef enum
 {
@@ -422,7 +422,7 @@ internal bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
 }
 
 shlDeclareList(WarEntityIdList, WarEntityId)
-shlDefineList(WarEntityIdList, WarEntityId, equalsEntityId, 0)
+shlDefineList(WarEntityIdList, WarEntityId)
 
 typedef enum
 {
@@ -466,7 +466,7 @@ internal bool equalsRoadPiece(const WarRoadPiece p1, const WarRoadPiece p2)
 }
 
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
-shlDefineList(WarRoadPieceList, WarRoadPiece, equalsRoadPiece, (WarRoadPiece){0})
+shlDefineList(WarRoadPieceList, WarRoadPiece)
 
 typedef enum
 {
@@ -503,7 +503,7 @@ internal bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActio
 }
 
 shlDeclareList(WarUnitActionStepList, WarUnitActionStep)
-shlDefineList(WarUnitActionStepList, WarUnitActionStep, equalsActionStep, (WarUnitActionStep){WAR_ACTION_STEP_NONE})
+shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 
 typedef enum
 {
@@ -542,19 +542,25 @@ internal bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
 }
 
 shlDeclareList(WarUnitActionList, WarUnitAction*)
-shlDefineList(WarUnitActionList, WarUnitAction*, equalsAction, NULL)
+shlDefineList(WarUnitActionList, WarUnitAction*)
 
 typedef struct
 {
-    Vec2List nodes;
+    vec2List nodes;
 } WarMapPath;
 
 typedef enum
 {
     PATH_FINDING_BFS,
-    PATH_FINDING_DFS,
     PATH_FINDING_ASTAR
 } PathFindingType;
+
+typedef enum
+{
+    PATH_FINDER_DATA_EMPTY,
+    PATH_FINDER_DATA_STATIC,
+    PATH_FINDER_DATA_DYNAMIC
+} WarPathFinderDataType;
 
 typedef struct
 {
@@ -725,7 +731,7 @@ internal inline bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
 }
 
 shlDeclareList(WarEntityList, WarEntity*)
-shlDefineList(WarEntityList, WarEntity*, equalsEntity, NULL)
+shlDefineList(WarEntityList, WarEntity*)
 
 typedef enum
 {

@@ -1,8 +1,31 @@
+inline bool isEmpty(WarPathFinder finder, s32 x, s32 y)
+{
+    assert(inRange(x, 0, finder.width));
+    assert(inRange(y, 0, finder.height));
+    return finder.data[y * finder.width + x] == PATH_FINDER_DATA_EMPTY;
+}
+
+inline bool isStatic(WarPathFinder finder, s32 x, s32 y)
+{
+    assert(inRange(x, 0, finder.width));
+    assert(inRange(y, 0, finder.height));
+    return finder.data[y * finder.width + x] == PATH_FINDER_DATA_STATIC;
+}
+
+inline bool isDynamic(WarPathFinder finder, s32 x, s32 y)
+{
+    assert(inRange(x, 0, finder.width));
+    assert(inRange(y, 0, finder.height));
+    return finder.data[y * finder.width + x] == PATH_FINDER_DATA_DYNAMIC;
+}
+
 typedef struct
 {
     s32 x, y;
     s32 level;
     s32 parent;
+    s32 gScore;
+    s32 fScore;
 } WarMapNode;
 
 internal bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
@@ -10,8 +33,21 @@ internal bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
     return node1.x == node2.x && node1.y == node2.y;
 }
 
+internal int32_t compareMapNode(const WarMapNode node1, const WarMapNode node2)
+{
+    return node1.fScore - node2.fScore;
+}
+
+internal int32_t heuristicCost(const WarMapNode node1, const WarMapNode node2)
+{
+    return abs(node1.x - node2.x) + abs(node1.y - node2.y);
+}
+
 shlDeclareList(WarMapNodeList, WarMapNode)
-shlDefineList(WarMapNodeList, WarMapNode, equalsMapNode, (WarMapNode){0})
+shlDefineList(WarMapNodeList, WarMapNode)
+
+shlDeclareBinaryHeap(WarMapNodeHeap, WarMapNode)
+shlDefineBinaryHeap(WarMapNodeHeap, WarMapNode)
 
 internal const s32 dirC = 8;
 internal const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
@@ -19,7 +55,7 @@ internal const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
 
 internal WarMapNode createNode(s32 x, s32 y)
 {
-    return (WarMapNode){x, y, 0, -1};
+    return (WarMapNode){x, y, 0, -1, INT32_MAX, INT32_MAX};
 }
 
 WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 data[])
@@ -58,30 +94,32 @@ internal void setValueTiles(WarPathFinder finder, s32 startX, s32 startY, s32 wi
 
 void setFreeTiles(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height)
 {
-    setValueTiles(finder, startX, startY, width, height, 0);
+    setValueTiles(finder, startX, startY, width, height, PATH_FINDER_DATA_EMPTY);
 }
 
-void setBlockTiles(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height)
+void setDynamicEntity(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height)
 {
-    setValueTiles(finder, startX, startY, width, height, 1);
+    setValueTiles(finder, startX, startY, width, height, PATH_FINDER_DATA_DYNAMIC);
 }
 
-u16 getTileValue(WarPathFinder finder, s32 x, s32 y)
+void setStaticEntity(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height)
 {
-    assert(inRange(x, 0, finder.width));
-    assert(inRange(y, 0, finder.height));
-    return finder.data[y * finder.width + x];
+    setValueTiles(finder, startX, startY, width, height, PATH_FINDER_DATA_STATIC);
 }
 
 void freePath(WarMapPath path)
 {
-    Vec2ListFree(&path.nodes);
+    vec2ListFree(&path.nodes);
 }
 
-WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
+internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
+    WarMapNodeListOptions options = {0};
+    options.defaultValue = (WarMapNode){0};
+    options.equalsFn = equalsMapNode;
+
     WarMapNodeList nodes;
-    WarMapNodeListInit(&nodes);
+    WarMapNodeListInit(&nodes, options);
 
     WarMapNode startNode = createNode(startX, startY);
     WarMapNode endNode = createNode(endX, endY);
@@ -102,7 +140,7 @@ WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 
             if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
                 WarMapNode newNode = createNode(xx, yy);
-                if (finder.data[yy * finder.width + xx] == 0 || equalsMapNode(newNode, endNode))
+                if (isEmpty(finder, xx, yy) || equalsMapNode(newNode, endNode))
                 {
                     if (!WarMapNodeListContains(&nodes, newNode))
                     {
@@ -116,25 +154,146 @@ WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 
     }
 
     WarMapPath path = (WarMapPath){0};
-    Vec2ListInit(&path.nodes);
+
+    vec2ListOptions vec2ListOptions = {0};
+    vec2ListOptions.defaultValue = VEC2_ZERO;
+    vec2ListOptions.equalsFn = equalsVec2;
+    vec2ListInit(&path.nodes, vec2ListOptions);
 
     if (i < nodes.count)
     {
         WarMapNode node = nodes.items[i];
-        Vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+        vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
         
         while (node.parent >= 0)
         {
             node = nodes.items[node.parent];
-            Vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+            vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
         }
 
-        Vec2ListReverse(&path.nodes);
+        vec2ListReverse(&path.nodes);
     }
 
     WarMapNodeListFree(&nodes);
 
     return path;
+}
+
+internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
+{
+    WarMapNodeHeapOptions openSetOptions = {0};
+    openSetOptions.defaultValue = (WarMapNode){0};
+    openSetOptions.compareFn = compareMapNode;
+    openSetOptions.equalsFn = equalsMapNode;
+
+    // The set of currently discovered nodes that are not evaluated yet.
+    WarMapNodeHeap openSet;
+    WarMapNodeHeapInit(&openSet, openSetOptions);
+
+    WarMapNodeListOptions closedSetOptions = {0};
+    closedSetOptions.defaultValue = (WarMapNode){0};
+    closedSetOptions.equalsFn = equalsMapNode;
+
+    // The set of nodes already evaluated
+    WarMapNodeList closedSet;
+    WarMapNodeListInit(&closedSet, closedSetOptions);
+
+    WarMapNode startNode = createNode(startX, startY);
+    WarMapNode endNode = createNode(endX, endY);
+
+    // The cost of going from start to start is zero.
+    startNode.gScore = 0;
+
+    // For the first node, that value is completely heuristic.
+    startNode.fScore = heuristicCost(startNode, endNode);
+    
+    // Initially, only the start node is known.
+    WarMapNodeHeapPush(&openSet, startNode);
+
+    while (openSet.count > 0)
+    {
+        // the node in openSet having the lowest fScore value
+        WarMapNode current = WarMapNodeHeapPop(&openSet);
+        WarMapNodeListAdd(&closedSet, current);
+
+        if (equalsMapNode(current, endNode))
+            break;
+
+        for(s32 d = 0; d < dirC; d++)
+        {
+            s32 xx = current.x + dirX[d];
+            s32 yy = current.y + dirY[d];
+            if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
+            {
+                WarMapNode neighbor = createNode(xx, yy);
+                if (!isEmpty(finder, xx, yy) && !equalsMapNode(neighbor, endNode))
+                    continue;
+
+                // Ignore the neighbor which is already evaluated.
+                if (WarMapNodeListContains(&closedSet, neighbor))
+                    continue;
+
+                // The distance from start to a neighbor
+                s32 gScore = current.gScore + 1 /* cost from current to neighbor, can be a little higher for diagonals */;
+
+                // < 0 indicates if this node need to be inserted into the heap
+                s32 index = WarMapNodeHeapIndexOf(&openSet, neighbor);
+                if (index >= 0)
+                {
+                    neighbor = openSet.items[index];
+                    if (gScore >= neighbor.gScore)
+                        continue;
+                }
+
+                // This path is the best until now. Record it!
+                neighbor.parent = closedSet.count - 1;
+                neighbor.gScore = gScore;
+                neighbor.fScore = neighbor.gScore + heuristicCost(neighbor, endNode);
+
+                if (index >= 0)
+                    WarMapNodeHeapUpdate(&openSet, index, neighbor);
+                else
+                    WarMapNodeHeapPush(&openSet, neighbor);
+            }
+        }        
+    }
+
+    WarMapPath path = (WarMapPath){0};
+
+    vec2ListOptions vec2ListOptions = {0};
+    vec2ListOptions.defaultValue = VEC2_ZERO;
+    vec2ListOptions.equalsFn = equalsVec2;
+    vec2ListInit(&path.nodes, vec2ListOptions);
+
+    s32 index = closedSet.count - 1;
+    while (index >= 0)
+    {
+        WarMapNode node = closedSet.items[index];
+        vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+
+        index = node.parent;
+    }
+
+    vec2ListReverse(&path.nodes);
+
+    WarMapNodeHeapFree(&openSet);
+    WarMapNodeListFree(&closedSet);
+
+    return path;
+}
+
+WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
+{
+    switch (finder.type)
+    {
+        case PATH_FINDING_BFS: return bfs(finder, startX, startY, endX, endY);
+        case PATH_FINDING_ASTAR: return astar(finder, startX, startY, endX, endY);
+        default:
+        {
+            logWarning("Unkown path finding type %d, defaulting to %d", finder.type, PATH_FINDING_ASTAR);
+            return astar(finder, startX, startY, endX, endY);
+        }
+    }
 }
 
 bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIndex)
@@ -157,13 +316,10 @@ bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIn
         s32 maxIndex = max(fromIndex, toIndex);
 
         // remove the nodes in the range [fromIndex, toIndex] or [toIndex, fromIndex] from current to last remaining nodes of the current path 
-        // TODO: make a RemoveRange function for lists
-        for(s32 i = maxIndex; i >= minIndex; i--)
-            Vec2ListRemoveAt(&path->nodes, i);
+        vec2ListRemoveAtRange(&path->nodes, minIndex, maxIndex - minIndex + 1);
 
         // if a path was found subsitute the portion of the path with the new one
-        for(s32 i = 0; i < newPath.nodes.count; i++)
-            Vec2ListInsert(&path->nodes, minIndex + i, newPath.nodes.items[i]);
+        vec2ListInsertRange(&path->nodes, minIndex, newPath.nodes.count, newPath.nodes.items);
 
         result = true;
     }

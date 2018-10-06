@@ -58,7 +58,12 @@ WarUnitAction* createUnitAction(WarUnitActionType type)
     action->type = type;
     action->loop = true;
     action->status = WAR_ACTION_NOT_STARTED;
-    WarUnitActionStepListInit(&action->steps);
+
+    WarUnitActionStepListOptions options = {0};
+    options.defaultValue = (WarUnitActionStep){WAR_ACTION_STEP_NONE};
+    options.equalsFn = equalsActionStep;
+
+    WarUnitActionStepListInit(&action->steps, options);
 
     action->waitCount = 0;
     action->currentStepIndex = -1;
