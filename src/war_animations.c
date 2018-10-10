@@ -9,11 +9,7 @@ WarSpriteAnimation* createAnimation(char* name, WarSprite sprite, f32 frameDelay
 
     anim->sprite = sprite;
 
-    s32ListOptions options = {0};
-    options.defaultValue = 0;
-    options.equalsFn = equalsS32;
-
-    s32ListInit(&anim->frames,options);
+    s32ListInit(&anim->frames, s32ListDefaultOptions);
 
     anim->animTime = 0;
     anim->status = WAR_ANIM_STATUS_NOT_STARTED;

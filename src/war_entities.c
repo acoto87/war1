@@ -61,11 +61,7 @@ void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, 
     entity->unit.amount = amount;
     entity->unit.currentActionIndex = 0;
 
-    WarUnitActionListOptions options = {0};
-    options.defaultValue = NULL;
-    options.equalsFn = equalsAction;
-
-    WarUnitActionListInit(&entity->unit.actions, options);
+    WarUnitActionListInit(&entity->unit.actions, WarUnitActionListDefaultOptions);
 }
 
 void removeUnitComponent(WarContext* context, WarEntity* entity)
@@ -110,13 +106,7 @@ void addAnimationsComponent(WarContext* context, WarEntity* entity)
 {
     entity->animations = (WarAnimationsComponent){0};
     entity->animations.enabled = true;
-
-    WarSpriteAnimationListOptions options = {0};
-    options.defaultValue = NULL;
-    options.equalsFn = equalsSpriteAnimation;
-    options.freeFn = freeAnimation;
-
-    WarSpriteAnimationListInit(&entity->animations.animations, options);
+    WarSpriteAnimationListInit(&entity->animations.animations, WarSpriteAnimationListDefaultOptions);
 }
 
 void removeAnimationsComponent(WarContext* context, WarEntity* entity)

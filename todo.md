@@ -6,17 +6,19 @@ List of thing to do in no particular order
   * Check for memory leaks in the removing animations functionality
 
 * General
-  * Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over
-  * Manage the gold in the mines and explode it when the gold is over
-  * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
   * Map scroll with the mouse cursor at the edge
   * Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
-  * Add ruins to collapsed buildings
-  * Add explosion animation to living npc units when clicking to many times
   * Manage components with a dictionary and not each entity having all the components
   * Create EntityManager to manage entities
   * > Test the new implementation for lists
-  * > Make some inline functions to create options for lists creations
+  * (done) Make some inline functions to create options for lists creations
+
+* Gameplay
+  * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
+  * Manage the gold in the mines and explode it when the gold is over
+  * Add ruins to collapsed buildings
+  * Add explosion animation to living npc units when clicking to many times
+  * Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over
 
 * Animations/actions
   * (done) Add animations data for each unit type
@@ -49,7 +51,9 @@ List of thing to do in no particular order
     "wait 1" 
   }
   ```
-  
+  * Move actions system to animations, again? :| 
+    The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
+
 * State machine
   * > Idle state
   * > Move state

@@ -70,6 +70,8 @@ internal bool equalsS32(const s32 a, const s32 b)
 shlDeclareList(s32List, s32)
 shlDefineList(s32List, s32)
 
+#define s32ListDefaultOptions (s32ListOptions){0, equalsS32, NULL}
+
 internal bool equalsVec2(const vec2 v1, const vec2 v2)
 {
     return v1.x == v2.x && v1.y == v2.y;
@@ -77,6 +79,8 @@ internal bool equalsVec2(const vec2 v1, const vec2 v2)
 
 shlDeclareList(vec2List, vec2)
 shlDefineList(vec2List, vec2)
+
+#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, equalsVec2, NULL}
 
 //
 // Resources
@@ -284,6 +288,8 @@ internal bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSp
 shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
 shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
 
+#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, freeAnimation}
+
 typedef enum
 {
     WAR_RESOURCE_NONE,
@@ -424,6 +430,8 @@ internal bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
 shlDeclareList(WarEntityIdList, WarEntityId)
 shlDefineList(WarEntityIdList, WarEntityId)
 
+#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL}
+
 typedef enum
 {
     WAR_ENTITY_TYPE_NONE,
@@ -459,6 +467,8 @@ typedef struct
     u8 player;
 } WarRoadPiece;
 
+#define WarRoadPieceEmpty (WarRoadPiece){0}
+
 internal bool equalsRoadPiece(const WarRoadPiece p1, const WarRoadPiece p2)
 {
     return p1.type == p2.type && p1.player == p2.player &&
@@ -467,6 +477,8 @@ internal bool equalsRoadPiece(const WarRoadPiece p1, const WarRoadPiece p2)
 
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarRoadPieceList, WarRoadPiece)
+
+#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL}
 
 typedef enum
 {
@@ -497,6 +509,8 @@ typedef struct
     s32 param;
 } WarUnitActionStep;
 
+#define WarUnitActionStepEmpty (WarUnitActionStep){WAR_ACTION_STEP_NONE}
+
 internal bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep step2)
 {
     return step1.type == step2.type && step1.param == step2.param;
@@ -504,6 +518,8 @@ internal bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActio
 
 shlDeclareList(WarUnitActionStepList, WarUnitActionStep)
 shlDefineList(WarUnitActionStepList, WarUnitActionStep)
+
+#define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, equalsActionStep, NULL}
 
 typedef enum
 {
@@ -543,6 +559,8 @@ internal bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
 
 shlDeclareList(WarUnitActionList, WarUnitAction*)
 shlDefineList(WarUnitActionList, WarUnitAction*)
+
+#define WarUnitActionListDefaultOptions (WarUnitActionListOptions){NULL, equalsAction, free}
 
 typedef struct
 {
@@ -732,6 +750,8 @@ internal inline bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
 
 shlDeclareList(WarEntityList, WarEntity*)
 shlDefineList(WarEntityList, WarEntity*)
+
+#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, free}
 
 typedef enum
 {

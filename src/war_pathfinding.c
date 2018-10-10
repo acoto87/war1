@@ -28,6 +28,8 @@ typedef struct
     s32 fScore;
 } WarMapNode;
 
+#define WarMapNodeEmpty (WarMapNode){0}
+
 internal bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
 {
     return node1.x == node2.x && node1.y == node2.y;
@@ -48,6 +50,9 @@ shlDefineList(WarMapNodeList, WarMapNode)
 
 shlDeclareBinaryHeap(WarMapNodeHeap, WarMapNode)
 shlDefineBinaryHeap(WarMapNodeHeap, WarMapNode)
+
+#define WarMapNodeListDefaultOptions (WarMapNodeListOptions){WarMapNodeEmpty, equalsMapNode, NULL}
+#define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareMapNode, NULL}
 
 internal const s32 dirC = 8;
 internal const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
@@ -114,12 +119,8 @@ void freePath(WarMapPath path)
 
 internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
-    WarMapNodeListOptions options = {0};
-    options.defaultValue = (WarMapNode){0};
-    options.equalsFn = equalsMapNode;
-
     WarMapNodeList nodes;
-    WarMapNodeListInit(&nodes, options);
+    WarMapNodeListInit(&nodes, WarMapNodeListDefaultOptions);
 
     WarMapNode startNode = createNode(startX, startY);
     WarMapNode endNode = createNode(endX, endY);
@@ -154,11 +155,7 @@ internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     }
 
     WarMapPath path = (WarMapPath){0};
-
-    vec2ListOptions vec2ListOptions = {0};
-    vec2ListOptions.defaultValue = VEC2_ZERO;
-    vec2ListOptions.equalsFn = equalsVec2;
-    vec2ListInit(&path.nodes, vec2ListOptions);
+    vec2ListInit(&path.nodes, vec2ListDefaultOptions);
 
     if (i < nodes.count)
     {
@@ -181,22 +178,13 @@ internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
 
 internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
-    WarMapNodeHeapOptions openSetOptions = {0};
-    openSetOptions.defaultValue = (WarMapNode){0};
-    openSetOptions.compareFn = compareMapNode;
-    openSetOptions.equalsFn = equalsMapNode;
-
     // The set of currently discovered nodes that are not evaluated yet.
     WarMapNodeHeap openSet;
-    WarMapNodeHeapInit(&openSet, openSetOptions);
-
-    WarMapNodeListOptions closedSetOptions = {0};
-    closedSetOptions.defaultValue = (WarMapNode){0};
-    closedSetOptions.equalsFn = equalsMapNode;
+    WarMapNodeHeapInit(&openSet, WarMapNodeHeapDefaultOptions);
 
     // The set of nodes already evaluated
     WarMapNodeList closedSet;
-    WarMapNodeListInit(&closedSet, closedSetOptions);
+    WarMapNodeListInit(&closedSet, WarMapNodeListDefaultOptions);
 
     WarMapNode startNode = createNode(startX, startY);
     WarMapNode endNode = createNode(endX, endY);
@@ -236,8 +224,8 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
                 // The distance from start to a neighbor
                 s32 gScore = current.gScore + 1 /* cost from current to neighbor, can be a little higher for diagonals */;
 
-                // < 0 indicates if this node need to be inserted into the heap
-                s32 index = WarMapNodeHeapIndexOf(&openSet, neighbor);
+                // < 0 indicates that this node need to be inserted into the heap
+                s32 index = WarMapNodeListIndexOf(&openSet, neighbor);
                 if (index >= 0)
                 {
                     neighbor = openSet.items[index];
@@ -255,7 +243,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
                 else
                     WarMapNodeHeapPush(&openSet, neighbor);
             }
-        }        
+        }
     }
 
     WarMapPath path = (WarMapPath){0};

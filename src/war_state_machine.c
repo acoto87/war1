@@ -243,6 +243,8 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     assert(inRange(state->move.currentIndex, 0, path->nodes.count));
     assert(inRange(state->move.nextIndex, 0, path->nodes.count));
 
+    WarUnitStats stats = getUnitStats(entity->unit.type);
+
     vec2 currentNode = path->nodes.items[state->move.currentIndex];
     vec2 nextNode = path->nodes.items[state->move.nextIndex];
 
@@ -288,7 +290,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 target = vec2TileToMapCoordinates(nextNode, true);
 
     vec2 direction = vec2Normalize(vec2Subv(target, position));
-    vec2 step = vec2Mulf(direction, 20 * context->deltaTime);
+    vec2 step = vec2Mulf(direction, stats.pixelsPerSeconds[0] * context->deltaTime);
     vec2 newPosition = vec2Addv(position, step);
 
     setUnitCenterPosition(entity, newPosition);
@@ -342,6 +344,8 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     assert(inRange(state->patrol.currentIndex, 0, path->nodes.count));
     assert(inRange(state->patrol.nextIndex, 0, path->nodes.count));
 
+    WarUnitStats stats = getUnitStats(entity->unit.type);
+
     vec2 currentNode = path->nodes.items[state->patrol.currentIndex];
     vec2 nextNode = path->nodes.items[state->patrol.nextIndex];
 
@@ -387,7 +391,7 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 target = vec2TileToMapCoordinates(nextNode, true);
 
     vec2 direction = vec2Normalize(vec2Subv(target, position));
-    vec2 step = vec2Mulf(direction, 20 * context->deltaTime);
+    vec2 step = vec2Mulf(direction, stats.pixelsPerSeconds[0] * context->deltaTime);
     vec2 newPosition = vec2Addv(position, step);
 
     setUnitCenterPosition(entity, newPosition);

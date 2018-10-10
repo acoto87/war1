@@ -165,18 +165,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
-    WarEntityListOptions entityListOptions;
-    entityListOptions.defaultValue = NULL;
-    entityListOptions.equalsFn = equalsEntity;
-    entityListOptions.freeFn = free;
-
-    WarEntityListInit(&map->entities, entityListOptions);
-
-    WarEntityIdListOptions entityIdListOptions;
-    entityIdListOptions.defaultValue = 0;
-    entityIdListOptions.equalsFn = equalsEntityId;
-
-    WarEntityIdListInit(&map->selectedEntities, entityIdListOptions);
+    WarEntityListInit(&map->entities, WarEntityListDefaultOptions);
+    WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
 
     map->finder = initPathFinder(PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
 
@@ -251,12 +241,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the starting roads
     {
-        WarRoadPieceListOptions options;
-        options.defaultValue = (WarRoadPiece){0};
-        options.equalsFn = equalsRoadPiece;
-
         WarRoadPieceList pieces;
-        WarRoadPieceListInit(&pieces, options);
+        WarRoadPieceListInit(&pieces, WarRoadPieceListDefaultOptions);
 
         for(s32 i = 0; i < levelInfo->levelInfo.startRoadsCount; i++)
         {
@@ -279,6 +265,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit unit = levelInfo->levelInfo.startEntities[i];
+
+            if (unit.type == WAR_UNIT_FOOTMAN)
+            {
+                unit.type = WAR_UNIT_RAIDER;
+            }
             
             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
             addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.resourceKind, unit.amount);
