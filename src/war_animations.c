@@ -49,7 +49,7 @@ void updateAnimation(WarContext* context, WarSpriteAnimation* anim)
     }
 
     anim->status = WAR_ANIM_STATUS_RUNNING;
-    anim->animTime += (context->deltaTime / (anim->frameDelay * anim->frames.count));
+    anim->animTime += (context->deltaTime / (anim->frameDelay * anim->frames.count)) * context->globalSpeed;
 
     if (anim->animTime >= 1)
     {

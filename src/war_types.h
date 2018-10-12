@@ -548,7 +548,7 @@ typedef struct
     WarUnitActionStatus status;
     WarUnitActionStepList steps;
     
-    s32 waitCount;
+    f32 waitCount;
     s32 currentStepIndex;
 } WarUnitAction;
 
@@ -697,6 +697,8 @@ typedef struct
     s32 hp;
     s32 maxhp;
 
+    s32 level;
+
     s32 currentActionIndex;
     WarUnitActionList actions;
 } WarUnitComponent;
@@ -804,6 +806,7 @@ typedef struct
     WarPathFinder finder;
 
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
+    WarSpriteAnimationList animations;
 } WarMap;
 
 typedef enum
@@ -861,6 +864,7 @@ typedef struct
     bool paused;
 
     f32 globalScale;
+    f32 globalSpeed;
 
     u32 originalWindowWidth;
     u32 originalWindowHeight;

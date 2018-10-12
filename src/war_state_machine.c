@@ -131,7 +131,7 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
                 setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
             setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-            setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
+            // setAction(context, entity, WAR_ACTION_TYPE_WALK, true, false);
             break;
         }
 
@@ -217,6 +217,8 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
                 unit->direction = WAR_DIRECTION_NORTH_WEST;
             else if(unit->direction >= WAR_DIRECTION_COUNT)
                 unit->direction = WAR_DIRECTION_NORTH;
+
+            unit->direction = WAR_DIRECTION_EAST;
         }
     }
 
@@ -244,11 +246,11 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     assert(inRange(state->move.nextIndex, 0, path->nodes.count));
 
     WarUnitStats stats = getUnitStats(entity->unit.type);
+    vec2 unitSize = getUnitSize(entity);
 
     vec2 currentNode = path->nodes.items[state->move.currentIndex];
     vec2 nextNode = path->nodes.items[state->move.nextIndex];
 
-    vec2 unitSize = getUnitSize(entity);
 
     // if this unit is waiting
     if (state->move.waitCount > 0)
@@ -290,7 +292,8 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 target = vec2TileToMapCoordinates(nextNode, true);
 
     vec2 direction = vec2Normalize(vec2Subv(target, position));
-    vec2 step = vec2Mulf(direction, stats.pixelsPerSeconds[0] * context->deltaTime);
+    f32 speed = stats.speeds[entity->unit.level] * context->globalSpeed;
+    vec2 step = vec2Mulf(direction, speed * context->deltaTime);
     vec2 newPosition = vec2Addv(position, step);
 
     setUnitCenterPosition(entity, newPosition);
@@ -391,7 +394,7 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 target = vec2TileToMapCoordinates(nextNode, true);
 
     vec2 direction = vec2Normalize(vec2Subv(target, position));
-    vec2 step = vec2Mulf(direction, stats.pixelsPerSeconds[0] * context->deltaTime);
+    vec2 step = vec2Mulf(direction, stats.speeds[0] * context->deltaTime);
     vec2 newPosition = vec2Addv(position, step);
 
     setUnitCenterPosition(entity, newPosition);

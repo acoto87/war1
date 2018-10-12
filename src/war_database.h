@@ -224,7 +224,7 @@ DatabaseEntry assets[] =
     { 294, DB_ENTRY_TYPE_SPRITE,            "lothar",                                       191, 217, 0 },
     { 295, DB_ENTRY_TYPE_SPRITE,            "wounded",                                      191, 217, 0 },
     { 296, DB_ENTRY_TYPE_SPRITE,            "garona",                                       191, 217, 0 },
-    { 297, DB_ENTRY_TYPE_SPRITE,            "giant",                                        191, 217, 0 },
+    { 297, DB_ENTRY_TYPE_SPRITE,            "ogre",                                         191, 217, 0 },
     { 298, DB_ENTRY_TYPE_SPRITE,            "spider",                                       191, 217, 0 },
     { 299, DB_ENTRY_TYPE_SPRITE,            "slime",                                        191, 217, 0 },
     { 300, DB_ENTRY_TYPE_SPRITE,            "Unit_300",                                     191, 217, 0 },

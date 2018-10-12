@@ -1,6 +1,8 @@
 #define MAX_ACTIONS 6
 #define MAX_ACTION_STEPS 32
 
+#define __frameCountToSeconds(f) ((f32)(f)/FRAMES_PER_SECONDS)
+
 typedef struct
 {
     s32 walkFramesCount;
@@ -77,17 +79,17 @@ WarUnitAction* buildWalkAction(s32 nframes, s32 frames[], s32 walkSpeed, bool di
     action->directional = directional;
 
     s32 halfIndex = nframes % 2 == 0 ? nframes / 2 : (nframes + 1) / 2;
-    s32 halfIndex2 = halfIndex - 1;
 
     addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
 
     // This code convert the frames sequence in this WAR_ACTION_STEP_FRAME sequence.
-    // (this code is extracted from the War1gus project, built with the Stratagus engine)
+    // (this code is ported from the War1gus project, built with the Stratagus engine)
     // 
-    // 1 frame  a        => a 0 a 0 a 0 a 0
-    // 2 frames a b      => a 0 b 0 a 0 b 0
-    // 3 frames a b c    => a b a 0 c b c 0
-    // 4 frames a b c d  => a b a 0 d c d 0
+    // 1 frame  a         => a 0 a 0 a 0 a 0
+    // 2 frames a b       => a 0 b 0 a 0 b 0
+    // 3 frames a b c     => a b a 0 c b c 0
+    // 4 frames a b c d   => a b a 0 d c d 0
+    // 5 frames a b c d e => a b c b a e d c d e
     //
     // This code is used with a previous steps calling 'getFrameNumbers' 
     // and construct the base frame sequences for walk, attack and death animations.
@@ -158,7 +160,6 @@ WarUnitAction* buildWalkAction(s32 nframes, s32 frames[], s32 walkSpeed, bool di
         addActionStep(action, WAR_ACTION_STEP_WAIT, walkSpeed);
         actionFrames--;
     }
-
 
     addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addActionStep(action, WAR_ACTION_STEP_FRAME, 0);
@@ -392,11 +393,28 @@ void buildUnitActions(WarEntity* entity)
         case WAR_UNIT_KNIGHT:
         case WAR_UNIT_RAIDER:
         {
-            walkSpeed = 3;
+            walkSpeed = 10;
             WarUnitFrameNumbers frames = frameNumbers_5_5_5_5;
 
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
-            WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
+
+            WarUnitAction* walkAction = createUnitAction(WAR_ACTION_TYPE_WALK);
+            walkAction->directional = directional;
+
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
+
+            s32 walkFrames[] = {15, 30, 45, 60, 0};
+            for(s32 i = 0; i < arrayLength(walkFrames); i++)
+            {
+                addActionStep(walkAction, WAR_ACTION_STEP_FRAME, walkFrames[i]);
+                addActionStep(walkAction, WAR_ACTION_STEP_MOVE, 4);
+                addActionStep(walkAction, WAR_ACTION_STEP_WAIT, walkSpeed);
+            }
+            
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
+            addActionStep(walkAction, WAR_ACTION_STEP_FRAME, 0);
+            addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 1);
+
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
             WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
 
@@ -562,7 +580,24 @@ void buildUnitActions(WarEntity* entity)
             WarUnitFrameNumbers frames = frameNumbers_5_5_4_5;
 
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
-            WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
+            
+            WarUnitAction* walkAction = createUnitAction(WAR_ACTION_TYPE_WALK);
+            walkAction->directional = directional;
+
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
+
+            s32 walkFrames[] = {15, 30, 45, 60, 0};
+            for(s32 i = 0; i < arrayLength(walkFrames); i++)
+            {
+                addActionStep(walkAction, WAR_ACTION_STEP_FRAME, walkFrames[i]);
+                addActionStep(walkAction, WAR_ACTION_STEP_MOVE, 4);
+                addActionStep(walkAction, WAR_ACTION_STEP_WAIT, walkSpeed);
+            }
+            
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
+            addActionStep(walkAction, WAR_ACTION_STEP_FRAME, 0);
+            addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 1);
+
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
             WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
 
@@ -615,7 +650,7 @@ void buildUnitActions(WarEntity* entity)
             waitTime = 8;
             WarUnitFrameNumbers frames = frameNumbers_5_3_5_3;
 
-            s32 idleFrames[] = {1, 5, 15, 30};
+            s32 idleFrames[] = {0, 5, 15, 30};
             WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, waitTime, directional);
 
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
@@ -633,7 +668,24 @@ void buildUnitActions(WarEntity* entity)
             WarUnitFrameNumbers frames = frameNumbers_5_5_5_5;
 
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
-            WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
+            
+            WarUnitAction* walkAction = createUnitAction(WAR_ACTION_TYPE_WALK);
+            walkAction->directional = directional;
+
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
+
+            s32 walkFrames[] = {15, 30, 45, 60, 0};
+            for(s32 i = 0; i < arrayLength(walkFrames); i++)
+            {
+                addActionStep(walkAction, WAR_ACTION_STEP_FRAME, walkFrames[i]);
+                addActionStep(walkAction, WAR_ACTION_STEP_MOVE, 4);
+                addActionStep(walkAction, WAR_ACTION_STEP_WAIT, walkSpeed);
+            }
+            
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
+            addActionStep(walkAction, WAR_ACTION_STEP_FRAME, 0);
+            addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 1);
+
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
             WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
 
@@ -849,7 +901,7 @@ void updateAction(WarContext* context, WarEntity* entity)
     WarUnitActionStep step = action->steps.items[action->currentStepIndex];
     if (step.type == WAR_ACTION_STEP_WAIT)
     {
-        action->waitCount--;
+        action->waitCount -= context->deltaTime;
         if (action->waitCount > 0)
             return;
         
@@ -939,7 +991,7 @@ void updateAction(WarContext* context, WarEntity* entity)
         step = action->steps.items[action->currentStepIndex];
     }
 
-    action->waitCount = step.param;
+    action->waitCount = __frameCountToSeconds(step.param) / context->globalSpeed;
 }
 
 // peasant: 40s

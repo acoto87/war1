@@ -189,7 +189,7 @@ typedef struct
     s32 goldCost;
     s32 lumberCost;
     s32 decay;
-    f32 pixelsPerSeconds[3];
+    f32 speeds[3];
 } WarUnitStats;
 
 // Move speeds (equivalent for orcs):

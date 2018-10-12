@@ -427,6 +427,8 @@ typedef struct
     f32 width, height;
 } rect;
 
+#define RECT_EMPTY (rect){0.0f, 0.0f, 0.0f, 0.0f}
+
 inline rect rectf(f32 x, f32 y, f32 width, f32 height)
 {
     return (rect){x, y, width, height}; 

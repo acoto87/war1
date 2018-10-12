@@ -1,15 +1,16 @@
 #define FRAMES_PER_SECONDS 60
 #define SECONDS_PER_FRAME (1.0f/FRAMES_PER_SECONDS)
 
-#define MOVE_EPSILON 0.2f
+#define MOVE_EPSILON 1.0f
 #define MOVE_WAIT_INTENTS 2
 #define MOVE_WAIT_TIME 1.0f
 
 // #define DEBUG_RENDER_MAP_GRID
-#define DEBUG_RENDER_PASSABLE_INFO
+// #define DEBUG_RENDER_PASSABLE_INFO
 #define DEBUG_RENDER_UNIT_PATHS
 // #define DEBUG_RENDER_UNIT_INFO
 // #define DEBUG_RENDER_UNIT_ANIMATIONS
+// #define DEBUG_RENDER_MAP_ANIMATIONS
 
 inline vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
 {
