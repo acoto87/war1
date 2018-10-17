@@ -16,7 +16,15 @@ inline bool isDynamic(WarPathFinder finder, s32 x, s32 y)
 {
     assert(inRange(x, 0, finder.width));
     assert(inRange(y, 0, finder.height));
-    return finder.data[y * finder.width + x] == PATH_FINDER_DATA_DYNAMIC;
+    u16 value = finder.data[y * finder.width + x];
+    return value > PATH_FINDER_DATA_EMPTY && value < PATH_FINDER_DATA_STATIC;
+}
+
+inline bool isDynamicOrEntity(WarPathFinder finder, s32 x, s32 y, WarEntityId id)
+{
+    assert(inRange(x, 0, finder.width));
+    assert(inRange(y, 0, finder.height));
+    return finder.data[y * finder.width + x] == id;
 }
 
 inline WarMapPath clonePath(WarMapPath path)
@@ -110,9 +118,9 @@ void setFreeTiles(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 h
     setValueTiles(finder, startX, startY, width, height, PATH_FINDER_DATA_EMPTY);
 }
 
-void setDynamicEntity(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height)
+void setDynamicEntity(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, WarEntityId id)
 {
-    setValueTiles(finder, startX, startY, width, height, PATH_FINDER_DATA_DYNAMIC);
+    setValueTiles(finder, startX, startY, width, height, id);
 }
 
 void setStaticEntity(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height)

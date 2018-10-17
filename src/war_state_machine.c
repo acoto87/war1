@@ -149,10 +149,10 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             }
 
             vec2 currentNode = path.nodes.items[state->move.pathNodeIndex];
-            setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
+            setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
             vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
-            setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
+            setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
             setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
 
@@ -203,7 +203,8 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
             if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
             {
                 vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
-                setFreeTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
+                if (isDynamicOrEntity(map->finder, currentNode.x, currentNode.y, entity->id))
+                    setFreeTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
             }
 
             // if the unit are leaving the move state it means that they couldn't advance anymore
@@ -217,7 +218,8 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
             if (inRange(state->move.pathNodeIndex + 1, 0, path->nodes.count))
             {
                 vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-                setFreeTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+                if (isDynamicOrEntity(map->finder, nextNode.x, nextNode.y, entity->id))
+                    setFreeTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
             }
 
             break;
@@ -327,7 +329,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             state->move.waitCount = 0;
         }
 
-        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
 
         // level 0 -> 1.0f, level 1 -> 0.9f, level 2 -> 0.8f
@@ -392,7 +394,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
         }
 
         currentNode = path->nodes.items[state->move.pathNodeIndex];
-        setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y, entity->id);
 
         nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
 
@@ -420,7 +422,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             return;
         }
 
-        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
+        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
 }

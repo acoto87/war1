@@ -576,9 +576,8 @@ typedef enum
 
 typedef enum
 {
-    PATH_FINDER_DATA_EMPTY,
-    PATH_FINDER_DATA_STATIC,
-    PATH_FINDER_DATA_DYNAMIC
+    PATH_FINDER_DATA_EMPTY = 0,
+    PATH_FINDER_DATA_STATIC = (1 << 16) - 1
 } WarPathFinderDataType;
 
 typedef struct
