@@ -263,104 +263,101 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the starting entities
     {
-        s32 x = 16, y = 31;
-        WarUnitType type;
-        for(s32 i = 0; i <= WAR_UNIT_SPEARMAN; i++)
-        {
-            type = i;
-            
-            if (type == WAR_UNIT_KNIGHT || type == WAR_UNIT_RAIDER)
-            {
-                for(s32 l = 0; l < 3; l++)
-                {
-                    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-                    addUnitComponent(context, entity, type, x, y, 0, WAR_RESOURCE_NONE, 0);
-                    entity->unit.level = l;
-
-                    addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
-
-                    WarUnitsData unitData = getUnitsData(type);
-                    s32 spriteIndex = unitData.resourceIndex;
-                    if (spriteIndex == 0)
-                    {
-                        logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
-                        spriteIndex = 279;
-                    }
-                    addSpriteComponentFromResource(context, entity, spriteIndex);
-
-                    buildUnitActions(entity);
-
-                    addStateMachineComponent(context, entity);
-
-                    WarState* idleState = createIdleState(context, entity, isDudeUnit(type));
-                    changeNextState(context, entity, idleState, true, true);
-
-                    y++;
-                }
-            }
-            else
-            {
-                type = WAR_UNIT_WATERELEMENTAL;
-
-                WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-                addUnitComponent(context, entity, type, x, y, 0, WAR_RESOURCE_NONE, 0);
-                addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
-
-                WarUnitsData unitData = getUnitsData(type);
-                s32 spriteIndex = unitData.resourceIndex;
-                if (spriteIndex == 0)
-                {
-                    logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
-                    spriteIndex = 279;
-                }
-                addSpriteComponentFromResource(context, entity, spriteIndex);
-
-                buildUnitActions(entity);
-
-                addStateMachineComponent(context, entity);
-
-                WarState* idleState = createIdleState(context, entity, isDudeUnit(type));
-                changeNextState(context, entity, idleState, true, true);
-
-                y++;
-            }
-        }
-        
-
-        // for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
+        // s32 x = 16, y = 31;
+        // WarUnitType type;
+        // for(s32 i = 0; i <= WAR_UNIT_SPEARMAN; i++)
         // {
-        //     WarLevelUnit unit = levelInfo->levelInfo.startEntities[i];
-
-        //     WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-        //     addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.resourceKind, unit.amount);
-        //     addTransformComponent(context, entity, vec2i(unit.x * MEGA_TILE_WIDTH, unit.y * MEGA_TILE_HEIGHT));
-
-        //     WarUnitsData unitData = getUnitsData(unit.type);
-        //     s32 spriteIndex = unitData.resourceIndex;
-        //     if (spriteIndex == 0)
+        //     type = i;
+            
+        //     if (type == WAR_UNIT_KNIGHT || type == WAR_UNIT_RAIDER)
         //     {
-        //         logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", unit.type);
-        //         spriteIndex = 279;
+        //         for(s32 l = 0; l < 3; l++)
+        //         {
+        //             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
+        //             addUnitComponent(context, entity, type, x, y, 0, WAR_RESOURCE_NONE, 0);
+        //             entity->unit.level = l;
+
+        //             addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
+
+        //             WarUnitsData unitData = getUnitsData(type);
+        //             s32 spriteIndex = unitData.resourceIndex;
+        //             if (spriteIndex == 0)
+        //             {
+        //                 logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
+        //                 spriteIndex = 279;
+        //             }
+        //             addSpriteComponentFromResource(context, entity, spriteIndex);
+
+        //             buildUnitActions(entity);
+
+        //             addStateMachineComponent(context, entity);
+
+        //             WarState* idleState = createIdleState(context, entity, isDudeUnit(type));
+        //             changeNextState(context, entity, idleState, true, true);
+
+        //             y++;
+        //         }
         //     }
-        //     addSpriteComponentFromResource(context, entity, spriteIndex);
-
-        //     buildUnitActions(entity);
-
-        //     if (isBuildingUnit(unit.type))
+        //     else
         //     {
-        //         addAnimationsComponent(context, entity);
+        //         WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
+        //         addUnitComponent(context, entity, type, x, y, 0, WAR_RESOURCE_NONE, 0);
+        //         addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
 
-        //         entity->unit.maxhp = 100;
-        //         entity->unit.hp = 100;
+        //         WarUnitsData unitData = getUnitsData(type);
+        //         s32 spriteIndex = unitData.resourceIndex;
+        //         if (spriteIndex == 0)
+        //         {
+        //             logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
+        //             spriteIndex = 279;
+        //         }
+        //         addSpriteComponentFromResource(context, entity, spriteIndex);
 
-        //         setStaticEntity(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey);
+        //         buildUnitActions(entity);
+
+        //         addStateMachineComponent(context, entity);
+
+        //         WarState* idleState = createIdleState(context, entity, isDudeUnit(type));
+        //         changeNextState(context, entity, idleState, true, true);
+
+        //         y++;
         //     }
-
-        //     addStateMachineComponent(context, entity);
-
-        //     WarState* idleState = createIdleState(context, entity, isDudeUnit(unit.type));
-        //     changeNextState(context, entity, idleState, true, true);
         // }
+        
+        for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
+        {
+            WarLevelUnit unit = levelInfo->levelInfo.startEntities[i];
+
+            WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
+            addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.resourceKind, unit.amount);
+            addTransformComponent(context, entity, vec2i(unit.x * MEGA_TILE_WIDTH, unit.y * MEGA_TILE_HEIGHT));
+
+            WarUnitsData unitData = getUnitsData(unit.type);
+            s32 spriteIndex = unitData.resourceIndex;
+            if (spriteIndex == 0)
+            {
+                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", unit.type);
+                spriteIndex = 279;
+            }
+            addSpriteComponentFromResource(context, entity, spriteIndex);
+
+            buildUnitActions(entity);
+
+            if (isBuildingUnit(unit.type))
+            {
+                addAnimationsComponent(context, entity);
+
+                entity->unit.maxhp = 100;
+                entity->unit.hp = 100;
+
+                setStaticEntity(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey);
+            }
+
+            addStateMachineComponent(context, entity);
+
+            WarState* idleState = createIdleState(context, entity, isDudeUnit(unit.type));
+            changeNextState(context, entity, idleState, true, true);
+        }
     }
 
     // add ui entities
@@ -404,34 +401,34 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // DEBUG
     // add animations
     {
-        WarSprite sprite = createSpriteFromResourceIndex(context, 305);
-        WarSpriteAnimation* anim = createAnimation("horsie1", sprite, 0.1f, true);
+        // WarSprite sprite = createSpriteFromResourceIndex(context, 299);
+        // WarSpriteAnimation* anim = createAnimation("horsie1", sprite, 0.1f, true);
 
-        anim->offset = vec2f(250, 300);
+        // anim->offset = vec2f(250, 280);
 
-        const s32 baseFrameIndices1[] = {0, 15, 30, 45, 60};
-        const s32 indexOff1 = 2;
+        // const s32 baseFrameIndices1[] = {15, 30, 45, 55, 65, 0};
+        // const s32 indexOff1 = 2;
         
-        for(s32 i = 0; i < arrayLength(baseFrameIndices1); i++)
-        {
-            addAnimationFrame(anim, baseFrameIndices1[i] + indexOff1);
-        }
+        // for(s32 i = 0; i < arrayLength(baseFrameIndices1); i++)
+        // {
+        //     addAnimationFrame(anim, baseFrameIndices1[i] + indexOff1);
+        // }
 
-        WarSpriteAnimationListAdd(&map->animations, anim);
+        // WarSpriteAnimationListAdd(&map->animations, anim);
 
-        WarSprite sprite2 = createSpriteFromResourceIndex(context, 305);
-        WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.1f, true);
-        anim2->offset = vec2f(250, 320);
+        // WarSprite sprite2 = createSpriteFromResourceIndex(context, 299);
+        // WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.1f, true);
+        // anim2->offset = vec2f(250, 320);
 
-        const s32 baseFrameIndices2[] = {15, 30, 15, 0, 60, 45, 60, 0};
-        const s32 indexOff2 = 2;
+        // const s32 baseFrameIndices2[] = {15, 30, 15, 0, 55, 45, 55, 0};
+        // const s32 indexOff2 = 2;
 
-        for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
-        {
-            addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
-        }
+        // for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
+        // {
+        //     addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
+        // }
 
-        WarSpriteAnimationListAdd(&map->animations, anim2);
+        // WarSpriteAnimationListAdd(&map->animations, anim2);
     }
 }
 
@@ -470,7 +467,7 @@ void updateMap(WarContext* context)
 
     updateViewport(context);
 
-    // process all state machines
+    // update all state machines
     for(s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
@@ -501,13 +498,11 @@ void updateMap(WarContext* context)
     }
 
     // update all animations of the map
-    
     for(s32 i = 0; i < map->animations.count; i++)
     {
         WarSpriteAnimation* anim = map->animations.items[i];
         updateAnimation(context, anim);
     }
-    
 
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
@@ -637,19 +632,8 @@ void updateMap(WarContext* context)
 
                 target = vec2MapToTileCoordinates(target);
 
-                WarMapPath path = findPath(map->finder, (s32)position.x, (s32)position.y, (s32)target.x, (s32)target.y);
-                if (path.nodes.count > 0)
-                {
-                    WarState* moveState = createMoveState(context, selEntity, path);
-                    changeNextState(context, selEntity, moveState, true, true);
-
-                    // WarState* patrolState = createPatrolState(context, selEntity, path);
-                    // changeNextState(context, selEntity, patrolState, true, true);
-                }
-                else
-                {
-                    freePath(path);
-                }
+                WarState* moveState = createMoveState(context, selEntity, 2, arrayArg(vec2, position, target));
+                changeNextState(context, selEntity, moveState, true, true);
             }
         }
 
@@ -833,7 +817,7 @@ void renderMap(WarContext *context)
                     
                     if (currentState->type == WAR_STATE_MOVE)
                     {
-                        index = currentState->move.currentIndex;
+                        index = currentState->move.pathNodeIndex;
                         path = stateMachine->currentState->move.path;
                     }
                     else if(currentState->type == WAR_STATE_PATROL)
@@ -869,11 +853,17 @@ void renderMap(WarContext *context)
         {
             for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                if (map->finder.data[y * MAP_TILES_WIDTH + x])
+                if (isStatic(map->finder, x, y))
                 {
                     vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                     vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(200, 0, 0, 100));
+                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 0, 0, 100));
+                }
+                else if(isDynamic(map->finder, x, y))
+                {
+                    vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                    vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 150, 100, 100));
                 }
             }
         }
@@ -959,11 +949,7 @@ void renderMap(WarContext *context)
             if (input->dragging)
             {
                 rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
-
-                nvgBeginPath(gfx);
-                nvgRect(gfx, pointerRect.x, pointerRect.y, pointerRect.width, pointerRect.height);
-                nvgStrokeColor(gfx, NVG_GREEN_SELECTION);
-                nvgStroke(gfx);
+                nvgStrokeRect(gfx, pointerRect, NVG_GREEN_SELECTION, 1.0f);
             }
 
             nvgRestore(gfx);
@@ -1047,11 +1033,7 @@ void renderMap(WarContext *context)
             nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
             nvgTranslate(gfx, map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
 
-            nvgBeginPath(gfx);
-            nvgRect(gfx, 0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
-            nvgStrokeWidth(gfx, 1.0f/context->globalScale);
-            nvgStrokeColor(gfx, NVG_WHITE);
-            nvgStroke(gfx);
+            nvgStrokeRect(gfx, recti(0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT), NVG_WHITE, 1.0f/context->globalScale);
 
             nvgRestore(gfx);
         }

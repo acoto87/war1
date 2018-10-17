@@ -122,12 +122,13 @@ void nvgFillRect(NVGcontext* gfx, rect r, NVGcolor color)
     nvgRestore(gfx);
 }
 
-void nvgStrokeRect(NVGcontext* gfx, rect r, NVGcolor color)
+void nvgStrokeRect(NVGcontext* gfx, rect r, NVGcolor color, f32 width)
 {
     nvgSave(gfx);
     nvgBeginPath(gfx);
     nvgRect(gfx, r.x, r.y, r.width, r.height);
     nvgStrokeColor(gfx, color);
+    nvgStrokeWidth(gfx, width);
     nvgStroke(gfx);
     nvgRestore(gfx);
 }
@@ -138,6 +139,24 @@ void nvgStrokeLine(NVGcontext* gfx, vec2 p1, vec2 p2, NVGcolor color, f32 width)
     nvgBeginPath(gfx);
     nvgMoveTo(gfx, p1.x, p1.y);
     nvgLineTo(gfx, p2.x, p2.y);
+    nvgStrokeColor(gfx, color);
+    nvgStrokeWidth(gfx, width);
+    nvgStroke(gfx);
+    nvgRestore(gfx);
+}
+
+void nvgStrokePolyline(NVGcontext* gfx, s32 count, vec2 points[], NVGcolor color, f32 width)
+{
+    if (count <= 1)
+        return;
+
+    nvgSave(gfx);
+    nvgBeginPath(gfx);
+
+    nvgMoveTo(gfx, points[0].x, points[0].y);
+    for(s32 i = 1; i < count; i++)
+        nvgLineTo(gfx, points[i].x, points[i].y);
+    
     nvgStrokeColor(gfx, color);
     nvgStrokeWidth(gfx, width);
     nvgStroke(gfx);

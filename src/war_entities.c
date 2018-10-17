@@ -87,17 +87,19 @@ void addStateMachineComponent(WarContext* context, WarEntity* entity)
 {
     entity->stateMachine = (WarStateMachineComponent){0};
     entity->stateMachine.enabled = true;
-    entity->stateMachine.nextState = NULL;
     entity->stateMachine.currentState = NULL;
+    entity->stateMachine.nextState = NULL;
 }
 
 void removeStateMachineComponent(WarContext* context, WarEntity* entity)
 {
-    if (entity->stateMachine.nextState)
-        leaveState(context, entity, entity->stateMachine.nextState);
+    WarStateMachineComponent* stateMachine = &entity->stateMachine;
 
-    if (entity->stateMachine.currentState)
-        leaveState(context, entity, entity->stateMachine.currentState);
+    if (stateMachine->currentState)
+        leaveState(context, entity, stateMachine->currentState);
+
+    if (stateMachine->nextState)
+        leaveState(context, entity, stateMachine->nextState);
 
     entity->stateMachine = (WarStateMachineComponent){0};
 }
@@ -347,7 +349,7 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
         if (selected)
         {
             rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
-            nvgStrokeRect(gfx, selr, NVG_GREEN_SELECTION);
+            nvgStrokeRect(gfx, selr, NVG_GREEN_SELECTION, 1.0f);
         }
     }
 

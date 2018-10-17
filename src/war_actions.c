@@ -59,6 +59,7 @@ WarUnitAction* createUnitAction(WarUnitActionType type)
     WarUnitAction* action = (WarUnitAction*)xmalloc(sizeof(WarUnitAction));
     action->type = type;
     action->loop = true;
+    action->scale = 1;
     action->status = WAR_ACTION_NOT_STARTED;
 
     WarUnitActionStepListInit(&action->steps, WarUnitActionStepListDefaultOptions);
@@ -613,10 +614,26 @@ void buildUnitActions(WarEntity* entity)
             waitTime = 8;
             WarUnitFrameNumbers frames = frameNumbers_5_5_5_3;
 
-            s32 idleFrames[] = {0, 65, 70, 75, 80, 85, 90};
+            s32 idleFrames[] = {0, 70, 75, 80, 85, 90};
             WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, waitTime, directional);
 
-            WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
+            WarUnitAction* walkAction = createUnitAction(WAR_ACTION_TYPE_WALK);
+            walkAction->directional = directional;
+
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
+
+            s32 walkFrames[] = {15, 30, 45, 55, 65, 0};
+            for(s32 i = 0; i < arrayLength(walkFrames); i++)
+            {
+                addActionStep(walkAction, WAR_ACTION_STEP_FRAME, walkFrames[i]);
+                addActionStep(walkAction, WAR_ACTION_STEP_MOVE, 4);
+                addActionStep(walkAction, WAR_ACTION_STEP_WAIT, walkSpeed);
+            }
+            
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
+            addActionStep(walkAction, WAR_ACTION_STEP_FRAME, 0);
+            addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 15);
+
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
             WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
 
@@ -635,7 +652,23 @@ void buildUnitActions(WarEntity* entity)
             s32 idleFrames[] = {5, 15, 25, 35, 50};
             WarUnitAction* idleAction = buildIdleAction(arrayLength(idleFrames), idleFrames, waitTime, directional);
 
-            WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
+            WarUnitAction* walkAction = createUnitAction(WAR_ACTION_TYPE_WALK);
+            walkAction->directional = directional;
+
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
+
+            s32 walkFrames[] = {10, 20, 30, 40, 50, 0};
+            for(s32 i = 0; i < arrayLength(walkFrames); i++)
+            {
+                addActionStep(walkAction, WAR_ACTION_STEP_FRAME, walkFrames[i]);
+                addActionStep(walkAction, WAR_ACTION_STEP_MOVE, 4);
+                addActionStep(walkAction, WAR_ACTION_STEP_WAIT, walkSpeed);
+            }
+            
+            addActionStep(walkAction, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
+            addActionStep(walkAction, WAR_ACTION_STEP_FRAME, 0);
+            addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 1);
+            
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
 
             addActions(entity, 3, idleAction, walkAction, attackAction);
@@ -849,14 +882,15 @@ void resetAction(WarUnitAction* action)
     action->status = WAR_ACTION_NOT_STARTED;
 }
 
-void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, bool defaultToIdle)
+void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale)
 {
     WarUnitComponent* unit = &entity->unit;
     if (unit)
     {
         s32 actionIndex = findAction(entity, type);
-        if (actionIndex < 0 && defaultToIdle)
+        if (actionIndex < 0)
         {
+            logError("Entity of type %d doesn't have a %d animation. Defaulting to WAR_ACTION_TYPE_IDLE", entity->type, type);
             actionIndex = findAction(entity, WAR_ACTION_TYPE_IDLE);
         }
 
@@ -868,10 +902,11 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
 
         unit->currentActionIndex = actionIndex;
 
+        if (scale >= 0)
+            unit->actions.items[unit->currentActionIndex]->scale = scale;
+
         if (reset)
-        {
             resetAction(unit->actions.items[unit->currentActionIndex]);
-        }
     }
 }
 
@@ -991,7 +1026,7 @@ void updateAction(WarContext* context, WarEntity* entity)
         step = action->steps.items[action->currentStepIndex];
     }
 
-    action->waitCount = __frameCountToSeconds(step.param) / context->globalSpeed;
+    action->waitCount = __frameCountToSeconds(step.param) * action->scale / context->globalSpeed;
 }
 
 // peasant: 40s

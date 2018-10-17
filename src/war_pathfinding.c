@@ -19,6 +19,14 @@ inline bool isDynamic(WarPathFinder finder, s32 x, s32 y)
     return finder.data[y * finder.width + x] == PATH_FINDER_DATA_DYNAMIC;
 }
 
+inline WarMapPath clonePath(WarMapPath path)
+{
+    WarMapPath clone = (WarMapPath){0};
+    vec2ListInit(&clone.nodes, vec2ListDefaultOptions);
+    vec2ListAddRange(&clone.nodes, path.nodes.count, path.nodes.items);
+    return clone;
+}
+
 typedef struct
 {
     s32 x, y;
@@ -214,7 +222,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
             if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
                 WarMapNode neighbor = createNode(xx, yy);
-                if (!isEmpty(finder, xx, yy) && !equalsMapNode(neighbor, endNode))
+                if (isStatic(finder, xx, yy))
                     continue;
 
                 // Ignore the neighbor which is already evaluated.
@@ -225,7 +233,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
                 s32 gScore = current.gScore + 1 /* cost from current to neighbor, can be a little higher for diagonals */;
 
                 // < 0 indicates that this node need to be inserted into the heap
-                s32 index = WarMapNodeListIndexOf(&openSet, neighbor);
+                s32 index = WarMapNodeHeapIndexOf(&openSet, neighbor);
                 if (index >= 0)
                 {
                     neighbor = openSet.items[index];
@@ -247,22 +255,25 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     }
 
     WarMapPath path = (WarMapPath){0};
+    vec2ListInit(&path.nodes, vec2ListDefaultOptions);
 
-    vec2ListOptions vec2ListOptions = {0};
-    vec2ListOptions.defaultValue = VEC2_ZERO;
-    vec2ListOptions.equalsFn = equalsVec2;
-    vec2ListInit(&path.nodes, vec2ListOptions);
-
-    s32 index = closedSet.count - 1;
-    while (index >= 0)
+    if (closedSet.count > 1)
     {
+        s32 index = closedSet.count - 1;
         WarMapNode node = closedSet.items[index];
-        vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+        if (equalsMapNode(node, endNode))
+        {
+            while (index >= 0)
+            {
+                node = closedSet.items[index];
+                vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
 
-        index = node.parent;
+                index = node.parent;
+            }
+
+            vec2ListReverse(&path.nodes);
+        }
     }
-
-    vec2ListReverse(&path.nodes);
 
     WarMapNodeHeapFree(&openSet);
     WarMapNodeListFree(&closedSet);
@@ -298,7 +309,7 @@ bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIn
     // find a new path from the current position to the destination
     WarMapPath newPath = findPath(finder, (s32)fromNode.x, (s32)fromNode.y, (s32)toNode.x, (s32)toNode.y);
 
-    if (newPath.nodes.count > 0)
+    if (newPath.nodes.count > 1)
     {
         s32 minIndex = min(fromIndex, toIndex);
         s32 maxIndex = max(fromIndex, toIndex);

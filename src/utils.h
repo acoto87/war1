@@ -8,8 +8,9 @@
 #define arrayArg(type, ...) arrayInit(type, __VA_ARGS__)
 #define arrayLength(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define chance(p) ((rand() % 100) < p)
-#define random(a, b) (a + (rand() % (b - a)))
-
+#define chancef(p) ((rand() / RAND_MAX) < p)
+#define randomi(a, b) ((a) + (rand() % ((b) - (a))))
+#define randomf(a, b) ((a) + ((f32)rand() / RAND_MAX) * ((b) - (a)))
 #define inRange(x, a, b) ((x) >= (a) && (x) < (b))
 
 typedef int8_t s8;

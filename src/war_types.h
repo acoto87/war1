@@ -545,6 +545,7 @@ typedef struct
     bool unbreakable;
     bool directional;
     bool loop;
+    f32 scale;
     WarUnitActionStatus status;
     WarUnitActionStepList steps;
     
@@ -606,12 +607,13 @@ typedef enum
     WAR_STATE_COUNT
 } WarStateType;
 
-typedef struct
+typedef struct _WarState
 {
     WarStateType type;
     s32 entityId;
     f32 updateFrequency;
     f32 nextUpdateTime;
+    struct _WarState* nextState;
 
     union
     {
@@ -622,10 +624,13 @@ typedef struct
 
         struct
         {
-            s32 currentIndex;
-            s32 nextIndex;
-            s32 waitCount;
+            s32 positionIndex;
+            vec2List positions;
+            
+            s32 pathNodeIndex;
             WarMapPath path;
+
+            s32 waitCount;
         } move;
 
         struct
@@ -640,7 +645,6 @@ typedef struct
         struct
         {
             f32 waitTime;
-            struct WarState* nextState;
         } wait;
 
         // struct
@@ -691,14 +695,17 @@ typedef struct
     WarResourceKind resourceKind;
     s32 amount;
 
+    // indicate if the unit is been built
     bool building;
   
     // hit points
     s32 hp;
     s32 maxhp;
 
+    // indicate the level of the unit
     s32 level;
 
+    // the current and action list for the unit
     s32 currentActionIndex;
     WarUnitActionList actions;
 } WarUnitComponent;
@@ -736,14 +743,6 @@ typedef struct
     WarStateMachineComponent stateMachine;
     WarAnimationsComponent animations;
 } WarEntity;
-
-internal inline s32 hashEntityId(const WarEntityId id)
-{
-    return id;
-}
-
-shlDeclareMap(WarEntityMap, WarEntityId, WarEntity*)
-shlDefineMap(WarEntityMap, WarEntityId, WarEntity*, hashEntityId, equalsEntityId, NULL)
 
 internal inline bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
 {
