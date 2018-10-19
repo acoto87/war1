@@ -6,6 +6,7 @@
 
 #define arrayInit(type, ...) ((type[]){__VA_ARGS__})
 #define arrayArg(type, ...) arrayInit(type, __VA_ARGS__)
+#define createArray(type, count, reset) (reset ? (type *)xcalloc(count, sizeof(type)) : (type *)xmalloc(count * sizeof(type))) 
 #define arrayLength(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define chance(p) ((rand() % 100) < p)
 #define chancef(p) ((rand() / RAND_MAX) < p)

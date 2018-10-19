@@ -634,11 +634,9 @@ typedef struct _WarState
 
         struct
         {
-            s32 currentIndex;
-            s32 nextIndex;
+            s32 positionIndex;
+            vec2List positions;
             s32 dir;
-            s32 waitCount;
-            WarMapPath path;
         } patrol;
 
         struct
@@ -839,7 +837,7 @@ typedef struct
 
 typedef struct
 {
-    // mouse position
+    // current mouse position
     vec2 pos;
 
     // state of the mouse buttons

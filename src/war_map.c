@@ -610,9 +610,7 @@ void updateMap(WarContext* context)
                 s32 entityIndex = findEntity(context, entityId);
                 assert(entityIndex >= 0);
 
-                WarEntity* selEntity = map->entities.items[entityIndex];
-                WarTransformComponent* transform = &selEntity->transform;
-                WarUnitComponent* unit = &selEntity->unit;
+                WarEntity* entity = map->entities.items[entityIndex];
 
                 vec2 position = vec2f(
                     rs[i].x + halff(rs[i].width), 
@@ -632,8 +630,38 @@ void updateMap(WarContext* context)
 
                 target = vec2MapToTileCoordinates(target);
 
-                WarState* moveState = createMoveState(context, selEntity, 2, arrayArg(vec2, position, target));
-                changeNextState(context, selEntity, moveState, true, true);
+                if (isKeyPressed(input, WAR_KEY_SHIFT))
+                {
+                    if (isPatrolling(entity))
+                    {
+                        if(isMoving(entity))
+                        {
+                            WarState* moveState = getMoveState(entity);
+                            vec2ListAdd(&moveState->move.positions, target);
+                        }
+                        
+                        WarState* patrolState = getPatrolState(entity);
+                        vec2ListAdd(&patrolState->patrol.positions, target);
+                    }
+                    else if(isMoving(entity))
+                    {
+                        WarState* moveState = getMoveState(entity);
+                        vec2ListAdd(&moveState->move.positions, target);
+                    }
+                    else
+                    {
+                        WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
+                        changeNextState(context, entity, moveState, true, true);
+                    }
+                }
+                else
+                {
+                    WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
+                    changeNextState(context, entity, moveState, true, true);
+
+                    // WarState* patrolState = createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
+                    // changeNextState(context, entity, patrolState, true, true);
+                }
             }
         }
 
@@ -810,35 +838,30 @@ void renderMap(WarContext *context)
             {
                 WarStateMachineComponent* stateMachine = &entity->stateMachine;
                 WarState* currentState = stateMachine->currentState;
-                if (currentState)
+                if (currentState && currentState->type == WAR_STATE_MOVE)
                 {
-                    s32 index = -1;
-                    WarMapPath path;
+                    vec2List positions = currentState->move.positions;
+                    for(s32 k = currentState->move.positionIndex; k < positions.count; k++)
+                    {
+                        vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
+                        pos = vec2Subv(pos, vec2i(2, 2));
+                        nvgFillRect(gfx, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
+                    }
                     
-                    if (currentState->type == WAR_STATE_MOVE)
-                    {
-                        index = currentState->move.pathNodeIndex;
-                        path = stateMachine->currentState->move.path;
-                    }
-                    else if(currentState->type == WAR_STATE_PATROL)
-                    {
-                        index = currentState->patrol.currentIndex;
-                        path = stateMachine->currentState->patrol.path;
-                    }
+                    s32 index = currentState->move.pathNodeIndex;
+                    WarMapPath path = currentState->move.path;
                     
                     if (index >= 0)
                     {
                         vec2 prevPos;
-                        for(s32 i = 0; i < path.nodes.count; i++)
+                        for(s32 k = 0; k < path.nodes.count; k++)
                         {
-                            vec2 pos = path.nodes.items[i];
-                            pos.x = pos.x * MEGA_TILE_WIDTH + halfi(MEGA_TILE_WIDTH);
-                            pos.y = pos.y * MEGA_TILE_HEIGHT + halfi(MEGA_TILE_HEIGHT);
+                            vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
 
-                            if (i > 0)
+                            if (k > 0)
                                 nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
 
-                            nvgFillRect(gfx, rectv(pos, VEC2_ONE), i == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
+                            nvgFillRect(gfx, rectv(pos, VEC2_ONE), k == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
 
                             prevPos = pos;
                         }

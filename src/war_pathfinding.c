@@ -37,11 +37,11 @@ inline WarMapPath clonePath(WarMapPath path)
 
 typedef struct
 {
-    s32 x, y;
-    s32 level;
-    s32 parent;
-    s32 gScore;
-    s32 fScore;
+    s32 x, y; // the coordinates of the node
+    s32 level; // the length of the path from the start to this node
+    s32 parent; // the previous node in the path from start to end passing through this node
+    s32 gScore; // the cost from the start to this node
+    s32 fScore; // the cost from start to end passing through this node
 } WarMapNode;
 
 #define WarMapNodeEmpty (WarMapNode){0}
@@ -51,14 +51,26 @@ internal bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
     return node1.x == node2.x && node1.y == node2.y;
 }
 
-internal int32_t compareMapNode(const WarMapNode node1, const WarMapNode node2)
+internal s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
 {
     return node1.fScore - node2.fScore;
 }
 
-internal int32_t heuristicCost(const WarMapNode node1, const WarMapNode node2)
+internal s32 compareGScore(const WarMapNode node1, const WarMapNode node2)
+{
+    return node1.gScore - node2.gScore;
+}
+
+internal s32 manhattanDistance(const WarMapNode node1, const WarMapNode node2)
 {
     return abs(node1.x - node2.x) + abs(node1.y - node2.y);
+}
+
+internal s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
+{
+    s32 xx = node1.x - node2.x;
+    s32 yy = node1.y - node2.y;
+    return xx * xx + yy * yy;
 }
 
 shlDeclareList(WarMapNodeList, WarMapNode)
@@ -68,7 +80,7 @@ shlDeclareBinaryHeap(WarMapNodeHeap, WarMapNode)
 shlDefineBinaryHeap(WarMapNodeHeap, WarMapNode)
 
 #define WarMapNodeListDefaultOptions (WarMapNodeListOptions){WarMapNodeEmpty, equalsMapNode, NULL}
-#define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareMapNode, NULL}
+#define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareFScore, NULL}
 
 internal const s32 dirC = 8;
 internal const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
@@ -208,8 +220,14 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     // The cost of going from start to start is zero.
     startNode.gScore = 0;
 
-    // For the first node, that value is completely heuristic.
-    startNode.fScore = heuristicCost(startNode, endNode);
+    // The cost of going from start to end is infinity.
+    endNode.gScore = INT32_MAX;
+
+    // For the first node, the fScore that value is completely heuristic.
+    startNode.fScore = manhattanDistance(startNode, endNode);
+
+    // For the last node, the fScore is 0
+    endNode.fScore = 0;
     
     // Initially, only the start node is known.
     WarMapNodeHeapPush(&openSet, startNode);
@@ -234,17 +252,22 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
                     continue;
 
                 // Ignore the neighbor which is already evaluated.
+                // OPTIMIZE
                 if (WarMapNodeListContains(&closedSet, neighbor))
                     continue;
 
-                // The distance from start to a neighbor
+                // The distance from start -> current node -> neighbor
                 s32 gScore = current.gScore + 1 /* cost from current to neighbor, can be a little higher for diagonals */;
 
                 // < 0 indicates that this node need to be inserted into the heap
                 s32 index = WarMapNodeHeapIndexOf(&openSet, neighbor);
+
+                // if the node is already in the heap, check to update its gScore if necessary
                 if (index >= 0)
                 {
                     neighbor = openSet.items[index];
+
+                    // going from the current node through this neighbor is not the best way, skip it
                     if (gScore >= neighbor.gScore)
                         continue;
                 }
@@ -252,7 +275,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
                 // This path is the best until now. Record it!
                 neighbor.parent = closedSet.count - 1;
                 neighbor.gScore = gScore;
-                neighbor.fScore = neighbor.gScore + heuristicCost(neighbor, endNode);
+                neighbor.fScore = neighbor.gScore + manhattanDistance(neighbor, endNode);
 
                 if (index >= 0)
                     WarMapNodeHeapUpdate(&openSet, index, neighbor);
@@ -265,22 +288,50 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     WarMapPath path = (WarMapPath){0};
     vec2ListInit(&path.nodes, vec2ListDefaultOptions);
 
+    // only process the path if has at least two points
     if (closedSet.count > 1)
     {
         s32 index = closedSet.count - 1;
         WarMapNode node = closedSet.items[index];
-        if (equalsMapNode(node, endNode))
-        {
-            while (index >= 0)
-            {
-                node = closedSet.items[index];
-                vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
 
-                index = node.parent;
+        // if the last node is not the end position, look for the most closest one and go there
+        if (!equalsMapNode(node, endNode))
+        {
+            s32 minDistanceToEnd = nodeDistanceSqr(endNode, node);
+            s32 minDistanceFromStart = nodeDistanceSqr(startNode, node);
+            for(s32 k = index - 1; k >= 0; k--)
+            {
+                s32 distanceToEnd = nodeDistanceSqr(endNode, closedSet.items[k]);
+                if (distanceToEnd < minDistanceToEnd)
+                {
+                    minDistanceToEnd = distanceToEnd;
+                    minDistanceFromStart = nodeDistanceSqr(startNode, closedSet.items[k]);
+                    index = k;
+                }
+                else if(distanceToEnd == minDistanceToEnd)
+                {
+                    s32 distanceFromStart = nodeDistanceSqr(startNode, closedSet.items[k]);
+                    if (distanceFromStart < minDistanceFromStart)
+                    {
+                        minDistanceToEnd = distanceToEnd;
+                        minDistanceFromStart = distanceFromStart;
+                        index = k;
+                    }
+                }
             }
 
-            vec2ListReverse(&path.nodes);
+            node = closedSet.items[index];
         }
+
+        while (index >= 0)
+        {
+            node = closedSet.items[index];
+            vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+
+            index = node.parent;
+        }
+
+        vec2ListReverse(&path.nodes);
     }
 
     WarMapNodeHeapFree(&openSet);

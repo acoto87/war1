@@ -58,6 +58,7 @@ static void __logInternal(LogSeverity severity, const char* message, ...)
     }
 }
 
+#define log(severity, message, ...) __logInternal(severity, message, __VA_ARGS__)
 #define logCritical(message, ...) __logInternal(LOG_SEVERITY_CRITICAL, message, __VA_ARGS__)
 #define logError(message, ...) __logInternal(LOG_SEVERITY_ERROR, message, __VA_ARGS__)
 #define logWarning(message, ...) __logInternal(LOG_SEVERITY_WARNING, message, __VA_ARGS__)

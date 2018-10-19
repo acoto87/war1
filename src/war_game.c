@@ -1,4 +1,4 @@
-bool initGame(WarContext *context)
+bool initGame(WarContext* context)
 {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);

@@ -56,12 +56,15 @@ List of thing to do in no particular order
 
 * State machine
   * > Idle state
-  * > Move state
-    * When the last position of a path is occupied and the unit waits is period but then continue to the last position when isn't clear.
+  * Move state
+    * (done) When the last position of a path is occupied and the unit waits is period but then continue to the last position when isn't clear.
+    * (done) Mark the pathfinding data with id of the units, so they can clear it appropiately when leaving states.
+    * (done) Moving with multiple waypoints.
     * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
-    * When the last few positions in a path are occupied and the final position is no longer reachable, the unit should get to the closest position posible.
-  * > Patrol state
-    * Patrol is a combination of move behaviors.
+    * (done) When the last few positions in a path are occupied and the final position is no longer reachable, the unit should get to the closest position posible.
+  * (done:rev) Patrol state
+    * (done) Patrol is a combination of move behaviors.
+    * (done) Patrol with multiple waypoints.
   * Attack state
   * Ground-attack state
     * Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.
@@ -79,7 +82,7 @@ List of thing to do in no particular order
   * (done) Update the map in each interation of the state machines to support updating the paths when moving units.
   * (done) Include the current position of the unit in the path to support the patrol behaviour.
   * When right click in the minimap, the selected unit should go there.
-  * Manage the case when there is no path to a position. It should stay or should go the closest position?
+  * (done) Manage the case when there is no path to a position. It should stay or should go the closest position?
 
 * Collision system
 
