@@ -91,6 +91,9 @@ void addStateMachineComponent(WarContext* context, WarEntity* entity)
     entity->stateMachine.nextState = NULL;
 }
 
+// forward reference to leaveState in war_state_machine.c
+void leaveState(WarContext* context, WarEntity* entity, WarState* state);
+
 void removeStateMachineComponent(WarContext* context, WarEntity* entity)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
@@ -200,7 +203,7 @@ WarEntity* createEntity(WarContext* context, WarEntityType type)
     return entity;
 }
 
-inline s32 findEntity(WarContext* context, WarEntityId id)
+s32 findEntityIndex(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
     assert(map);
@@ -214,12 +217,28 @@ inline s32 findEntity(WarContext* context, WarEntityId id)
     return -1;
 }
 
-inline void removeEntityById(WarContext* context, WarEntityId id)
+WarEntity* findEntity(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
     assert(map);
     
-    s32 index = findEntity(context, id);
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        if (map->entities.items[i]->id == id)
+            return map->entities.items[i];
+    }
+
+    return NULL;
+}
+
+void removeEntityById(WarContext* context, WarEntityId id)
+{
+    WarMap* map = context->map;
+    assert(map);
+    
+    s32 index = findEntityIndex(context, id);
+    assert(index >= 0);
+
     WarEntity* entity = map->entities.items[index];
     
     removeTransformComponent(context, entity);

@@ -19,6 +19,7 @@
 #include <GLFW/glfw3.h>
 
 #include "nanovg.c"
+#define NVG_DISABLE_CULL_FACE
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.h"
 
@@ -51,9 +52,9 @@
 #include "war_render.c"
 #include "war_resources.c"
 #include "war_sprites.c"
+#include "war_entities.c"
 #include "war_pathfinding.c"
 #include "war_state_machine.c"
-#include "war_entities.c"
 #include "war_map.c"
 #include "war_game.c"
 

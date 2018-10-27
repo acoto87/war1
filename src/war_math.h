@@ -221,6 +221,8 @@ typedef struct
 #define VEC2_RIGHT (vec2){1.0f, 0.0f}
 #define VEC2_DOWN (vec2){0.0f, 1.0f}
 
+#define vec2IsZero(v) ((v).x == 0.0f && (v).y == 0.0f)
+
 inline vec2 vec2f(f32 x, f32 y)
 {
     return (vec2){x, y};
@@ -356,6 +358,12 @@ inline f32 vec2DistanceSqr(vec2 v1, vec2 v2)
 inline f32 vec2Distance(vec2 v1, vec2 v2)
 {
     return sqrtf(vec2DistanceSqr(v1, v2));
+}
+
+inline f32 vec2DistanceInTiles(vec2 v1, vec2 v2)
+{
+    vec2 diff = vec2Subv(v1, v2);
+    return maxf(diff.x, diff.y);
 }
 
 inline vec2 vec2Normalize(vec2 v)

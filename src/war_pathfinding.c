@@ -1,40 +1,3 @@
-inline bool isEmpty(WarPathFinder finder, s32 x, s32 y)
-{
-    assert(inRange(x, 0, finder.width));
-    assert(inRange(y, 0, finder.height));
-    return finder.data[y * finder.width + x] == PATH_FINDER_DATA_EMPTY;
-}
-
-inline bool isStatic(WarPathFinder finder, s32 x, s32 y)
-{
-    assert(inRange(x, 0, finder.width));
-    assert(inRange(y, 0, finder.height));
-    return finder.data[y * finder.width + x] == PATH_FINDER_DATA_STATIC;
-}
-
-inline bool isDynamic(WarPathFinder finder, s32 x, s32 y)
-{
-    assert(inRange(x, 0, finder.width));
-    assert(inRange(y, 0, finder.height));
-    u16 value = finder.data[y * finder.width + x];
-    return value > PATH_FINDER_DATA_EMPTY && value < PATH_FINDER_DATA_STATIC;
-}
-
-inline bool isDynamicOrEntity(WarPathFinder finder, s32 x, s32 y, WarEntityId id)
-{
-    assert(inRange(x, 0, finder.width));
-    assert(inRange(y, 0, finder.height));
-    return finder.data[y * finder.width + x] == id;
-}
-
-inline WarMapPath clonePath(WarMapPath path)
-{
-    WarMapPath clone = (WarMapPath){0};
-    vec2ListInit(&clone.nodes, vec2ListDefaultOptions);
-    vec2ListAddRange(&clone.nodes, path.nodes.count, path.nodes.items);
-    return clone;
-}
-
 typedef struct
 {
     s32 x, y; // the coordinates of the node
@@ -102,7 +65,7 @@ WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 da
     return finder;
 }
 
-internal void setValueTiles(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, u16 value)
+internal void setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, u16 value)
 {
     if (!inRange(startX, 0, finder.width) || !inRange(startY, 0, finder.height))
         return;
@@ -125,20 +88,23 @@ internal void setValueTiles(WarPathFinder finder, s32 startX, s32 startY, s32 wi
     }
 }
 
-void setFreeTiles(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height)
+#define setFreeTiles(finder, startX, startY, width, height) setTilesValue(finder, startX, startY, width, height, PATH_FINDER_DATA_EMPTY)
+#define setDynamicEntity(finder, startX, startY, width, height, id) setTilesValue(finder, startX, startY, width, height, (id << 4) | PATH_FINDER_DATA_DYNAMIC)
+#define setStaticEntity(finder, startX, startY, width, height, id) setTilesValue(finder, startX, startY, width, height, (id << 4) | PATH_FINDER_DATA_STATIC)
+
+u16 getTileValue(WarPathFinder finder, s32 x, s32 y)
 {
-    setValueTiles(finder, startX, startY, width, height, PATH_FINDER_DATA_EMPTY);
+    assert(inRange(x, 0, finder.width));
+    assert(inRange(y, 0, finder.height));
+    return finder.data[y * finder.width + x];
 }
 
-void setDynamicEntity(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, WarEntityId id)
-{
-    setValueTiles(finder, startX, startY, width, height, id);
-}
-
-void setStaticEntity(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height)
-{
-    setValueTiles(finder, startX, startY, width, height, PATH_FINDER_DATA_STATIC);
-}
+#define getTileValueType(finder, x, y) (getTileValue(finder, x, y) & 0x000F)
+#define getTileEntityId(finder, x, y) ((getTileValue(finder, x, y) & 0xFFF0) >> 4)
+#define isEmpty(finder, x, y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_EMPTY)
+#define isStatic(finder, x, y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_STATIC)
+#define isDynamic(finder, x,  y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_DYNAMIC)
+#define isDynamicOfEntity(finder, x, y, id) (getTileEntityId(finder, x, y) == id)
 
 void freePath(WarMapPath path)
 {

@@ -229,14 +229,14 @@ typedef struct
 const WarUnitStats unitStats[] = 
 {
     // unit type                range  armour   hp    min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
-    { WAR_UNIT_FOOTMAN,          -1,     2,     60,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_GRUNT,            -1,     2,     60,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_PEASANT,          -1,     0,     40,    -1,     -1,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_PEON,             -1,     0,     40,    -1,     -1,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_FOOTMAN,           1,     2,     60,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
+    { WAR_UNIT_GRUNT,             1,     2,     60,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
+    { WAR_UNIT_PEASANT,           1,     0,     40,    -1,     -1,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_PEON,              1,     0,     40,    -1,     -1,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
     { WAR_UNIT_CATAPULT_HUMANS,   8,     0,    120,    -1,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
     { WAR_UNIT_CATAPULT_ORCS,     8,     0,    120,    -1,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
-    { WAR_UNIT_KNIGHT,           -1,     5,     90,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
-    { WAR_UNIT_RAIDER,           -1,     5,     90,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
+    { WAR_UNIT_KNIGHT,            1,     5,     90,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
+    { WAR_UNIT_RAIDER,            1,     5,     90,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
     { WAR_UNIT_ARCHER,            5,     1,     60,     4,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
     { WAR_UNIT_SPEARMAN,          5,     1,     60,     5,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
     { WAR_UNIT_CONJURER,          2,     0,     40,     6,      0,    __bts(900),    900,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
@@ -244,17 +244,17 @@ const WarUnitStats unitStats[] =
     { WAR_UNIT_CLERIC,            2,     0,     40,     6,      0,    __bts(800),    700,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
     { WAR_UNIT_NECROLYTE,         1,     0,     40,     6,      0,    __bts(800),    700,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
     { WAR_UNIT_MEDIVH,            5,     0,    110,    10,      0,            -1,     -1,     -1,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_LOTHAR,           -1,     5,     50,     1,     15,            -1,     -1,     -1,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_GRIZELDA,         -1,     0,     30,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_GARONA,           -1,     0,     30,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_OGRE,             -1,     3,     60,     1,     12,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_SPIDER,           -1,     0,     30,     1,      3,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
-    { WAR_UNIT_SLIME,            -1,    10,    150,     1,      0,            -1,     -1,     -1,     -1,   { 26.064f, 26.064f, 26.064f } },
-    { WAR_UNIT_FIREELEMENTAL,    -1,     0,    200,     0,     40,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_SCORPION,         -1,     0,     30,     3,      0,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
-    { WAR_UNIT_BRIGAND,          -1,     1,     40,     1,      9,            -1,     -1,     -1,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_SKELETON,         -1,     1,     40,     1,      4,            -1,     -1,     -1,     45,   {  8.992f,  8.992f,  8.992f } },
-    { WAR_UNIT_DAEMON,           -1,     0,    300,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_LOTHAR,            1,     5,     50,     1,     15,            -1,     -1,     -1,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_GRIZELDA,          1,     0,     30,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_GARONA,            1,     0,     30,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_OGRE,              1,     3,     60,     1,     12,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_SPIDER,            1,     0,     30,     1,      3,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
+    { WAR_UNIT_SLIME,             1,    10,    150,     1,      0,            -1,     -1,     -1,     -1,   { 26.064f, 26.064f, 26.064f } },
+    { WAR_UNIT_FIREELEMENTAL,     1,     0,    200,     0,     40,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_SCORPION,          1,     0,     30,     3,      0,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
+    { WAR_UNIT_BRIGAND,           1,     1,     40,     1,      9,            -1,     -1,     -1,     -1,   { 16.736f, 16.736f, 16.736f } },
+    { WAR_UNIT_SKELETON,          1,     1,     40,     1,      4,            -1,     -1,     -1,     45,   {  8.992f,  8.992f,  8.992f } },
+    { WAR_UNIT_DAEMON,            1,     0,    300,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
     { WAR_UNIT_WATERELEMENTAL,    3,     0,    250,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
 };
 
@@ -454,4 +454,16 @@ inline void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
 {
     WarUnitDirection direction = getDirectionFromDiff(dx, dy);
     setUnitDirection(entity, direction);
+}
+
+inline bool inRangeForAttack(WarEntity* entity, vec2 targetPosition)
+{
+    WarUnitComponent* unit = &entity->unit;
+    WarUnitStats stats = getUnitStats(unit->type);
+    
+    WarTransformComponent* transform = &entity->transform;
+    vec2 position = transform->position;
+    
+    f32 distance = vec2DistanceInTiles(targetPosition, position);
+    return distance <= stats.range;
 }

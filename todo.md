@@ -6,12 +6,13 @@ List of thing to do in no particular order
   * Check for memory leaks in the removing animations functionality.
 
 * General
+  * (done) Test the new implementation for lists.
+  * (done) Make some or macros or inline functions to create options for lists initializations.
   * Map scroll with the mouse cursor at the edge.
   * Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
   * Manage components with a dictionary and not each entity having all the components.
   * Create EntityManager to manage entities.
-  * (done) Test the new implementation for lists.
-  * (done) Make some or macros or inline functions to create options for lists initializations.
+  * Make a profiler system?
 
 * Gameplay
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
@@ -60,12 +61,17 @@ List of thing to do in no particular order
     * (done) When the last position of a path is occupied and the unit waits is period but then continue to the last position when isn't clear.
     * (done) Mark the pathfinding data with id of the units, so they can clear it appropiately when leaving states.
     * (done) Moving with multiple waypoints.
-    * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
     * (done) When the last few positions in a path are occupied and the final position is no longer reachable, the unit should get to the closest position posible.
+    * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
   * (done:rev) Patrol state
     * (done) Patrol is a combination of move behaviors.
     * (done) Patrol with multiple waypoints.
-  * Attack state
+  * > Follow state
+    * Follow other units
+  * > Attack state
+    * (done) Attack the unit next to
+    * Move to attack the unit that is far
+    * Consider ranged and melee attacks
   * Ground-attack state
     * Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.
   * Move-Attack state
@@ -81,8 +87,9 @@ List of thing to do in no particular order
     * (done) Test the implementation of the A* algorithm for pathfinding.
   * (done) Update the map in each interation of the state machines to support updating the paths when moving units.
   * (done) Include the current position of the unit in the path to support the patrol behaviour.
-  * When right click in the minimap, the selected unit should go there.
   * (done) Manage the case when there is no path to a position. It should stay or should go the closest position?
+  * > Optimize the path finding when the destination is unreachable (e.g. when the unit is moving to another unit's position)
+  * When right click in the minimap, the selected unit should go there.
 
 * Collision system
 

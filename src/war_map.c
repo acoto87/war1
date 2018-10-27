@@ -350,7 +350,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 entity->unit.maxhp = 100;
                 entity->unit.hp = 100;
 
-                setStaticEntity(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey);
+                setStaticEntity(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey, entity->id);
             }
 
             addStateMachineComponent(context, entity);
@@ -576,10 +576,9 @@ void updateMap(WarContext* context)
             for(s32 i = 0; i < selEntitiesCount; i++)
             {
                 WarEntityId entityId = map->selectedEntities.items[i];
-                s32 entityIndex = findEntity(context, entityId);
-                assert(entityIndex >= 0);
+                WarEntity* entity = findEntity(context, entityId);
+                assert(entity);
 
-                WarEntity* entity = map->entities.items[entityIndex];
                 rs[i] = rectv(entity->transform.position, getUnitSpriteSize(entity));
             }
 
@@ -607,10 +606,8 @@ void updateMap(WarContext* context)
             for(s32 i = 0; i < selEntitiesCount; i++)
             {
                 WarEntityId entityId = map->selectedEntities.items[i];
-                s32 entityIndex = findEntity(context, entityId);
-                assert(entityIndex >= 0);
-
-                WarEntity* entity = map->entities.items[entityIndex];
+                WarEntity* entity = findEntity(context, entityId);
+                assert(entity);
 
                 vec2 position = vec2f(
                     rs[i].x + halff(rs[i].width), 
@@ -630,7 +627,20 @@ void updateMap(WarContext* context)
 
                 target = vec2MapToTileCoordinates(target);
 
-                if (isKeyPressed(input, WAR_KEY_SHIFT))
+                WarEntityId targetEntityId = getTileEntityId(map->finder, target.x, target.y);
+                if (targetEntityId > 0)
+                {
+                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    if (targetEntity)
+                    {
+                        WarState* followState = createFollowState(context, entity, targetEntityId, 1);
+                        changeNextState(context, entity, followState, true, true);
+
+                        // WarState* attackState = createAttackState(context, entity, targetEntityId);
+                        // changeNextState(context, entity, attackState, true, true);
+                    }
+                }
+                else if (isKeyPressed(input, WAR_KEY_SHIFT))
                 {
                     if (isPatrolling(entity))
                     {
@@ -643,7 +653,7 @@ void updateMap(WarContext* context)
                         WarState* patrolState = getPatrolState(entity);
                         vec2ListAdd(&patrolState->patrol.positions, target);
                     }
-                    else if(isMoving(entity))
+                    else if(isMoving(entity) && !isAttacking(entity))
                     {
                         WarState* moveState = getMoveState(entity);
                         vec2ListAdd(&moveState->move.positions, target);
@@ -663,6 +673,8 @@ void updateMap(WarContext* context)
                     // changeNextState(context, entity, patrolState, true, true);
                 }
             }
+
+            free(rs);
         }
 
         // if(map->selectedEntities.count > 0)

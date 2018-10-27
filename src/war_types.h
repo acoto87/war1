@@ -420,7 +420,7 @@ typedef struct
 //
 // Entities
 //
-typedef u32 WarEntityId;
+typedef u16 WarEntityId;
 
 internal bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
 {
@@ -577,7 +577,8 @@ typedef enum
 typedef enum
 {
     PATH_FINDER_DATA_EMPTY = 0,
-    PATH_FINDER_DATA_STATIC = (1 << 16) - 1
+    PATH_FINDER_DATA_STATIC = 1,
+    PATH_FINDER_DATA_DYNAMIC = 2,
 } WarPathFinderDataType;
 
 typedef struct
@@ -592,6 +593,7 @@ typedef enum
     WAR_STATE_IDLE,
     WAR_STATE_MOVE,
     WAR_STATE_PATROL,
+    WAR_STATE_FOLLOW,
     WAR_STATE_ATTACK,
     WAR_STATE_ATTACK_MOVE,
     WAR_STATE_BUILD,
@@ -641,19 +643,19 @@ typedef struct _WarState
 
         struct
         {
+            s32 targetEntityId;
+            s32 distance;
+        } follow;
+
+        struct
+        {
             f32 waitTime;
         } wait;
 
-        // struct
-        // {
-        //     s32 targetIndex;
-        // } attack;
-
-        // struct
-        // {
-        //     s32 targetIndex;
-        //     s32 x, y;
-        // } attackMove;
+        struct
+        {
+            s32 targetEntityId;
+        } attack;
     };
 } WarState;
 

@@ -40,6 +40,25 @@ WarState* createPatrolState(WarContext* context, WarEntity* entity, s32 position
     return state;
 }
 
+WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, s32 distance)
+{
+    WarState* state = createState(context, entity, WAR_STATE_FOLLOW);
+    state->updateFrequency = SECONDS_PER_FRAME;
+    state->nextUpdateTime = 0;
+    state->follow.targetEntityId = targetEntityId;
+    state->follow.distance = distance;
+    return state;
+}
+
+WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId)
+{
+    WarState* state = createState(context, entity, WAR_STATE_ATTACK);
+    state->updateFrequency = SECONDS_PER_FRAME;
+    state->nextUpdateTime = 0;
+    state->attack.targetEntityId = targetEntityId;
+    return state;
+}
+
 WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_WAIT);
@@ -119,6 +138,7 @@ bool hasNextState(WarEntity* entity, WarStateType type)
 #define isIdle(entity) hasDirectState(entity, WAR_STATE_IDLE)
 #define isMoving(entity) hasState(entity, WAR_STATE_MOVE)
 #define isPatrolling(entity) hasState(entity, WAR_STATE_PATROL)
+#define isAttacking(entity) hasState(entity, WAR_STATE_ATTACK)
 
 void freeState(WarState* state)
 {
@@ -155,8 +175,7 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
         case WAR_STATE_WAIT:
         {
             vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-            setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
-
+            setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
             setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
             break;
         }
@@ -165,8 +184,12 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
         {
             if (state->move.positions.count <= 1)
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                if (!changeStateNextState(context, entity, state))
+                {
+                    WarState* idleState = createIdleState(context, entity, true);
+                    changeNextState(context, entity, idleState, true, true);
+                }
+
                 return;
             }
 
@@ -177,19 +200,26 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             vec2 start = state->move.positions.items[state->move.positionIndex];
             vec2 end = state->move.positions.items[state->move.positionIndex + 1];
 
-            WarMapPath path = state->move.path = findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
+            WarMapPath path = state->move.path = findPath(map->finder, start.x, start.y, end.x, end.y);
+
+            // if the is no path to the next position, go to idle
             if (path.nodes.count <= 1)
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                if (!changeStateNextState(context, entity, state))
+                {
+                    WarState* idleState = createIdleState(context, entity, true);
+                    changeNextState(context, entity, idleState, true, true);
+                }
+
+                freePath(path);
                 return;
             }
 
             vec2 currentNode = path.nodes.items[state->move.pathNodeIndex];
-            setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+            setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y, entity->id);
 
             vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
-            setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+            setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
 
             setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
 
@@ -203,14 +233,110 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
         {
             if (state->patrol.positions.count <= 1)
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                if (!changeStateNextState(context, entity, state))
+                {
+                    WarState* idleState = createIdleState(context, entity, true);
+                    changeNextState(context, entity, idleState, true, true);
+                }
+                
                 return;
             }
 
             WarState* moveState = createMoveState(context, entity, state->patrol.positions.count, vec2ListToArray(&state->patrol.positions));
             moveState->nextState = state;
             changeNextState(context, entity, moveState, false, true);
+            break;
+        }
+
+        case WAR_STATE_FOLLOW:
+        {
+            WarEntity* targetEntity = findEntity(context, state->follow.targetEntityId);
+
+            // if the entity to follow doesn't exists, go to idle
+            if (!targetEntity)
+            {
+                if (!changeStateNextState(context, entity, state))
+                {
+                    WarState* idleState = createIdleState(context, entity, true);
+                    changeNextState(context, entity, idleState, true, true);
+                }
+
+                return;
+            }
+
+            vec2 start = vec2MapToTileCoordinates(entity->transform.position);
+            vec2 end = vec2MapToTileCoordinates(targetEntity->transform.position);
+            f32 distance = vec2DistanceInTiles(start, end);
+
+            // if the unit is already in distance, go to idle
+            if (distance <= state->follow.distance)
+            {
+                if (!changeStateNextState(context, entity, state))
+                {
+                    WarState* idleState = createIdleState(context, entity, true);
+                    changeNextState(context, entity, idleState, true, true);
+                }
+                
+                return;
+            }
+
+            WarMapPath path = state->move.path = findPath(map->finder, start.x, start.y, end.x, end.y);
+
+            // if there is no path to the target, go to idle
+            if (path.nodes.count <= 1)
+            {
+                if (!changeStateNextState(context, entity, state))
+                {
+                    WarState* idleState = createIdleState(context, entity, true);
+                    changeNextState(context, entity, idleState, true, true);
+                }
+
+                freePath(path);
+                return;
+            }
+
+            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
+            moveState->nextState = state;
+            changeNextState(context, entity, moveState, false, true);
+
+            freePath(path);
+            break;
+        }
+
+        case WAR_STATE_ATTACK:
+        {
+            WarEntity* targetEntity = findEntity(context, state->attack.targetEntityId);
+
+            // if the entity to attack doesn't exists, go idle
+            if (!targetEntity)
+            {
+                if (!changeStateNextState(context, entity, state))
+                {
+                    WarState* idleState = createIdleState(context, entity, true);
+                    changeNextState(context, entity, idleState, true, true);
+                }
+
+                return;
+            }
+
+            vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+            vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
+
+            // if the unit is not in range to attack, chase it
+            if (!inRangeForAttack(entity, targetPosition))
+            {
+                WarUnitStats stats = getUnitStats(entity->unit.type);
+
+                WarState* followState = createFollowState(context, entity, state->attack.targetEntityId, stats.range);
+                followState->nextState = state;
+                changeNextState(context, entity, followState, false, true);
+
+                return;
+            }
+
+            setDynamicEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+            setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
+            setAction(context, entity, WAR_ACTION_TYPE_ATTACK, true, 1.0f);
             break;
         }
 
@@ -247,14 +373,14 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
             if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
             {
                 vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
-                if (isDynamicOrEntity(map->finder, currentNode.x, currentNode.y, entity->id))
+                if (isDynamicOfEntity(map->finder, currentNode.x, currentNode.y, entity->id))
                     setFreeTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
             }
 
             if (inRange(state->move.pathNodeIndex + 1, 0, path->nodes.count))
             {
                 vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-                if (isDynamicOrEntity(map->finder, nextNode.x, nextNode.y, entity->id))
+                if (isDynamicOfEntity(map->finder, nextNode.x, nextNode.y, entity->id))
                     setFreeTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
             }
 
@@ -484,6 +610,64 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     free(positionsToMove);
 }
 
+void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
+{
+    WarMap* map = context->map;
+
+    WarEntity* targetEntity = findEntity(context, state->follow.targetEntityId);
+
+    // if the entity to follow doesn't exists, go to idle
+    if (!targetEntity)
+    {
+        if (!changeStateNextState(context, entity, state))
+        {
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState, true, true);
+        }
+
+        return;
+    }
+
+    vec2 start = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 end = vec2MapToTileCoordinates(targetEntity->transform.position);
+    f32 distance = vec2DistanceInTiles(start, end);
+
+    // if the unit is already in distance, go to idle
+    if (distance <= state->follow.distance)
+    {
+        if (!changeStateNextState(context, entity, state))
+        {
+            WarState* waitState = createWaitState(context, entity, true, MOVE_WAIT_TIME);
+            waitState->nextState = state;
+            changeNextState(context, entity, waitState, true, true);
+        }
+
+        return;
+    }
+
+    WarMapPath path = state->move.path = findPath(map->finder, start.x, start.y, end.x, end.y);
+
+    // if there is no path to the target, go to idle
+    if (path.nodes.count <= 1)
+    {
+        if (!changeStateNextState(context, entity, state))
+        {
+            WarState* waitState = createWaitState(context, entity, true, MOVE_WAIT_TIME);
+            waitState->nextState = state;
+            changeNextState(context, entity, waitState, true, true);
+        }
+
+        freePath(path);
+        return;
+    }
+
+    WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
+    moveState->nextState = state;
+    changeNextState(context, entity, moveState, false, true);
+
+    freePath(path);
+}
+
 void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
 {
     state->wait.waitTime -= context->deltaTime;
@@ -496,6 +680,40 @@ void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
             changeNextState(context, entity, idleState, true, true);
         }
     }
+}
+
+void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
+{
+    WarMap* map = context->map;
+    vec2 unitSize = getUnitSize(entity);
+    WarUnitStats stats = getUnitStats(entity->unit.type);
+
+    WarEntity* targetEntity = findEntity(context, state->attack.targetEntityId);
+
+    // if the entity to attack doesn't exists, go idle
+    if (!targetEntity)
+    {
+        WarState* idleState = createIdleState(context, entity, true);
+        changeNextState(context, entity, idleState, true, true);
+        return;
+    }
+
+    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
+
+    // if the unit is not in range to attack, chase it
+    if (!inRangeForAttack(entity, targetPosition))
+    {
+        WarState* followState = createFollowState(context, entity, state->attack.targetEntityId, stats.range);
+        followState->nextState = state;
+        changeNextState(context, entity, followState, false, true);
+
+        return;
+    }
+
+    setDynamicEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+    setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
+    setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 }
 
 void updateStateMachine(WarContext* context, WarEntity* entity)
@@ -540,9 +758,21 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
                     break;
                 }
 
+                case WAR_STATE_FOLLOW:
+                {
+                    updateFollowState(context, entity, currentState);
+                    break;
+                }
+
                 case WAR_STATE_WAIT:
                 {
                     updateWaitState(context, entity, currentState);
+                    break;
+                }
+
+                case WAR_STATE_ATTACK:
+                {
+                    updateAttackState(context, entity, currentState);
                     break;
                 }
             
