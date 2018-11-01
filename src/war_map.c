@@ -633,11 +633,11 @@ void updateMap(WarContext* context)
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
-                        WarState* followState = createFollowState(context, entity, targetEntityId, 1);
-                        changeNextState(context, entity, followState, true, true);
+                        // WarState* followState = createFollowState(context, entity, targetEntityId, 1);
+                        // changeNextState(context, entity, followState, true, true);
 
-                        // WarState* attackState = createAttackState(context, entity, targetEntityId);
-                        // changeNextState(context, entity, attackState, true, true);
+                        WarState* attackState = createAttackState(context, entity, targetEntityId);
+                        changeNextState(context, entity, attackState, true, true);
                     }
                 }
                 else if (isKeyPressed(input, WAR_KEY_SHIFT))

@@ -363,7 +363,7 @@ inline f32 vec2Distance(vec2 v1, vec2 v2)
 inline f32 vec2DistanceInTiles(vec2 v1, vec2 v2)
 {
     vec2 diff = vec2Subv(v1, v2);
-    return maxf(diff.x, diff.y);
+    return maxf(absf(diff.x), absf(diff.y));
 }
 
 inline vec2 vec2Normalize(vec2 v)

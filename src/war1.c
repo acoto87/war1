@@ -36,6 +36,7 @@
 #include "list.h"
 #include "queue.h"
 #include "binary_heap.h"
+#include "map.h"
 
 #include "log.h"
 #include "utils.h"

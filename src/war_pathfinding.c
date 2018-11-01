@@ -1,5 +1,6 @@
 typedef struct
 {
+    s32 id; // id of the node
     s32 x, y; // the coordinates of the node
     s32 level; // the length of the path from the start to this node
     s32 parent; // the previous node in the path from start to end passing through this node
@@ -36,22 +37,36 @@ internal s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
     return xx * xx + yy * yy;
 }
 
+internal s32 hashMapNode(const s32 key)
+{
+    return key;
+}
+
+internal bool equalsMapNodeId(const s32 key1, const s32 key2)
+{
+    return key1 == key2;
+}
+
 shlDeclareList(WarMapNodeList, WarMapNode)
 shlDefineList(WarMapNodeList, WarMapNode)
 
 shlDeclareBinaryHeap(WarMapNodeHeap, WarMapNode)
 shlDefineBinaryHeap(WarMapNodeHeap, WarMapNode)
 
+shlDeclareMap(WarMapNodeMap, s32, WarMapNode)
+shlDefineMap(WarMapNodeMap, s32, WarMapNode)
+
 #define WarMapNodeListDefaultOptions (WarMapNodeListOptions){WarMapNodeEmpty, equalsMapNode, NULL}
 #define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareFScore, NULL}
+#define WarMapNodeMapDefaultOptions (WarMapNodeMapOptions){WarMapNodeEmpty, hashMapNode, equalsMapNodeId, NULL}
 
 internal const s32 dirC = 8;
 internal const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
 internal const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
 
-internal WarMapNode createNode(s32 x, s32 y)
+internal WarMapNode createNode(WarPathFinder finder, s32 x, s32 y)
 {
-    return (WarMapNode){x, y, 0, -1, INT32_MAX, INT32_MAX};
+    return (WarMapNode){y * finder.width + x, x, y, 0, -1, INT32_MAX, INT32_MAX};
 }
 
 WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 data[])
@@ -116,8 +131,8 @@ internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     WarMapNodeList nodes;
     WarMapNodeListInit(&nodes, WarMapNodeListDefaultOptions);
 
-    WarMapNode startNode = createNode(startX, startY);
-    WarMapNode endNode = createNode(endX, endY);
+    WarMapNode startNode = createNode(finder, startX, startY);
+    WarMapNode endNode = createNode(finder, endX, endY);
 
     WarMapNodeListAdd(&nodes, startNode);
     
@@ -134,7 +149,7 @@ internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
             s32 yy = node.y + dirY[d];
             if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
-                WarMapNode newNode = createNode(xx, yy);
+                WarMapNode newNode = createNode(finder, xx, yy);
                 if (isEmpty(finder, xx, yy) || equalsMapNode(newNode, endNode))
                 {
                     if (!WarMapNodeListContains(&nodes, newNode))
@@ -177,11 +192,11 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     WarMapNodeHeapInit(&openSet, WarMapNodeHeapDefaultOptions);
 
     // The set of nodes already evaluated
-    WarMapNodeList closedSet;
-    WarMapNodeListInit(&closedSet, WarMapNodeListDefaultOptions);
+    WarMapNodeMap closedSet;
+    WarMapNodeMapInit(&closedSet, WarMapNodeMapDefaultOptions);
 
-    WarMapNode startNode = createNode(startX, startY);
-    WarMapNode endNode = createNode(endX, endY);
+    WarMapNode startNode = createNode(finder, startX, startY);
+    WarMapNode endNode = createNode(finder, endX, endY);
 
     // The cost of going from start to start is zero.
     startNode.gScore = 0;
@@ -202,7 +217,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     {
         // the node in openSet having the lowest fScore value
         WarMapNode current = WarMapNodeHeapPop(&openSet);
-        WarMapNodeListAdd(&closedSet, current);
+        WarMapNodeMapSet(&closedSet, current.id, current);
 
         if (equalsMapNode(current, endNode))
             break;
@@ -213,13 +228,13 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
             s32 yy = current.y + dirY[d];
             if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
-                WarMapNode neighbor = createNode(xx, yy);
+                WarMapNode neighbor = createNode(finder, xx, yy);
                 if (isStatic(finder, xx, yy))
                     continue;
 
                 // Ignore the neighbor which is already evaluated.
                 // OPTIMIZE
-                if (WarMapNodeListContains(&closedSet, neighbor))
+                if (WarMapNodeMapContains(&closedSet, neighbor.id))
                     continue;
 
                 // The distance from start -> current node -> neighbor
@@ -239,7 +254,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
                 }
 
                 // This path is the best until now. Record it!
-                neighbor.parent = closedSet.count - 1;
+                neighbor.parent = current.id;
                 neighbor.gScore = gScore;
                 neighbor.fScore = neighbor.gScore + manhattanDistance(neighbor, endNode);
 
@@ -257,46 +272,51 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     // only process the path if has at least two points
     if (closedSet.count > 1)
     {
-        s32 index = closedSet.count - 1;
-        WarMapNode node = closedSet.items[index];
+        WarMapNode node;
 
-        // if the last node is not the end position, look for the most closest one and go there
-        if (!equalsMapNode(node, endNode))
+        // if the last node is not in the collection of processed nodes, 
+        // then the node is unreachable, look for the closest one and go there
+        if (!WarMapNodeMapContains(&closedSet, endNode.id))
         {
-            s32 minDistanceToEnd = nodeDistanceSqr(endNode, node);
-            s32 minDistanceFromStart = nodeDistanceSqr(startNode, node);
-            for(s32 k = index - 1; k >= 0; k--)
+            s32 minDistanceToEnd = INT32_MAX;
+            s32 minDistanceFromStart = INT32_MAX;
+            
+            for(s32 k = 0; k < closedSet.count; k++)
             {
-                s32 distanceToEnd = nodeDistanceSqr(endNode, closedSet.items[k]);
-                if (distanceToEnd < minDistanceToEnd)
+                if (closedSet.entries[k].active)
                 {
-                    minDistanceToEnd = distanceToEnd;
-                    minDistanceFromStart = nodeDistanceSqr(startNode, closedSet.items[k]);
-                    index = k;
-                }
-                else if(distanceToEnd == minDistanceToEnd)
-                {
-                    s32 distanceFromStart = nodeDistanceSqr(startNode, closedSet.items[k]);
-                    if (distanceFromStart < minDistanceFromStart)
+                    s32 distanceToEnd = nodeDistanceSqr(endNode, closedSet.entries[k].value);
+                    if (distanceToEnd < minDistanceToEnd)
                     {
+                        node = closedSet.entries[k].value;
                         minDistanceToEnd = distanceToEnd;
-                        minDistanceFromStart = distanceFromStart;
-                        index = k;
+                        minDistanceFromStart = nodeDistanceSqr(startNode, closedSet.entries[k].value);
+                    }
+                    else if(distanceToEnd == minDistanceToEnd)
+                    {
+                        s32 distanceFromStart = nodeDistanceSqr(startNode, closedSet.entries[k].value);
+                        if (distanceFromStart < minDistanceFromStart)
+                        {
+                            node = closedSet.entries[k].value;
+                            minDistanceToEnd = distanceToEnd;
+                            minDistanceFromStart = distanceFromStart;
+                        }
                     }
                 }
             }
-
-            node = closedSet.items[index];
         }
-
-        while (index >= 0)
+        else
         {
-            node = closedSet.items[index];
-            vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
-
-            index = node.parent;
+            node = WarMapNodeMapGet(&closedSet, endNode.id);
         }
 
+        while (node.parent >= 0)
+        {
+            vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+            node = WarMapNodeMapGet(&closedSet, node.parent);
+        }
+
+        vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
         vec2ListReverse(&path.nodes);
     }
 

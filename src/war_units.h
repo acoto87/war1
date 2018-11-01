@@ -455,15 +455,3 @@ inline void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
     WarUnitDirection direction = getDirectionFromDiff(dx, dy);
     setUnitDirection(entity, direction);
 }
-
-inline bool inRangeForAttack(WarEntity* entity, vec2 targetPosition)
-{
-    WarUnitComponent* unit = &entity->unit;
-    WarUnitStats stats = getUnitStats(unit->type);
-    
-    WarTransformComponent* transform = &entity->transform;
-    vec2 position = transform->position;
-    
-    f32 distance = vec2DistanceInTiles(targetPosition, position);
-    return distance <= stats.range;
-}

@@ -250,93 +250,13 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
 
         case WAR_STATE_FOLLOW:
         {
-            WarEntity* targetEntity = findEntity(context, state->follow.targetEntityId);
-
-            // if the entity to follow doesn't exists, go to idle
-            if (!targetEntity)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            vec2 start = vec2MapToTileCoordinates(entity->transform.position);
-            vec2 end = vec2MapToTileCoordinates(targetEntity->transform.position);
-            f32 distance = vec2DistanceInTiles(start, end);
-
-            // if the unit is already in distance, go to idle
-            if (distance <= state->follow.distance)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-                
-                return;
-            }
-
-            WarMapPath path = state->move.path = findPath(map->finder, start.x, start.y, end.x, end.y);
-
-            // if there is no path to the target, go to idle
-            if (path.nodes.count <= 1)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-
-                freePath(path);
-                return;
-            }
-
-            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
-            moveState->nextState = state;
-            changeNextState(context, entity, moveState, false, true);
-
-            freePath(path);
+            // all the logic is already in the update function, do nothing here
             break;
         }
 
         case WAR_STATE_ATTACK:
         {
-            WarEntity* targetEntity = findEntity(context, state->attack.targetEntityId);
-
-            // if the entity to attack doesn't exists, go idle
-            if (!targetEntity)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-            vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
-
-            // if the unit is not in range to attack, chase it
-            if (!inRangeForAttack(entity, targetPosition))
-            {
-                WarUnitStats stats = getUnitStats(entity->unit.type);
-
-                WarState* followState = createFollowState(context, entity, state->attack.targetEntityId, stats.range);
-                followState->nextState = state;
-                changeNextState(context, entity, followState, false, true);
-
-                return;
-            }
-
-            setDynamicEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
-            setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
-            setAction(context, entity, WAR_ACTION_TYPE_ATTACK, true, 1.0f);
+            // all the logic is already in the update function, do nothing here
             break;
         }
 
@@ -639,7 +559,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
         {
             WarState* waitState = createWaitState(context, entity, true, MOVE_WAIT_TIME);
             waitState->nextState = state;
-            changeNextState(context, entity, waitState, true, true);
+            changeNextState(context, entity, waitState, false, true);
         }
 
         return;
@@ -652,9 +572,8 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* waitState = createWaitState(context, entity, true, MOVE_WAIT_TIME);
-            waitState->nextState = state;
-            changeNextState(context, entity, waitState, true, true);
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState, true, true);
         }
 
         freePath(path);
@@ -700,9 +619,10 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
     vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
-
+    f32 distance = vec2DistanceInTiles(targetPosition, position);
+    
     // if the unit is not in range to attack, chase it
-    if (!inRangeForAttack(entity, targetPosition))
+    if (distance > stats.range)
     {
         WarState* followState = createFollowState(context, entity, state->attack.targetEntityId, stats.range);
         followState->nextState = state;
