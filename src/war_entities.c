@@ -124,61 +124,6 @@ void removeAnimationsComponent(WarContext* context, WarEntity* entity)
 #define isEnemy(player) (player != 0 && !isNeutral(player))
 #define isHuman(player) (player == 0)
 
-inline bool isDudeUnit(WarUnitType type)
-{
-    switch (type)
-    {
-        case WAR_UNIT_FOOTMAN:
-        case WAR_UNIT_GRUNT:
-        case WAR_UNIT_PEASANT:
-        case WAR_UNIT_PEON:
-        case WAR_UNIT_CATAPULT_HUMANS:
-        case WAR_UNIT_CATAPULT_ORCS:
-        case WAR_UNIT_KNIGHT:
-        case WAR_UNIT_RAIDER:
-        case WAR_UNIT_ARCHER:
-        case WAR_UNIT_SPEARMAN:
-        case WAR_UNIT_CONJURER:
-        case WAR_UNIT_WARLOCK:
-        case WAR_UNIT_CLERIC:
-        case WAR_UNIT_NECROLYTE:
-        case WAR_UNIT_MEDIVH:
-            return true;
-    
-        default:
-            return false;
-    }
-}
-
-inline bool isBuildingUnit(WarUnitType type)
-{
-    switch (type)
-    {
-        case WAR_UNIT_FARM_HUMANS:
-        case WAR_UNIT_FARM_ORCS:
-        case WAR_UNIT_BARRACKS_HUMANS:
-        case WAR_UNIT_BARRACKS_ORCS:
-        case WAR_UNIT_CHURCH:
-        case WAR_UNIT_TEMPLE:
-        case WAR_UNIT_TOWER_HUMANS:
-        case WAR_UNIT_TOWER_ORCS:
-        case WAR_UNIT_TOWNHALL_HUMANS:
-        case WAR_UNIT_TOWNHALL_ORCS:
-        case WAR_UNIT_LUMBERMILL_HUMANS:
-        case WAR_UNIT_LUMBERMILL_ORCS:
-        case WAR_UNIT_STABLES:
-        case WAR_UNIT_KENNEL:
-        case WAR_UNIT_BLACKSMITH_HUMANS:
-        case WAR_UNIT_BLACKSMITH_ORCS:
-        case WAR_UNIT_STORMWIND:
-        case WAR_UNIT_BLACKROCK:
-            return true;
-    
-        default: 
-            return false;
-    }
-}
-
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type)
 {

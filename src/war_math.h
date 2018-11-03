@@ -1,4 +1,4 @@
-#define clamp(x, a, b) max(min(x, b),a)
+#define clamp(x, a, b) max(min(x, b), a)
 
 /* 
  * This macro evaluate x twice, so for getting the sign of a value
@@ -21,8 +21,8 @@
 
 #define absi(x) abs(x)
 #define absf(x) fabsf(x)
-#define halfi(x) ((x)/2)
-#define halff(x) ((x)*0.5f)
+#define halfi(x) ((x) / 2)
+#define halff(x) ((x) * 0.5f)
 
 //
 // From the linux kernel
@@ -190,7 +190,6 @@
 //  */
 // #define clamp_val(val, lo, hi) clamp_t(typeof(val), val, lo, hi)
 
-
 // /**
 //  * swap - swap values of @a and @b
 //  * @a: first value
@@ -214,12 +213,12 @@ typedef struct
     f32 x, y;
 } vec2;
 
-#define VEC2_ZERO (vec2){0.0f, 0.0f}
-#define VEC2_ONE (vec2){1.0f, 1.0f}
-#define VEC2_LEFT (vec2){-1.0f, 0.0f}
-#define VEC2_UP (vec2){0.0f, -1.0f}
-#define VEC2_RIGHT (vec2){1.0f, 0.0f}
-#define VEC2_DOWN (vec2){0.0f, 1.0f}
+#define VEC2_ZERO ((vec2){0.0f, 0.0f})
+#define VEC2_ONE ((vec2){1.0f, 1.0f})
+#define VEC2_LEFT ((vec2){-1.0f, 0.0 })
+#define VEC2_UP ((vec2){0.0f, -1.0 })
+#define VEC2_RIGHT ((vec2){1.0f, 0.0f})
+#define VEC2_DOWN ((vec2){0.0f, 1.0f})
 
 #define vec2IsZero(v) ((v).x == 0.0f && (v).y == 0.0f)
 
@@ -235,74 +234,52 @@ inline vec2 vec2i(s32 x, s32 y)
 
 inline vec2 vec2Addv(vec2 a, vec2 b)
 {
-    return (vec2){
-        a.x + b.x,
-        a.y + b.y
-    };
+    return (vec2){a.x + b.x, a.y + b.y};
 }
 
 inline vec2 vec2Addi(vec2 v, s32 x)
 {
-    return (vec2){
-        v.x + x,
-        v.y + x
-    };
+    return (vec2){v.x + x, v.y + x};
 }
 
 inline vec2 vec2Addf(vec2 v, f32 x)
 {
-    return (vec2){
-        v.x + x,
-        v.y + x
-    };
+    return (vec2){v.x + x, v.y + x};
 }
 
 inline vec2 vec2Subv(vec2 a, vec2 b)
 {
-    return (vec2){
-        a.x - b.x,
-        a.y - b.y
-    };
+    return (vec2){a.x - b.x, a.y - b.y};
 }
 
 inline vec2 vec2Subi(vec2 v, s32 x)
 {
-    return (vec2){
-        v.x - x,
-        v.y - x
-    };
+    return (vec2){v.x - x, v.y - x};
 }
 
 inline vec2 vec2Subf(vec2 v, f32 x)
 {
-    return (vec2){
-        v.x - x,
-        v.y - x
-    };
+    return (vec2){v.x - x, v.y - x};
 }
 
 inline vec2 vec2Mulf(vec2 v, f32 a)
 {
-    return (vec2){
-        v.x * a,
-        v.y * a
-    };
+    return (vec2){v.x * a, v.y * a};
 }
 
 inline vec2 vec2Muli(vec2 v, s32 a)
 {
-    return (vec2){
-        v.x * (f32)a,
-        v.y * (f32)a
-    };
+    return (vec2){v.x * (f32)a, v.y * (f32)a};
 }
 
 inline vec2 vec2Mulv(vec2 a, vec2 b)
 {
-    return (vec2){
-        a.x * b.x,
-        a.y * b.y
-    };
+    return (vec2){a.x * b.x, a.y * b.y};
+}
+
+inline vec2 vec2Half(vec2 a)
+{
+    return (vec2){a.x * 0.5f, a.y * 0.5f};
 }
 
 inline vec2 vec2Translatef(vec2 v, f32 x, f32 y)
@@ -332,10 +309,7 @@ inline vec2 vec2Scalev(vec2 v, vec2 scale)
 
 inline vec2 vec2Inverse(vec2 v)
 {
-    return (vec2) { 
-        -v.x, 
-        -v.y 
-    };
+    return (vec2){-v.x, -v.y};
 }
 
 inline f32 vec2LengthSqr(vec2 v)
@@ -369,56 +343,37 @@ inline f32 vec2DistanceInTiles(vec2 v1, vec2 v2)
 inline vec2 vec2Normalize(vec2 v)
 {
     f32 len = vec2Length(v);
-    if (len == 0) return VEC2_ZERO;
-    return vec2Scalef(v, 1 / len);
+    return len != 0 ? vec2Scalef(v, 1 / len) : VEC2_ZERO;
 }
 
 inline vec2 vec2Clampf(vec2 v, f32 a, f32 b)
 {
-    return (vec2){
-        clamp(v.x, a, b),
-        clamp(v.y, a, b)
-    };
+    return (vec2){clamp(v.x, a, b), clamp(v.y, a, b)};
 }
 
 inline vec2 vec2Clampi(vec2 v, s32 a, s32 b)
 {
-    return (vec2){
-        clamp(v.x, (f32)a, (f32)b),
-        clamp(v.y, (f32)a, (f32)b)
-    };
+    return (vec2){clamp(v.x, (f32)a, (f32)b), clamp(v.y, (f32)a, (f32)b)};
 }
 
 inline vec2 vec2Clampv(vec2 v, vec2 a, vec2 b)
 {
-    return (vec2){
-        clamp(v.x, a.x, b.x),
-        clamp(v.y, a.y, b.y)
-    };
+    return (vec2){clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y)};
 }
 
 inline vec2 vec2Floor(vec2 v)
 {
-    return (vec2){
-        floorf(v.x),
-        floorf(v.y)
-    };
+    return (vec2){floorf(v.x), floorf(v.y)};
 }
 
 inline vec2 vec2Ceil(vec2 v)
 {
-    return (vec2){
-        ceilf(v.x),
-        ceilf(v.y)
-    };
+    return (vec2){ceilf(v.x), ceilf(v.y)};
 }
 
 inline vec2 vec2Round(vec2 v)
 {
-    return (vec2){
-        roundf(v.x),
-        roundf(v.y)
-    };
+    return (vec2){roundf(v.x), roundf(v.y)};
 }
 
 inline void vec2Print(vec2 v)
@@ -435,35 +390,31 @@ typedef struct
     f32 width, height;
 } rect;
 
-#define RECT_EMPTY (rect){0.0f, 0.0f, 0.0f, 0.0f}
+#define RECT_EMPTY ((rect){0.0f, 0.0f, 0.0f, 0.0f})
 
 inline rect rectf(f32 x, f32 y, f32 width, f32 height)
 {
-    return (rect){x, y, width, height}; 
+    return (rect){x, y, width, height};
 }
 
 inline rect recti(s32 x, s32 y, s32 width, s32 height)
 {
-    return (rect){(f32)x, (f32)y, (f32)width, (f32)height}; 
+    return (rect){(f32)x, (f32)y, (f32)width, (f32)height};
 }
 
 inline rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2)
 {
-    return rectf(
-        minf(x1, x2),
-        minf(y1, y2),
-        absf(x1 - x2), 
-        absf(y1 - y2));
+    return rectf(minf(x1, x2), minf(y1, y2), absf(x1 - x2), absf(y1 - y2));
 }
 
 inline rect rectv(vec2 pos, vec2 size)
 {
-    return (rect){pos.x, pos.y, size.x, size.y}; 
+    return (rect){pos.x, pos.y, size.x, size.y};
 }
 
 inline rect rects(vec2 size)
 {
-    return (rect){0.0f, 0.0f, size.x, size.y}; 
+    return (rect){0.0f, 0.0f, size.x, size.y};
 }
 
 inline bool rectContainsf(rect r, f32 x, f32 y)
@@ -492,6 +443,49 @@ inline rect rectTranslatef(rect r, f32 x, f32 y)
     r.x += x;
     r.y += y;
     return r;
+}
+
+vec2 getClosestPointOnRect(vec2 p, rect r)
+{
+    f32 left = r.x;
+    f32 top = r.y;
+    f32 right = r.x + r.width - 1;
+    f32 bottom = r.y + r.height - 1;
+
+    // top-left
+    if (p.x < left && p.y < top)
+        return vec2f(left, top);
+
+    // top-center
+    if (p.x >= left && p.x <= right && p.y < top)
+        return vec2f(p.x, top);
+
+    // top-right
+    if (p.x > right && p.y < top)
+        return vec2f(right, top);
+
+    // middle-right
+    if (p.x > right && p.y >= top && p.y <= bottom)
+        return vec2f(right, p.y);
+
+    // bottom-right
+    if (p.x > right && p.y > bottom)
+        return vec2f(right, bottom);
+
+    // bottom-center
+    if (p.x >= left && p.x <= right && p.y > bottom)
+        return vec2f(p.x, bottom);
+
+    // bottom-left
+    if (p.x < left && p.y > bottom)
+        return vec2f(left, bottom);
+
+    // middle-left
+    if (p.x < left && p.y >= top && p.y <= bottom)
+        return vec2f(left, p.y);
+
+    // the point is inside the rect
+    return p;
 }
 
 inline void rectPrint(rect r)

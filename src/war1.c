@@ -54,7 +54,7 @@
 #include "war_resources.c"
 #include "war_sprites.c"
 #include "war_entities.c"
-#include "war_pathfinding.c"
+#include "war_pathfinder.c"
 #include "war_state_machine.c"
 #include "war_map.c"
 #include "war_game.c"

@@ -13,6 +13,8 @@ List of thing to do in no particular order
   * Manage components with a dictionary and not each entity having all the components.
   * Create EntityManager to manage entities.
   * Make a profiler system?
+  * Sort the units by 'y' position to render and the units with greater 'y' render on top of the ones with less 'y'.
+  * Factorize state_machine.c in files (maybe state_machine_update.c, state_machine_enter.c, etc.)
 
 * Gameplay
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
@@ -66,12 +68,12 @@ List of thing to do in no particular order
   * (done:rev) Patrol state
     * (done) Patrol is a combination of move behaviors.
     * (done) Patrol with multiple waypoints.
-  * > Follow state
-    * Follow other units
-  * > Attack state
+  * (done:rev) Follow state
+    * (done) Follow other units
+  * (done:rev) Attack state
     * (done) Attack the unit next to
-    * Move to attack the unit that is far
-    * Consider ranged and melee attacks
+    * (done) Move to attack the unit that is far
+    * (done) Consider ranged and melee attacks
   * Ground-attack state
     * Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.
   * Move-Attack state
@@ -79,6 +81,7 @@ List of thing to do in no particular order
   * Build state
   * Gathering resources state
   * (done) Make a Leave function when the states are leaving, and not just free them. Let that responsibility to the state itself.
+  * Make the state switching system can return values when going back to the previous state. This will allow follow and move to return to previous state (such attack) that there is no path to the target, so the unit can go idle.
 
 * Pathfinding
   * (done) Add path finding algorithm to move the entities.
@@ -88,8 +91,9 @@ List of thing to do in no particular order
   * (done) Update the map in each interation of the state machines to support updating the paths when moving units.
   * (done) Include the current position of the unit in the path to support the patrol behaviour.
   * (done) Manage the case when there is no path to a position. It should stay or should go the closest position?
-  * > Optimize the path finding when the destination is unreachable (e.g. when the unit is moving to another unit's position)
+  * (done) Optimize the path finding when the destination is unreachable (e.g. when the unit is moving to another unit's position)
   * When right click in the minimap, the selected unit should go there.
+  * Give more cost to diagonal movements
 
 * Collision system
 

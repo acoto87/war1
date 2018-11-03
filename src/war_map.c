@@ -343,7 +343,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
             buildUnitActions(entity);
 
-            if (isBuildingUnit(unit.type))
+            if (isBuildingUnit(entity))
             {
                 addAnimationsComponent(context, entity);
 
@@ -355,7 +355,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
             addStateMachineComponent(context, entity);
 
-            WarState* idleState = createIdleState(context, entity, isDudeUnit(unit.type));
+            WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
             changeNextState(context, entity, idleState, true, true);
         }
     }
@@ -571,110 +571,125 @@ void updateMap(WarContext* context)
         s32 selEntitiesCount = map->selectedEntities.count;
         if (selEntitiesCount > 0)
         {
-            rect* rs = (rect*)xcalloc(selEntitiesCount, sizeof(rect));
-
-            for(s32 i = 0; i < selEntitiesCount; i++)
-            {
-                WarEntityId entityId = map->selectedEntities.items[i];
-                WarEntity* entity = findEntity(context, entityId);
-                assert(entity);
-
-                rs[i] = rectv(entity->transform.position, getUnitSpriteSize(entity));
-            }
-
-            rect bbox = rs[0];
-
-            for(s32 i = 1; i < selEntitiesCount; i++)
-            {
-                if (rs[i].x < bbox.x)
-                    bbox.x = rs[i].x;
-                if (rs[i].y < bbox.y)
-                    bbox.y = rs[i].y;
-                if (rs[i].x + rs[i].width > bbox.x + bbox.width)
-                    bbox.width = (rs[i].x + rs[i].width) - bbox.x;
-                if (rs[i].y + rs[i].height > bbox.y + bbox.height)
-                    bbox.height = (rs[i].y + rs[i].height) - bbox.y;
-            }
-            
             vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-            rect targetbbox = rectf(
-                targetPoint.x - halff(bbox.width),
-                targetPoint.y - halff(bbox.height),
-                bbox.width,
-                bbox.height);
+            vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-            for(s32 i = 0; i < selEntitiesCount; i++)
+            WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+            if (targetEntityId > 0)
             {
-                WarEntityId entityId = map->selectedEntities.items[i];
-                WarEntity* entity = findEntity(context, entityId);
-                assert(entity);
-
-                vec2 position = vec2f(
-                    rs[i].x + halff(rs[i].width), 
-                    rs[i].y + halff(rs[i].height));
-
-                position = vec2MapToTileCoordinates(position);
-
-                rect targetRect = rectf(
-                    targetbbox.x + (rs[i].x - bbox.x),
-                    targetbbox.y + (rs[i].y - bbox.y),
-                    rs[i].width, 
-                    rs[i].height);
-
-                vec2 target = vec2f(
-                    targetRect.x + halff(targetRect.width), 
-                    targetRect.y + halff(targetRect.height));
-
-                target = vec2MapToTileCoordinates(target);
-
-                WarEntityId targetEntityId = getTileEntityId(map->finder, target.x, target.y);
-                if (targetEntityId > 0)
+                WarEntity* targetEntity = findEntity(context, targetEntityId);
+                if (targetEntity)
                 {
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
-                    if (targetEntity)
+                    for(s32 i = 0; i < selEntitiesCount; i++)
                     {
-                        // WarState* followState = createFollowState(context, entity, targetEntityId, 1);
-                        // changeNextState(context, entity, followState, true, true);
+                        WarEntityId entityId = map->selectedEntities.items[i];
+                        WarEntity* entity = findEntity(context, entityId);
+                        assert(entity);
 
-                        WarState* attackState = createAttackState(context, entity, targetEntityId);
-                        changeNextState(context, entity, attackState, true, true);
-                    }
+                        if (isUnit(entity) && entity->id != targetEntity->id)
+                        {
+                            // WarState* followState = createFollowState(context, entity, targetEntityId, 1);
+                            // changeNextState(context, entity, followState, true, true);
+
+                            WarState* attackState = createAttackState(context, entity, targetEntityId);
+                            changeNextState(context, entity, attackState, true, true);
+                        }
+                    }                    
                 }
-                else if (isKeyPressed(input, WAR_KEY_SHIFT))
+            }
+            else
+            {
+                rect* rs = (rect*)xcalloc(selEntitiesCount, sizeof(rect));
+
+                for(s32 i = 0; i < selEntitiesCount; i++)
                 {
-                    if (isPatrolling(entity))
+                    WarEntityId entityId = map->selectedEntities.items[i];
+                    WarEntity* entity = findEntity(context, entityId);
+                    assert(entity);
+
+                    rs[i] = rectv(entity->transform.position, getUnitSpriteSize(entity));
+                }
+
+                rect bbox = rs[0];
+
+                for(s32 i = 1; i < selEntitiesCount; i++)
+                {
+                    if (rs[i].x < bbox.x)
+                        bbox.x = rs[i].x;
+                    if (rs[i].y < bbox.y)
+                        bbox.y = rs[i].y;
+                    if (rs[i].x + rs[i].width > bbox.x + bbox.width)
+                        bbox.width = (rs[i].x + rs[i].width) - bbox.x;
+                    if (rs[i].y + rs[i].height > bbox.y + bbox.height)
+                        bbox.height = (rs[i].y + rs[i].height) - bbox.y;
+                }
+
+                rect targetbbox = rectf(
+                    targetPoint.x - halff(bbox.width),
+                    targetPoint.y - halff(bbox.height),
+                    bbox.width,
+                    bbox.height);
+
+                for(s32 i = 0; i < selEntitiesCount; i++)
+                {
+                    WarEntityId entityId = map->selectedEntities.items[i];
+                    WarEntity* entity = findEntity(context, entityId);
+                    assert(entity);
+
+                    vec2 position = vec2f(
+                        rs[i].x + halff(rs[i].width), 
+                        rs[i].y + halff(rs[i].height));
+
+                    position = vec2MapToTileCoordinates(position);
+
+                    rect targetRect = rectf(
+                        targetbbox.x + (rs[i].x - bbox.x),
+                        targetbbox.y + (rs[i].y - bbox.y),
+                        rs[i].width, 
+                        rs[i].height);
+
+                    vec2 target = vec2f(
+                        targetRect.x + halff(targetRect.width), 
+                        targetRect.y + halff(targetRect.height));
+
+                    target = vec2MapToTileCoordinates(target);
+
+                    if (isKeyPressed(input, WAR_KEY_SHIFT))
                     {
-                        if(isMoving(entity))
+                        if (isPatrolling(entity))
+                        {
+                            if(isMoving(entity))
+                            {
+                                WarState* moveState = getMoveState(entity);
+                                vec2ListAdd(&moveState->move.positions, target);
+                            }
+                            
+                            WarState* patrolState = getPatrolState(entity);
+                            vec2ListAdd(&patrolState->patrol.positions, target);
+                        }
+                        else if(isMoving(entity) && !isAttacking(entity))
                         {
                             WarState* moveState = getMoveState(entity);
                             vec2ListAdd(&moveState->move.positions, target);
                         }
-                        
-                        WarState* patrolState = getPatrolState(entity);
-                        vec2ListAdd(&patrolState->patrol.positions, target);
-                    }
-                    else if(isMoving(entity) && !isAttacking(entity))
-                    {
-                        WarState* moveState = getMoveState(entity);
-                        vec2ListAdd(&moveState->move.positions, target);
+                        else
+                        {
+                            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
+                            changeNextState(context, entity, moveState, true, true);
+                        }
                     }
                     else
                     {
                         WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
                         changeNextState(context, entity, moveState, true, true);
+
+                        // WarState* patrolState = createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
+                        // changeNextState(context, entity, patrolState, true, true);
                     }
                 }
-                else
-                {
-                    WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
-                    changeNextState(context, entity, moveState, true, true);
 
-                    // WarState* patrolState = createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
-                    // changeNextState(context, entity, patrolState, true, true);
-                }
+                free(rs);
             }
-
-            free(rs);
         }
 
         // if(map->selectedEntities.count > 0)

@@ -385,7 +385,7 @@ inline rect getUnitSpriteRect(WarEntity* entity)
 {
     vec2 frameSize = getUnitFrameSize(entity);
     vec2 unitSize = getUnitSpriteSize(entity);
-    vec2 pos = vec2Mulf(vec2Subv(frameSize, unitSize), 0.5f);
+    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
     return rectv(pos, unitSize);
 }
 
@@ -393,24 +393,24 @@ inline vec2 getUnitSpriteCenter(WarEntity* entity)
 {
     vec2 frameSize = getUnitFrameSize(entity);
     vec2 unitSize = getUnitSpriteSize(entity);
-    vec2 pos = vec2Mulf(vec2Subv(frameSize, unitSize), 0.5f);
-    return vec2Addv(pos, vec2Mulf(unitSize, 0.5f));
+    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
+    return vec2Addv(pos, vec2Half(unitSize));
 }
 
-inline vec2 getUnitCenterPosition(WarEntity* entity)
+inline vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
 {
     WarTransformComponent* transform = &entity->transform;
     vec2 spriteSize = getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Mulf(spriteSize, 0.5f);
+    vec2 unitCenter = vec2Half(spriteSize);
     vec2 position = vec2Addv(transform->position, unitCenter);
-    return position;
+    return inTiles ? vec2MapToTileCoordinates(position) : position;
 }
 
 inline void setUnitCenterPosition(WarEntity* entity, vec2 position)
 {
     WarTransformComponent* transform = &entity->transform;
     vec2 spriteSize = getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Mulf(spriteSize, 0.5f);
+    vec2 unitCenter = vec2Half(spriteSize);
     transform->position = vec2Subv(position, unitCenter);
 }
 
@@ -454,4 +454,102 @@ inline void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
 {
     WarUnitDirection direction = getDirectionFromDiff(dx, dy);
     setUnitDirection(entity, direction);
+}
+
+inline f32 getUnitActionScale(WarEntity* entity)
+{
+    // level 0 -> 1.0f
+    // level 1 -> 0.9f
+    // level 2 -> 0.8f
+    return 1 - entity->unit.level * 0.1f;
+}
+
+#define isUnit(entity) ((entity)->unit.enabled)
+
+inline bool isDudeUnit(WarEntity* entity)
+{
+    if (!isUnit(entity))
+        return false;
+
+    switch (entity->unit.type)
+    {
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_PEASANT:
+        case WAR_UNIT_PEON:
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_CATAPULT_ORCS:
+        case WAR_UNIT_KNIGHT:
+        case WAR_UNIT_RAIDER:
+        case WAR_UNIT_ARCHER:
+        case WAR_UNIT_SPEARMAN:
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_NECROLYTE:
+        case WAR_UNIT_MEDIVH:
+            return true;
+    
+        default:
+            return false;
+    }
+}
+
+inline bool isBuildingUnit(WarEntity* entity)
+{
+    if (!isUnit(entity))
+        return false;
+
+    switch (entity->unit.type)
+    {
+        case WAR_UNIT_FARM_HUMANS:
+        case WAR_UNIT_FARM_ORCS:
+        case WAR_UNIT_BARRACKS_HUMANS:
+        case WAR_UNIT_BARRACKS_ORCS:
+        case WAR_UNIT_CHURCH:
+        case WAR_UNIT_TEMPLE:
+        case WAR_UNIT_TOWER_HUMANS:
+        case WAR_UNIT_TOWER_ORCS:
+        case WAR_UNIT_TOWNHALL_HUMANS:
+        case WAR_UNIT_TOWNHALL_ORCS:
+        case WAR_UNIT_LUMBERMILL_HUMANS:
+        case WAR_UNIT_LUMBERMILL_ORCS:
+        case WAR_UNIT_STABLES:
+        case WAR_UNIT_KENNEL:
+        case WAR_UNIT_BLACKSMITH_HUMANS:
+        case WAR_UNIT_BLACKSMITH_ORCS:
+        case WAR_UNIT_STORMWIND:
+        case WAR_UNIT_BLACKROCK:
+            return true;
+    
+        default: 
+            return false;
+    }
+}
+
+vec2 getAttackPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
+{
+    assert(isUnit(entity));
+    assert(isUnit(targetEntity));
+
+    vec2 position = getUnitCenterPosition(entity, true);
+
+    vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
+    vec2 unitSize = getUnitSize(targetEntity);
+    rect unitRect = rectv(targetPosition, unitSize);
+    
+    return getClosestPointOnRect(position, unitRect);
+}
+
+bool inAttackRange(WarEntity* entity, WarEntity* targetEntity)
+{
+    assert(isUnit(entity));
+    assert(isUnit(targetEntity));
+
+    WarUnitStats stats = getUnitStats(entity->unit.type);
+
+    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 pointOnTarget = getAttackPointOnTarget(entity, targetEntity);
+    f32 distance = vec2DistanceInTiles(position, pointOnTarget);
+    return distance <= stats.range;
 }

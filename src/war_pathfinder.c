@@ -1,11 +1,28 @@
+// this value is the distance squared to avoid dynamic units
+// so if the dynamic entity at a distance squared less than this value, 
+// treat it like a static one, so the unit can get around it and the risk of
+// overlapping units is less
+#define DISTANCE_SQR_AVOID_DYNAMIC_POSITIONS 2.0f
+
 typedef struct
 {
-    s32 id; // id of the node
-    s32 x, y; // the coordinates of the node
-    s32 level; // the length of the path from the start to this node
-    s32 parent; // the previous node in the path from start to end passing through this node
-    s32 gScore; // the cost from the start to this node
-    s32 fScore; // the cost from start to end passing through this node
+    // id of the node
+    s32 id;
+
+    // the coordinates of the node
+    s32 x, y;
+
+    // the length of the path from the start to this node
+    s32 level;
+
+    // the previous node in the path from start to end passing through this node
+    s32 parent;
+
+    // the cost from the start to this node
+    s32 gScore;
+
+    // the cost from start to end passing through this node
+    s32 fScore;
 } WarMapNode;
 
 #define WarMapNodeEmpty (WarMapNode){0}
@@ -191,7 +208,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     WarMapNodeHeap openSet;
     WarMapNodeHeapInit(&openSet, WarMapNodeHeapDefaultOptions);
 
-    // The set of nodes already evaluated
+    // The set of nodes already evaluated (this could be a simple boolean array to mark the visited nodes)
     WarMapNodeMap closedSet;
     WarMapNodeMapInit(&closedSet, WarMapNodeMapDefaultOptions);
 
@@ -228,12 +245,25 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
             s32 yy = current.y + dirY[d];
             if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
-                WarMapNode neighbor = createNode(finder, xx, yy);
+                // if the neighbor position is occupied by a static entity, 
+                // don't consider it so that the unit is able to surround it
                 if (isStatic(finder, xx, yy))
                     continue;
 
+                WarMapNode neighbor = createNode(finder, xx, yy);
+
+                // if the neighbor position is a occupied by a dynamic entity (another unit moving),
+                // there is a chance that when the unit gets there the position is empty
+                // but only consider it in the path when that position is far away from the start,
+                // because when that position is close enough, the risk of overlaping units is greater
+                if (isDynamic(finder, xx, yy))
+                {
+                    f32 distance = nodeDistanceSqr(startNode, neighbor);
+                    if (distance < DISTANCE_SQR_AVOID_DYNAMIC_POSITIONS)
+                        continue;
+                }
+
                 // Ignore the neighbor which is already evaluated.
-                // OPTIMIZE
                 if (WarMapNodeMapContains(&closedSet, neighbor.id))
                     continue;
 
@@ -281,7 +311,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
             s32 minDistanceToEnd = INT32_MAX;
             s32 minDistanceFromStart = INT32_MAX;
             
-            for(s32 k = 0; k < closedSet.count; k++)
+            for(s32 k = 0; k < closedSet.capacity; k++)
             {
                 if (closedSet.entries[k].active)
                 {

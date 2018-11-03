@@ -119,6 +119,8 @@ WarState* getNextState(WarEntity* entity, WarStateType type)
 #define getIdleState(entity) getDirectState(entity, WAR_STATE_IDLE)
 #define getMoveState(entity) getState(entity, WAR_STATE_MOVE)
 #define getPatrolState(entity) getState(entity, WAR_STATE_PATROL)
+#define getFollowState(entity) getState(entity, WAR_STATE_FOLLOW)
+#define getAttackState(entity) getState(entity, WAR_STATE_ATTACK)
 
 bool hasState(WarEntity* entity, WarStateType type)
 {
@@ -138,6 +140,7 @@ bool hasNextState(WarEntity* entity, WarStateType type)
 #define isIdle(entity) hasDirectState(entity, WAR_STATE_IDLE)
 #define isMoving(entity) hasState(entity, WAR_STATE_MOVE)
 #define isPatrolling(entity) hasState(entity, WAR_STATE_PATROL)
+#define isFollowing(entity) hasState(entity, WAR_STATE_FOLLOW)
 #define isAttacking(entity) hasState(entity, WAR_STATE_ATTACK)
 
 void freeState(WarState* state)
@@ -211,7 +214,6 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
                     changeNextState(context, entity, idleState, true, true);
                 }
 
-                freePath(path);
                 return;
             }
 
@@ -222,10 +224,7 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
 
             setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-
-            // level 0 -> 1.0f, level 1 -> 0.9f, level 2 -> 0.8f
-            f32 scale = 1 - entity->unit.level * 0.1f;
-            setAction(context, entity, WAR_ACTION_TYPE_WALK, true, scale);
+            setAction(context, entity, WAR_ACTION_TYPE_WALK, true, getUnitActionScale(entity));
             break;
         }
 
@@ -399,13 +398,10 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 
         setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-
-        // level 0 -> 1.0f, level 1 -> 0.9f, level 2 -> 0.8f
-        f32 scale = 1 - entity->unit.level * 0.1f;
-        setAction(context, entity, WAR_ACTION_TYPE_WALK, true, scale);
+        setAction(context, entity, WAR_ACTION_TYPE_WALK, true, getUnitActionScale(entity));
     }
 
-    vec2 position = getUnitCenterPosition(entity);
+    vec2 position = getUnitCenterPosition(entity, false);
     vec2 target = vec2TileToMapCoordinates(nextNode, true);
 
     vec2 direction = vec2Normalize(vec2Subv(target, position));
@@ -548,8 +544,8 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    vec2 start = vec2MapToTileCoordinates(entity->transform.position);
-    vec2 end = vec2MapToTileCoordinates(targetEntity->transform.position);
+    vec2 start = getUnitCenterPosition(entity, true);
+    vec2 end = getUnitCenterPosition(targetEntity, true);
     f32 distance = vec2DistanceInTiles(start, end);
 
     // if the unit is already in distance, go to idle
@@ -565,7 +561,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    WarMapPath path = state->move.path = findPath(map->finder, start.x, start.y, end.x, end.y);
+    WarMapPath path = findPath(map->finder, start.x, start.y, end.x, end.y);
 
     // if there is no path to the target, go to idle
     if (path.nodes.count <= 1)
@@ -587,20 +583,6 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     freePath(path);
 }
 
-void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    state->wait.waitTime -= context->deltaTime;
-
-    if (state->wait.waitTime < 0)
-    {
-        if (!changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
-        }
-    }
-}
-
 void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
@@ -617,12 +599,8 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-    vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
-    f32 distance = vec2DistanceInTiles(targetPosition, position);
-    
     // if the unit is not in range to attack, chase it
-    if (distance > stats.range)
+    if (!inAttackRange(entity, targetEntity))
     {
         WarState* followState = createFollowState(context, entity, state->attack.targetEntityId, stats.range);
         followState->nextState = state;
@@ -631,9 +609,26 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    setDynamicEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+    vec2 position = vec2MapToTileCoordinates(entity->transform.position, true);
+    vec2 targetPosition = getAttackPointOnTarget(entity, targetEntity);
+
+    setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
     setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
+}
+
+void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
+{
+    state->wait.waitTime -= context->deltaTime;
+
+    if (state->wait.waitTime < 0)
+    {
+        if (!changeStateNextState(context, entity, state))
+        {
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState, true, true);
+        }
+    }
 }
 
 void updateStateMachine(WarContext* context, WarEntity* entity)
