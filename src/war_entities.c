@@ -59,7 +59,15 @@ void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, 
     entity->unit.player = player;
     entity->unit.resourceKind = resourceKind;
     entity->unit.amount = amount;
-    entity->unit.currentActionIndex = 0;
+    entity->unit.level = 0;
+    entity->unit.hp = 0;
+    entity->unit.maxhp = 0;
+    entity->unit.armour = 0;
+    entity->unit.range = 0;
+    entity->unit.minDamage = 0;
+    entity->unit.rndDamage = 0;
+    entity->unit.decay = 0;
+    entity->unit.actionIndex = 0;
 
     WarUnitActionListInit(&entity->unit.actions, WarUnitActionListDefaultOptions);
 }
@@ -304,11 +312,32 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
     nvgFillRect(gfx, rectv(getUnitSpriteCenter(entity), VEC2_ONE), nvgRGB(255, 0, 0));
 #endif
 
+#ifdef DEBUG_RENDER_UNIT_STATS
+    rect spriteRect = getUnitSpriteRect(entity);
+    
+    char debugText[50];
+
+    if (unit->hp == 0)
+        sprintf(debugText, "hp: dead");
+    else
+        sprintf(debugText, "hp: %d", percentabi(unit->hp, unit->maxhp));
+
+    nvgFontSize(gfx, 5.0f);
+    nvgFontFace(gfx, "roboto-r");
+    nvgFillColor(gfx, nvgRGBA(200, 200, 200, 255));
+    nvgTextAlign(gfx, NVG_ALIGN_LEFT);
+    nvgText(gfx, spriteRect.x, spriteRect.y, debugText, NULL);
+#endif
+
     if (sprite->enabled)
     {
+        nvgSave(gfx);
+
         WarSpriteFrame* frame = getSpriteFrame(context, sprite);
         updateSpriteImage(context, &sprite->sprite, frame->data);
         renderSprite(context, &sprite->sprite, VEC2_ZERO, scale);
+
+        nvgRestore(gfx);
 
         if (selected)
         {

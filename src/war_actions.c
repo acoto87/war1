@@ -65,7 +65,7 @@ WarUnitAction* createUnitAction(WarUnitActionType type)
     WarUnitActionStepListInit(&action->steps, WarUnitActionStepListDefaultOptions);
 
     action->waitCount = 0;
-    action->currentStepIndex = -1;
+    action->stepIndex = -1;
     return action;
 }
 
@@ -312,7 +312,7 @@ void addActions(WarEntity* entity, s32 count, ...)
     va_end(actions);
 }
 
-void buildUnitActions(WarEntity* entity)
+void addUnitActions(WarEntity* entity)
 {
     WarUnitFrameNumbers frameNumbers_5_5_5_5 = getFrameNumbers(5, arrayArg(s32, 5, 5, 5));
     WarUnitFrameNumbers frameNumbers_5_5_5_4 = getFrameNumbers(5, arrayArg(s32, 5, 5, 4));
@@ -878,36 +878,36 @@ s32 findAction(WarEntity* entity, WarUnitActionType type)
 
 void resetAction(WarUnitAction* action)
 {
-    action->currentStepIndex = 0;
+    action->stepIndex = 0;
     action->status = WAR_ACTION_NOT_STARTED;
 }
 
 void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale)
 {
+    assert(isUnit(entity));
+
     WarUnitComponent* unit = &entity->unit;
-    if (unit)
+    
+    s32 actionIndex = findAction(entity, type);
+    if (actionIndex < 0)
     {
-        s32 actionIndex = findAction(entity, type);
-        if (actionIndex < 0)
-        {
-            logError("Entity of type %d doesn't have a %d animation. Defaulting to WAR_ACTION_TYPE_IDLE", entity->type, type);
-            actionIndex = findAction(entity, WAR_ACTION_TYPE_IDLE);
-        }
-
-        if (actionIndex < 0)
-        {
-            logError("Entity of type %d doesn't have a %d or %d animations", entity->type, type, WAR_ACTION_TYPE_IDLE);
-            return;
-        }
-
-        unit->currentActionIndex = actionIndex;
-
-        if (scale >= 0)
-            unit->actions.items[unit->currentActionIndex]->scale = scale;
-
-        if (reset)
-            resetAction(unit->actions.items[unit->currentActionIndex]);
+        logError("Entity of type %d doesn't have a %d animation. Defaulting to WAR_ACTION_TYPE_IDLE", entity->type, type);
+        actionIndex = findAction(entity, WAR_ACTION_TYPE_IDLE);
     }
+
+    if (actionIndex < 0)
+    {
+        logError("Entity of type %d doesn't have a %d or %d animations", entity->type, type, WAR_ACTION_TYPE_IDLE);
+        return;
+    }
+
+    unit->actionIndex = actionIndex;
+
+    if (scale >= 0)
+        unit->actions.items[unit->actionIndex]->scale = scale;
+
+    if (reset)
+        resetAction(unit->actions.items[unit->actionIndex]);
 }
 
 void updateAction(WarContext* context, WarEntity* entity)
@@ -916,24 +916,24 @@ void updateAction(WarContext* context, WarEntity* entity)
     WarSpriteComponent* sprite = &entity->sprite;
     WarUnitComponent* unit = &entity->unit;
 
-    if (!unit || unit->currentActionIndex < 0)
+    if (!unit || unit->actionIndex < 0)
         return;
 
-    WarUnitAction* action = unit->actions.items[unit->currentActionIndex];
+    WarUnitAction* action = unit->actions.items[unit->actionIndex];
     if (!action)
         return;
 
     if (action->status == WAR_ACTION_FINISHED)
         return;
 
-    if (action->currentStepIndex < 0)
+    if (action->stepIndex < 0)
     {
         resetAction(action);
     }
 
     action->status = WAR_ACTION_RUNNING;
 
-    WarUnitActionStep step = action->steps.items[action->currentStepIndex];
+    WarUnitActionStep step = action->steps.items[action->stepIndex];
     if (step.type == WAR_ACTION_STEP_WAIT)
     {
         action->waitCount -= context->deltaTime;
@@ -942,8 +942,8 @@ void updateAction(WarContext* context, WarEntity* entity)
         
         action->waitCount = 0;
 
-        action->currentStepIndex++;
-        if (action->currentStepIndex >= action->steps.count)
+        action->stepIndex++;
+        if (action->stepIndex >= action->steps.count)
         {
             if (!action->loop)
             {
@@ -951,11 +951,14 @@ void updateAction(WarContext* context, WarEntity* entity)
                 return;
             }
             
-            action->currentStepIndex = 0;
+            action->stepIndex = 0;
         }
 
-        step = action->steps.items[action->currentStepIndex];
+        step = action->steps.items[action->stepIndex];
     }
+
+    action->lastActionStep = WAR_ACTION_STEP_NONE;
+    action->lastSoundStep = WAR_ACTION_STEP_NONE;
 
     while (step.type != WAR_ACTION_STEP_WAIT)
     {
@@ -991,17 +994,34 @@ void updateAction(WarContext* context, WarEntity* entity)
 
                     frameIndex += (4 - absi(4 - unit->direction));
 
-                    if (inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT))
-                    {
-                        transform->scale.x = -1;
-                    }
-                    else
-                    {
-                        transform->scale.x = 1;
-                    }
+                    transform->scale.x = inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT) ? -1 : 1;
                 }
 
                 sprite->frameIndex = frameIndex;
+                break;
+            }
+
+            case WAR_ACTION_STEP_MOVE:
+            {
+                action->lastActionStep = WAR_ACTION_STEP_MOVE;
+                break;
+            }
+
+            case WAR_ACTION_STEP_ATTACK:
+            {
+                action->lastActionStep = WAR_ACTION_STEP_ATTACK;
+                break;
+            }
+
+            case WAR_ACTION_STEP_SOUND_SWORD:
+            case WAR_ACTION_STEP_SOUND_FIST:
+            case WAR_ACTION_STEP_SOUND_FIREBALL:
+            case WAR_ACTION_STEP_SOUND_CHOPPING:
+            case WAR_ACTION_STEP_SOUND_CATAPULT:
+            case WAR_ACTION_STEP_SOUND_ARROW:
+            case WAR_ACTION_STEP_SOUND_LIGHTNING:
+            {
+                action->lastSoundStep = step.type;
                 break;
             }
         
@@ -1011,8 +1031,8 @@ void updateAction(WarContext* context, WarEntity* entity)
             }
         }
 
-        action->currentStepIndex++;
-        if (action->currentStepIndex >= action->steps.count)
+        action->stepIndex++;
+        if (action->stepIndex >= action->steps.count)
         {
             if (!action->loop)
             {
@@ -1020,10 +1040,10 @@ void updateAction(WarContext* context, WarEntity* entity)
                 return;
             }
                 
-            action->currentStepIndex = 0;
+            action->stepIndex = 0;
         }
 
-        step = action->steps.items[action->currentStepIndex];
+        step = action->steps.items[action->stepIndex];
     }
 
     action->waitCount = __frameCountToSeconds(step.param) * action->scale / context->globalSpeed;

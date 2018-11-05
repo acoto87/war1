@@ -326,34 +326,46 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
-            WarLevelUnit unit = levelInfo->levelInfo.startEntities[i];
+            WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
 
             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-            addUnitComponent(context, entity, unit.type, unit.x, unit.y, unit.player, unit.resourceKind, unit.amount);
-            addTransformComponent(context, entity, vec2i(unit.x * MEGA_TILE_WIDTH, unit.y * MEGA_TILE_HEIGHT));
+            addUnitComponent(context, entity, startUnit.type, startUnit.x, startUnit.y, startUnit.player, startUnit.resourceKind, startUnit.amount);
+            addTransformComponent(context, entity, vec2i(startUnit.x * MEGA_TILE_WIDTH, startUnit.y * MEGA_TILE_HEIGHT));
 
-            WarUnitsData unitData = getUnitsData(unit.type);
+            WarUnitsData unitData = getUnitsData(startUnit.type);
+
             s32 spriteIndex = unitData.resourceIndex;
             if (spriteIndex == 0)
             {
-                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", unit.type);
+                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", startUnit.type);
                 spriteIndex = 279;
             }
             addSpriteComponentFromResource(context, entity, spriteIndex);
 
-            buildUnitActions(entity);
-
-            if (isBuildingUnit(entity))
-            {
-                addAnimationsComponent(context, entity);
-
-                entity->unit.maxhp = 100;
-                entity->unit.hp = 100;
-
-                setStaticEntity(map->finder, entity->unit.tilex, entity->unit.tiley, entity->unit.sizex, entity->unit.sizey, entity->id);
-            }
-
+            addUnitActions(entity);
+            addAnimationsComponent(context, entity);
             addStateMachineComponent(context, entity);
+
+            if (isDudeUnit(entity))
+            {
+                WarUnitStats unitStats = getUnitStats(startUnit.type);
+
+                entity->unit.maxhp = unitStats.hp;
+                entity->unit.hp = unitStats.hp;
+                entity->unit.armour = unitStats.armour;
+                entity->unit.range = unitStats.range;
+                entity->unit.minDamage = unitStats.minDamage;
+                entity->unit.rndDamage = unitStats.rndDamage;
+                entity->unit.decay = unitStats.decay;
+            }
+            else if(isBuildingUnit(entity))
+            {
+                WarBuildingStats buildingStats = getBuildingStats(startUnit.type);
+
+                entity->unit.maxhp = buildingStats.hp;
+                entity->unit.hp = buildingStats.hp;
+                entity->unit.armour = buildingStats.armour;
+            }
 
             WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
             changeNextState(context, entity, idleState, true, true);

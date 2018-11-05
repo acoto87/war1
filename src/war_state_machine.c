@@ -92,13 +92,8 @@ WarState* getState(WarEntity* entity, WarStateType type)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
     WarState* state = stateMachine->currentState;
-    while (state)
-    {
-        if (state->type == type)
-            return state;
-
+    while (state && state->type != type)
         state = state->nextState;
-    }
     return NULL;
 }
 
@@ -615,6 +610,28 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
     setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
+
+    WarUnitComponent* unit = &entity->unit;
+    WarUnitAction* action = unit->actions.items[unit->actionIndex];
+    if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
+    {
+        // do damage
+
+        // every unit has a 20 percent chance to miss
+        if (chance(80))
+        {
+            WarUnitComponent* targetUnit = &targetEntity->unit;
+            
+            // Minimal damage + [Random damage - Enemy's Armour]
+            s32 damage = unit->minDamage + maxi(unit->rndDamage - targetUnit->armour, 0);
+            targetUnit->hp -= damage;
+            targetUnit->hp = maxi(targetUnit->hp, 0);
+        }
+
+        // this is not the more elegant solution, but the actions and the state machine have to comunicate some how
+        action->lastActionStep = WAR_ACTION_STEP_NONE;
+        action->lastSoundStep =  WAR_ACTION_STEP_NONE;
+    }
 }
 
 void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)

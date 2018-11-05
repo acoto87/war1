@@ -205,8 +205,6 @@ typedef struct
 // or at least I couldn't understanding it. So I'm taking the formula from the statement (also in that document)
 // that the TownHall which have 1000 build units last aprox. 80 seconds
 //
-// build time in seconds
-#define __bts(t) ((t)*80/1000)
 // Unit build times (equivalent for orcs):
 // FOOTMAN,                      600 program cycles = 48s
 // PEASANT,                      750 program cycles = 60s
@@ -215,7 +213,7 @@ typedef struct
 // ARCHER,                       700 program cycles = 56s
 // CONJURER,                     900 program cycles = 72s
 // CLERIC,                       800 program cycles = 64s
-
+//
 // Building build times (equivalent for orcs):
 // FARM_HUMANS,                 1000 program cycles =  80s
 // BARRACKS_HUMANS,             1500 program cycles = 120s
@@ -225,20 +223,23 @@ typedef struct
 // LUMBERMILL_HUMANS,           1500 program cycles = 120s
 // STABLES,                     1500 program cycles = 120s
 // BLACKSMITH_HUMANS,           1500 program cycles = 120s
+//
+// build time in seconds
+#define __bts(t) ((t)*80/1000)
 
 const WarUnitStats unitStats[] = 
 {
     // unit type                range  armour   hp    min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
     { WAR_UNIT_FOOTMAN,           1,     2,     60,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
     { WAR_UNIT_GRUNT,             1,     2,     60,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_PEASANT,           1,     0,     40,    -1,     -1,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_PEON,              1,     0,     40,    -1,     -1,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_CATAPULT_HUMANS,   8,     0,    120,    -1,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
-    { WAR_UNIT_CATAPULT_ORCS,     8,     0,    120,    -1,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
+    { WAR_UNIT_PEASANT,           1,     0,     40,     0,      0,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_PEON,              1,     0,     40,     0,      0,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_CATAPULT_HUMANS,   8,     0,    120,     0,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
+    { WAR_UNIT_CATAPULT_ORCS,     8,     0,    120,     0,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
     { WAR_UNIT_KNIGHT,            1,     5,     90,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
     { WAR_UNIT_RAIDER,            1,     5,     90,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
     { WAR_UNIT_ARCHER,            5,     1,     60,     4,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_SPEARMAN,          5,     1,     60,     5,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_SPEARMAN,          4,     1,     60,     5,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
     { WAR_UNIT_CONJURER,          2,     0,     40,     6,      0,    __bts(900),    900,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
     { WAR_UNIT_WARLOCK,           3,     0,     40,     6,      0,    __bts(900),    900,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
     { WAR_UNIT_CLERIC,            2,     0,     40,     6,      0,    __bts(800),    700,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
@@ -358,112 +359,6 @@ inline WarBuildingStats getBuildingStats(WarUnitType type)
     return buildingStats[index];
 }
 
-inline vec2 getUnitSize(WarEntity* entity)
-{
-    WarUnitComponent* unit = &entity->unit;
-    return vec2i(unit->sizex, unit->sizey);
-}
-
-inline vec2 getUnitFrameSize(WarEntity* entity)
-{
-    WarSpriteComponent* sprite = &entity->sprite;
-    return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-}
-
-inline rect getUnitFrameRect(WarEntity* entity)
-{
-    return rectv(VEC2_ZERO, getUnitFrameSize(entity));
-}
-
-inline vec2 getUnitSpriteSize(WarEntity* entity)
-{
-    WarUnitComponent* unit = &entity->unit;
-    return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
-}
-
-inline rect getUnitSpriteRect(WarEntity* entity)
-{
-    vec2 frameSize = getUnitFrameSize(entity);
-    vec2 unitSize = getUnitSpriteSize(entity);
-    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
-    return rectv(pos, unitSize);
-}
-
-inline vec2 getUnitSpriteCenter(WarEntity* entity)
-{
-    vec2 frameSize = getUnitFrameSize(entity);
-    vec2 unitSize = getUnitSpriteSize(entity);
-    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
-    return vec2Addv(pos, vec2Half(unitSize));
-}
-
-inline vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
-{
-    WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Half(spriteSize);
-    vec2 position = vec2Addv(transform->position, unitCenter);
-    return inTiles ? vec2MapToTileCoordinates(position) : position;
-}
-
-inline void setUnitCenterPosition(WarEntity* entity, vec2 position)
-{
-    WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Half(spriteSize);
-    transform->position = vec2Subv(position, unitCenter);
-}
-
-inline WarUnitDirection getUnitDirection(WarEntity* entity)
-{
-    WarUnitComponent* unit = &entity->unit;
-    return unit->direction;
-}
-
-internal WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
-{
-    if (x < 0 && y < 0)
-        return WAR_DIRECTION_NORTH_WEST;
-    if (x == 0 && y < 0)
-        return WAR_DIRECTION_NORTH;
-    if (x > 0 && y < 0)
-        return WAR_DIRECTION_NORTH_EAST;
-
-    if (x < 0 && y == 0)
-        return WAR_DIRECTION_WEST;
-    if (x > 0 && y == 0)
-        return WAR_DIRECTION_EAST;
-
-    if (x < 0 && y > 0)
-        return WAR_DIRECTION_SOUTH_WEST;
-    if (x == 0 && y > 0)
-        return WAR_DIRECTION_SOUTH;
-    if (x > 0 && y > 0)
-        return WAR_DIRECTION_SOUTH_EAST;
-
-    return WAR_DIRECTION_NORTH;
-}
-
-inline void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
-{
-    WarUnitComponent* unit = &entity->unit;
-    unit->direction = direction;
-}
-
-inline void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
-{
-    WarUnitDirection direction = getDirectionFromDiff(dx, dy);
-    setUnitDirection(entity, direction);
-}
-
-inline f32 getUnitActionScale(WarEntity* entity)
-{
-    // level 0 -> 1.0f
-    // level 1 -> 0.9f
-    // level 2 -> 0.8f
-    return 1 - entity->unit.level * 0.1f;
-}
-
 #define isUnit(entity) ((entity)->unit.enabled)
 
 inline bool isDudeUnit(WarEntity* entity)
@@ -520,11 +415,132 @@ inline bool isBuildingUnit(WarEntity* entity)
         case WAR_UNIT_BLACKSMITH_ORCS:
         case WAR_UNIT_STORMWIND:
         case WAR_UNIT_BLACKROCK:
+        case WAR_UNIT_GOLDMINE:
             return true;
     
         default: 
             return false;
     }
+}
+
+inline vec2 getUnitSize(WarEntity* entity)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    return vec2i(unit->sizex, unit->sizey);
+}
+
+inline vec2 getUnitFrameSize(WarEntity* entity)
+{
+    WarSpriteComponent* sprite = &entity->sprite;
+    return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
+}
+
+inline rect getUnitFrameRect(WarEntity* entity)
+{
+    return rectv(VEC2_ZERO, getUnitFrameSize(entity));
+}
+
+inline vec2 getUnitSpriteSize(WarEntity* entity)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
+}
+
+inline rect getUnitSpriteRect(WarEntity* entity)
+{
+    vec2 frameSize = getUnitFrameSize(entity);
+    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
+    return rectv(pos, unitSize);
+}
+
+inline vec2 getUnitSpriteCenter(WarEntity* entity)
+{
+    vec2 frameSize = getUnitFrameSize(entity);
+    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
+    return vec2Addv(pos, vec2Half(unitSize));
+}
+
+inline vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
+{
+    WarTransformComponent* transform = &entity->transform;
+    vec2 spriteSize = getUnitSpriteSize(entity);
+    vec2 unitCenter = vec2Half(spriteSize);
+    vec2 position = vec2Addv(transform->position, unitCenter);
+    return inTiles ? vec2MapToTileCoordinates(position) : position;
+}
+
+inline void setUnitCenterPosition(WarEntity* entity, vec2 position)
+{
+    WarTransformComponent* transform = &entity->transform;
+    vec2 spriteSize = getUnitSpriteSize(entity);
+    vec2 unitCenter = vec2Half(spriteSize);
+    transform->position = vec2Subv(position, unitCenter);
+}
+
+inline WarUnitDirection getUnitDirection(WarEntity* entity)
+{
+    assert(isUnit(entity));
+
+    return entity->unit.direction;
+}
+
+internal WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
+{
+    if (x < 0 && y < 0)
+        return WAR_DIRECTION_NORTH_WEST;
+    if (x == 0 && y < 0)
+        return WAR_DIRECTION_NORTH;
+    if (x > 0 && y < 0)
+        return WAR_DIRECTION_NORTH_EAST;
+
+    if (x < 0 && y == 0)
+        return WAR_DIRECTION_WEST;
+    if (x > 0 && y == 0)
+        return WAR_DIRECTION_EAST;
+
+    if (x < 0 && y > 0)
+        return WAR_DIRECTION_SOUTH_WEST;
+    if (x == 0 && y > 0)
+        return WAR_DIRECTION_SOUTH;
+    if (x > 0 && y > 0)
+        return WAR_DIRECTION_SOUTH_EAST;
+
+    return WAR_DIRECTION_NORTH;
+}
+
+inline void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
+{
+    assert(isUnit(entity));
+
+    entity->unit.direction = direction;
+}
+
+inline void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
+{
+    assert(isUnit(entity));
+
+    WarUnitDirection direction = getDirectionFromDiff(dx, dy);
+    setUnitDirection(entity, direction);
+}
+
+inline f32 getUnitActionScale(WarEntity* entity)
+{
+    assert(isUnit(entity));
+
+    // this is the scale of the animation, for walking 
+    // the lower the less time is the transition between the frames 
+    // thus the animation goes faster.
+    //
+    // level 0 -> 1.0f
+    // level 1 -> 0.9f
+    // level 2 -> 0.8f
+    return 1 - entity->unit.level * 0.1f;
 }
 
 vec2 getAttackPointOnTarget(WarEntity* entity, WarEntity* targetEntity)

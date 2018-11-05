@@ -542,15 +542,16 @@ typedef enum
 typedef struct
 {
     WarUnitActionType type;
+    WarUnitActionStatus status;    
     bool unbreakable;
     bool directional;
     bool loop;
     f32 scale;
-    WarUnitActionStatus status;
-    WarUnitActionStepList steps;
-    
     f32 waitCount;
-    s32 currentStepIndex;
+    s32 stepIndex;
+    WarUnitActionStepList steps;
+    WarUnitActionStepType lastActionStep;
+    WarUnitActionStepType lastSoundStep;
 } WarUnitAction;
 
 internal bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
@@ -595,13 +596,12 @@ typedef enum
     WAR_STATE_PATROL,
     WAR_STATE_FOLLOW,
     WAR_STATE_ATTACK,
-    WAR_STATE_ATTACK_MOVE,
     WAR_STATE_BUILD,
     WAR_STATE_TO_MINE,
     WAR_STATE_MINING,
     WAR_STATE_TO_CHOP,
     WAR_STATE_CHOPPING,
-    WAR_STATE_BACK_RESOURCES,
+    WAR_STATE_TO_DELIVER,
     WAR_STATE_DEAD,
     WAR_STATE_WAIT,
 
@@ -697,15 +697,20 @@ typedef struct
     // indicate if the unit is been built
     bool building;
   
-    // hit points
-    s32 hp;
+    // hit points and armour
     s32 maxhp;
+    s32 hp;
+    s32 armour;
+    s32 range;
+    s32 minDamage;
+    s32 rndDamage;
+    s32 decay;
 
     // indicate the level of the unit
     s32 level;
 
     // the current and action list for the unit
-    s32 currentActionIndex;
+    s32 actionIndex;
     WarUnitActionList actions;
 } WarUnitComponent;
 
