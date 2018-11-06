@@ -602,7 +602,7 @@ typedef enum
     WAR_STATE_TO_CHOP,
     WAR_STATE_CHOPPING,
     WAR_STATE_TO_DELIVER,
-    WAR_STATE_DEAD,
+    WAR_STATE_DEATH,
     WAR_STATE_WAIT,
 
     WAR_STATE_COUNT
@@ -646,6 +646,11 @@ typedef struct _WarState
             s32 targetEntityId;
             s32 distance;
         } follow;
+
+        struct
+        {
+            f32 timeToWait;
+        } death;
 
         struct
         {

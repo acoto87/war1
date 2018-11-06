@@ -32,10 +32,10 @@ void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 
 void removeSpriteComponent(WarContext* context, WarEntity* entity)
 {
     WarSpriteComponent* sprite = &entity->sprite;
-    for(s32 i = 0; i < sprite->sprite.framesCount; i++)
+    for (s32 i = 0; i < sprite->sprite.framesCount; i++)
     {
         u8* data = sprite->sprite.frames[i].data;
-        if (data) 
+        if (data)
             free(data);
     }
 
@@ -100,6 +100,8 @@ void addStateMachineComponent(WarContext* context, WarEntity* entity)
 }
 
 // forward reference to leaveState in war_state_machine.c
+WarState* createDeathState(WarContext* context, WarEntity* entity, f32 timeToWait);
+void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
 void leaveState(WarContext* context, WarEntity* entity, WarState* state);
 
 void removeStateMachineComponent(WarContext* context, WarEntity* entity)
@@ -138,11 +140,11 @@ WarEntity* createEntity(WarContext* context, WarEntityType type)
     WarMap* map = context->map;
     assert(map);
 
-    WarEntity *entity = (WarEntity*)xcalloc(1, sizeof(WarEntity));
+    WarEntity* entity = (WarEntity *)xcalloc(1, sizeof(WarEntity));
     entity->id = ++context->staticEntityId;
     entity->type = type;
     entity->enabled = true;
-    
+
     // transform component
     entity->transform = (WarTransformComponent){0};
     entity->sprite = (WarSpriteComponent){0};
@@ -160,8 +162,8 @@ s32 findEntityIndex(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
     assert(map);
-    
-    for(s32 i = 0; i < map->entities.count; i++)
+
+    for (s32 i = 0; i < map->entities.count; i++)
     {
         if (map->entities.items[i]->id == id)
             return i;
@@ -174,8 +176,8 @@ WarEntity* findEntity(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
     assert(map);
-    
-    for(s32 i = 0; i < map->entities.count; i++)
+
+    for (s32 i = 0; i < map->entities.count; i++)
     {
         if (map->entities.items[i]->id == id)
             return map->entities.items[i];
@@ -188,12 +190,12 @@ void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
     assert(map);
-    
+
     s32 index = findEntityIndex(context, id);
     assert(index >= 0);
 
     WarEntity* entity = map->entities.items[index];
-    
+
     removeTransformComponent(context, entity);
     removeSpriteComponent(context, entity);
     removeRoadComponent(context, entity);
@@ -237,7 +239,7 @@ void renderRoad(WarContext* context, WarEntity* entity)
 
         if (road->enabled)
         {
-            WarRoadPieceList *pieces = &road->pieces;
+            WarRoadPieceList* pieces = &road->pieces;
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, road->pieces.count);
 
@@ -250,9 +252,9 @@ void renderRoad(WarContext* context, WarEntity* entity)
 
             WarMapTilesetType tilesetType = context->map->tilesetType;
 
-            for(s32 i = 0; i < road->pieces.count; i++)
+            for (s32 i = 0; i < road->pieces.count; i++)
             {
-                // get the index of the tile in the spritesheet of the map, 
+                // get the index of the tile in the spritesheet of the map,
                 // corresponding to the current tileset type (forest, swamp)
                 WarRoadsData roadData = getRoadsData(pieces->items[i].type);
                 s32 tileIndex = tilesetType == MAP_TILESET_FOREST ? roadData.tileIndexForest : roadData.tileIndexSwamp;
@@ -295,10 +297,10 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
     // size of the unit
     vec2 unitSize = getUnitSpriteSize(entity);
 
-    // position of the unit in the map 
+    // position of the unit in the map
     vec2 position = transform->position;
 
-    // scale of the unit: this is modified by animations when the animation indicates that it 
+    // scale of the unit: this is modified by animations when the animation indicates that it
     // should flip horizontally or vertically or both
     vec2 scale = transform->scale;
 
@@ -314,7 +316,7 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
 
 #ifdef DEBUG_RENDER_UNIT_STATS
     rect spriteRect = getUnitSpriteRect(entity);
-    
+
     char debugText[50];
 
     if (unit->hp == 0)
@@ -348,7 +350,7 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
 
     if (animations->enabled)
     {
-        for(s32 i = 0; i < animations->animations.count; i++)
+        for (s32 i = 0; i < animations->animations.count; i++)
         {
             WarSpriteAnimation* anim = animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
@@ -391,31 +393,49 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
 
         switch (entity->type)
         {
-            case WAR_ENTITY_TYPE_IMAGE:
-            {
-                renderImage(context, entity);
-                break;
-            }
+        case WAR_ENTITY_TYPE_IMAGE:
+        {
+            renderImage(context, entity);
+            break;
+        }
 
-            case WAR_ENTITY_TYPE_UNIT:
-            {
-                renderUnit(context, entity, selected);
-                break;
-            }
+        case WAR_ENTITY_TYPE_UNIT:
+        {
+            renderUnit(context, entity, selected);
+            break;
+        }
 
-            case WAR_ENTITY_TYPE_ROAD:
-            {
-                renderRoad(context, entity);
-                break;
-            }
+        case WAR_ENTITY_TYPE_ROAD:
+        {
+            renderRoad(context, entity);
+            break;
+        }
 
-            default:
-            {
-                logError("Entity of type %d can't be rendered.\n", entity->type);
-                break;
-            }
+        default:
+        {
+            logError("Entity of type %d can't be rendered.\n", entity->type);
+            break;
+        }
         }
 
         nvgRestore(gfx);
+    }
+}
+
+void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent *unit = &entity->unit;
+
+    // Minimal damage + [Random damage - Enemy's Armour]
+    s32 damage = minDamage + maxi(rndDamage - unit->armour, 0);
+    unit->hp -= damage;
+    unit->hp = maxi(unit->hp, 0);
+
+    if (unit->hp == 0)
+    {
+        WarState* deathState = createDeathState(context, entity, __frameCountToSeconds(108));
+        changeNextState(context, entity, deathState, true, true);
     }
 }

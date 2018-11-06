@@ -635,6 +635,8 @@ void addUnitActions(WarEntity* entity)
             addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 15);
 
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
+
+            waitTime = 3;
             WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
@@ -688,6 +690,8 @@ void addUnitActions(WarEntity* entity)
 
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
+
+            waitTime = 3;
             WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
@@ -835,7 +839,7 @@ void addUnitActions(WarEntity* entity)
         case WAR_UNIT_HUMAN_CORPSE:
         {
             s32 deathFrames[] = {0, 10, 15, 20};
-            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathAction), deathFrames, 300, false, false);
+            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 300, true, false);
 
             addActions(entity, 1, deathAction);
             break;
@@ -844,7 +848,7 @@ void addUnitActions(WarEntity* entity)
         case WAR_UNIT_ORC_CORPSE: 
         {
             s32 deathFrames[] = {5, 10, 15, 20};
-            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathAction), deathFrames, 300, false, false);
+            WarUnitAction* deathAction = buildDeathAction(arrayLength(deathFrames), deathFrames, 300, true, false);
 
             addActions(entity, 1, deathAction);
             break;

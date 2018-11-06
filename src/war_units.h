@@ -109,6 +109,10 @@ const WarUnitsData unitsData[] =
 
     // neutral
     { WAR_UNIT_GOLDMINE,                  325, 3, 3 },
+
+    // corpses
+    { WAR_UNIT_HUMAN_CORPSE,              326, 1, 1 },
+    { WAR_UNIT_ORC_CORPSE,                326, 1, 1 }
 };
 
 typedef struct

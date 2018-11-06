@@ -79,6 +79,10 @@ List of thing to do in no particular order
     * ~~Move to attack the unit that is far~~
     * ~~Consider ranged and melee attacks~~
     * > Do damage.
+      * Do damage to units.
+      * Do damage to buildings.
+      * Do damage with splash (catapults).
+      * Do damage with magic.
   * Ground-attack state
     * Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.
   * Build state

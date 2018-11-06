@@ -59,6 +59,15 @@ WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId 
     return state;
 }
 
+WarState* createDeathState(WarContext* context, WarEntity* entity, f32 timeToWait)
+{
+    WarState* state = createState(context, entity, WAR_STATE_DEATH);
+    state->updateFrequency = SECONDS_PER_FRAME;
+    state->nextUpdateTime = 0;
+    state->death.timeToWait = timeToWait;
+    return state;
+}
+
 WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_WAIT);
@@ -137,6 +146,14 @@ bool hasNextState(WarEntity* entity, WarStateType type)
 #define isPatrolling(entity) hasState(entity, WAR_STATE_PATROL)
 #define isFollowing(entity) hasState(entity, WAR_STATE_FOLLOW)
 #define isAttacking(entity) hasState(entity, WAR_STATE_ATTACK)
+#define isDeath(entity) hasState(entity, WAR_STATE_DEATH)
+
+#define isGoingToIdle(entity) hasNextState(entity, WAR_STATE_IDLE)
+#define isGoingToMove(entity) hasNextState(entity, WAR_STATE_MOVE)
+#define isGoingToPatrol(entity) hasNextState(entity, WAR_STATE_PATROL)
+#define isGoingToFollow(entity) hasNextState(entity, WAR_STATE_FOLLOW)
+#define isGoingToAttack(entity) hasNextState(entity, WAR_STATE_ATTACK)
+#define isGoingToDie(entity) hasNextState(entity, WAR_STATE_DEATH)
 
 void freeState(WarState* state)
 {
@@ -254,6 +271,14 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             break;
         }
 
+        case WAR_STATE_DEATH:
+        {
+            vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+            setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
+            setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
+            break;
+        }
+
         default:
         {
             logError("Unkown state %d for entity %d", state->type, entity->id);
@@ -268,13 +293,13 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     
     WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
 
     switch (state->type)
     {
         case WAR_STATE_IDLE:
         case WAR_STATE_WAIT:
         {
+            vec2 unitSize = getUnitSize(entity);
             vec2 position = vec2MapToTileCoordinates(entity->transform.position);
             setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
             break;
@@ -282,6 +307,7 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
 
         case WAR_STATE_MOVE:
         {
+            vec2 unitSize = getUnitSize(entity);
             WarMapPath* path = &state->move.path;
 
             if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
@@ -616,21 +642,64 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
         // do damage
-
         // every unit has a 20 percent chance to miss
         if (chance(80))
         {
-            WarUnitComponent* targetUnit = &targetEntity->unit;
-            
-            // Minimal damage + [Random damage - Enemy's Armour]
-            s32 damage = unit->minDamage + maxi(unit->rndDamage - targetUnit->armour, 0);
-            targetUnit->hp -= damage;
-            targetUnit->hp = maxi(targetUnit->hp, 0);
+            takeDamage(context, targetEntity, unit->minDamage, unit->rndDamage);
+            if (isDeath(targetEntity) || isGoingToDie(targetEntity))
+            {
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+            }
         }
 
-        // this is not the more elegant solution, but the actions and the state machine have to comunicate some how
+        // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
         action->lastActionStep = WAR_ACTION_STEP_NONE;
         action->lastSoundStep =  WAR_ACTION_STEP_NONE;
+    }
+}
+
+void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
+{
+    state->death.timeToWait -= context->deltaTime;
+    if (state->death.timeToWait <= 0)
+    {
+        if (entity->unit.type != WAR_UNIT_HUMAN_CORPSE)
+        {
+            vec2 mapPosition = entity->transform.position;
+            vec2 tilePosition = vec2MapToTileCoordinates(mapPosition);
+
+            // TODO: check here for the race of the unit to spawn the correct corpse type
+            WarUnitType corpseType = WAR_UNIT_HUMAN_CORPSE; // entity->unit.race == WAR_RACE_ORCS ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
+            WarEntity* corpse = createEntity(context, WAR_ENTITY_TYPE_UNIT);
+            addUnitComponent(context, corpse, corpseType, (s32)tilePosition.x, (s32)tilePosition.y, WAR_RACE_NEUTRAL, WAR_RESOURCE_NONE, 0);
+            addTransformComponent(context, corpse, mapPosition);
+
+            WarUnitsData unitData = getUnitsData(corpseType);
+
+            s32 spriteIndex = unitData.resourceIndex;
+            if (spriteIndex == 0)
+            {
+                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", corpseType);
+                spriteIndex = 279;
+            }
+            addSpriteComponentFromResource(context, corpse, spriteIndex);
+
+            addUnitActions(corpse);
+            addAnimationsComponent(context, corpse);
+            addStateMachineComponent(context, corpse);
+
+            WarState* deathState = createDeathState(context, corpse, __frameCountToSeconds(1201));
+            changeNextState(context, corpse, deathState, true, true);
+        }
+        
+        // remove the entity from the selection, for this the state machine file need to know about the map and selections
+        // removeEntityFromSelection(context, entity->id);
+        
+        removeEntityById(context, entity->id);
+
+        // free the entity here?
+        // freeEntity(context, entity);
     }
 }
 
@@ -696,18 +765,24 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
                     break;
                 }
 
+                case WAR_STATE_ATTACK:
+                {
+                    updateAttackState(context, entity, currentState);
+                    break;
+                }
+
+                case WAR_STATE_DEATH:
+                {
+                    updateDeathState(context, entity, currentState);
+                    break;
+                }
+
                 case WAR_STATE_WAIT:
                 {
                     updateWaitState(context, entity, currentState);
                     break;
                 }
 
-                case WAR_STATE_ATTACK:
-                {
-                    updateAttackState(context, entity, currentState);
-                    break;
-                }
-            
                 default:
                 {
                     logError("Unkown state %d for entity %d", currentState->type, entity->id);
