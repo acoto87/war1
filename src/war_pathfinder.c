@@ -351,7 +351,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     }
 
     WarMapNodeHeapFree(&openSet);
-    WarMapNodeListFree(&closedSet);
+    WarMapNodeMapFree(&closedSet);
 
     return path;
 }

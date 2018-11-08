@@ -603,6 +603,8 @@ typedef enum
     WAR_STATE_CHOPPING,
     WAR_STATE_TO_DELIVER,
     WAR_STATE_DEATH,
+    WAR_STATE_DAMAGED,
+    WAR_STATE_COLLAPSE,
     WAR_STATE_WAIT,
 
     WAR_STATE_COUNT
@@ -612,8 +614,8 @@ typedef struct _WarState
 {
     WarStateType type;
     s32 entityId;
-    f32 updateFrequency;
     f32 nextUpdateTime;
+    f32 delay;
     struct _WarState* nextState;
 
     union
@@ -646,11 +648,6 @@ typedef struct _WarState
             s32 targetEntityId;
             s32 distance;
         } follow;
-
-        struct
-        {
-            f32 timeToWait;
-        } death;
 
         struct
         {

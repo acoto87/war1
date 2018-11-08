@@ -1,79 +1,21 @@
+#include "war_state_machine.h"
+#include "state_machine/war_state_machine_idle.c"
+#include "state_machine/war_state_machine_move.c"
+#include "state_machine/war_state_machine_follow.c"
+#include "state_machine/war_state_machine_patrol.c"
+#include "state_machine/war_state_machine_attack.c"
+#include "state_machine/war_state_machine_death.c"
+#include "state_machine/war_state_machine_damaged.c"
+#include "state_machine/war_state_machine_collapse.c"
+#include "state_machine/war_state_machine_wait.c"
+
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
     WarState* state = (WarState*)xcalloc(1, sizeof(WarState));
     state->type = type;
     state->entityId = entity->id;
-    return state;
-}
-
-WarState* createIdleState(WarContext* context, WarEntity* entity, bool lookAround)
-{
-    WarState* state = createState(context, entity, WAR_STATE_IDLE);
-    state->updateFrequency = 1.0f;
     state->nextUpdateTime = 0;
-    state->idle.lookAround = lookAround;
-    return state;
-}
-
-WarState* createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
-{
-    WarState* state = createState(context, entity, WAR_STATE_MOVE);
-    state->updateFrequency = SECONDS_PER_FRAME;
-    state->nextUpdateTime = 0;
-
-    vec2ListInit(&state->move.positions, vec2ListDefaultOptions);
-    vec2ListAddRange(&state->move.positions, positionCount, positions);
-
-    return state;
-}
-
-WarState* createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
-{
-    WarState* state = createState(context, entity, WAR_STATE_PATROL);
-    state->updateFrequency = SECONDS_PER_FRAME;
-    state->nextUpdateTime = 0;
-    state->patrol.dir = 1;
-
-    vec2ListInit(&state->patrol.positions, vec2ListDefaultOptions);
-    vec2ListAddRange(&state->patrol.positions, positionCount, positions);
-
-    return state;
-}
-
-WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, s32 distance)
-{
-    WarState* state = createState(context, entity, WAR_STATE_FOLLOW);
-    state->updateFrequency = SECONDS_PER_FRAME;
-    state->nextUpdateTime = 0;
-    state->follow.targetEntityId = targetEntityId;
-    state->follow.distance = distance;
-    return state;
-}
-
-WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId)
-{
-    WarState* state = createState(context, entity, WAR_STATE_ATTACK);
-    state->updateFrequency = SECONDS_PER_FRAME;
-    state->nextUpdateTime = 0;
-    state->attack.targetEntityId = targetEntityId;
-    return state;
-}
-
-WarState* createDeathState(WarContext* context, WarEntity* entity, f32 timeToWait)
-{
-    WarState* state = createState(context, entity, WAR_STATE_DEATH);
-    state->updateFrequency = SECONDS_PER_FRAME;
-    state->nextUpdateTime = 0;
-    state->death.timeToWait = timeToWait;
-    return state;
-}
-
-WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
-{
-    WarState* state = createState(context, entity, WAR_STATE_WAIT);
-    state->updateFrequency = SECONDS_PER_FRAME;
-    state->nextUpdateTime = 0;
-    state->wait.waitTime = waitTime;
+    state->delay = 0;
     return state;
 }
 
@@ -103,7 +45,7 @@ WarState* getState(WarEntity* entity, WarStateType type)
     WarState* state = stateMachine->currentState;
     while (state && state->type != type)
         state = state->nextState;
-    return NULL;
+    return state;
 }
 
 WarState* getDirectState(WarEntity* entity, WarStateType type)
@@ -120,12 +62,6 @@ WarState* getNextState(WarEntity* entity, WarStateType type)
     return state && state->type == type ? state : NULL;
 }
 
-#define getIdleState(entity) getDirectState(entity, WAR_STATE_IDLE)
-#define getMoveState(entity) getState(entity, WAR_STATE_MOVE)
-#define getPatrolState(entity) getState(entity, WAR_STATE_PATROL)
-#define getFollowState(entity) getState(entity, WAR_STATE_FOLLOW)
-#define getAttackState(entity) getState(entity, WAR_STATE_ATTACK)
-
 bool hasState(WarEntity* entity, WarStateType type)
 {
     return getState(entity, type) != NULL;
@@ -141,141 +77,61 @@ bool hasNextState(WarEntity* entity, WarStateType type)
     return getNextState(entity, type) != NULL;
 }
 
-#define isIdle(entity) hasDirectState(entity, WAR_STATE_IDLE)
-#define isMoving(entity) hasState(entity, WAR_STATE_MOVE)
-#define isPatrolling(entity) hasState(entity, WAR_STATE_PATROL)
-#define isFollowing(entity) hasState(entity, WAR_STATE_FOLLOW)
-#define isAttacking(entity) hasState(entity, WAR_STATE_ATTACK)
-#define isDeath(entity) hasState(entity, WAR_STATE_DEATH)
-
-#define isGoingToIdle(entity) hasNextState(entity, WAR_STATE_IDLE)
-#define isGoingToMove(entity) hasNextState(entity, WAR_STATE_MOVE)
-#define isGoingToPatrol(entity) hasNextState(entity, WAR_STATE_PATROL)
-#define isGoingToFollow(entity) hasNextState(entity, WAR_STATE_FOLLOW)
-#define isGoingToAttack(entity) hasNextState(entity, WAR_STATE_ATTACK)
-#define isGoingToDie(entity) hasNextState(entity, WAR_STATE_DEATH)
-
-void freeState(WarState* state)
-{
-    switch (state->type)
-    {
-        case WAR_STATE_MOVE:
-        {
-            vec2ListFree(&state->move.positions);
-            freePath(state->move.path);
-            break;
-        }
-
-        case WAR_STATE_PATROL:
-        {
-            vec2ListFree(&state->patrol.positions);
-            break;
-        }
-    }
-
-    if (state->nextState)
-        freeState(state->nextState);
-
-    free(state);
-}
-
 void enterState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
-
     switch (state->type)
     {
         case WAR_STATE_IDLE:
-        case WAR_STATE_WAIT:
         {
-            vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-            setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
-            setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
+            enterIdleState(context, entity, state);
             break;
         }
-    
+
         case WAR_STATE_MOVE:
         {
-            if (state->move.positions.count <= 1)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            state->move.positionIndex = 0;
-            state->move.pathNodeIndex = 0;
-            state->move.waitCount = 0;
-
-            vec2 start = state->move.positions.items[state->move.positionIndex];
-            vec2 end = state->move.positions.items[state->move.positionIndex + 1];
-
-            WarMapPath path = state->move.path = findPath(map->finder, start.x, start.y, end.x, end.y);
-
-            // if the is no path to the next position, go to idle
-            if (path.nodes.count <= 1)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            vec2 currentNode = path.nodes.items[state->move.pathNodeIndex];
-            setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y, entity->id);
-
-            vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
-            setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
-
-            setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-            setAction(context, entity, WAR_ACTION_TYPE_WALK, true, getUnitActionScale(entity));
-            break;
-        }
-
-        case WAR_STATE_PATROL:
-        {
-            if (state->patrol.positions.count <= 1)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-                
-                return;
-            }
-
-            WarState* moveState = createMoveState(context, entity, state->patrol.positions.count, vec2ListToArray(&state->patrol.positions));
-            moveState->nextState = state;
-            changeNextState(context, entity, moveState, false, true);
+            enterMoveState(context, entity, state);
             break;
         }
 
         case WAR_STATE_FOLLOW:
         {
-            // all the logic is already in the update function, do nothing here
+            enterFollowState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_PATROL:
+        {
+            enterPatrolState(context, entity, state);
             break;
         }
 
         case WAR_STATE_ATTACK:
         {
-            // all the logic is already in the update function, do nothing here
+            enterAttackState(context, entity, state);
             break;
         }
 
         case WAR_STATE_DEATH:
         {
-            vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-            setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
-            setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
+            enterDeathState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_DAMAGED:
+        {
+            enterDamagedState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_COLLAPSE:
+        {
+            enterCollapseState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_WAIT:
+        {
+            enterWaitState(context, entity, state);
             break;
         }
 
@@ -291,430 +147,71 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     if (!state)
         return;
-    
-    WarMap* map = context->map;
 
     switch (state->type)
     {
         case WAR_STATE_IDLE:
-        case WAR_STATE_WAIT:
         {
-            vec2 unitSize = getUnitSize(entity);
-            vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-            setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+            leaveIdleState(context, entity, state);
             break;
         }
 
         case WAR_STATE_MOVE:
         {
-            vec2 unitSize = getUnitSize(entity);
-            WarMapPath* path = &state->move.path;
+            leaveMoveState(context, entity, state);
+            break;
+        }
 
-            if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
-            {
-                vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
-                if (isDynamicOfEntity(map->finder, currentNode.x, currentNode.y, entity->id))
-                    setFreeTiles(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y);
-            }
-
-            if (inRange(state->move.pathNodeIndex + 1, 0, path->nodes.count))
-            {
-                vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-                if (isDynamicOfEntity(map->finder, nextNode.x, nextNode.y, entity->id))
-                    setFreeTiles(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y);
-            }
-
+        case WAR_STATE_FOLLOW:
+        {
+            leaveFollowState(context, entity, state);
             break;
         }
 
         case WAR_STATE_PATROL:
         {
+            leavePatrolState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_ATTACK:
+        {
+            leaveAttackState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_DEATH:
+        {
+            leaveDeathState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_DAMAGED:
+        {
+            leaveDamagedState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_COLLAPSE:
+        {
+            leaveCollapseState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_WAIT:
+        {
+            leaveWaitState(context, entity, state);
+            break;
+        }
+
+        default:
+        {
+            logError("Unkown state %d for entity %d", state->type, entity->id);
             break;
         }
     }
 
     freeState(state);
-}
-
-void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    if (state->idle.lookAround)
-    {
-        if (chance(20))
-        {
-            WarUnitComponent* unit = &entity->unit;
-            unit->direction += randomi(-1, 2);
-            if (unit->direction < 0)
-                unit->direction = WAR_DIRECTION_NORTH_WEST;
-            else if(unit->direction >= WAR_DIRECTION_COUNT)
-                unit->direction = WAR_DIRECTION_NORTH;
-        }
-    }
-
-    // for(s32 i = 0; i < map->entities.count; i++)
-    // {
-    //     WarEntity* other = context->map->entities[i];
-    //     if (other && other->type == WAR_ENTITY_TYPE_UNIT)
-    //     {
-    //         WarUnitComponent* unit = &other->unit;
-    //         if (isDudeUnit(unit->type) && isEnemy(unit->player))
-    //         {
-                
-    //         }
-    //     }
-    // }
-}
-
-void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    WarMap* map = context->map;
-    WarMapPath* path = &state->move.path;
-
-    assert(path->nodes.count > 1);
-    assert(inRange(state->move.pathNodeIndex, 0, path->nodes.count - 1));
-
-    WarUnitStats stats = getUnitStats(entity->unit.type);
-    vec2 unitSize = getUnitSize(entity);
-
-    vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
-    vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-
-    // if this unit is waiting
-    if (state->move.waitCount > 0)
-    {
-        if (!isEmpty(map->finder, (s32)nextNode.x, (s32)nextNode.y))
-        {
-            // wait for a number of times before re-route
-            if (state->move.waitCount < MOVE_WAIT_INTENTS)
-            {
-                state->move.waitCount++;
-
-                WarState* waitState = createWaitState(context, entity, MOVE_WAIT_TIME);
-                waitState->nextState = state;
-                changeNextState(context, entity, waitState, false, true);
-
-                return;
-            }
-
-            state->move.waitCount = 0;
-
-            // if there is no re-routing possible, go to idle
-            if (!reRoutePath(map->finder, path, state->move.pathNodeIndex, path->nodes.count - 1))
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-                
-                return;
-            }
-
-            nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-        }
-        else
-        {
-            state->move.waitCount = 0;
-        }
-
-        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
-        setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-        setAction(context, entity, WAR_ACTION_TYPE_WALK, true, getUnitActionScale(entity));
-    }
-
-    vec2 position = getUnitCenterPosition(entity, false);
-    vec2 target = vec2TileToMapCoordinates(nextNode, true);
-
-    vec2 direction = vec2Normalize(vec2Subv(target, position));
-    f32 speed = stats.speeds[entity->unit.level] * context->globalSpeed;
-    vec2 step = vec2Mulf(direction, speed * context->deltaTime);
-    vec2 newPosition = vec2Addv(position, step);
-
-    setUnitCenterPosition(entity, newPosition);
-
-    f32 distance = vec2Distance(newPosition, target);
-    if (distance < MOVE_EPSILON)
-    {
-        newPosition = target;
-        setUnitCenterPosition(entity, newPosition);
-
-        setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
-        setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
-
-        state->move.pathNodeIndex++;
-
-        // if there is no more path nodes to check, go to idle
-        if (state->move.pathNodeIndex >= path->nodes.count - 1)
-        {
-            state->move.positionIndex++;
-
-            // if this is no more segments, go to idle
-            if (state->move.positionIndex >= state->move.positions.count - 1)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            // free the previous path and check if there is a new one
-            freePath(*path);
-
-            vec2 start = state->move.positions.items[state->move.positionIndex];
-            vec2 end = state->move.positions.items[state->move.positionIndex + 1];
-
-            *path = findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
-
-            // if there is no path for the next segment, go to idle
-            if (path->nodes.count <= 1)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            state->move.pathNodeIndex = 0;
-        }
-
-        currentNode = path->nodes.items[state->move.pathNodeIndex];
-        setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y, entity->id);
-
-        nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-
-        // if the next node is occupied, check if the unit have to wait to re-route if necessary
-        if (!isEmpty(map->finder, (s32)nextNode.x, (s32)nextNode.y))
-        {
-            // if the next node is occupied but is the last one, don't wait to re-route, go idle
-            if (state->move.pathNodeIndex + 1 == path->nodes.count - 1)
-            {
-                if (!changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            state->move.waitCount++;
-
-            WarState* waitState = createWaitState(context, entity, MOVE_WAIT_TIME);
-            waitState->nextState = state;
-            changeNextState(context, entity, waitState, false, true);
-            
-            return;
-        }
-
-        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
-        setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-    }
-}
-
-void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    vec2List positions = state->patrol.positions;
-
-    // if the unit isn't where is suppose to be, then there must have been a problem in the move, so abort and go idle
-    vec2 actualPosition = vec2MapToTileCoordinates(entity->transform.position);
-    vec2 shouldBeAt = positions.items[positions.count - 1];
-
-    f32 distance = vec2Distance(actualPosition, shouldBeAt);
-    if (distance >= MOVE_EPSILON)
-    {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
-
-        return;
-    }
-
-    // otherwise, reverse the positions list and go to the move state again
-    state->patrol.dir *= -1;
-    vec2ListReverse(&state->patrol.positions);
-
-    vec2* positionsToMove = vec2ListToArray(&state->patrol.positions);
-
-    WarState* moveState = createMoveState(context, entity, state->patrol.positions.count, positionsToMove);
-    moveState->nextState = state;
-    changeNextState(context, entity, moveState, false, true);
-
-    free(positionsToMove);
-}
-
-void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    WarMap* map = context->map;
-
-    WarEntity* targetEntity = findEntity(context, state->follow.targetEntityId);
-
-    // if the entity to follow doesn't exists, go to idle
-    if (!targetEntity)
-    {
-        if (!changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
-        }
-
-        return;
-    }
-
-    vec2 start = getUnitCenterPosition(entity, true);
-    vec2 end = getUnitCenterPosition(targetEntity, true);
-    f32 distance = vec2DistanceInTiles(start, end);
-
-    // if the unit is already in distance, go to idle
-    if (distance <= state->follow.distance)
-    {
-        if (!changeStateNextState(context, entity, state))
-        {
-            WarState* waitState = createWaitState(context, entity, true, MOVE_WAIT_TIME);
-            waitState->nextState = state;
-            changeNextState(context, entity, waitState, false, true);
-        }
-
-        return;
-    }
-
-    WarMapPath path = findPath(map->finder, start.x, start.y, end.x, end.y);
-
-    // if there is no path to the target, go to idle
-    if (path.nodes.count <= 1)
-    {
-        if (!changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
-        }
-
-        freePath(path);
-        return;
-    }
-
-    WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
-    moveState->nextState = state;
-    changeNextState(context, entity, moveState, false, true);
-
-    freePath(path);
-}
-
-void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
-    WarUnitStats stats = getUnitStats(entity->unit.type);
-
-    WarEntity* targetEntity = findEntity(context, state->attack.targetEntityId);
-
-    // if the entity to attack doesn't exists, go idle
-    if (!targetEntity)
-    {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
-        return;
-    }
-
-    // if the unit is not in range to attack, chase it
-    if (!inAttackRange(entity, targetEntity))
-    {
-        WarState* followState = createFollowState(context, entity, state->attack.targetEntityId, stats.range);
-        followState->nextState = state;
-        changeNextState(context, entity, followState, false, true);
-
-        return;
-    }
-
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position, true);
-    vec2 targetPosition = getAttackPointOnTarget(entity, targetEntity);
-
-    setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
-    setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
-    setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
-
-    WarUnitComponent* unit = &entity->unit;
-    WarUnitAction* action = unit->actions.items[unit->actionIndex];
-    if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
-    {
-        // do damage
-        // every unit has a 20 percent chance to miss
-        if (chance(80))
-        {
-            takeDamage(context, targetEntity, unit->minDamage, unit->rndDamage);
-            if (isDeath(targetEntity) || isGoingToDie(targetEntity))
-            {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
-            }
-        }
-
-        // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
-        action->lastActionStep = WAR_ACTION_STEP_NONE;
-        action->lastSoundStep =  WAR_ACTION_STEP_NONE;
-    }
-}
-
-void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    state->death.timeToWait -= context->deltaTime;
-    if (state->death.timeToWait <= 0)
-    {
-        if (entity->unit.type != WAR_UNIT_HUMAN_CORPSE)
-        {
-            vec2 mapPosition = entity->transform.position;
-            vec2 tilePosition = vec2MapToTileCoordinates(mapPosition);
-
-            // TODO: check here for the race of the unit to spawn the correct corpse type
-            WarUnitType corpseType = WAR_UNIT_HUMAN_CORPSE; // entity->unit.race == WAR_RACE_ORCS ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
-            WarEntity* corpse = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-            addUnitComponent(context, corpse, corpseType, (s32)tilePosition.x, (s32)tilePosition.y, WAR_RACE_NEUTRAL, WAR_RESOURCE_NONE, 0);
-            addTransformComponent(context, corpse, mapPosition);
-
-            WarUnitsData unitData = getUnitsData(corpseType);
-
-            s32 spriteIndex = unitData.resourceIndex;
-            if (spriteIndex == 0)
-            {
-                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", corpseType);
-                spriteIndex = 279;
-            }
-            addSpriteComponentFromResource(context, corpse, spriteIndex);
-
-            addUnitActions(corpse);
-            addAnimationsComponent(context, corpse);
-            addStateMachineComponent(context, corpse);
-
-            WarState* deathState = createDeathState(context, corpse, __frameCountToSeconds(1201));
-            changeNextState(context, corpse, deathState, true, true);
-        }
-        
-        // remove the entity from the selection, for this the state machine file need to know about the map and selections
-        // removeEntityFromSelection(context, entity->id);
-        
-        removeEntityById(context, entity->id);
-
-        // free the entity here?
-        // freeEntity(context, entity);
-    }
-}
-
-void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    state->wait.waitTime -= context->deltaTime;
-
-    if (state->wait.waitTime < 0)
-    {
-        if (!changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
-        }
-    }
 }
 
 void updateStateMachine(WarContext* context, WarEntity* entity)
@@ -737,6 +234,12 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
 
         WarState* currentState = stateMachine->currentState;
 
+        if (currentState->delay > 0)
+        {
+            currentState->nextUpdateTime = context->time + currentState->delay;
+            currentState->delay = 0;
+        }
+
         if (context->time >= currentState->nextUpdateTime)
         {
             switch (currentState->type)
@@ -753,15 +256,15 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
                     break;
                 }
 
-                case WAR_STATE_PATROL:
-                {
-                    updatePatrolState(context, entity, currentState);
-                    break;
-                }
-
                 case WAR_STATE_FOLLOW:
                 {
                     updateFollowState(context, entity, currentState);
+                    break;
+                }
+
+                case WAR_STATE_PATROL:
+                {
+                    updatePatrolState(context, entity, currentState);
                     break;
                 }
 
@@ -777,6 +280,18 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
                     break;
                 }
 
+                case WAR_STATE_DAMAGED:
+                {
+                    updateDamagedState(context, entity, currentState);
+                    break;
+                }
+
+                case WAR_STATE_COLLAPSE:
+                {
+                    updateCollapseState(context, entity, currentState);
+                    break;
+                }
+
                 case WAR_STATE_WAIT:
                 {
                     updateWaitState(context, entity, currentState);
@@ -789,8 +304,77 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
                     break;
                 }
             }
-
-            currentState->nextUpdateTime = context->time + currentState->updateFrequency;
         }
     }
+}
+
+void freeState(WarState* state)
+{
+    switch (state->type)
+    {
+        case WAR_STATE_IDLE:
+        {
+            freeIdleState(state);
+            break;
+        }
+
+        case WAR_STATE_MOVE:
+        {
+            freeMoveState(state);
+            break;
+        }
+
+        case WAR_STATE_FOLLOW:
+        {
+            freeFollowState(state);
+            break;
+        }
+
+        case WAR_STATE_PATROL:
+        {
+            freePatrolState(state);
+            break;
+        }
+
+        case WAR_STATE_ATTACK:
+        {
+            freeAttackState(state);
+            break;
+        }
+
+        case WAR_STATE_DEATH:
+        {
+            freeDeathState(state);
+            break;
+        }
+
+        case WAR_STATE_DAMAGED:
+        {
+            freeDamagedState(state);
+            break;
+        }
+
+        case WAR_STATE_COLLAPSE:
+        {
+            freeCollapseState(state);
+            break;
+        }
+
+        case WAR_STATE_WAIT:
+        {
+            freeWaitState(state);
+            break;
+        }
+
+        default:
+        {
+            logError("Unkown state %d for entity %d", state->type);
+            break;
+        }
+    }
+
+    if (state->nextState)
+        freeState(state->nextState);
+
+    free(state);
 }

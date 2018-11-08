@@ -263,67 +263,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the starting entities
     {
-        // s32 x = 16, y = 31;
-        // WarUnitType type;
-        // for(s32 i = 0; i <= WAR_UNIT_SPEARMAN; i++)
-        // {
-        //     type = i;
-            
-        //     if (type == WAR_UNIT_KNIGHT || type == WAR_UNIT_RAIDER)
-        //     {
-        //         for(s32 l = 0; l < 3; l++)
-        //         {
-        //             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-        //             addUnitComponent(context, entity, type, x, y, 0, WAR_RESOURCE_NONE, 0);
-        //             entity->unit.level = l;
-
-        //             addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
-
-        //             WarUnitsData unitData = getUnitsData(type);
-        //             s32 spriteIndex = unitData.resourceIndex;
-        //             if (spriteIndex == 0)
-        //             {
-        //                 logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
-        //                 spriteIndex = 279;
-        //             }
-        //             addSpriteComponentFromResource(context, entity, spriteIndex);
-
-        //             buildUnitActions(entity);
-
-        //             addStateMachineComponent(context, entity);
-
-        //             WarState* idleState = createIdleState(context, entity, isDudeUnit(type));
-        //             changeNextState(context, entity, idleState, true, true);
-
-        //             y++;
-        //         }
-        //     }
-        //     else
-        //     {
-        //         WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
-        //         addUnitComponent(context, entity, type, x, y, 0, WAR_RESOURCE_NONE, 0);
-        //         addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
-
-        //         WarUnitsData unitData = getUnitsData(type);
-        //         s32 spriteIndex = unitData.resourceIndex;
-        //         if (spriteIndex == 0)
-        //         {
-        //             logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
-        //             spriteIndex = 279;
-        //         }
-        //         addSpriteComponentFromResource(context, entity, spriteIndex);
-
-        //         buildUnitActions(entity);
-
-        //         addStateMachineComponent(context, entity);
-
-        //         WarState* idleState = createIdleState(context, entity, isDudeUnit(type));
-        //         changeNextState(context, entity, idleState, true, true);
-
-        //         y++;
-        //     }
-        // }
-        
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
@@ -413,18 +352,14 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // DEBUG
     // add animations
     {
-        // WarSprite sprite = createSpriteFromResourceIndex(context, 299);
-        // WarSpriteAnimation* anim = createAnimation("horsie1", sprite, 0.1f, true);
+        // FIX: THE RUINS ARE A TILES RESOURCE, TREAT IT LIKE TILESET OF MAPS
+        //
+        // WarSprite sprite = createSpriteFromResourceIndex(context, 190);
+        // WarSpriteAnimation* anim = createAnimation("ruins", sprite, 0.1f, true);
 
         // anim->offset = vec2f(250, 280);
 
-        // const s32 baseFrameIndices1[] = {15, 30, 45, 55, 65, 0};
-        // const s32 indexOff1 = 2;
-        
-        // for(s32 i = 0; i < arrayLength(baseFrameIndices1); i++)
-        // {
-        //     addAnimationFrame(anim, baseFrameIndices1[i] + indexOff1);
-        // }
+        // addAnimationFrame(anim, 0);
 
         // WarSpriteAnimationListAdd(&map->animations, anim);
 
@@ -703,101 +638,6 @@ void updateMap(WarContext* context)
                 free(rs);
             }
         }
-
-        // if(map->selectedEntities.count > 0)
-        // {
-        //     WarEntityId selEntityId = map->selectedEntities.items[0];
-        //     s32 selEntityIndex = findEntity(context, selEntityId);
-        //     if (selEntityIndex >= 0)
-        //     {
-        //         WarEntity* selEntity = map->entities.items[selEntityIndex];
-        //         WarUnitComponent* unit = &selEntity->unit;
-        //         if (isBuildingUnit(unit->type))
-        //         {
-        //             unit->hp -= (s32)(unit->maxhp * 0.1f);
-        //             if (unit->hp < 0) unit->hp = 0;
-
-        //             f32 p = (f32)unit->hp / unit->maxhp;
-        //             if (p <= 0)
-        //             {
-        //                 if (!containsAnimation(context, selEntity, "collapse"))
-        //                 {
-        //                     removeAnimation(context, selEntity, "hugeDamage");
-
-        //                     selEntity->sprite.enabled = false;
-
-        //                     vec2 frameSize = getUnitFrameSize(selEntity);
-        //                     vec2 unitSize = getUnitSpriteSize(selEntity);
-
-        //                     WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_COLLAPSE_RESOURCE);
-        //                     WarSpriteAnimation* anim = createAnimation("collapse", sprite, 0.1f, false);
-
-        //                     vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
-
-        //                     // this is the scale of the explosion animation sprites with respect to the size of the building
-        //                     f32 animScale = unitSize.x / animFrameSize.x;
-
-        //                     // if the offset is based on the size of the frame, and it's scaled, then the offset must take into
-        //                     // account the scale to make the calculations
-        //                     f32 offsetx = halff(frameSize.x - unitSize.x);
-        //                     f32 offsety = halff(frameSize.y - unitSize.y) - (animFrameSize.y * animScale - unitSize.y);
-
-        //                     anim->scale = vec2f(animScale, animScale);
-        //                     anim->offset = vec2f(offsetx, offsety);
-
-        //                     for(s32 i = 0; i < 17; i++)
-        //                         addAnimationFrame(anim, i);
-                            
-        //                     addAnimation(selEntity, anim);
-
-        //                     // deselect the entity and remove it!
-        //                     removeEntityFromSelection(context, selEntity->id);
-
-        //                     // if the entity is removed here, then the collapse animation doesn't show
-        //                     // this is because the animation is tied to the entity
-        //                     // for this two solutions:
-        //                     //   1. delay the removing of the entity until the animation is finished
-        //                     //   2. the collapse animation is not tied to the entity
-        //                     // I need to know when the animation finish to spawn a ruins entity,
-        //                     // or the ruins entity spawn at this same moment.
-        //                     //
-        //                     // removeEntityById(context, selEntity->id);
-        //                 }
-        //             }
-        //             else if (p < 0.3f)
-        //             {
-        //                 if (!containsAnimation(context, selEntity, "hugeDamage"))
-        //                 {
-        //                     removeAnimation(context, selEntity, "littleDamage");
-
-        //                     WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_2_RESOURCE);
-        //                     WarSpriteAnimation* anim = createAnimation("hugeDamage", sprite, 0.2f, true);
-        //                     anim->offset = vec2Subv(getUnitSpriteCenter(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
-                            
-        //                     for(s32 i = 0; i < 4; i++)
-        //                         addAnimationFrame(anim, i);
-                            
-        //                     addAnimation(selEntity, anim);
-        //                 }
-        //             }
-        //             else if(p < 0.7f)
-        //             {
-        //                 if (!containsAnimation(context, selEntity, "littleDamage"))
-        //                 {
-        //                     WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_1_RESOURCE);
-        //                     WarSpriteAnimation* anim = createAnimation("littleDamage", sprite, 0.2f, true);
-        //                     anim->offset = vec2Subv(getUnitSpriteCenter(selEntity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
-                            
-        //                     for(s32 i = 0; i < 4; i++)
-        //                         addAnimationFrame(anim, i);
-                            
-        //                     addAnimation(selEntity, anim);
-        //                 }
-        //             }
-                    
-        //         }
-        //     }
-        // }
     }
 }
 

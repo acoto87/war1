@@ -1,4 +1,5 @@
-// Components
+#include "war_state_machine.h"
+
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
     entity->transform = (WarTransformComponent){0};
@@ -98,11 +99,6 @@ void addStateMachineComponent(WarContext* context, WarEntity* entity)
     entity->stateMachine.currentState = NULL;
     entity->stateMachine.nextState = NULL;
 }
-
-// forward reference to leaveState in war_state_machine.c
-WarState* createDeathState(WarContext* context, WarEntity* entity, f32 timeToWait);
-void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
-void leaveState(WarContext* context, WarEntity* entity, WarState* state);
 
 void removeStateMachineComponent(WarContext* context, WarEntity* entity)
 {
@@ -435,7 +431,24 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
 
     if (unit->hp == 0)
     {
-        WarState* deathState = createDeathState(context, entity, __frameCountToSeconds(108));
-        changeNextState(context, entity, deathState, true, true);
+        if (isBuildingUnit(entity))
+        {
+            WarState* collapseState = createCollapseState(context, entity);
+            changeNextState(context, entity, collapseState, true, true);
+        }
+        else
+        {
+            WarState* deathState = createDeathState(context, entity);
+            deathState->delay = __frameCountToSeconds(108);
+            changeNextState(context, entity, deathState, true, true);
+        }
+    }
+    else if (isBuildingUnit(entity))
+    {
+        if (!isDamaged(entity))
+        {
+            WarState* damagedState = createDamagedState(context, entity);
+            changeNextState(context, entity, damagedState, true, true);
+        }
     }
 }

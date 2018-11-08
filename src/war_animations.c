@@ -76,7 +76,7 @@ void updateAnimations(WarContext* context, WarEntity* entity)
     }
 }
 
-s32 findAnimation(WarContext* context, WarEntity* entity, const char* name)
+s32 findAnimationIndex(WarContext* context, WarEntity* entity, const char* name)
 {
     s32 index = -1;
 
@@ -94,9 +94,24 @@ s32 findAnimation(WarContext* context, WarEntity* entity, const char* name)
     return index;
 }
 
+WarSpriteAnimation* findAnimation(WarContext* context, WarEntity* entity, const char* name)
+{
+    WarAnimationsComponent* animations = &entity->animations;
+    for(s32 i = 0; i < animations->animations.count; i++)
+    {
+        WarSpriteAnimation* anim = animations->animations.items[i];
+        if (strcmp(anim->name, name) == 0)
+        {
+            return anim;
+        }
+    }
+
+    return NULL;
+}
+
 bool containsAnimation(WarContext* context, WarEntity* entity, const char* name)
 {
-    return findAnimation(context, entity, name) >= 0;
+    return findAnimationIndex(context, entity, name) >= 0;
 }
 
 void freeAnimation(WarSpriteAnimation* animation)
@@ -115,7 +130,7 @@ void freeAnimation(WarSpriteAnimation* animation)
 
 void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
 {
-    s32 index = findAnimation(context, entity, name);
+    s32 index = findAnimationIndex(context, entity, name);
     if (index >= 0)
     {
         WarAnimationsComponent* animations = &entity->animations;

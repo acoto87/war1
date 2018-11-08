@@ -25,7 +25,7 @@ inline void initLog(LogSeverity severity)
     __log.severity = severity;
 }
 
-static void __logInternal(LogSeverity severity, const char* message, ...)
+static void __logInternal(LogSeverity severity, const char* file, const int32_t line, const char* message, ...)
 {
     if (severity <= __log.severity)
     {
@@ -47,7 +47,7 @@ static void __logInternal(LogSeverity severity, const char* message, ...)
             default:                        severityStr = "UNKOWN";     break;
         }
 
-        printf("[%s][%s]: ", tstr, severityStr);
+        fprintf(stdout, "[%s:(%d)][%s][%s]: ", file, line, tstr, severityStr);
 
         va_list args;
         va_start(args, message);
@@ -58,9 +58,11 @@ static void __logInternal(LogSeverity severity, const char* message, ...)
     }
 }
 
-#define log(severity, message, ...) __logInternal(severity, message, __VA_ARGS__)
-#define logCritical(message, ...) __logInternal(LOG_SEVERITY_CRITICAL, message, __VA_ARGS__)
-#define logError(message, ...) __logInternal(LOG_SEVERITY_ERROR, message, __VA_ARGS__)
-#define logWarning(message, ...) __logInternal(LOG_SEVERITY_WARNING, message, __VA_ARGS__)
-#define logInfo(message, ...) __logInternal(LOG_SEVERITY_INFO, message, __VA_ARGS__)
-#define logDebug(message, ...) __logInternal(LOG_SEVERITY_DEBUG, message, __VA_ARGS__)
+#define NOT_IMPLEMENTED fprintf(stderr, "Not implemented at %s (%d)", )
+
+#define log(severity, message, ...) __logInternal(severity, __FILE__, __LINE__, message, __VA_ARGS__)
+#define logCritical(message, ...) __logInternal(LOG_SEVERITY_CRITICAL, __FILE__, __LINE__, message, __VA_ARGS__)
+#define logError(message, ...) __logInternal(LOG_SEVERITY_ERROR, __FILE__, __LINE__, message, __VA_ARGS__)
+#define logWarning(message, ...) __logInternal(LOG_SEVERITY_WARNING, __FILE__, __LINE__, message, __VA_ARGS__)
+#define logInfo(message, ...) __logInternal(LOG_SEVERITY_INFO, __FILE__, __LINE__, message, __VA_ARGS__)
+#define logDebug(message, ...) __logInternal(LOG_SEVERITY_DEBUG, __FILE__, __LINE__, message, __VA_ARGS__)
