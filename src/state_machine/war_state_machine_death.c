@@ -13,6 +13,7 @@ void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
     setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
+    removeEntityFromSelection(context, entity->id);
 }
 
 void leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
@@ -53,13 +54,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
         changeNextState(context, corpse, deathState, true, true);
     }
     
-    // remove the entity from the selection, for this the state machine file need to know about the map and selections
-    // removeEntityFromSelection(context, entity->id);
-    
     removeEntityById(context, entity->id);
-
-    // free the entity here?
-    // freeEntity(context, entity);
 }
 
 void freeDeathState(WarState* state)

@@ -137,3 +137,47 @@ void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
         WarSpriteAnimationListRemoveAt(&animations->animations, index);
     }
 }
+
+WarSpriteAnimation* createDamageAnimation(WarContext* context, WarEntity* entity, char* name, int damageLevel)
+{
+    s32 resourceIndex = damageLevel == 1 ? BUILDING_DAMAGE_1_RESOURCE : BUILDING_DAMAGE_2_RESOURCE;
+    WarSprite sprite = createSpriteFromResourceIndex(context, resourceIndex);
+    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.2f, true);
+    anim->offset = vec2Subv(getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+    
+    for(s32 i = 0; i < 4; i++)
+        addAnimationFrame(anim, i);
+    
+    addAnimation(entity, anim);
+
+    return anim;
+}
+
+WarSpriteAnimation* createCollapseAnimation(WarContext* context, WarEntity* entity, char* name)
+{
+    vec2 unitFrameSize = getUnitFrameSize(entity);
+    vec2 unitSpriteSize = getUnitSpriteSize(entity);
+
+    WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_COLLAPSE_RESOURCE);
+    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
+
+    vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+
+    // this is the scale of the explosion animation sprites with respect to the size of the building
+    f32 animScale = unitSpriteSize.x / animFrameSize.x;
+
+    // if the offset is based on the size of the frame, and it's scaled, then the offset must take into
+    // account the scale to make the calculations
+    f32 offsetx = halff(unitFrameSize.x - unitSpriteSize.x);
+    f32 offsety = halff(unitFrameSize.y - unitSpriteSize.y) - (animFrameSize.y * animScale - unitSpriteSize.y);
+
+    anim->scale = vec2f(animScale, animScale);
+    anim->offset = vec2f(offsetx, offsety);
+
+    for(s32 i = 0; i < 17; i++)
+        addAnimationFrame(anim, i);
+    
+    addAnimation(entity, anim);
+
+    return anim;
+}

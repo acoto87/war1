@@ -438,7 +438,10 @@ typedef enum
     WAR_ENTITY_TYPE_IMAGE,
     WAR_ENTITY_TYPE_UNIT,
     WAR_ENTITY_TYPE_ROAD,
-    WAR_ENTITY_TYPE_WALL
+    WAR_ENTITY_TYPE_WALL,
+    WAR_ENTITY_TYPE_RUIN,
+
+    WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
 
 typedef enum
@@ -463,22 +466,64 @@ typedef enum
 typedef struct
 {
     WarRoadPieceType type;
-    u8 tilex, tiley;
+    s32 tilex, tiley;
     u8 player;
 } WarRoadPiece;
 
 #define WarRoadPieceEmpty (WarRoadPiece){0}
+#define createRoadPiece(type, x, y, player) ((WarRoadPiece){(type), (x), (y), (player)})
 
-internal bool equalsRoadPiece(const WarRoadPiece p1, const WarRoadPiece p2)
+internal bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
 {
-    return p1.type == p2.type && p1.player == p2.player &&
-           p1.tilex == p2.tilex && p1.tiley == p2.tiley;
+    return r1.type == r2.type && r1.player == r2.player &&
+           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
 }
 
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarRoadPieceList, WarRoadPiece)
 
 #define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL}
+
+typedef enum 
+{
+    WAR_RUIN_PIECE_TOP_LEFT,
+    WAR_RUIN_PIECE_TOP,
+    WAR_RUIN_PIECE_TOP_RIGHT,
+    WAR_RUIN_PIECE_LEFT,
+    WAR_RUIN_PIECE_CENTER,
+    WAR_RUIN_PIECE_RIGHT,
+    WAR_RUIN_PIECE_BOTTOM_LEFT,
+    WAR_RUIN_PIECE_BOTTOM,
+    WAR_RUIN_PIECE_BOTTOM_RIGHT,
+
+    WAR_RUIN_PIECE_TOP_LEFT_INSIDE,
+    WAR_RUIN_PIECE_TOP_RIGHT_INSIDE,
+    WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE,
+    WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE,
+
+    WAR_RUIN_PIECE_DIAG_1,
+    WAR_RUIN_PIECE_DIAG_2,
+} WarRuinPieceType;
+
+typedef struct
+{
+    WarRuinPieceType type;
+    s32 tilex, tiley;
+} WarRuinPiece;
+
+#define WarRuinPieceEmpty (WarRuinPiece){0}
+#define createRuinPiece(x, y) ((WarRuinPiece){0, (x), (y)})
+
+internal bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
+{
+    return r1.type == r2.type && 
+           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
+}
+
+shlDeclareList(WarRuinPieceList, WarRuinPiece)
+shlDefineList(WarRuinPieceList, WarRuinPiece)
+
+#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL}
 
 typedef enum
 {
@@ -731,6 +776,12 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    WarRuinPieceList pieces;
+} WarRuinComponent;
+
+typedef struct
+{
+    bool enabled;
     WarState* currentState;
     WarState* nextState;
     bool leaveState;
@@ -745,6 +796,7 @@ typedef struct
     WarTransformComponent transform;
     WarSpriteComponent sprite;
     WarRoadComponent road;
+    WarRuinComponent ruin;
     WarUnitComponent unit;
     WarStateMachineComponent stateMachine;
     WarAnimationsComponent animations;

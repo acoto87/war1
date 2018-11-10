@@ -41,7 +41,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position, true);
+    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
     vec2 targetPosition = getAttackPointOnTarget(entity, targetEntity);
 
     setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);

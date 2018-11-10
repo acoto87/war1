@@ -1,145 +1,3 @@
-void createRoads(WarRoadPieceList *pieces, WarLevelConstruct *construct)
-{
-    s32 x1 = construct->x1;
-    s32 y1 = construct->y1;
-    s32 x2 = construct->x2;
-    s32 y2 = construct->y2;
-    u8 player = construct->player;
-
-    s32 dx = x2 - x1;
-    dx = sign(dx);
-
-    s32 dy = y2 - y1;
-    dy = sign(dy);
-    
-    s32 x = x1;
-    s32 y = y1;
-
-    WarRoadPiece piece;
-
-    while (x != x2)
-    {
-        piece = (WarRoadPiece){0};
-        piece.player = player;
-        piece.tilex = x;
-        piece.tiley = y;
-
-        WarRoadPieceListAdd(pieces, piece);
-
-        x += dx;
-    }
-
-    piece = (WarRoadPiece){0};
-    piece.player = player;
-    piece.tilex = x;
-    piece.tiley = y;
-
-    WarRoadPieceListAdd(pieces, piece);
-
-    while (y != y2)
-    {
-        piece = (WarRoadPiece){0};
-        piece.player = player;
-        piece.tilex = x;
-        piece.tiley = y;
-
-        WarRoadPieceListAdd(pieces, piece);
-
-        y += dy;
-    }
-
-    piece = (WarRoadPiece){0};
-    piece.player = player;
-    piece.tilex = x;
-    piece.tiley = y;
-
-    WarRoadPieceListAdd(pieces, piece);
-}
-
-void determineRoadTypes(WarRoadPieceList *pieces)
-{
-    s32 count = pieces->count;
-    for(s32 i = 0; i < count; i++)
-    {
-        bool left = false, 
-             top = false, 
-             right = false, 
-             bottom = false;
-
-        for(s32 j = 0; j < count; j++)
-        {
-            if (i == j) continue;
-
-            if (pieces->items[j].tilex == pieces->items[i].tilex - 1 && pieces->items[j].tiley == pieces->items[i].tiley)
-                left = true;
-            else if(pieces->items[j].tilex == pieces->items[i].tilex + 1 && pieces->items[j].tiley == pieces->items[i].tiley)
-                right = true;
-            else if (pieces->items[j].tilex == pieces->items[i].tilex && pieces->items[j].tiley == pieces->items[i].tiley - 1)
-                top = true;
-            else if (pieces->items[j].tilex == pieces->items[i].tilex && pieces->items[j].tiley == pieces->items[i].tiley + 1)
-                bottom = true;
-        }
-
-        // Endpieces
-        if (top && !bottom && !left && !right)
-            pieces->items[i].type = WAR_ROAD_PIECE_BOTTOM;
-        if (!top && bottom && !left && !right)
-            pieces->items[i].type = WAR_ROAD_PIECE_TOP;
-        if (!top && !bottom && !left && right)
-            pieces->items[i].type = WAR_ROAD_PIECE_LEFT;
-        if (!top && !bottom && left && !right)
-            pieces->items[i].type = WAR_ROAD_PIECE_RIGHT;
-
-        // Corner pieces
-        if (top && !bottom && left && !right)
-            pieces->items[i].type = WAR_ROAD_PIECE_TOP_LEFT;
-        if (!top && bottom && left && !right)
-            pieces->items[i].type = WAR_ROAD_PIECE_BOTTOM_LEFT;
-        if (top && !bottom && !left && right)
-            pieces->items[i].type = WAR_ROAD_PIECE_TOP_RIGHT;
-        if (!top && bottom && !left && right)
-            pieces->items[i].type = WAR_ROAD_PIECE_BOTTOM_RIGHT;
-
-        // Middle pieces
-        if (!top && !bottom && left && right)
-            pieces->items[i].type = WAR_ROAD_PIECE_HORIZONTAL;
-        if (top && bottom && !left && !right)
-            pieces->items[i].type = WAR_ROAD_PIECE_VERTICAL;
-
-        // Quad piece
-        if (top && bottom && left && right)
-            pieces->items[i].type = WAR_ROAD_PIECE_CROSS;
-
-        // T-Corners
-        if (top && bottom && left && !right)
-            pieces->items[i].type = WAR_ROAD_PIECE_T_RIGHT;
-        if (top && bottom && !left && right)
-            pieces->items[i].type = WAR_ROAD_PIECE_T_LEFT;
-        if (!top && bottom && left && right)
-            pieces->items[i].type = WAR_ROAD_PIECE_T_TOP;
-        if (top && !bottom && left && right)
-            pieces->items[i].type = WAR_ROAD_PIECE_T_BOTTOM;
-    }
-}
-
-internal inline void addEntityToSelection(WarContext* context, WarEntityId id)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    // subtitute this with a set data structure that doesn't allow duplicates
-    if (!WarEntityIdListContains(&map->selectedEntities, id))
-        WarEntityIdListAdd(&map->selectedEntities, id);
-}
-
-internal inline void removeEntityFromSelection(WarContext* context, WarEntityId id)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    WarEntityIdListRemove(&map->selectedEntities, id);
-}
-
 void createMap(WarContext *context, s32 levelInfoIndex)
 {
     WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
@@ -352,16 +210,23 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // DEBUG
     // add animations
     {
-        // FIX: THE RUINS ARE A TILES RESOURCE, TREAT IT LIKE TILESET OF MAPS
-        //
-        // WarSprite sprite = createSpriteFromResourceIndex(context, 190);
-        // WarSpriteAnimation* anim = createAnimation("ruins", sprite, 0.1f, true);
+        WarEntity* ruins = createRuins(context, 10, 8, 3);
 
-        // anim->offset = vec2f(250, 280);
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(12, 7));
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(13, 7));
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(13, 8));
 
-        // addAnimationFrame(anim, 0);
 
-        // WarSpriteAnimationListAdd(&map->animations, anim);
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(9, 10));
+
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(9,  11));
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(10, 11));
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(11, 11));
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(9,  12));
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(10, 12));
+        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(11, 12));
+
+        determineRuinTypes(ruins);
 
         // WarSprite sprite2 = createSpriteFromResourceIndex(context, 299);
         // WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.1f, true);
@@ -703,6 +568,18 @@ void renderMap(WarContext *context)
             {
                 WarEntity *entity = map->entities.items[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
+                {
+                    renderEntity(context, entity, false);
+                }
+            }
+        }
+
+        // render ruins
+        {
+            for(s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity* entity = map->entities.items[i];
+                if (entity && entity->type == WAR_ENTITY_TYPE_RUIN)
                 {
                     renderEntity(context, entity, false);
                 }

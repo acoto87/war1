@@ -58,8 +58,6 @@ static void __logInternal(LogSeverity severity, const char* file, const int32_t 
     }
 }
 
-#define NOT_IMPLEMENTED fprintf(stderr, "Not implemented at %s (%d)", )
-
 #define log(severity, message, ...) __logInternal(severity, __FILE__, __LINE__, message, __VA_ARGS__)
 #define logCritical(message, ...) __logInternal(LOG_SEVERITY_CRITICAL, __FILE__, __LINE__, message, __VA_ARGS__)
 #define logError(message, ...) __logInternal(LOG_SEVERITY_ERROR, __FILE__, __LINE__, message, __VA_ARGS__)

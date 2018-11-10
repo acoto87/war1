@@ -28,29 +28,14 @@ void updateDamagedState(WarContext* context, WarEntity* entity, WarState* state)
         if (!containsAnimation(context, entity, "hugeDamage"))
         {
             removeAnimation(context, entity, "littleDamage");
-
-            WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_2_RESOURCE);
-            WarSpriteAnimation* anim = createAnimation("hugeDamage", sprite, 0.2f, true);
-            anim->offset = vec2Subv(getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
-            
-            for(s32 i = 0; i < 4; i++)
-                addAnimationFrame(anim, i);
-            
-            addAnimation(entity, anim);
+            createDamageAnimation(context, entity, "hugeDamage", 2);
         }
     }
     else if(hpPercent <= 66)
     {
         if (!containsAnimation(context, entity, "littleDamage"))
         {
-            WarSprite sprite = createSpriteFromResourceIndex(context, BUILDING_DAMAGE_1_RESOURCE);
-            WarSpriteAnimation* anim = createAnimation("littleDamage", sprite, 0.2f, true);
-            anim->offset = vec2Subv(getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
-            
-            for(s32 i = 0; i < 4; i++)
-                addAnimationFrame(anim, i);
-            
-            addAnimation(entity, anim);
+            createDamageAnimation(context, entity, "littleDamage", 1);
         }
     }
 }

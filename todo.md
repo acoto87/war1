@@ -16,6 +16,7 @@ List of thing to do in no particular order
   * Sort the units by `y` position to render and the units with greater `y` render on top of the ones with less `y`.
   * Factorize state_machine.c in files (maybe `state_machine_update.c`, `state_machine_enter.c`, etc.)
   * Draw text system (to debug and other texts).
+  * > Walls (same system like roads).
 
 * Gameplay
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
@@ -24,7 +25,8 @@ List of thing to do in no particular order
   * Add explosion animation to living npc units when clicking to many times.
   * Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over.
   * Fix the selection of units to select only dude units or one building.
-  * > Making health system for units.
+  * Make Ctrl+click select all units of the same type on the screen.
+  * ~~Making health system for units.~~
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~
@@ -78,16 +80,17 @@ List of thing to do in no particular order
     * ~~Attack the unit next to~~
     * ~~Move to attack the unit that is far~~
     * ~~Consider ranged and melee attacks~~
-    * > Do damage.
+    * Do damage.
       * ~~Do damage to units.~~
       * ~~Do damage to buildings.~~
       * Do damage with splash (catapults).
       * Do damage with magic.
   * Ground-attack state
     * Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.
-  * > Damaged state (for buildings)
-  * > Collapse state (for buildings)
-    * Spawn ruins after the collapse of a building.
+  * ~~Damaged state (for buildings)~~
+  * Collapse state (for buildings)~~
+    * ~~Spawn ruins after the collapse of a building.~~
+    * Check if the new spawning ruins could merge with a previous one. This occurs when a building is built above a ruins.
   * Build state
   * Gathering resources state
   * ~~Make a Leave function when the states are leaving, and not just free them. Let that responsibility to the state itself.~~
@@ -107,6 +110,7 @@ List of thing to do in no particular order
   * When right click in the minimap, the selected unit should go there.
   * Give greater cost to diagonal movements than to straight movements.
   * Remove BFS implementation.
+  * Check again the path finding stuff, because now the units will go for side edges of buildings when a corner is closest.
 
 * UI system
   * Buttons

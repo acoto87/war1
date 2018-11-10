@@ -160,25 +160,53 @@ typedef struct
     WarRoadPieceType type;
     s32 tileIndexForest;
     s32 tileIndexSwamp;
+    s32 tileIndexDungeon;
 } WarRoadsData;
 
 const WarRoadsData roadsData[] =
 {
-    { WAR_ROAD_PIECE_LEFT,                56, 57 },
-    { WAR_ROAD_PIECE_TOP,                 57, 58 },
-    { WAR_ROAD_PIECE_RIGHT,               58, 59 },
-    { WAR_ROAD_PIECE_BOTTOM,              59, 60 },
-    { WAR_ROAD_PIECE_BOTTOM_LEFT,         60, 61 },
-    { WAR_ROAD_PIECE_VERTICAL,            61, 62 },
-    { WAR_ROAD_PIECE_BOTTOM_RIGHT,        62, 63 },
-    { WAR_ROAD_PIECE_T_LEFT,              63, 64 },
-    { WAR_ROAD_PIECE_T_BOTTOM,            64, 65 },
-    { WAR_ROAD_PIECE_T_RIGHT,             65, 66 },
-    { WAR_ROAD_PIECE_CROSS,               66, 67 },
-    { WAR_ROAD_PIECE_TOP_LEFT,            67, 68 },
-    { WAR_ROAD_PIECE_HORIZONTAL,          68, 69 },
-    { WAR_ROAD_PIECE_T_TOP,               69, 70 },
-    { WAR_ROAD_PIECE_TOP_RIGHT,           70, 71 },
+    { WAR_ROAD_PIECE_LEFT,                56, 57, 83 },
+    { WAR_ROAD_PIECE_TOP,                 57, 58, 83 },
+    { WAR_ROAD_PIECE_RIGHT,               58, 59, 83 },
+    { WAR_ROAD_PIECE_BOTTOM,              59, 60, 83 },
+    { WAR_ROAD_PIECE_BOTTOM_LEFT,         60, 61, 83 },
+    { WAR_ROAD_PIECE_VERTICAL,            61, 62, 83 },
+    { WAR_ROAD_PIECE_BOTTOM_RIGHT,        62, 63, 83 },
+    { WAR_ROAD_PIECE_T_LEFT,              63, 64, 83 },
+    { WAR_ROAD_PIECE_T_BOTTOM,            64, 65, 83 },
+    { WAR_ROAD_PIECE_T_RIGHT,             65, 66, 83 },
+    { WAR_ROAD_PIECE_CROSS,               66, 67, 83 },
+    { WAR_ROAD_PIECE_TOP_LEFT,            67, 68, 83 },
+    { WAR_ROAD_PIECE_HORIZONTAL,          68, 69, 83 },
+    { WAR_ROAD_PIECE_T_TOP,               69, 70, 83 },
+    { WAR_ROAD_PIECE_TOP_RIGHT,           70, 71, 83 },
+};
+
+typedef struct
+{
+    WarRuinPieceType type;
+    s32 tileIndexForest;
+    s32 tileIndexSwamp;
+    s32 tileIndexDungeon;
+} WarRuinsData;
+
+const WarRuinsData ruinsData[] =
+{
+    { WAR_RUIN_PIECE_TOP_LEFT,            41, 42, 83 },
+    { WAR_RUIN_PIECE_TOP,                 42, 43, 83 },
+    { WAR_RUIN_PIECE_TOP_RIGHT,           43, 44, 83 },
+    { WAR_RUIN_PIECE_LEFT,                44, 45, 83 },
+    { WAR_RUIN_PIECE_CENTER,              45, 46, 83 },
+    { WAR_RUIN_PIECE_RIGHT,               46, 47, 83 },
+    { WAR_RUIN_PIECE_BOTTOM_LEFT,         47, 48, 83 },
+    { WAR_RUIN_PIECE_BOTTOM,              48, 49, 83 },
+    { WAR_RUIN_PIECE_BOTTOM_RIGHT,        49, 50, 83 },
+    { WAR_RUIN_PIECE_TOP_LEFT_INSIDE,     50, 51, 83 },
+    { WAR_RUIN_PIECE_TOP_RIGHT_INSIDE,    51, 52, 83 },
+    { WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE,  53, 54, 83 },
+    { WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE, 52, 53, 83 },
+    { WAR_RUIN_PIECE_DIAG_1,              55, 56, 83 },
+    { WAR_RUIN_PIECE_DIAG_2,              54, 55, 83 },
 };
 
 typedef struct
@@ -339,6 +367,17 @@ inline WarRoadsData getRoadsData(WarRoadPieceType type)
 
     assert(index < length);
     return roadsData[index];
+}
+
+inline WarRuinsData getRuinsData(WarRuinPieceType type)
+{
+    s32 index = 0;
+    s32 length = arrayLength(ruinsData);
+    while (index < length && ruinsData[index].type != type)
+        index++;
+
+    assert(index < length);
+    return ruinsData[index];
 }
 
 inline WarUnitStats getUnitStats(WarUnitType type)

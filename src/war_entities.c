@@ -1,5 +1,3 @@
-#include "war_state_machine.h"
-
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
     entity->transform = (WarTransformComponent){0};
@@ -92,6 +90,19 @@ void removeRoadComponent(WarContext* context, WarEntity* entity)
     entity->road = (WarRoadComponent){0};
 }
 
+void addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces)
+{
+    entity->ruin = (WarRuinComponent){0};
+    entity->ruin.enabled = true;
+    entity->ruin.pieces = pieces;
+}
+
+void removeRuinComponent(WarContext* context, WarEntity* entity)
+{
+    WarRuinPieceListFree(&entity->ruin.pieces);
+    entity->ruin = (WarRuinComponent){0};
+}
+
 void addStateMachineComponent(WarContext* context, WarEntity* entity)
 {
     entity->stateMachine = (WarStateMachineComponent){0};
@@ -154,6 +165,220 @@ WarEntity* createEntity(WarContext* context, WarEntityType type)
     return entity;
 }
 
+void createRoads(WarRoadPieceList *pieces, WarLevelConstruct *construct)
+{
+    s32 x1 = construct->x1;
+    s32 y1 = construct->y1;
+    s32 x2 = construct->x2;
+    s32 y2 = construct->y2;
+    u8 player = construct->player;
+
+    s32 dx = x2 - x1;
+    dx = sign(dx);
+
+    s32 dy = y2 - y1;
+    dy = sign(dy);
+    
+    s32 x = x1;
+    s32 y = y1;
+
+    WarRoadPiece piece;
+
+    while (x != x2)
+    {
+        WarRoadPieceListAdd(pieces, createRoadPiece(0, x, y, player));
+        x += dx;
+    }
+
+    WarRoadPieceListAdd(pieces, createRoadPiece(0, x, y, player));
+
+    while (y != y2)
+    {
+        WarRoadPieceListAdd(pieces, createRoadPiece(0, x, y, player));
+        y += dy;
+    }
+
+    WarRoadPieceListAdd(pieces, createRoadPiece(0, x, y, player));
+}
+
+void determineRoadTypes(WarRoadPieceList *pieces)
+{
+    s32 count = pieces->count;
+    for(s32 i = 0; i < count; i++)
+    {
+        WarRoadPiece* pi = &pieces->items[i];
+
+        bool left = false, 
+             top = false, 
+             right = false, 
+             bottom = false;
+
+        for(s32 j = 0; j < count; j++)
+        {
+            if (i == j) continue;
+
+            WarRoadPiece* pj = &pieces->items[j];
+
+            if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley)
+                left = true;
+            else if(pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley)
+                right = true;
+            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley - 1)
+                top = true;
+            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley + 1)
+                bottom = true;
+        }
+
+        // Endpieces
+        if (top && !bottom && !left && !right)
+            pi->type = WAR_ROAD_PIECE_BOTTOM;
+        if (!top && bottom && !left && !right)
+            pi->type = WAR_ROAD_PIECE_TOP;
+        if (!top && !bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_LEFT;
+        if (!top && !bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_RIGHT;
+
+        // Corner pieces
+        if (top && !bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_TOP_LEFT;
+        if (!top && bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_BOTTOM_LEFT;
+        if (top && !bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_TOP_RIGHT;
+        if (!top && bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_BOTTOM_RIGHT;
+
+        // Middle pieces
+        if (!top && !bottom && left && right)
+            pi->type = WAR_ROAD_PIECE_HORIZONTAL;
+        if (top && bottom && !left && !right)
+            pi->type = WAR_ROAD_PIECE_VERTICAL;
+
+        // Quad piece
+        if (top && bottom && left && right)
+            pi->type = WAR_ROAD_PIECE_CROSS;
+
+        // T-Corners
+        if (top && bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_T_RIGHT;
+        if (top && bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_T_LEFT;
+        if (!top && bottom && left && right)
+            pi->type = WAR_ROAD_PIECE_T_TOP;
+        if (top && !bottom && left && right)
+            pi->type = WAR_ROAD_PIECE_T_BOTTOM;
+    }
+}
+
+void determineRuinTypes(WarEntity* entity)
+{
+    WarRuinComponent* ruin = &entity->ruin;
+    WarRuinPieceList* pieces = &ruin->pieces;
+    s32 count = pieces->count;
+    for(s32 i = 0; i < count; i++)
+    {
+        WarRuinPiece* pi = &pieces->items[i];
+
+        bool topLeft = false,
+             top = false,
+             topRight = false,
+             left = false,
+             right = false,
+             bottomLeft = false,
+             bottom = false,
+             bottomRight = false;
+
+        for(s32 j = 0; j < count; j++)
+        {
+            if (i == j) continue;
+
+            WarRuinPiece* pj = &pieces->items[j];
+
+            if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley - 1)
+                topLeft = true;
+            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley - 1)
+                top = true;
+            else if (pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley - 1)
+                topRight = true;
+            else if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley)
+                left = true;
+            else if(pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley)
+                right = true;
+            else if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley + 1)
+                bottomLeft = true;
+            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley + 1)
+                bottom = true;
+            else if (pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley + 1)
+                bottomRight = true;
+        }
+
+        // Corners
+        if (!topLeft && !top && !left && right && bottom && bottomRight)
+            pi->type = WAR_RUIN_PIECE_TOP_LEFT;
+        if (!topRight && !top && !right && left && bottom && bottomLeft)
+            pi->type = WAR_RUIN_PIECE_TOP_RIGHT;
+        if (!bottomLeft && !bottom && !left && right && top && topRight)
+            pi->type = WAR_RUIN_PIECE_BOTTOM_LEFT;
+        if (!bottomRight && !bottom && !right && left && top && topLeft)
+            pi->type = WAR_RUIN_PIECE_BOTTOM_RIGHT;
+
+        // Edges
+        if (!top && left && right && bottom)
+            pi->type = WAR_RUIN_PIECE_TOP;
+        if (!left && top && bottom && right)
+            pi->type = WAR_RUIN_PIECE_LEFT;
+        if (!right && top && bottom && left)
+            pi->type = WAR_RUIN_PIECE_RIGHT;
+        if (!bottom && left && right && top)
+            pi->type = WAR_RUIN_PIECE_BOTTOM;
+
+        // Insides
+        if (!bottomRight && top && left && right && bottom && topLeft)
+            pi->type = WAR_RUIN_PIECE_TOP_LEFT_INSIDE;
+        if (!bottomLeft && top && right && left && bottom && topRight)
+            pi->type = WAR_RUIN_PIECE_TOP_RIGHT_INSIDE;
+        if (!topRight && top && left && right && bottom && bottomLeft)
+            pi->type = WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE;
+        if (!topLeft && top && left && right && bottom && bottomRight)
+            pi->type = WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE;
+
+        // Diagonals
+        if (!topRight && !bottomLeft && topLeft && bottomRight)
+            pi->type = WAR_RUIN_PIECE_DIAG_1;
+        if (!topLeft && !bottomRight && topRight && bottomLeft)
+            pi->type = WAR_RUIN_PIECE_DIAG_2;
+
+        // Center
+        if (topLeft && top && topRight && left && right && bottomLeft && bottom && bottomRight)
+            pi->type = WAR_RUIN_PIECE_CENTER;
+        if (!topLeft && !top && !topRight && !left && !right && !bottomLeft && !bottom && !bottomRight)
+            pi->type = WAR_RUIN_PIECE_CENTER;
+    }
+}
+
+WarEntity* createRuins(WarContext* context, s32 x, s32 y, s32 dim)
+{
+    WarMap* map = context->map;
+
+    WarRuinPieceList pieces;
+    WarRuinPieceListInit(&pieces, WarRuinPieceListDefaultOptions);
+
+    for(s32 yy = 0; yy < dim; yy++)
+    {
+        for(s32 xx = 0; xx < dim; xx++)
+            WarRuinPieceListAdd(&pieces, createRuinPiece(x + xx, y + yy));
+    }
+
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_RUIN);
+    addRuinComponent(context, entity, pieces);
+    addSpriteComponent(context, entity, map->sprite);
+
+    determineRuinTypes(entity);
+
+    return entity;
+}
+
 s32 findEntityIndex(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
@@ -195,6 +420,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
     removeTransformComponent(context, entity);
     removeSpriteComponent(context, entity);
     removeRoadComponent(context, entity);
+    removeRuinComponent(context, entity);
     removeUnitComponent(context, entity);
     removeStateMachineComponent(context, entity);
     removeAnimationsComponent(context, entity);
@@ -239,21 +465,108 @@ void renderRoad(WarContext* context, WarEntity* entity)
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, road->pieces.count);
 
-            if (context->map->tilesetType != MAP_TILESET_FOREST &&
-                context->map->tilesetType != MAP_TILESET_SWAMP)
-            {
-                logError("Unkown tileset for a road: %d\n", context->map->tilesetType);
-                return;
-            }
-
             WarMapTilesetType tilesetType = context->map->tilesetType;
 
             for (s32 i = 0; i < road->pieces.count; i++)
             {
                 // get the index of the tile in the spritesheet of the map,
                 // corresponding to the current tileset type (forest, swamp)
-                WarRoadsData roadData = getRoadsData(pieces->items[i].type);
-                s32 tileIndex = tilesetType == MAP_TILESET_FOREST ? roadData.tileIndexForest : roadData.tileIndexSwamp;
+                WarRoadsData roadsData = getRoadsData(pieces->items[i].type);
+
+                s32 tileIndex = 0;
+                
+                switch (tilesetType)
+                {
+                    case MAP_TILESET_FOREST:
+                    {
+                        tileIndex = roadsData.tileIndexForest;
+                        break;
+                    }
+
+                    case MAP_TILESET_SWAMP:
+                    {
+                        tileIndex = roadsData.tileIndexSwamp;
+                        break;
+                    }
+
+                    case MAP_TILESET_DUNGEON:
+                    {
+                        tileIndex = roadsData.tileIndexDungeon;
+                        break;
+                    }
+                }
+
+                // the position in the world of the road piece tile
+                s32 x = pieces->items[i].tilex;
+                s32 y = pieces->items[i].tiley;
+
+                // coordinates in pixels of the road piece tile
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                nvgSave(gfx);
+                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+
+                nvgRestore(gfx);
+            }
+
+            nvgEndImageBatch(gfx, batch);
+        }
+    }
+}
+
+void renderRuin(WarContext* context, WarEntity* entity)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarTransformComponent transform = entity->transform;
+    WarSpriteComponent* sprite = &entity->sprite;
+    WarRuinComponent* ruin = &entity->ruin;
+
+    if (sprite->enabled)
+    {
+        nvgTranslate(gfx, transform.position.x, transform.position.y);
+
+        if (ruin->enabled)
+        {
+            WarRuinPieceList* pieces = &ruin->pieces;
+
+            NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, ruin->pieces.count);
+
+            WarMapTilesetType tilesetType = context->map->tilesetType;
+
+            for (s32 i = 0; i < ruin->pieces.count; i++)
+            {
+                // get the index of the tile in the spritesheet of the map,
+                // corresponding to the current tileset type (forest, swamp)
+                WarRuinsData ruinsData = getRuinsData(pieces->items[i].type);
+                
+                s32 tileIndex = 0;
+                
+                switch (tilesetType)
+                {
+                    case MAP_TILESET_FOREST:
+                    {
+                        tileIndex = ruinsData.tileIndexForest;
+                        break;
+                    }
+
+                    case MAP_TILESET_SWAMP:
+                    {
+                        tileIndex = ruinsData.tileIndexSwamp;
+                        break;
+                    }
+
+                    case MAP_TILESET_DUNGEON:
+                    {
+                        tileIndex = ruinsData.tileIndexDungeon;
+                        break;
+                    }
+                }
 
                 // the position in the world of the road piece tile
                 s32 x = pieces->items[i].tilex;
@@ -404,6 +717,12 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
         case WAR_ENTITY_TYPE_ROAD:
         {
             renderRoad(context, entity);
+            break;
+        }
+
+        case WAR_ENTITY_TYPE_RUIN:
+        {
+            renderRuin(context, entity);
             break;
         }
 
