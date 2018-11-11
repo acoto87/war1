@@ -471,7 +471,7 @@ typedef struct
 } WarRoadPiece;
 
 #define WarRoadPieceEmpty (WarRoadPiece){0}
-#define createRoadPiece(type, x, y, player) ((WarRoadPiece){(type), (x), (y), (player)})
+#define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (player)})
 
 internal bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
 {
@@ -484,6 +484,48 @@ shlDefineList(WarRoadPieceList, WarRoadPiece)
 
 #define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL}
 
+typedef enum
+{
+    WAR_WALL_PIECE_LEFT,
+    WAR_WALL_PIECE_TOP,
+    WAR_WALL_PIECE_RIGHT,
+    WAR_WALL_PIECE_BOTTOM,
+    WAR_WALL_PIECE_BOTTOM_LEFT,
+    WAR_WALL_PIECE_VERTICAL,
+    WAR_WALL_PIECE_BOTTOM_RIGHT,
+    WAR_WALL_PIECE_T_LEFT,
+    WAR_WALL_PIECE_T_BOTTOM,
+    WAR_WALL_PIECE_T_RIGHT,
+    WAR_WALL_PIECE_CROSS,
+    WAR_WALL_PIECE_TOP_LEFT,
+    WAR_WALL_PIECE_HORIZONTAL,
+    WAR_WALL_PIECE_T_TOP,
+    WAR_WALL_PIECE_TOP_RIGHT,
+} WarWallPieceType;
+
+typedef struct
+{
+    WarWallPieceType type;
+    s32 hp;
+    s32 maxhp;
+    s32 tilex, tiley;
+    u8 player;
+} WarWallPiece;
+
+#define WarWallPieceEmpty (WarWallPiece){0}
+#define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (player)})
+
+internal bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
+{
+    return w1.type == w2.type && w1.player == w2.player &&
+           w1.tilex == w2.tilex && w1.tiley == w2.tiley;
+}
+
+shlDeclareList(WarWallPieceList, WarWallPiece)
+shlDefineList(WarWallPieceList, WarWallPiece)
+
+#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, equalsWallPiece, NULL}
+
 typedef enum 
 {
     WAR_RUIN_PIECE_TOP_LEFT,
@@ -495,12 +537,10 @@ typedef enum
     WAR_RUIN_PIECE_BOTTOM_LEFT,
     WAR_RUIN_PIECE_BOTTOM,
     WAR_RUIN_PIECE_BOTTOM_RIGHT,
-
     WAR_RUIN_PIECE_TOP_LEFT_INSIDE,
     WAR_RUIN_PIECE_TOP_RIGHT_INSIDE,
     WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE,
     WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE,
-
     WAR_RUIN_PIECE_DIAG_1,
     WAR_RUIN_PIECE_DIAG_2,
 } WarRuinPieceType;
@@ -702,6 +742,7 @@ typedef struct _WarState
         struct
         {
             s32 targetEntityId;
+            vec2 targetTile;
         } attack;
     };
 } WarState;
@@ -776,6 +817,12 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    WarWallPieceList pieces;
+} WarWallComponent;
+
+typedef struct
+{
+    bool enabled;
     WarRuinPieceList pieces;
 } WarRuinComponent;
 
@@ -796,6 +843,7 @@ typedef struct
     WarTransformComponent transform;
     WarSpriteComponent sprite;
     WarRoadComponent road;
+    WarWallComponent wall;
     WarRuinComponent ruin;
     WarUnitComponent unit;
     WarStateMachineComponent stateMachine;

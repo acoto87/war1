@@ -90,6 +90,19 @@ void removeRoadComponent(WarContext* context, WarEntity* entity)
     entity->road = (WarRoadComponent){0};
 }
 
+void addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList pieces)
+{
+    entity->wall = (WarWallComponent){0};
+    entity->wall.enabled = true;
+    entity->wall.pieces = pieces;
+}
+
+void removeWallComponent(WarContext* context, WarEntity* entity)
+{
+    WarWallPieceListFree(&entity->wall.pieces);
+    entity->wall = (WarWallComponent){0};
+}
+
 void addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces)
 {
     entity->ruin = (WarRuinComponent){0};
@@ -165,44 +178,12 @@ WarEntity* createEntity(WarContext* context, WarEntityType type)
     return entity;
 }
 
-void createRoads(WarRoadPieceList *pieces, WarLevelConstruct *construct)
+void determineRoadTypes(WarEntity* entity)
 {
-    s32 x1 = construct->x1;
-    s32 y1 = construct->y1;
-    s32 x2 = construct->x2;
-    s32 y2 = construct->y2;
-    u8 player = construct->player;
+    assert(entity->type == WAR_ENTITY_TYPE_ROAD);
 
-    s32 dx = x2 - x1;
-    dx = sign(dx);
+    WarRoadPieceList* pieces = &entity->road.pieces;
 
-    s32 dy = y2 - y1;
-    dy = sign(dy);
-    
-    s32 x = x1;
-    s32 y = y1;
-
-    WarRoadPiece piece;
-
-    while (x != x2)
-    {
-        WarRoadPieceListAdd(pieces, createRoadPiece(0, x, y, player));
-        x += dx;
-    }
-
-    WarRoadPieceListAdd(pieces, createRoadPiece(0, x, y, player));
-
-    while (y != y2)
-    {
-        WarRoadPieceListAdd(pieces, createRoadPiece(0, x, y, player));
-        y += dy;
-    }
-
-    WarRoadPieceListAdd(pieces, createRoadPiece(0, x, y, player));
-}
-
-void determineRoadTypes(WarRoadPieceList *pieces)
-{
     s32 count = pieces->count;
     for(s32 i = 0; i < count; i++)
     {
@@ -269,6 +250,206 @@ void determineRoadTypes(WarRoadPieceList *pieces)
         if (top && !bottom && left && right)
             pi->type = WAR_ROAD_PIECE_T_BOTTOM;
     }
+}
+
+void addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
+{
+    assert(entity->type == WAR_ENTITY_TYPE_ROAD);
+
+    WarRoadPieceList* pieces = &entity->road.pieces;
+
+    s32 x1 = construct->x1;
+    s32 y1 = construct->y1;
+    s32 x2 = construct->x2;
+    s32 y2 = construct->y2;
+    u8 player = construct->player;
+
+    s32 dx = x2 - x1;
+    dx = sign(dx);
+
+    s32 dy = y2 - y1;
+    dy = sign(dy);
+    
+    s32 x = x1;
+    s32 y = y1;
+
+    WarRoadPiece piece;
+
+    while (x != x2)
+    {
+        WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
+        x += dx;
+    }
+
+    WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
+
+    while (y != y2)
+    {
+        WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
+        y += dy;
+    }
+
+    WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
+}
+
+WarEntity* createRoad(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    WarRoadPieceList pieces;
+    WarRoadPieceListInit(&pieces, WarRoadPieceListDefaultOptions);
+
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
+    addRoadComponent(context, entity, pieces);
+    addSpriteComponent(context, entity, map->sprite);
+
+    return entity;
+}
+
+void determineWallTypes(WarEntity* entity)
+{
+    assert(entity->type == WAR_ENTITY_TYPE_WALL);
+
+    WarWallPieceList *pieces = &entity->wall.pieces;
+
+    s32 count = pieces->count;
+    for(s32 i = 0; i < count; i++)
+    {
+        WarWallPiece* pi = &pieces->items[i];
+
+        bool left = false, 
+             top = false, 
+             right = false, 
+             bottom = false;
+
+        for(s32 j = 0; j < count; j++)
+        {
+            if (i == j) continue;
+
+            WarWallPiece* pj = &pieces->items[j];
+
+            if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley)
+                left = true;
+            else if(pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley)
+                right = true;
+            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley - 1)
+                top = true;
+            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley + 1)
+                bottom = true;
+        }
+
+        // Endpieces
+        if (top && !bottom && !left && !right)
+            pi->type = WAR_ROAD_PIECE_BOTTOM;
+        if (!top && bottom && !left && !right)
+            pi->type = WAR_ROAD_PIECE_TOP;
+        if (!top && !bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_LEFT;
+        if (!top && !bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_RIGHT;
+
+        // Corner pieces
+        if (top && !bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_TOP_LEFT;
+        if (!top && bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_BOTTOM_LEFT;
+        if (top && !bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_TOP_RIGHT;
+        if (!top && bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_BOTTOM_RIGHT;
+
+        // Middle pieces
+        if (!top && !bottom && left && right)
+            pi->type = WAR_ROAD_PIECE_HORIZONTAL;
+        if (top && bottom && !left && !right)
+            pi->type = WAR_ROAD_PIECE_VERTICAL;
+
+        // Quad piece
+        if (top && bottom && left && right)
+            pi->type = WAR_ROAD_PIECE_CROSS;
+
+        // T-Corners
+        if (top && bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_T_RIGHT;
+        if (top && bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_T_LEFT;
+        if (!top && bottom && left && right)
+            pi->type = WAR_ROAD_PIECE_T_TOP;
+        if (top && !bottom && left && right)
+            pi->type = WAR_ROAD_PIECE_T_BOTTOM;
+    }
+}
+
+WarWallPiece* getWallPiece(WarEntity* entity, vec2 position)
+{
+    assert(isWall(entity));
+
+    WarWallComponent* wall = &entity->wall;
+    
+    for(s32 i = 0; i < wall->pieces.count; i++)
+    {
+        WarWallPiece* piece = &wall->pieces.items[i];
+        if (piece->tilex == (s32)position.x && piece->tiley == (s32)position.y)
+        {
+            return piece;
+        }
+    }
+    
+    return NULL;
+}
+
+void addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
+{
+    assert(entity->type == WAR_ENTITY_TYPE_WALL);
+
+    WarWallPieceList *pieces = &entity->wall.pieces;
+
+    s32 x1 = construct->x1;
+    s32 y1 = construct->y1;
+    s32 x2 = construct->x2;
+    s32 y2 = construct->y2;
+    u8 player = construct->player;
+
+    s32 dx = x2 - x1;
+    dx = sign(dx);
+
+    s32 dy = y2 - y1;
+    dy = sign(dy);
+    
+    s32 x = x1;
+    s32 y = y1;
+
+    WarWallPiece piece;
+
+    while (x != x2)
+    {
+        WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
+        x += dx;
+    }
+
+    WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
+
+    while (y != y2)
+    {
+        WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
+        y += dy;
+    }
+
+    WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
+}
+
+WarEntity* createWall(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    WarWallPieceList pieces;
+    WarWallPieceListInit(&pieces, WarWallPieceListDefaultOptions);
+
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_WALL);
+    addWallComponent(context, entity, pieces);
+    addSpriteComponent(context, entity, map->sprite);
+
+    return entity;
 }
 
 void determineRuinTypes(WarEntity* entity)
@@ -465,42 +646,96 @@ void renderRoad(WarContext* context, WarEntity* entity)
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, road->pieces.count);
 
+            // the roads are only for forest and swamp maps
             WarMapTilesetType tilesetType = context->map->tilesetType;
+            assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
-            for (s32 i = 0; i < road->pieces.count; i++)
+            for (s32 i = 0; i < pieces->count; i++)
             {
                 // get the index of the tile in the spritesheet of the map,
                 // corresponding to the current tileset type (forest, swamp)
                 WarRoadsData roadsData = getRoadsData(pieces->items[i].type);
 
-                s32 tileIndex = 0;
+                s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                    ? roadsData.tileIndexForest : roadsData.tileIndexSwamp;
                 
-                switch (tilesetType)
-                {
-                    case MAP_TILESET_FOREST:
-                    {
-                        tileIndex = roadsData.tileIndexForest;
-                        break;
-                    }
-
-                    case MAP_TILESET_SWAMP:
-                    {
-                        tileIndex = roadsData.tileIndexSwamp;
-                        break;
-                    }
-
-                    case MAP_TILESET_DUNGEON:
-                    {
-                        tileIndex = roadsData.tileIndexDungeon;
-                        break;
-                    }
-                }
-
                 // the position in the world of the road piece tile
                 s32 x = pieces->items[i].tilex;
                 s32 y = pieces->items[i].tiley;
 
                 // coordinates in pixels of the road piece tile
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                nvgSave(gfx);
+                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+
+                nvgRestore(gfx);
+            }
+
+            nvgEndImageBatch(gfx, batch);
+        }
+    }
+}
+
+void renderWall(WarContext* context, WarEntity* entity)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarTransformComponent transform = entity->transform;
+    WarSpriteComponent* sprite = &entity->sprite;
+    WarWallComponent* wall = &entity->wall;
+
+    if (sprite->enabled)
+    {
+        nvgTranslate(gfx, transform.position.x, transform.position.y);
+
+        if (wall->enabled)
+        {
+            WarWallPieceList* pieces = &wall->pieces;
+
+            NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, wall->pieces.count);
+
+            // the walls are only for forest and swamp maps
+            WarMapTilesetType tilesetType = context->map->tilesetType;
+            assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
+            for (s32 i = 0; i < pieces->count; i++)
+            {
+                WarWallPiece* piece = &pieces->items[i];
+
+                // get the index of the tile in the spritesheet of the map,
+                // corresponding to the current tileset type (forest, swamp)
+                WarWallsData wallsData = getWallsData(piece->type);
+
+                s32 tileIndex = 0;
+
+                s32 hpPercent = percentabi(piece->hp, piece->maxhp);
+                if (hpPercent <= 0)
+                {
+                    tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                        ? wallsData.tileDestroyedForest : wallsData.tileDestroyedSwamp;
+                }
+                else if(hpPercent < 50)
+                {
+                    tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                        ? wallsData.tileDamagedForest : wallsData.tileDamagedSwamp;
+                }
+                else
+                {
+                    tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                        ? wallsData.tileForest : wallsData.tileSwamp;
+                }
+
+                // the position in the world of the wall piece tile
+                s32 x = piece->tilex;
+                s32 y = piece->tiley;
+
+                // coordinates in pixels of the wall piece tile
                 s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
                 s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
@@ -537,7 +772,9 @@ void renderRuin(WarContext* context, WarEntity* entity)
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, ruin->pieces.count);
 
+            // the walls are only for forest and swamp maps
             WarMapTilesetType tilesetType = context->map->tilesetType;
+            assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
             for (s32 i = 0; i < ruin->pieces.count; i++)
             {
@@ -545,29 +782,9 @@ void renderRuin(WarContext* context, WarEntity* entity)
                 // corresponding to the current tileset type (forest, swamp)
                 WarRuinsData ruinsData = getRuinsData(pieces->items[i].type);
                 
-                s32 tileIndex = 0;
+                s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                    ? ruinsData.tileIndexForest : ruinsData.tileIndexSwamp;
                 
-                switch (tilesetType)
-                {
-                    case MAP_TILESET_FOREST:
-                    {
-                        tileIndex = ruinsData.tileIndexForest;
-                        break;
-                    }
-
-                    case MAP_TILESET_SWAMP:
-                    {
-                        tileIndex = ruinsData.tileIndexSwamp;
-                        break;
-                    }
-
-                    case MAP_TILESET_DUNGEON:
-                    {
-                        tileIndex = ruinsData.tileIndexDungeon;
-                        break;
-                    }
-                }
-
                 // the position in the world of the road piece tile
                 s32 x = pieces->items[i].tilex;
                 s32 y = pieces->items[i].tiley;
@@ -702,39 +919,50 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
 
         switch (entity->type)
         {
-        case WAR_ENTITY_TYPE_IMAGE:
-        {
-            renderImage(context, entity);
-            break;
-        }
+            case WAR_ENTITY_TYPE_IMAGE:
+            {
+                renderImage(context, entity);
+                break;
+            }
 
-        case WAR_ENTITY_TYPE_UNIT:
-        {
-            renderUnit(context, entity, selected);
-            break;
-        }
+            case WAR_ENTITY_TYPE_UNIT:
+            {
+                renderUnit(context, entity, selected);
+                break;
+            }
 
-        case WAR_ENTITY_TYPE_ROAD:
-        {
-            renderRoad(context, entity);
-            break;
-        }
+            case WAR_ENTITY_TYPE_ROAD:
+            {
+                renderRoad(context, entity);
+                break;
+            }
 
-        case WAR_ENTITY_TYPE_RUIN:
-        {
-            renderRuin(context, entity);
-            break;
-        }
+            case WAR_ENTITY_TYPE_WALL:
+            {
+                renderWall(context, entity);
+                break;
+            }
 
-        default:
-        {
-            logError("Entity of type %d can't be rendered.\n", entity->type);
-            break;
-        }
+            case WAR_ENTITY_TYPE_RUIN:
+            {
+                renderRuin(context, entity);
+                break;
+            }
+
+            default:
+            {
+                logError("Entity of type %d can't be rendered.\n", entity->type);
+                break;
+            }
         }
 
         nvgRestore(gfx);
     }
+}
+
+inline s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armour)
+{
+    return minDamage + maxi(rndDamage - armour, 0);
 }
 
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
@@ -744,7 +972,7 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
     WarUnitComponent *unit = &entity->unit;
 
     // Minimal damage + [Random damage - Enemy's Armour]
-    s32 damage = minDamage + maxi(rndDamage - unit->armour, 0);
+    s32 damage = getTotalDamage(minDamage, rndDamage, unit->armour);
     unit->hp -= damage;
     unit->hp = maxi(unit->hp, 0);
 
@@ -770,4 +998,14 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
             changeNextState(context, entity, damagedState, true, true);
         }
     }
+}
+
+void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage)
+{
+    assert(isWall(entity));
+
+    // Minimal damage + [Random damage - Enemy's Armour]
+    s32 damage = getTotalDamage(minDamage, rndDamage, 0);
+    piece->hp -= damage;
+    piece->hp = maxi(piece->hp, 0);
 }

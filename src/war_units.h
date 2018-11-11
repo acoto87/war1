@@ -160,26 +160,55 @@ typedef struct
     WarRoadPieceType type;
     s32 tileIndexForest;
     s32 tileIndexSwamp;
-    s32 tileIndexDungeon;
 } WarRoadsData;
 
 const WarRoadsData roadsData[] =
 {
-    { WAR_ROAD_PIECE_LEFT,                56, 57, 83 },
-    { WAR_ROAD_PIECE_TOP,                 57, 58, 83 },
-    { WAR_ROAD_PIECE_RIGHT,               58, 59, 83 },
-    { WAR_ROAD_PIECE_BOTTOM,              59, 60, 83 },
-    { WAR_ROAD_PIECE_BOTTOM_LEFT,         60, 61, 83 },
-    { WAR_ROAD_PIECE_VERTICAL,            61, 62, 83 },
-    { WAR_ROAD_PIECE_BOTTOM_RIGHT,        62, 63, 83 },
-    { WAR_ROAD_PIECE_T_LEFT,              63, 64, 83 },
-    { WAR_ROAD_PIECE_T_BOTTOM,            64, 65, 83 },
-    { WAR_ROAD_PIECE_T_RIGHT,             65, 66, 83 },
-    { WAR_ROAD_PIECE_CROSS,               66, 67, 83 },
-    { WAR_ROAD_PIECE_TOP_LEFT,            67, 68, 83 },
-    { WAR_ROAD_PIECE_HORIZONTAL,          68, 69, 83 },
-    { WAR_ROAD_PIECE_T_TOP,               69, 70, 83 },
-    { WAR_ROAD_PIECE_TOP_RIGHT,           70, 71, 83 },
+    { WAR_ROAD_PIECE_LEFT,                56, 57 },
+    { WAR_ROAD_PIECE_TOP,                 57, 58 },
+    { WAR_ROAD_PIECE_RIGHT,               58, 59 },
+    { WAR_ROAD_PIECE_BOTTOM,              59, 60 },
+    { WAR_ROAD_PIECE_BOTTOM_LEFT,         60, 61 },
+    { WAR_ROAD_PIECE_VERTICAL,            61, 62 },
+    { WAR_ROAD_PIECE_BOTTOM_RIGHT,        62, 63 },
+    { WAR_ROAD_PIECE_T_LEFT,              63, 64 },
+    { WAR_ROAD_PIECE_T_BOTTOM,            64, 65 },
+    { WAR_ROAD_PIECE_T_RIGHT,             65, 66 },
+    { WAR_ROAD_PIECE_CROSS,               66, 67 },
+    { WAR_ROAD_PIECE_TOP_LEFT,            67, 68 },
+    { WAR_ROAD_PIECE_HORIZONTAL,          68, 69 },
+    { WAR_ROAD_PIECE_T_TOP,               69, 70 },
+    { WAR_ROAD_PIECE_TOP_RIGHT,           70, 71 },
+};
+
+typedef struct
+{
+    WarWallPieceType type;
+    s32 tileForest;
+    s32 tileDamagedForest;
+    s32 tileDestroyedForest;
+    s32 tileSwamp;
+    s32 tileDamagedSwamp;
+    s32 tileDestroyedSwamp;
+} WarWallsData;
+
+const WarWallsData wallsData[] =
+{
+    { WAR_WALL_PIECE_LEFT,                18, 30, 37, 18, 26, 37 },
+    { WAR_WALL_PIECE_TOP,                 21, 23, 34, 21, 23, 34 },
+    { WAR_WALL_PIECE_RIGHT,               18, 30, 37, 18, 26, 37 },
+    { WAR_WALL_PIECE_BOTTOM,              11, 40, 34, 11, 40, 34 },
+    { WAR_WALL_PIECE_BOTTOM_LEFT,         10, 22, 36, 10, 22, 36 },
+    { WAR_WALL_PIECE_VERTICAL,            21, 23, 34, 21, 23, 34 },
+    { WAR_WALL_PIECE_BOTTOM_RIGHT,        12, 24, 38, 12, 24, 38 },
+    { WAR_WALL_PIECE_T_LEFT,              13, 25, 36, 13, 25, 36 },
+    { WAR_WALL_PIECE_T_BOTTOM,            14, 26, 39, 14, 26, 39 },
+    { WAR_WALL_PIECE_T_RIGHT,             15, 27, 38, 15, 27, 38 },
+    { WAR_WALL_PIECE_CROSS,               16, 28, 39, 16, 28, 39 },
+    { WAR_WALL_PIECE_TOP_LEFT,            17, 29, 33, 17, 29, 33 },
+    { WAR_WALL_PIECE_HORIZONTAL,          18, 30, 37, 18, 30, 37 },
+    { WAR_WALL_PIECE_T_TOP,               19, 31, 37, 19, 31, 37 },
+    { WAR_WALL_PIECE_TOP_RIGHT,           20, 32, 35, 20, 32, 35 },
 };
 
 typedef struct
@@ -187,26 +216,25 @@ typedef struct
     WarRuinPieceType type;
     s32 tileIndexForest;
     s32 tileIndexSwamp;
-    s32 tileIndexDungeon;
 } WarRuinsData;
 
 const WarRuinsData ruinsData[] =
 {
-    { WAR_RUIN_PIECE_TOP_LEFT,            41, 42, 83 },
-    { WAR_RUIN_PIECE_TOP,                 42, 43, 83 },
-    { WAR_RUIN_PIECE_TOP_RIGHT,           43, 44, 83 },
-    { WAR_RUIN_PIECE_LEFT,                44, 45, 83 },
-    { WAR_RUIN_PIECE_CENTER,              45, 46, 83 },
-    { WAR_RUIN_PIECE_RIGHT,               46, 47, 83 },
-    { WAR_RUIN_PIECE_BOTTOM_LEFT,         47, 48, 83 },
-    { WAR_RUIN_PIECE_BOTTOM,              48, 49, 83 },
-    { WAR_RUIN_PIECE_BOTTOM_RIGHT,        49, 50, 83 },
-    { WAR_RUIN_PIECE_TOP_LEFT_INSIDE,     50, 51, 83 },
-    { WAR_RUIN_PIECE_TOP_RIGHT_INSIDE,    51, 52, 83 },
-    { WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE,  53, 54, 83 },
-    { WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE, 52, 53, 83 },
-    { WAR_RUIN_PIECE_DIAG_1,              55, 56, 83 },
-    { WAR_RUIN_PIECE_DIAG_2,              54, 55, 83 },
+    { WAR_RUIN_PIECE_TOP_LEFT,            41, 42 },
+    { WAR_RUIN_PIECE_TOP,                 42, 43 },
+    { WAR_RUIN_PIECE_TOP_RIGHT,           43, 44 },
+    { WAR_RUIN_PIECE_LEFT,                44, 45 },
+    { WAR_RUIN_PIECE_CENTER,              45, 46 },
+    { WAR_RUIN_PIECE_RIGHT,               46, 47 },
+    { WAR_RUIN_PIECE_BOTTOM_LEFT,         47, 48 },
+    { WAR_RUIN_PIECE_BOTTOM,              48, 49 },
+    { WAR_RUIN_PIECE_BOTTOM_RIGHT,        49, 50 },
+    { WAR_RUIN_PIECE_TOP_LEFT_INSIDE,     50, 51 },
+    { WAR_RUIN_PIECE_TOP_RIGHT_INSIDE,    51, 52 },
+    { WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE,  53, 54 },
+    { WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE, 52, 53 },
+    { WAR_RUIN_PIECE_DIAG_1,              55, 56 },
+    { WAR_RUIN_PIECE_DIAG_2,              54, 55 },
 };
 
 typedef struct
@@ -369,6 +397,17 @@ inline WarRoadsData getRoadsData(WarRoadPieceType type)
     return roadsData[index];
 }
 
+inline WarWallsData getWallsData(WarWallPieceType type)
+{
+    s32 index = 0;
+    s32 length = arrayLength(wallsData);
+    while (index < length && wallsData[index].type != type)
+        index++;
+
+    assert(index < length);
+    return wallsData[index];
+}
+
 inline WarRuinsData getRuinsData(WarRuinPieceType type)
 {
     s32 index = 0;
@@ -402,7 +441,10 @@ inline WarBuildingStats getBuildingStats(WarUnitType type)
     return buildingStats[index];
 }
 
-#define isUnit(entity) ((entity)->unit.enabled)
+#define isUnit(entity) ((entity)->type == WAR_ENTITY_TYPE_UNIT)
+#define isRoad(entity) ((entity)->type == WAR_ENTITY_TYPE_ROAD)
+#define isWall(entity) ((entity)->type == WAR_ENTITY_TYPE_WALL)
+#define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
 
 inline bool isDudeUnit(WarEntity* entity)
 {
@@ -600,15 +642,19 @@ vec2 getAttackPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
     return getClosestPointOnRect(position, unitRect);
 }
 
-bool inAttackRange(WarEntity* entity, WarEntity* targetEntity)
+bool positionInAttackRange(WarEntity* entity, vec2 targetPosition)
 {
     assert(isUnit(entity));
-    assert(isUnit(targetEntity));
 
     WarUnitStats stats = getUnitStats(entity->unit.type);
 
     vec2 position = getUnitCenterPosition(entity, true);
-    vec2 pointOnTarget = getAttackPointOnTarget(entity, targetEntity);
-    f32 distance = vec2DistanceInTiles(position, pointOnTarget);
+    f32 distance = vec2DistanceInTiles(position, targetPosition);
     return distance <= stats.range;
+}
+
+bool unitInAttackRange(WarEntity* entity, WarEntity* targetEntity)
+{
+    vec2 pointOnTarget = getAttackPointOnTarget(entity, targetEntity);
+    return positionInAttackRange(entity, pointOnTarget);
 }

@@ -920,7 +920,7 @@ void updateAction(WarContext* context, WarEntity* entity)
     WarSpriteComponent* sprite = &entity->sprite;
     WarUnitComponent* unit = &entity->unit;
 
-    if (!unit || unit->actionIndex < 0)
+    if (!unit || unit->actions.count == 0 || unit->actionIndex < 0)
         return;
 
     WarUnitAction* action = unit->actions.items[unit->actionIndex];

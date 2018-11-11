@@ -100,23 +100,66 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the starting roads
     {
-        WarRoadPieceList pieces;
-        WarRoadPieceListInit(&pieces, WarRoadPieceListDefaultOptions);
+        WarEntity* wall = createWall(context);
 
         for(s32 i = 0; i < levelInfo->levelInfo.startRoadsCount; i++)
         {
             WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
             if (construct->type == WAR_CONSTRUCT_ROAD)
             {
-                createRoads(&pieces, construct);
+                addWallPiecesFromConstruct(wall, construct);
             }
         }
 
-        determineRoadTypes(&pieces);
+        determineWallTypes(wall);
 
-        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
-        addRoadComponent(context, entity, pieces);
-        addSpriteComponent(context, entity, map->sprite);
+        for(s32 i = 0; i < wall->wall.pieces.count; i++)
+        {
+            WarWallPiece* piece = &wall->wall.pieces.items[i];
+            piece->hp = 60;
+            piece->maxhp = 60;
+        }
+
+        addStateMachineComponent(context, wall);
+
+        WarState* idleState = createIdleState(context, wall, false);
+        changeNextState(context, wall, idleState, true, true);
+
+        // WarEntity* road = createRoad(context);
+
+        // for(s32 i = 0; i < levelInfo->levelInfo.startRoadsCount; i++)
+        // {
+        //     WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
+        //     if (construct->type == WAR_CONSTRUCT_ROAD)
+        //     {
+        //         addRoadPiecesFromConstruct(road, construct);
+        //     }
+        // }
+
+        // determineRoadTypes(road);
+    }
+
+    // create the starting walls
+    {
+        WarEntity* wall = createWall(context);
+
+        for(s32 i = 0; i < levelInfo->levelInfo.startWallsCount; i++)
+        {
+            WarLevelConstruct *construct = &levelInfo->levelInfo.startWalls[i];
+            if (construct->type == WAR_CONSTRUCT_WALL)
+            {
+                addWallPiecesFromConstruct(wall, construct);
+            }
+        }
+
+        determineWallTypes(wall);
+
+        for(s32 i = 0; i < wall->wall.pieces.count; i++)
+        {
+            WarWallPiece* piece = &wall->wall.pieces.items[i];
+            piece->hp = 60;
+            piece->maxhp = 60;
+        }
     }
 
     // create the starting entities
@@ -210,6 +253,9 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // DEBUG
     // add animations
     {
+
+
+
         WarEntity* ruins = createRuins(context, 10, 8, 3);
 
         WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(12, 7));
@@ -283,7 +329,7 @@ void updateMap(WarContext* context)
     for(s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        if (entity)
         {
             updateStateMachine(context, entity);
         }
@@ -293,7 +339,7 @@ void updateMap(WarContext* context)
     for(s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        if (entity && isUnit(entity))
         {
             updateAction(context, entity);
         }
@@ -303,7 +349,7 @@ void updateMap(WarContext* context)
     for(s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        if (entity)
         {
             updateAnimations(context, entity);
         }
@@ -398,12 +444,12 @@ void updateMap(WarContext* context)
                         WarEntity* entity = findEntity(context, entityId);
                         assert(entity);
 
-                        if (isUnit(entity) && entity->id != targetEntity->id)
+                        if (entity->id != targetEntity->id)
                         {
                             // WarState* followState = createFollowState(context, entity, targetEntityId, 1);
                             // changeNextState(context, entity, followState, true, true);
 
-                            WarState* attackState = createAttackState(context, entity, targetEntityId);
+                            WarState* attackState = createAttackState(context, entity, targetEntityId, targetTile);
                             changeNextState(context, entity, attackState, true, true);
                         }
                     }                    
@@ -568,6 +614,18 @@ void renderMap(WarContext *context)
             {
                 WarEntity *entity = map->entities.items[i];
                 if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
+                {
+                    renderEntity(context, entity, false);
+                }
+            }
+        }
+
+        // render walls
+        {
+            for(s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity *entity = map->entities.items[i];
+                if (entity && entity->type == WAR_ENTITY_TYPE_WALL)
                 {
                     renderEntity(context, entity, false);
                 }

@@ -26,8 +26,8 @@
 
 #define percentf(x) ((x) * 100)
 #define percenti(x) ((s32)percentf(x))
-#define percentabf(a, b) percentf((f32)a/b)
-#define percentabi(a, b) percenti((f32)a/b)
+#define percentabf(a, b) percentf((f32)(a)/(b))
+#define percentabi(a, b) percenti((f32)(a)/(b))
 
 //
 // From the linux kernel

@@ -17,6 +17,8 @@ List of thing to do in no particular order
   * Factorize state_machine.c in files (maybe `state_machine_update.c`, `state_machine_enter.c`, etc.)
   * Draw text system (to debug and other texts).
   * > Walls (same system like roads).
+    * > Some wall tiles doesn't change sprite when damaged.
+    * > The attacking unit doesn't move to the wall tile if isn't in range.
 
 * Gameplay
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
