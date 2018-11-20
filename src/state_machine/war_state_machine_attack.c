@@ -34,27 +34,25 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
+    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 targetPosition = isUnit(targetEntity) ? unitPointOnTarget(entity, targetEntity) : state->attack.targetTile;
+
     // if the unit is not in range to attack, chase it
-    if (isUnit(targetEntity) && !unitInAttackRange(entity, targetEntity))
+    if (isUnit(targetEntity) && !unitInRange(entity, targetEntity, stats.range))
     {
         WarState* followState = createFollowState(context, entity, state->attack.targetEntityId, stats.range);
         followState->nextState = state;
         changeNextState(context, entity, followState, false, true);
         return;
     }
-    else if(isWall(targetEntity) && !positionInAttackRange(entity, state->attack.targetTile))
+    
+    if(isWall(targetEntity) && !positionInRange(entity, state->attack.targetTile, stats.range))
     {
-        WarState* moveState = createMoveState(context, entity, 1, arrayArg(vec2, state->attack.targetTile));
+        WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
         moveState->nextState = state;
         changeNextState(context, entity, moveState, false, true);
         return;
     }
-
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-    
-    vec2 targetPosition = isUnit(targetEntity) 
-        ? getAttackPointOnTarget(entity, targetEntity) 
-        : state->attack.targetTile;
 
     setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
     setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);

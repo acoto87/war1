@@ -116,6 +116,20 @@ void removeRuinComponent(WarContext* context, WarEntity* entity)
     entity->ruin = (WarRuinComponent){0};
 }
 
+void addWoodComponent(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 amount)
+{
+    entity->wood = (WarWoodComponent){0};
+    entity->wood.enabled = true;
+    entity->wood.tilex = x;
+    entity->wood.tiley = y;
+    entity->wood.amount = amount;
+}
+
+void removeWoodComponent(WarContext* context, WarEntity* entity)
+{
+    entity->wood = (WarWoodComponent){0};
+}
+
 void addStateMachineComponent(WarContext* context, WarEntity* entity)
 {
     entity->stateMachine = (WarStateMachineComponent){0};
@@ -170,6 +184,8 @@ WarEntity* createEntity(WarContext* context, WarEntityType type)
     entity->sprite = (WarSpriteComponent){0};
     entity->unit = (WarUnitComponent){0};
     entity->road = (WarRoadComponent){0};
+    entity->wall = (WarWallComponent){0};
+    entity->wood = (WarWoodComponent){0};
     entity->stateMachine = (WarStateMachineComponent){0};
     entity->animations = (WarAnimationsComponent){0};
 
@@ -350,13 +366,13 @@ void determineWallTypes(WarEntity* entity)
 
         // Corner pieces
         if (top && !bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_TOP_LEFT;
-        if (!top && bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_BOTTOM_LEFT;
-        if (top && !bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_TOP_RIGHT;
-        if (!top && bottom && !left && right)
             pi->type = WAR_ROAD_PIECE_BOTTOM_RIGHT;
+        if (!top && bottom && left && !right)
+            pi->type = WAR_ROAD_PIECE_TOP_RIGHT;
+        if (top && !bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_BOTTOM_LEFT;
+        if (!top && bottom && !left && right)
+            pi->type = WAR_ROAD_PIECE_TOP_LEFT;
 
         // Middle pieces
         if (!top && !bottom && left && right)
@@ -588,6 +604,31 @@ WarEntity* findEntity(WarContext* context, WarEntityId id)
     return NULL;
 }
 
+WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    WarEntity* result = NULL;
+    f32 minDst = INT32_MAX;
+
+    for (s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* target = map->entities.items[i];
+        if (isUnitOfType(target, type))
+        {
+            s32 dst = unitDistanceInTiles(entity, target);
+            if (dst < minDst)
+            {
+                result = target;
+                minDst = dst;
+            }
+        }
+    }
+
+    return result;
+}
+
 void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
@@ -601,7 +642,9 @@ void removeEntityById(WarContext* context, WarEntityId id)
     removeTransformComponent(context, entity);
     removeSpriteComponent(context, entity);
     removeRoadComponent(context, entity);
+    removeWallComponent(context, entity);
     removeRuinComponent(context, entity);
+    removeWoodComponent(context, entity);
     removeUnitComponent(context, entity);
     removeStateMachineComponent(context, entity);
     removeAnimationsComponent(context, entity);
@@ -623,7 +666,6 @@ void renderImage(WarContext* context, WarEntity* entity)
 
         nvgTranslate(gfx, -frame->dx, -frame->dy);
         nvgTranslate(gfx, transform.position.x, transform.position.y);
-
         renderSprite(context, &sprite->sprite, VEC2_ZERO, VEC2_ONE);
     }
 }
@@ -636,19 +678,17 @@ void renderRoad(WarContext* context, WarEntity* entity)
     WarSpriteComponent* sprite = &entity->sprite;
     WarRoadComponent* road = &entity->road;
 
+    // the roads are only for forest and swamp maps
+    WarMapTilesetType tilesetType = context->map->tilesetType;
+    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
     if (sprite->enabled)
     {
-        nvgTranslate(gfx, transform.position.x, transform.position.y);
-
         if (road->enabled)
         {
             WarRoadPieceList* pieces = &road->pieces;
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, road->pieces.count);
-
-            // the roads are only for forest and swamp maps
-            WarMapTilesetType tilesetType = context->map->tilesetType;
-            assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
             for (s32 i = 0; i < pieces->count; i++)
             {
@@ -690,19 +730,17 @@ void renderWall(WarContext* context, WarEntity* entity)
     WarSpriteComponent* sprite = &entity->sprite;
     WarWallComponent* wall = &entity->wall;
 
+    // the walls are only for forest and swamp maps
+    WarMapTilesetType tilesetType = context->map->tilesetType;
+    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
     if (sprite->enabled)
     {
-        nvgTranslate(gfx, transform.position.x, transform.position.y);
-
         if (wall->enabled)
         {
             WarWallPieceList* pieces = &wall->pieces;
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, wall->pieces.count);
-
-            // the walls are only for forest and swamp maps
-            WarMapTilesetType tilesetType = context->map->tilesetType;
-            assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
             for (s32 i = 0; i < pieces->count; i++)
             {
@@ -762,19 +800,17 @@ void renderRuin(WarContext* context, WarEntity* entity)
     WarSpriteComponent* sprite = &entity->sprite;
     WarRuinComponent* ruin = &entity->ruin;
 
+    // the walls are only for forest and swamp maps
+    WarMapTilesetType tilesetType = context->map->tilesetType;
+    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
     if (sprite->enabled)
     {
-        nvgTranslate(gfx, transform.position.x, transform.position.y);
-
         if (ruin->enabled)
         {
             WarRuinPieceList* pieces = &ruin->pieces;
 
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, ruin->pieces.count);
-
-            // the walls are only for forest and swamp maps
-            WarMapTilesetType tilesetType = context->map->tilesetType;
-            assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
             for (s32 i = 0; i < ruin->pieces.count; i++)
             {
@@ -804,6 +840,46 @@ void renderRuin(WarContext* context, WarEntity* entity)
             }
 
             nvgEndImageBatch(gfx, batch);
+        }
+    }
+}
+
+void renderWood(WarContext* context, WarEntity* entity)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarTransformComponent transform = entity->transform;
+    WarSpriteComponent* sprite = &entity->sprite;
+    WarWoodComponent* wood = &entity->wood;
+
+    // the wood are only for forest and swamp maps
+    WarMapTilesetType tilesetType = context->map->tilesetType;
+    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
+    if (sprite->enabled)
+    {
+        // only render the sprite of  chooped wood if the entity hasn't any wood left
+        // the sprite of the trees are already in the map description
+        if (wood->enabled && wood->amount == 0)
+        {
+            // the position in the world of the wood tile
+            s32 x = wood->tilex;
+            s32 y = wood->tiley;
+
+            s32 tileIndex = (tilesetType == MAP_TILESET_FOREST) ? 95 : 96;
+
+            // coordinates in pixels of the road piece tile
+            s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+            s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+            nvgSave(gfx);
+            nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+            rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            renderSubSprite(context, &sprite->sprite, rs, rd, VEC2_ONE);
+
+            nvgRestore(gfx);
         }
     }
 }
@@ -946,6 +1022,12 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
             case WAR_ENTITY_TYPE_RUIN:
             {
                 renderRuin(context, entity);
+                break;
+            }
+
+            case WAR_ENTITY_TYPE_WOOD:
+            {
+                renderWood(context, entity);
                 break;
             }
 

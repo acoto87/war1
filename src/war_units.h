@@ -442,6 +442,7 @@ inline WarBuildingStats getBuildingStats(WarUnitType type)
 }
 
 #define isUnit(entity) ((entity)->type == WAR_ENTITY_TYPE_UNIT)
+#define isUnitOfType(entity, unitType) (isUnit(entity) && (entity)->unit.type == (unitType))
 #define isRoad(entity) ((entity)->type == WAR_ENTITY_TYPE_ROAD)
 #define isWall(entity) ((entity)->type == WAR_ENTITY_TYPE_WALL)
 #define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
@@ -505,6 +506,75 @@ inline bool isBuildingUnit(WarEntity* entity)
     
         default: 
             return false;
+    }
+}
+
+inline bool getUnitRace(WarEntity* entity)
+{
+    if (!isUnit(entity))
+        return WAR_RACE_NEUTRAL;
+
+    switch (entity->unit.type)
+    {
+        // units
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_PEASANT:
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_KNIGHT:
+        case WAR_UNIT_ARCHER:
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_LOTHAR:
+        case WAR_UNIT_WATERELEMENTAL:
+        case WAR_UNIT_HUMAN_CORPSE:
+        // buildings
+        case WAR_UNIT_FARM_HUMANS:
+        case WAR_UNIT_BARRACKS_HUMANS:
+        case WAR_UNIT_CHURCH:
+        case WAR_UNIT_TOWER_HUMANS:
+        case WAR_UNIT_TOWNHALL_HUMANS:
+        case WAR_UNIT_LUMBERMILL_HUMANS:
+        case WAR_UNIT_STABLES:
+        case WAR_UNIT_BLACKSMITH_HUMANS:
+        case WAR_UNIT_STORMWIND:
+            return WAR_RACE_HUMANS;
+
+        // units
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_PEON:
+        case WAR_UNIT_CATAPULT_ORCS:
+        case WAR_UNIT_RAIDER:
+        case WAR_UNIT_SPEARMAN:
+        case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_NECROLYTE:
+        case WAR_UNIT_GRIZELDA:
+        case WAR_UNIT_GARONA:
+        case WAR_UNIT_FIREELEMENTAL:
+        case WAR_UNIT_ORC_CORPSE:
+        // buildings
+        case WAR_UNIT_FARM_ORCS:
+        case WAR_UNIT_BARRACKS_ORCS:
+        case WAR_UNIT_TEMPLE:
+        case WAR_UNIT_TOWER_ORCS:
+        case WAR_UNIT_TOWNHALL_ORCS:
+        case WAR_UNIT_LUMBERMILL_ORCS:
+        case WAR_UNIT_KENNEL:
+        case WAR_UNIT_BLACKSMITH_ORCS:
+        case WAR_UNIT_BLACKROCK:
+            return WAR_RACE_ORCS;
+    
+        default: 
+            return WAR_RACE_NEUTRAL;
+    }
+}
+
+inline WarUnitType getTownHallOfRace(WarRace race)
+{
+    switch (race)
+    {
+        case WAR_RACE_HUMANS: return WAR_UNIT_TOWNHALL_HUMANS;
+        case WAR_RACE_ORCS: return WAR_UNIT_TOWNHALL_ORCS;
+        default: return WAR_UNIT_TOWNHALL_HUMANS;
     }
 }
 
@@ -628,7 +698,7 @@ inline f32 getUnitActionScale(WarEntity* entity)
     return 1 - entity->unit.level * 0.1f;
 }
 
-vec2 getAttackPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
+vec2 unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
 {
     assert(isUnit(entity));
     assert(isUnit(targetEntity));
@@ -642,19 +712,35 @@ vec2 getAttackPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
     return getClosestPointOnRect(position, unitRect);
 }
 
-bool positionInAttackRange(WarEntity* entity, vec2 targetPosition)
+s32 positionDistanceInTiles(WarEntity* entity, vec2 targetPosition)
 {
     assert(isUnit(entity));
 
-    WarUnitStats stats = getUnitStats(entity->unit.type);
-
     vec2 position = getUnitCenterPosition(entity, true);
     f32 distance = vec2DistanceInTiles(position, targetPosition);
-    return distance <= stats.range;
+    return (s32)distance;
 }
 
-bool unitInAttackRange(WarEntity* entity, WarEntity* targetEntity)
+bool positionInRange(WarEntity* entity, vec2 targetPosition, s32 range)
 {
-    vec2 pointOnTarget = getAttackPointOnTarget(entity, targetEntity);
-    return positionInAttackRange(entity, pointOnTarget);
+    assert(range >= 0);
+
+    s32 distance = positionDistanceInTiles(entity, targetPosition);
+    return distance <= range;
+}
+
+s32 unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
+{
+    assert(isUnit(entity));
+
+    vec2 pointOnTarget = unitPointOnTarget(entity, targetEntity);
+    return positionDistanceInTiles(entity, pointOnTarget);
+}
+
+bool unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
+{
+    assert(range >= 0);
+
+    s32 distance = unitDistanceInTiles(entity, targetEntity);
+    return distance <= range;
 }

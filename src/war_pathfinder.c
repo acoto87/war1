@@ -93,7 +93,23 @@ WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 da
     finder.width = width;
     finder.height = height;
     finder.data = (u16*)xcalloc(width * height, sizeof(u16));
-    memcpy(finder.data, data, width * height * sizeof(u16));
+
+    // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
+    for(s32 i = 0; i < width * height; i++)
+    {
+        switch (data[i])
+        {
+            case 128:
+            case 64:
+                finder.data[i] = PATH_FINDER_DATA_STATIC;
+                break;
+
+            default:
+                finder.data[i] = PATH_FINDER_DATA_EMPTY;
+                break;
+        }
+    }
+
     return finder;
 }
 
@@ -399,5 +415,13 @@ bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIn
     }
 
     freePath(newPath);
+    return result;
+}
+
+bool pathExists(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
+{
+    WarMapPath path = findPath(finder, startX, startY, endX, endY);
+    bool result = path.nodes.count >= 2;
+    freePath(path);
     return result;
 }

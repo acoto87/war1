@@ -16,16 +16,17 @@ List of thing to do in no particular order
   * Sort the units by `y` position to render and the units with greater `y` render on top of the ones with less `y`.
   * Factorize state_machine.c in files (maybe `state_machine_update.c`, `state_machine_enter.c`, etc.)
   * Draw text system (to debug and other texts).
-  * > Walls (same system like roads).
-    * > Some wall tiles doesn't change sprite when damaged.
-    * > The attacking unit doesn't move to the wall tile if isn't in range.
+  * ~~Walls (same system like roads).~~
+  * Make a better input system
+    * ~~Map scrolling and positioning by clicking in the minimap is now all under `updateViewport` function.~~
+    * ~~Selection drag is now all under `updateDragRect` function.~~
 
 * Gameplay
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
   * Manage the gold in the mines and explode it when the gold is over.
-  * Add ruins to collapsed buildings.
+  * ~~Add ruins to collapsed buildings.~~
   * Add explosion animation to living npc units when clicking to many times.
-  * Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over.
+  * ~~Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over.~~
   * Fix the selection of units to select only dude units or one building.
   * Make Ctrl+click select all units of the same type on the screen.
   * ~~Making health system for units.~~
@@ -94,7 +95,9 @@ List of thing to do in no particular order
     * ~~Spawn ruins after the collapse of a building.~~
     * Check if the new spawning ruins could merge with a previous one. This occurs when a building is built above a ruins.
   * Build state
-  * Gathering resources state
+  * > Gathering resources state
+    * > Gathering gold
+    * Gathering wood
   * ~~Make a Leave function when the states are leaving, and not just free them. Let that responsibility to the state itself.~~
   * Make the state switching system can return values when going back to the previous state. This will allow follow and move to return to previous state (such attack) that there is no path to the target, so the unit can go idle.
     * When an unit is going to attack another one, but can't reach it because of is blocked but other units, there is a loop between attack and follow states, because there is not mechanism to allow the follow state to tell the attack state that the target unit can't be reached, so the unit must go idle.

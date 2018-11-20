@@ -12,6 +12,7 @@ WarState* createDeathState(WarContext* context, WarEntity* entity);
 WarState* createDamagedState(WarContext* context, WarEntity* entity);
 WarState* createCollapseState(WarContext* context, WarEntity* entity);
 WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime);
+WarState* createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId);
 
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
 bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* state);

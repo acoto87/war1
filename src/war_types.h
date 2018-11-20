@@ -52,11 +52,6 @@
 #define MAX_UPGRADES_COUNT 10
 #define MAX_TILES_COUNT 1024
 
-#define isButtonPressed(input, btn) (input->buttons[btn].pressed)
-#define wasButtonPressed(input, btn) (input->buttons[btn].wasPressed)
-#define isKeyPressed(input, key) (input->keys[key].pressed)
-#define wasKeyPressed(input, key) (input->keys[key].wasPressed)
-
 #define directionByIndex(i) ((WarUnitDirection)(WAR_DIRECTION_NORTH + i))
 
 shlDefineCreateArray(s32, s32)
@@ -440,6 +435,7 @@ typedef enum
     WAR_ENTITY_TYPE_ROAD,
     WAR_ENTITY_TYPE_WALL,
     WAR_ENTITY_TYPE_RUIN,
+    WAR_ENTITY_TYPE_WOOD,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -682,11 +678,8 @@ typedef enum
     WAR_STATE_FOLLOW,
     WAR_STATE_ATTACK,
     WAR_STATE_BUILD,
-    WAR_STATE_TO_MINE,
-    WAR_STATE_MINING,
-    WAR_STATE_TO_CHOP,
-    WAR_STATE_CHOPPING,
-    WAR_STATE_TO_DELIVER,
+    WAR_STATE_GOLD,
+    WAR_STATE_WOOD,
     WAR_STATE_DEATH,
     WAR_STATE_DAMAGED,
     WAR_STATE_COLLAPSE,
@@ -744,6 +737,12 @@ typedef struct _WarState
             s32 targetEntityId;
             vec2 targetTile;
         } attack;
+
+        struct
+        {
+            s32 targetEntityId;
+            s32 direction;
+        } gold;
     };
 } WarState;
 
@@ -829,6 +828,13 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    s32 tilex, tiley;
+    s32 amount;
+} WarWoodComponent;
+
+typedef struct
+{
+    bool enabled;
     WarState* currentState;
     WarState* nextState;
     bool leaveState;
@@ -845,6 +851,7 @@ typedef struct
     WarRoadComponent road;
     WarWallComponent wall;
     WarRuinComponent ruin;
+    WarWoodComponent wood;
     WarUnitComponent unit;
     WarStateMachineComponent stateMachine;
     WarAnimationsComponent animations;
@@ -885,6 +892,7 @@ typedef struct
 {
     s32 levelInfoIndex;
     s32 scrollSpeed;
+    bool scrolling;
 
     // viewport in map coordinates, 
     // this is the portion of the map that the player see
@@ -956,8 +964,10 @@ typedef struct
     WarKeyButtonState keys[WAR_KEY_COUNT];
 
     // drag
-    bool dragging;
+    bool isDragging;
+    bool wasDragging;
     vec2 dragPos;
+    rect dragRect;
 } WarInput;
 
 typedef struct 

@@ -98,45 +98,39 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         map->minimapSprite = createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, 2, minimapFrames);
     }
 
+    // create the wood entities
+    {
+        u16* passableData = levelPassable->levelPassable.data;
+        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+        {
+            if (passableData[i] == 128)
+            {
+                s32 x = i % MAP_TILES_WIDTH;
+                s32 y = i / MAP_TILES_WIDTH;
+
+                WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_WOOD);
+                addSpriteComponent(context, entity, map->sprite);
+                addWoodComponent(context, entity, x, y, 100);
+
+                setStaticEntity(map->finder, x, y, 1, 1, entity->id);
+            }
+        }
+    }
+
     // create the starting roads
     {
-        WarEntity* wall = createWall(context);
+        WarEntity* road = createRoad(context);
 
         for(s32 i = 0; i < levelInfo->levelInfo.startRoadsCount; i++)
         {
             WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
             if (construct->type == WAR_CONSTRUCT_ROAD)
             {
-                addWallPiecesFromConstruct(wall, construct);
+                addRoadPiecesFromConstruct(road, construct);
             }
         }
 
-        determineWallTypes(wall);
-
-        for(s32 i = 0; i < wall->wall.pieces.count; i++)
-        {
-            WarWallPiece* piece = &wall->wall.pieces.items[i];
-            piece->hp = 60;
-            piece->maxhp = 60;
-        }
-
-        addStateMachineComponent(context, wall);
-
-        WarState* idleState = createIdleState(context, wall, false);
-        changeNextState(context, wall, idleState, true, true);
-
-        // WarEntity* road = createRoad(context);
-
-        // for(s32 i = 0; i < levelInfo->levelInfo.startRoadsCount; i++)
-        // {
-        //     WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
-        //     if (construct->type == WAR_CONSTRUCT_ROAD)
-        //     {
-        //         addRoadPiecesFromConstruct(road, construct);
-        //     }
-        // }
-
-        // determineRoadTypes(road);
+        determineRoadTypes(road);
     }
 
     // create the starting walls
@@ -160,6 +154,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             piece->hp = 60;
             piece->maxhp = 60;
         }
+
+        addStateMachineComponent(context, wall);
+
+        WarState* idleState = createIdleState(context, wall, false);
+        changeNextState(context, wall, idleState, true, true);
     }
 
     // create the starting entities
@@ -253,7 +252,39 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // DEBUG
     // add animations
     {
+        WarEntity* wall = createWall(context);
 
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(34, 17, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(35, 17, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(36, 17, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(36, 18, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(36, 19, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(36, 20, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(35, 20, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(34, 20, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(34, 19, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(34, 18, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(37, 18, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(38, 18, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(33, 19, 0));
+        WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(32, 19, 0));
+
+        determineWallTypes(wall);
+
+        for(s32 i = 0; i < wall->wall.pieces.count; i++)
+        {
+            WarWallPiece* piece = &wall->wall.pieces.items[i];
+            piece->hp = 60;
+            piece->maxhp = 60;
+        }
+
+        addStateMachineComponent(context, wall);
+
+        WarState* idleState = createIdleState(context, wall, false);
+        changeNextState(context, wall, idleState, true, true);
+
+
+        
 
 
         WarEntity* ruins = createRuins(context, 10, 8, 3);
@@ -297,23 +328,72 @@ internal void updateViewport(WarContext *context)
 
     vec2 dir = VEC2_ZERO;
 
-    if (isKeyPressed(input, WAR_KEY_LEFT))
-        dir.x = -1;
-    else if (isKeyPressed(input, WAR_KEY_RIGHT))
-        dir.x = 1;
+    // if there was a click in the minimap, then update the position of the viewport
+    if (isButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        rect minimapPanel = map->minimapPanel;
+        rect mapPanel = map->mapPanel;
 
-    if (isKeyPressed(input, WAR_KEY_DOWN))
-        dir.y = 1;
-    else if (isKeyPressed(input, WAR_KEY_UP))
-        dir.y = -1;
+        // check if the click is inside the minimap panel        
+        if (rectContainsf(minimapPanel, input->pos.x, input->pos.y))
+        {
+            vec2 minimapSize = vec2i(MINIMAP_WIDTH, MINIMAP_HEIGHT);
+            vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
 
-    dir = vec2Normalize(dir);
+            map->viewport.x = offset.x * MAP_WIDTH / minimapSize.x;
+            map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
+        }
+        // check if it was at the edge of the map to scroll also and update the position of the viewport
+        else if(!input->isDragging && rectContainsf(mapPanel, input->pos.x, input->pos.y))
+        {
+            dir = getDirFromMousePos(context, input);
+        }
+    }
+    // check for the arrows keys and update the position of the viewport
+    else
+    {
+        dir = getDirFromArrowKeys(context, input);
+    }
 
     map->viewport.x += map->scrollSpeed * dir.x * context->deltaTime;
     map->viewport.x = clamp(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
 
     map->viewport.y += map->scrollSpeed * dir.y * context->deltaTime;
     map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
+
+    map->scrolling = !vec2IsZero(dir);
+}
+
+void updateDragRect(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    input->wasDragging = false;
+    input->dragRect = RECT_EMPTY;
+
+    if (map->scrolling)
+        return;    
+
+    if (isButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        rect mapPanel = map->mapPanel;
+
+        if(rectContainsf(mapPanel, input->pos.x, input->pos.y))
+        {
+            if (!input->isDragging)
+            {
+                input->dragPos = input->pos;
+                input->isDragging = true;
+            }
+        }
+    }
+    else if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        input->isDragging = false;
+        input->wasDragging = true;
+        input->dragRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
+    }
 }
 
 void updateMap(WarContext* context)
@@ -324,6 +404,7 @@ void updateMap(WarContext* context)
     WarInput* input = &context->input;
 
     updateViewport(context);
+    updateDragRect(context);
 
     // update all state machines
     for(s32 i = 0; i < map->entities.count; i++)
@@ -362,41 +443,17 @@ void updateMap(WarContext* context)
         updateAnimation(context, anim);
     }
 
-    if (isButtonPressed(input, WAR_MOUSE_LEFT))
-    {
-        rect minimapPanel = map->minimapPanel;
-        rect mapPanel = map->mapPanel;
-
-        // check if the click is inside the minimap panel        
-        if (rectContainsf(minimapPanel, input->pos.x, input->pos.y))
-        {
-            vec2 minimapSize = vec2i(MINIMAP_WIDTH, MINIMAP_HEIGHT);
-            vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
-
-            map->viewport.x = offset.x * MAP_WIDTH / minimapSize.x;
-            map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
-        }
-        // check if the click is inside the map panel
-        else if(rectContainsf(mapPanel, input->pos.x, input->pos.y))
-        {
-            if (!input->dragging)
-            {
-                input->dragPos = input->pos;
-                input->dragging = true;
-            }
-        }
-    }
-    else if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
         rect minimapPanel = map->minimapPanel;
         rect mapPanel = map->mapPanel;
 
         // check if the click is inside the map panel
-        if(input->dragging || rectContainsf(mapPanel, input->pos.x, input->pos.y))
+        if(input->isDragging || rectContainsf(mapPanel, input->pos.x, input->pos.y))
         {
-            rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
-            pointerRect = rectScreenToMapCoordinates(context, pointerRect);
+            rect pointerRect = rectScreenToMapCoordinates(context, input->dragRect);
 
+            // select the entities inside the dragging rect
             for(s32 i = 0; i < map->entities.count; i++)
             {
                 WarEntity* entity = map->entities.items[i];
@@ -420,8 +477,6 @@ void updateMap(WarContext* context)
                 }
             }
         }
-
-        input->dragging = false;
     }
 
     if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
@@ -444,13 +499,39 @@ void updateMap(WarContext* context)
                         WarEntity* entity = findEntity(context, entityId);
                         assert(entity);
 
+                        // TODO: check here if the attacker can attack the target entity
+                        // if it can, the attacker go to attack state
+                        // if it can't, the attacker go to follow state
+
+                        // TODO: if right click on a friendly unit, default to follow
+                        // to attack a friendly unit the player need to explicitly click on the attack button and the click on the unit,
+
+                        // TODO: if the selected unit is a worker, and target entity is a gold or wood, go to the gathering state
+
                         if (entity->id != targetEntity->id)
                         {
-                            // WarState* followState = createFollowState(context, entity, targetEntityId, 1);
-                            // changeNextState(context, entity, followState, true, true);
+                            if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
+                            {
+                                if (isUnitOfType(entity, WAR_UNIT_PEASANT) ||
+                                    isUnitOfType(entity, WAR_UNIT_PEON))
+                                {
+                                    WarState* gatherGoldState = createGatherGoldState(context, entity, targetEntity->id);
+                                    changeNextState(context, entity, gatherGoldState, true, true);        
+                                }
+                                else
+                                {
+                                    WarState* followState = createFollowState(context, entity, targetEntityId, 1);
+                                    changeNextState(context, entity, followState, true, true);
+                                }
+                            }
+                            else
+                            {
+                                // WarState* followState = createFollowState(context, entity, targetEntityId, 1);
+                                // changeNextState(context, entity, followState, true, true);
 
-                            WarState* attackState = createAttackState(context, entity, targetEntityId, targetTile);
-                            changeNextState(context, entity, attackState, true, true);
+                                WarState* attackState = createAttackState(context, entity, targetEntityId, targetTile);
+                                changeNextState(context, entity, attackState, true, true);
+                            }
                         }
                     }                    
                 }
@@ -644,6 +725,18 @@ void renderMap(WarContext *context)
             }
         }
 
+        // render wood
+        {
+            for(s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity* entity = map->entities.items[i];
+                if (entity && entity->type == WAR_ENTITY_TYPE_WOOD)
+                {
+                    renderEntity(context, entity, false);
+                }
+            }
+        }
+
 #ifdef DEBUG_RENDER_UNIT_PATHS
         for(s32 i = 0; i < map->entities.count; i++)
         {
@@ -783,7 +876,7 @@ void renderMap(WarContext *context)
             nvgSave(gfx);
 
             WarInput* input = &context->input;
-            if (input->dragging)
+            if (input->isDragging)
             {
                 rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
                 nvgStrokeRect(gfx, pointerRect, NVG_GREEN_SELECTION, 1.0f);

@@ -425,7 +425,7 @@ void loadLevelPassable(WarContext *context, DatabaseEntry *entry)
     {
         // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
         u16 data = readu16(rawResource.data, i * 2);
-        resource->levelPassable.data[i] = data > 0 ? PATH_FINDER_DATA_STATIC : PATH_FINDER_DATA_EMPTY;
+        resource->levelPassable.data[i] = data;
     }
 }
 
