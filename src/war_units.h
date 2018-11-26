@@ -239,6 +239,32 @@ const WarRuinsData ruinsData[] =
 
 typedef struct
 {
+    WarTreeType type;
+    s32 tileIndexForest;
+    s32 tileIndexSwamp;
+} WarTreesData;
+
+const WarTreesData treesData[] =
+{
+    { WAR_TREE_TOP_LEFT,            73, 42 },
+    { WAR_TREE_TOP,                 75, 43 },
+    { WAR_TREE_TOP_RIGHT,           76, 44 },
+    { WAR_TREE_LEFT,                72, 45 },
+    { WAR_TREE_CENTER,              94, 46 },
+    { WAR_TREE_RIGHT,               78, 47 },
+    { WAR_TREE_BOTTOM_LEFT,         71, 48 },
+    { WAR_TREE_BOTTOM,              93, 49 },
+    { WAR_TREE_BOTTOM_RIGHT,        79, 50 },
+    { WAR_TREE_TOP_LEFT_INSIDE,     80, 51 },
+    { WAR_TREE_TOP_RIGHT_INSIDE,    81, 52 },
+    { WAR_TREE_BOTTOM_LEFT_INSIDE,  77, 54 },
+    { WAR_TREE_BOTTOM_RIGHT_INSIDE, 74, 53 },
+    { WAR_TREE_DIAG_1,              82, 56 },
+    { WAR_TREE_DIAG_2,              83, 55 },
+};
+
+typedef struct
+{
     WarUnitType type;
     s32 range;
     s32 armour;
@@ -417,6 +443,17 @@ inline WarRuinsData getRuinsData(WarRuinPieceType type)
 
     assert(index < length);
     return ruinsData[index];
+}
+
+inline WarTreesData getTreesData(WarTreeType type)
+{
+    s32 index = 0;
+    s32 length = arrayLength(treesData);
+    while (index < length && treesData[index].type != type)
+        index++;
+
+    assert(index < length);
+    return treesData[index];
 }
 
 inline WarUnitStats getUnitStats(WarUnitType type)
@@ -630,8 +667,11 @@ inline vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
     return inTiles ? vec2MapToTileCoordinates(position) : position;
 }
 
-inline void setUnitCenterPosition(WarEntity* entity, vec2 position)
+inline void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
+    if (inTiles)
+        position = vec2TileToMapCoordinates(position, true);
+
     WarTransformComponent* transform = &entity->transform;
     vec2 spriteSize = getUnitSpriteSize(entity);
     vec2 unitCenter = vec2Half(spriteSize);

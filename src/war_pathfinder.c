@@ -1,8 +1,4 @@
-// this value is the distance squared to avoid dynamic units
-// so if the dynamic entity at a distance squared less than this value, 
-// treat it like a static one, so the unit can get around it and the risk of
-// overlapping units is less
-#define DISTANCE_SQR_AVOID_DYNAMIC_POSITIONS 2.0f
+#include "war_pathfinder.h"
 
 typedef struct
 {
@@ -77,43 +73,19 @@ shlDefineMap(WarMapNodeMap, s32, WarMapNode)
 #define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareFScore, NULL}
 #define WarMapNodeMapDefaultOptions (WarMapNodeMapOptions){WarMapNodeEmpty, hashMapNode, equalsMapNodeId, NULL}
 
-internal const s32 dirC = 8;
-internal const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
-internal const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
-
 internal WarMapNode createNode(WarPathFinder finder, s32 x, s32 y)
 {
     return (WarMapNode){y * finder.width + x, x, y, 0, -1, INT32_MAX, INT32_MAX};
 }
 
-WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 data[])
+u16 getTileValue(WarPathFinder finder, s32 x, s32 y)
 {
-    WarPathFinder finder = (WarPathFinder){0};
-    finder.type = type;
-    finder.width = width;
-    finder.height = height;
-    finder.data = (u16*)xcalloc(width * height, sizeof(u16));
-
-    // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
-    for(s32 i = 0; i < width * height; i++)
-    {
-        switch (data[i])
-        {
-            case 128:
-            case 64:
-                finder.data[i] = PATH_FINDER_DATA_STATIC;
-                break;
-
-            default:
-                finder.data[i] = PATH_FINDER_DATA_EMPTY;
-                break;
-        }
-    }
-
-    return finder;
+    assert(inRange(x, 0, finder.width));
+    assert(inRange(y, 0, finder.height));
+    return finder.data[y * finder.width + x];
 }
 
-internal void setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, u16 value)
+void setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, u16 value)
 {
     if (!inRange(startX, 0, finder.width) || !inRange(startY, 0, finder.height))
         return;
@@ -134,29 +106,6 @@ internal void setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 wi
             finder.data[y * finder.width + x] = value;
         }
     }
-}
-
-#define setFreeTiles(finder, startX, startY, width, height) setTilesValue(finder, startX, startY, width, height, PATH_FINDER_DATA_EMPTY)
-#define setDynamicEntity(finder, startX, startY, width, height, id) setTilesValue(finder, startX, startY, width, height, (id << 4) | PATH_FINDER_DATA_DYNAMIC)
-#define setStaticEntity(finder, startX, startY, width, height, id) setTilesValue(finder, startX, startY, width, height, (id << 4) | PATH_FINDER_DATA_STATIC)
-
-u16 getTileValue(WarPathFinder finder, s32 x, s32 y)
-{
-    assert(inRange(x, 0, finder.width));
-    assert(inRange(y, 0, finder.height));
-    return finder.data[y * finder.width + x];
-}
-
-#define getTileValueType(finder, x, y) (getTileValue(finder, x, y) & 0x000F)
-#define getTileEntityId(finder, x, y) ((getTileValue(finder, x, y) & 0xFFF0) >> 4)
-#define isEmpty(finder, x, y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_EMPTY)
-#define isStatic(finder, x, y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_STATIC)
-#define isDynamic(finder, x,  y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_DYNAMIC)
-#define isDynamicOfEntity(finder, x, y, id) (getTileEntityId(finder, x, y) == id)
-
-void freePath(WarMapPath path)
-{
-    vec2ListFree(&path.nodes);
 }
 
 internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
@@ -180,7 +129,7 @@ internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
         {
             s32 xx = node.x + dirX[d];
             s32 yy = node.y + dirY[d];
-            if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
+            if (isInside(finder, xx, yy))
             {
                 WarMapNode newNode = createNode(finder, xx, yy);
                 if (isEmpty(finder, xx, yy) || equalsMapNode(newNode, endNode))
@@ -259,7 +208,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
         {
             s32 xx = current.x + dirX[d];
             s32 yy = current.y + dirY[d];
-            if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
+            if (isInside(finder, xx, yy))
             {
                 // if the neighbor position is occupied by a static entity, 
                 // don't consider it so that the unit is able to surround it
@@ -372,6 +321,38 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     return path;
 }
 
+WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 data[])
+{
+    WarPathFinder finder = (WarPathFinder){0};
+    finder.type = type;
+    finder.width = width;
+    finder.height = height;
+    finder.data = (u16*)xcalloc(width * height, sizeof(u16));
+
+    // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
+    for(s32 i = 0; i < width * height; i++)
+    {
+        switch (data[i])
+        {
+            case 128:
+            case 64:
+                finder.data[i] = PATH_FINDER_DATA_STATIC;
+                break;
+
+            default:
+                finder.data[i] = PATH_FINDER_DATA_EMPTY;
+                break;
+        }
+    }
+
+    return finder;
+}
+
+bool isInside(WarPathFinder finder, s32 x, s32 y)
+{
+    return inRange(x, 0, finder.width) && inRange(y, 0, finder.height);
+}
+
 WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
     switch (finder.type)
@@ -424,4 +405,61 @@ bool pathExists(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY
     bool result = path.nodes.count >= 2;
     freePath(path);
     return result;
+}
+
+void freePath(WarMapPath path)
+{
+    vec2ListFree(&path.nodes);
+}
+
+vec2 findEmptyPosition(WarPathFinder finder, vec2 position)
+{
+    if (isEmpty(finder, (s32)position.x, (s32)position.y))
+        return position;
+
+    vec2List positions;
+    vec2ListInit(&positions, vec2ListDefaultOptions);
+    vec2ListAdd(&positions, position);
+    
+    for(s32 i = 0; i < positions.count; i++)
+    {
+        vec2 currentPosition = positions.items[i];
+        if (isEmpty(finder, (s32)currentPosition.x, (s32)currentPosition.y))
+        {
+            position = currentPosition;
+            break;
+        }
+
+        for(s32 d = 0; d < dirC; d++)
+        {
+            s32 xx = currentPosition.x + dirX[d];
+            s32 yy = currentPosition.y + dirY[d];
+            if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
+            {
+                vec2 newPosition = vec2i(xx, yy);
+                if (!vec2ListContains(&positions, newPosition))
+                    vec2ListAdd(&positions, newPosition);
+            }
+        }
+    }
+
+    vec2ListFree(&positions);
+
+    return position;
+}
+
+bool isPositionAccesible(WarPathFinder finder, vec2 position)
+{
+    for(s32 d = 0; d < dirC; d++)
+    {
+        s32 xx = (s32)position.x + dirX[d];
+        s32 yy = (s32)position.y + dirY[d];
+        if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
+        {
+            if (isEmpty(finder, xx, yy))
+                return true;
+        }
+    }
+
+    return false;
 }

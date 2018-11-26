@@ -39,6 +39,19 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
         assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        {
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            {
+                // index of the tile in the tilesheet
+                u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+                printf("%d ", tileIndex);
+            }
+
+            printf("\n");
+        }
+
+
         map->sprite = createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
 
         // the minimap sprite will be a 2 frames sprite
@@ -98,21 +111,55 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         map->minimapSprite = createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, 2, minimapFrames);
     }
 
-    // create the wood entities
+    // create the forest entities
     {
+        bool processed[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+            processed[i] = false;
+
         u16* passableData = levelPassable->levelPassable.data;
         for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         {
-            if (passableData[i] == 128)
+            if (passableData[i] == 128 && !processed[i])
             {
-                s32 x = i % MAP_TILES_WIDTH;
-                s32 y = i / MAP_TILES_WIDTH;
+                WarTreeList trees;
+                WarTreeListInit(&trees, WarTreeListDefaultOptions);
 
-                WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_WOOD);
+                // TODO: access here to tree data to get the amount of wood
+                WarTreeListAdd(&trees, createTree(i % MAP_TILES_WIDTH, i / MAP_TILES_WIDTH, 100));
+                processed[i] = true;
+
+                for(s32 j = 0; j < trees.count; j++)
+                {
+                    WarTree tree = trees.items[j];
+                    for(s32 d = 0; d < dirC; d++)
+                    {
+                        s32 xx = tree.tilex + dirX[d];
+                        s32 yy = tree.tiley + dirY[d];
+                        if (isInside(map->finder, xx, yy))
+                        {
+                            s32 k = yy * MAP_TILES_WIDTH + xx;
+                            if (passableData[k] == 128)
+                            {
+                                WarTree newTree = createTree(xx, yy, 100);
+                                if (!processed[k])
+                                {
+                                    WarTreeListAdd(&trees, newTree);
+                                    processed[k] = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
                 addSpriteComponent(context, entity, map->sprite);
-                addWoodComponent(context, entity, x, y, 100);
+                addForestComponent(context, entity, trees);
 
-                setStaticEntity(map->finder, x, y, 1, 1, entity->id);
+                determineTreeTypes(entity);
+
+                for (s32 i = 0; i < trees.count; i++)
+                    setStaticEntity(map->finder, trees.items[i].tilex, trees.items[i].tiley, 1, 1, entity->id);
             }
         }
     }
@@ -252,6 +299,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // DEBUG
     // add animations
     {
+        // test walls
         WarEntity* wall = createWall(context);
 
         WarWallPieceListAdd(&wall->wall.pieces, createWallPiece(34, 17, 0));
@@ -284,27 +332,14 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         changeNextState(context, wall, idleState, true, true);
 
 
-        
+        // test ruins
+        WarEntity* ruins = createRuins(context, 11, 6, 3);
+        addRuinsPieces(context, ruins, 11, 6, 3);
+        addRuinsPieces(context, ruins, 13, 5, 2);
+        addRuinsPieces(context, ruins, 9, 5, 3);
+        addRuinsPieces(context, ruins, 8, 8, 4);
 
-
-        WarEntity* ruins = createRuins(context, 10, 8, 3);
-
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(12, 7));
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(13, 7));
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(13, 8));
-
-
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(9, 10));
-
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(9,  11));
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(10, 11));
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(11, 11));
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(9,  12));
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(10, 12));
-        WarRuinPieceListAdd(&ruins->ruin.pieces, createRuinPiece(11, 12));
-
-        determineRuinTypes(ruins);
-
+        // test animations
         // WarSprite sprite2 = createSpriteFromResourceIndex(context, 299);
         // WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.1f, true);
         // anim2->offset = vec2f(250, 320);
@@ -326,7 +361,10 @@ internal void updateViewport(WarContext *context)
     WarMap *map = context->map;
     WarInput *input = &context->input;
 
+    map->wasScrolling = false;
+
     vec2 dir = VEC2_ZERO;
+    bool wasScrolling = map->isScrolling;
 
     // if there was a click in the minimap, then update the position of the viewport
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
@@ -361,7 +399,10 @@ internal void updateViewport(WarContext *context)
     map->viewport.y += map->scrollSpeed * dir.y * context->deltaTime;
     map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
 
-    map->scrolling = !vec2IsZero(dir);
+    map->isScrolling = !vec2IsZero(dir);
+
+    if (!map->isScrolling)
+        map->wasScrolling = wasScrolling;
 }
 
 void updateDragRect(WarContext* context)
@@ -372,8 +413,12 @@ void updateDragRect(WarContext* context)
     input->wasDragging = false;
     input->dragRect = RECT_EMPTY;
 
-    if (map->scrolling)
+    if (map->isScrolling)
+    {
+        input->isDragging = false;
+        input->dragPos = VEC2_ZERO;
         return;    
+    }
 
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
@@ -390,9 +435,56 @@ void updateDragRect(WarContext* context)
     }
     else if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        input->isDragging = false;
-        input->wasDragging = true;
-        input->dragRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
+        if (input->isDragging)
+        {
+            input->isDragging = false;
+            input->wasDragging = true;
+            input->dragRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
+        }
+    }
+}
+
+void updateSelection(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        // if it was scrolling last frame, don't perform any selection this frame
+        if (!map->wasScrolling)
+        {
+            // check if the click is inside the map panel
+            if(input->wasDragging || rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            {
+                rect pointerRect = rectScreenToMapCoordinates(context, input->dragRect);
+                rectPrint(pointerRect);
+
+                // select the entities inside the dragging rect
+                for(s32 i = 0; i < map->entities.count; i++)
+                {
+                    WarEntity* entity = map->entities.items[i];
+                    if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+                    {
+                        WarTransformComponent transform = entity->transform;
+                        WarUnitComponent unit = entity->unit;
+                        if (transform.enabled && unit.enabled)
+                        {
+                            rect unitRect = rectv(transform.position, getUnitSpriteSize(entity));
+
+                            if (rectIntersects(pointerRect, unitRect))
+                            {
+                                addEntityToSelection(context, entity->id);
+                            }
+                            else if (!input->keys[WAR_KEY_CTRL].pressed)
+                            {
+                                removeEntityFromSelection(context, entity->id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -405,6 +497,7 @@ void updateMap(WarContext* context)
 
     updateViewport(context);
     updateDragRect(context);
+    updateSelection(context);
 
     // update all state machines
     for(s32 i = 0; i < map->entities.count; i++)
@@ -443,42 +536,9 @@ void updateMap(WarContext* context)
         updateAnimation(context, anim);
     }
 
-    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
-    {
-        rect minimapPanel = map->minimapPanel;
-        rect mapPanel = map->mapPanel;
-
-        // check if the click is inside the map panel
-        if(input->isDragging || rectContainsf(mapPanel, input->pos.x, input->pos.y))
-        {
-            rect pointerRect = rectScreenToMapCoordinates(context, input->dragRect);
-
-            // select the entities inside the dragging rect
-            for(s32 i = 0; i < map->entities.count; i++)
-            {
-                WarEntity* entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
-                {
-                    WarTransformComponent transform = entity->transform;
-                    WarUnitComponent unit = entity->unit;
-                    if (transform.enabled && unit.enabled)
-                    {
-                        rect unitRect = rectv(transform.position, getUnitSpriteSize(entity));
-
-                        if (rectIntersects(pointerRect, unitRect))
-                        {
-                            addEntityToSelection(context, entity->id);
-                        }
-                        else if (!input->keys[WAR_KEY_CTRL].pressed)
-                        {
-                            removeEntityFromSelection(context, entity->id);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+    //
+    // TODO: Refactor this code to an order system that is more robust
+    //
     if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
     {
         s32 selEntitiesCount = map->selectedEntities.count;
@@ -517,6 +577,20 @@ void updateMap(WarContext* context)
                                 {
                                     WarState* gatherGoldState = createGatherGoldState(context, entity, targetEntity->id);
                                     changeNextState(context, entity, gatherGoldState, true, true);        
+                                }
+                                else
+                                {
+                                    WarState* followState = createFollowState(context, entity, targetEntityId, 1);
+                                    changeNextState(context, entity, followState, true, true);
+                                }
+                            }
+                            else if(targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                            {
+                                if (isUnitOfType(entity, WAR_UNIT_PEASANT) ||
+                                    isUnitOfType(entity, WAR_UNIT_PEON))
+                                {
+                                    WarState* gatherWoodState = createGatherWoodState(context, entity, targetEntityId, targetTile);
+                                    changeNextState(context, entity, gatherWoodState, true, true);        
                                 }
                                 else
                                 {
@@ -659,9 +733,6 @@ void renderMap(WarContext *context)
             WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
             assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-            WarResource* tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
-            assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
-
             NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
 
             for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
@@ -730,7 +801,7 @@ void renderMap(WarContext *context)
             for(s32 i = 0; i < map->entities.count; i++)
             {
                 WarEntity* entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_WOOD)
+                if (entity && entity->type == WAR_ENTITY_TYPE_FOREST)
                 {
                     renderEntity(context, entity, false);
                 }
@@ -800,20 +871,18 @@ void renderMap(WarContext *context)
 #endif
 
 #ifdef DEBUG_RENDER_MAP_GRID
-        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
         {
-            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            {
-                nvgSave(gfx);
+            vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
+            vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
+            nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
+        }
 
-                nvgBeginPath(gfx);
-                nvgRect(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgStrokeWidth(gfx, 0.5f);
-                nvgStrokeColor(gfx, NVG_WHITE);
-                nvgStroke(gfx);
-
-                nvgRestore(gfx);
-            }
+        for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
+        {
+            vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
+            vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
+            nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
         }
 #endif
 

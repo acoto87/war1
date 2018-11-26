@@ -141,13 +141,13 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 step = vec2Mulf(direction, speed * context->deltaTime);
     vec2 newPosition = vec2Addv(position, step);
 
-    setUnitCenterPosition(entity, newPosition);
+    setUnitCenterPosition(entity, newPosition, false);
 
     f32 distance = vec2Distance(newPosition, target);
     if (distance < MOVE_EPSILON)
     {
         newPosition = target;
-        setUnitCenterPosition(entity, newPosition);
+        setUnitCenterPosition(entity, newPosition, false);
 
         setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
         setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);

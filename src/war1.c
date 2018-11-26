@@ -48,6 +48,7 @@
 #include "war_database.h"
 #include "war_map.h"
 #include "war_units.h"
+#include "war_pathfinder.h"
 #include "war_state_machine.h"
 #include "war_file.c"
 #include "war_actions.c"

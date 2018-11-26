@@ -435,7 +435,7 @@ typedef enum
     WAR_ENTITY_TYPE_ROAD,
     WAR_ENTITY_TYPE_WALL,
     WAR_ENTITY_TYPE_RUIN,
-    WAR_ENTITY_TYPE_WOOD,
+    WAR_ENTITY_TYPE_FOREST,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -560,6 +560,46 @@ shlDeclareList(WarRuinPieceList, WarRuinPiece)
 shlDefineList(WarRuinPieceList, WarRuinPiece)
 
 #define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL}
+
+typedef enum 
+{
+    WAR_TREE_TOP_LEFT,
+    WAR_TREE_TOP,
+    WAR_TREE_TOP_RIGHT,
+    WAR_TREE_LEFT,
+    WAR_TREE_CENTER,
+    WAR_TREE_RIGHT,
+    WAR_TREE_BOTTOM_LEFT,
+    WAR_TREE_BOTTOM,
+    WAR_TREE_BOTTOM_RIGHT,
+    WAR_TREE_TOP_LEFT_INSIDE,
+    WAR_TREE_TOP_RIGHT_INSIDE,
+    WAR_TREE_BOTTOM_LEFT_INSIDE,
+    WAR_TREE_BOTTOM_RIGHT_INSIDE,
+    WAR_TREE_DIAG_1,
+    WAR_TREE_DIAG_2,
+} WarTreeType;
+
+typedef struct
+{
+    WarTreeType type;
+    s32 tilex, tiley;
+    s32 amount;
+} WarTree;
+
+#define WarTreeEmpty (WarTree){0}
+#define createTree(x, y, amount) ((WarTree){0, (x), (y), (amount)})
+
+internal bool equalsTree(const WarTree r1, const WarTree r2)
+{
+    return r1.type == r2.type && 
+           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
+}
+
+shlDeclareList(WarTreeList, WarTree)
+shlDefineList(WarTreeList, WarTree)
+
+#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
 
 typedef enum
 {
@@ -742,7 +782,16 @@ typedef struct _WarState
         {
             s32 targetEntityId;
             s32 direction;
+            bool insideBuilding;
         } gold;
+
+        struct
+        {
+            s32 forestId;
+            vec2 position;
+            s32 direction;
+            bool insideBuilding;
+        } wood;
     };
 } WarState;
 
@@ -828,9 +877,8 @@ typedef struct
 typedef struct
 {
     bool enabled;
-    s32 tilex, tiley;
-    s32 amount;
-} WarWoodComponent;
+    WarTreeList trees;
+} WarForestComponent;
 
 typedef struct
 {
@@ -851,7 +899,7 @@ typedef struct
     WarRoadComponent road;
     WarWallComponent wall;
     WarRuinComponent ruin;
-    WarWoodComponent wood;
+    WarForestComponent forest;
     WarUnitComponent unit;
     WarStateMachineComponent stateMachine;
     WarAnimationsComponent animations;
@@ -891,8 +939,11 @@ typedef struct
 typedef struct
 {
     s32 levelInfoIndex;
+
+    // scroll
     s32 scrollSpeed;
-    bool scrolling;
+    bool isScrolling;
+    bool wasScrolling;
 
     // viewport in map coordinates, 
     // this is the portion of the map that the player see

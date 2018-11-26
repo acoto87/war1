@@ -25,6 +25,20 @@ inline void initLog(LogSeverity severity)
     __log.severity = severity;
 }
 
+static int32_t __getFileNameIndex(const char* file)
+{
+    int32_t index = 0;
+
+    size_t len = strlen(file);
+    for (int32_t i = 1; i < len; i++)
+    {
+        if (file[i] == '/' || file[i] == '\\')
+            index = i;
+    }
+    
+    return index;
+}
+
 static void __logInternal(LogSeverity severity, const char* file, const int32_t line, const char* message, ...)
 {
     if (severity <= __log.severity)
@@ -47,7 +61,8 @@ static void __logInternal(LogSeverity severity, const char* file, const int32_t 
             default:                        severityStr = "UNKOWN";     break;
         }
 
-        fprintf(stdout, "[%s:(%d)][%s][%s]: ", file, line, tstr, severityStr);
+        int32_t fileNameIndex = __getFileNameIndex(file);
+        fprintf(stdout, "[%s:(%d)][%s][%s]: ", file + fileNameIndex + 1, line, tstr, severityStr);
 
         va_list args;
         va_start(args, message);

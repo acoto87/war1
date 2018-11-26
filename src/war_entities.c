@@ -116,18 +116,17 @@ void removeRuinComponent(WarContext* context, WarEntity* entity)
     entity->ruin = (WarRuinComponent){0};
 }
 
-void addWoodComponent(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 amount)
+void addForestComponent(WarContext* context, WarEntity* entity, WarTreeList trees)
 {
-    entity->wood = (WarWoodComponent){0};
-    entity->wood.enabled = true;
-    entity->wood.tilex = x;
-    entity->wood.tiley = y;
-    entity->wood.amount = amount;
+    entity->forest = (WarForestComponent){0};
+    entity->forest.enabled = true;
+    entity->forest.trees = trees;
 }
 
-void removeWoodComponent(WarContext* context, WarEntity* entity)
+void removeForestComponent(WarContext* context, WarEntity* entity)
 {
-    entity->wood = (WarWoodComponent){0};
+    WarTreeListFree(&entity->forest.trees);
+    entity->forest = (WarForestComponent){0};
 }
 
 void addStateMachineComponent(WarContext* context, WarEntity* entity)
@@ -185,7 +184,7 @@ WarEntity* createEntity(WarContext* context, WarEntityType type)
     entity->unit = (WarUnitComponent){0};
     entity->road = (WarRoadComponent){0};
     entity->wall = (WarWallComponent){0};
-    entity->wood = (WarWoodComponent){0};
+    entity->forest = (WarForestComponent){0};
     entity->stateMachine = (WarStateMachineComponent){0};
     entity->animations = (WarAnimationsComponent){0};
 
@@ -554,26 +553,34 @@ void determineRuinTypes(WarEntity* entity)
     }
 }
 
-WarEntity* createRuins(WarContext* context, s32 x, s32 y, s32 dim)
+WarEntity* createRuins(WarContext* context)
 {
     WarMap* map = context->map;
 
     WarRuinPieceList pieces;
     WarRuinPieceListInit(&pieces, WarRuinPieceListDefaultOptions);
 
-    for(s32 yy = 0; yy < dim; yy++)
-    {
-        for(s32 xx = 0; xx < dim; xx++)
-            WarRuinPieceListAdd(&pieces, createRuinPiece(x + xx, y + yy));
-    }
-
     WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_RUIN);
     addRuinComponent(context, entity, pieces);
     addSpriteComponent(context, entity, map->sprite);
 
-    determineRuinTypes(entity);
-
     return entity;
+}
+
+void addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim)
+{
+    assert(entity);
+    assert(entity->type == WAR_ENTITY_TYPE_RUIN);
+
+    WarRuinPieceList* pieces = &entity->ruin.pieces;
+
+    for(s32 yy = 0; yy < dim; yy++)
+    {
+        for(s32 xx = 0; xx < dim; xx++)
+            WarRuinPieceListAdd(pieces, createRuinPiece(x + xx, y + yy));
+    }
+
+    determineRuinTypes(entity);
 }
 
 s32 findEntityIndex(WarContext* context, WarEntityId id)
@@ -629,6 +636,155 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
+void determineTreeTypes(WarEntity* entity)
+{
+    assert(entity);
+    assert(entity->type == WAR_ENTITY_TYPE_FOREST);
+
+    WarTreeList* trees = &entity->forest.trees;
+    
+    for (s32 i = 0; i < trees->count; i++)
+    {
+        WarTree* ti = &trees->items[i];
+
+        bool topLeft = ti->tilex == 0 || ti->tiley == 0,
+             top = ti->tiley == 0,
+             topRight = ti->tilex == MAP_TILES_WIDTH - 1 || ti->tiley == 0,
+             left = ti->tilex == 0,
+             right = ti->tilex == MAP_TILES_WIDTH - 1,
+             bottomLeft = ti->tilex == 0 || ti->tiley == MAP_TILES_HEIGHT - 1,
+             bottom = ti->tiley == MAP_TILES_HEIGHT - 1,
+             bottomRight = ti->tilex == MAP_TILES_WIDTH - 1 || ti->tiley == MAP_TILES_HEIGHT - 1;
+
+        for (s32 j = 0; j < trees->count; j++)
+        {
+            if (i == j) continue;
+
+            WarTree* tj = &trees->items[j];
+
+            // if the tree is chopped down treat it as an empty tile
+            if (tj->amount == 0) continue;
+
+            if (tj->tilex == ti->tilex - 1 && tj->tiley == ti->tiley - 1)
+                topLeft = true;
+            else if (tj->tilex == ti->tilex && tj->tiley == ti->tiley - 1)
+                top = true;
+            else if (tj->tilex == ti->tilex + 1 && tj->tiley == ti->tiley - 1)
+                topRight = true;
+            else if (tj->tilex == ti->tilex - 1 && tj->tiley == ti->tiley)
+                left = true;
+            else if(tj->tilex == ti->tilex + 1 && tj->tiley == ti->tiley)
+                right = true;
+            else if (tj->tilex == ti->tilex - 1 && tj->tiley == ti->tiley + 1)
+                bottomLeft = true;
+            else if (tj->tilex == ti->tilex && tj->tiley == ti->tiley + 1)
+                bottom = true;
+            else if (tj->tilex == ti->tilex + 1 && tj->tiley == ti->tiley + 1)
+                bottomRight = true;
+        }
+        
+        // Corners
+        if (!topLeft && !top && !left && right && bottom && bottomRight)
+            ti->type = WAR_TREE_TOP_LEFT;
+        if (!topRight && !top && !right && left && bottom && bottomLeft)
+            ti->type = WAR_TREE_TOP_RIGHT;
+        if (!bottomLeft && !bottom && !left && right && top && topRight)
+            ti->type = WAR_TREE_BOTTOM_LEFT;
+        if (!bottomRight && !bottom && !right && left && top && topLeft)
+            ti->type = WAR_TREE_BOTTOM_RIGHT;
+
+        // Edges
+        if (!top && left && right && bottom)
+            ti->type = WAR_TREE_TOP;
+        if (!left && top && bottom && right)
+            ti->type = WAR_TREE_LEFT;
+        if (!right && top && bottom && left)
+            ti->type = WAR_TREE_RIGHT;
+        if (!bottom && left && right && top)
+            ti->type = WAR_TREE_BOTTOM;
+
+        // Insides
+        if (!bottomRight && top && left && right && bottom && topLeft)
+            ti->type = WAR_TREE_TOP_LEFT_INSIDE;
+        if (!bottomLeft && top && right && left && bottom && topRight)
+            ti->type = WAR_TREE_TOP_RIGHT_INSIDE;
+        if (!topRight && top && left && right && bottom && bottomLeft)
+            ti->type = WAR_TREE_BOTTOM_LEFT_INSIDE;
+        if (!topLeft && top && left && right && bottom && bottomRight)
+            ti->type = WAR_TREE_BOTTOM_RIGHT_INSIDE;
+
+        // Diagonals
+        if (!topRight && !bottomLeft && topLeft && bottomRight)
+            ti->type = WAR_TREE_DIAG_1;
+        if (!topLeft && !bottomRight && topRight && bottomLeft)
+            ti->type = WAR_TREE_DIAG_2;
+
+        // Center
+        if (topLeft && top && topRight && left && right && bottomLeft && bottom && bottomRight)
+            ti->type = WAR_TREE_CENTER;
+        if (!topLeft && !top && !topRight && !left && !right && !bottomLeft && !bottom && !bottomRight)
+            ti->type = WAR_TREE_CENTER;
+    }
+    
+}
+
+WarTree* getTreeAtPosition(WarEntity* forest, vec2 position)
+{
+    s32 x = (s32)position.x;
+    s32 y = (s32)position.y;
+    WarTreeList* trees = &forest->forest.trees;
+    for (s32 i = 0; i < trees->count; i++)
+    {
+        WarTree* tree = &trees->items[i];
+        if (tree->tilex == x && tree->tiley == y)
+            return tree;
+    }
+
+    return NULL;
+}
+
+WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position)
+{
+    WarMap* map = context->map;
+
+    WarTree* result = NULL;
+
+    vec2List positions;
+    vec2ListInit(&positions, vec2ListDefaultOptions);
+    vec2ListAdd(&positions, position);
+    
+    for (s32 i = 0; i < positions.count; i++)
+    {
+        position = positions.items[i];
+
+        WarTree* tree = getTreeAtPosition(forest, position);
+        if (tree)
+        {
+            if (isPositionAccesible(map->finder, position) && tree->amount > 0)
+            {
+                result = tree;
+                break;
+            }
+        }
+
+        for (s32 d = 0; d < dirC; d++)
+        {
+            s32 xx = (s32)position.x + dirX[d];
+            s32 yy = (s32)position.y + dirY[d];
+            if (isInside(map->finder, xx, yy))
+            {
+                vec2 newPosition = vec2i(xx, yy);
+                if (!vec2ListContains(&positions, newPosition))
+                    vec2ListAdd(&positions, newPosition);
+            }
+        }
+    }
+
+    vec2ListFree(&positions);
+
+    return result;
+}
+
 void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
@@ -644,7 +800,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
     removeRoadComponent(context, entity);
     removeWallComponent(context, entity);
     removeRuinComponent(context, entity);
-    removeWoodComponent(context, entity);
+    removeForestComponent(context, entity);
     removeUnitComponent(context, entity);
     removeStateMachineComponent(context, entity);
     removeAnimationsComponent(context, entity);
@@ -844,13 +1000,13 @@ void renderRuin(WarContext* context, WarEntity* entity)
     }
 }
 
-void renderWood(WarContext* context, WarEntity* entity)
+void renderForest(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
     WarTransformComponent transform = entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
-    WarWoodComponent* wood = &entity->wood;
+    WarForestComponent* forest = &entity->forest;
 
     // the wood are only for forest and swamp maps
     WarMapTilesetType tilesetType = context->map->tilesetType;
@@ -858,28 +1014,44 @@ void renderWood(WarContext* context, WarEntity* entity)
 
     if (sprite->enabled)
     {
-        // only render the sprite of  chooped wood if the entity hasn't any wood left
-        // the sprite of the trees are already in the map description
-        if (wood->enabled && wood->amount == 0)
+        if (forest->enabled)
         {
-            // the position in the world of the wood tile
-            s32 x = wood->tilex;
-            s32 y = wood->tiley;
+            WarTreeList* trees = &forest->trees;
+            for (s32 i = 0; i < trees->count; i++)
+            {
+                WarTree* tree = &trees->items[i];
 
-            s32 tileIndex = (tilesetType == MAP_TILESET_FOREST) ? 95 : 96;
+                WarTreesData data = getTreesData(tree->type);
 
-            // coordinates in pixels of the road piece tile
-            s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-            s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+                // this is the index in the map sprite of the chopped down tree tile
+                s32 tileIndex = (tilesetType == MAP_TILESET_FOREST) 
+                    ? data.tileIndexForest : data.tileIndexSwamp;
 
-            nvgSave(gfx);
-            nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                // only render the sprite of chooped wood if the entity hasn't any wood left
+                // the sprite of the trees are already in the map description
+                if (tree->amount == 0)
+                {
+                    tileIndex = (tilesetType == MAP_TILESET_FOREST) 
+                        ? CHOPPED_DOWN_TREE_FOREST_TILE_INDEX : CHOPPED_DOWN_TREE_SWAMP_TILE_INDEX;
+                }
 
-            rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            renderSubSprite(context, &sprite->sprite, rs, rd, VEC2_ONE);
+                // the position in the world of the wood tile
+                s32 x = tree->tilex;
+                s32 y = tree->tiley;
 
-            nvgRestore(gfx);
+                // coordinates in pixels of the road piece tile
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                nvgSave(gfx);
+                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                renderSubSprite(context, &sprite->sprite, rs, rd, VEC2_ONE);
+
+                nvgRestore(gfx);
+            }            
         }
     }
 }
@@ -1025,9 +1197,9 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
                 break;
             }
 
-            case WAR_ENTITY_TYPE_WOOD:
+            case WAR_ENTITY_TYPE_FOREST:
             {
-                renderWood(context, entity);
+                renderForest(context, entity);
                 break;
             }
 
@@ -1090,4 +1262,22 @@ void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece,
     s32 damage = getTotalDamage(minDamage, rndDamage, 0);
     piece->hp -= damage;
     piece->hp = maxi(piece->hp, 0);
+}
+
+void chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
+{
+    assert(forest);
+    assert(forest->type == WAR_ENTITY_TYPE_FOREST);
+
+    WarMap* map = context->map;
+
+    tree->amount -= amount;
+    tree->amount = maxi(tree->amount, 0);
+    if (tree->amount == 0)
+    {
+        // determine the tree types when any tree of this forest is chopped down
+        determineTreeTypes(forest);
+
+        setFreeTiles(map->finder, tree->tilex, tree->tiley, 1, 1);
+    }
 }

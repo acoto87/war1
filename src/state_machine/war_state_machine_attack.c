@@ -54,6 +54,16 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
+    // if the unit is attacking a worker that is currently gathering and inside of the goldmine or the townhall, 
+    // stop the attacking for a moment until the unit come out again
+    if (isInsideBuilding(targetEntity))
+    {
+        WarState* waitState = createWaitState(context, entity, 1.0f);
+        waitState->nextState = state;
+        changeNextState(context, entity, waitState, false, true);
+        return;
+    }
+
     setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
     setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);

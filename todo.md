@@ -20,6 +20,7 @@ List of thing to do in no particular order
   * Make a better input system
     * ~~Map scrolling and positioning by clicking in the minimap is now all under `updateViewport` function.~~
     * ~~Selection drag is now all under `updateDragRect` function.~~
+    * Refactor right click code into a more robust order system.
 
 * Gameplay
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
@@ -39,7 +40,8 @@ List of thing to do in no particular order
   * ~~Add animation system, again.~~
   * ~~Switch animations without reseting the new animation to the start. This will allow have one animation for each orientation of then switch to the correct one depending of the orientation but conserving the state.~~
   * Change the concept of animations by a sequence of frames, to a more complex but powerful system of actions. Each unit can have several actions, which can have steps and the steps of the actions describe what the unit does. For example, this is the `Attack` action of the footman:
-  ```
+
+  ```c
   Attack={
     "unbreakable begin",
     "frame 5",
@@ -62,6 +64,7 @@ List of thing to do in no particular order
     "wait 1" 
   }
   ```
+
   * Move actions system to animations, again? :| 
     The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
   * Projectiles (arrows, and fireballs).
@@ -96,8 +99,8 @@ List of thing to do in no particular order
     * Check if the new spawning ruins could merge with a previous one. This occurs when a building is built above a ruins.
   * Build state
   * > Gathering resources state
-    * > Gathering gold
-    * Gathering wood
+    * ~~Gathering gold.~~
+    * > Gathering wood
   * ~~Make a Leave function when the states are leaving, and not just free them. Let that responsibility to the state itself.~~
   * Make the state switching system can return values when going back to the previous state. This will allow follow and move to return to previous state (such attack) that there is no path to the target, so the unit can go idle.
     * When an unit is going to attack another one, but can't reach it because of is blocked but other units, there is a loop between attack and follow states, because there is not mechanism to allow the follow state to tell the attack state that the target unit can't be reached, so the unit must go idle.

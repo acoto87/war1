@@ -984,6 +984,8 @@ void updateAction(WarContext* context, WarEntity* entity)
                 
                 if (action->directional)
                 {
+                    // super complicated math here:
+                    //
                     // d               d
                     // N:  4 - abs(4 - 0) = 4 - 4 = 0
                     // NE: 4 - abs(4 - 1) = 4 - 3 = 1

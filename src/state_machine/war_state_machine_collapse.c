@@ -20,7 +20,10 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     entity->sprite.enabled = false;
 
     createCollapseAnimation(context, entity, "collapse");
-    createRuins(context, position.x, position.y, unitSize.x);
+
+    WarEntity* ruins = createRuins(context);
+    addRuinsPieces(context, ruins, position.x, position.y, unitSize.x);
+    
     setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
     removeEntityFromSelection(context, entity->id);
 }

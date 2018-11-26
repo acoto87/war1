@@ -9,6 +9,7 @@
 #include "state_machine/war_state_machine_collapse.c"
 #include "state_machine/war_state_machine_wait.c"
 #include "state_machine/war_state_machine_gather_gold.c"
+#include "state_machine/war_state_machine_gather_wood.c"
 
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
@@ -142,6 +143,11 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
             break;
         }
 
+        case WAR_STATE_WOOD:
+        {
+            enterGatherWoodState(context, entity, state);
+        }
+
         default:
         {
             logError("Unkown state %d for entity %d", state->type, entity->id);
@@ -214,6 +220,12 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
         case WAR_STATE_GOLD:
         {
             leaveGatherGoldState(context, entity, state);
+            break;
+        }
+
+        case WAR_STATE_WOOD:
+        {
+            leaveGatherWoodState(context, entity, state);
             break;
         }
 
@@ -317,6 +329,12 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
                     break;
                 }
 
+                case WAR_STATE_WOOD:
+                {
+                    updateGatherWoodState(context, entity, currentState);
+                    break;
+                }
+
                 default:
                 {
                     logError("Unkown state %d for entity %d", currentState->type, entity->id);
@@ -388,6 +406,12 @@ void freeState(WarState* state)
         case WAR_STATE_GOLD:
         {
             freeGatherGoldState(state);
+            break;
+        }
+
+        case WAR_STATE_WOOD:
+        {
+            freeGatherWoodState(state);
             break;
         }
 
