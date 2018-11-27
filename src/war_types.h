@@ -563,6 +563,7 @@ shlDefineList(WarRuinPieceList, WarRuinPiece)
 
 typedef enum 
 {
+    WAR_TREE_NONE,
     WAR_TREE_TOP_LEFT,
     WAR_TREE_TOP,
     WAR_TREE_TOP_RIGHT,
@@ -576,24 +577,31 @@ typedef enum
     WAR_TREE_TOP_RIGHT_INSIDE,
     WAR_TREE_BOTTOM_LEFT_INSIDE,
     WAR_TREE_BOTTOM_RIGHT_INSIDE,
+    WAR_TREE_BOTTOM_END,
+    WAR_TREE_VERTICAL,
     WAR_TREE_DIAG_1,
     WAR_TREE_DIAG_2,
-} WarTreeType;
+    WAR_TREE_CHOPPED,
+} WarTreeTileType;
 
 typedef struct
 {
-    WarTreeType type;
     s32 tilex, tiley;
     s32 amount;
 } WarTree;
 
 #define WarTreeEmpty (WarTree){0}
-#define createTree(x, y, amount) ((WarTree){0, (x), (y), (amount)})
+#define createTree(x, y, amount) ((WarTree){(x), (y), (amount)})
 
-internal bool equalsTree(const WarTree r1, const WarTree r2)
+internal bool equalsTree(const WarTree t1, const WarTree t2)
 {
-    return r1.type == r2.type && 
-           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
+    return t1.tilex == t2.tilex && t1.tiley == t2.tiley;
+}
+
+s32 compareTreesByPosition(const WarTree t1, const WarTree t2)
+{
+    // order by 'x' asc, then by 'y' desc
+    return t1.tilex == t2.tilex ? t2.tiley - t1.tiley : t1.tilex - t2.tilex;
 }
 
 shlDeclareList(WarTreeList, WarTree)
@@ -990,6 +998,9 @@ typedef enum
     WAR_KEY_DOWN,
     WAR_KEY_UP,
     WAR_KEY_P,
+    WAR_KEY_T,
+    WAR_KEY_R,
+    WAR_KEY_U,
 
     WAR_KEY_COUNT
 } WarKeys;
@@ -1052,4 +1063,11 @@ typedef struct
     WarMap* map;
 
     WarInput input;
+
+    // DEBUG:
+    bool editingTrees;
+    WarEntity* debugForest;
+    
+    bool editingRoads;
+    bool editingRuins;
 } WarContext;

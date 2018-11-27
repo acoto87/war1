@@ -239,13 +239,14 @@ const WarRuinsData ruinsData[] =
 
 typedef struct
 {
-    WarTreeType type;
+    WarTreeTileType type;
     s32 tileIndexForest;
     s32 tileIndexSwamp;
 } WarTreesData;
 
 const WarTreesData treesData[] =
 {
+    { WAR_TREE_NONE,                 0,  0 },
     { WAR_TREE_TOP_LEFT,            73, 42 },
     { WAR_TREE_TOP,                 75, 43 },
     { WAR_TREE_TOP_RIGHT,           76, 44 },
@@ -259,8 +260,11 @@ const WarTreesData treesData[] =
     { WAR_TREE_TOP_RIGHT_INSIDE,    81, 52 },
     { WAR_TREE_BOTTOM_LEFT_INSIDE,  77, 54 },
     { WAR_TREE_BOTTOM_RIGHT_INSIDE, 74, 53 },
+    { WAR_TREE_BOTTOM_END,          92, 92 },
+    { WAR_TREE_VERTICAL,            91, 91 },
     { WAR_TREE_DIAG_1,              82, 56 },
     { WAR_TREE_DIAG_2,              83, 55 },
+    { WAR_TREE_CHOPPED,             95, 96 },
 };
 
 typedef struct
@@ -445,7 +449,7 @@ inline WarRuinsData getRuinsData(WarRuinPieceType type)
     return ruinsData[index];
 }
 
-inline WarTreesData getTreesData(WarTreeType type)
+inline WarTreesData getTreesData(WarTreeTileType type)
 {
     s32 index = 0;
     s32 length = arrayLength(treesData);

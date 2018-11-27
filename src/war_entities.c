@@ -636,12 +636,14 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
-void determineTreeTypes(WarEntity* entity)
+void determineTreeTiles(WarContext* context, WarEntity* forest)
 {
-    assert(entity);
-    assert(entity->type == WAR_ENTITY_TYPE_FOREST);
+    assert(forest);
+    assert(forest->type == WAR_ENTITY_TYPE_FOREST);
 
-    WarTreeList* trees = &entity->forest.trees;
+    WarMap* map = context->map;
+
+    WarTreeList* trees = &forest->forest.trees;
     
     for (s32 i = 0; i < trees->count; i++)
     {
@@ -662,7 +664,7 @@ void determineTreeTypes(WarEntity* entity)
 
             WarTree* tj = &trees->items[j];
 
-            // if the tree is chopped down treat it as an empty tile
+            // if the tree is chopped down treat it as an empty
             if (tj->amount == 0) continue;
 
             if (tj->tilex == ti->tilex - 1 && tj->tiley == ti->tiley - 1)
@@ -683,49 +685,128 @@ void determineTreeTypes(WarEntity* entity)
                 bottomRight = true;
         }
         
-        // Corners
-        if (!topLeft && !top && !left && right && bottom && bottomRight)
-            ti->type = WAR_TREE_TOP_LEFT;
-        if (!topRight && !top && !right && left && bottom && bottomLeft)
-            ti->type = WAR_TREE_TOP_RIGHT;
-        if (!bottomLeft && !bottom && !left && right && top && topRight)
-            ti->type = WAR_TREE_BOTTOM_LEFT;
-        if (!bottomRight && !bottom && !right && left && top && topLeft)
-            ti->type = WAR_TREE_BOTTOM_RIGHT;
+        WarTreeTileType type = WAR_TREE_NONE;
 
-        // Edges
-        if (!top && left && right && bottom)
-            ti->type = WAR_TREE_TOP;
-        if (!left && top && bottom && right)
-            ti->type = WAR_TREE_LEFT;
-        if (!right && top && bottom && left)
-            ti->type = WAR_TREE_RIGHT;
-        if (!bottom && left && right && top)
-            ti->type = WAR_TREE_BOTTOM;
+        if (!bottom)
+        {
+            if (left && right)
+                type = WAR_TREE_BOTTOM;
+            else if(!left)
+                type = WAR_TREE_BOTTOM_LEFT;
+            else if(!right)
+                type = WAR_TREE_BOTTOM_RIGHT;
+            else
+                type == WAR_TREE_BOTTOM_END;
+        }
+        else
+        {
+            if (left && right && bottomLeft && bottomRight)
+            {
+                if (top)
+                {
+                    if (topRight && topLeft)
+                    {
+                        type = WAR_TREE_CENTER;
+                    }
+                    else if (!topLeft)
+                    {
+                        type = WAR_TREE_BOTTOM_RIGHT_INSIDE;
+                    }
+                    else if (!topRight)
+                    {
+                        type = WAR_TREE_BOTTOM_LEFT_INSIDE;
+                    }
+                    else
+                    {
+                    }
+                }
+                else
+                {
+                    type = WAR_TREE_CENTER;
+                }
+            }
+            else if (left && right && bottomLeft && !bottomRight)
+            {
+                type = WAR_TREE_TOP_LEFT_INSIDE;
+            }
+            else if (left && right && !bottomLeft && bottomRight)
+            {
+                type = WAR_TREE_TOP_RIGHT_INSIDE;
+            }
+            else if (left && right && !bottomLeft && !bottomRight)
+            {
 
-        // Insides
-        if (!bottomRight && top && left && right && bottom && topLeft)
-            ti->type = WAR_TREE_TOP_LEFT_INSIDE;
-        if (!bottomLeft && top && right && left && bottom && topRight)
-            ti->type = WAR_TREE_TOP_RIGHT_INSIDE;
-        if (!topRight && top && left && right && bottom && bottomLeft)
-            ti->type = WAR_TREE_BOTTOM_LEFT_INSIDE;
-        if (!topLeft && top && left && right && bottom && bottomRight)
-            ti->type = WAR_TREE_BOTTOM_RIGHT_INSIDE;
+            }
+            else if (!left)
+            {
+                if (bottomLeft)
+                {
+                    type = WAR_TREE_BOTTOM_LEFT_INSIDE;
+                }
+                else
+                {
+                    type = WAR_TREE_LEFT;
+                }
+            }
+            else if (!right)
+            {
+                if (bottomRight)
+                {
+                    type = WAR_TREE_BOTTOM_RIGHT_INSIDE;
+                }
+                else
+                {
+                    type = WAR_TREE_RIGHT;
+                }
+            }
+        }
 
-        // Diagonals
-        if (!topRight && !bottomLeft && topLeft && bottomRight)
-            ti->type = WAR_TREE_DIAG_1;
-        if (!topLeft && !bottomRight && topRight && bottomLeft)
-            ti->type = WAR_TREE_DIAG_2;
+        if (type != WAR_TREE_NONE)
+        {
+            WarTreesData data = getTreesData(type);
 
-        // Center
-        if (topLeft && top && topRight && left && right && bottomLeft && bottom && bottomRight)
-            ti->type = WAR_TREE_CENTER;
-        if (!topLeft && !top && !topRight && !left && !right && !bottomLeft && !bottom && !bottomRight)
-            ti->type = WAR_TREE_CENTER;
+            WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+            assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+            WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+            assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+
+            WarMapTilesetType tilesetType = map->tilesetType;
+            assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
+            s32 prevTileIndex = levelVisual->levelVisual.data[ti->tiley * MAP_TILES_WIDTH + ti->tilex];
+            s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
+
+            if (prevTileIndex != newTileIndex)
+                logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", ti->tilex, ti->tiley, prevTileIndex, newTileIndex);
+
+            levelVisual->levelVisual.data[ti->tiley * MAP_TILES_WIDTH + ti->tilex] = newTileIndex;
+
+            if (!top && isInside(map->finder, ti->tilex, ti->tiley - 1))
+            {
+                if (left && right)
+                {
+                    type = WAR_TREE_TOP;
+                }
+                else if (!left)
+                {
+                    type = WAR_TREE_TOP_LEFT;
+                }
+                else if (!right)
+                {
+                    type = WAR_TREE_TOP_RIGHT;
+                }
+                else
+                {
+                    type = WAR_TREE_TOP;
+                }
+
+                data = getTreesData(type);
+                s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
+                levelVisual->levelVisual.data[(ti->tiley - 1) * MAP_TILES_WIDTH + ti->tilex] = newTileIndex;
+            }
+        }
     }
-    
 }
 
 WarTree* getTreeAtPosition(WarEntity* forest, vec2 position)
@@ -1012,48 +1093,48 @@ void renderForest(WarContext* context, WarEntity* entity)
     WarMapTilesetType tilesetType = context->map->tilesetType;
     assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
-    if (sprite->enabled)
-    {
-        if (forest->enabled)
-        {
-            WarTreeList* trees = &forest->trees;
-            for (s32 i = 0; i < trees->count; i++)
-            {
-                WarTree* tree = &trees->items[i];
+    // if (sprite->enabled)
+    // {
+    //     if (forest->enabled)
+    //     {
+    //         WarTreeList* trees = &forest->trees;
+    //         for (s32 i = 0; i < trees->count; i++)
+    //         {
+    //             WarTree* tree = &trees->items[i];
 
-                WarTreesData data = getTreesData(tree->type);
+    //             WarTreesData data = getTreesData(tree->type);
 
-                // this is the index in the map sprite of the chopped down tree tile
-                s32 tileIndex = (tilesetType == MAP_TILESET_FOREST) 
-                    ? data.tileIndexForest : data.tileIndexSwamp;
+    //             // this is the index in the map sprite of the chopped down tree tile
+    //             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST) 
+    //                 ? data.tileIndexForest : data.tileIndexSwamp;
 
-                // only render the sprite of chooped wood if the entity hasn't any wood left
-                // the sprite of the trees are already in the map description
-                if (tree->amount == 0)
-                {
-                    tileIndex = (tilesetType == MAP_TILESET_FOREST) 
-                        ? CHOPPED_DOWN_TREE_FOREST_TILE_INDEX : CHOPPED_DOWN_TREE_SWAMP_TILE_INDEX;
-                }
+    //             // only render the sprite of chooped wood if the entity hasn't any wood left
+    //             // the sprite of the trees are already in the map description
+    //             // if (tree->amount == 0)
+    //             {
+    //                 tileIndex = (tilesetType == MAP_TILESET_FOREST) 
+    //                     ? CHOPPED_DOWN_TREE_FOREST_TILE_INDEX : CHOPPED_DOWN_TREE_SWAMP_TILE_INDEX;
+    //             }
 
-                // the position in the world of the wood tile
-                s32 x = tree->tilex;
-                s32 y = tree->tiley;
+    //             // the position in the world of the wood tile
+    //             s32 x = tree->tilex;
+    //             s32 y = tree->tiley;
 
-                // coordinates in pixels of the road piece tile
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+    //             // coordinates in pixels of the road piece tile
+    //             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+    //             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                nvgSave(gfx);
-                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+    //             nvgSave(gfx);
+    //             nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
-                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderSubSprite(context, &sprite->sprite, rs, rd, VEC2_ONE);
+    //             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+    //             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+    //             renderSubSprite(context, &sprite->sprite, rs, rd, VEC2_ONE);
 
-                nvgRestore(gfx);
-            }            
-        }
-    }
+    //             nvgRestore(gfx);
+    //         }            
+    //     }
+    // }
 }
 
 void renderUnit(WarContext* context, WarEntity* entity, bool selected)
@@ -1276,7 +1357,7 @@ void chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
     if (tree->amount == 0)
     {
         // determine the tree types when any tree of this forest is chopped down
-        determineTreeTypes(forest);
+        determineTreeTiles(context, forest);
 
         setFreeTiles(map->finder, tree->tilex, tree->tiley, 1, 1);
     }

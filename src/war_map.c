@@ -39,18 +39,20 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
         assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
-        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            {
-                // index of the tile in the tilesheet
-                u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
-                printf("%d ", tileIndex);
-            }
+        // DEBUG: 
+        // print level visual data to console to see the sprites of the map
+        //
+        // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        // {
+        //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        //     {
+        //         // index of the tile in the tilesheet
+        //         u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+        //         printf("%d ", tileIndex);
+        //     }
 
-            printf("\n");
-        }
-
+        //     printf("\n");
+        // }
 
         map->sprite = createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
 
@@ -118,15 +120,45 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             processed[i] = false;
 
         u16* passableData = levelPassable->levelPassable.data;
+
+        // DEBUG
+        // for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+        // {
+        //     if (passableData[i] == 128)
+        //     {
+        //         WarTreesData data = getTreesData(WAR_TREE_CHOPPED);
+
+        //         WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+        //         assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+
+        //         WarMapTilesetType tilesetType = map->tilesetType;
+        //         assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
+        //         s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
+        //         levelVisual->levelVisual.data[i] = newTileIndex;
+        //     }
+        // }
+
         for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         {
-            if (passableData[i] == 128 && !processed[i])
+            if (!processed[i] && passableData[i] == 128)
             {
+                s32 x = i % MAP_TILES_WIDTH;
+                s32 y = i / MAP_TILES_WIDTH;
+
+                // if above the new tree isn't other tree, then there is no real tree there
+                if (isInside(map->finder, x, y - 1))
+                {
+                    s32 iu = (y - 1) * MAP_TILES_WIDTH + x;
+                    if (passableData[iu] != 128)
+                        continue;
+                }
+
                 WarTreeList trees;
                 WarTreeListInit(&trees, WarTreeListDefaultOptions);
 
                 // TODO: access here to tree data to get the amount of wood
-                WarTreeListAdd(&trees, createTree(i % MAP_TILES_WIDTH, i / MAP_TILES_WIDTH, 100));
+                WarTreeListAdd(&trees, createTree(x, y, 100));
                 processed[i] = true;
 
                 for(s32 j = 0; j < trees.count; j++)
@@ -139,29 +171,55 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                         if (isInside(map->finder, xx, yy))
                         {
                             s32 k = yy * MAP_TILES_WIDTH + xx;
-                            if (passableData[k] == 128)
+                            if (!processed[k] && passableData[k] == 128)
                             {
-                                WarTree newTree = createTree(xx, yy, 100);
-                                if (!processed[k])
+                                // mark it processed right away, to not process it later
+                                processed[k] = true;
+
+                                // if above the new tree isn't other tree, then there is no real tree there
+                                if (isInside(map->finder, xx, yy - 1))
                                 {
-                                    WarTreeListAdd(&trees, newTree);
-                                    processed[k] = true;
+                                    s32 ku = (yy - 1) * MAP_TILES_WIDTH + xx;
+                                    if (passableData[ku] != 128)
+                                        continue;
                                 }
+
+                                WarTree newTree = createTree(xx, yy, 100);
+                                WarTreeListAdd(&trees, newTree);
                             }
                         }
                     }
                 }
                 
+                // trees are sort by 'x' asc and then by 'y' desc
+                WarTreeListSort(&trees, compareTreesByPosition);
+
                 WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
                 addSpriteComponent(context, entity, map->sprite);
                 addForestComponent(context, entity, trees);
 
-                determineTreeTypes(entity);
+                determineTreeTiles(context, entity);
 
                 for (s32 i = 0; i < trees.count; i++)
-                    setStaticEntity(map->finder, trees.items[i].tilex, trees.items[i].tiley, 1, 1, entity->id);
+                {
+                    WarTree* tree = &trees.items[i];
+
+                    if (isInside(map->finder, tree->tilex, tree->tiley - 1))
+                        setStaticEntity(map->finder, tree->tilex, tree->tiley - 1, 1, 1, entity->id);
+
+                    setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, entity->id);
+                }
             }
         }
+
+        // DEBUG: create debug forest
+        WarTreeList trees;
+        WarTreeListInit(&trees, WarTreeListDefaultOptions);
+        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
+        addSpriteComponent(context, entity, map->sprite);
+        addForestComponent(context, entity, trees);
+
+        context->debugForest = entity;
     }
 
     // create the starting roads
@@ -458,7 +516,6 @@ void updateSelection(WarContext* context)
             if(input->wasDragging || rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
                 rect pointerRect = rectScreenToMapCoordinates(context, input->dragRect);
-                rectPrint(pointerRect);
 
                 // select the entities inside the dragging rect
                 for(s32 i = 0; i < map->entities.count; i++)
@@ -488,6 +545,46 @@ void updateSelection(WarContext* context)
     }
 }
 
+void updateTreesEdit(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if (wasKeyPressed(input, WAR_KEY_T))
+    {
+        context->editingTrees = !context->editingTrees;
+    }
+
+    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        if (context->editingTrees)
+        {
+            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+            pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+            WarEntityId entityId = getTileEntityId(map->finder, (s32)pointerPos.x, (s32)pointerPos.y);
+            WarEntity* entity = findEntity(context, entityId);
+            if (!entity)
+            {
+                entity = context->debugForest;
+
+                WarTree tree = createTree((s32)pointerPos.x, (s32)pointerPos.y, 100);
+                WarTreeListAdd(&entity->forest.trees, tree);
+            }
+            else if (entity->type == WAR_ENTITY_TYPE_FOREST)
+            {
+                WarTree* tree = getTreeAtPosition(entity, pointerPos);
+                if (tree)
+                {
+                    WarTreeListRemove(&entity->forest.trees, *tree);
+                }
+            }
+
+            determineTreeTiles(context, entity);
+        }
+    }
+}
+
 void updateMap(WarContext* context)
 {
     WarMap* map = context->map;
@@ -498,6 +595,7 @@ void updateMap(WarContext* context)
     updateViewport(context);
     updateDragRect(context);
     updateSelection(context);
+    updateTreesEdit(context);
 
     // update all state machines
     for(s32 i = 0; i < map->entities.count; i++)
@@ -712,6 +810,7 @@ void renderMap(WarContext *context)
     WarMap *map = context->map;
     if (!map) return;
 
+    WarInput* input = &context->input;
     NVGcontext* gfx = context->gfx;
 
     WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
@@ -1035,6 +1134,24 @@ void renderMap(WarContext *context)
             nvgStrokeRect(gfx, recti(0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT), NVG_WHITE, 1.0f/context->globalScale);
 
             nvgRestore(gfx);
+        }
+
+        // DEBUG:
+        // Render debug info
+        {
+            char debugText[256];
+
+            sprintf(debugText, 
+                "Debug info:\n"
+                "editing trees = %d\n"
+                "editing roads = %d\n"
+                "editing ruins = %d\n",
+                context->editingTrees,
+                context->editingRoads,
+                context->editingRuins);
+
+            NVGFontParams params = nvgCreateFontParams("roboto-r", 5.0f, nvgRGBA(200, 200, 200, 255));
+            nvgMultilineText(gfx, debugText, map->mapPanel.x + 2, map->mapPanel.y + 2, 200, 200, params);
         }
 
         nvgRestore(gfx);

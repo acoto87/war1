@@ -163,6 +163,84 @@ void nvgStrokePolyline(NVGcontext* gfx, s32 count, vec2 points[], NVGcolor color
     nvgRestore(gfx);
 }
 
+typedef struct 
+{
+    char* fontFace;
+    f32 fontSize;
+    NVGcolor fontColor;
+    s32 textAlign;
+} NVGFontParams;
+
+#define nvgCreateFontParams(fontFace, fontSize, fontColor) ((NVGFontParams){(fontFace), (fontSize), (fontColor), 0})
+
+void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGFontParams params)
+{
+    f32 fontSize = params.fontSize;
+    if (fontSize == 0) fontSize = 8.0f;
+
+    char* fontFace = params.fontFace;
+    if (fontFace == NULL) fontFace = "roboto-r";
+
+    s32 textAlign = params.textAlign;
+    if (textAlign == 0) textAlign = NVG_ALIGN_LEFT;
+
+    NVGcolor fontColor = params.fontColor;
+
+	nvgSave(gfx);
+    nvgFontSize(gfx, fontSize);
+    nvgFontFace(gfx, fontFace);
+    nvgFillColor(gfx, fontColor);
+    nvgTextAlign(gfx, textAlign);
+    nvgText(gfx, x, y, text, NULL);
+    nvgRestore(gfx);
+}
+
+void nvgMultilineText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGFontParams params)
+{
+    f32 fontSize = params.fontSize;
+    if (fontSize == 0) fontSize = 8.0f;
+
+    char* fontFace = params.fontFace;
+    if (fontFace == NULL) fontFace = "roboto-r";
+
+    s32 textAlign = params.textAlign;
+    if (textAlign == 0) textAlign = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
+
+    NVGcolor fontColor = params.fontColor;
+
+	nvgSave(gfx);
+    nvgFontSize(gfx, fontSize);
+    nvgFontFace(gfx, fontFace);
+    nvgFillColor(gfx, fontColor);
+    nvgTextAlign(gfx, textAlign);
+
+    float lineh;
+    nvgTextMetrics(gfx, NULL, NULL, &lineh);
+
+    NVGtextRow rows[10];
+    const char* start = text;
+    const char* end = text + strlen(text);
+    s32 nrows;
+
+    // The text break API can be used to fill a large buffer of rows,
+	// or to iterate over the text just few lines (or just one) at a time.
+	// The "next" variable of the last returned item tells where to continue.
+	
+    while ((nrows = nvgTextBreakLines(gfx, start, end, width, rows, 10))) {
+        for (s32 i = 0; i < nrows; i++) {
+            NVGtextRow* row = &rows[i];
+
+            nvgText(gfx, x, y, row->start, row->end);
+            y += lineh;
+        }
+
+        // Keep going...
+        start = rows[nrows - 1].next;
+    }
+
+    nvgRestore(gfx);
+}
+
 NVGcolor getColorFromList(s32 index)
 {
     const u32 colors[] = 
