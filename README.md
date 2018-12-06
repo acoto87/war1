@@ -14,3 +14,6 @@ Libraries used:
 
 Screnshots:
 
+![](https://github.com/acoto87/war1/blob/master/pics/GIF14.gif)
+![](https://github.com/acoto87/war1/blob/master/pics/GIF30.gif)
+![](https://github.com/acoto87/war1/blob/master/pics/GIF32.gif)
