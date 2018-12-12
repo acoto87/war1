@@ -7,7 +7,9 @@
             
 #define MAP_EDGE_SCROLL_GAP 5.0f
 
-#define DEBUG_RENDER_MAP_GRID
+#define TREE_MAX_WOOD 100
+
+// #define DEBUG_RENDER_MAP_GRID
 // #define DEBUG_RENDER_PASSABLE_INFO
 // #define DEBUG_RENDER_UNIT_PATHS
 // #define DEBUG_RENDER_UNIT_INFO

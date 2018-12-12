@@ -1,5 +1,3 @@
-#include "../war_state_machine.h"
-
 WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, s32 distance)
 {
     WarState* state = createState(context, entity, WAR_STATE_FOLLOW);

@@ -1,5 +1,3 @@
-#include "../war_state_machine.h"
-
 WarState* createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
 {
     WarState* state = createState(context, entity, WAR_STATE_WOOD);
@@ -53,7 +51,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     vec2 treePosition = state->wood.position;
-    WarTree* tree = getTreeAtPosition(forest, treePosition);
+    WarTree* tree = getTreeAtPosition(forest, treePosition.x, treePosition.y);
 
     // if the worker is going towards the tree
     if (state->wood.direction > 0)

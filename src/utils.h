@@ -14,6 +14,8 @@
 #define randomf(a, b) ((a) + ((f32)rand() / RAND_MAX) * ((b) - (a)))
 #define inRange(x, a, b) ((x) >= (a) && (x) < (b))
 
+#define snap(x) printf("variable "#x" = %d\n", x)
+
 typedef int8_t s8;
 typedef int16_t s16;
 typedef int32_t s32;

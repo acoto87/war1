@@ -577,6 +577,7 @@ typedef enum
     WAR_TREE_TOP_RIGHT_INSIDE,
     WAR_TREE_BOTTOM_LEFT_INSIDE,
     WAR_TREE_BOTTOM_RIGHT_INSIDE,
+    WAR_TREE_TOP_END,
     WAR_TREE_BOTTOM_END,
     WAR_TREE_VERTICAL,
     WAR_TREE_DIAG_1,
@@ -586,12 +587,13 @@ typedef enum
 
 typedef struct
 {
+    WarTreeTileType type;
     s32 tilex, tiley;
     s32 amount;
 } WarTree;
 
 #define WarTreeEmpty (WarTree){0}
-#define createTree(x, y, amount) ((WarTree){(x), (y), (amount)})
+#define createTree(x, y, amount) ((WarTree){0, (x), (y), (amount)})
 
 internal bool equalsTree(const WarTree t1, const WarTree t2)
 {
@@ -1001,6 +1003,7 @@ typedef enum
     WAR_KEY_T,
     WAR_KEY_R,
     WAR_KEY_U,
+    WAR_KEY_W,
 
     WAR_KEY_COUNT
 } WarKeys;
@@ -1069,5 +1072,11 @@ typedef struct
     WarEntity* debugForest;
     
     bool editingRoads;
+    WarEntity* debugRoad;
+
+    bool editingWalls;
+    WarEntity* debugWall;
+
     bool editingRuins;
+    WarEntity* debugRuin;
 } WarContext;

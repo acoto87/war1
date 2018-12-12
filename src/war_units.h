@@ -181,6 +181,15 @@ const WarRoadsData roadsData[] =
     { WAR_ROAD_PIECE_TOP_RIGHT,           70, 71 },
 };
 
+// this is a map of the configurations of the neighbors of a tile to a road tile type.
+// each index represent one configuration of the 16 possibles and the value at that index
+// is the tile the tree should get based on that configuration.
+const WarRoadPieceType roadTileTypeMap[16] =
+{
+    // 0-15
+    0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10, 
+};
+
 typedef struct
 {
     WarWallPieceType type;
@@ -209,6 +218,15 @@ const WarWallsData wallsData[] =
     { WAR_WALL_PIECE_HORIZONTAL,          18, 30, 37, 18, 30, 37 },
     { WAR_WALL_PIECE_T_TOP,               19, 31, 37, 19, 31, 37 },
     { WAR_WALL_PIECE_TOP_RIGHT,           20, 32, 35, 20, 32, 35 },
+};
+
+// this is a map of the configurations of the neighbors of a tile to a wall tile type.
+// each index represent one configuration of the 16 possibles and the value at that index
+// is the tile the tree should get based on that configuration.
+const WarWallPieceType wallTileTypeMap[16] =
+{
+    // 0-15
+    0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10, 
 };
 
 typedef struct
@@ -260,11 +278,51 @@ const WarTreesData treesData[] =
     { WAR_TREE_TOP_RIGHT_INSIDE,    81, 52 },
     { WAR_TREE_BOTTOM_LEFT_INSIDE,  77, 54 },
     { WAR_TREE_BOTTOM_RIGHT_INSIDE, 74, 53 },
+    { WAR_TREE_TOP_END,             90, 90 },
     { WAR_TREE_BOTTOM_END,          92, 92 },
     { WAR_TREE_VERTICAL,            91, 91 },
-    { WAR_TREE_DIAG_1,              82, 56 },
-    { WAR_TREE_DIAG_2,              83, 55 },
+    { WAR_TREE_DIAG_1,              83, 56 },
+    { WAR_TREE_DIAG_2,              82, 55 },
     { WAR_TREE_CHOPPED,             95, 96 },
+};
+
+// this is a map of the configurations of the neighbors of a tile to a tree tile type.
+// each index represent one configuration of the 256 possibles and the value at that index
+// is the tile the tree should get based on that configuration.
+const WarTreeTileType treeTileTypeMap[256] =
+{
+    // 0-15
+    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 0, 0, 0, 0, 7, 7, 
+    // 16-31
+    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 7, 7, 
+    // 32-47
+    14, 14, 16, 16, 14, 14, 16, 16, 0, 0, 0, 0, 14, 14, 4, 4, 
+    // 48-63
+    14, 14, 16, 16, 14, 14, 16, 16, 1, 1, 4, 4, 1, 1, 4, 4, 
+    // 64-79
+    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 0, 0, 0, 0, 7, 7, 
+    // 80-95
+    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 7, 15, 0, 0, 7, 7, 
+    // 96-111
+    14, 14, 16, 16, 14, 14, 16, 16, 1, 0, 4, 0, 14, 1, 4, 4, 
+    // 112-127
+    14, 14, 16, 16, 14, 14, 16, 16, 1, 1, 4, 4, 1, 1, 4, 4, 
+    // 128-143
+    0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 0, 8, 0, 0, 8, 8, 
+    // 144-159
+    0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 8, 9, 0, 0, 8, 8, 
+    // 160-175
+    0, 14, 0, 6, 0, 3, 6, 6, 2, 0, 0, 0, 0, 14, 0, 5, 
+    // 176-191
+    0, 14, 0, 6, 0, 14, 0, 6, 0, 1, 0, 18, 0, 14, 5, 11, 
+    // 192-207
+    0, 0, 15, 9, 0, 0, 15, 9, 0, 0, 0, 0, 0, 0, 7, 8, 
+    // 208-223
+    0, 0, 9, 9, 0, 0, 15, 9, 0, 0, 15, 9, 0, 0, 7, 8, 
+    // 224-239
+    3, 3, 6, 6, 3, 3, 6, 6, 2, 2, 0, 5, 3, 2, 17, 10, 
+    // 240-255
+    3, 3, 6, 6, 3, 3, 6, 6, 2, 2, 5, 12, 2, 2, 13, 5, 
 };
 
 typedef struct

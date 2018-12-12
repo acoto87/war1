@@ -1,5 +1,3 @@
-#include "../war_state_machine.h"
-
 WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
 {
     WarState* state = createState(context, entity, WAR_STATE_ATTACK);
@@ -94,7 +92,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         }
         else if(isWall(targetEntity))
         {
-            WarWallPiece* piece = getWallPiece(targetEntity, state->attack.targetTile);
+            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, state->attack.targetTile.x, state->attack.targetTile.y);
             if (piece)
             {
                 // if the piece of the wall the unit is attacking has no more hit points, go to idle.

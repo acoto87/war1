@@ -1,5 +1,3 @@
-#include "../war_state_machine.h"
-
 WarState* createIdleState(WarContext* context, WarEntity* entity, bool lookAround)
 {
     WarState* state = createState(context, entity, WAR_STATE_IDLE);

@@ -1,5 +1,3 @@
-#include "../war_state_machine.h"
-
 WarState* createCollapseState(WarContext* context, WarEntity* entity)
 {
     WarState* state = createState(context, entity, WAR_STATE_COLLAPSE);

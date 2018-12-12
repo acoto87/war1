@@ -1,16 +1,3 @@
-#include "war_state_machine.h"
-#include "state_machine/war_state_machine_idle.c"
-#include "state_machine/war_state_machine_move.c"
-#include "state_machine/war_state_machine_follow.c"
-#include "state_machine/war_state_machine_patrol.c"
-#include "state_machine/war_state_machine_attack.c"
-#include "state_machine/war_state_machine_death.c"
-#include "state_machine/war_state_machine_damaged.c"
-#include "state_machine/war_state_machine_collapse.c"
-#include "state_machine/war_state_machine_wait.c"
-#include "state_machine/war_state_machine_gather_gold.c"
-#include "state_machine/war_state_machine_gather_wood.c"
-
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
     WarState* state = (WarState*)xcalloc(1, sizeof(WarState));

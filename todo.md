@@ -21,6 +21,11 @@ List of thing to do in no particular order
     * ~~Map scrolling and positioning by clicking in the minimap is now all under `updateViewport` function.~~
     * ~~Selection drag is now all under `updateDragRect` function.~~
     * Refactor right click code into a more robust order system.
+  * ~~Make trees behavior~~
+    * ~~Test different configurations and update the excel and the array of tree index to tile mappings.~~
+  * ~~Make roads behavior like the trees.~~
+  * ~~Make walls behavior like the trees.~~
+  * > Make ruins behavior like the trees
 
 * Gameplay
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.

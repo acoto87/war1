@@ -1,5 +1,3 @@
-#include "../war_state_machine.h"
-
 WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_WAIT);

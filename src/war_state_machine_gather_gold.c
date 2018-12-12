@@ -1,5 +1,3 @@
-#include "../war_state_machine.h"
-
 WarState* createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId)
 {
     WarState* state = createState(context, entity, WAR_STATE_GOLD);

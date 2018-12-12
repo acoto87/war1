@@ -100,3 +100,6 @@ inline vec2 vec2TileToMapCoordinates(vec2 v, bool centeredInTile)
 
     return v;
 }
+
+inline s32 getMapTileIndex(WarContext* context, s32 x, s32 y);
+inline void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile);

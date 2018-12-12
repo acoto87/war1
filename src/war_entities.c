@@ -163,10 +163,6 @@ void removeAnimationsComponent(WarContext* context, WarEntity* entity)
     entity->animations = (WarAnimationsComponent){0};
 }
 
-#define isNeutral(player) (player == 4)
-#define isEnemy(player) (player != 0 && !isNeutral(player))
-#define isHuman(player) (player == 0)
-
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type)
 {
@@ -191,396 +187,6 @@ WarEntity* createEntity(WarContext* context, WarEntityType type)
     WarEntityListAdd(&map->entities, entity);
 
     return entity;
-}
-
-void determineRoadTypes(WarEntity* entity)
-{
-    assert(entity->type == WAR_ENTITY_TYPE_ROAD);
-
-    WarRoadPieceList* pieces = &entity->road.pieces;
-
-    s32 count = pieces->count;
-    for(s32 i = 0; i < count; i++)
-    {
-        WarRoadPiece* pi = &pieces->items[i];
-
-        bool left = false, 
-             top = false, 
-             right = false, 
-             bottom = false;
-
-        for(s32 j = 0; j < count; j++)
-        {
-            if (i == j) continue;
-
-            WarRoadPiece* pj = &pieces->items[j];
-
-            if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley)
-                left = true;
-            else if(pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley)
-                right = true;
-            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley - 1)
-                top = true;
-            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley + 1)
-                bottom = true;
-        }
-
-        // Endpieces
-        if (top && !bottom && !left && !right)
-            pi->type = WAR_ROAD_PIECE_BOTTOM;
-        if (!top && bottom && !left && !right)
-            pi->type = WAR_ROAD_PIECE_TOP;
-        if (!top && !bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_LEFT;
-        if (!top && !bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_RIGHT;
-
-        // Corner pieces
-        if (top && !bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_TOP_LEFT;
-        if (!top && bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_BOTTOM_LEFT;
-        if (top && !bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_TOP_RIGHT;
-        if (!top && bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_BOTTOM_RIGHT;
-
-        // Middle pieces
-        if (!top && !bottom && left && right)
-            pi->type = WAR_ROAD_PIECE_HORIZONTAL;
-        if (top && bottom && !left && !right)
-            pi->type = WAR_ROAD_PIECE_VERTICAL;
-
-        // Quad piece
-        if (top && bottom && left && right)
-            pi->type = WAR_ROAD_PIECE_CROSS;
-
-        // T-Corners
-        if (top && bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_T_RIGHT;
-        if (top && bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_T_LEFT;
-        if (!top && bottom && left && right)
-            pi->type = WAR_ROAD_PIECE_T_TOP;
-        if (top && !bottom && left && right)
-            pi->type = WAR_ROAD_PIECE_T_BOTTOM;
-    }
-}
-
-void addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
-{
-    assert(entity->type == WAR_ENTITY_TYPE_ROAD);
-
-    WarRoadPieceList* pieces = &entity->road.pieces;
-
-    s32 x1 = construct->x1;
-    s32 y1 = construct->y1;
-    s32 x2 = construct->x2;
-    s32 y2 = construct->y2;
-    u8 player = construct->player;
-
-    s32 dx = x2 - x1;
-    dx = sign(dx);
-
-    s32 dy = y2 - y1;
-    dy = sign(dy);
-    
-    s32 x = x1;
-    s32 y = y1;
-
-    WarRoadPiece piece;
-
-    while (x != x2)
-    {
-        WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
-        x += dx;
-    }
-
-    WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
-
-    while (y != y2)
-    {
-        WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
-        y += dy;
-    }
-
-    WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
-}
-
-WarEntity* createRoad(WarContext* context)
-{
-    WarMap* map = context->map;
-
-    WarRoadPieceList pieces;
-    WarRoadPieceListInit(&pieces, WarRoadPieceListDefaultOptions);
-
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
-    addRoadComponent(context, entity, pieces);
-    addSpriteComponent(context, entity, map->sprite);
-
-    return entity;
-}
-
-void determineWallTypes(WarEntity* entity)
-{
-    assert(entity->type == WAR_ENTITY_TYPE_WALL);
-
-    WarWallPieceList *pieces = &entity->wall.pieces;
-
-    s32 count = pieces->count;
-    for(s32 i = 0; i < count; i++)
-    {
-        WarWallPiece* pi = &pieces->items[i];
-
-        bool left = false, 
-             top = false, 
-             right = false, 
-             bottom = false;
-
-        for(s32 j = 0; j < count; j++)
-        {
-            if (i == j) continue;
-
-            WarWallPiece* pj = &pieces->items[j];
-
-            if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley)
-                left = true;
-            else if(pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley)
-                right = true;
-            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley - 1)
-                top = true;
-            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley + 1)
-                bottom = true;
-        }
-
-        // Endpieces
-        if (top && !bottom && !left && !right)
-            pi->type = WAR_ROAD_PIECE_BOTTOM;
-        if (!top && bottom && !left && !right)
-            pi->type = WAR_ROAD_PIECE_TOP;
-        if (!top && !bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_LEFT;
-        if (!top && !bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_RIGHT;
-
-        // Corner pieces
-        if (top && !bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_BOTTOM_RIGHT;
-        if (!top && bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_TOP_RIGHT;
-        if (top && !bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_BOTTOM_LEFT;
-        if (!top && bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_TOP_LEFT;
-
-        // Middle pieces
-        if (!top && !bottom && left && right)
-            pi->type = WAR_ROAD_PIECE_HORIZONTAL;
-        if (top && bottom && !left && !right)
-            pi->type = WAR_ROAD_PIECE_VERTICAL;
-
-        // Quad piece
-        if (top && bottom && left && right)
-            pi->type = WAR_ROAD_PIECE_CROSS;
-
-        // T-Corners
-        if (top && bottom && left && !right)
-            pi->type = WAR_ROAD_PIECE_T_RIGHT;
-        if (top && bottom && !left && right)
-            pi->type = WAR_ROAD_PIECE_T_LEFT;
-        if (!top && bottom && left && right)
-            pi->type = WAR_ROAD_PIECE_T_TOP;
-        if (top && !bottom && left && right)
-            pi->type = WAR_ROAD_PIECE_T_BOTTOM;
-    }
-}
-
-WarWallPiece* getWallPiece(WarEntity* entity, vec2 position)
-{
-    assert(isWall(entity));
-
-    WarWallComponent* wall = &entity->wall;
-    
-    for(s32 i = 0; i < wall->pieces.count; i++)
-    {
-        WarWallPiece* piece = &wall->pieces.items[i];
-        if (piece->tilex == (s32)position.x && piece->tiley == (s32)position.y)
-        {
-            return piece;
-        }
-    }
-    
-    return NULL;
-}
-
-void addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
-{
-    assert(entity->type == WAR_ENTITY_TYPE_WALL);
-
-    WarWallPieceList *pieces = &entity->wall.pieces;
-
-    s32 x1 = construct->x1;
-    s32 y1 = construct->y1;
-    s32 x2 = construct->x2;
-    s32 y2 = construct->y2;
-    u8 player = construct->player;
-
-    s32 dx = x2 - x1;
-    dx = sign(dx);
-
-    s32 dy = y2 - y1;
-    dy = sign(dy);
-    
-    s32 x = x1;
-    s32 y = y1;
-
-    WarWallPiece piece;
-
-    while (x != x2)
-    {
-        WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
-        x += dx;
-    }
-
-    WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
-
-    while (y != y2)
-    {
-        WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
-        y += dy;
-    }
-
-    WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
-}
-
-WarEntity* createWall(WarContext* context)
-{
-    WarMap* map = context->map;
-
-    WarWallPieceList pieces;
-    WarWallPieceListInit(&pieces, WarWallPieceListDefaultOptions);
-
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_WALL);
-    addWallComponent(context, entity, pieces);
-    addSpriteComponent(context, entity, map->sprite);
-
-    return entity;
-}
-
-void determineRuinTypes(WarEntity* entity)
-{
-    WarRuinComponent* ruin = &entity->ruin;
-    WarRuinPieceList* pieces = &ruin->pieces;
-    s32 count = pieces->count;
-    for(s32 i = 0; i < count; i++)
-    {
-        WarRuinPiece* pi = &pieces->items[i];
-
-        bool topLeft = false,
-             top = false,
-             topRight = false,
-             left = false,
-             right = false,
-             bottomLeft = false,
-             bottom = false,
-             bottomRight = false;
-
-        for(s32 j = 0; j < count; j++)
-        {
-            if (i == j) continue;
-
-            WarRuinPiece* pj = &pieces->items[j];
-
-            if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley - 1)
-                topLeft = true;
-            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley - 1)
-                top = true;
-            else if (pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley - 1)
-                topRight = true;
-            else if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley)
-                left = true;
-            else if(pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley)
-                right = true;
-            else if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley + 1)
-                bottomLeft = true;
-            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley + 1)
-                bottom = true;
-            else if (pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley + 1)
-                bottomRight = true;
-        }
-
-        // Corners
-        if (!topLeft && !top && !left && right && bottom && bottomRight)
-            pi->type = WAR_RUIN_PIECE_TOP_LEFT;
-        if (!topRight && !top && !right && left && bottom && bottomLeft)
-            pi->type = WAR_RUIN_PIECE_TOP_RIGHT;
-        if (!bottomLeft && !bottom && !left && right && top && topRight)
-            pi->type = WAR_RUIN_PIECE_BOTTOM_LEFT;
-        if (!bottomRight && !bottom && !right && left && top && topLeft)
-            pi->type = WAR_RUIN_PIECE_BOTTOM_RIGHT;
-
-        // Edges
-        if (!top && left && right && bottom)
-            pi->type = WAR_RUIN_PIECE_TOP;
-        if (!left && top && bottom && right)
-            pi->type = WAR_RUIN_PIECE_LEFT;
-        if (!right && top && bottom && left)
-            pi->type = WAR_RUIN_PIECE_RIGHT;
-        if (!bottom && left && right && top)
-            pi->type = WAR_RUIN_PIECE_BOTTOM;
-
-        // Insides
-        if (!bottomRight && top && left && right && bottom && topLeft)
-            pi->type = WAR_RUIN_PIECE_TOP_LEFT_INSIDE;
-        if (!bottomLeft && top && right && left && bottom && topRight)
-            pi->type = WAR_RUIN_PIECE_TOP_RIGHT_INSIDE;
-        if (!topRight && top && left && right && bottom && bottomLeft)
-            pi->type = WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE;
-        if (!topLeft && top && left && right && bottom && bottomRight)
-            pi->type = WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE;
-
-        // Diagonals
-        if (!topRight && !bottomLeft && topLeft && bottomRight)
-            pi->type = WAR_RUIN_PIECE_DIAG_1;
-        if (!topLeft && !bottomRight && topRight && bottomLeft)
-            pi->type = WAR_RUIN_PIECE_DIAG_2;
-
-        // Center
-        if (topLeft && top && topRight && left && right && bottomLeft && bottom && bottomRight)
-            pi->type = WAR_RUIN_PIECE_CENTER;
-        if (!topLeft && !top && !topRight && !left && !right && !bottomLeft && !bottom && !bottomRight)
-            pi->type = WAR_RUIN_PIECE_CENTER;
-    }
-}
-
-WarEntity* createRuins(WarContext* context)
-{
-    WarMap* map = context->map;
-
-    WarRuinPieceList pieces;
-    WarRuinPieceListInit(&pieces, WarRuinPieceListDefaultOptions);
-
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_RUIN);
-    addRuinComponent(context, entity, pieces);
-    addSpriteComponent(context, entity, map->sprite);
-
-    return entity;
-}
-
-void addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim)
-{
-    assert(entity);
-    assert(entity->type == WAR_ENTITY_TYPE_RUIN);
-
-    WarRuinPieceList* pieces = &entity->ruin.pieces;
-
-    for(s32 yy = 0; yy < dim; yy++)
-    {
-        for(s32 xx = 0; xx < dim; xx++)
-            WarRuinPieceListAdd(pieces, createRuinPiece(x + xx, y + yy));
-    }
-
-    determineRuinTypes(entity);
 }
 
 s32 findEntityIndex(WarContext* context, WarEntityId id)
@@ -636,236 +242,6 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
-void determineTreeTiles(WarContext* context, WarEntity* forest)
-{
-    assert(forest);
-    assert(forest->type == WAR_ENTITY_TYPE_FOREST);
-
-    WarMap* map = context->map;
-
-    WarTreeList* trees = &forest->forest.trees;
-    
-    for (s32 i = 0; i < trees->count; i++)
-    {
-        WarTree* ti = &trees->items[i];
-
-        bool topLeft = ti->tilex == 0 || ti->tiley == 0,
-             top = ti->tiley == 0,
-             topRight = ti->tilex == MAP_TILES_WIDTH - 1 || ti->tiley == 0,
-             left = ti->tilex == 0,
-             right = ti->tilex == MAP_TILES_WIDTH - 1,
-             bottomLeft = ti->tilex == 0 || ti->tiley == MAP_TILES_HEIGHT - 1,
-             bottom = ti->tiley == MAP_TILES_HEIGHT - 1,
-             bottomRight = ti->tilex == MAP_TILES_WIDTH - 1 || ti->tiley == MAP_TILES_HEIGHT - 1;
-
-        for (s32 j = 0; j < trees->count; j++)
-        {
-            if (i == j) continue;
-
-            WarTree* tj = &trees->items[j];
-
-            // if the tree is chopped down treat it as an empty
-            if (tj->amount == 0) continue;
-
-            if (tj->tilex == ti->tilex - 1 && tj->tiley == ti->tiley - 1)
-                topLeft = true;
-            else if (tj->tilex == ti->tilex && tj->tiley == ti->tiley - 1)
-                top = true;
-            else if (tj->tilex == ti->tilex + 1 && tj->tiley == ti->tiley - 1)
-                topRight = true;
-            else if (tj->tilex == ti->tilex - 1 && tj->tiley == ti->tiley)
-                left = true;
-            else if(tj->tilex == ti->tilex + 1 && tj->tiley == ti->tiley)
-                right = true;
-            else if (tj->tilex == ti->tilex - 1 && tj->tiley == ti->tiley + 1)
-                bottomLeft = true;
-            else if (tj->tilex == ti->tilex && tj->tiley == ti->tiley + 1)
-                bottom = true;
-            else if (tj->tilex == ti->tilex + 1 && tj->tiley == ti->tiley + 1)
-                bottomRight = true;
-        }
-        
-        WarTreeTileType type = WAR_TREE_NONE;
-
-        if (!bottom)
-        {
-            if (left && right)
-                type = WAR_TREE_BOTTOM;
-            else if(!left)
-                type = WAR_TREE_BOTTOM_LEFT;
-            else if(!right)
-                type = WAR_TREE_BOTTOM_RIGHT;
-            else
-                type == WAR_TREE_BOTTOM_END;
-        }
-        else
-        {
-            if (left && right && bottomLeft && bottomRight)
-            {
-                if (top)
-                {
-                    if (topRight && topLeft)
-                    {
-                        type = WAR_TREE_CENTER;
-                    }
-                    else if (!topLeft)
-                    {
-                        type = WAR_TREE_BOTTOM_RIGHT_INSIDE;
-                    }
-                    else if (!topRight)
-                    {
-                        type = WAR_TREE_BOTTOM_LEFT_INSIDE;
-                    }
-                    else
-                    {
-                    }
-                }
-                else
-                {
-                    type = WAR_TREE_CENTER;
-                }
-            }
-            else if (left && right && bottomLeft && !bottomRight)
-            {
-                type = WAR_TREE_TOP_LEFT_INSIDE;
-            }
-            else if (left && right && !bottomLeft && bottomRight)
-            {
-                type = WAR_TREE_TOP_RIGHT_INSIDE;
-            }
-            else if (left && right && !bottomLeft && !bottomRight)
-            {
-
-            }
-            else if (!left)
-            {
-                if (bottomLeft)
-                {
-                    type = WAR_TREE_BOTTOM_LEFT_INSIDE;
-                }
-                else
-                {
-                    type = WAR_TREE_LEFT;
-                }
-            }
-            else if (!right)
-            {
-                if (bottomRight)
-                {
-                    type = WAR_TREE_BOTTOM_RIGHT_INSIDE;
-                }
-                else
-                {
-                    type = WAR_TREE_RIGHT;
-                }
-            }
-        }
-
-        if (type != WAR_TREE_NONE)
-        {
-            WarTreesData data = getTreesData(type);
-
-            WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
-            assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
-
-            WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-            assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-
-            WarMapTilesetType tilesetType = map->tilesetType;
-            assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
-
-            s32 prevTileIndex = levelVisual->levelVisual.data[ti->tiley * MAP_TILES_WIDTH + ti->tilex];
-            s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
-
-            if (prevTileIndex != newTileIndex)
-                logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", ti->tilex, ti->tiley, prevTileIndex, newTileIndex);
-
-            levelVisual->levelVisual.data[ti->tiley * MAP_TILES_WIDTH + ti->tilex] = newTileIndex;
-
-            if (!top && isInside(map->finder, ti->tilex, ti->tiley - 1))
-            {
-                if (left && right)
-                {
-                    type = WAR_TREE_TOP;
-                }
-                else if (!left)
-                {
-                    type = WAR_TREE_TOP_LEFT;
-                }
-                else if (!right)
-                {
-                    type = WAR_TREE_TOP_RIGHT;
-                }
-                else
-                {
-                    type = WAR_TREE_TOP;
-                }
-
-                data = getTreesData(type);
-                s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
-                levelVisual->levelVisual.data[(ti->tiley - 1) * MAP_TILES_WIDTH + ti->tilex] = newTileIndex;
-            }
-        }
-    }
-}
-
-WarTree* getTreeAtPosition(WarEntity* forest, vec2 position)
-{
-    s32 x = (s32)position.x;
-    s32 y = (s32)position.y;
-    WarTreeList* trees = &forest->forest.trees;
-    for (s32 i = 0; i < trees->count; i++)
-    {
-        WarTree* tree = &trees->items[i];
-        if (tree->tilex == x && tree->tiley == y)
-            return tree;
-    }
-
-    return NULL;
-}
-
-WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position)
-{
-    WarMap* map = context->map;
-
-    WarTree* result = NULL;
-
-    vec2List positions;
-    vec2ListInit(&positions, vec2ListDefaultOptions);
-    vec2ListAdd(&positions, position);
-    
-    for (s32 i = 0; i < positions.count; i++)
-    {
-        position = positions.items[i];
-
-        WarTree* tree = getTreeAtPosition(forest, position);
-        if (tree)
-        {
-            if (isPositionAccesible(map->finder, position) && tree->amount > 0)
-            {
-                result = tree;
-                break;
-            }
-        }
-
-        for (s32 d = 0; d < dirC; d++)
-        {
-            s32 xx = (s32)position.x + dirX[d];
-            s32 yy = (s32)position.y + dirY[d];
-            if (isInside(map->finder, xx, yy))
-            {
-                vec2 newPosition = vec2i(xx, yy);
-                if (!vec2ListContains(&positions, newPosition))
-                    vec2ListAdd(&positions, newPosition);
-            }
-        }
-    }
-
-    vec2ListFree(&positions);
-
-    return result;
-}
-
 void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
@@ -890,7 +266,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
 }
 
 // Render entities
-void renderImage(WarContext* context, WarEntity* entity)
+void _renderImage(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -907,7 +283,7 @@ void renderImage(WarContext* context, WarEntity* entity)
     }
 }
 
-void renderRoad(WarContext* context, WarEntity* entity)
+void _renderRoad(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -959,7 +335,7 @@ void renderRoad(WarContext* context, WarEntity* entity)
     }
 }
 
-void renderWall(WarContext* context, WarEntity* entity)
+void _renderWall(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -1029,7 +405,7 @@ void renderWall(WarContext* context, WarEntity* entity)
     }
 }
 
-void renderRuin(WarContext* context, WarEntity* entity)
+void _renderRuin(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -1081,7 +457,7 @@ void renderRuin(WarContext* context, WarEntity* entity)
     }
 }
 
-void renderForest(WarContext* context, WarEntity* entity)
+void _renderForest(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -1137,7 +513,7 @@ void renderForest(WarContext* context, WarEntity* entity)
     // }
 }
 
-void renderUnit(WarContext* context, WarEntity* entity, bool selected)
+void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -1250,37 +626,37 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
         {
             case WAR_ENTITY_TYPE_IMAGE:
             {
-                renderImage(context, entity);
+                _renderImage(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_UNIT:
             {
-                renderUnit(context, entity, selected);
+                _renderUnit(context, entity, selected);
                 break;
             }
 
             case WAR_ENTITY_TYPE_ROAD:
             {
-                renderRoad(context, entity);
+                _renderRoad(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_WALL:
             {
-                renderWall(context, entity);
+                _renderWall(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_RUIN:
             {
-                renderRuin(context, entity);
+                _renderRuin(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_FOREST:
             {
-                renderForest(context, entity);
+                _renderForest(context, entity);
                 break;
             }
 
@@ -1293,11 +669,6 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
 
         nvgRestore(gfx);
     }
-}
-
-inline s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armour)
-{
-    return minDamage + maxi(rndDamage - armour, 0);
 }
 
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
@@ -1332,33 +703,5 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
             WarState* damagedState = createDamagedState(context, entity);
             changeNextState(context, entity, damagedState, true, true);
         }
-    }
-}
-
-void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage)
-{
-    assert(isWall(entity));
-
-    // Minimal damage + [Random damage - Enemy's Armour]
-    s32 damage = getTotalDamage(minDamage, rndDamage, 0);
-    piece->hp -= damage;
-    piece->hp = maxi(piece->hp, 0);
-}
-
-void chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
-{
-    assert(forest);
-    assert(forest->type == WAR_ENTITY_TYPE_FOREST);
-
-    WarMap* map = context->map;
-
-    tree->amount -= amount;
-    tree->amount = maxi(tree->amount, 0);
-    if (tree->amount == 0)
-    {
-        // determine the tree types when any tree of this forest is chopped down
-        determineTreeTiles(context, forest);
-
-        setFreeTiles(map->finder, tree->tilex, tree->tiley, 1, 1);
     }
 }
