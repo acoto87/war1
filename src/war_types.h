@@ -524,6 +524,7 @@ shlDefineList(WarWallPieceList, WarWallPiece)
 
 typedef enum 
 {
+    WAR_RUIN_PIECE_NONE,
     WAR_RUIN_PIECE_TOP_LEFT,
     WAR_RUIN_PIECE_TOP,
     WAR_RUIN_PIECE_TOP_RIGHT,

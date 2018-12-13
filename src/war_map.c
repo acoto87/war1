@@ -147,9 +147,9 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the forest entities
     {
-        // bool processed[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
-        // for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-        //     processed[i] = false;
+        bool processed[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+            processed[i] = false;
 
         u16* passableData = levelPassable->levelPassable.data;
 
@@ -171,95 +171,95 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         //     }
         // }
 
-        WarTreeList trees;
-        WarTreeListInit(&trees, WarTreeListDefaultOptions);
-
-        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-        {
-            if (passableData[i] == 128)
-            {
-                s32 x = i % MAP_TILES_WIDTH;
-                s32 y = i / MAP_TILES_WIDTH;
-
-                // TODO: access here to tree data to get the amount of wood
-                WarTreeListAdd(&trees, createTree(x, y, 100));
-            }
-        }
-
-        // trees are sort by 'x' asc and then by 'y' desc
-        // WarTreeListSort(&trees, compareTreesByPosition);
-
-        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
-        addSpriteComponent(context, entity, map->sprite);
-        addForestComponent(context, entity, trees);
-
-        for (s32 i = 0; i < trees.count; i++)
-        {
-            WarTree* tree = &trees.items[i];
-            setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, entity->id);
-        }
-
-        determineTreeTiles(context, entity);
+        // WarTreeList trees;
+        // WarTreeListInit(&trees, WarTreeListDefaultOptions);
 
         // for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         // {
-        //     if (!processed[i] && passableData[i] == 128)
+        //     if (passableData[i] == 128)
         //     {
         //         s32 x = i % MAP_TILES_WIDTH;
         //         s32 y = i / MAP_TILES_WIDTH;
 
-        //         WarTreeList trees;
-        //         WarTreeListInit(&trees, WarTreeListDefaultOptions);
-
         //         // TODO: access here to tree data to get the amount of wood
         //         WarTreeListAdd(&trees, createTree(x, y, 100));
-        //         processed[i] = true;
-
-        //         for(s32 j = 0; j < trees.count; j++)
-        //         {
-        //             WarTree tree = trees.items[j];
-        //             for(s32 d = 0; d < dirC; d++)
-        //             {
-        //                 s32 xx = tree.tilex + dirX[d];
-        //                 s32 yy = tree.tiley + dirY[d];
-        //                 if (isInside(map->finder, xx, yy))
-        //                 {
-        //                     s32 k = yy * MAP_TILES_WIDTH + xx;
-        //                     if (!processed[k] && passableData[k] == 128)
-        //                     {
-        //                         // mark it processed right away, to not process it later
-        //                         processed[k] = true;
-
-        //                         WarTree newTree = createTree(xx, yy, 100);
-        //                         WarTreeListAdd(&trees, newTree);
-        //                     }
-        //                 }
-        //             }
-        //         }
-                
-        //         // trees are sort by 'x' asc and then by 'y' desc
-        //         // WarTreeListSort(&trees, compareTreesByPosition);
-
-        //         WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
-        //         addSpriteComponent(context, entity, map->sprite);
-        //         addForestComponent(context, entity, trees);
-
-        //         for (s32 i = 0; i < trees.count; i++)
-        //         {
-        //             WarTree* tree = &trees.items[i];
-        //             setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, entity->id);
-        //         }
-
-        //         determineTreeTiles(context, entity);
         //     }
         // }
 
-        // DEBUG: create debug forest
-        // WarTreeList trees;
-        // WarTreeListInit(&trees, WarTreeListDefaultOptions);
+        // // trees are sort by 'x' asc and then by 'y' desc
+        // // WarTreeListSort(&trees, compareTreesByPosition);
+
         // WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
         // addSpriteComponent(context, entity, map->sprite);
         // addForestComponent(context, entity, trees);
+
+        // for (s32 i = 0; i < trees.count; i++)
+        // {
+        //     WarTree* tree = &trees.items[i];
+        //     setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, entity->id);
+        // }
+
+        // determineTreeTiles(context, entity);
+
+        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+        {
+            if (!processed[i] && passableData[i] == 128)
+            {
+                s32 x = i % MAP_TILES_WIDTH;
+                s32 y = i / MAP_TILES_WIDTH;
+
+                WarTreeList trees;
+                WarTreeListInit(&trees, WarTreeListDefaultOptions);
+
+                // TODO: access here to tree data to get the amount of wood
+                WarTreeListAdd(&trees, createTree(x, y, 100));
+                processed[i] = true;
+
+                for(s32 j = 0; j < trees.count; j++)
+                {
+                    WarTree tree = trees.items[j];
+                    for(s32 d = 0; d < dirC; d++)
+                    {
+                        s32 xx = tree.tilex + dirX[d];
+                        s32 yy = tree.tiley + dirY[d];
+                        if (isInside(map->finder, xx, yy))
+                        {
+                            s32 k = yy * MAP_TILES_WIDTH + xx;
+                            if (!processed[k] && passableData[k] == 128)
+                            {
+                                // mark it processed right away, to not process it later
+                                processed[k] = true;
+
+                                WarTree newTree = createTree(xx, yy, 100);
+                                WarTreeListAdd(&trees, newTree);
+                            }
+                        }
+                    }
+                }
+                
+                // trees are sort by 'x' asc and then by 'y' desc
+                // WarTreeListSort(&trees, compareTreesByPosition);
+
+                WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
+                addSpriteComponent(context, entity, map->sprite);
+                addForestComponent(context, entity, trees);
+
+                for (s32 i = 0; i < trees.count; i++)
+                {
+                    WarTree* tree = &trees.items[i];
+                    setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, entity->id);
+                }
+
+                determineTreeTiles(context, entity);
+            }
+        }
+
+        // DEBUG: create debug forest
+        WarTreeList trees;
+        WarTreeListInit(&trees, WarTreeListDefaultOptions);
+        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
+        addSpriteComponent(context, entity, map->sprite);
+        addForestComponent(context, entity, trees);
 
         context->debugForest = entity;
     }
@@ -317,6 +317,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
+            if (startUnit.type == WAR_UNIT_FOOTMAN)
+                startUnit.type = WAR_UNIT_PEASANT;
 
             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
             addUnitComponent(context, entity, startUnit.type, startUnit.x, startUnit.y, startUnit.player, startUnit.resourceKind, startUnit.amount);
@@ -409,6 +411,9 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         addRuinsPieces(context, ruins, 13, 5, 2);
         addRuinsPieces(context, ruins, 9, 5, 3);
         addRuinsPieces(context, ruins, 8, 8, 4);
+        determineRuinTypes(context, ruins);
+
+        context->debugRuin = ruins;
 
         // test animations
         // WarSprite sprite2 = createSpriteFromResourceIndex(context, 299);
@@ -682,6 +687,43 @@ void updateWallsEdit(WarContext* context)
     }
 }
 
+void updateRuinsEdit(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if (wasKeyPressed(input, WAR_KEY_U))
+    {
+        context->editingRuins = !context->editingRuins;
+    }
+
+    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        if (context->editingRuins)
+        {
+            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+            pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+            s32 x = (s32)pointerPos.x;
+            s32 y = (s32)pointerPos.y;
+
+            WarEntity* ruin = context->debugRuin;
+
+            WarRuinPiece* piece = getRuinPieceAtPosition(ruin, x, y);
+            if (!piece)
+            {
+                addRuinsPieces(context, ruin, x, y, 2);
+                determineRuinTypes(context, ruin);
+            }
+            else
+            {
+                removeRuinPiece(ruin, piece);
+                determineRuinTypes(context, ruin);
+            }
+        }
+    }
+}
+
 void updateMap(WarContext* context)
 {
     WarMap* map = context->map;
@@ -695,6 +737,7 @@ void updateMap(WarContext* context)
     updateTreesEdit(context);
     updateRoadsEdit(context);
     updateWallsEdit(context);
+    updateRuinsEdit(context);
 
     // update all state machines
     for(s32 i = 0; i < map->entities.count; i++)

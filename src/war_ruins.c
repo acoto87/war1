@@ -1,87 +1,72 @@
-void determineRuinTypes(WarEntity* entity)
+bool hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
 {
-    WarRuinComponent* ruin = &entity->ruin;
-    WarRuinPieceList* pieces = &ruin->pieces;
-    s32 count = pieces->count;
-    for(s32 i = 0; i < count; i++)
+    WarRuinPieceList* pieces = &ruins->ruin.pieces;
+    for (s32 i = 0; i < pieces->count; i++)
+    {
+        WarRuinPiece* piece = &pieces->items[i];
+        if (piece->tilex == x && piece->tiley == y)
+            return true;
+    }
+
+    return false;
+}
+
+WarRuinPiece* getRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
+{
+    WarRuinPieceList* pieces = &ruins->ruin.pieces;
+    for (s32 i = 0; i < pieces->count; i++)
+    {
+        WarRuinPiece* piece = &pieces->items[i];
+        if (piece->tilex == x && piece->tiley == y)
+            return piece;
+    }
+
+    return NULL;
+}
+
+void determineRuinTypes(WarContext* context, WarEntity* entity)
+{
+    assert(entity);
+    assert(entity->type == WAR_ENTITY_TYPE_RUIN);
+
+    WarMap* map = context->map;
+
+    WarRuinPieceList* pieces = &entity->ruin.pieces;
+
+    const s32 dirC = 8;
+    const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
+    const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
+
+    s32List invalidPieces;
+    s32ListInit(&invalidPieces, s32ListDefaultOptions);
+
+    for(s32 i = 0; i < pieces->count; i++)
     {
         WarRuinPiece* pi = &pieces->items[i];
 
-        bool topLeft = false,
-             top = false,
-             topRight = false,
-             left = false,
-             right = false,
-             bottomLeft = false,
-             bottom = false,
-             bottomRight = false;
+        s32 index = 0;
 
-        for(s32 j = 0; j < count; j++)
+        for (s32 d = 0; d < dirC; d++)
         {
-            if (i == j) continue;
-
-            WarRuinPiece* pj = &pieces->items[j];
-
-            if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley - 1)
-                topLeft = true;
-            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley - 1)
-                top = true;
-            else if (pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley - 1)
-                topRight = true;
-            else if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley)
-                left = true;
-            else if(pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley)
-                right = true;
-            else if (pj->tilex == pi->tilex - 1 && pj->tiley == pi->tiley + 1)
-                bottomLeft = true;
-            else if (pj->tilex == pi->tilex && pj->tiley == pi->tiley + 1)
-                bottom = true;
-            else if (pj->tilex == pi->tilex + 1 && pj->tiley == pi->tiley + 1)
-                bottomRight = true;
+            s32 xx = pi->tilex + dirX[d];
+            s32 yy = pi->tiley + dirY[d];
+            
+            if (!isInside(map->finder, xx, yy) || hasRuinPieceAtPosition(entity, xx, yy))
+            {
+                index = index | (1 << d);
+            }
         }
+        
+        pi->type = ruinTileTypeMap[index];
 
-        // Corners
-        if (!topLeft && !top && !left && right && bottom && bottomRight)
-            pi->type = WAR_RUIN_PIECE_TOP_LEFT;
-        if (!topRight && !top && !right && left && bottom && bottomLeft)
-            pi->type = WAR_RUIN_PIECE_TOP_RIGHT;
-        if (!bottomLeft && !bottom && !left && right && top && topRight)
-            pi->type = WAR_RUIN_PIECE_BOTTOM_LEFT;
-        if (!bottomRight && !bottom && !right && left && top && topLeft)
-            pi->type = WAR_RUIN_PIECE_BOTTOM_RIGHT;
-
-        // Edges
-        if (!top && left && right && bottom)
-            pi->type = WAR_RUIN_PIECE_TOP;
-        if (!left && top && bottom && right)
-            pi->type = WAR_RUIN_PIECE_LEFT;
-        if (!right && top && bottom && left)
-            pi->type = WAR_RUIN_PIECE_RIGHT;
-        if (!bottom && left && right && top)
-            pi->type = WAR_RUIN_PIECE_BOTTOM;
-
-        // Insides
-        if (!bottomRight && top && left && right && bottom && topLeft)
-            pi->type = WAR_RUIN_PIECE_TOP_LEFT_INSIDE;
-        if (!bottomLeft && top && right && left && bottom && topRight)
-            pi->type = WAR_RUIN_PIECE_TOP_RIGHT_INSIDE;
-        if (!topRight && top && left && right && bottom && bottomLeft)
-            pi->type = WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE;
-        if (!topLeft && top && left && right && bottom && bottomRight)
-            pi->type = WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE;
-
-        // Diagonals
-        if (!topRight && !bottomLeft && topLeft && bottomRight)
-            pi->type = WAR_RUIN_PIECE_DIAG_1;
-        if (!topLeft && !bottomRight && topRight && bottomLeft)
-            pi->type = WAR_RUIN_PIECE_DIAG_2;
-
-        // Center
-        if (topLeft && top && topRight && left && right && bottomLeft && bottom && bottomRight)
-            pi->type = WAR_RUIN_PIECE_CENTER;
-        if (!topLeft && !top && !topRight && !left && !right && !bottomLeft && !bottom && !bottomRight)
-            pi->type = WAR_RUIN_PIECE_CENTER;
+        if (pi->type == WAR_RUIN_PIECE_NONE)
+            s32ListAdd(&invalidPieces, i);
     }
+    
+    for (s32 i = invalidPieces.count - 1; i >= 0; i--)
+        WarRuinPieceListRemoveAt(pieces, invalidPieces.items[i]);
+
+    s32ListFree(&invalidPieces);
 }
 
 WarEntity* createRuins(WarContext* context)
@@ -108,8 +93,15 @@ void addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 di
     for(s32 yy = 0; yy < dim; yy++)
     {
         for(s32 xx = 0; xx < dim; xx++)
-            WarRuinPieceListAdd(pieces, createRuinPiece(x + xx, y + yy));
+        {
+            if (!hasRuinPieceAtPosition(entity, x + xx, y + yy))
+                WarRuinPieceListAdd(pieces, createRuinPiece(x + xx, y + yy));
+        }
     }
+}
 
-    determineRuinTypes(entity);
+void removeRuinPiece(WarEntity* entity, WarRuinPiece* piece)
+{
+    WarRuinPieceList* pieces = &entity->ruin.pieces;
+    WarRuinPieceListRemove(pieces, *piece);
 }

@@ -102,6 +102,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
         if (tree)
         {
             chopTree(context, forest, tree, 100);
+            determineTreeTiles(context, forest);
         }
         
         WarWorkerData workerData = getWorkerData(unit->type);

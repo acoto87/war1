@@ -25,7 +25,8 @@ List of thing to do in no particular order
     * ~~Test different configurations and update the excel and the array of tree index to tile mappings.~~
   * ~~Make roads behavior like the trees.~~
   * ~~Make walls behavior like the trees.~~
-  * > Make ruins behavior like the trees
+  * ~~Make ruins behavior like the trees.~~
+  * > Update minimap with chopped trees
 
 * Gameplay
   * Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
@@ -36,6 +37,8 @@ List of thing to do in no particular order
   * Fix the selection of units to select only dude units or one building.
   * Make Ctrl+click select all units of the same type on the screen.
   * ~~Making health system for units.~~
+  * > Change the behavior of chopping trees when multiple units are chopping the same tree. With each hack of the axe the tree should loose wood, until it ran out of it. Each unit go back to the townhall when has max amount of wood or there is no more trees to chop.
+  * > If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better.
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~
@@ -103,9 +106,9 @@ List of thing to do in no particular order
     * ~~Spawn ruins after the collapse of a building.~~
     * Check if the new spawning ruins could merge with a previous one. This occurs when a building is built above a ruins.
   * Build state
-  * > Gathering resources state
+  * ~~Gathering resources state~~
     * ~~Gathering gold.~~
-    * > Gathering wood
+    * ~~Gathering wood~~
   * ~~Make a Leave function when the states are leaving, and not just free them. Let that responsibility to the state itself.~~
   * Make the state switching system can return values when going back to the previous state. This will allow follow and move to return to previous state (such attack) that there is no path to the target, so the unit can go idle.
     * When an unit is going to attack another one, but can't reach it because of is blocked but other units, there is a loop between attack and follow states, because there is not mechanism to allow the follow state to tell the attack state that the target unit can't be reached, so the unit must go idle.

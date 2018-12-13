@@ -427,16 +427,20 @@ void _renderRuin(WarContext* context, WarEntity* entity)
 
             for (s32 i = 0; i < ruin->pieces.count; i++)
             {
+                WarRuinPiece* piece = &pieces->items[i];
+                if (piece->type == WAR_RUIN_PIECE_NONE)
+                    continue;
+                    
                 // get the index of the tile in the spritesheet of the map,
                 // corresponding to the current tileset type (forest, swamp)
-                WarRuinsData ruinsData = getRuinsData(pieces->items[i].type);
+                WarRuinsData ruinsData = getRuinsData(piece->type);
                 
                 s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
                     ? ruinsData.tileIndexForest : ruinsData.tileIndexSwamp;
                 
                 // the position in the world of the road piece tile
-                s32 x = pieces->items[i].tilex;
-                s32 y = pieces->items[i].tiley;
+                s32 x = piece->tilex;
+                s32 y = piece->tiley;
 
                 // coordinates in pixels of the road piece tile
                 s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
@@ -469,48 +473,34 @@ void _renderForest(WarContext* context, WarEntity* entity)
     WarMapTilesetType tilesetType = context->map->tilesetType;
     assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
-    // if (sprite->enabled)
-    // {
-    //     if (forest->enabled)
-    //     {
-    //         WarTreeList* trees = &forest->trees;
-    //         for (s32 i = 0; i < trees->count; i++)
-    //         {
-    //             WarTree* tree = &trees->items[i];
+    if (sprite->enabled)
+    {
+        if (forest->enabled)
+        {
+            WarTreeList* trees = &forest->trees;
+            for (s32 i = 0; i < trees->count; i++)
+            {
+                WarTree* tree = &trees->items[i];
 
-    //             WarTreesData data = getTreesData(tree->type);
+                if (tree->type == WAR_TREE_NONE)
+                    continue;
 
-    //             // this is the index in the map sprite of the chopped down tree tile
-    //             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST) 
-    //                 ? data.tileIndexForest : data.tileIndexSwamp;
+                WarTreesData data = getTreesData(tree->type);
 
-    //             // only render the sprite of chooped wood if the entity hasn't any wood left
-    //             // the sprite of the trees are already in the map description
-    //             // if (tree->amount == 0)
-    //             {
-    //                 tileIndex = (tilesetType == MAP_TILESET_FOREST) 
-    //                     ? CHOPPED_DOWN_TREE_FOREST_TILE_INDEX : CHOPPED_DOWN_TREE_SWAMP_TILE_INDEX;
-    //             }
+                // the position in the world of the wood tile
+                s32 x = tree->tilex;
+                s32 y = tree->tiley;
 
-    //             // the position in the world of the wood tile
-    //             s32 x = tree->tilex;
-    //             s32 y = tree->tiley;
+                s32 prevTileIndex = getMapTileIndex(context, x, y);
+                s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
 
-    //             // coordinates in pixels of the road piece tile
-    //             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-    //             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+                if (prevTileIndex != newTileIndex)
+                    logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", x, y, prevTileIndex, newTileIndex);
 
-    //             nvgSave(gfx);
-    //             nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-
-    //             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-    //             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-    //             renderSubSprite(context, &sprite->sprite, rs, rd, VEC2_ONE);
-
-    //             nvgRestore(gfx);
-    //         }            
-    //     }
-    // }
+                setMapTileIndex(context, x, y, newTileIndex);
+            }            
+        }
+    }
 }
 
 void _renderUnit(WarContext* context, WarEntity* entity, bool selected)

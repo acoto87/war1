@@ -37,8 +37,8 @@ void determineTreeTiles(WarContext* context, WarEntity* forest)
     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
     const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
 
-    WarMapTilesetType tilesetType = map->tilesetType;
-    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+    s32List invalidTrees;
+    s32ListInit(&invalidTrees, s32ListDefaultOptions);
 
     for (s32 i = 0; i < trees->count; i++)
     {
@@ -69,21 +69,16 @@ void determineTreeTiles(WarContext* context, WarEntity* forest)
             }
             
             ti->type = treeTileTypeMap[index];
-        }
 
-        if (ti->type != WAR_TREE_NONE)
-        {
-            WarTreesData data = getTreesData(ti->type);
-
-            s32 prevTileIndex = getMapTileIndex(context, ti->tilex, ti->tiley);
-            s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
-
-            if (prevTileIndex != newTileIndex)
-                logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", ti->tilex, ti->tiley, prevTileIndex, newTileIndex);
-
-            setMapTileIndex(context, ti->tilex, ti->tiley, newTileIndex);
+            if (ti->type == WAR_TREE_NONE)
+                s32ListAdd(&invalidTrees, i);
         }
     }
+
+    for (s32 i = invalidTrees.count - 1; i >= 0; i--)
+        WarRuinPieceListRemoveAt(trees, invalidTrees.items[i]);
+
+    s32ListFree(&invalidTrees);
 }
 
 WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position)

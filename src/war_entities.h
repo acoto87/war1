@@ -57,7 +57,9 @@ void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece,
 // Ruins
 WarEntity* createRuins(WarContext* context);
 void addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim);
-void determineRuinTypes(WarEntity* entity);
+bool hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y);
+WarRuinPiece* getRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y);
+void determineRuinTypes(WarContext* context, WarEntity* entity);
 
 // Trees
 bool hasTreeAtPosition(WarEntity* forest, s32 x, s32 y);
