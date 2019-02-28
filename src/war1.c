@@ -14,6 +14,8 @@
 // #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
 
+// Guide to predefined macros in C compilers gcc, clang, msvc, etc.
+// https://blog.kowalczyk.info/article/j/guide-to-predefined-macros-in-c-compilers-gcc-clang-msvc-etc..html
 #if defined(_WIN32) || defined(_WIN64)
 #include <glew.h>
 #else
