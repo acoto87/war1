@@ -1,4 +1,4 @@
-#define FRAMES_PER_SECONDS 60
+#define FRAMES_PER_SECONDS 30
 #define SECONDS_PER_FRAME (1.0f/FRAMES_PER_SECONDS)
 
 #define MOVE_EPSILON 0.5f
@@ -22,7 +22,7 @@
 #define isKeyPressed(input, key) (input->keys[key].pressed)
 #define wasKeyPressed(input, key) (input->keys[key].wasPressed)
 
-inline vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
+vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
 {
     vec2 dir = VEC2_ZERO;
 
@@ -40,7 +40,7 @@ inline vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
     return dir;
 }
 
-inline vec2 getDirFromMousePos(WarContext* context, WarInput* input)
+vec2 getDirFromMousePos(WarContext* context, WarInput* input)
 {
     WarMap *map = context->map;
     rect mapPanel = map->mapPanel;
@@ -65,14 +65,14 @@ void printDirection(WarUnitDirection direction)
 {
     switch (direction)
     {        
-        case WAR_DIRECTION_NORTH:      logDebug("DIRECTION_NORTH");      break;
-        case WAR_DIRECTION_NORTH_EAST: logDebug("DIRECTION_NORTH_EAST"); break;
-        case WAR_DIRECTION_EAST:       logDebug("DIRECTION_EAST");       break;
-        case WAR_DIRECTION_SOUTH_EAST: logDebug("DIRECTION_SOUTH_EAST"); break;
-        case WAR_DIRECTION_SOUTH:      logDebug("DIRECTION_SOUTH");      break;
-        case WAR_DIRECTION_SOUTH_WEST: logDebug("DIRECTION_SOUTH_WEST"); break;
-        case WAR_DIRECTION_WEST:       logDebug("DIRECTION_WEST");       break;
-        case WAR_DIRECTION_NORTH_WEST: logDebug("DIRECTION_NORTH_WEST"); break;
-        default:                       logError("Unkown direction");     break;
+        case WAR_DIRECTION_NORTH:      logDebug("DIRECTION_NORTH\n");      break;
+        case WAR_DIRECTION_NORTH_EAST: logDebug("DIRECTION_NORTH_EAST\n"); break;
+        case WAR_DIRECTION_EAST:       logDebug("DIRECTION_EAST\n");       break;
+        case WAR_DIRECTION_SOUTH_EAST: logDebug("DIRECTION_SOUTH_EAST\n"); break;
+        case WAR_DIRECTION_SOUTH:      logDebug("DIRECTION_SOUTH\n");      break;
+        case WAR_DIRECTION_SOUTH_WEST: logDebug("DIRECTION_SOUTH_WEST\n"); break;
+        case WAR_DIRECTION_WEST:       logDebug("DIRECTION_WEST\n");       break;
+        case WAR_DIRECTION_NORTH_WEST: logDebug("DIRECTION_NORTH_WEST\n"); break;
+        default:                       logError("Unkown direction\n");     break;
     }
 }

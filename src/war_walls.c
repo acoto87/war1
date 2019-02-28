@@ -85,8 +85,6 @@ void addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
     s32 x = x1;
     s32 y = y1;
 
-    WarWallPiece piece;
-
     while (x != x2)
     {
         WarWallPieceListAdd(pieces, createWallPiece(x, y, player));

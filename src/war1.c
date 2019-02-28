@@ -8,19 +8,32 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 #include <math.h>
 
 // #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
 
+#if defined(_WIN32) || defined(_WIN64)
 #include <glew.h>
+#else
+#include <glad/glad.h>
+#endif
 
+#if defined(_WIN32) || defined(_WIN64)
 #define GLFW_DLL
+#endif
+
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include "nanovg.c"
 #define NVG_DISABLE_CULL_FACE
+#if defined(_WIN32) || defined(_WIN64)
 #define NANOVG_GL3_IMPLEMENTATION
+#else
+#define NANOVG_GLES2_IMPLEMENTATION
+#endif
 #include "nanovg_gl.h"
 
 #if _DEBUG
@@ -40,9 +53,9 @@
 
 #include "log.h"
 #include "utils.h"
+#include "war_math.h"
 #include "io.h"
 #include "glutils.h"
-#include "war_math.h"
 #include "war_types.h"
 #include "war.h"
 #include "war_database.h"
@@ -78,27 +91,29 @@
 #include "war_map.c"
 #include "war_game.c"
 
-internal void glfwErrorCallback(int error, const char* description)
+void glfwErrorCallback(int error, const char* description)
 {
-    logError("Error: %d, %s", error, description);
+    logError("Error: %d, %s\n", error, description);
 }
 
 int main(int argc, char *argv[]) 
 {
     srand(time(NULL));
 
+    initLog(LOG_SEVERITY_DEBUG);
+
     glfwSetErrorCallback(glfwErrorCallback);
 
     if (!glfwInit())
     {
-        logError("Error initializing GLFW!");
+        logError("Error initializing GLFW!\n");
         return -1;
     }
 
     WarContext context = {0};
     if (!initGame(&context))
     {
-        logError("Can't initialize the game!");
+        logError("Can't initialize the game!\n");
         return -1;
     }
 
@@ -119,7 +134,11 @@ int main(int argc, char *argv[])
         presentGame(&context);
     }
 
+#if defined(_WIN32) || defined(_WIN64)
     nvgDeleteGL3(context.gfx);
+#else
+    nvgDeleteGLES2(context.gfx);
+#endif
     glfwDestroyWindow(context.window);
     glfwTerminate();
 	return 0;

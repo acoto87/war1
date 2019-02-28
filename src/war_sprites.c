@@ -72,6 +72,12 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource)
             sprite = createSpriteFromFrames(context, frameWidth, frameHeight, frameCount, frames);
             break;
         }
+
+        default:
+        {
+            logWarning("Trying to load the resource of type %d as a sprite.\n", resource->type);
+            break;
+        }
     }
 
     return sprite;

@@ -38,7 +38,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
         s32 spriteIndex = unitData.resourceIndex;
         if (spriteIndex == 0)
         {
-            logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", corpseType);
+            logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", corpseType);
             spriteIndex = 279;
         }
         addSpriteComponentFromResource(context, corpse, spriteIndex);

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <stdio.h>
-#include <time.h>
-
 typedef enum
 {
     LOG_SEVERITY_CRITICAL,
@@ -17,15 +14,15 @@ typedef struct
     LogSeverity severity;
 } Log;
 
-static Log __log;
+Log __log__;
 
-inline void initLog(LogSeverity severity)
+void initLog(LogSeverity severity)
 {
-    __log = (Log){0};
-    __log.severity = severity;
+    __log__ = (Log){0};
+    __log__.severity = severity;
 }
 
-static int32_t __getFileNameIndex(const char* file)
+int32_t __getFileNameIndex(const char* file)
 {
     int32_t index = 0;
 
@@ -39,9 +36,9 @@ static int32_t __getFileNameIndex(const char* file)
     return index;
 }
 
-static void __logInternal(LogSeverity severity, const char* file, const int32_t line, const char* message, ...)
+void __logInternal(LogSeverity severity, const char* file, const int32_t line, const char* message, ...)
 {
-    if (severity <= __log.severity)
+    if (severity <= __log__.severity)
     {
         time_t t = time(NULL);
         struct tm* timeInfo = localtime(&t);
@@ -68,14 +65,12 @@ static void __logInternal(LogSeverity severity, const char* file, const int32_t 
         va_start(args, message);
         vprintf(message, args);
         va_end(args);
-
-        printf("\n");
     }
 }
 
-#define log(severity, message, ...) __logInternal(severity, __FILE__, __LINE__, message, __VA_ARGS__)
-#define logCritical(message, ...) __logInternal(LOG_SEVERITY_CRITICAL, __FILE__, __LINE__, message, __VA_ARGS__)
-#define logError(message, ...) __logInternal(LOG_SEVERITY_ERROR, __FILE__, __LINE__, message, __VA_ARGS__)
-#define logWarning(message, ...) __logInternal(LOG_SEVERITY_WARNING, __FILE__, __LINE__, message, __VA_ARGS__)
-#define logInfo(message, ...) __logInternal(LOG_SEVERITY_INFO, __FILE__, __LINE__, message, __VA_ARGS__)
-#define logDebug(message, ...) __logInternal(LOG_SEVERITY_DEBUG, __FILE__, __LINE__, message, __VA_ARGS__)
+#define log(severity, message, ...) __logInternal(severity, __FILE__, __LINE__, message, ##__VA_ARGS__)
+#define logCritical(message, ...) __logInternal(LOG_SEVERITY_CRITICAL, __FILE__, __LINE__, message, ##__VA_ARGS__)
+#define logError(message, ...) __logInternal(LOG_SEVERITY_ERROR, __FILE__, __LINE__, message, ##__VA_ARGS__)
+#define logWarning(message, ...) __logInternal(LOG_SEVERITY_WARNING, __FILE__, __LINE__, message, ##__VA_ARGS__)
+#define logInfo(message, ...) __logInternal(LOG_SEVERITY_INFO, __FILE__, __LINE__, message, ##__VA_ARGS__)
+#define logDebug(message, ...) __logInternal(LOG_SEVERITY_DEBUG, __FILE__, __LINE__, message, ##__VA_ARGS__)

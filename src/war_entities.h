@@ -2,7 +2,7 @@
 #define isEnemy(player) (player != 0 && !isNeutral(player))
 #define isHuman(player) (player == 0)
 
-inline s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armour)
+s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armour)
 {
     return minDamage + maxi(rndDamage - armour, 0);
 }
@@ -51,7 +51,7 @@ void addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
 bool hasWallPieceAtPosition(WarEntity* entity, s32 x, s32 y);
 WarWallPiece* getWallPieceAtPosition(WarEntity* entity, s32 x, s32 y);
 void removeWallPiece(WarEntity* entity, WarWallPiece* piece);
-void determineWallTypes(WarEntity* entity);
+void determineWallTypes(WarContext* context, WarEntity* entity);
 void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage);
 
 // Ruins

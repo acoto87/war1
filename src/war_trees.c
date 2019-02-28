@@ -76,7 +76,7 @@ void determineTreeTiles(WarContext* context, WarEntity* forest)
     }
 
     for (s32 i = invalidTrees.count - 1; i >= 0; i--)
-        WarRuinPieceListRemoveAt(trees, invalidTrees.items[i]);
+        WarTreeListRemoveAt(trees, invalidTrees.items[i]);
 
     s32ListFree(&invalidTrees);
 }

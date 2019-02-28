@@ -1,25 +1,30 @@
 bool initGame(WarContext* context)
 {
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+
+#if defined(_WIN32) || defined(_WIN64)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-    initLog(LOG_SEVERITY_DEBUG);
+#else
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+#endif
 
     context->globalScale = 3;
     context->globalSpeed = 1;
     context->originalWindowWidth = 320;
     context->originalWindowHeight = 200;
-    context->windowWidth = (u32)(context->originalWindowWidth * context->globalScale);
-    context->windowHeight = (u32)(context->originalWindowHeight * context->globalScale);
-    context->windowTitle = "War 1";
+    context->windowWidth = (s32)(context->originalWindowWidth * context->globalScale);
+    context->windowHeight = (s32)(context->originalWindowHeight * context->globalScale);
+    strcpy(context->windowTitle, "War 1");
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, NULL, NULL);
 
     if (!context->window)
     {
-        logError("GLFW window could not be created!");
+        logError("GLFW window could not be created!\n");
         glfwTerminate();
         return false;
     }
@@ -30,6 +35,7 @@ bool initGame(WarContext* context)
 
     glfwMakeContextCurrent(context->window);
 
+#if defined(_WIN32) || defined(_WIN64)
     glewExperimental = GL_TRUE;
     GLenum glewError = glewInit();
     if (glewError != GLEW_OK)
@@ -42,23 +48,33 @@ bool initGame(WarContext* context)
 
     // GLEW generates GL error because it calls glGetString(GL_EXTENSIONS), we'll consume it here.
 	glGetError();
+#else
+    gladLoadGLES2Loader((GLADloadproc) glfwGetProcAddress);
+#endif
 
+    glCheckOpenGLVersion();
+
+#if defined(_WIN32) || defined(_WIN64)
     context->gfx = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_DEBUG);
+#else
+    context->gfx = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_DEBUG);
+#endif
+
     if (!context->gfx) 
     {
-        logError("Could not init nanovg.");
+        logError("Could not init nanovg.\n");
         glfwDestroyWindow(context->window);
         glfwTerminate();
 		return -1;
 	}
 
     // load fonts
-    nvgCreateFont(context->gfx, "roboto-r", ".\\build\\Roboto-Regular.ttf");
+    nvgCreateFont(context->gfx, "roboto-r", "./build/Roboto-Regular.ttf");
 
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    context->warFilePath = ".\\build\\DATA.WAR";
+    context->warFilePath = "./build/DATA.WAR";
     context->warFile = loadWarFile(context->warFilePath);
 
     for (int i = 0; i < arrayLength(assets); ++i)
@@ -122,7 +138,7 @@ bool initGame(WarContext* context)
 
             default:
             {
-                logInfo("DB entries of type %d aren't handled yet", entry.type);
+                logInfo("DB entries of type %d aren't handled yet.\n", entry.type);
                 break;
             }
         }

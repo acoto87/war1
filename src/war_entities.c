@@ -287,7 +287,6 @@ void _renderRoad(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
-    WarTransformComponent transform = entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarRoadComponent* road = &entity->road;
 
@@ -339,7 +338,6 @@ void _renderWall(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
-    WarTransformComponent transform = entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarWallComponent* wall = &entity->wall;
 
@@ -409,7 +407,6 @@ void _renderRuin(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
-    WarTransformComponent transform = entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarRuinComponent* ruin = &entity->ruin;
 
@@ -463,9 +460,6 @@ void _renderRuin(WarContext* context, WarEntity* entity)
 
 void _renderForest(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
-    WarTransformComponent transform = entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarForestComponent* forest = &entity->forest;
 
@@ -495,7 +489,7 @@ void _renderForest(WarContext* context, WarEntity* entity)
                 s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
 
                 if (prevTileIndex != newTileIndex)
-                    logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", x, y, prevTileIndex, newTileIndex);
+                    logDebug("different tile index for tree (%d, %d), prev: %d, new: %d\n", x, y, prevTileIndex, newTileIndex);
 
                 setMapTileIndex(context, x, y, newTileIndex);
             }            
@@ -509,7 +503,6 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
 
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
-    WarUnitComponent* unit = &entity->unit;
     WarAnimationsComponent* animations = &entity->animations;
 
     // size of the original sprite
@@ -536,6 +529,8 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
 #endif
 
 #ifdef DEBUG_RENDER_UNIT_STATS
+    WarUnitComponent* unit = &entity->unit;
+
     rect spriteRect = getUnitSpriteRect(entity);
 
     char debugText[50];
@@ -582,15 +577,15 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
                 s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
                 assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
 
-                // size of the original sprite
-                vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
-
                 nvgSave(gfx);
 
                 nvgTranslate(gfx, anim->offset.x, anim->offset.y);
                 nvgScale(gfx, anim->scale.x, anim->scale.y);
 
 #ifdef DEBUG_RENDER_UNIT_ANIMATIONS
+                // size of the original sprite
+                vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+
                 nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
 #endif
 

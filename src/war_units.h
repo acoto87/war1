@@ -480,7 +480,7 @@ const WarBuildingStats buildingStats[] =
     { WAR_UNIT_GOLDMINE,                  0,     25500,              -1,     -1,     -1 },
 };
 
-inline WarUnitsData getUnitsData(WarUnitType type)
+WarUnitsData getUnitsData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(unitsData);
@@ -491,7 +491,7 @@ inline WarUnitsData getUnitsData(WarUnitType type)
     return unitsData[index];
 }
 
-inline WarWorkerData getWorkerData(WarUnitType type)
+WarWorkerData getWorkerData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(workersData);
@@ -502,7 +502,7 @@ inline WarWorkerData getWorkerData(WarUnitType type)
     return workersData[index];
 }
 
-inline WarBuildingData getBuildingsData(WarUnitType type)
+WarBuildingData getBuildingsData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(buildingsData);
@@ -513,7 +513,7 @@ inline WarBuildingData getBuildingsData(WarUnitType type)
     return buildingsData[index];
 }
 
-inline WarRoadsData getRoadsData(WarRoadPieceType type)
+WarRoadsData getRoadsData(WarRoadPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(roadsData);
@@ -524,7 +524,7 @@ inline WarRoadsData getRoadsData(WarRoadPieceType type)
     return roadsData[index];
 }
 
-inline WarWallsData getWallsData(WarWallPieceType type)
+WarWallsData getWallsData(WarWallPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(wallsData);
@@ -535,7 +535,7 @@ inline WarWallsData getWallsData(WarWallPieceType type)
     return wallsData[index];
 }
 
-inline WarRuinsData getRuinsData(WarRuinPieceType type)
+WarRuinsData getRuinsData(WarRuinPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(ruinsData);
@@ -546,7 +546,7 @@ inline WarRuinsData getRuinsData(WarRuinPieceType type)
     return ruinsData[index];
 }
 
-inline WarTreesData getTreesData(WarTreeTileType type)
+WarTreesData getTreesData(WarTreeTileType type)
 {
     s32 index = 0;
     s32 length = arrayLength(treesData);
@@ -557,7 +557,7 @@ inline WarTreesData getTreesData(WarTreeTileType type)
     return treesData[index];
 }
 
-inline WarUnitStats getUnitStats(WarUnitType type)
+WarUnitStats getUnitStats(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(unitStats);
@@ -568,7 +568,7 @@ inline WarUnitStats getUnitStats(WarUnitType type)
     return unitStats[index];
 }
 
-inline WarBuildingStats getBuildingStats(WarUnitType type)
+WarBuildingStats getBuildingStats(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(buildingStats);
@@ -585,7 +585,7 @@ inline WarBuildingStats getBuildingStats(WarUnitType type)
 #define isWall(entity) ((entity)->type == WAR_ENTITY_TYPE_WALL)
 #define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
 
-inline bool isDudeUnit(WarEntity* entity)
+bool isDudeUnit(WarEntity* entity)
 {
     if (!isUnit(entity))
         return false;
@@ -614,7 +614,7 @@ inline bool isDudeUnit(WarEntity* entity)
     }
 }
 
-inline bool isBuildingUnit(WarEntity* entity)
+bool isBuildingUnit(WarEntity* entity)
 {
     if (!isUnit(entity))
         return false;
@@ -647,7 +647,7 @@ inline bool isBuildingUnit(WarEntity* entity)
     }
 }
 
-inline bool getUnitRace(WarEntity* entity)
+bool getUnitRace(WarEntity* entity)
 {
     if (!isUnit(entity))
         return WAR_RACE_NEUTRAL;
@@ -706,7 +706,7 @@ inline bool getUnitRace(WarEntity* entity)
     }
 }
 
-inline WarUnitType getTownHallOfRace(WarRace race)
+WarUnitType getTownHallOfRace(WarRace race)
 {
     switch (race)
     {
@@ -716,7 +716,7 @@ inline WarUnitType getTownHallOfRace(WarRace race)
     }
 }
 
-inline vec2 getUnitSize(WarEntity* entity)
+vec2 getUnitSize(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -724,18 +724,18 @@ inline vec2 getUnitSize(WarEntity* entity)
     return vec2i(unit->sizex, unit->sizey);
 }
 
-inline vec2 getUnitFrameSize(WarEntity* entity)
+vec2 getUnitFrameSize(WarEntity* entity)
 {
     WarSpriteComponent* sprite = &entity->sprite;
     return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
 }
 
-inline rect getUnitFrameRect(WarEntity* entity)
+rect getUnitFrameRect(WarEntity* entity)
 {
     return rectv(VEC2_ZERO, getUnitFrameSize(entity));
 }
 
-inline vec2 getUnitSpriteSize(WarEntity* entity)
+vec2 getUnitSpriteSize(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -743,7 +743,7 @@ inline vec2 getUnitSpriteSize(WarEntity* entity)
     return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
 }
 
-inline rect getUnitSpriteRect(WarEntity* entity)
+rect getUnitSpriteRect(WarEntity* entity)
 {
     vec2 frameSize = getUnitFrameSize(entity);
     vec2 unitSize = getUnitSpriteSize(entity);
@@ -751,7 +751,7 @@ inline rect getUnitSpriteRect(WarEntity* entity)
     return rectv(pos, unitSize);
 }
 
-inline vec2 getUnitSpriteCenter(WarEntity* entity)
+vec2 getUnitSpriteCenter(WarEntity* entity)
 {
     vec2 frameSize = getUnitFrameSize(entity);
     vec2 unitSize = getUnitSpriteSize(entity);
@@ -759,7 +759,7 @@ inline vec2 getUnitSpriteCenter(WarEntity* entity)
     return vec2Addv(pos, vec2Half(unitSize));
 }
 
-inline vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
+vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
 {
     WarTransformComponent* transform = &entity->transform;
     vec2 spriteSize = getUnitSpriteSize(entity);
@@ -768,7 +768,7 @@ inline vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
     return inTiles ? vec2MapToTileCoordinates(position) : position;
 }
 
-inline void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
+void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
         position = vec2TileToMapCoordinates(position, true);
@@ -779,14 +779,14 @@ inline void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles
     transform->position = vec2Subv(position, unitCenter);
 }
 
-inline WarUnitDirection getUnitDirection(WarEntity* entity)
+WarUnitDirection getUnitDirection(WarEntity* entity)
 {
     assert(isUnit(entity));
 
     return entity->unit.direction;
 }
 
-internal WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
+WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
 {
     if (x < 0 && y < 0)
         return WAR_DIRECTION_NORTH_WEST;
@@ -810,14 +810,14 @@ internal WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
     return WAR_DIRECTION_NORTH;
 }
 
-inline void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
+void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
 {
     assert(isUnit(entity));
 
     entity->unit.direction = direction;
 }
 
-inline void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
+void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
 {
     assert(isUnit(entity));
 
@@ -825,7 +825,7 @@ inline void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
     setUnitDirection(entity, direction);
 }
 
-inline f32 getUnitActionScale(WarEntity* entity)
+f32 getUnitActionScale(WarEntity* entity)
 {
     assert(isUnit(entity));
 

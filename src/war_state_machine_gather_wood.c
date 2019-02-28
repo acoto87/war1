@@ -131,7 +131,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
         }
 
         // TODO: deliver wood here to the player!!
-        logDebug("wood delivered!");
+        logDebug("wood delivered!\n");
         
         // the unit arrive to the townhall, so now the unit go to wait state for some time to simulate the depositing
         // then need go back to the tree. for this the sprite of the unit need to be changed to the normal one.

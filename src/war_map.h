@@ -1,6 +1,6 @@
 #pragma once
 
-inline void addEntityToSelection(WarContext* context, WarEntityId id)
+void addEntityToSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
     assert(map);
@@ -10,7 +10,7 @@ inline void addEntityToSelection(WarContext* context, WarEntityId id)
         WarEntityIdListAdd(&map->selectedEntities, id);
 }
 
-inline void removeEntityFromSelection(WarContext* context, WarEntityId id)
+void removeEntityFromSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
     assert(map);
@@ -18,7 +18,7 @@ inline void removeEntityFromSelection(WarContext* context, WarEntityId id)
     WarEntityIdListRemove(&map->selectedEntities, id);
 }
 
-inline vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
+vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
     assert(map);
@@ -31,7 +31,7 @@ inline vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
     return v;
 }
 
-inline vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
+vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
     assert(map);
@@ -47,7 +47,7 @@ inline vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
     return v;
 }
 
-inline rect rectScreenToMapCoordinates(WarContext* context, rect r)
+rect rectScreenToMapCoordinates(WarContext* context, rect r)
 {
     WarMap* map = context->map;
     assert(map);
@@ -60,7 +60,7 @@ inline rect rectScreenToMapCoordinates(WarContext* context, rect r)
     return r;
 }
 
-inline vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
+vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
     assert(map);
@@ -70,7 +70,7 @@ inline vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
     return v;
 }
 
-inline rect rectMapToScreenCoordinates(WarContext* context, rect r)
+rect rectMapToScreenCoordinates(WarContext* context, rect r)
 {
     WarMap* map = context->map;
     assert(map);
@@ -80,14 +80,14 @@ inline rect rectMapToScreenCoordinates(WarContext* context, rect r)
     return r;
 }
 
-inline vec2 vec2MapToTileCoordinates(vec2 v)
+vec2 vec2MapToTileCoordinates(vec2 v)
 {
     v.x = floorf(v.x / MEGA_TILE_WIDTH);
     v.y = floorf(v.y / MEGA_TILE_HEIGHT);
     return v;
 }
 
-inline vec2 vec2TileToMapCoordinates(vec2 v, bool centeredInTile)
+vec2 vec2TileToMapCoordinates(vec2 v, bool centeredInTile)
 {
     v.x *= MEGA_TILE_WIDTH;
     v.y *= MEGA_TILE_HEIGHT;
@@ -101,5 +101,5 @@ inline vec2 vec2TileToMapCoordinates(vec2 v, bool centeredInTile)
     return v;
 }
 
-inline s32 getMapTileIndex(WarContext* context, s32 x, s32 y);
-inline void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile);
+s32 getMapTileIndex(WarContext* context, s32 x, s32 y);
+void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile);

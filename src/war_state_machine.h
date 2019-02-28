@@ -61,7 +61,7 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 
 #define setDelay(state, seconds) ((state)->delay = (seconds))
 
-inline bool isInsideBuilding(WarEntity* entity)
+bool isInsideBuilding(WarEntity* entity)
 {
     if (isGatheringGold(entity))
     {

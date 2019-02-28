@@ -1,3 +1,5 @@
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 #define clamp(x, a, b) max(min(x, b), a)
 
 /* 
@@ -40,19 +42,19 @@
 //  *
 //  * Return: an absolute value of x.
 //  */
-// #define abs(x)	__abs_choose_expr(x, long long,				\
-// 		__abs_choose_expr(x, long,				\
-// 		__abs_choose_expr(x, int,				\
-// 		__abs_choose_expr(x, short,				\
-// 		__abs_choose_expr(x, char,				\
-// 		__builtin_choose_expr(					\
-// 			__builtin_types_compatible_p(typeof(x), char),	\
-// 			(char)({ signed char __x = (x); __x<0?-__x:__x; }), \
+// #define abs(x)	__abs_choose_expr(x, long long,				(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 		__abs_choose_expr(x, long,				(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 		__abs_choose_expr(x, int,				(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 		__abs_choose_expr(x, short,				(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 		__abs_choose_expr(x, char,				(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 		__builtin_choose_expr(					(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 			__builtin_types_compatible_p(typeof(x), char),	(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 			(char)({ signed char __x = (x); __x<0?-__x:__x; }), (A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 			((void)0)))))))
 
-// #define __abs_choose_expr(x, type, other) __builtin_choose_expr(	\
-// 	__builtin_types_compatible_p(typeof(x),   signed type) ||	\
-// 	__builtin_types_compatible_p(typeof(x), unsigned type),		\
+// #define __abs_choose_expr(x, type, other) __builtin_choose_expr(	(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 	__builtin_types_compatible_p(typeof(x),   signed type) ||	(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 	__builtin_types_compatible_p(typeof(x), unsigned type),		(A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 	({ signed type __x = (x); __x < 0 ? -__x : __x; }), other)
 
 // /*
@@ -67,7 +69,7 @@
 //  *   constant expressions (to avoid tripping VLA warnings in stack
 //  *   allocation usage).
 //  */
-// #define __typecheck(x, y) \
+// #define __typecheck(x, y) (A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 		(!!(sizeof((typeof(x) *)1 == (typeof(y) *)1)))
 
 // /*
@@ -75,25 +77,25 @@
 //  * a constant expression, most importantly without evaluating the argument.
 //  * Glory to Martin Uecker <Martin.Uecker@med.uni-goettingen.de>
 //  */
-// #define __is_constexpr(x) \
+// #define __is_constexpr(x) (A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 	(sizeof(int) == sizeof(*(8 ? ((void *)((long)(x) * 0l)) : (int *)8)))
 
-// #define __no_side_effects(x, y) \
+// #define __no_side_effects(x, y) (A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 		(__is_constexpr(x) && __is_constexpr(y))
 
-// #define __safe_cmp(x, y) \
+// #define __safe_cmp(x, y) (A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 		(__typecheck(x, y) && __no_side_effects(x, y))
 
 // #define __cmp(x, y, op)	((x) op (y) ? (x) : (y))
 
-// #define __cmp_once(x, y, unique_x, unique_y, op) ({	\
-// 		typeof(x) unique_x = (x);		\
-// 		typeof(y) unique_y = (y);		\
+// #define __cmp_once(x, y, unique_x, unique_y, op) ({	(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 		typeof(x) unique_x = (x);		(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 		typeof(y) unique_y = (y);		(A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 		__cmp(unique_x, unique_y, op); })
 
-// #define __careful_cmp(x, y, op) \
-// 	__builtin_choose_expr(__safe_cmp(x, y), \
-// 		__cmp(x, y, op), \
+// #define __careful_cmp(x, y, op) (A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 	__builtin_choose_expr(__safe_cmp(x, y), (A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 		__cmp(x, y, op), (A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 		__cmp_once(x, y, __UNIQUE_ID(__x), __UNIQUE_ID(__y), op))
 
 // /**
@@ -131,9 +133,9 @@
 //  * @x: value1
 //  * @y: value2
 //  */
-// #define min_not_zero(x, y) ({			\
-// 	typeof(x) __x = (x);			\
-// 	typeof(y) __y = (y);			\
+// #define min_not_zero(x, y) ({			(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 	typeof(x) __x = (x);			(A BACKLASH HERE TO MAKE THE MACRO WORK)
+// 	typeof(y) __y = (y);			(A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 	__x == 0 ? __y : ((__y == 0) ? __x : min(__x, __y)); })
 
 // /**
@@ -200,7 +202,7 @@
 //  * @a: first value
 //  * @b: second value
 //  */
-// #define swap(a, b) \
+// #define swap(a, b) (A BACKLASH HERE TO MAKE THE MACRO WORK)
 // 	do { typeof(a) __tmp = (a); (a) = (b); (b) = __tmp; } while (0)
 
 // /* This counts to 12. Any more, it will return 13th argument. */
@@ -226,164 +228,165 @@ typedef struct
 #define VEC2_DOWN ((vec2){0.0f, 1.0f})
 
 #define vec2IsZero(v) ((v).x == 0.0f && (v).y == 0.0f)
+#define vec2IsOne(v) ((v).x == 1.0f && (v).y == 1.0f)
 
-inline vec2 vec2f(f32 x, f32 y)
+vec2 vec2f(f32 x, f32 y)
 {
     return (vec2){x, y};
 }
 
-inline vec2 vec2i(s32 x, s32 y)
+vec2 vec2i(s32 x, s32 y)
 {
     return (vec2){(f32)x, (f32)y};
 }
 
-inline vec2 vec2Addv(vec2 a, vec2 b)
+vec2 vec2Addv(vec2 a, vec2 b)
 {
     return (vec2){a.x + b.x, a.y + b.y};
 }
 
-inline vec2 vec2Addi(vec2 v, s32 x)
+vec2 vec2Addi(vec2 v, s32 x)
 {
     return (vec2){v.x + x, v.y + x};
 }
 
-inline vec2 vec2Addf(vec2 v, f32 x)
+vec2 vec2Addf(vec2 v, f32 x)
 {
     return (vec2){v.x + x, v.y + x};
 }
 
-inline vec2 vec2Subv(vec2 a, vec2 b)
+vec2 vec2Subv(vec2 a, vec2 b)
 {
     return (vec2){a.x - b.x, a.y - b.y};
 }
 
-inline vec2 vec2Subi(vec2 v, s32 x)
+vec2 vec2Subi(vec2 v, s32 x)
 {
     return (vec2){v.x - x, v.y - x};
 }
 
-inline vec2 vec2Subf(vec2 v, f32 x)
+vec2 vec2Subf(vec2 v, f32 x)
 {
     return (vec2){v.x - x, v.y - x};
 }
 
-inline vec2 vec2Mulf(vec2 v, f32 a)
+vec2 vec2Mulf(vec2 v, f32 a)
 {
     return (vec2){v.x * a, v.y * a};
 }
 
-inline vec2 vec2Muli(vec2 v, s32 a)
+vec2 vec2Muli(vec2 v, s32 a)
 {
     return (vec2){v.x * (f32)a, v.y * (f32)a};
 }
 
-inline vec2 vec2Mulv(vec2 a, vec2 b)
+vec2 vec2Mulv(vec2 a, vec2 b)
 {
     return (vec2){a.x * b.x, a.y * b.y};
 }
 
-inline vec2 vec2Half(vec2 a)
+vec2 vec2Half(vec2 a)
 {
     return (vec2){a.x * 0.5f, a.y * 0.5f};
 }
 
-inline vec2 vec2Translatef(vec2 v, f32 x, f32 y)
+vec2 vec2Translatef(vec2 v, f32 x, f32 y)
 {
     return (vec2){v.x + x, v.y + y};
 }
 
-inline vec2 vec2Translatei(vec2 v, s32 x, s32 y)
+vec2 vec2Translatei(vec2 v, s32 x, s32 y)
 {
     return (vec2){v.x + (f32)x, v.y + (f32)y};
 }
 
-inline vec2 vec2Scalef(vec2 v, f32 scale)
+vec2 vec2Scalef(vec2 v, f32 scale)
 {
     return (vec2){v.x * scale, v.y * scale};
 }
 
-inline vec2 vec2Scalei(vec2 v, s32 scale)
+vec2 vec2Scalei(vec2 v, s32 scale)
 {
     return (vec2){v.x * (f32)scale, v.y * (f32)scale};
 }
 
-inline vec2 vec2Scalev(vec2 v, vec2 scale)
+vec2 vec2Scalev(vec2 v, vec2 scale)
 {
     return (vec2){v.x * scale.x, v.y * scale.y};
 }
 
-inline vec2 vec2Inverse(vec2 v)
+vec2 vec2Inverse(vec2 v)
 {
     return (vec2){-v.x, -v.y};
 }
 
-inline f32 vec2LengthSqr(vec2 v)
+f32 vec2LengthSqr(vec2 v)
 {
     return v.x * v.x + v.y * v.y;
 }
 
-inline f32 vec2Length(vec2 v)
+f32 vec2Length(vec2 v)
 {
     return sqrtf(vec2LengthSqr(v));
 }
 
-inline f32 vec2DistanceSqr(vec2 v1, vec2 v2)
+f32 vec2DistanceSqr(vec2 v1, vec2 v2)
 {
     f32 xx = (v1.x - v2.x);
     f32 yy = (v1.y - v2.y);
     return xx * xx + yy * yy;
 }
 
-inline f32 vec2Distance(vec2 v1, vec2 v2)
+f32 vec2Distance(vec2 v1, vec2 v2)
 {
     return sqrtf(vec2DistanceSqr(v1, v2));
 }
 
-inline f32 vec2DistanceInTiles(vec2 v1, vec2 v2)
+f32 vec2DistanceInTiles(vec2 v1, vec2 v2)
 {
     vec2 diff = vec2Subv(v1, v2);
     return maxf(absf(diff.x), absf(diff.y));
 }
 
-inline vec2 vec2Normalize(vec2 v)
+vec2 vec2Normalize(vec2 v)
 {
     f32 len = vec2Length(v);
     return len != 0 ? vec2Scalef(v, 1 / len) : VEC2_ZERO;
 }
 
-inline vec2 vec2Clampf(vec2 v, f32 a, f32 b)
+vec2 vec2Clampf(vec2 v, f32 a, f32 b)
 {
     return (vec2){clamp(v.x, a, b), clamp(v.y, a, b)};
 }
 
-inline vec2 vec2Clampi(vec2 v, s32 a, s32 b)
+vec2 vec2Clampi(vec2 v, s32 a, s32 b)
 {
     return (vec2){clamp(v.x, (f32)a, (f32)b), clamp(v.y, (f32)a, (f32)b)};
 }
 
-inline vec2 vec2Clampv(vec2 v, vec2 a, vec2 b)
+vec2 vec2Clampv(vec2 v, vec2 a, vec2 b)
 {
     return (vec2){clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y)};
 }
 
-inline vec2 vec2Floor(vec2 v)
+vec2 vec2Floor(vec2 v)
 {
     return (vec2){floorf(v.x), floorf(v.y)};
 }
 
-inline vec2 vec2Ceil(vec2 v)
+vec2 vec2Ceil(vec2 v)
 {
     return (vec2){ceilf(v.x), ceilf(v.y)};
 }
 
-inline vec2 vec2Round(vec2 v)
+vec2 vec2Round(vec2 v)
 {
     return (vec2){roundf(v.x), roundf(v.y)};
 }
 
-inline void vec2Print(vec2 v)
+void vec2Print(vec2 v)
 {
-    logDebug("(%f, %f)", v.x, v.y);
+    logDebug("(%f, %f)\n", v.x, v.y);
 }
 
 /*
@@ -397,44 +400,44 @@ typedef struct
 
 #define RECT_EMPTY ((rect){0.0f, 0.0f, 0.0f, 0.0f})
 
-inline rect rectf(f32 x, f32 y, f32 width, f32 height)
+rect rectf(f32 x, f32 y, f32 width, f32 height)
 {
     return (rect){x, y, width, height};
 }
 
-inline rect recti(s32 x, s32 y, s32 width, s32 height)
+rect recti(s32 x, s32 y, s32 width, s32 height)
 {
     return (rect){(f32)x, (f32)y, (f32)width, (f32)height};
 }
 
-inline rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2)
+rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2)
 {
     return rectf(minf(x1, x2), minf(y1, y2), absf(x1 - x2), absf(y1 - y2));
 }
 
-inline rect rectv(vec2 pos, vec2 size)
+rect rectv(vec2 pos, vec2 size)
 {
     return (rect){pos.x, pos.y, size.x, size.y};
 }
 
-inline rect rects(vec2 size)
+rect rects(vec2 size)
 {
     return (rect){0.0f, 0.0f, size.x, size.y};
 }
 
-inline bool rectContainsf(rect r, f32 x, f32 y)
+bool rectContainsf(rect r, f32 x, f32 y)
 {
     return x >= r.x && x <= r.x + r.width &&
            y >= r.y && y <= r.y + r.height;
 }
 
-inline bool rectIntersects(rect r1, rect r2)
+bool rectIntersects(rect r1, rect r2)
 {
     return !(r1.x + r1.width < r2.x || r1.x > r2.x + r2.width ||
              r1.y + r1.height < r2.y || r1.y > r2.y + r2.height);
 }
 
-inline rect rectScalef(rect r, f32 scale)
+rect rectScalef(rect r, f32 scale)
 {
     r.x *= scale;
     r.y *= scale;
@@ -443,7 +446,7 @@ inline rect rectScalef(rect r, f32 scale)
     return r;
 }
 
-inline rect rectTranslatef(rect r, f32 x, f32 y)
+rect rectTranslatef(rect r, f32 x, f32 y)
 {
     r.x += x;
     r.y += y;
@@ -493,7 +496,7 @@ vec2 getClosestPointOnRect(vec2 p, rect r)
     return p;
 }
 
-inline void rectPrint(rect r)
+void rectPrint(rect r)
 {
     printf("(%f, %f, %f, %f)\n", r.x, r.y, r.width, r.height);
 }

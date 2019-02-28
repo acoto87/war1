@@ -33,10 +33,17 @@ internal s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
     return node1.fScore - node2.fScore;
 }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 internal s32 compareGScore(const WarMapNode node1, const WarMapNode node2)
 {
     return node1.gScore - node2.gScore;
 }
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 internal s32 manhattanDistance(const WarMapNode node1, const WarMapNode node2)
 {
@@ -50,7 +57,7 @@ internal s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
     return xx * xx + yy * yy;
 }
 
-internal s32 hashMapNode(const s32 key)
+internal u32 hashMapNode(const s32 key)
 {
     return key;
 }
@@ -361,7 +368,7 @@ WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 
         case PATH_FINDING_ASTAR: return astar(finder, startX, startY, endX, endY);
         default:
         {
-            logWarning("Unkown path finding type %d, defaulting to %d", finder.type, PATH_FINDING_ASTAR);
+            logWarning("Unkown path finding type %d, defaulting to %d\n", finder.type, PATH_FINDING_ASTAR);
             return astar(finder, startX, startY, endX, endY);
         }
     }

@@ -1,3 +1,23 @@
+#pragma once
+
+void glCheckOpenGLVersion()
+{
+    const uchar* vendor = glGetString(GL_VENDOR);
+    printf("Vendor: %s\n", vendor);
+
+    const uchar* renderer = glGetString(GL_RENDERER);
+    printf("Renderer: %s\n", renderer);
+
+    const uchar* version = glGetString(GL_VERSION);
+    printf("Version: %s\n", version);
+
+    const uchar* glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
+    printf("GLSL Version: %s\n", glslVersion);
+
+    const uchar* extensions = glGetString(GL_EXTENSIONS);
+    printf("Extensions: %s\n", extensions);
+}
+
 GLenum glCheckError_(const char *file, int line)
 {
     GLenum errorCode = glGetError();
@@ -81,14 +101,14 @@ void printShaderLog(GLuint shader)
     }
 }
 
-inline bool checkShaderCompilationStatus(GLuint shader)
+bool checkShaderCompilationStatus(GLuint shader)
 {
     GLint shaderCompiled = GL_FALSE;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &shaderCompiled);
     return (shaderCompiled == GL_TRUE);
 }
 
-inline bool checkProgramLinkStatus(GLuint program)
+bool checkProgramLinkStatus(GLuint program)
 {
     GLint programSuccess = GL_TRUE;
     glGetProgramiv(program, GL_LINK_STATUS, &programSuccess);
@@ -114,7 +134,7 @@ GLuint loadShaderFromFile(char *shaderFilePath, GLenum shaderType)
         return 0;
     }
 
-    const uchar *shaderSource = shaderFile->contents;
+    const char *shaderSource = (const char*)shaderFile->contents;
     
     glShaderSource(shader, 1, &shaderSource, NULL);
     // glCheckError();

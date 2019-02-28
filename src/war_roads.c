@@ -85,8 +85,6 @@ void addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
     s32 x = x1;
     s32 y = y1;
 
-    WarRoadPiece piece;
-
     while (x != x2)
     {
         WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));

@@ -99,7 +99,7 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
         }
 
         // TODO: deliver gold here to the player!!
-        logDebug("gold delivered!");
+        logDebug("gold delivered!\n");
 
         // the unit arrive to the townhall, so now the unit go to wait state for some time to simulate the depositing
         // then need go back to the goldmine. for this the sprite of the unit need to be changed to the normal one.

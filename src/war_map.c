@@ -1,4 +1,4 @@
-inline s32 getMapTileIndex(WarContext* context, s32 x, s32 y)
+s32 getMapTileIndex(WarContext* context, s32 x, s32 y)
 {
     WarMap* map = context->map;
 
@@ -14,7 +14,7 @@ inline s32 getMapTileIndex(WarContext* context, s32 x, s32 y)
     return levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
 }
 
-inline void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
+void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
 {
     WarMap* map = context->map;
 
@@ -329,7 +329,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             s32 spriteIndex = unitData.resourceIndex;
             if (spriteIndex == 0)
             {
-                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", startUnit.type);
+                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", startUnit.type);
                 spriteIndex = 279;
             }
             addSpriteComponentFromResource(context, entity, spriteIndex);
@@ -607,7 +607,6 @@ void updateTreesEdit(WarContext* context)
 
 void updateRoadsEdit(WarContext* context)
 {
-    WarMap* map = context->map;
     WarInput* input = &context->input;
 
     if (wasKeyPressed(input, WAR_KEY_R))
@@ -644,7 +643,6 @@ void updateRoadsEdit(WarContext* context)
 
 void updateWallsEdit(WarContext* context)
 {
-    WarMap* map = context->map;
     WarInput* input = &context->input;
 
     if (wasKeyPressed(input, WAR_KEY_W))
@@ -689,7 +687,6 @@ void updateWallsEdit(WarContext* context)
 
 void updateRuinsEdit(WarContext* context)
 {
-    WarMap* map = context->map;
     WarInput* input = &context->input;
 
     if (wasKeyPressed(input, WAR_KEY_U))
@@ -952,7 +949,6 @@ void renderMap(WarContext *context)
     WarMap *map = context->map;
     if (!map) return;
 
-    WarInput* input = &context->input;
     NVGcontext* gfx = context->gfx;
 
     WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
@@ -974,7 +970,10 @@ void renderMap(WarContext *context)
             WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
             assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-            NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+            f32 ct = glfwGetTime();
+
+            // NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+            NVGimageGridBatch* batch = nvgBeginImageGridBatch(gfx, map->sprite.image, MAP_TILES_WIDTH, MAP_TILES_HEIGHT);
 
             for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
             {
@@ -992,13 +991,20 @@ void renderMap(WarContext *context)
 
                     rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                     rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+
+                    // nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+                    nvgRenderGridBatchImage(gfx, batch, rs, rd, VEC2_ONE, x, y);
 
                     nvgRestore(gfx);
                 }
             }
 
-            nvgEndImageBatch(gfx, batch);
+            // nvgEndImageBatch(gfx, batch);
+            nvgEndImageGridBatch(gfx, batch);
+
+            ct = glfwGetTime() - ct;
+
+            // logInfo("Render terrain time: ct: %.4f\n", ct);
         }
 
         // render roads
@@ -1153,15 +1159,15 @@ void renderMap(WarContext *context)
                     s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
                     assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
 
-                    // size of the original sprite
-                    vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
-
                     nvgSave(gfx);
 
                     nvgTranslate(gfx, anim->offset.x, anim->offset.y);
                     nvgScale(gfx, anim->scale.x, anim->scale.y);
 
     #ifdef DEBUG_RENDER_MAP_ANIMATIONS
+                    // size of the original sprite
+                    vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+
                     nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
     #endif
 
@@ -1297,7 +1303,7 @@ void renderMap(WarContext *context)
             rect r = recti(map->mapPanel.x + 2, map->mapPanel.y + 2, 30, 50);
             nvgFillRect(gfx, r, nvgRGBA(50, 50, 50, 200));
 
-            NVGFontParams params = nvgCreateFontParams("roboto-r", 5.0f, nvgRGBA(200, 200, 200, 255));
+            NVGfontParams params = nvgCreateFontParams("roboto-r", 5.0f, nvgRGBA(200, 200, 200, 255));
             nvgMultilineText(gfx, debugText, r.x, r.y, r.width, r.height, params);
         }
 

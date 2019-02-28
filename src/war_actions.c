@@ -324,7 +324,16 @@ void addUnitActions(WarEntity* entity)
     WarUnitFrameNumbers frameNumbers_5_5_2_3 = getFrameNumbers(5, arrayArg(s32, 5, 2, 3));
     WarUnitFrameNumbers frameNumbers_5_3_5_3 = getFrameNumbers(5, arrayArg(s32, 3, 5, 3));
     WarUnitFrameNumbers frameNumbers_5_2_5_3 = getFrameNumbers(5, arrayArg(s32, 2, 5, 3));
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
     WarUnitFrameNumbers frameNumbers_5_4_3_3 = getFrameNumbers(5, arrayArg(s32, 4, 3, 3));
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+    
     WarUnitFrameNumbers frameNumbers_5_5_5_0 = getFrameNumbers(5, arrayArg(s32, 5, 5, 0));
 
     s32 walkSpeed = 6;
@@ -856,7 +865,7 @@ void addUnitActions(WarEntity* entity)
 
         default:
         {
-            logError("Type doesn't have any defined actions: %d", unit->type);
+            logError("Type doesn't have any defined actions: %d\n", unit->type);
             break;
         }
     }
@@ -895,13 +904,13 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
     s32 actionIndex = findAction(entity, type);
     if (actionIndex < 0)
     {
-        logError("Entity of type %d doesn't have a %d animation. Defaulting to WAR_ACTION_TYPE_IDLE", entity->type, type);
+        logError("Entity of type %d doesn't have a %d animation. Defaulting to WAR_ACTION_TYPE_IDLE\n", entity->type, type);
         actionIndex = findAction(entity, WAR_ACTION_TYPE_IDLE);
     }
 
     if (actionIndex < 0)
     {
-        logError("Entity of type %d doesn't have a %d or %d animations", entity->type, type, WAR_ACTION_TYPE_IDLE);
+        logError("Entity of type %d doesn't have a %d or %d animations\n", entity->type, type, WAR_ACTION_TYPE_IDLE);
         return;
     }
 

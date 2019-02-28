@@ -137,7 +137,7 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
 
         default:
         {
-            logError("Unkown state %d for entity %d", state->type, entity->id);
+            logError("Unkown state %d for entity %d\n", state->type, entity->id);
             break;
         }
     }
@@ -218,7 +218,7 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
 
         default:
         {
-            logError("Unkown state %d for entity %d", state->type, entity->id);
+            logError("Unkown state %d for entity %d\n", state->type, entity->id);
             break;
         }
     }
@@ -324,7 +324,7 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
 
                 default:
                 {
-                    logError("Unkown state %d for entity %d", currentState->type, entity->id);
+                    logError("Unkown state %d for entity %d\n", currentState->type, entity->id);
                     break;
                 }
             }
@@ -404,7 +404,7 @@ void freeState(WarState* state)
 
         default:
         {
-            logError("Unkown state %d for entity %d", state->type);
+            logError("Unkown state %d for entity %d\n", state->type);
             break;
         }
     }

@@ -57,7 +57,7 @@
 shlDefineCreateArray(s32, s32)
 shlDefineFreeArray(s32, s32)
 
-internal bool equalsS32(const s32 a, const s32 b)
+bool equalsS32(const s32 a, const s32 b)
 {
     return a == b;
 }
@@ -67,7 +67,7 @@ shlDefineList(s32List, s32)
 
 #define s32ListDefaultOptions (s32ListOptions){0, equalsS32, NULL}
 
-internal bool equalsVec2(const vec2 v1, const vec2 v2)
+bool equalsVec2(const vec2 v1, const vec2 v2)
 {
     return v1.x == v2.x && v1.y == v2.y;
 }
@@ -275,7 +275,7 @@ typedef struct
     WarAnimationStatus status;
 } WarSpriteAnimation;
 
-internal bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
+bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
 {
     return strcmp(anim1->name, anim2->name) == 0;
 }
@@ -417,7 +417,7 @@ typedef struct
 //
 typedef u16 WarEntityId;
 
-internal bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
+bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
 {
     return id1 == id2;
 }
@@ -469,7 +469,7 @@ typedef struct
 #define WarRoadPieceEmpty (WarRoadPiece){0}
 #define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (player)})
 
-internal bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
+bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
 {
     return r1.type == r2.type && r1.player == r2.player &&
            r1.tilex == r2.tilex && r1.tiley == r2.tiley;
@@ -511,7 +511,7 @@ typedef struct
 #define WarWallPieceEmpty (WarWallPiece){0}
 #define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (player)})
 
-internal bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
+bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
 {
     return w1.type == w2.type && w1.player == w2.player &&
            w1.tilex == w2.tilex && w1.tiley == w2.tiley;
@@ -551,7 +551,7 @@ typedef struct
 #define WarRuinPieceEmpty (WarRuinPiece){0}
 #define createRuinPiece(x, y) ((WarRuinPiece){0, (x), (y)})
 
-internal bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
+bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
 {
     return r1.type == r2.type && 
            r1.tilex == r2.tilex && r1.tiley == r2.tiley;
@@ -596,7 +596,7 @@ typedef struct
 #define WarTreeEmpty (WarTree){0}
 #define createTree(x, y, amount) ((WarTree){0, (x), (y), (amount)})
 
-internal bool equalsTree(const WarTree t1, const WarTree t2)
+bool equalsTree(const WarTree t1, const WarTree t2)
 {
     return t1.tilex == t2.tilex && t1.tiley == t2.tiley;
 }
@@ -643,7 +643,7 @@ typedef struct
 
 #define WarUnitActionStepEmpty (WarUnitActionStep){WAR_ACTION_STEP_NONE}
 
-internal bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep step2)
+bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep step2)
 {
     return step1.type == step2.type && step1.param == step2.param;
 }
@@ -686,15 +686,20 @@ typedef struct
     WarUnitActionStepType lastSoundStep;
 } WarUnitAction;
 
-internal bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
+bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
 {
     return a1->type == a2->type;
+}
+
+void freeAction(WarUnitAction* a)
+{
+    free((void*)a);
 }
 
 shlDeclareList(WarUnitActionList, WarUnitAction*)
 shlDefineList(WarUnitActionList, WarUnitAction*)
 
-#define WarUnitActionListDefaultOptions (WarUnitActionListOptions){NULL, equalsAction, free}
+#define WarUnitActionListDefaultOptions (WarUnitActionListOptions){NULL, equalsAction, freeAction}
 
 typedef struct
 {
@@ -916,15 +921,20 @@ typedef struct
     WarAnimationsComponent animations;
 } WarEntity;
 
-internal inline bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
+bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
 {
     return e1->id == e2->id;
+}
+
+void freeEntity(WarEntity* e)
+{
+    free((void*)e);
 }
 
 shlDeclareList(WarEntityList, WarEntity*)
 shlDefineList(WarEntityList, WarEntity*)
 
-#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, free}
+#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, freeEntity}
 
 typedef enum
 {
@@ -1047,14 +1057,14 @@ typedef struct
     f32 globalScale;
     f32 globalSpeed;
 
-    u32 originalWindowWidth;
-    u32 originalWindowHeight;
-    u32 windowWidth;
-    u32 windowHeight;
-    u32 framebufferWidth;
-    u32 framebufferHeight;
+    s32 originalWindowWidth;
+    s32 originalWindowHeight;
+    s32 windowWidth;
+    s32 windowHeight;
+    s32 framebufferWidth;
+    s32 framebufferHeight;
     f32 devicePixelRatio;
-    char* windowTitle;
+    char windowTitle[256];
     GLFWwindow* window;
 
     char* warFilePath;

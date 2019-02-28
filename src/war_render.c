@@ -3,13 +3,20 @@
 #define NVG_GRAY_TRANSPARENT nvgRGBA(128, 128, 128, 128)
 #define NVG_GREEN_SELECTION nvgRGBA(0, 199, 0, 255)
 
+void printVertex(NVGvertex* v)
+{
+    printf("(%.2f, %.2f, %.4f, %.4f)\n", v->x, v->y, v->u, v->v);
+}
+
 typedef struct
 {
-    s32 image;
-    s32 cimages;
-    s32 nvertices;
-    s32 cvertices;
-    NVGvertex *vertices;
+    s32 image;              // the id of the source image
+    s32 cimages;            // how many images are going to be rendered
+    s32 iw;                 // width of the source image in pixels
+    s32 ih;                 // height of the source image in pixels
+    s32 nvertices;          // actual count of vertices
+    s32 cvertices;          // total count of vertices
+    NVGvertex* vertices;    // the vertices
 } NVGimageBatch;
 
 NVGimageBatch* nvgBeginImageBatch(NVGcontext* gfx, s32 image, s32 cimages)
@@ -20,66 +27,58 @@ NVGimageBatch* nvgBeginImageBatch(NVGcontext* gfx, s32 image, s32 cimages)
     batch->nvertices = 0;
     batch->cvertices = cimages * 6;
     batch->vertices = (NVGvertex *)xcalloc(batch->cvertices, sizeof(NVGvertex));
+
+    nvgImageSize(gfx, batch->image, &batch->iw, &batch->ih);
+
     return batch;
 }
 
 void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, rect rs, rect rd, vec2 scale)
 {
     f32 x, y;
-    s32 iw, ih;
-    f32 tx, ty;
-    f32 sx, sy;
-    NVGstate *state;
-    NVGvertex *vertex;
+    NVGvertex* vertex;
     
-    if (batch->nvertices >= batch->cvertices)
+    if (batch->nvertices + 6 > batch->cvertices)
     {
-        fprintf(stderr, "Can't print more images in this batch: (%d, %d)\n", batch->nvertices, batch->cvertices);
+        logError("Can't print more images in this batch: (nvertices: %d, cvertices: %d)\n", batch->nvertices, batch->cvertices);
         return;
     }
 
-    state = nvg__getState(gfx);
-    
-    nvgImageSize(gfx, batch->image, &iw, &ih);
+    NVGstate* state = nvg__getState(gfx);
 
-    tx = rs.x / iw;
-    ty = rs.y / ih;
+    // if the scale is (1.0, 1.0) then these transformations aren't necessary
+    if (!vec2IsOne(scale))
+    {
+        nvgTranslate(gfx, halff(rd.width), halff(rd.height));
+        nvgScale(gfx, scale.x, scale.y);
+        nvgTranslate(gfx, -halff(rd.width), -halff(rd.height));
+    }
 
-    nvgTranslate(gfx, halff(rd.width), halff(rd.height));
-    nvgScale(gfx, scale.x, scale.y);
-    nvgTranslate(gfx, -halff(rd.width), -halff(rd.height));
+    // positions of the four vertices
+    f32 px = rd.x;
+    f32 py = rd.y;
+    f32 pw = rd.x + rd.width;
+    f32 ph = rd.y + rd.height;
 
-    // first triangle
-    vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, rd.x, rd.y);
-    nvg__vset(vertex, x, y, tx, ty);
-    batch->nvertices++;
+    // tex-coords of the four vertices
+    f32 tx = rs.x / batch->iw;
+    f32 ty = rs.y / batch->ih;
+    f32 tw = rs.width / batch->iw;
+    f32 th = rs.height / batch->ih;
 
-    vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, rd.x, rd.y + rd.height);
-    nvg__vset(vertex, x, y, tx, ty + rs.height / ih);
-    batch->nvertices++;
+    f32 pxs[] = { px, px,      px + pw, px + pw, px,      px + pw };
+    f32 pys[] = { py, py + ph, py,      py,      py + ph, py + ph };
 
-    vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, rd.x + rd.width, rd.y);
-    nvg__vset(vertex, x, y, tx + rs.width / iw, ty);
-    batch->nvertices++;
+    f32 cxs[] = { tx, tx,      tx + tw, tx + tw, tx,      tx + tw };
+    f32 cys[] = { ty, ty + th, ty,      ty,      ty + th, ty + th };
 
-    // second triangle
-    vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, rd.x + rd.width, rd.y);
-    nvg__vset(vertex, x, y, tx + rs.width / iw, ty);
-    batch->nvertices++;
-
-    vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, rd.x, rd.y + rd.height);
-    nvg__vset(vertex, x, y, tx, ty + rs.height / ih);
-    batch->nvertices++;
-
-    vertex = &batch->vertices[batch->nvertices];
-    nvgTransformPoint(&x, &y, state->xform, rd.x + rd.width, rd.y + rd.height);
-    nvg__vset(vertex, x, y, tx + rs.width / iw, ty + rs.height / ih);
-    batch->nvertices++;
+    for (s32 i = 0; i < 6; i++)
+    {
+        vertex = &batch->vertices[batch->nvertices];
+        nvgTransformPoint(&x, &y, state->xform, pxs[i], pys[i]);
+        nvg__vset(vertex, x, y, cxs[i], cys[i]);
+        batch->nvertices++;    
+    }
 }
 
 void nvgEndImageBatch(NVGcontext* gfx, NVGimageBatch* batch)
@@ -91,7 +90,193 @@ void nvgEndImageBatch(NVGcontext* gfx, NVGimageBatch* batch)
     paint.innerColor.a *= state->alpha;
     paint.outerColor.a *= state->alpha;
 
-	gfx->params.renderTriangles(gfx->params.userPtr, &paint, state->compositeOperation, &state->scissor, batch->vertices, batch->nvertices);
+	gfx->params.renderTriangles(gfx->params.userPtr, 
+                                &paint, 
+                                state->compositeOperation,
+                                &state->scissor, 
+                                batch->vertices, 
+                                batch->nvertices);
+	gfx->drawCallCount++;
+	gfx->textTriCount += batch->nvertices/3;
+
+    free(batch->vertices);
+    free(batch);
+}
+
+typedef struct
+{
+    s32 image;				// the id of the source image
+    s32 cimages;			// how many images are going to be rendered
+	s32 iw;					// width of the source image in pixels
+	s32 ih;					// height of the source image in pixels
+	s32 gw;					// width of the grid in cells
+	s32 gh;					// height of the grid in cells
+    s32 nvertices;			// actual count of vertices
+    s32 cvertices;			// total count of vertices
+    NVGvertex* vertices;	// the vertices
+} NVGimageGridBatch;
+
+NVGimageGridBatch* nvgBeginImageGridBatch(NVGcontext* gfx, s32 image, s32 gw, s32 gh)
+{
+    NVGimageGridBatch* batch = (NVGimageGridBatch*)xmalloc(sizeof(NVGimageGridBatch));
+    batch->image = image;
+    batch->cimages = gw * gh;
+    batch->gw = gw;
+    batch->gh = gh;
+    batch->nvertices = 0;
+    batch->cvertices = batch->cimages * 6;
+    batch->vertices = (NVGvertex *)xcalloc(batch->cvertices, sizeof(NVGvertex));
+
+    nvgImageSize(gfx, batch->image, &batch->iw, &batch->ih);
+
+    return batch;
+}
+
+void nvgRenderGridBatchImage(NVGcontext* gfx, NVGimageGridBatch* batch, rect rs, rect rd, vec2 scale, s32 gx, s32 gy)
+{
+    f32 x, y;
+    NVGvertex *vertex;
+    
+    if (batch->nvertices + 6 > batch->cvertices)
+    {
+        fprintf(stderr, "Can't print more images in this batch: (%d, %d)\n", batch->nvertices, batch->cvertices);
+        return;
+    }
+
+    NVGstate* state = nvg__getState(gfx);
+
+    f32 tx = rs.x / batch->iw;
+    f32 ty = rs.y / batch->ih;
+
+    if (!vec2IsOne(scale))
+    {
+        nvgTranslate(gfx, halff(rd.width), halff(rd.height));
+        nvgScale(gfx, scale.x, scale.y);
+        nvgTranslate(gfx, -halff(rd.width), -halff(rd.height));
+    }
+
+    // first triangle
+	{
+		// first vertex
+		{
+			vertex = &batch->vertices[batch->nvertices];
+
+			if (gx == 0 && gy == 0)
+			{
+				nvgTransformPoint(&x, &y, state->xform, rd.x, rd.y);
+			}
+            else if (gx == 0)
+            {
+                s32 index = ((gy - 1) * batch->gw + gx) * 6 + 1;
+                x = batch->vertices[index].x;
+                y = batch->vertices[index].y;
+            }
+			else
+			{
+                s32 index = (gy * batch->gw + (gx - 1)) * 6 + 2;
+                x = batch->vertices[index].x;
+                y = batch->vertices[index].y;
+			}
+
+            nvg__vset(vertex, x, y, tx, ty);
+
+			batch->nvertices++;
+		}
+
+		// second vertex
+		{
+			vertex = &batch->vertices[batch->nvertices];
+
+			if (gx == 0)
+			{
+                nvgTransformPoint(&x, &y, state->xform, rd.x, rd.y + rd.height);
+			}
+			else
+			{
+                s32 index = (gy * batch->gw + (gx - 1)) * 6 + 5;
+                x = batch->vertices[index].x;
+                y = batch->vertices[index].y;
+			}
+
+            nvg__vset(vertex, x, y, tx, ty + rs.height / batch->ih);
+
+			batch->nvertices++;
+        }
+
+		// third vertex
+		{
+			vertex = &batch->vertices[batch->nvertices];
+
+			if (gy == 0)
+			{
+				nvgTransformPoint(&x, &y, state->xform, rd.x + rd.width, rd.y);
+			}
+			else
+			{
+                s32 index = ((gy - 1) * batch->gw + gx) * 6 + 5;
+                x = batch->vertices[index].x;
+                y = batch->vertices[index].y;
+			}
+
+            nvg__vset(vertex, x, y, tx + rs.width / batch->iw, ty);
+
+			batch->nvertices++;
+		}
+	}
+    
+    // second triangle
+    {
+		// first vertex
+		{
+			vertex = &batch->vertices[batch->nvertices];
+
+            s32 index = batch->nvertices - 1;
+            x = batch->vertices[index].x;
+            y = batch->vertices[index].y;
+
+            nvg__vset(vertex, x, y, tx + rs.width / batch->iw, ty);
+
+			batch->nvertices++;
+		}
+
+		// second vertex
+		{
+			vertex = &batch->vertices[batch->nvertices];
+
+            s32 index = batch->nvertices - 3;
+            x = batch->vertices[index].x;
+            y = batch->vertices[index].y;
+
+            nvg__vset(vertex, x, y, tx, ty + rs.height / batch->ih);
+
+			batch->nvertices++;
+		}
+
+		// third vertex
+		{
+			vertex = &batch->vertices[batch->nvertices];
+			nvgTransformPoint(&x, &y, state->xform, rd.x + rd.width, rd.y + rd.height);
+			nvg__vset(vertex, x, y, tx + rs.width / batch->iw, ty + rs.height / batch->ih);
+			batch->nvertices++;
+		}
+	}
+}
+
+void nvgEndImageGridBatch(NVGcontext* gfx, NVGimageGridBatch* batch)
+{
+    NVGstate* state = nvg__getState(gfx);
+    NVGpaint paint = state->fill;
+
+    paint.image = batch->image;
+    paint.innerColor.a *= state->alpha;
+    paint.outerColor.a *= state->alpha;
+
+	gfx->params.renderTriangles(gfx->params.userPtr, 
+                                &paint, 
+                                state->compositeOperation, 
+                                &state->scissor, 
+                                batch->vertices, 
+                                batch->nvertices);
 	gfx->drawCallCount++;
 	gfx->textTriCount += batch->nvertices/3;
 
@@ -169,11 +354,11 @@ typedef struct
     f32 fontSize;
     NVGcolor fontColor;
     s32 textAlign;
-} NVGFontParams;
+} NVGfontParams;
 
-#define nvgCreateFontParams(fontFace, fontSize, fontColor) ((NVGFontParams){(fontFace), (fontSize), (fontColor), 0})
+#define nvgCreateFontParams(fontFace, fontSize, fontColor) ((NVGfontParams){(fontFace), (fontSize), (fontColor), 0})
 
-void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGFontParams params)
+void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGfontParams params)
 {
     f32 fontSize = params.fontSize;
     if (fontSize == 0) fontSize = 8.0f;
@@ -195,7 +380,7 @@ void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f
     nvgRestore(gfx);
 }
 
-void nvgMultilineText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGFontParams params)
+void nvgMultilineText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGfontParams params)
 {
     f32 fontSize = params.fontSize;
     if (fontSize == 0) fontSize = 8.0f;

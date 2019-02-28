@@ -9,9 +9,6 @@ WarState* createPatrolState(WarContext* context, WarEntity* entity, s32 position
 
 void enterPatrolState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
-    
     if (state->patrol.positions.count <= 1)
     {
         if (!changeStateNextState(context, entity, state))
