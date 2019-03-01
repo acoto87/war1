@@ -1,6 +1,11 @@
-#pragma once
-
-#include "war_types.h"
+typedef struct
+{
+    WarStateType type;
+    void (*enterStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
+    void (*leaveStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
+    void (*updateStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
+    void (*freeStateFunc)(WarState* state);
+} WarStateDescriptor;
 
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type);
 WarState* createIdleState(WarContext* context, WarEntity* entity, bool lookAround);
@@ -12,8 +17,11 @@ WarState* createDeathState(WarContext* context, WarEntity* entity);
 WarState* createDamagedState(WarContext* context, WarEntity* entity);
 WarState* createCollapseState(WarContext* context, WarEntity* entity);
 WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime);
-WarState* createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId);
+WarState* createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId);
+WarState* createMiningState(WarContext* context, WarEntity* entity, WarEntityId goldmineId);
 WarState* createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 position);
+WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position);
+WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId);
 
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
 bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* state);
@@ -31,7 +39,10 @@ WarState* getNextState(WarEntity* entity, WarStateType type);
 #define getDamagedState(entity) getState(entity, WAR_STATE_DAMAGED)
 #define getCollapseState(entity) getState(entity, WAR_STATE_COLLAPSE)
 #define getGatherGoldState(entity) getState(entity, WAR_STATE_GOLD)
+#define getMiningState(entity) getState(entity, WAR_STATE_MINING)
 #define getGatherWoodState(entity) getState(entity, WAR_STATE_WOOD)
+#define getChoppingState(entity) getState(entity, WAR_STATE_CHOP)
+#define getDeliverState(entity) getState(entity, WAR_STATE_DELIVER)
 
 bool hasState(WarEntity* entity, WarStateType type);
 bool hasDirectState(WarEntity* entity, WarStateType type);
@@ -46,7 +57,10 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isDamaged(entity) hasState(entity, WAR_STATE_DAMAGED)
 #define isCollapsing(entity) hasState(entity, WAR_STATE_COLLAPSE)
 #define isGatheringGold(entity) hasState(entity, WAR_STATE_GOLD)
+#define isMining(entity) hasState(entity, WAR_STATE_MINING)
 #define isGatheringWood(entity) hasState(entity, WAR_STATE_WOOD)
+#define isChopping(entity) hasState(entity, WAR_STATE_CHOP)
+#define isDelivering(entity) hasState(entity, WAR_STATE_DELIVER)
 
 #define isGoingToIdle(entity) hasNextState(entity, WAR_STATE_IDLE)
 #define isGoingToMove(entity) hasNextState(entity, WAR_STATE_MOVE)
@@ -57,22 +71,22 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGoingToBeDamaged(entity) hasNextState(entity, WAR_STATE_DAMAGED)
 #define isGoingToCollapse(entity) hasNextState(entity, WAR_STATE_COLLAPSE)
 #define isGoingToGatherGold(entity) hasNextState(entity, WAR_STATE_GOLD)
+#define isGoingToMine(entity) hasNextState(entity, WAR_STATE_MINING)
 #define isGoingToGatherWood(entity) hasNextState(entity, WAR_STATE_WOOD)
+#define isGoingToChop(entity) hasNextState(entity, WAR_STATE_CHOP)
+#define isGoingToDeliver(entity) hasNextState(entity, WAR_STATE_DELIVER)
 
 #define setDelay(state, seconds) ((state)->delay = (seconds))
 
 bool isInsideBuilding(WarEntity* entity)
 {
-    if (isGatheringGold(entity))
-    {
-        WarState* gatherGold = getGatherGoldState(entity);
-        return gatherGold->gold.insideBuilding;
-    }
+    if (isMining(entity))
+        return true;
 
-    if(isGatheringWood(entity))
+    if(isDelivering(entity))
     {
-        WarState* gatherWood = getGatherWoodState(entity);
-        return gatherWood->wood.insideBuilding;
+        WarState* deliver = getDeliverState(entity);
+        return deliver->deliver.insideBuilding;
     }
 
     return false;

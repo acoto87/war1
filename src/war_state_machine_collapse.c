@@ -21,6 +21,7 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 
     WarEntity* ruins = createRuins(context);
     addRuinsPieces(context, ruins, position.x, position.y, unitSize.x);
+    determineRuinTypes(context, ruins);
     
     setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
     removeEntityFromSelection(context, entity->id);

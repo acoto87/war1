@@ -436,6 +436,7 @@ typedef enum
     WAR_ENTITY_TYPE_WALL,
     WAR_ENTITY_TYPE_RUIN,
     WAR_ENTITY_TYPE_FOREST,
+    WAR_ENTITY_TYPE_TEXT,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -735,7 +736,10 @@ typedef enum
     WAR_STATE_ATTACK,
     WAR_STATE_BUILD,
     WAR_STATE_GOLD,
+    WAR_STATE_MINING,
     WAR_STATE_WOOD,
+    WAR_STATE_CHOPPING,
+    WAR_STATE_DELIVER,
     WAR_STATE_DEATH,
     WAR_STATE_DAMAGED,
     WAR_STATE_COLLAPSE,
@@ -796,18 +800,33 @@ typedef struct _WarState
 
         struct
         {
-            s32 targetEntityId;
-            s32 direction;
-            bool insideBuilding;
+            s32 goldmineId;
         } gold;
+
+        struct
+        {
+            s32 goldmineId;
+            f32 miningTime;
+        } mine;
 
         struct
         {
             s32 forestId;
             vec2 position;
-            s32 direction;
-            bool insideBuilding;
         } wood;
+
+        struct
+        {
+            s32 forestId;
+            vec2 position;
+            f32 chopTime;
+        } chop;
+
+        struct
+        {
+            s32 townHallId;
+            bool insideBuilding;
+        } deliver;        
     };
 } WarState;
 
@@ -908,6 +927,22 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    char* name;
+} WarUIComponent;
+
+typedef struct
+{
+    bool enabled;
+    char* text;
+    char* font;
+    f32 fontSize;
+    f32 shadowBlur;
+    vec2 shadowOffset;
+} WarTextComponent;
+
+typedef struct
+{
+    bool enabled;
     WarEntityId id;
     WarEntityType type;
     WarTransformComponent transform;
@@ -919,6 +954,8 @@ typedef struct
     WarUnitComponent unit;
     WarStateMachineComponent stateMachine;
     WarAnimationsComponent animations;
+    WarUIComponent ui;
+    WarTextComponent text;
 } WarEntity;
 
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
@@ -953,8 +990,10 @@ typedef enum
 typedef struct
 {
     s32 index;
+    WarRace race;
     u32 gold;
     u32 wood;
+    u32 units;
 } WarPlayerInfo;
 
 typedef struct
@@ -1006,15 +1045,28 @@ typedef enum
 {
     WAR_KEY_CTRL,
     WAR_KEY_SHIFT,
+
     WAR_KEY_LEFT,
     WAR_KEY_RIGHT,
     WAR_KEY_DOWN,
     WAR_KEY_UP,
+
     WAR_KEY_P,
     WAR_KEY_T,
     WAR_KEY_R,
     WAR_KEY_U,
     WAR_KEY_W,
+
+    WAR_KEY_1,
+    WAR_KEY_2,
+    WAR_KEY_3,
+    WAR_KEY_4,
+    WAR_KEY_5,
+    WAR_KEY_6,
+    WAR_KEY_7,
+    WAR_KEY_8,
+    WAR_KEY_9,
+    WAR_KEY_0,
 
     WAR_KEY_COUNT
 } WarKeys;
@@ -1070,6 +1122,9 @@ typedef struct
     char* warFilePath;
     WarFile* warFile;
 
+    char* fontPath;
+    WarSprite fontSprite;
+    
     s32 staticEntityId;
 
     NVGcontext* gfx;

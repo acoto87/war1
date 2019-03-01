@@ -205,13 +205,12 @@ WarUnitAction* buildAttackAction(s32 nframes, s32 frames[], s32 attackSpeed, s32
     return action;
 }
 
-WarUnitAction* buildHarvestAction(s32 nframes, s32 frames[], s32 attackSpeed, WarUnitActionStepType attackSound, bool directional)
+WarUnitAction* buildHarvestAction(s32 nframes, s32 frames[], s32 harvestSpeed, WarUnitActionStepType harvestSound, bool directional)
 {
     WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_HARVEST);
     action->directional = directional;
 
     addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
-    addActionStep(action, WAR_ACTION_STEP_SOUND_CHOPPING, 0);
     addActionStep(action, WAR_ACTION_STEP_WAIT, 5);
     
     for(s32 i = 0; i < nframes; i++)
@@ -219,9 +218,9 @@ WarUnitAction* buildHarvestAction(s32 nframes, s32 frames[], s32 attackSpeed, Wa
         addActionStep(action, WAR_ACTION_STEP_FRAME, frames[i]);
 
         if (i == nframes/2)
-            addActionStep(action, attackSound, 0);
+            addActionStep(action, harvestSound, 0);
 
-        addActionStep(action, WAR_ACTION_STEP_WAIT, attackSpeed);
+        addActionStep(action, WAR_ACTION_STEP_WAIT, harvestSpeed);
     }
 
     addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
@@ -1061,7 +1060,7 @@ void updateAction(WarContext* context, WarEntity* entity)
         step = action->steps.items[action->stepIndex];
     }
 
-    action->waitCount = __frameCountToSeconds(step.param) * action->scale / context->globalSpeed;
+    action->waitCount = __frameCountToSeconds(step.param) * getScaledTime(context, action->scale);
 }
 
 // peasant: 40s

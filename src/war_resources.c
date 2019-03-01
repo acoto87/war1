@@ -25,7 +25,7 @@ void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *p
     }
 
     // probably only the palettes 191, 194, 197 need this to use a second palette for the background
-    // for now leave it whenevenr there is specified a second palette on the entry
+    // for now leave it whenever there is specified a second palette on the entry
     if (palette2Index)
     {
         WarResource* palette2 = getOrCreateResource(context, palette2Index);
@@ -74,6 +74,48 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
     for (s32 i = 0; i < PALETTE_LENGTH; ++i)
     {
         resource->paletteData.colors[i] = rawResource.data[i] * 4;
+    }
+
+    // this is a hack in palette #255 because the UI graphics of the unit info
+    // is wrong when using the palette as it came from the file,
+    // or at least I didn't knew how to decode it.
+    if (entry->index == 255)
+    {
+        resource->paletteData.colors[190 * 3 + 0] = 176;
+        resource->paletteData.colors[190 * 3 + 1] = 184;
+        resource->paletteData.colors[190 * 3 + 2] = 208;
+
+        resource->paletteData.colors[191 * 3 + 0] = 208;
+        resource->paletteData.colors[191 * 3 + 1] = 208;
+        resource->paletteData.colors[191 * 3 + 2] = 236;
+
+        resource->paletteData.colors[214 * 3 + 0] = 204;
+        resource->paletteData.colors[214 * 3 + 1] = 212;
+        resource->paletteData.colors[214 * 3 + 2] = 180;
+
+        resource->paletteData.colors[208 * 3 + 0] = 32;
+        resource->paletteData.colors[208 * 3 + 1] = 32;
+        resource->paletteData.colors[208 * 3 + 2] = 44;
+
+        resource->paletteData.colors[211 * 3 + 0] = 80;
+        resource->paletteData.colors[211 * 3 + 1] = 104;
+        resource->paletteData.colors[211 * 3 + 2] = 104;
+
+        resource->paletteData.colors[184 * 3 + 0] = 12;
+        resource->paletteData.colors[184 * 3 + 1] = 20;
+        resource->paletteData.colors[184 * 3 + 2] = 12;
+
+        resource->paletteData.colors[185 * 3 + 0] = 28;
+        resource->paletteData.colors[185 * 3 + 1] = 32;
+        resource->paletteData.colors[185 * 3 + 2] = 32;
+
+        resource->paletteData.colors[186 * 3 + 0] = 56;
+        resource->paletteData.colors[186 * 3 + 1] = 64;
+        resource->paletteData.colors[186 * 3 + 2] = 68;
+
+        resource->paletteData.colors[189 * 3 + 0] = 144;
+        resource->paletteData.colors[189 * 3 + 1] = 156;
+        resource->paletteData.colors[189 * 3 + 2] = 176;
     }
 }
 

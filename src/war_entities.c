@@ -163,6 +163,36 @@ void removeAnimationsComponent(WarContext* context, WarEntity* entity)
     entity->animations = (WarAnimationsComponent){0};
 }
 
+void addUIComponent(WarContext* context, WarEntity* entity, char* name)
+{
+    entity->ui = (WarUIComponent){0};
+    entity->ui.enabled = true;
+    entity->ui.name = name;
+}
+
+void removeUIComponent(WarContext* context, WarEntity* entity)
+{
+    entity->ui = (WarUIComponent){0};
+}
+
+void addTextComponent(WarContext* context, WarEntity* entity, char* text)
+{
+    entity->text = (WarTextComponent){0};
+    entity->text.enabled = true;
+    entity->text.font = "defaultFont";
+    entity->text.fontSize = 8.0f;
+    entity->text.shadowBlur = 0.0f;
+    entity->text.shadowOffset = VEC2_ZERO;
+
+    setUIText(context, entity, text);
+}
+
+void removeTextComponent(WarContext* context, WarEntity* entity)
+{
+    clearUIText(context, entity);
+    entity->text = (WarTextComponent){0};
+}
+
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type)
 {
@@ -242,6 +272,21 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
+WarEntity* findUIEntity(WarContext* context, char* name)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    for (s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && entity->ui.enabled && !strcmp(entity->ui.name, name))
+            return entity;
+    }
+
+    return NULL;
+}
+
 void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
@@ -273,13 +318,21 @@ void _renderImage(WarContext* context, WarEntity* entity)
     WarTransformComponent transform = entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
 
-    if (sprite->enabled)
+    if (sprite->enabled && sprite->frameIndex >= 0)
     {
-        WarSpriteFrame* frame = getSpriteFrame(context, sprite);
+        nvgSave(gfx);
 
-        nvgTranslate(gfx, -frame->dx, -frame->dy);
+        if (sprite->sprite.framesCount > 1)
+        {
+            WarSpriteFrame* frame = getSpriteFrame(context, sprite);
+            updateSpriteImage(context, &sprite->sprite, frame->data);
+
+            nvgTranslate(gfx, -frame->dx, -frame->dy);
+        }
+
         nvgTranslate(gfx, transform.position.x, transform.position.y);
         renderSprite(context, &sprite->sprite, VEC2_ZERO, VEC2_ONE);
+        nvgRestore(gfx);
     }
 }
 
@@ -599,6 +652,31 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
     }
 }
 
+void _renderText(WarContext* context, WarEntity* entity)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarTransformComponent* transform = &entity->transform;
+    WarUIComponent* ui = &entity->ui;
+    WarTextComponent* text = &entity->text;
+
+    if (ui->enabled && text->enabled && text->text)
+    {
+        nvgSave(gfx);
+        nvgTranslate(gfx, transform->position.x, transform->position.y);
+        nvgScale(gfx, transform->scale.x, transform->scale.y);
+
+        NVGfontParams params = nvgCreateFontParams(text->font, text->fontSize, nvgRGBA(0, 0, 0, 255));
+        params.blur = text->shadowBlur;
+        nvgSingleText(gfx, text->text, text->shadowOffset.x, text->shadowOffset.y, params);
+
+        params = nvgCreateFontParams(text->font, text->fontSize, nvgRGBA(255, 255, 255, 255));
+        nvgSingleText(gfx, text->text, 0, 0, params);
+
+        nvgRestore(gfx);
+    }
+}
+
 void renderEntity(WarContext* context, WarEntity* entity, bool selected)
 {
     NVGcontext* gfx = context->gfx;
@@ -642,6 +720,12 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
             case WAR_ENTITY_TYPE_FOREST:
             {
                 _renderForest(context, entity);
+                break;
+            }
+
+            case WAR_ENTITY_TYPE_TEXT:
+            {
+                _renderText(context, entity);
                 break;
             }
 
@@ -689,4 +773,31 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
             changeNextState(context, entity, damagedState, true, true);
         }
     }
+}
+
+s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
+{
+    assert(goldmine);
+    assert(isUnit(goldmine));
+
+    WarUnitComponent* unit = &goldmine->unit;
+
+    if (unit->amount < amount)
+        amount = unit->amount;
+
+    unit->amount -= amount;
+    unit->amount = maxi(unit->amount, 0);
+    
+    logDebug("goldmine: %d", unit->amount);
+
+    if (unit->amount == 0)
+    {
+        if (!isCollapsing(goldmine) && !isGoingToCollapse(goldmine))
+        {
+            WarState* collapseState = createCollapseState(context, goldmine);
+            changeNextState(context, goldmine, collapseState, true, true);
+        }
+    }
+
+    return amount;
 }

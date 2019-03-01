@@ -8,6 +8,10 @@
 #define MAP_EDGE_SCROLL_GAP 5.0f
 
 #define TREE_MAX_WOOD 100
+#define GOLDMINE_MAX_GOLD 300
+#define UNIT_MAX_CARRY_WOOD 100
+#define UNIT_MAX_CARRY_GOLD 100
+#define WALL_MAX_HP 60
 
 // #define DEBUG_RENDER_MAP_GRID
 // #define DEBUG_RENDER_PASSABLE_INFO
@@ -21,6 +25,22 @@
 #define wasButtonPressed(input, btn) (input->buttons[btn].wasPressed)
 #define isKeyPressed(input, key) (input->keys[key].pressed)
 #define wasKeyPressed(input, key) (input->keys[key].wasPressed)
+
+#define getScaledSpeed(context, t) ((t) * (context)->globalSpeed)
+#define getScaledTime(context, t) ((t) / (context)->globalSpeed)
+
+void setWindowSize(WarContext* context, u32 width, u32 height);
+void setGlobalScale(WarContext* context, f32 scale);
+void setGlobalSpeed(WarContext* context, f32 speed);
+
+#define FONT_SPRITE_WIDTH_PX 192
+#define FONT_SPRITE_HEIGHT_PX 192
+#define FONT_SPRITE_CHARS_PER_ROW 16
+#define FONT_SPRITE_CHAR_WIDTH_PX 12
+#define FONT_SPRITE_CHAR_HEIGHT_PX 12
+#define FONT_LINE_HEIGHT_PX 14
+
+#define getCharIndex(c) ((c) > 0 ? (c) - 32 : 0)
 
 vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
 {

@@ -374,7 +374,7 @@ typedef struct
     s32 rndDamage;
     s32 buildTime;
     s32 goldCost;
-    s32 lumberCost;
+    s32 woodCost;
     s32 decay;
     f32 speeds[3];
 } WarUnitStats;
@@ -453,7 +453,7 @@ typedef struct
     s32 hp;
     s32 buildTime;
     s32 goldCost;
-    s32 lumberCost;
+    s32 woodCost;
 } WarBuildingStats;
 
 const WarBuildingStats buildingStats[] = 
@@ -607,6 +607,24 @@ bool isDudeUnit(WarEntity* entity)
         case WAR_UNIT_CLERIC:
         case WAR_UNIT_NECROLYTE:
         case WAR_UNIT_MEDIVH:
+            return true;
+    
+        default:
+            return false;
+    }
+}
+
+bool isMagicUnit(WarEntity* entity)
+{
+    if (!isUnit(entity))
+        return false;
+
+    switch (entity->unit.type)
+    {
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_NECROLYTE:
             return true;
     
         default:
@@ -884,4 +902,17 @@ bool unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
 
     s32 distance = unitDistanceInTiles(entity, targetEntity);
     return distance <= range;
+}
+
+bool isCarryingResources(WarEntity* entity)
+{
+    assert(entity);
+    assert(isUnit(entity));
+    
+    switch (entity->unit.resourceKind)
+    {
+        case WAR_RESOURCE_GOLD: return entity->unit.amount == UNIT_MAX_CARRY_WOOD;
+        case WAR_RESOURCE_WOOD: return entity->unit.amount == UNIT_MAX_CARRY_GOLD;
+        default: return false;
+    }
 }

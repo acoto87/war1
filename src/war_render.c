@@ -3,11 +3,6 @@
 #define NVG_GRAY_TRANSPARENT nvgRGBA(128, 128, 128, 128)
 #define NVG_GREEN_SELECTION nvgRGBA(0, 199, 0, 255)
 
-void printVertex(NVGvertex* v)
-{
-    printf("(%.2f, %.2f, %.4f, %.4f)\n", v->x, v->y, v->u, v->v);
-}
-
 typedef struct
 {
     s32 image;              // the id of the source image
@@ -354,50 +349,55 @@ typedef struct
     f32 fontSize;
     NVGcolor fontColor;
     s32 textAlign;
+    f32 blur;
 } NVGfontParams;
 
-#define nvgCreateFontParams(fontFace, fontSize, fontColor) ((NVGfontParams){(fontFace), (fontSize), (fontColor), 0})
+#define nvgCreateFontParams(fontFace, fontSize, fontColor) ((NVGfontParams){(fontFace), (fontSize), (fontColor), 0, 0})
 
-void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGfontParams params)
+void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {
-    f32 fontSize = params.fontSize;
-    if (fontSize == 0) fontSize = 8.0f;
+    if (params.fontSize <= 0)
+        params.fontSize = 8.0f;
 
-    char* fontFace = params.fontFace;
-    if (fontFace == NULL) fontFace = "roboto-r";
+    if (!params.fontFace)
+        params.fontFace = "defaultFont";
 
-    s32 textAlign = params.textAlign;
-    if (textAlign == 0) textAlign = NVG_ALIGN_LEFT;
+    if (params.textAlign <= 0)
+        params.textAlign = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
 
-    NVGcolor fontColor = params.fontColor;
+    if (params.blur < 0)
+        params.blur = 0;
 
 	nvgSave(gfx);
-    nvgFontSize(gfx, fontSize);
-    nvgFontFace(gfx, fontFace);
-    nvgFillColor(gfx, fontColor);
-    nvgTextAlign(gfx, textAlign);
+    nvgFontSize(gfx, params.fontSize);
+    nvgFontFace(gfx, params.fontFace);
+    nvgFillColor(gfx, params.fontColor);
+    nvgTextAlign(gfx, params.textAlign);
+    nvgFontBlur(gfx, params.blur);
     nvgText(gfx, x, y, text, NULL);
     nvgRestore(gfx);
 }
 
 void nvgMultilineText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGfontParams params)
 {
-    f32 fontSize = params.fontSize;
-    if (fontSize == 0) fontSize = 8.0f;
+    if (params.fontSize <= 0)
+        params.fontSize = 8.0f;
 
-    char* fontFace = params.fontFace;
-    if (fontFace == NULL) fontFace = "roboto-r";
+    if (!params.fontFace)
+        params.fontFace = "defaultFont";
 
-    s32 textAlign = params.textAlign;
-    if (textAlign == 0) textAlign = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
+    if (params.textAlign <= 0)
+        params.textAlign = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
 
-    NVGcolor fontColor = params.fontColor;
+    if (params.blur < 0)
+        params.blur = 0;
 
 	nvgSave(gfx);
-    nvgFontSize(gfx, fontSize);
-    nvgFontFace(gfx, fontFace);
-    nvgFillColor(gfx, fontColor);
-    nvgTextAlign(gfx, textAlign);
+    nvgFontSize(gfx, params.fontSize);
+    nvgFontFace(gfx, params.fontFace);
+    nvgFillColor(gfx, params.fontColor);
+    nvgTextAlign(gfx, params.textAlign);
+    nvgFontBlur(gfx, params.blur);
 
     float lineh;
     nvgTextMetrics(gfx, NULL, NULL, &lineh);
@@ -410,7 +410,6 @@ void nvgMultilineText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width
     // The text break API can be used to fill a large buffer of rows,
 	// or to iterate over the text just few lines (or just one) at a time.
 	// The "next" variable of the last returned item tells where to continue.
-	
     while ((nrows = nvgTextBreakLines(gfx, start, end, width, rows, 10))) {
         for (s32 i = 0; i < nrows; i++) {
             NVGtextRow* row = &rows[i];
@@ -419,7 +418,6 @@ void nvgMultilineText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width
             y += lineh;
         }
 
-        // Keep going...
         start = rows[nrows - 1].next;
     }
 

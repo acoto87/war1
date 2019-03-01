@@ -1,3 +1,22 @@
+WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] = 
+{
+    { WAR_STATE_IDLE,     enterIdleState,       leaveIdleState,       updateIdleState,       freeIdleState       },
+    { WAR_STATE_MOVE,     enterMoveState,       leaveMoveState,       updateMoveState,       freeMoveState       },
+    { WAR_STATE_PATROL,   enterPatrolState,     leavePatrolState,     updatePatrolState,     freePatrolState     },
+    { WAR_STATE_FOLLOW,   enterFollowState,     leaveFollowState,     updateFollowState,     freeFollowState     },
+    { WAR_STATE_ATTACK,   enterAttackState,     leaveAttackState,     updateAttackState,     freeAttackState     },
+    { WAR_STATE_BUILD,    NULL,                 NULL,                 NULL,                  NULL                },
+    { WAR_STATE_GOLD,     enterGatherGoldState, leaveGatherGoldState, updateGatherGoldState, freeGatherGoldState },
+    { WAR_STATE_MINING,   enterMiningState,     leaveMiningState,     updateMiningState,     freeMiningState     },
+    { WAR_STATE_WOOD,     enterGatherWoodState, leaveGatherWoodState, updateGatherWoodState, freeGatherWoodState },
+    { WAR_STATE_CHOPPING, enterChoppingState,   leaveChoppingState,   updateChoppingState,   freeChoppingState   },
+    { WAR_STATE_DELIVER,  enterDeliverState,    leaveDeliverState,    updateDeliverState,    freeDeliverState    },
+    { WAR_STATE_DEATH,    enterDeathState,      leaveDeathState,      updateDeathState,      freeDeathState      },
+    { WAR_STATE_DAMAGED,  enterDamagedState,    leaveDamagedState,    updateDamagedState,    freeDamagedState    },
+    { WAR_STATE_COLLAPSE, enterCollapseState,   leaveCollapseState,   updateCollapseState,   freeCollapseState   },
+    { WAR_STATE_WAIT,     enterWaitState,       leaveWaitState,       updateWaitState,       freeWaitState       },
+};
+
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
     WarState* state = (WarState*)xcalloc(1, sizeof(WarState));
@@ -68,161 +87,29 @@ bool hasNextState(WarEntity* entity, WarStateType type)
 
 void enterState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    switch (state->type)
+    if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
     {
-        case WAR_STATE_IDLE:
-        {
-            enterIdleState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_MOVE:
-        {
-            enterMoveState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_FOLLOW:
-        {
-            enterFollowState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_PATROL:
-        {
-            enterPatrolState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_ATTACK:
-        {
-            enterAttackState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_DEATH:
-        {
-            enterDeathState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_DAMAGED:
-        {
-            enterDamagedState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_COLLAPSE:
-        {
-            enterCollapseState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_WAIT:
-        {
-            enterWaitState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_GOLD:
-        {
-            enterGatherGoldState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_WOOD:
-        {
-            enterGatherWoodState(context, entity, state);
-        }
-
-        default:
-        {
-            logError("Unkown state %d for entity %d\n", state->type, entity->id);
-            break;
-        }
+        logError("Unkown state %d for entity %d", state->type, entity->id);
+        return;
     }
+
+    stateDescriptors[state->type].enterStateFunc(context, entity, state);
 }
 
 void leaveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     if (!state)
-        return;
-
-    switch (state->type)
     {
-        case WAR_STATE_IDLE:
-        {
-            leaveIdleState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_MOVE:
-        {
-            leaveMoveState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_FOLLOW:
-        {
-            leaveFollowState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_PATROL:
-        {
-            leavePatrolState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_ATTACK:
-        {
-            leaveAttackState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_DEATH:
-        {
-            leaveDeathState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_DAMAGED:
-        {
-            leaveDamagedState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_COLLAPSE:
-        {
-            leaveCollapseState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_WAIT:
-        {
-            leaveWaitState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_GOLD:
-        {
-            leaveGatherGoldState(context, entity, state);
-            break;
-        }
-
-        case WAR_STATE_WOOD:
-        {
-            leaveGatherWoodState(context, entity, state);
-            break;
-        }
-
-        default:
-        {
-            logError("Unkown state %d for entity %d\n", state->type, entity->id);
-            break;
-        }
+        return;
     }
 
+    if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
+    {
+        logError("Unkown state %d for entity %d", state->type, entity->id);
+        return;
+    }
+
+    stateDescriptors[state->type].leaveStateFunc(context, entity, state);
     freeState(state);
 }
 
@@ -254,160 +141,26 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
 
         if (context->time >= currentState->nextUpdateTime)
         {
-            switch (currentState->type)
+            if (!inRange(currentState->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
             {
-                case WAR_STATE_IDLE:
-                {
-                    updateIdleState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_MOVE:
-                {
-                    updateMoveState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_FOLLOW:
-                {
-                    updateFollowState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_PATROL:
-                {
-                    updatePatrolState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_ATTACK:
-                {
-                    updateAttackState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_DEATH:
-                {
-                    updateDeathState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_DAMAGED:
-                {
-                    updateDamagedState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_COLLAPSE:
-                {
-                    updateCollapseState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_WAIT:
-                {
-                    updateWaitState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_GOLD:
-                {
-                    updateGatherGoldState(context, entity, currentState);
-                    break;
-                }
-
-                case WAR_STATE_WOOD:
-                {
-                    updateGatherWoodState(context, entity, currentState);
-                    break;
-                }
-
-                default:
-                {
-                    logError("Unkown state %d for entity %d\n", currentState->type, entity->id);
-                    break;
-                }
+                logError("Unkown state %d for entity %d", currentState->type, entity->id);
+                return;
             }
+
+            stateDescriptors[currentState->type].updateStateFunc(context, entity, currentState);
         }
     }
 }
 
 void freeState(WarState* state)
 {
-    switch (state->type)
+    if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
     {
-        case WAR_STATE_IDLE:
-        {
-            freeIdleState(state);
-            break;
-        }
-
-        case WAR_STATE_MOVE:
-        {
-            freeMoveState(state);
-            break;
-        }
-
-        case WAR_STATE_FOLLOW:
-        {
-            freeFollowState(state);
-            break;
-        }
-
-        case WAR_STATE_PATROL:
-        {
-            freePatrolState(state);
-            break;
-        }
-
-        case WAR_STATE_ATTACK:
-        {
-            freeAttackState(state);
-            break;
-        }
-
-        case WAR_STATE_DEATH:
-        {
-            freeDeathState(state);
-            break;
-        }
-
-        case WAR_STATE_DAMAGED:
-        {
-            freeDamagedState(state);
-            break;
-        }
-
-        case WAR_STATE_COLLAPSE:
-        {
-            freeCollapseState(state);
-            break;
-        }
-
-        case WAR_STATE_WAIT:
-        {
-            freeWaitState(state);
-            break;
-        }
-
-        case WAR_STATE_GOLD:
-        {
-            freeGatherGoldState(state);
-            break;
-        }
-
-        case WAR_STATE_WOOD:
-        {
-            freeGatherWoodState(state);
-            break;
-        }
-
-        default:
-        {
-            logError("Unkown state %d for entity %d\n", state->type);
-            break;
-        }
+        logError("Unkown state %d", state->type);
+        return;
     }
+
+    stateDescriptors[state->type].freeStateFunc(state);
 
     if (state->nextState)
         freeState(state->nextState);

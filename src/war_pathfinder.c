@@ -59,7 +59,7 @@ internal s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
 
 internal u32 hashMapNode(const s32 key)
 {
-    return key;
+    return (u32)key;
 }
 
 internal bool equalsMapNodeId(const s32 key1, const s32 key2)

@@ -1,8 +1,25 @@
+WarSprite loadFontSprite(WarContext* context)
+{
+    const char* fontPath = context->fontPath;
+
+    WarSprite sprite = {0};
+
+    s32 width, height, bitsPerPixel;
+    u8* data = stbi_load(fontPath, &width, &height, &bitsPerPixel, 0);
+    if (data)
+    {
+        sprite = createSprite(context, width, height, data);
+        stbi_image_free(data);
+    }
+
+    return sprite;
+}
+
 bool initGame(WarContext* context)
 {
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef WAR_OPENGL
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -35,26 +52,11 @@ bool initGame(WarContext* context)
 
     glfwMakeContextCurrent(context->window);
 
-#if defined(_WIN32) || defined(_WIN64)
-    glewExperimental = GL_TRUE;
-    GLenum glewError = glewInit();
-    if (glewError != GLEW_OK)
-    {
-        logError("Error initializing GLEW! %s", glewGetErrorString(glewError));
-        glfwDestroyWindow(context->window);
-        glfwTerminate();
-        return false;
-    }
-
-    // GLEW generates GL error because it calls glGetString(GL_EXTENSIONS), we'll consume it here.
-	glGetError();
-#else
     gladLoadGLES2Loader((GLADloadproc) glfwGetProcAddress);
-#endif
 
     glCheckOpenGLVersion();
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef WAR_OPENGL
     context->gfx = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_DEBUG);
 #else
     context->gfx = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_DEBUG);
@@ -74,8 +76,11 @@ bool initGame(WarContext* context)
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    context->fontPath = "./build/font.png";
+    context->fontSprite = loadFontSprite(context);
+
     context->warFilePath = "./build/DATA.WAR";
-    context->warFile = loadWarFile(context->warFilePath);
+    context->warFile = loadWarFile(context);
 
     for (int i = 0; i < arrayLength(assets); ++i)
     {
@@ -151,6 +156,34 @@ bool initGame(WarContext* context)
     return true;
 }
 
+void setWindowSize(WarContext* context, u32 width, u32 height)
+{
+    context->windowWidth = width;
+    context->windowHeight = height;
+    glfwSetWindowSize(context->window, context->windowWidth, context->windowHeight);
+    
+    glfwGetFramebufferSize(context->window, &context->framebufferWidth, &context->framebufferHeight);
+    context->devicePixelRatio = (f32)context->framebufferWidth / (f32)context->windowWidth;
+}
+
+void setGlobalScale(WarContext* context, f32 scale)
+{
+    assert(scale >= 1);
+
+    context->globalScale = scale;
+
+    u32 newWidth = (u32)(context->originalWindowWidth * context->globalScale);
+    u32 newHeight = (u32)(context->originalWindowHeight * context->globalScale);
+    setWindowSize(context, newWidth, newHeight);
+}
+
+void setGlobalSpeed(WarContext* context, f32 speed)
+{
+    assert(speed >= 1);
+
+    context->globalSpeed = speed;
+}
+
 void setInputButton(WarContext* context, s32 button, bool pressed)
 {
     WarInput* input = &context->input;
@@ -186,15 +219,38 @@ void inputGame(WarContext *context)
                                        glfwGetKey(context->window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_SHIFT, glfwGetKey(context->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
                                         glfwGetKey(context->window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
+
     setInputKey(context, WAR_KEY_LEFT, glfwGetKey(context->window, GLFW_KEY_LEFT) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_RIGHT, glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_UP, glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_DOWN, glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS);
+
     setInputKey(context, WAR_KEY_P, glfwGetKey(context->window, GLFW_KEY_P) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_T, glfwGetKey(context->window, GLFW_KEY_T) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_R, glfwGetKey(context->window, GLFW_KEY_R) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_U, glfwGetKey(context->window, GLFW_KEY_U) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_W, glfwGetKey(context->window, GLFW_KEY_W) == GLFW_PRESS);
+
+    setInputKey(context, WAR_KEY_1, glfwGetKey(context->window, GLFW_KEY_1) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_1) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_2, glfwGetKey(context->window, GLFW_KEY_2) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_2) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_3, glfwGetKey(context->window, GLFW_KEY_3) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_3) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_4, glfwGetKey(context->window, GLFW_KEY_4) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_4) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_5, glfwGetKey(context->window, GLFW_KEY_5) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_5) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_6, glfwGetKey(context->window, GLFW_KEY_6) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_6) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_7, glfwGetKey(context->window, GLFW_KEY_7) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_7) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_8, glfwGetKey(context->window, GLFW_KEY_8) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_8) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_9, glfwGetKey(context->window, GLFW_KEY_9) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_9) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_0, glfwGetKey(context->window, GLFW_KEY_0) == GLFW_PRESS ||
+                                    glfwGetKey(context->window, GLFW_KEY_KP_0) == GLFW_PRESS);
 }
 
 void updateGame(WarContext* context)

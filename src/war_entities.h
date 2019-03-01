@@ -35,6 +35,12 @@ void removeStateMachineComponent(WarContext* context, WarEntity* entity);
 void addAnimationsComponent(WarContext* context, WarEntity* entity);
 void removeAnimationsComponent(WarContext* context, WarEntity* entity);
 
+void addUIComponent(WarContext* context, WarEntity* entity, char* name);
+void removeUIComponent(WarContext* context, WarEntity* entity);
+
+void addTextComponent(WarContext* context, WarEntity* entity, char* text);
+void removeTextComponent(WarContext* context, WarEntity* entity);
+
 // Roads
 WarEntity* createRoad(WarContext* context);
 void addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player);
@@ -65,16 +71,18 @@ void determineRuinTypes(WarContext* context, WarEntity* entity);
 bool hasTreeAtPosition(WarEntity* forest, s32 x, s32 y);
 WarTree* getTreeAtPosition(WarEntity* forest, s32 x, s32 y);
 void determineTreeTiles(WarContext* context, WarEntity* forest);
+void determineAllTreeTiles(WarContext* context);
 WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position);
 void plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y);
 bool validTree(WarContext* context, WarEntity* forest, WarTree* tree);
-void chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount);
+s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount);
 
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type);
 s32 findEntityIndex(WarContext* context, WarEntityId id);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
+WarEntity* findUIEntity(WarContext* context, char* name);
 void removeEntityById(WarContext* context, WarEntityId id);
 void renderEntity(WarContext* context, WarEntity* entity, bool selected);
 

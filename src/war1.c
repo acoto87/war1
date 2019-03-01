@@ -2,6 +2,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#ifdef _WIN64
+#define WAR_OPENGL
+#else
+#define WAR_OPENGL_ES
+#endif
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -16,13 +22,9 @@
 
 // Guide to predefined macros in C compilers gcc, clang, msvc, etc.
 // https://blog.kowalczyk.info/article/j/guide-to-predefined-macros-in-c-compilers-gcc-clang-msvc-etc..html
-#if defined(_WIN32) || defined(_WIN64)
-#include <glew.h>
-#else
 #include <glad/glad.h>
-#endif
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN64)
 #define GLFW_DLL
 #endif
 
@@ -31,7 +33,7 @@
 
 #include "nanovg.c"
 #define NVG_DISABLE_CULL_FACE
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef WAR_OPENGL
 #define NANOVG_GL3_IMPLEMENTATION
 #else
 #define NANOVG_GLES2_IMPLEMENTATION
@@ -76,6 +78,7 @@
 #include "war_walls.c"
 #include "war_ruins.c"
 #include "war_trees.c"
+#include "war_ui.c"
 #include "war_entities.c"
 #include "war_pathfinder.c"
 #include "war_state_machine_idle.c"
@@ -88,7 +91,10 @@
 #include "war_state_machine_collapse.c"
 #include "war_state_machine_wait.c"
 #include "war_state_machine_gather_gold.c"
+#include "war_state_machine_mining.c"
 #include "war_state_machine_gather_wood.c"
+#include "war_state_machine_chopping.c"
+#include "war_state_machine_deliver.c"
 #include "war_state_machine.c"
 #include "war_map.c"
 #include "war_game.c"
@@ -136,7 +142,7 @@ int main(int argc, char *argv[])
         presentGame(&context);
     }
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef WAR_OPENGL
     nvgDeleteGL3(context.gfx);
 #else
     nvgDeleteGLES2(context.gfx);

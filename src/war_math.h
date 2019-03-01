@@ -399,6 +399,10 @@ typedef struct
 } rect;
 
 #define RECT_EMPTY ((rect){0.0f, 0.0f, 0.0f, 0.0f})
+#define rectTopLeft(r) vec2f(r.x, r.y)
+#define recttopRight(r) vec2f(r.x + r.width, r.y)
+#define rectBottomLeft(r) vec2f(r.x, r.y + r.height)
+#define rectBottomRight(r) vec2f(r.x + r.width, r.y + r.height)
 
 rect rectf(f32 x, f32 y, f32 width, f32 height)
 {

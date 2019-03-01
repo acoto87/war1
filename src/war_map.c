@@ -1,3 +1,46 @@
+u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
+{
+    s32 index = y * MAP_TILES_WIDTH + x;
+    u16 tileIndex = levelVisual->levelVisual.data[index];
+
+    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+    s32 r = 0, g = 0, b = 0;
+
+    for(s32 ty = 0; ty < MEGA_TILE_HEIGHT; ty++)
+    {
+        for(s32 tx = 0; tx < MEGA_TILE_WIDTH; tx++)
+        {
+            s32 pixel = (tilePixelY + ty) * TILESET_WIDTH + (tilePixelX + tx);
+            r += tileset->tilesetData.data[pixel * 4 + 0];
+            g += tileset->tilesetData.data[pixel * 4 + 1];
+            b += tileset->tilesetData.data[pixel * 4 + 2];
+        }
+    }
+
+    r /= 256;
+    g /= 256;
+    b /= 256;
+
+    u8Color color = {0};
+    color.r = (u8)r;
+    color.g = (u8)g;
+    color.b = (u8)b;
+    color.a = 255;
+    return color;
+}
+
+void updateMinimapTile(WarSpriteFrame* minimapFrame, WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
+{
+    s32 index = y * MAP_TILES_WIDTH + x;
+    u8Color color = getMapTileAverage(levelVisual, tileset, x, y);
+    minimapFrame->data[index * 4 + 0] = color.r;
+    minimapFrame->data[index * 4 + 1] = color.g;
+    minimapFrame->data[index * 4 + 2] = color.b;
+    minimapFrame->data[index * 4 + 3] = color.a;
+}
+
 s32 getMapTileIndex(WarContext* context, s32 x, s32 y)
 {
     WarMap* map = context->map;
@@ -24,10 +67,12 @@ void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
     WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
     assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-    WarMapTilesetType tilesetType = map->tilesetType;
-    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+    WarResource* tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
+    assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
     levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x] = tile;
+
+    updateMinimapTile(&map->minimapSprite.frames[1], levelVisual, tileset, x, y);
 }
 
 void createMap(WarContext *context, s32 levelInfoIndex)
@@ -65,10 +110,10 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // create the map sprite
     {
-        WarResource *levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+        WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
         assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-        WarResource *tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
+        WarResource* tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
         assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
         // DEBUG: 
@@ -110,34 +155,13 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
                 s32 index = y * MAP_TILES_WIDTH + x;
-                u16 tileIndex = levelVisual->levelVisual.data[index];
-
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                s32 r = 0, g = 0, b = 0;
-
-                for(s32 ty = 0; ty < MEGA_TILE_HEIGHT; ty++)
-                {
-                    for(s32 tx = 0; tx < MEGA_TILE_WIDTH; tx++)
-                    {
-                        s32 pixel = (tilePixelY + ty) * TILESET_WIDTH + (tilePixelX + tx);
-                        r += tileset->tilesetData.data[pixel * 4 + 0];
-                        g += tileset->tilesetData.data[pixel * 4 + 1];
-                        b += tileset->tilesetData.data[pixel * 4 + 2];
-                    }
-                }
-
-                r /= 256;
-                g /= 256;
-                b /= 256;
-
+                u8Color color = getMapTileAverage(levelVisual, tileset, x, y);
                 for(s32 i = 0; i < 2; i++)
                 {
-                    minimapFrames[i].data[index * 4 + 0] = (u8)r;
-                    minimapFrames[i].data[index * 4 + 1] = (u8)g;
-                    minimapFrames[i].data[index * 4 + 2] = (u8)b;
-                    minimapFrames[i].data[index * 4 + 3] = 255;   
+                    minimapFrames[i].data[index * 4 + 0] = color.r;
+                    minimapFrames[i].data[index * 4 + 1] = color.g;
+                    minimapFrames[i].data[index * 4 + 2] = color.b;
+                    minimapFrames[i].data[index * 4 + 3] = color.a;
                 }
             }
         }
@@ -152,55 +176,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             processed[i] = false;
 
         u16* passableData = levelPassable->levelPassable.data;
-
-        // DEBUG
-        // for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-        // {
-        //     if (passableData[i] == 128)
-        //     {
-        //         WarTreesData data = getTreesData(WAR_TREE_CHOPPED);
-
-        //         WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-        //         assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-
-        //         WarMapTilesetType tilesetType = map->tilesetType;
-        //         assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
-
-        //         s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
-        //         levelVisual->levelVisual.data[i] = newTileIndex;
-        //     }
-        // }
-
-        // WarTreeList trees;
-        // WarTreeListInit(&trees, WarTreeListDefaultOptions);
-
-        // for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-        // {
-        //     if (passableData[i] == 128)
-        //     {
-        //         s32 x = i % MAP_TILES_WIDTH;
-        //         s32 y = i / MAP_TILES_WIDTH;
-
-        //         // TODO: access here to tree data to get the amount of wood
-        //         WarTreeListAdd(&trees, createTree(x, y, 100));
-        //     }
-        // }
-
-        // // trees are sort by 'x' asc and then by 'y' desc
-        // // WarTreeListSort(&trees, compareTreesByPosition);
-
-        // WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
-        // addSpriteComponent(context, entity, map->sprite);
-        // addForestComponent(context, entity, trees);
-
-        // for (s32 i = 0; i < trees.count; i++)
-        // {
-        //     WarTree* tree = &trees.items[i];
-        //     setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, entity->id);
-        // }
-
-        // determineTreeTiles(context, entity);
-
         for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         {
             if (!processed[i] && passableData[i] == 128)
@@ -210,9 +185,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
                 WarTreeList trees;
                 WarTreeListInit(&trees, WarTreeListDefaultOptions);
-
-                // TODO: access here to tree data to get the amount of wood
-                WarTreeListAdd(&trees, createTree(x, y, 100));
+                WarTreeListAdd(&trees, createTree(x, y, TREE_MAX_WOOD));
                 processed[i] = true;
 
                 for(s32 j = 0; j < trees.count; j++)
@@ -230,16 +203,13 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                                 // mark it processed right away, to not process it later
                                 processed[k] = true;
 
-                                WarTree newTree = createTree(xx, yy, 100);
+                                WarTree newTree = createTree(xx, yy, TREE_MAX_WOOD);
                                 WarTreeListAdd(&trees, newTree);
                             }
                         }
                     }
                 }
                 
-                // trees are sort by 'x' asc and then by 'y' desc
-                // WarTreeListSort(&trees, compareTreesByPosition);
-
                 WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
                 addSpriteComponent(context, entity, map->sprite);
                 addForestComponent(context, entity, trees);
@@ -260,7 +230,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
         addSpriteComponent(context, entity, map->sprite);
         addForestComponent(context, entity, trees);
-
         context->debugForest = entity;
     }
 
@@ -300,8 +269,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < wall->wall.pieces.count; i++)
         {
             WarWallPiece* piece = &wall->wall.pieces.items[i];
-            piece->hp = 60;
-            piece->maxhp = 60;
+            piece->hp = WALL_MAX_HP;
+            piece->maxhp = WALL_MAX_HP;
         }
 
         addStateMachineComponent(context, wall);
@@ -312,13 +281,23 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         context->debugWall = wall;
     }
 
+    // create players info
+    {
+        for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
+        {
+            map->players[i].index = 0;
+            map->players[i].race = levelInfo->levelInfo.races[i];
+            map->players[i].gold = levelInfo->levelInfo.gold[i];
+            map->players[i].wood = levelInfo->levelInfo.lumber[i];
+            map->players[i].units = 0;
+        }
+    }
+
     // create the starting entities
     {
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
-            if (startUnit.type == WAR_UNIT_FOOTMAN)
-                startUnit.type = WAR_UNIT_PEASANT;
 
             WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
             addUnitComponent(context, entity, startUnit.type, startUnit.x, startUnit.y, startUnit.player, startUnit.resourceKind, startUnit.amount);
@@ -359,6 +338,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 entity->unit.armour = buildingStats.armour;
             }
 
+            map->players[entity->unit.player].units++;
+
             WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
             changeNextState(context, entity, idleState, true, true);
         }
@@ -366,32 +347,37 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // add ui entities
     {
-        WarEntity *entity;
-        
-        // left top panel (minimap)
-        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
-        addTransformComponent(context, entity, (vec2){map->leftTopPanel.x, map->leftTopPanel.y});
-        addSpriteComponentFromResource(context, entity, 224);
+        // panels
+        createUIImage(context, "panelLeftTop", 224, rectTopLeft(map->leftTopPanel));
+        createUIImage(context, "panelLeftBottom", 226, rectTopLeft(map->leftBottomPanel));
+        createUIImage(context, "panelTop", 218, rectTopLeft(map->topPanel));
+        createUIImage(context, "panelRight", 220, rectTopLeft(map->rightPanel));
+        createUIImage(context, "panelBottom", 222, rectTopLeft(map->bottomPanel));
 
-        // left bottom panel
-        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
-        addTransformComponent(context, entity, (vec2){map->leftBottomPanel.x, map->leftBottomPanel.y});
-        addSpriteComponentFromResource(context, entity, 226);
-        
-        // top panel
-        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
-        addTransformComponent(context, entity, (vec2){map->topPanel.x, map->topPanel.y});
-        addSpriteComponentFromResource(context, entity, 218);
+        // top panel images
+        createUIImage(context, "imgGold", 406, vec2Addv(rectTopLeft(map->topPanel), vec2i(201, 1)));
+        createUIImage(context, "imgLumber", 407, vec2Addv(rectTopLeft(map->topPanel), vec2i(102, 0)));
 
-        // right panel
-        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
-        addTransformComponent(context, entity, (vec2){map->rightPanel.x, map->rightPanel.y});
-        addSpriteComponentFromResource(context, entity, 220);
+        // top panel texts
+        createUIText(context, "txtGold", vec2Addv(rectTopLeft(map->topPanel), vec2i(150, 1)));
+        createUIText(context, "txtWood", vec2Addv(rectTopLeft(map->topPanel), vec2i(50, 1)));
 
-        // bottom panel
-        entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
-        addTransformComponent(context, entity, (vec2){map->bottomPanel.x, map->bottomPanel.y});
-        addSpriteComponentFromResource(context, entity, 222);
+        // status text
+        createUIText(context, "txtStatus", vec2Addv(rectTopLeft(map->bottomPanel), vec2i(0, 4)));
+
+        // selected unit(s) info
+        createUIImageFromSprite(context, "imgUnitInfo", 360, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 0)));
+        // createUIImageFromSprite(context, "imgUnitPortrait0", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 4)));
+        createUIImageFromSprite(context, "imgUnitPortrait1", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 1)));
+        createUIImageFromSprite(context, "imgUnitPortrait2", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 1)));
+        createUIImageFromSprite(context, "imgUnitPortrait3", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 10)));
+        createUIImageFromSprite(context, "imgUnitPortrait4", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 10)));
+        createUIImageFromSprite(context, "imgUnitInfoLife", 360, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 16)));
+
+        // initial update for the top panel texts
+        updateGoldText(context);
+        updateWoodText(context);
+        updateSelectedUnitsInfo(context);
     }
 
     // set the initial state for the tiles
@@ -416,19 +402,56 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         context->debugRuin = ruins;
 
         // test animations
-        // WarSprite sprite2 = createSpriteFromResourceIndex(context, 299);
-        // WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.1f, true);
-        // anim2->offset = vec2f(250, 320);
+        WarSprite sprite2 = createSpriteFromResourceIndex(context, 359);
+        WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.5f, true);
+        anim2->offset = vec2i(100, 100);
 
-        // const s32 baseFrameIndices2[] = {15, 30, 15, 0, 55, 45, 55, 0};
-        // const s32 indexOff2 = 2;
+        const s32 baseFrameIndices2[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+        const s32 indexOff2 = 0;
 
-        // for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
-        // {
-        //     addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
-        // }
+        for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
+        {
+            addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
+        }
 
-        // WarSpriteAnimationListAdd(&map->animations, anim2);
+        WarSpriteAnimationListAdd(&map->animations, anim2);
+
+
+
+
+        WarSprite sprite3 = createSpriteFromResourceIndex(context, 360);
+        WarSpriteAnimation* anim3 = createAnimation("horsie3", sprite3, 0.5f, true);
+        anim3->offset = vec2i(200, 100);
+
+        const s32 baseFrameIndices3[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+        const s32 indexOff3 = 0;
+
+        for(s32 i = 0; i < arrayLength(baseFrameIndices3); i++)
+        {
+            addAnimationFrame(anim3, baseFrameIndices3[i] + indexOff3);
+        }
+
+        WarSpriteAnimationListAdd(&map->animations, anim3);
+
+        
+
+
+        WarSprite sprite4 = createSpriteFromResourceIndex(context, 361);
+        WarSpriteAnimation* anim4 = createAnimation("horsie3", sprite4, 0.5f, true);
+        anim4->offset = vec2i(300, 100);
+
+        s32 baseFrameindices4[93];
+        for (s32 i = 0; i < 93; i++)
+            baseFrameindices4[i] = i;
+
+        const s32 indexOff4 = 0;
+
+        for(s32 i = 0; i < arrayLength(baseFrameindices4); i++)
+        {
+            addAnimationFrame(anim4, baseFrameindices4[i] + indexOff4);
+        }
+
+        WarSpriteAnimationListAdd(&map->animations, anim4);
     }
 }
 
@@ -541,11 +564,9 @@ void updateSelection(WarContext* context)
                     WarEntity* entity = map->entities.items[i];
                     if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
                     {
-                        WarTransformComponent transform = entity->transform;
-                        WarUnitComponent unit = entity->unit;
-                        if (transform.enabled && unit.enabled)
+                        if (entity->unit.enabled)
                         {
-                            rect unitRect = rectv(transform.position, getUnitSpriteSize(entity));
+                            rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
 
                             if (rectIntersects(pointerRect, unitRect))
                             {
@@ -558,6 +579,9 @@ void updateSelection(WarContext* context)
                         }
                     }
                 }
+                
+                updateStatusText(context);
+                updateSelectedUnitsInfo(context);
             }
         }
     }
@@ -590,7 +614,7 @@ void updateTreesEdit(WarContext* context)
                 entity = context->debugForest;
 
                 plantTree(context, entity, x, y);
-                determineTreeTiles(context, entity);
+                determineAllTreeTiles(context);
             }
             else if (entity->type == WAR_ENTITY_TYPE_FOREST)
             {
@@ -598,7 +622,7 @@ void updateTreesEdit(WarContext* context)
                 if (tree)
                 {
                     chopTree(context, entity, tree, TREE_MAX_WOOD);
-                    determineTreeTiles(context, entity);
+                    determineAllTreeTiles(context);
                 }
             }
         }
@@ -721,6 +745,40 @@ void updateRuinsEdit(WarContext* context)
     }
 }
 
+void updateGlobalSpeed(WarContext* context)
+{
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL) && !isKeyPressed(input, WAR_KEY_SHIFT))
+    {
+        if (wasKeyPressed(input, WAR_KEY_1))
+            setGlobalSpeed(context, 1.0f);
+        else if (wasKeyPressed(input, WAR_KEY_2))
+            setGlobalSpeed(context, 2.0f);
+        else if (wasKeyPressed(input, WAR_KEY_3))
+            setGlobalSpeed(context, 3.0f);
+        else if (wasKeyPressed(input, WAR_KEY_4))
+            setGlobalSpeed(context, 4.0f);
+    }
+}
+
+void updateGlobalScale(WarContext* context)
+{
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL) && isKeyPressed(input, WAR_KEY_SHIFT))
+    {
+        if (wasKeyPressed(input, WAR_KEY_1))
+            setGlobalScale(context, 1.0f);
+        else if (wasKeyPressed(input, WAR_KEY_2))
+            setGlobalScale(context, 2.0f);
+        else if (wasKeyPressed(input, WAR_KEY_3))
+            setGlobalScale(context, 3.0f);
+        else if (wasKeyPressed(input, WAR_KEY_4))
+            setGlobalScale(context, 4.0f);
+    }
+}
+
 void updateMap(WarContext* context)
 {
     WarMap* map = context->map;
@@ -728,6 +786,8 @@ void updateMap(WarContext* context)
 
     WarInput* input = &context->input;
 
+    updateGlobalSpeed(context);
+    updateGlobalScale(context);
     updateViewport(context);
     updateDragRect(context);
     updateSelection(context);
@@ -812,8 +872,31 @@ void updateMap(WarContext* context)
                                 if (isUnitOfType(entity, WAR_UNIT_PEASANT) ||
                                     isUnitOfType(entity, WAR_UNIT_PEON))
                                 {
-                                    WarState* gatherGoldState = createGatherGoldState(context, entity, targetEntity->id);
-                                    changeNextState(context, entity, gatherGoldState, true, true);        
+                                    if (isCarryingResources(entity))
+                                    {
+                                        // find the closest town hall to deliver the gold
+                                        WarRace race = getUnitRace(entity);
+                                        WarUnitType townHallType = getTownHallOfRace(race);
+                                        WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+
+                                        // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
+                                        if (!townHall)
+                                        {
+                                            WarState* idleState = createIdleState(context, entity, true);
+                                            changeNextState(context, entity, idleState, true, true);
+                                        }
+                                        else
+                                        {
+                                            WarState* deliverState = createDeliverState(context, entity, townHall->id);
+                                            deliverState->nextState = createGatherGoldState(context, entity, targetEntity->id);
+                                            changeNextState(context, entity, deliverState, true, true);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        WarState* gatherGoldState = createGatherGoldState(context, entity, targetEntity->id);
+                                        changeNextState(context, entity, gatherGoldState, true, true);        
+                                    }
                                 }
                                 else
                                 {
@@ -826,13 +909,69 @@ void updateMap(WarContext* context)
                                 if (isUnitOfType(entity, WAR_UNIT_PEASANT) ||
                                     isUnitOfType(entity, WAR_UNIT_PEON))
                                 {
-                                    WarState* gatherWoodState = createGatherWoodState(context, entity, targetEntityId, targetTile);
-                                    changeNextState(context, entity, gatherWoodState, true, true);        
+                                    if (isCarryingResources(entity))
+                                    {
+                                        // find the closest town hall to deliver the gold
+                                        WarRace race = getUnitRace(entity);
+                                        WarUnitType townHallType = getTownHallOfRace(race);
+                                        WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+
+                                        // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
+                                        if (!townHall)
+                                        {
+                                            WarState* idleState = createIdleState(context, entity, true);
+                                            changeNextState(context, entity, idleState, true, true);
+                                        }
+                                        else
+                                        {
+                                            WarState* deliverState = createDeliverState(context, entity, townHall->id);
+                                            deliverState->nextState = createGatherWoodState(context, entity, targetEntityId, targetTile);
+                                            changeNextState(context, entity, deliverState, true, true);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        WarState* gatherWoodState = createGatherWoodState(context, entity, targetEntityId, targetTile);
+                                        changeNextState(context, entity, gatherWoodState, true, true);        
+                                    }
                                 }
                                 else
                                 {
                                     WarState* followState = createFollowState(context, entity, targetEntityId, 1);
                                     changeNextState(context, entity, followState, true, true);
+                                }
+                            }
+                            else if (isUnit(targetEntity) && (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) || isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS)))
+                            {
+                                if (isUnitOfType(entity, WAR_UNIT_PEASANT) || isUnitOfType(entity, WAR_UNIT_PEON))
+                                {
+                                    if (isCarryingResources(entity))
+                                    {
+                                        // find the closest town hall to deliver the gold
+                                        WarRace race = getUnitRace(entity);
+                                        WarUnitType townHallType = getTownHallOfRace(race);
+                                        WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+
+                                        // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
+                                        if (!townHall)
+                                        {
+                                            WarState* idleState = createIdleState(context, entity, true);
+                                            changeNextState(context, entity, idleState, true, true);
+                                        }
+                                        else
+                                        {
+                                            WarState* deliverState = createDeliverState(context, entity, townHall->id);
+                                            changeNextState(context, entity, deliverState, true, true);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // WarState* followState = createFollowState(context, entity, targetEntityId, 1);
+                                    // changeNextState(context, entity, followState, true, true);
+
+                                    WarState* attackState = createAttackState(context, entity, targetEntityId, targetTile);
+                                    changeNextState(context, entity, attackState, true, true);
                                 }
                             }
                             else
@@ -944,10 +1083,9 @@ void updateMap(WarContext* context)
     }
 }
 
-void renderMap(WarContext *context)
+void renderMapPanel(WarContext *context)
 {
     WarMap *map = context->map;
-    if (!map) return;
 
     NVGcontext* gfx = context->gfx;
 
@@ -956,359 +1094,233 @@ void renderMap(WarContext *context)
 
     nvgSave(gfx);
 
-    nvgScale(gfx, context->globalScale, context->globalScale);
-
-    // render map
+    nvgTranslate(gfx, map->mapPanel.x, map->mapPanel.y);
+    nvgTranslate(gfx, -map->viewport.x, -map->viewport.y);
+    
+    // render terrain
     {
-        nvgSave(gfx);
+        WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+        assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-        nvgTranslate(gfx, map->mapPanel.x, map->mapPanel.y);
-        nvgTranslate(gfx, -map->viewport.x, -map->viewport.y);
-        
-        // render terrain
+        NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
         {
-            WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-            assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-
-            f32 ct = glfwGetTime();
-
-            // NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-            NVGimageGridBatch* batch = nvgBeginImageGridBatch(gfx, map->sprite.image, MAP_TILES_WIDTH, MAP_TILES_HEIGHT);
-
-            for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-                {
-                    // index of the tile in the tilesheet
-                    u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+                // index of the tile in the tilesheet
+                u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
 
-                    // coordinates in pixels of the terrain tile
-                    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+                // coordinates in pixels of the terrain tile
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                    nvgSave(gfx);
-                    nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                nvgSave(gfx);
+                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
-                    rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
 
-                    // nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
-                    nvgRenderGridBatchImage(gfx, batch, rs, rd, VEC2_ONE, x, y);
-
-                    nvgRestore(gfx);
-                }
-            }
-
-            // nvgEndImageBatch(gfx, batch);
-            nvgEndImageGridBatch(gfx, batch);
-
-            ct = glfwGetTime() - ct;
-
-            // logInfo("Render terrain time: ct: %.4f\n", ct);
-        }
-
-        // render roads
-        {
-            for(s32 i = 0; i < map->entities.count; i++)
-            {
-                WarEntity *entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
-                {
-                    renderEntity(context, entity, false);
-                }
+                nvgRestore(gfx);
             }
         }
 
-        // render walls
-        {
-            for(s32 i = 0; i < map->entities.count; i++)
-            {
-                WarEntity *entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_WALL)
-                {
-                    renderEntity(context, entity, false);
-                }
-            }
-        }
+        nvgEndImageBatch(gfx, batch);
+    }
 
-        // render ruins
+    // render roads
+    {
+        for(s32 i = 0; i < map->entities.count; i++)
         {
-            for(s32 i = 0; i < map->entities.count; i++)
+            WarEntity *entity = map->entities.items[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
             {
-                WarEntity* entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_RUIN)
-                {
-                    renderEntity(context, entity, false);
-                }
+                renderEntity(context, entity, false);
             }
         }
+    }
 
-        // render wood
+    // render walls
+    {
+        for(s32 i = 0; i < map->entities.count; i++)
         {
-            for(s32 i = 0; i < map->entities.count; i++)
+            WarEntity *entity = map->entities.items[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_WALL)
             {
-                WarEntity* entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_FOREST)
-                {
-                    renderEntity(context, entity, false);
-                }
+                renderEntity(context, entity, false);
             }
         }
+    }
+
+    // render ruins
+    {
+        for(s32 i = 0; i < map->entities.count; i++)
+        {
+            WarEntity* entity = map->entities.items[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_RUIN)
+            {
+                renderEntity(context, entity, false);
+            }
+        }
+    }
+
+    // render wood
+    {
+        for(s32 i = 0; i < map->entities.count; i++)
+        {
+            WarEntity* entity = map->entities.items[i];
+            if (entity && entity->type == WAR_ENTITY_TYPE_FOREST)
+            {
+                renderEntity(context, entity, false);
+            }
+        }
+    }
 
 #ifdef DEBUG_RENDER_UNIT_PATHS
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity *entity = map->entities.items[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        {
+            WarStateMachineComponent* stateMachine = &entity->stateMachine;
+            WarState* currentState = stateMachine->currentState;
+            if (currentState && currentState->type == WAR_STATE_MOVE)
+            {
+                vec2List positions = currentState->move.positions;
+                for(s32 k = currentState->move.positionIndex; k < positions.count; k++)
+                {
+                    vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
+                    pos = vec2Subv(pos, vec2i(2, 2));
+                    nvgFillRect(gfx, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
+                }
+                
+                s32 index = currentState->move.pathNodeIndex;
+                WarMapPath path = currentState->move.path;
+                
+                if (index >= 0)
+                {
+                    vec2 prevPos;
+                    for(s32 k = 0; k < path.nodes.count; k++)
+                    {
+                        vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
+
+                        if (k > 0)
+                            nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
+
+                        nvgFillRect(gfx, rectv(pos, VEC2_ONE), k == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
+
+                        prevPos = pos;
+                    }
+                }
+            }
+        }
+    }
+#endif
+
+#ifdef DEBUG_RENDER_PASSABLE_INFO
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    {
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        {
+            if (isStatic(map->finder, x, y))
+            {
+                vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 0, 0, 100));
+            }
+            else if(isDynamic(map->finder, x, y))
+            {
+                vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 150, 100, 100));
+            }
+        }
+    }
+#endif
+
+#ifdef DEBUG_RENDER_MAP_GRID
+    for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
+    {
+        vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
+        vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
+        nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
+    }
+
+    for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
+    {
+        vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
+        vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
+        nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
+    }
+#endif
+
+    // render units
+    {
         for(s32 i = 0; i < map->entities.count; i++)
         {
             WarEntity *entity = map->entities.items[i];
             if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
             {
-                WarStateMachineComponent* stateMachine = &entity->stateMachine;
-                WarState* currentState = stateMachine->currentState;
-                if (currentState && currentState->type == WAR_STATE_MOVE)
-                {
-                    vec2List positions = currentState->move.positions;
-                    for(s32 k = currentState->move.positionIndex; k < positions.count; k++)
-                    {
-                        vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
-                        pos = vec2Subv(pos, vec2i(2, 2));
-                        nvgFillRect(gfx, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
-                    }
-                    
-                    s32 index = currentState->move.pathNodeIndex;
-                    WarMapPath path = currentState->move.path;
-                    
-                    if (index >= 0)
-                    {
-                        vec2 prevPos;
-                        for(s32 k = 0; k < path.nodes.count; k++)
-                        {
-                            vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
-
-                            if (k > 0)
-                                nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
-
-                            nvgFillRect(gfx, rectv(pos, VEC2_ONE), k == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
-
-                            prevPos = pos;
-                        }
-                    }
-                }
+                bool selected = WarEntityIdListContains(&map->selectedEntities, entity->id);
+                renderEntity(context, entity, selected);
             }
         }
-#endif
-
-#ifdef DEBUG_RENDER_PASSABLE_INFO
-        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            {
-                if (isStatic(map->finder, x, y))
-                {
-                    vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                    vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 0, 0, 100));
-                }
-                else if(isDynamic(map->finder, x, y))
-                {
-                    vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                    vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 150, 100, 100));
-                }
-            }
-        }
-#endif
-
-#ifdef DEBUG_RENDER_MAP_GRID
-        for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
-        {
-            vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
-            vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
-            nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
-        }
-
-        for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
-        {
-            vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
-            vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
-            nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
-        }
-#endif
-
-        // render units
-        {
-            for(s32 i = 0; i < map->entities.count; i++)
-            {
-                WarEntity *entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
-                {
-                    bool selected = WarEntityIdListContains(&map->selectedEntities, entity->id);
-                    renderEntity(context, entity, selected);
-                }
-            }
-        }
-
-        // render animations
-        {
-            for(s32 i = 0; i < map->animations.count; i++)
-            {
-                WarSpriteAnimation* anim = map->animations.items[i];
-                if (anim->status == WAR_ANIM_STATUS_RUNNING)
-                {
-                    s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
-                    animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
-
-                    s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-                    assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
-
-                    nvgSave(gfx);
-
-                    nvgTranslate(gfx, anim->offset.x, anim->offset.y);
-                    nvgScale(gfx, anim->scale.x, anim->scale.y);
-
-    #ifdef DEBUG_RENDER_MAP_ANIMATIONS
-                    // size of the original sprite
-                    vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
-
-                    nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
-    #endif
-
-                    WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
-                    updateSpriteImage(context, &anim->sprite, frame.data);
-                    renderSprite(context, &anim->sprite, VEC2_ZERO, VEC2_ONE);
-
-                    nvgRestore(gfx);
-                }
-            }
-        }
-
-        nvgRestore(gfx);
     }
+
+    // render animations
+    {
+        for(s32 i = 0; i < map->animations.count; i++)
+        {
+            WarSpriteAnimation* anim = map->animations.items[i];
+            if (anim->status == WAR_ANIM_STATUS_RUNNING)
+            {
+                s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
+                animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+
+                s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
+                assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
+
+                nvgSave(gfx);
+
+                nvgTranslate(gfx, anim->offset.x, anim->offset.y);
+                nvgScale(gfx, anim->scale.x, anim->scale.y);
+
+#ifdef DEBUG_RENDER_MAP_ANIMATIONS
+                // size of the original sprite
+                vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+
+                nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
+#endif
+
+                WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
+                updateSpriteImage(context, &anim->sprite, frame.data);
+                renderSprite(context, &anim->sprite, VEC2_ZERO, VEC2_ONE);
+
+                nvgRestore(gfx);
+            }
+        }
+    }
+
+    nvgRestore(gfx);
+}
+
+void renderMap(WarContext *context)
+{
+    WarMap *map = context->map;
+    assert(map);
+    if (!map) return;
+
+    NVGcontext* gfx = context->gfx;
+
+    nvgSave(gfx);
+    nvgScale(gfx, context->globalScale, context->globalScale);
+
+    // render map
+    renderMapPanel(context);
 
     // render ui
-    {
-        nvgSave(gfx);
-
-        // render selection rect
-        {
-            nvgSave(gfx);
-
-            WarInput* input = &context->input;
-            if (input->isDragging)
-            {
-                rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
-                nvgStrokeRect(gfx, pointerRect, NVG_GREEN_SELECTION, 1.0f);
-            }
-
-            nvgRestore(gfx);
-        }
-
-        // render images
-        {
-            nvgSave(gfx);
-
-            for(s32 i = 0; i < map->entities.count; i++)
-            {
-                WarEntity *entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_IMAGE)
-                {
-                    renderEntity(context, entity, false);
-                }
-            }
-
-            nvgRestore(gfx);
-        }
-        
-        // render minimap
-        {
-            nvgSave(gfx);
-
-            // copy the minimap base to the first frame which is the one that will be rendered
-            memcpy(map->minimapSprite.frames[0].data, map->minimapSprite.frames[1].data, MINIMAP_WIDTH * MINIMAP_HEIGHT * 4);
-
-            for(s32 i = 0; i < map->entities.count; i++)
-            {
-                u8 r = 211, g = 211, b = 211;
-
-                WarEntity* entity = map->entities.items[i];
-                if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
-                {
-                    WarUnitComponent unit = entity->unit;
-
-                    if (unit.type == WAR_UNIT_TOWNHALL_HUMANS || 
-                        unit.type == WAR_UNIT_TOWNHALL_ORCS)
-                    {
-                        r = 255; g = 255; b = 0;
-                    }
-                    else if(unit.player == 0)
-                    {
-                        r = 0; g = 199; b = 0;
-                    }
-                    else if(unit.player < 4)
-                    {
-                        r = 199; g = 0; b = 0;
-                    }
-
-                    WarTransformComponent transform = entity->transform;
-                    s32 tileX = (s32)(transform.position.x/MEGA_TILE_WIDTH);
-                    s32 tileY = (s32)(transform.position.y/MEGA_TILE_HEIGHT);
-
-                    for(s32 y = 0; y < unit.sizey; y++)
-                    {
-                        for(s32 x = 0; x < unit.sizex; x++)
-                        {
-                            s32 pixel = (tileY + y) * MINIMAP_WIDTH + (tileX + x);
-                            map->minimapSprite.frames[0].data[pixel * 4 + 0] = r;
-                            map->minimapSprite.frames[0].data[pixel * 4 + 1] = g;
-                            map->minimapSprite.frames[0].data[pixel * 4 + 2] = b;
-                        }
-                    }
-                }
-            }
-
-            nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
-
-            updateSpriteImage(context, &map->minimapSprite, map->minimapSprite.frames[0].data);
-            renderSprite(context, &map->minimapSprite, VEC2_ZERO, VEC2_ONE);
-
-            nvgRestore(gfx);
-        }
-
-        // render minimap viewport
-        {
-            nvgSave(gfx);
-
-            nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
-            nvgTranslate(gfx, map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
-
-            nvgStrokeRect(gfx, recti(0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT), NVG_WHITE, 1.0f/context->globalScale);
-
-            nvgRestore(gfx);
-        }
-
-        // DEBUG:
-        // Render debug info
-        {
-            char debugText[256];
-
-            sprintf(debugText, 
-                "Debug info:\n"
-                "editing trees = %d\n"
-                "editing roads = %d\n"
-                "editing walls = %d\n"
-                "editing ruins = %d\n",
-                context->editingTrees,
-                context->editingRoads,
-                context->editingWalls,
-                context->editingRuins);
-
-            rect r = recti(map->mapPanel.x + 2, map->mapPanel.y + 2, 30, 50);
-            nvgFillRect(gfx, r, nvgRGBA(50, 50, 50, 200));
-
-            NVGfontParams params = nvgCreateFontParams("roboto-r", 5.0f, nvgRGBA(200, 200, 200, 255));
-            nvgMultilineText(gfx, debugText, r.x, r.y, r.width, r.height, params);
-        }
-
-        nvgRestore(gfx);
-    }
+    renderMapUI(context);
 
     nvgRestore(gfx);
 }

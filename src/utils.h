@@ -13,8 +13,7 @@
 #define randomi(a, b) ((a) + (rand() % ((b) - (a))))
 #define randomf(a, b) ((a) + ((f32)rand() / RAND_MAX) * ((b) - (a)))
 #define inRange(x, a, b) ((x) >= (a) && (x) < (b))
-
-#define snap(x) printf("variable "#x" = %d\n", x)
+#define debugVar(x) printf("variable "#x" = %d\n", x)
 
 typedef int8_t s8;
 typedef int16_t s16;
@@ -32,6 +31,13 @@ typedef double f64;
 typedef unsigned char uchar;
 
 typedef size_t size32;
+
+typedef union {
+    u8 rgba[4];
+    struct {
+        u8 r,g,b,a;
+    };
+} u8Color;
 
 #define NULL 0
 
@@ -54,7 +60,7 @@ void* xmalloc(size32 size, char *file, s32 line)
     void *ptr = malloc(size);
     if (!ptr)
     {
-        perror("war1: xmalloc failed!");
+        perror("xmalloc failed!");
         if (file)
         {
             fprintf(stderr, "  at file %s (%d)\n", file, line);
@@ -70,7 +76,7 @@ void* xcalloc(size32 count, size32 size, char *file, s32 line)
     void *ptr = calloc(count, size);
     if (!ptr)
     {
-        perror("war1: xcalloc failed!");
+        perror("xcalloc failed!");
         if (file)
         {
             fprintf(stderr, "  at file %s (%d)\n", file, line);
@@ -86,7 +92,7 @@ void* xrealloc(void *ptr, size32 size, char *file, s32 line)
     ptr = realloc(ptr, size);
     if (!ptr)
     {
-        perror("war1: xrealloc failed!");
+        perror("xrealloc failed!");
         if (file)
         {
             fprintf(stderr, "  at file %s (%d)\n", file, line);
