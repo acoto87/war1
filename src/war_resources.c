@@ -81,6 +81,10 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
     // or at least I didn't knew how to decode it.
     if (entry->index == 255)
     {
+        resource->paletteData.colors[0] = 0;
+        resource->paletteData.colors[1] = 0;
+        resource->paletteData.colors[2] = 0;
+
         resource->paletteData.colors[190 * 3 + 0] = 176;
         resource->paletteData.colors[190 * 3 + 1] = 184;
         resource->paletteData.colors[190 * 3 + 2] = 208;
@@ -182,9 +186,9 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
         WarSpriteFrame *frame = &resource->spriteData.frames[i];
 
         u32 off = frame->off;
-        for (int y = frame->dy; y < (frame->dy + frame->h); ++y)
+        for (s32 y = frame->dy; y < (frame->dy + frame->h); ++y)
         {
-            for (int x = frame->dx; x < (frame->dx + frame->w); ++x)
+            for (s32 x = frame->dx; x < (frame->dx + frame->w); ++x)
             {
                 u32 pixel = (x + y * frameWidth) * 4;
                 u32 colorIndex = rawResource.data[off++];

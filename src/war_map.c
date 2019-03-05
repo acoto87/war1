@@ -367,11 +367,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
         // selected unit(s) info
         createUIImageFromSprite(context, "imgUnitInfo", 360, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 0)));
-        // createUIImageFromSprite(context, "imgUnitPortrait0", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 4)));
-        createUIImageFromSprite(context, "imgUnitPortrait1", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 1)));
-        createUIImageFromSprite(context, "imgUnitPortrait2", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 1)));
-        createUIImageFromSprite(context, "imgUnitPortrait3", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 10)));
-        createUIImageFromSprite(context, "imgUnitPortrait4", 361, 0, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 10)));
+        createUIImageFromSprite(context, "imgUnitPortrait0", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 4)));
+        createUIImageFromSprite(context, "imgUnitPortrait1", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 1)));
+        createUIImageFromSprite(context, "imgUnitPortrait2", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 1)));
+        createUIImageFromSprite(context, "imgUnitPortrait3", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 23)));
+        createUIImageFromSprite(context, "imgUnitPortrait4", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 23)));
         createUIImageFromSprite(context, "imgUnitInfoLife", 360, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 16)));
 
         // initial update for the top panel texts

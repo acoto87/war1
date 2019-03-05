@@ -118,28 +118,46 @@ void updateSelectedUnitsInfo(WarContext* context)
 {
     WarMap* map = context->map;
 
+    // retrieve entities of sprites of unit info/portraits
     WarEntity* imgUnitInfo = findUIEntity(context, "imgUnitInfo");
     assert(imgUnitInfo);
 
     WarEntity* imgUnitInfoLife = findUIEntity(context, "imgUnitInfoLife");
     assert(imgUnitInfoLife);
 
-    if (map->selectedEntities.count >= 4)
+    char imgUnitPortraitUIName[17];
+    WarEntity* imgUnitPortraits[5];
+    for (s32 i = 0; i < 5; i++)
     {
-        imgUnitInfo->sprite.frameIndex = 5;
-        imgUnitInfoLife->sprite.frameIndex = 8;
+        sprintf(imgUnitPortraitUIName, "imgUnitPortrait%d", i);
+        imgUnitPortraits[i] = findUIEntity(context, imgUnitPortraitUIName);
+        assert(imgUnitPortraits[i]);
     }
-    else if (map->selectedEntities.count >= 3)
+
+    // reset frame index of the sprites of unit info/portraits
+    imgUnitInfo->sprite.frameIndex = -1;
+    imgUnitInfoLife->sprite.frameIndex = -1;
+
+    for (s32 i = 0; i < 5; i++)
+        imgUnitPortraits[i]->sprite.frameIndex = -1;
+
+    // update the frame index of unit info/portraits 
+    // based on the number of entities selected
+    s32 selectedEntitiesCount = mini(map->selectedEntities.count, 4);
+    if (selectedEntitiesCount >= 2)
     {
-        imgUnitInfo->sprite.frameIndex = 4;
-        imgUnitInfoLife->sprite.frameIndex = 7;
+        // for 4 selected -> frame indices 5, 8
+        // for 3 selected -> frame indices 4, 7
+        // for 2 selected -> frame indices 3, 6
+        imgUnitInfo->sprite.frameIndex = selectedEntitiesCount + 1;
+        imgUnitInfoLife->sprite.frameIndex = selectedEntitiesCount + 4;
+
+        for (s32 i = 1; i <= selectedEntitiesCount; i++)
+        {
+            imgUnitPortraits[i]->sprite.frameIndex = 0;
+        }
     }
-    else if (map->selectedEntities.count >= 2)
-    {
-        imgUnitInfo->sprite.frameIndex = 3;
-        imgUnitInfoLife->sprite.frameIndex = 6;
-    }
-    else if (map->selectedEntities.count >= 1)
+    else if (selectedEntitiesCount >= 1)
     {
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
         WarEntity* selectedEntity = findEntity(context, selectedEntityId);
@@ -156,13 +174,10 @@ void updateSelectedUnitsInfo(WarContext* context)
             {
                 imgUnitInfo->sprite.frameIndex = 2;
             }
+
+            imgUnitPortraits[0]->sprite.frameIndex = 0;
         }
 
-        imgUnitInfoLife->sprite.frameIndex = -1;
-    }
-    else
-    {
-        imgUnitInfo->sprite.frameIndex = -1;
         imgUnitInfoLife->sprite.frameIndex = -1;
     }
 }

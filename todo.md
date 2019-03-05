@@ -3,7 +3,9 @@
 List of thing to do in no particular order
 
 * Bugs
+  * ~~Fix black areas in human unit portraits images.~~
   * Check for memory leaks in the removing animations functionality.
+  * Check why the changing of the global scale renders with the previous global scale after a change.
 
 * General
   * ~~Test the new implementation for lists.~~

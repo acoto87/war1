@@ -71,7 +71,7 @@ bool initGame(WarContext* context)
 	}
 
     // load fonts
-    nvgCreateFont(context->gfx, "roboto-r", "./build/Roboto-Regular.ttf");
+    nvgCreateFont(context->gfx, "defaultFont", "./build/Roboto-Regular.ttf");
 
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
