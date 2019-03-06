@@ -50,6 +50,7 @@ typedef struct
 {
     WarUnitType type;
     s32 resourceIndex;
+    s32 portraitFrameIndex;
     s32 sizex;
     s32 sizey;
 } WarUnitsData;
@@ -57,62 +58,62 @@ typedef struct
 const WarUnitsData unitsData[] = 
 {
     // units
-    { WAR_UNIT_FOOTMAN,                   279, 1, 1 },
-    { WAR_UNIT_GRUNT,                     280, 1, 1 },
-    { WAR_UNIT_PEASANT,                   281, 1, 1 },
-    { WAR_UNIT_PEON,                      282, 1, 1 },
-    { WAR_UNIT_CATAPULT_HUMANS,           283, 1, 1 },
-    { WAR_UNIT_CATAPULT_ORCS,             284, 1, 1 },
-    { WAR_UNIT_KNIGHT,                    285, 1, 1 },
-    { WAR_UNIT_RAIDER,                    286, 1, 1 },
-    { WAR_UNIT_ARCHER,                    287, 1, 1 },
-    { WAR_UNIT_SPEARMAN,                  288, 1, 1 },
-    { WAR_UNIT_CONJURER,                  289, 1, 1 },
-    { WAR_UNIT_WARLOCK,                   290, 1, 1 },
-    { WAR_UNIT_CLERIC,                    291, 1, 1 },
-    { WAR_UNIT_NECROLYTE,                 292, 1, 1 },
-    { WAR_UNIT_MEDIVH,                    293, 1, 1 },
-    { WAR_UNIT_LOTHAR,                    294, 1, 1 },
-    { WAR_UNIT_WOUNDED,                   295, 1, 1 },
-    { WAR_UNIT_GRIZELDA,                  296, 1, 1 },
-    { WAR_UNIT_GARONA,                    296, 1, 1 },
-    { WAR_UNIT_OGRE,                      297, 1, 1 },
-    { WAR_UNIT_SPIDER,                    298, 1, 1 },
-    { WAR_UNIT_SLIME,                     299, 1, 1 },
-    { WAR_UNIT_FIREELEMENTAL,             300, 1, 1 },
-    { WAR_UNIT_SCORPION,                  301, 1, 1 },
-    { WAR_UNIT_BRIGAND,                   302, 1, 1 },
-    { WAR_UNIT_THE_DEAD,                  303, 1, 1 },
-    { WAR_UNIT_SKELETON,                  304, 1, 1 },
-    { WAR_UNIT_DAEMON,                    305, 1, 1 },
-    { WAR_UNIT_WATERELEMENTAL,            306, 1, 1 },
+    { WAR_UNIT_FOOTMAN,                   279,  0, 1, 1 },
+    { WAR_UNIT_GRUNT,                     280,  1, 1, 1 },
+    { WAR_UNIT_PEASANT,                   281,  4, 1, 1 },
+    { WAR_UNIT_PEON,                      282,  5, 1, 1 },
+    { WAR_UNIT_CATAPULT_HUMANS,           283,  6, 1, 1 },
+    { WAR_UNIT_CATAPULT_ORCS,             284,  7, 1, 1 },
+    { WAR_UNIT_KNIGHT,                    285,  8, 1, 1 },
+    { WAR_UNIT_RAIDER,                    286,  9, 1, 1 },
+    { WAR_UNIT_ARCHER,                    287, 10, 1, 1 },
+    { WAR_UNIT_SPEARMAN,                  288, 11, 1, 1 },
+    { WAR_UNIT_CONJURER,                  289,  2, 1, 1 },
+    { WAR_UNIT_WARLOCK,                   290,  3, 1, 1 },
+    { WAR_UNIT_CLERIC,                    291, 12, 1, 1 },
+    { WAR_UNIT_NECROLYTE,                 292, 13, 1, 1 },
+    { WAR_UNIT_MEDIVH,                    293, 54, 1, 1 },
+    { WAR_UNIT_LOTHAR,                    294, 53, 1, 1 },
+    { WAR_UNIT_WOUNDED,                   295, 57, 1, 1 },
+    { WAR_UNIT_GRIZELDA,                  296, 55, 1, 1 },
+    { WAR_UNIT_GARONA,                    296, 56, 1, 1 },
+    { WAR_UNIT_OGRE,                      297, 44, 1, 1 },
+    { WAR_UNIT_SPIDER,                    298, 45, 1, 1 },
+    { WAR_UNIT_SLIME,                     299, 46, 1, 1 },
+    { WAR_UNIT_FIREELEMENTAL,             300, 47, 1, 1 },
+    { WAR_UNIT_SCORPION,                  301, 48, 1, 1 },
+    { WAR_UNIT_BRIGAND,                   302, 58, 1, 1 },
+    { WAR_UNIT_THE_DEAD,                  303, 50, 1, 1 },
+    { WAR_UNIT_SKELETON,                  304, 49, 1, 1 },
+    { WAR_UNIT_DAEMON,                    305, 51, 1, 1 },
+    { WAR_UNIT_WATERELEMENTAL,            306, 52, 1, 1 },
 
     // buildings
-    { WAR_UNIT_FARM_HUMANS,               307, 2, 2 },
-    { WAR_UNIT_FARM_ORCS,                 308, 2, 2 },
-    { WAR_UNIT_BARRACKS_HUMANS,           309, 3, 3 },
-    { WAR_UNIT_BARRACKS_ORCS,             310, 3, 3 },
-    { WAR_UNIT_CHURCH,                    311, 2, 2 },
-    { WAR_UNIT_TEMPLE,                    312, 2, 2 },
-    { WAR_UNIT_TOWER_HUMANS,              313, 2, 2 },
-    { WAR_UNIT_TOWER_ORCS,                314, 2, 2 },
-    { WAR_UNIT_TOWNHALL_HUMANS,           315, 3, 3 },
-    { WAR_UNIT_TOWNHALL_ORCS,             316, 3, 3 },
-    { WAR_UNIT_LUMBERMILL_HUMANS,         317, 3, 3 },
-    { WAR_UNIT_LUMBERMILL_ORCS,           318, 3, 3 },
-    { WAR_UNIT_STABLES,                   319, 3, 3 },
-    { WAR_UNIT_KENNEL,                    320, 3, 3 },
-    { WAR_UNIT_BLACKSMITH_HUMANS,         321, 3, 3 },
-    { WAR_UNIT_BLACKSMITH_ORCS,           322, 3, 3 },
-    { WAR_UNIT_STORMWIND,                 323, 4, 4 },
-    { WAR_UNIT_BLACKROCK,                 324, 4, 4 },
+    { WAR_UNIT_FARM_HUMANS,               307, 14, 2, 2 },
+    { WAR_UNIT_FARM_ORCS,                 308, 15, 2, 2 },
+    { WAR_UNIT_BARRACKS_HUMANS,           309, 16, 3, 3 },
+    { WAR_UNIT_BARRACKS_ORCS,             310, 17, 3, 3 },
+    { WAR_UNIT_CHURCH,                    311, 28, 2, 2 },
+    { WAR_UNIT_TEMPLE,                    312, 29, 2, 2 },
+    { WAR_UNIT_TOWER_HUMANS,              313, 18, 2, 2 },
+    { WAR_UNIT_TOWER_ORCS,                314, 19, 2, 2 },
+    { WAR_UNIT_TOWNHALL_HUMANS,           315, 20, 3, 3 },
+    { WAR_UNIT_TOWNHALL_ORCS,             316, 21, 3, 3 },
+    { WAR_UNIT_LUMBERMILL_HUMANS,         317, 22, 3, 3 },
+    { WAR_UNIT_LUMBERMILL_ORCS,           318, 23, 3, 3 },
+    { WAR_UNIT_STABLES,                   319, 24, 3, 3 },
+    { WAR_UNIT_KENNEL,                    320, 25, 3, 3 },
+    { WAR_UNIT_BLACKSMITH_HUMANS,         321, 26, 3, 3 },
+    { WAR_UNIT_BLACKSMITH_ORCS,           322, 27, 3, 3 },
+    { WAR_UNIT_STORMWIND,                 323, 31, 4, 4 },
+    { WAR_UNIT_BLACKROCK,                 324, 32, 4, 4 },
 
     // neutral
-    { WAR_UNIT_GOLDMINE,                  325, 3, 3 },
+    { WAR_UNIT_GOLDMINE,                  325, 30, 3, 3 },
 
     // corpses
-    { WAR_UNIT_HUMAN_CORPSE,              326, 1, 1 },
-    { WAR_UNIT_ORC_CORPSE,                326, 1, 1 }
+    { WAR_UNIT_HUMAN_CORPSE,              326, 0, 1, 1 },
+    { WAR_UNIT_ORC_CORPSE,                326, 0, 1, 1 }
 };
 
 typedef struct
@@ -607,8 +608,22 @@ bool isDudeUnit(WarEntity* entity)
         case WAR_UNIT_CLERIC:
         case WAR_UNIT_NECROLYTE:
         case WAR_UNIT_MEDIVH:
+        case WAR_UNIT_LOTHAR:
+        case WAR_UNIT_WOUNDED:
+        case WAR_UNIT_GRIZELDA:
+        case WAR_UNIT_GARONA:
+        case WAR_UNIT_OGRE:
+        case WAR_UNIT_SPIDER:
+        case WAR_UNIT_SLIME:
+        case WAR_UNIT_FIREELEMENTAL:
+        case WAR_UNIT_SCORPION:
+        case WAR_UNIT_BRIGAND:
+        case WAR_UNIT_THE_DEAD:
+        case WAR_UNIT_SKELETON:
+        case WAR_UNIT_DAEMON:
+        case WAR_UNIT_WATERELEMENTAL:
             return true;
-    
+
         default:
             return false;
     }

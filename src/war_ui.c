@@ -143,18 +143,27 @@ void updateSelectedUnitsInfo(WarContext* context)
 
     // update the frame index of unit info/portraits 
     // based on the number of entities selected
+    //
+    // TODO: the max number of selected entities shouldn't greater than 4 but
+    // that's not implemented right now, so put a min call to guard for that.
     s32 selectedEntitiesCount = mini(map->selectedEntities.count, 4);
     if (selectedEntitiesCount >= 2)
     {
-        // for 4 selected -> frame indices 5, 8
-        // for 3 selected -> frame indices 4, 7
-        // for 2 selected -> frame indices 3, 6
+        // for 4 units selected -> frame indices 5, 8
+        // for 3 units selected -> frame indices 4, 7
+        // for 2 units selected -> frame indices 3, 6
         imgUnitInfo->sprite.frameIndex = selectedEntitiesCount + 1;
         imgUnitInfoLife->sprite.frameIndex = selectedEntitiesCount + 4;
 
         for (s32 i = 1; i <= selectedEntitiesCount; i++)
         {
-            imgUnitPortraits[i]->sprite.frameIndex = 0;
+            WarEntityId selectedEntityId = map->selectedEntities.items[i - 1];
+            WarEntity* selectedEntity = findEntity(context, selectedEntityId);
+            if (selectedEntity && isUnit(selectedEntity))
+            {
+                WarUnitsData unitsData = getUnitsData(selectedEntity->unit.type);
+                imgUnitPortraits[i]->sprite.frameIndex = unitsData.portraitFrameIndex;
+            }
         }
     }
     else if (selectedEntitiesCount >= 1)
@@ -175,7 +184,8 @@ void updateSelectedUnitsInfo(WarContext* context)
                 imgUnitInfo->sprite.frameIndex = 2;
             }
 
-            imgUnitPortraits[0]->sprite.frameIndex = 0;
+            WarUnitsData unitsData = getUnitsData(selectedEntity->unit.type);
+            imgUnitPortraits[0]->sprite.frameIndex = unitsData.portraitFrameIndex;
         }
 
         imgUnitInfoLife->sprite.frameIndex = -1;

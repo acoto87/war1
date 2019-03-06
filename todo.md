@@ -3,7 +3,6 @@
 List of thing to do in no particular order
 
 * Bugs
-  * ~~Fix black areas in human unit portraits images.~~
   * Check for memory leaks in the removing animations functionality.
   * Check why the changing of the global scale renders with the previous global scale after a change.
 
@@ -32,6 +31,12 @@ List of thing to do in no particular order
 
 * Gameplay
   * > Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
+    * ~~Fix black areas in human unit portraits images.~~
+    * ~~Add selected units back images.~~
+    * ~~Add portraits to selected units.~~
+    * ~~Remove pink pixels from unit portraits images.~~
+    * > Add command images based on selected(s) unit types.
+    * Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
   * ~~Manage the gold in the mines and explode it when the gold is over.~~
   * ~~Add ruins to collapsed buildings.~~
   * Add explosion animation to living npc units when clicking to many times.

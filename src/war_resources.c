@@ -79,7 +79,7 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
     // this is a hack in palette #255 because the UI graphics of the unit info
     // is wrong when using the palette as it came from the file,
     // or at least I didn't knew how to decode it.
-    if (entry->index == 255)
+    if (index == 255)
     {
         resource->paletteData.colors[0] = 0;
         resource->paletteData.colors[1] = 0;
@@ -120,6 +120,14 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
         resource->paletteData.colors[189 * 3 + 0] = 144;
         resource->paletteData.colors[189 * 3 + 1] = 156;
         resource->paletteData.colors[189 * 3 + 2] = 176;
+    }
+    // this palette has an ugly pink color (color #150)
+    // that is showing in the unit portraits, so change it to dark gray
+    else if (index == 217)
+    {
+        resource->paletteData.colors[150 * 3 + 0] = 46;
+        resource->paletteData.colors[150 * 3 + 1] = 54;
+        resource->paletteData.colors[150 * 3 + 2] = 54;
     }
 }
 
