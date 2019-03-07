@@ -373,6 +373,12 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImageFromSprite(context, "imgUnitPortrait3", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 23)));
         createUIImageFromSprite(context, "imgUnitPortrait4", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 23)));
         createUIImageFromSprite(context, "imgUnitInfoLife", 360, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 16)));
+        createUIText(context, "txtUnitName", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 25)));
+        createUIRect(context, "lifeBar0", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "lifeBar1", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 17)), vec2i(27, 3), U8COLOR_RED);
+        createUIRect(context, "lifeBar2", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 17)), vec2i(27, 3), U8COLOR_RED);
+        createUIRect(context, "lifeBar3", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 39)), vec2i(27, 3), U8COLOR_RED);
+        createUIRect(context, "lifeBar4", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 39)), vec2i(27, 3), U8COLOR_RED);
 
         // initial update for the top panel texts
         updateGoldText(context);

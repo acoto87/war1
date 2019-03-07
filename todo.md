@@ -35,7 +35,10 @@ List of thing to do in no particular order
     * ~~Add selected units back images.~~
     * ~~Add portraits to selected units.~~
     * ~~Remove pink pixels from unit portraits images.~~
-    * > Add command images based on selected(s) unit types.
+    * ~~Add name to the unit portraits.~~
+    * > Add life bar to the unit portraits.
+    * Add magic to the unit portraits.
+    * Add command images based on selected(s) unit types.
     * Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
   * ~~Manage the gold in the mines and explode it when the gold is over.~~
   * ~~Add ruins to collapsed buildings.~~

@@ -39,6 +39,12 @@ typedef union {
     };
 } u8Color;
 
+#define U8COLOR_WHITE ((u8Color){255, 255, 255, 255})
+#define U8COLOR_BLACK ((u8Color){0, 0, 0, 255})
+#define U8COLOR_RED ((u8Color){255, 0, 0, 255})
+#define U8COLOR_GREEN ((u8Color){0, 255, 0, 255})
+#define U8COLOR_BLUE ((u8Color){0, 0, 255, 255})
+
 #define NULL 0
 
 #define internal static

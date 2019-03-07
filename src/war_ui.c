@@ -19,6 +19,64 @@ void setUIText(WarContext* context, WarEntity* entity, char* text)
     }
 }
 
+WarEntity* createUIText(WarContext* context, char* name, vec2 position)
+{
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT);
+    addTransformComponent(context, entity, position);
+    addUIComponent(context, entity, name);
+    addTextComponent(context, entity, NULL);
+    entity->text.shadowBlur = 1.0f;
+    entity->text.shadowOffset = VEC2_ONE;
+
+    return entity;
+}
+
+WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, u8Color color)
+{
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_RECT);
+    addTransformComponent(context, entity, position);
+    addUIComponent(context, entity, name);
+    addRectComponent(context, entity, size, color);
+
+    return entity;
+}
+
+WarEntity* createUIImage(WarContext* context, char* name, s32 resourceIndex, vec2 position)
+{
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+    addTransformComponent(context, entity, position);
+    addUIComponent(context, entity, name);
+    addSpriteComponentFromResource(context, entity, resourceIndex);
+
+    return entity;
+}
+
+WarEntity* createUIImageFromSprite(WarContext* context, char* name, s32 resourceIndex, s32 frameIndex, vec2 position)
+{
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+    addTransformComponent(context, entity, position);
+    addUIComponent(context, entity, name);
+    addSpriteComponentFromResource(context, entity, resourceIndex);
+
+    entity->sprite.frameIndex = frameIndex;
+
+    return entity;
+}
+
+bool isUIEntity(WarEntity* entity)
+{
+    switch (entity->type)
+    {
+        case WAR_ENTITY_TYPE_IMAGE:
+        case WAR_ENTITY_TYPE_TEXT:
+        case WAR_ENTITY_TYPE_RECT:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 void updateStatusText(WarContext* context)
 {
     WarMap* map = context->map;
@@ -43,49 +101,6 @@ void updateStatusText(WarContext* context)
     {
         clearUIText(context, txtStatus);
     }
-}
-
-WarEntity* createUIText(WarContext* context, char* name, vec2 position)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addTextComponent(context, entity, NULL);
-    entity->text.shadowBlur = 1.0f;
-    entity->text.shadowOffset = VEC2_ONE;
-
-    return entity;
-}
-
-WarEntity* createUIImage(WarContext* context, char* name, s32 resourceIndex, vec2 position)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addSpriteComponentFromResource(context, entity, resourceIndex);
-
-    return entity;
-}
-
-WarEntity* createUIImageFromSprite(WarContext* context, char* name, s32 resourceIndex, s32 frameIndex, vec2 position)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addSpriteComponentFromResource(context, entity, resourceIndex);
-
-    entity->sprite.frameIndex = frameIndex;
-
-    return entity;
 }
 
 void updateGoldText(WarContext* context)
@@ -134,12 +149,17 @@ void updateSelectedUnitsInfo(WarContext* context)
         assert(imgUnitPortraits[i]);
     }
 
+    WarEntity* txtUnitName = findUIEntity(context, "txtUnitName");
+    assert(txtUnitName);
+
     // reset frame index of the sprites of unit info/portraits
     imgUnitInfo->sprite.frameIndex = -1;
     imgUnitInfoLife->sprite.frameIndex = -1;
 
     for (s32 i = 0; i < 5; i++)
         imgUnitPortraits[i]->sprite.frameIndex = -1;
+
+    setUIText(context, txtUnitName, NULL);
 
     // update the frame index of unit info/portraits 
     // based on the number of entities selected
@@ -186,9 +206,8 @@ void updateSelectedUnitsInfo(WarContext* context)
 
             WarUnitsData unitsData = getUnitsData(selectedEntity->unit.type);
             imgUnitPortraits[0]->sprite.frameIndex = unitsData.portraitFrameIndex;
+            setUIText(context, txtUnitName, unitsData.name);
         }
-
-        imgUnitInfoLife->sprite.frameIndex = -1;
     }
 }
 
@@ -311,23 +330,23 @@ void renderMapUI(WarContext* context)
     renderSelectionRect(context);
 
     // render images
-    renderPanels(context);
+    // renderPanels(context);
     
-    // render minimap
-    renderMinimap(context);
-    renderMinimapViewport(context);
-
     // render text
     {
         for(s32 i = 0; i < map->entities.count; i++)
         {
             WarEntity *entity = map->entities.items[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_TEXT)
+            if (entity && isUIEntity(entity))
             {
                 renderEntity(context, entity, false);
             }
         }
     }
+
+    // render minimap
+    renderMinimap(context);
+    renderMinimapViewport(context);
 
     // DEBUG:
     // Render debug info

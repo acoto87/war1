@@ -193,6 +193,19 @@ void removeTextComponent(WarContext* context, WarEntity* entity)
     entity->text = (WarTextComponent){0};
 }
 
+void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color)
+{
+    entity->rect = (WarRectComponent){0};
+    entity->rect.enabled = true;
+    entity->rect.size = size;
+    entity->rect.color = color;
+}
+
+void removeRectComponent(WarContext* context, WarEntity* entity)
+{
+    entity->rect = (WarRectComponent){0};
+}
+
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type)
 {
@@ -677,6 +690,27 @@ void _renderText(WarContext* context, WarEntity* entity)
     }
 }
 
+void _renderRect(WarContext* context, WarEntity* entity)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarTransformComponent* transform = &entity->transform;
+    WarUIComponent* ui = &entity->ui;
+    WarRectComponent* rect = &entity->rect;
+
+    if (ui->enabled && rect->enabled)
+    {
+        nvgSave(gfx);
+        nvgTranslate(gfx, transform->position.x, transform->position.y);
+        nvgScale(gfx, transform->scale.x, transform->scale.y);
+
+        NVGcolor color = nvgRGBA(rect->color.r, rect->color.g, rect->color.b, rect->color.a);
+        nvgFillRect(gfx, rectf(0.0f, 0.0f, rect->size.x, rect->size.y), color);
+
+        nvgRestore(gfx);
+    }
+}
+
 void renderEntity(WarContext* context, WarEntity* entity, bool selected)
 {
     NVGcontext* gfx = context->gfx;
@@ -726,6 +760,12 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
             case WAR_ENTITY_TYPE_TEXT:
             {
                 _renderText(context, entity);
+                break;
+            }
+
+            case WAR_ENTITY_TYPE_RECT:
+            {
+                _renderRect(context, entity);
                 break;
             }
 

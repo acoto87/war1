@@ -41,6 +41,9 @@ void removeUIComponent(WarContext* context, WarEntity* entity);
 void addTextComponent(WarContext* context, WarEntity* entity, char* text);
 void removeTextComponent(WarContext* context, WarEntity* entity);
 
+void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color);
+void removeRectComponent(WarContext* context, WarEntity* entity);
+
 // Roads
 WarEntity* createRoad(WarContext* context);
 void addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player);

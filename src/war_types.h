@@ -437,6 +437,7 @@ typedef enum
     WAR_ENTITY_TYPE_RUIN,
     WAR_ENTITY_TYPE_FOREST,
     WAR_ENTITY_TYPE_TEXT,
+    WAR_ENTITY_TYPE_RECT,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -826,7 +827,7 @@ typedef struct _WarState
         {
             s32 townHallId;
             bool insideBuilding;
-        } deliver;        
+        } deliver;
     };
 } WarState;
 
@@ -943,6 +944,13 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    vec2 size;
+    u8Color color;
+} WarRectComponent;
+
+typedef struct
+{
+    bool enabled;
     WarEntityId id;
     WarEntityType type;
     WarTransformComponent transform;
@@ -956,6 +964,7 @@ typedef struct
     WarAnimationsComponent animations;
     WarUIComponent ui;
     WarTextComponent text;
+    WarRectComponent rect;
 } WarEntity;
 
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
