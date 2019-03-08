@@ -129,6 +129,25 @@ void updateWoodText(WarContext* context)
     setUIText(context, txtWood, buffer);
 }
 
+void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
+{
+#define LIFEBAR_RED_THRESHOLD 0.33f
+#define LIFEBAR_YELLOW_THRESHOLD 0.66f
+#define LIFEBAR_WIDTH_PX 27
+
+    f32 hpPercent = percentabf01(unit->hp, unit->maxhp);
+
+    if (hpPercent <= LIFEBAR_RED_THRESHOLD)
+        rectLifeBar->rect.color = U8COLOR_RED;
+    else if (hpPercent <= LIFEBAR_YELLOW_THRESHOLD)
+        rectLifeBar->rect.color = U8COLOR_YELLOW;
+    else
+        rectLifeBar->rect.color = U8COLOR_GREEN;
+
+    rectLifeBar->rect.size.x = (s32)(hpPercent * LIFEBAR_WIDTH_PX);
+    rectLifeBar->rect.enabled = true;
+}
+
 void updateSelectedUnitsInfo(WarContext* context)
 {
     WarMap* map = context->map;
@@ -140,13 +159,18 @@ void updateSelectedUnitsInfo(WarContext* context)
     WarEntity* imgUnitInfoLife = findUIEntity(context, "imgUnitInfoLife");
     assert(imgUnitInfoLife);
 
-    char imgUnitPortraitUIName[17];
+    char uiEntityName[20];
     WarEntity* imgUnitPortraits[5];
+    WarEntity* rectLifeBars[5];
     for (s32 i = 0; i < 5; i++)
     {
-        sprintf(imgUnitPortraitUIName, "imgUnitPortrait%d", i);
-        imgUnitPortraits[i] = findUIEntity(context, imgUnitPortraitUIName);
+        sprintf(uiEntityName, "imgUnitPortrait%d", i);
+        imgUnitPortraits[i] = findUIEntity(context, uiEntityName);
         assert(imgUnitPortraits[i]);
+
+        sprintf(uiEntityName, "rectLifeBar%d", i);
+        rectLifeBars[i] = findUIEntity(context, uiEntityName);
+        assert(rectLifeBars[i]);
     }
 
     WarEntity* txtUnitName = findUIEntity(context, "txtUnitName");
@@ -157,7 +181,10 @@ void updateSelectedUnitsInfo(WarContext* context)
     imgUnitInfoLife->sprite.frameIndex = -1;
 
     for (s32 i = 0; i < 5; i++)
+    {
         imgUnitPortraits[i]->sprite.frameIndex = -1;
+        rectLifeBars[i]->rect.enabled = false;
+    }
 
     setUIText(context, txtUnitName, NULL);
 
@@ -181,8 +208,12 @@ void updateSelectedUnitsInfo(WarContext* context)
             WarEntity* selectedEntity = findEntity(context, selectedEntityId);
             if (selectedEntity && isUnit(selectedEntity))
             {
-                WarUnitsData unitsData = getUnitsData(selectedEntity->unit.type);
+                WarUnitComponent* unit = &selectedEntity->unit;
+
+                WarUnitsData unitsData = getUnitsData(unit->type);
                 imgUnitPortraits[i]->sprite.frameIndex = unitsData.portraitFrameIndex;
+
+                setLifeBar(rectLifeBars[i], unit);
             }
         }
     }
@@ -204,9 +235,13 @@ void updateSelectedUnitsInfo(WarContext* context)
                 imgUnitInfo->sprite.frameIndex = 2;
             }
 
-            WarUnitsData unitsData = getUnitsData(selectedEntity->unit.type);
+            WarUnitComponent* unit = &selectedEntity->unit;
+
+            WarUnitsData unitsData = getUnitsData(unit->type);
             imgUnitPortraits[0]->sprite.frameIndex = unitsData.portraitFrameIndex;
             setUIText(context, txtUnitName, unitsData.name);
+
+            setLifeBar(rectLifeBars[0], unit);
         }
     }
 }
@@ -329,10 +364,7 @@ void renderMapUI(WarContext* context)
     // render selection rect
     renderSelectionRect(context);
 
-    // render images
-    // renderPanels(context);
-    
-    // render text
+    // render ui elements
     {
         for(s32 i = 0; i < map->entities.count; i++)
         {

@@ -360,43 +360,40 @@ void _renderRoad(WarContext* context, WarEntity* entity)
     WarMapTilesetType tilesetType = context->map->tilesetType;
     assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
-    if (sprite->enabled)
+    if (sprite->enabled && road->enabled)
     {
-        if (road->enabled)
+        WarRoadPieceList* pieces = &road->pieces;
+
+        NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, road->pieces.count);
+
+        for (s32 i = 0; i < pieces->count; i++)
         {
-            WarRoadPieceList* pieces = &road->pieces;
+            // get the index of the tile in the spritesheet of the map,
+            // corresponding to the current tileset type (forest, swamp)
+            WarRoadsData roadsData = getRoadsData(pieces->items[i].type);
 
-            NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, road->pieces.count);
+            s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                ? roadsData.tileIndexForest : roadsData.tileIndexSwamp;
+            
+            // the position in the world of the road piece tile
+            s32 x = pieces->items[i].tilex;
+            s32 y = pieces->items[i].tiley;
 
-            for (s32 i = 0; i < pieces->count; i++)
-            {
-                // get the index of the tile in the spritesheet of the map,
-                // corresponding to the current tileset type (forest, swamp)
-                WarRoadsData roadsData = getRoadsData(pieces->items[i].type);
+            // coordinates in pixels of the road piece tile
+            s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+            s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                    ? roadsData.tileIndexForest : roadsData.tileIndexSwamp;
-                
-                // the position in the world of the road piece tile
-                s32 x = pieces->items[i].tilex;
-                s32 y = pieces->items[i].tiley;
+            nvgSave(gfx);
+            nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
-                // coordinates in pixels of the road piece tile
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+            rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
 
-                nvgSave(gfx);
-                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-
-                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
-
-                nvgRestore(gfx);
-            }
-
-            nvgEndImageBatch(gfx, batch);
+            nvgRestore(gfx);
         }
+
+        nvgEndImageBatch(gfx, batch);
     }
 }
 
@@ -411,61 +408,58 @@ void _renderWall(WarContext* context, WarEntity* entity)
     WarMapTilesetType tilesetType = context->map->tilesetType;
     assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
-    if (sprite->enabled)
+    if (sprite->enabled && wall->enabled)
     {
-        if (wall->enabled)
+        WarWallPieceList* pieces = &wall->pieces;
+
+        NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, wall->pieces.count);
+
+        for (s32 i = 0; i < pieces->count; i++)
         {
-            WarWallPieceList* pieces = &wall->pieces;
+            WarWallPiece* piece = &pieces->items[i];
 
-            NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, wall->pieces.count);
+            // get the index of the tile in the spritesheet of the map,
+            // corresponding to the current tileset type (forest, swamp)
+            WarWallsData wallsData = getWallsData(piece->type);
 
-            for (s32 i = 0; i < pieces->count; i++)
+            s32 tileIndex = 0;
+
+            s32 hpPercent = percentabi(piece->hp, piece->maxhp);
+            if (hpPercent <= 0)
             {
-                WarWallPiece* piece = &pieces->items[i];
-
-                // get the index of the tile in the spritesheet of the map,
-                // corresponding to the current tileset type (forest, swamp)
-                WarWallsData wallsData = getWallsData(piece->type);
-
-                s32 tileIndex = 0;
-
-                s32 hpPercent = percentabi(piece->hp, piece->maxhp);
-                if (hpPercent <= 0)
-                {
-                    tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                        ? wallsData.tileDestroyedForest : wallsData.tileDestroyedSwamp;
-                }
-                else if(hpPercent < 50)
-                {
-                    tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                        ? wallsData.tileDamagedForest : wallsData.tileDamagedSwamp;
-                }
-                else
-                {
-                    tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                        ? wallsData.tileForest : wallsData.tileSwamp;
-                }
-
-                // the position in the world of the wall piece tile
-                s32 x = piece->tilex;
-                s32 y = piece->tiley;
-
-                // coordinates in pixels of the wall piece tile
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                nvgSave(gfx);
-                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-
-                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
-
-                nvgRestore(gfx);
+                tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                    ? wallsData.tileDestroyedForest : wallsData.tileDestroyedSwamp;
+            }
+            else if(hpPercent < 50)
+            {
+                tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                    ? wallsData.tileDamagedForest : wallsData.tileDamagedSwamp;
+            }
+            else
+            {
+                tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                    ? wallsData.tileForest : wallsData.tileSwamp;
             }
 
-            nvgEndImageBatch(gfx, batch);
+            // the position in the world of the wall piece tile
+            s32 x = piece->tilex;
+            s32 y = piece->tiley;
+
+            // coordinates in pixels of the wall piece tile
+            s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+            s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+            nvgSave(gfx);
+            nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+            rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+
+            nvgRestore(gfx);
         }
+
+        nvgEndImageBatch(gfx, batch);
     }
 }
 
@@ -480,86 +474,79 @@ void _renderRuin(WarContext* context, WarEntity* entity)
     WarMapTilesetType tilesetType = context->map->tilesetType;
     assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
-    if (sprite->enabled)
+    if (sprite->enabled && ruin->enabled)
     {
-        if (ruin->enabled)
+        WarRuinPieceList* pieces = &ruin->pieces;
+
+        NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, ruin->pieces.count);
+
+        for (s32 i = 0; i < ruin->pieces.count; i++)
         {
-            WarRuinPieceList* pieces = &ruin->pieces;
-
-            NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, ruin->pieces.count);
-
-            for (s32 i = 0; i < ruin->pieces.count; i++)
-            {
-                WarRuinPiece* piece = &pieces->items[i];
-                if (piece->type == WAR_RUIN_PIECE_NONE)
-                    continue;
-                    
-                // get the index of the tile in the spritesheet of the map,
-                // corresponding to the current tileset type (forest, swamp)
-                WarRuinsData ruinsData = getRuinsData(piece->type);
+            WarRuinPiece* piece = &pieces->items[i];
+            if (piece->type == WAR_RUIN_PIECE_NONE)
+                continue;
                 
-                s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                    ? ruinsData.tileIndexForest : ruinsData.tileIndexSwamp;
-                
-                // the position in the world of the road piece tile
-                s32 x = piece->tilex;
-                s32 y = piece->tiley;
+            // get the index of the tile in the spritesheet of the map,
+            // corresponding to the current tileset type (forest, swamp)
+            WarRuinsData ruinsData = getRuinsData(piece->type);
+            
+            s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
+                ? ruinsData.tileIndexForest : ruinsData.tileIndexSwamp;
+            
+            // the position in the world of the road piece tile
+            s32 x = piece->tilex;
+            s32 y = piece->tiley;
 
-                // coordinates in pixels of the road piece tile
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+            // coordinates in pixels of the road piece tile
+            s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+            s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                nvgSave(gfx);
-                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            nvgSave(gfx);
+            nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
-                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+            rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
 
-                nvgRestore(gfx);
-            }
-
-            nvgEndImageBatch(gfx, batch);
+            nvgRestore(gfx);
         }
+
+        nvgEndImageBatch(gfx, batch);
     }
 }
 
 void _renderForest(WarContext* context, WarEntity* entity)
 {
-    WarSpriteComponent* sprite = &entity->sprite;
     WarForestComponent* forest = &entity->forest;
 
     // the wood are only for forest and swamp maps
     WarMapTilesetType tilesetType = context->map->tilesetType;
     assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
 
-    if (sprite->enabled)
+    if (forest->enabled)
     {
-        if (forest->enabled)
+        WarTreeList* trees = &forest->trees;
+        for (s32 i = 0; i < trees->count; i++)
         {
-            WarTreeList* trees = &forest->trees;
-            for (s32 i = 0; i < trees->count; i++)
-            {
-                WarTree* tree = &trees->items[i];
+            WarTree* tree = &trees->items[i];
 
-                if (tree->type == WAR_TREE_NONE)
-                    continue;
+            if (tree->type == WAR_TREE_NONE)
+                continue;
 
-                WarTreesData data = getTreesData(tree->type);
+            WarTreesData data = getTreesData(tree->type);
 
-                // the position in the world of the wood tile
-                s32 x = tree->tilex;
-                s32 y = tree->tiley;
+            // the position in the world of the wood tile
+            s32 x = tree->tilex;
+            s32 y = tree->tiley;
 
-                s32 prevTileIndex = getMapTileIndex(context, x, y);
-                s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
+            s32 prevTileIndex = getMapTileIndex(context, x, y);
+            s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
 
-                if (prevTileIndex != newTileIndex)
-                    logDebug("different tile index for tree (%d, %d), prev: %d, new: %d\n", x, y, prevTileIndex, newTileIndex);
+            if (prevTileIndex != newTileIndex)
+                logDebug("different tile index for tree (%d, %d), prev: %d, new: %d\n", x, y, prevTileIndex, newTileIndex);
 
-                setMapTileIndex(context, x, y, newTileIndex);
-            }            
-        }
+            setMapTileIndex(context, x, y, newTileIndex);
+        }            
     }
 }
 

@@ -39,11 +39,12 @@ typedef union {
     };
 } u8Color;
 
-#define U8COLOR_WHITE ((u8Color){255, 255, 255, 255})
-#define U8COLOR_BLACK ((u8Color){0, 0, 0, 255})
-#define U8COLOR_RED ((u8Color){255, 0, 0, 255})
-#define U8COLOR_GREEN ((u8Color){0, 255, 0, 255})
-#define U8COLOR_BLUE ((u8Color){0, 0, 255, 255})
+#define U8COLOR_WHITE ((u8Color){{255, 255, 255, 255}})
+#define U8COLOR_BLACK ((u8Color){{0, 0, 0, 255}})
+#define U8COLOR_RED ((u8Color){{255, 0, 0, 255}})
+#define U8COLOR_GREEN ((u8Color){{0, 255, 0, 255}})
+#define U8COLOR_BLUE ((u8Color){{0, 0, 255, 255}})
+#define U8COLOR_YELLOW ((u8Color){{255, 255, 0, 255}})
 
 #define NULL 0
 
@@ -56,10 +57,10 @@ typedef union {
 #define NOT_IMPLEMENTED fprintf(stderr, "Not implemented at %s (%d)", __FILE__, __LINE__)
 
 #define readu8(arr, index) (arr[index])
-#define reads16(arr, index) (*(s16*)(rawResource.data + (index)))
-#define readu16(arr, index) (*(u16*)(rawResource.data + (index)))
-#define reads32(arr, index) (*(s32*)(rawResource.data + (index)))
-#define readu32(arr, index) (*(u32*)(rawResource.data + (index)))
+#define reads16(arr, index) (*(s16*)((arr) + (index)))
+#define readu16(arr, index) (*(u16*)((arr) + (index)))
+#define reads32(arr, index) (*(s32*)((arr) + (index)))
+#define readu32(arr, index) (*(u32*)((arr) + (index)))
 
 void* xmalloc(size32 size, char *file, s32 line)
 {

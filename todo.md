@@ -5,6 +5,7 @@ List of thing to do in no particular order
 * Bugs
   * Check for memory leaks in the removing animations functionality.
   * Check why the changing of the global scale renders with the previous global scale after a change.
+  * Corpses can be selected, it shouldn't.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -28,6 +29,7 @@ List of thing to do in no particular order
   * ~~Make walls behavior like the trees.~~
   * ~~Make ruins behavior like the trees.~~
   * ~~Update minimap with chopped trees.~~
+  * Remove global __log__ and move it to WarContext.
 
 * Gameplay
   * > Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
@@ -36,8 +38,9 @@ List of thing to do in no particular order
     * ~~Add portraits to selected units.~~
     * ~~Remove pink pixels from unit portraits images.~~
     * ~~Add name to the unit portraits.~~
-    * > Add life bar to the unit portraits.
-    * Add magic to the unit portraits.
+    * ~~Add life bar to the unit portraits.~~
+    * > Add magic to the unit portraits.
+    * Add complete % bar only when there is something building.
     * Add command images based on selected(s) unit types.
     * Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
   * ~~Manage the gold in the mines and explode it when the gold is over.~~
