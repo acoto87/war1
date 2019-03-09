@@ -5,7 +5,6 @@ WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
     { WAR_STATE_PATROL,   enterPatrolState,     leavePatrolState,     updatePatrolState,     freePatrolState     },
     { WAR_STATE_FOLLOW,   enterFollowState,     leaveFollowState,     updateFollowState,     freeFollowState     },
     { WAR_STATE_ATTACK,   enterAttackState,     leaveAttackState,     updateAttackState,     freeAttackState     },
-    { WAR_STATE_BUILD,    NULL,                 NULL,                 NULL,                  NULL                },
     { WAR_STATE_GOLD,     enterGatherGoldState, leaveGatherGoldState, updateGatherGoldState, freeGatherGoldState },
     { WAR_STATE_MINING,   enterMiningState,     leaveMiningState,     updateMiningState,     freeMiningState     },
     { WAR_STATE_WOOD,     enterGatherWoodState, leaveGatherWoodState, updateGatherWoodState, freeGatherWoodState },
@@ -14,6 +13,7 @@ WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
     { WAR_STATE_DEATH,    enterDeathState,      leaveDeathState,      updateDeathState,      freeDeathState      },
     { WAR_STATE_DAMAGED,  enterDamagedState,    leaveDamagedState,    updateDamagedState,    freeDamagedState    },
     { WAR_STATE_COLLAPSE, enterCollapseState,   leaveCollapseState,   updateCollapseState,   freeCollapseState   },
+    { WAR_STATE_BUILDING, enterBuildingState,   leaveBuildingState,   updateBuildingState,   freeBuildingState   },
     { WAR_STATE_WAIT,     enterWaitState,       leaveWaitState,       updateWaitState,       freeWaitState       },
 };
 

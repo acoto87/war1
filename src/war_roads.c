@@ -115,7 +115,7 @@ WarEntity* createRoad(WarContext* context)
     WarRoadPieceList pieces;
     WarRoadPieceListInit(&pieces, WarRoadPieceListDefaultOptions);
 
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD);
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD, true);
     addRoadComponent(context, entity, pieces);
     addSpriteComponent(context, entity, map->sprite);
 

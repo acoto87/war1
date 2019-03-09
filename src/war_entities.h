@@ -44,6 +44,10 @@ void removeTextComponent(WarContext* context, WarEntity* entity);
 void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color);
 void removeRectComponent(WarContext* context, WarEntity* entity);
 
+void addTextButtonComponent(WarContext* context, WarEntity* entity, char* text);
+void addImageButtonComponent(WarContext* context, WarEntity* entity, s32 imageResourceIndex);
+void removeButtonComponent(WarContext* context, WarEntity* entity);
+
 // Roads
 WarEntity* createRoad(WarContext* context);
 void addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player);
@@ -81,7 +85,7 @@ bool validTree(WarContext* context, WarEntity* forest, WarTree* tree);
 s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount);
 
 // Entities
-WarEntity* createEntity(WarContext* context, WarEntityType type);
+WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap);
 s32 findEntityIndex(WarContext* context, WarEntityId id);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);

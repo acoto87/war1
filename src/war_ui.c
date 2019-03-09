@@ -21,7 +21,7 @@ void setUIText(WarContext* context, WarEntity* entity, char* text)
 
 WarEntity* createUIText(WarContext* context, char* name, vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT);
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addTextComponent(context, entity, NULL);
@@ -33,7 +33,7 @@ WarEntity* createUIText(WarContext* context, char* name, vec2 position)
 
 WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, u8Color color)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_RECT);
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_RECT, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addRectComponent(context, entity, size, color);
@@ -43,7 +43,7 @@ WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 siz
 
 WarEntity* createUIImage(WarContext* context, char* name, s32 resourceIndex, vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addSpriteComponentFromResource(context, entity, resourceIndex);
@@ -53,7 +53,7 @@ WarEntity* createUIImage(WarContext* context, char* name, s32 resourceIndex, vec
 
 WarEntity* createUIImageFromSprite(WarContext* context, char* name, s32 resourceIndex, s32 frameIndex, vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE);
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addSpriteComponentFromResource(context, entity, resourceIndex);
@@ -131,21 +131,39 @@ void updateWoodText(WarContext* context)
 
 void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
 {
-#define LIFEBAR_RED_THRESHOLD 0.33f
-#define LIFEBAR_YELLOW_THRESHOLD 0.66f
-#define LIFEBAR_WIDTH_PX 27
+#define LIFE_BAR_RED_THRESHOLD 0.35f
+#define LIFE_BAR_YELLOW_THRESHOLD 0.70f
+#define LIFE_BAR_WIDTH_PX 27
 
     f32 hpPercent = percentabf01(unit->hp, unit->maxhp);
 
-    if (hpPercent <= LIFEBAR_RED_THRESHOLD)
+    if (hpPercent <= LIFE_BAR_RED_THRESHOLD)
         rectLifeBar->rect.color = U8COLOR_RED;
-    else if (hpPercent <= LIFEBAR_YELLOW_THRESHOLD)
+    else if (hpPercent <= LIFE_BAR_YELLOW_THRESHOLD)
         rectLifeBar->rect.color = U8COLOR_YELLOW;
     else
         rectLifeBar->rect.color = U8COLOR_GREEN;
 
-    rectLifeBar->rect.size.x = (s32)(hpPercent * LIFEBAR_WIDTH_PX);
+    rectLifeBar->rect.size.x = (s32)(hpPercent * LIFE_BAR_WIDTH_PX);
     rectLifeBar->rect.enabled = true;
+}
+
+void setMagicBar(WarEntity* rectMagicBar, WarUnitComponent* unit)
+{
+#define MAGIC_BAR_WIDTH_PX 27
+
+    f32 magicPercent = percentabf01(unit->magic, unit->maxMagic);
+    rectMagicBar->rect.size.x = (s32)(magicPercent * MAGIC_BAR_WIDTH_PX);
+    rectMagicBar->rect.enabled = true;
+}
+
+void setPercentBar(WarEntity* rectPercentBar, WarUnitComponent* unit)
+{
+#define PERCENT_BAR_WIDTH_PX 64
+
+    f32 percent = unit->buildPercent;
+    rectPercentBar->rect.size.x = (s32)(percent * PERCENT_BAR_WIDTH_PX);
+    rectPercentBar->rect.enabled = true;
 }
 
 void updateSelectedUnitsInfo(WarContext* context)
@@ -173,6 +191,12 @@ void updateSelectedUnitsInfo(WarContext* context)
         assert(rectLifeBars[i]);
     }
 
+    WarEntity* rectMagicBar = findUIEntity(context, "rectMagicBar");
+    assert(rectMagicBar);
+
+    WarEntity* rectPercentBar = findUIEntity(context, "rectPercentBar");
+    assert(rectPercentBar);
+
     WarEntity* txtUnitName = findUIEntity(context, "txtUnitName");
     assert(txtUnitName);
 
@@ -186,6 +210,8 @@ void updateSelectedUnitsInfo(WarContext* context)
         rectLifeBars[i]->rect.enabled = false;
     }
 
+    rectMagicBar->rect.enabled = false;
+    rectPercentBar->rect.enabled = false;
     setUIText(context, txtUnitName, NULL);
 
     // update the frame index of unit info/portraits 
@@ -223,19 +249,30 @@ void updateSelectedUnitsInfo(WarContext* context)
         WarEntity* selectedEntity = findEntity(context, selectedEntityId);
         if (selectedEntity && isUnit(selectedEntity))
         {
+            WarUnitComponent* unit = &selectedEntity->unit;
+
             if (isDudeUnit(selectedEntity))
             {
                 if (isMagicUnit(selectedEntity))
+                {
                     imgUnitInfo->sprite.frameIndex = 1;
+                    setMagicBar(rectMagicBar, unit);
+                }
                 else
                     imgUnitInfo->sprite.frameIndex = 0;
             }
             else if (isBuildingUnit(selectedEntity))
             {
-                imgUnitInfo->sprite.frameIndex = 2;
+                if (unit->building)
+                {
+                    imgUnitInfo->sprite.frameIndex = 2;
+                    setPercentBar(rectPercentBar, unit);
+                }
+                else
+                {
+                    imgUnitInfo->sprite.frameIndex = 0;
+                }
             }
-
-            WarUnitComponent* unit = &selectedEntity->unit;
 
             WarUnitsData unitsData = getUnitsData(unit->type);
             imgUnitPortraits[0]->sprite.frameIndex = unitsData.portraitFrameIndex;

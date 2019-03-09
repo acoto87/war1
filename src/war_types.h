@@ -735,7 +735,6 @@ typedef enum
     WAR_STATE_PATROL,
     WAR_STATE_FOLLOW,
     WAR_STATE_ATTACK,
-    WAR_STATE_BUILD,
     WAR_STATE_GOLD,
     WAR_STATE_MINING,
     WAR_STATE_WOOD,
@@ -744,6 +743,7 @@ typedef enum
     WAR_STATE_DEATH,
     WAR_STATE_DAMAGED,
     WAR_STATE_COLLAPSE,
+    WAR_STATE_BUILDING,
     WAR_STATE_WAIT,
 
     WAR_STATE_COUNT
@@ -828,6 +828,21 @@ typedef struct _WarState
             s32 townHallId;
             bool insideBuilding;
         } deliver;
+
+        struct
+        {
+            void* entityToBuild;
+            // NOTE: another type of building unit are the upgrades, represent it
+            // here with another field.
+            // WarUpgrade* upgradeToBuild;
+
+            // many time has passed since start building (in seconds)
+            f32 buildTime;
+            // total time to build (in seconds)
+            f32 totalBuildTime;
+
+            bool cancelled;
+        } building;
     };
 } WarState;
 
@@ -866,12 +881,15 @@ typedef struct
     WarResourceKind resourceKind;
     s32 amount;
 
-    // indicate if the unit is been built
+    // indicate if the unit is building something
     bool building;
+    f32 buildPercent;
   
-    // hit points and armour
+    // hit points, magic and armour
     s32 maxhp;
     s32 hp;
+    s32 maxMagic;
+    s32 magic;
     s32 armour;
     s32 range;
     s32 minDamage;
@@ -951,6 +969,22 @@ typedef struct
 typedef struct
 {
     bool enabled;
+
+    // the background sprites for normal and pressed states
+    WarSprite backgroundNormal;
+    WarSprite backgroundPressed;
+
+    // If the button is a text button this field is set
+    char* text;
+
+    // If the button is an image button these fields are set
+    s32 frameIndex;
+    WarSprite sprite;
+} WarButtonComponent;
+
+typedef struct
+{
+    bool enabled;
     WarEntityId id;
     WarEntityType type;
     WarTransformComponent transform;
@@ -965,6 +999,7 @@ typedef struct
     WarUIComponent ui;
     WarTextComponent text;
     WarRectComponent rect;
+    WarButtonComponent button;
 } WarEntity;
 
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)

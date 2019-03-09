@@ -115,7 +115,7 @@ WarEntity* createWall(WarContext* context)
     WarWallPieceList pieces;
     WarWallPieceListInit(&pieces, WarWallPieceListDefaultOptions);
 
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_WALL);
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_WALL, true);
     addWallComponent(context, entity, pieces);
     addSpriteComponent(context, entity, map->sprite);
 

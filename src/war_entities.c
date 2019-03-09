@@ -206,8 +206,24 @@ void removeRectComponent(WarContext* context, WarEntity* entity)
     entity->rect = (WarRectComponent){0};
 }
 
+void addTextButtonComponent(WarContext* context, WarEntity* entity, char* text)
+{
+
+}
+
+void addImageButtonComponent(WarContext* context, WarEntity* entity, s32 imageResourceIndex)
+{
+
+}
+
+void removeButtonComponent(WarContext* context, WarEntity* entity)
+{
+    // free the sprites here
+    entity->button = (WarButtonComponent){0};
+}
+
 // Entities
-WarEntity* createEntity(WarContext* context, WarEntityType type)
+WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
 {
     WarMap* map = context->map;
     assert(map);
@@ -227,7 +243,8 @@ WarEntity* createEntity(WarContext* context, WarEntityType type)
     entity->stateMachine = (WarStateMachineComponent){0};
     entity->animations = (WarAnimationsComponent){0};
 
-    WarEntityListAdd(&map->entities, entity);
+    if (addToMap)
+        WarEntityListAdd(&map->entities, entity);
 
     return entity;
 }

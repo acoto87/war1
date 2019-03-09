@@ -210,7 +210,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                     }
                 }
                 
-                WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
+                WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
                 addSpriteComponent(context, entity, map->sprite);
                 addForestComponent(context, entity, trees);
 
@@ -227,7 +227,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         // DEBUG: create debug forest
         WarTreeList trees;
         WarTreeListInit(&trees, WarTreeListDefaultOptions);
-        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST);
+        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
         addSpriteComponent(context, entity, map->sprite);
         addForestComponent(context, entity, trees);
         context->debugForest = entity;
@@ -299,7 +299,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
 
-            WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT);
+            WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, true);
             addUnitComponent(context, entity, startUnit.type, startUnit.x, startUnit.y, startUnit.player, startUnit.resourceKind, startUnit.amount);
             addTransformComponent(context, entity, vec2i(startUnit.x * MEGA_TILE_WIDTH, startUnit.y * MEGA_TILE_HEIGHT));
 
@@ -323,6 +323,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
                 entity->unit.maxhp = unitStats.hp;
                 entity->unit.hp = unitStats.hp;
+                entity->unit.maxMagic = unitStats.magic;
+                entity->unit.magic = 100;
                 entity->unit.armour = unitStats.armour;
                 entity->unit.range = unitStats.range;
                 entity->unit.minDamage = unitStats.minDamage;
@@ -375,10 +377,16 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImageFromSprite(context, "imgUnitInfoLife", 360, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 16)));
         createUIText(context, "txtUnitName", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 25)));
         createUIRect(context, "rectLifeBar0", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar1", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 17)), vec2i(27, 3), U8COLOR_RED);
-        createUIRect(context, "rectLifeBar2", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 17)), vec2i(27, 3), U8COLOR_RED);
-        createUIRect(context, "rectLifeBar3", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 39)), vec2i(27, 3), U8COLOR_RED);
-        createUIRect(context, "rectLifeBar4", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 39)), vec2i(27, 3), U8COLOR_RED);
+        createUIRect(context, "rectLifeBar1", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectLifeBar2", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 17)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectLifeBar3", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 39)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectLifeBar4", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 39)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectMagicBar", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(37, 9)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectPercentBar", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 36)), vec2i(64, 7), U8COLOR_GREEN);
+
+        createUIImage(context, "btn1_normal", 364, vec2Addv(rectTopLeft(map->mapPanel), vec2i(50, 5)));
+        createUIImage(context, "btn1_pressed", 365, vec2Addv(rectTopLeft(map->mapPanel), vec2i(80, 5)));
+
 
         // initial update for the top panel texts
         updateGoldText(context);

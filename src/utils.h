@@ -39,6 +39,7 @@ typedef union {
     };
 } u8Color;
 
+#define U8COLOR_TRANSPARENT ((u8Color){{0, 0, 0, 0}})
 #define U8COLOR_WHITE ((u8Color){{255, 255, 255, 255}})
 #define U8COLOR_BLACK ((u8Color){{0, 0, 0, 255}})
 #define U8COLOR_RED ((u8Color){{255, 0, 0, 255}})

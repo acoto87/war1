@@ -76,7 +76,7 @@ WarEntity* createRuins(WarContext* context)
     WarRuinPieceList pieces;
     WarRuinPieceListInit(&pieces, WarRuinPieceListDefaultOptions);
 
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_RUIN);
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_RUIN, true);
     addRuinComponent(context, entity, pieces);
     addSpriteComponent(context, entity, map->sprite);
 

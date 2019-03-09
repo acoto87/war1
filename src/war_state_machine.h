@@ -22,6 +22,7 @@ WarState* createMiningState(WarContext* context, WarEntity* entity, WarEntityId 
 WarState* createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 position);
 WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position);
 WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId);
+WarState* createBuildingState(WarContext* context, WarEntity* entity, WarEntity* unitToBuild, f32 buildTime);
 
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
 bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* state);
@@ -43,6 +44,7 @@ WarState* getNextState(WarEntity* entity, WarStateType type);
 #define getGatherWoodState(entity) getState(entity, WAR_STATE_WOOD)
 #define getChoppingState(entity) getState(entity, WAR_STATE_CHOP)
 #define getDeliverState(entity) getState(entity, WAR_STATE_DELIVER)
+#define getBuildingState(entity) getState(entity, WAR_STATE_BUILDING)
 
 bool hasState(WarEntity* entity, WarStateType type);
 bool hasDirectState(WarEntity* entity, WarStateType type);
@@ -61,6 +63,7 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGatheringWood(entity) hasState(entity, WAR_STATE_WOOD)
 #define isChopping(entity) hasState(entity, WAR_STATE_CHOP)
 #define isDelivering(entity) hasState(entity, WAR_STATE_DELIVER)
+#define isBuilding(entity) hasState(entity, WAR_STATE_BUILDING)
 
 #define isGoingToIdle(entity) hasNextState(entity, WAR_STATE_IDLE)
 #define isGoingToMove(entity) hasNextState(entity, WAR_STATE_MOVE)
@@ -75,6 +78,7 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGoingToGatherWood(entity) hasNextState(entity, WAR_STATE_WOOD)
 #define isGoingToChop(entity) hasNextState(entity, WAR_STATE_CHOP)
 #define isGoingToDeliver(entity) hasNextState(entity, WAR_STATE_DELIVER)
+#define isGoingToBuild(entity) hasNextState(entity, WAR_STATE_BUILDING)
 
 #define setDelay(state, seconds) ((state)->delay = (seconds))
 

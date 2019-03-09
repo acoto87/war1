@@ -39,8 +39,8 @@ List of thing to do in no particular order
     * ~~Remove pink pixels from unit portraits images.~~
     * ~~Add name to the unit portraits.~~
     * ~~Add life bar to the unit portraits.~~
-    * > Add magic to the unit portraits.
-    * Add complete % bar only when there is something building.
+    * ~~Add magic to the unit portraits.~~
+    * ~~Add complete % bar only when there is something building.~~
     * Add command images based on selected(s) unit types.
     * Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
   * ~~Manage the gold in the mines and explode it when the gold is over.~~
@@ -53,6 +53,7 @@ List of thing to do in no particular order
   * ~~Change the behavior of chopping trees when multiple units are chopping the same tree. With each hack of the axe the tree should loose wood, until it ran out of it. Each unit go back to the townhall when has max amount of wood or there is no more trees to chop.~~
   * ~~If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better, and make the necessary changes.~~
     * ~~The solution implemented was that tree islands are forests, and in editing, just determine the tree tiles for each forest, because the edition a less used and slower funcionality and it doesn't matter too much if every tree is checked in each operation.~~
+  * Add functionality of building units.
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~
@@ -119,7 +120,7 @@ List of thing to do in no particular order
   * Collapse state (for buildings)~~
     * ~~Spawn ruins after the collapse of a building.~~
     * Check if the new spawning ruins could merge with a previous one. This occurs when a building is built above a ruins.
-  * Build state
+  * ~~Build state~~
   * ~~Gathering resources state~~
     * ~~Gathering gold.~~
     * ~~Gathering wood~~
