@@ -794,6 +794,58 @@ void updateGlobalScale(WarContext* context)
     }
 }
 
+void updateButtonState(WarContext* context, WarEntity* entity)
+{
+    WarInput* input = &context->input;
+
+    assert(entity->type == WAR_ENTITY_TYPE_BUTTON);
+
+    vec2 position = entity->transform.position;
+    vec2 size = vec2i(entity->button.backgroundNormalSprite.frameWidth,
+                      entity->button.backgroundNormalSprite.frameHeight);
+
+    rect buttonRect = rectv(position, size);
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        if (rectContainsf(buttonRect, input->pos.x, input->pos.y))
+        {
+            // perform action?
+            logInfo("action for button %d\n", entity->id);
+        }
+
+        entity->button.pressed = false;
+    }
+    else if (isButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        if (rectContainsf(buttonRect, input->pos.x, input->pos.y))
+        {
+            entity->button.pressed = true;
+        }
+    }
+    else if (rectContainsf(buttonRect, input->pos.x, input->pos.y))
+    {
+        // update status text with description of the button?
+        logInfo("status text for button %d\n", entity->id);
+    }
+}
+
+void updateButtons(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && isUIEntity(entity))
+        {
+            if (entity->type == WAR_ENTITY_TYPE_BUTTON)
+            {
+                updateButtonState(context, entity);
+            }
+        }
+    }
+}
+
 void updateMap(WarContext* context)
 {
     WarMap* map = context->map;
@@ -812,7 +864,8 @@ void updateMap(WarContext* context)
     updateRuinsEdit(context);
     updateSelectedUnitsInfo(context);
     updateStatusText(context);
-    
+    updateButtons(context);
+
     // update all state machines
     for(s32 i = 0; i < map->entities.count; i++)
     {

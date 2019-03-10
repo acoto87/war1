@@ -779,6 +779,9 @@ void _renderButton(WarContext* context, WarEntity* entity)
 
         nvgTranslate(gfx, 2, 2);
 
+        if (button->pressed)
+            nvgTranslate(gfx, 0, 1);
+
         WarSpriteFrame frame = getSpriteFrame(context, *foregroundSprite, 0);
         updateSpriteImage(context, foregroundSprite, frame.data);
         renderSprite(context, foregroundSprite, VEC2_ZERO, VEC2_ONE);

@@ -308,7 +308,7 @@ void updateSelectedUnitsInfo(WarContext* context)
             }
             else if (isBuildingUnit(selectedEntity))
             {
-                if (unit->building)
+                if (!unit->building)
                 {
                     setUIImage(imgUnitInfo, 2);
                     setPercentBar(rectPercentBar, rectPercentText, unit);

@@ -8,6 +8,7 @@ List of thing to do in no particular order
   * Corpses can be selected, it shouldn't.
   * Corpses are rendered above units.
   * Damage animations are rendered below units.
+  * Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.
 
 * General
   * ~~Test the new implementation for lists.~~
