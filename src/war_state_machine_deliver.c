@@ -28,7 +28,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
         WarUnitsData unitData = getUnitsData(unit->type);
         removeSpriteComponent(context, entity);
-        addSpriteComponentFromResource(context, entity, unitData.resourceIndex);
+        addSpriteComponentFromResource(context, entity, unitData.resourceIndex, 0, NULL);
 
         if (!changeStateNextState(context, entity, state))
         {

@@ -36,7 +36,7 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
         sprite.frames[i].w = frames[i].w;
         sprite.frames[i].h = frames[i].h;
         sprite.frames[i].off = 0;
-        sprite.frames[i].data = (u8*)malloc(frameWidth * frameHeight * 4);
+        sprite.frames[i].data = (u8*)xmalloc(frameWidth * frameHeight * 4);
 
         if (frames[i].data)
             memcpy(sprite.frames[i].data, frames[i].data, frameWidth * frameHeight * 4);
@@ -45,7 +45,7 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
     return sprite;
 }
 
-WarSprite createSpriteFromResource(WarContext* context, WarResource* resource)
+WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s32 frameIndicesCount, s32 frameIndices[])
 {
     assert(resource);
     assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || resource->type == WAR_RESOURCE_TYPE_SPRITE);
@@ -67,15 +67,40 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource)
         {
             u32 frameWidth = resource->spriteData.frameWidth;
             u32 frameHeight = resource->spriteData.frameHeight;
-            u32 frameCount = resource->spriteData.framesCount;
+            u32 framesCount = resource->spriteData.framesCount;
             WarSpriteFrame* frames = resource->spriteData.frames;
-            sprite = createSpriteFromFrames(context, frameWidth, frameHeight, frameCount, frames);
+
+            if (frameIndicesCount > 0)
+            {
+                WarSpriteFrame* allFrames = frames;
+
+                frames = (WarSpriteFrame*)xmalloc(frameIndicesCount * sizeof(WarSpriteFrame));
+                for (s32 i = 0; i < frameIndicesCount; i++)
+                {
+                    s32 frameIndex = frameIndices[i];
+                    assert(frameIndex >= 0 && frameIndex < framesCount);
+
+                    frames[i] = allFrames[frameIndex];
+                    logInfo("frameIndex: %d\n", frameIndex);
+                }
+
+                framesCount = frameIndicesCount;
+            }
+
+            sprite = createSpriteFromFrames(context, frameWidth, frameHeight, framesCount, frames);
+
+            if (frameIndicesCount > 0)
+            {
+                free(frames);
+            }
+
             break;
         }
 
         default:
         {
             logWarning("Trying to load the resource of type %d as a sprite.\n", resource->type);
+            assert(false);
             break;
         }
     }
@@ -83,10 +108,10 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource)
     return sprite;
 }
 
-WarSprite createSpriteFromResourceIndex(WarContext* context, s32 resourceIndex)
+WarSprite createSpriteFromResourceIndex(WarContext* context, s32 resourceIndex, s32 frameIndicesCount, s32 frameIndices[])
 {
     WarResource* resource = getOrCreateResource(context, resourceIndex);
-    return createSpriteFromResource(context, resource);
+    return createSpriteFromResource(context, resource, frameIndicesCount, frameIndices);
 }
 
 void updateSpriteImage(WarContext *context, WarSprite *sprite, u8 data[])
@@ -107,10 +132,19 @@ void renderSprite(WarContext *context, WarSprite *sprite, vec2 pos, vec2 scale)
     nvgRenderSubImage(context->gfx, sprite->image, rs, rd, scale);
 }
 
-WarSpriteFrame* getSpriteFrame(WarContext* context, WarSpriteComponent* sprite)
+WarSpriteFrame getSpriteFrame(WarContext* context, WarSprite sprite, s32 frameIndex)
 {
-    s32 spriteFrameIndex = sprite->frameIndex;
-    assert(spriteFrameIndex >= 0 && spriteFrameIndex < MAX_SPRITE_FRAME_COUNT);
+    assert(frameIndex >= 0 && frameIndex < sprite.framesCount);
+    return sprite.frames[frameIndex];
+}
 
-    return &sprite->sprite.frames[spriteFrameIndex];
+void freeSprite(WarContext* context, WarSprite sprite)
+{
+    for (s32 i = 0; i < sprite.framesCount; i++)
+    {
+        if (sprite.frames[i].data)
+            free(sprite.frames[i].data);
+    }
+
+    nvgDeleteImage(context->gfx, sprite.image);
 }

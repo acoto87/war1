@@ -6,6 +6,8 @@ List of thing to do in no particular order
   * Check for memory leaks in the removing animations functionality.
   * Check why the changing of the global scale renders with the previous global scale after a change.
   * Corpses can be selected, it shouldn't.
+  * Corpses are rendered above units.
+  * Damage animations are rendered below units.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -41,7 +43,7 @@ List of thing to do in no particular order
     * ~~Add life bar to the unit portraits.~~
     * ~~Add magic to the unit portraits.~~
     * ~~Add complete % bar only when there is something building.~~
-    * Add command images based on selected(s) unit types.
+    * > Add command images based on selected(s) unit types.
     * Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
   * ~~Manage the gold in the mines and explode it when the gold is over.~~
   * ~~Add ruins to collapsed buildings.~~

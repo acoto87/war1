@@ -11,7 +11,7 @@ void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position
 void removeTransformComponent(WarContext* context, WarEntity* entity);
 
 void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite);
-void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 resourceIndex);
+void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 resourceIndex, s32 frameIndicesCount, s32 frameIndices[]);
 void removeSpriteComponent(WarContext* context, WarEntity* entity);
 
 void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, s32 x, s32 y, u8 player, WarResourceKind resourceKind, u32 amount);
@@ -44,8 +44,27 @@ void removeTextComponent(WarContext* context, WarEntity* entity);
 void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color);
 void removeRectComponent(WarContext* context, WarEntity* entity);
 
-void addTextButtonComponent(WarContext* context, WarEntity* entity, char* text);
-void addImageButtonComponent(WarContext* context, WarEntity* entity, s32 imageResourceIndex);
+void addTextButtonComponent(WarContext* context,
+                            WarEntity* entity,
+                            WarSprite backgroundNormalSprite,
+                            WarSprite backgroundPressedSprite,
+                            char* text);
+void addTextButtonComponentFromResource(WarContext* context,
+                                        WarEntity* entity,
+                                        s32 backgroundNormalResourceIndex,
+                                        s32 backgroundPressedResourceIndex,
+                                        char* text);
+void addImageButtonComponent(WarContext* context,
+                             WarEntity* entity,
+                             WarSprite backgroundNormalSprite,
+                             WarSprite backgroundPressedSprite,
+                             WarSprite foregroundSprite);
+void addImageButtonComponentFromResource(WarContext* context, 
+                                         WarEntity* entity, 
+                                         s32 backgroundNormalResourceIndex, 
+                                         s32 backgroundPressedResourceIndex, 
+                                         s32 foregroundResourceIndex,
+                                         s32 foregroundFrameIndex);
 void removeButtonComponent(WarContext* context, WarEntity* entity);
 
 // Roads

@@ -41,7 +41,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
             logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", corpseType);
             spriteIndex = 279;
         }
-        addSpriteComponentFromResource(context, corpse, spriteIndex);
+        addSpriteComponentFromResource(context, corpse, spriteIndex, 0, NULL);
 
         addUnitActions(corpse);
         addAnimationsComponent(context, corpse);

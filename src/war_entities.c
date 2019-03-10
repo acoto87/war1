@@ -21,26 +21,22 @@ void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite
     entity->sprite.sprite = sprite;
 }
 
-void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 resourceIndex)
+void addSpriteComponentFromResource(WarContext* context, 
+                                    WarEntity* entity, 
+                                    s32 resourceIndex, 
+                                    s32 frameIndicesCount, 
+                                    s32 frameIndices[])
 {
-    WarSprite sprite = createSpriteFromResourceIndex(context, resourceIndex);
+    WarSprite sprite = createSpriteFromResourceIndex(context, resourceIndex, frameIndicesCount, frameIndices);
     addSpriteComponent(context, entity, sprite);
     entity->sprite.resourceIndex = resourceIndex;
 }
 
 void removeSpriteComponent(WarContext* context, WarEntity* entity)
 {
-    WarSpriteComponent* sprite = &entity->sprite;
-    for (s32 i = 0; i < sprite->sprite.framesCount; i++)
-    {
-        u8* data = sprite->sprite.frames[i].data;
-        if (data)
-            free(data);
-    }
+    freeSprite(context, entity->sprite.sprite);
 
-    nvgDeleteImage(context->gfx, sprite->sprite.image);
-
-    *sprite = (WarSpriteComponent){0};
+    entity->sprite = (WarSpriteComponent){0};
 }
 
 void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, s32 x, s32 y, u8 player, WarResourceKind resourceKind, u32 amount)
@@ -184,12 +180,12 @@ void addTextComponent(WarContext* context, WarEntity* entity, char* text)
     entity->text.shadowBlur = 0.0f;
     entity->text.shadowOffset = VEC2_ZERO;
 
-    setUIText(context, entity, text);
+    setUIText(entity, text);
 }
 
 void removeTextComponent(WarContext* context, WarEntity* entity)
 {
-    clearUIText(context, entity);
+    clearUIText(entity);
     entity->text = (WarTextComponent){0};
 }
 
@@ -206,19 +202,64 @@ void removeRectComponent(WarContext* context, WarEntity* entity)
     entity->rect = (WarRectComponent){0};
 }
 
-void addTextButtonComponent(WarContext* context, WarEntity* entity, char* text)
+void addTextButtonComponent(WarContext* context,
+                            WarEntity* entity,
+                            WarSprite backgroundNormalSprite,
+                            WarSprite backgroundPressedSprite,
+                            char* text)
 {
-
+    entity->button = (WarButtonComponent){0};
+    entity->button.enabled = true;
+    entity->button.backgroundNormalSprite = backgroundNormalSprite;
+    entity->button.backgroundPressedSprite = backgroundPressedSprite;
+    entity->button.text = (char *)xmalloc(strlen(text) * sizeof(char));
+    strcpy(entity->button.text, text);
 }
 
-void addImageButtonComponent(WarContext* context, WarEntity* entity, s32 imageResourceIndex)
+void addTextButtonComponentFromResource(WarContext* context,
+                                        WarEntity* entity,
+                                        s32 backgroundNormalResourceIndex,
+                                        s32 backgroundPressedResourceIndex,
+                                        char* text)
 {
+    WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalResourceIndex, 0, NULL);
+    WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedResourceIndex, 0, NULL);
+    addTextButtonComponent(context, entity, backgroundNormalSprite, backgroundPressedSprite, text);
+}
 
+void addImageButtonComponent(WarContext* context,
+                             WarEntity* entity,
+                             WarSprite backgroundNormalSprite,
+                             WarSprite backgroundPressedSprite,
+                             WarSprite foregroundSprite)
+{
+    entity->button = (WarButtonComponent){0};
+    entity->button.enabled = true;
+    entity->button.backgroundNormalSprite = backgroundNormalSprite;
+    entity->button.backgroundPressedSprite = backgroundPressedSprite;
+    entity->button.foregroundSprite = foregroundSprite;
+}
+
+void addImageButtonComponentFromResource(WarContext* context, 
+                                         WarEntity* entity, 
+                                         s32 backgroundNormalResourceIndex, 
+                                         s32 backgroundPressedResourceIndex, 
+                                         s32 foregroundResourceIndex,
+                                         s32 foregroundFrameIndex)
+{
+    WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalResourceIndex, 0, NULL);
+    WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedResourceIndex, 0, NULL);
+    WarSprite foregroundSprite = createSpriteFromResourceIndex(context, foregroundResourceIndex, 1, arrayArg(s32, foregroundFrameIndex));
+    addImageButtonComponent(context, entity, backgroundNormalSprite, backgroundPressedSprite, foregroundSprite);
 }
 
 void removeButtonComponent(WarContext* context, WarEntity* entity)
 {
-    // free the sprites here
+    freeSprite(context, entity->button.backgroundNormalSprite);
+    freeSprite(context, entity->button.backgroundPressedSprite);
+    freeSprite(context, entity->button.foregroundSprite);
+    if (entity->button.text)
+        free(entity->button.text);
     entity->button = (WarButtonComponent){0};
 }
 
@@ -354,10 +395,10 @@ void _renderImage(WarContext* context, WarEntity* entity)
 
         if (sprite->sprite.framesCount > 1)
         {
-            WarSpriteFrame* frame = getSpriteFrame(context, sprite);
-            updateSpriteImage(context, &sprite->sprite, frame->data);
+            WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+            updateSpriteImage(context, &sprite->sprite, frame.data);
 
-            nvgTranslate(gfx, -frame->dx, -frame->dy);
+            nvgTranslate(gfx, -frame.dx, -frame.dy);
         }
 
         nvgTranslate(gfx, transform.position.x, transform.position.y);
@@ -621,8 +662,8 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
     {
         nvgSave(gfx);
 
-        WarSpriteFrame* frame = getSpriteFrame(context, sprite);
-        updateSpriteImage(context, &sprite->sprite, frame->data);
+        WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+        updateSpriteImage(context, &sprite->sprite, frame.data);
         renderSprite(context, &sprite->sprite, VEC2_ZERO, scale);
 
         nvgRestore(gfx);
@@ -641,12 +682,6 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
             WarSpriteAnimation* anim = animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
-                s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
-                animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
-
-                s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-                assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
-
                 nvgSave(gfx);
 
                 nvgTranslate(gfx, anim->offset.x, anim->offset.y);
@@ -659,7 +694,12 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
                 nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
 #endif
 
-                WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
+                s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
+                animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+
+                s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
+                WarSpriteFrame frame = getSpriteFrame(context, anim->sprite, spriteFrameIndex);
+
                 updateSpriteImage(context, &anim->sprite, frame.data);
                 renderSprite(context, &anim->sprite, VEC2_ZERO, VEC2_ONE);
 
@@ -710,6 +750,38 @@ void _renderRect(WarContext* context, WarEntity* entity)
 
         NVGcolor color = nvgRGBA(rect->color.r, rect->color.g, rect->color.b, rect->color.a);
         nvgFillRect(gfx, rectf(0.0f, 0.0f, rect->size.x, rect->size.y), color);
+
+        nvgRestore(gfx);
+    }
+}
+
+void _renderButton(WarContext* context, WarEntity* entity)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarTransformComponent* transform = &entity->transform;
+    WarUIComponent* ui = &entity->ui;
+    WarButtonComponent* button = &entity->button;
+
+    if (ui->enabled && button->enabled)
+    {
+        nvgSave(gfx);
+        nvgTranslate(gfx, transform->position.x, transform->position.y);
+        nvgScale(gfx, transform->scale.x, transform->scale.y);
+
+        WarSprite* backgroundSprite = button->pressed
+            ? &button->backgroundPressedSprite 
+            : &button->backgroundNormalSprite;;
+
+        WarSprite* foregroundSprite = &button->foregroundSprite;
+
+        renderSprite(context, backgroundSprite, VEC2_ZERO, VEC2_ONE);
+
+        nvgTranslate(gfx, 2, 2);
+
+        WarSpriteFrame frame = getSpriteFrame(context, *foregroundSprite, 0);
+        updateSpriteImage(context, foregroundSprite, frame.data);
+        renderSprite(context, foregroundSprite, VEC2_ZERO, VEC2_ONE);
 
         nvgRestore(gfx);
     }
@@ -770,6 +842,12 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
             case WAR_ENTITY_TYPE_RECT:
             {
                 _renderRect(context, entity);
+                break;
+            }
+
+            case WAR_ENTITY_TYPE_BUTTON:
+            {
+                _renderButton(context, entity);
                 break;
             }
 

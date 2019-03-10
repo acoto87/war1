@@ -311,7 +311,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", startUnit.type);
                 spriteIndex = 279;
             }
-            addSpriteComponentFromResource(context, entity, spriteIndex);
+            addSpriteComponentFromResource(context, entity, spriteIndex, 0, NULL);
 
             addUnitActions(entity);
             addAnimationsComponent(context, entity);
@@ -368,13 +368,13 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIText(context, "txtStatus", vec2Addv(rectTopLeft(map->bottomPanel), vec2i(0, 4)));
 
         // selected unit(s) info
-        createUIImageFromSprite(context, "imgUnitInfo", 360, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 0)));
-        createUIImageFromSprite(context, "imgUnitPortrait0", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 4)));
-        createUIImageFromSprite(context, "imgUnitPortrait1", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 1)));
-        createUIImageFromSprite(context, "imgUnitPortrait2", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 1)));
-        createUIImageFromSprite(context, "imgUnitPortrait3", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 23)));
-        createUIImageFromSprite(context, "imgUnitPortrait4", 361, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 23)));
-        createUIImageFromSprite(context, "imgUnitInfoLife", 360, -1, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 16)));
+        createUIImage(context, "imgUnitInfo", 360, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 0)));
+        createUIImage(context, "imgUnitPortrait0", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 4)));
+        createUIImage(context, "imgUnitPortrait1", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 1)));
+        createUIImage(context, "imgUnitPortrait2", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 1)));
+        createUIImage(context, "imgUnitPortrait3", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 23)));
+        createUIImage(context, "imgUnitPortrait4", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 23)));
+        createUIImage(context, "imgUnitInfoLife", 360, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 16)));
         createUIText(context, "txtUnitName", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 25)));
         createUIRect(context, "rectLifeBar0", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectLifeBar1", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
@@ -382,11 +382,15 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIRect(context, "rectLifeBar3", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 39)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectLifeBar4", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 39)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectMagicBar", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(37, 9)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectPercentBar", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 36)), vec2i(64, 7), U8COLOR_GREEN);
+        createUIRect(context, "rectPercentBar", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 37)), vec2i(62, 5), U8COLOR_GREEN);
+        createUIImage(context, "rectPercentText", 410, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(15, 37)));
 
-        createUIImage(context, "btn1_normal", 364, vec2Addv(rectTopLeft(map->mapPanel), vec2i(50, 5)));
-        createUIImage(context, "btn1_pressed", 365, vec2Addv(rectTopLeft(map->mapPanel), vec2i(80, 5)));
-
+        createUIImageButton(context, "action0", 364, 365, 361, 33, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 46)));
+        createUIImageButton(context, "action1", 364, 365, 361, 79, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(36, 46)));
+        createUIImageButton(context, "action2", 364, 365, 361, 35, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 69)));
+        createUIImageButton(context, "action3", 364, 365, 361, 36, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(36, 69)));
+        createUIImageButton(context, "action4", 364, 365, 361, 37, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 92)));
+        createUIImageButton(context, "action5", 364, 365, 361, 38, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(36, 92)));
 
         // initial update for the top panel texts
         updateGoldText(context);
@@ -416,7 +420,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         context->debugRuin = ruins;
 
         // test animations
-        WarSprite sprite2 = createSpriteFromResourceIndex(context, 359);
+        WarSprite sprite2 = createSpriteFromResourceIndex(context, 359, 0, NULL);
         WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.5f, true);
         anim2->offset = vec2i(100, 100);
 
@@ -433,7 +437,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
 
 
-        WarSprite sprite3 = createSpriteFromResourceIndex(context, 360);
+        WarSprite sprite3 = createSpriteFromResourceIndex(context, 360, 0, NULL);
         WarSpriteAnimation* anim3 = createAnimation("horsie3", sprite3, 0.5f, true);
         anim3->offset = vec2i(200, 100);
 
@@ -450,7 +454,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         
 
 
-        WarSprite sprite4 = createSpriteFromResourceIndex(context, 361);
+        WarSprite sprite4 = createSpriteFromResourceIndex(context, 361, 0, NULL);
         WarSpriteAnimation* anim4 = createAnimation("horsie3", sprite4, 0.5f, true);
         anim4->offset = vec2i(300, 100);
 

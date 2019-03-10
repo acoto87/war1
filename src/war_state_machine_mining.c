@@ -56,7 +56,7 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
         // set the carrying gold sprites
         WarWorkerData workerData = getWorkerData(unit->type);
         removeSpriteComponent(context, entity);
-        addSpriteComponentFromResource(context, entity, workerData.carryingGoldResource);
+        addSpriteComponentFromResource(context, entity, workerData.carryingGoldResource, 0, NULL);
 
         // find the closest town hall to deliver the gold
         WarRace race = getUnitRace(entity);

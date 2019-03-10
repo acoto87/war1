@@ -438,6 +438,7 @@ typedef enum
     WAR_ENTITY_TYPE_FOREST,
     WAR_ENTITY_TYPE_TEXT,
     WAR_ENTITY_TYPE_RECT,
+    WAR_ENTITY_TYPE_BUTTON,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -970,16 +971,12 @@ typedef struct
 {
     bool enabled;
 
-    // the background sprites for normal and pressed states
-    WarSprite backgroundNormal;
-    WarSprite backgroundPressed;
+    bool pressed;
 
-    // If the button is a text button this field is set
+    WarSprite backgroundNormalSprite;
+    WarSprite backgroundPressedSprite;
+    WarSprite foregroundSprite;
     char* text;
-
-    // If the button is an image button these fields are set
-    s32 frameIndex;
-    WarSprite sprite;
 } WarButtonComponent;
 
 typedef struct
