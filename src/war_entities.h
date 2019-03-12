@@ -11,10 +11,17 @@ void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position
 void removeTransformComponent(WarContext* context, WarEntity* entity);
 
 void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite);
-void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, s32 resourceIndex, s32 frameIndicesCount, s32 frameIndices[]);
+void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef);
 void removeSpriteComponent(WarContext* context, WarEntity* entity);
 
-void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, s32 x, s32 y, u8 player, WarResourceKind resourceKind, u32 amount);
+void addUnitComponent(WarContext* context, 
+                      WarEntity* entity, 
+                      WarUnitType type, 
+                      s32 x, 
+                      s32 y, 
+                      u8 player, 
+                      WarResourceKind resourceKind, 
+                      u32 amount);
 void removeUnitComponent(WarContext* context, WarEntity* entity);
 
 void addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces);
@@ -48,23 +55,30 @@ void addTextButtonComponent(WarContext* context,
                             WarEntity* entity,
                             WarSprite backgroundNormalSprite,
                             WarSprite backgroundPressedSprite,
-                            char* text);
+                            char* text,
+                            char* tooltip,
+                            WarClickHandler clickHandler);
 void addTextButtonComponentFromResource(WarContext* context,
                                         WarEntity* entity,
-                                        s32 backgroundNormalResourceIndex,
-                                        s32 backgroundPressedResourceIndex,
-                                        char* text);
+                                        WarSpriteResourceRef backgroundNormalRef,
+                                        WarSpriteResourceRef backgroundPressedRef,
+                                        char* text,
+                                        char* tooltip,
+                                        WarClickHandler clickHandler);
 void addImageButtonComponent(WarContext* context,
                              WarEntity* entity,
                              WarSprite backgroundNormalSprite,
                              WarSprite backgroundPressedSprite,
-                             WarSprite foregroundSprite);
+                             WarSprite foregroundSprite,
+                             char* tooltip,
+                             WarClickHandler clickHandler);
 void addImageButtonComponentFromResource(WarContext* context, 
                                          WarEntity* entity, 
-                                         s32 backgroundNormalResourceIndex, 
-                                         s32 backgroundPressedResourceIndex, 
-                                         s32 foregroundResourceIndex,
-                                         s32 foregroundFrameIndex);
+                                         WarSpriteResourceRef backgroundNormalRef,
+                                         WarSpriteResourceRef backgroundPressedRef,
+                                         WarSpriteResourceRef foregroundRef,
+                                         char* tooltip,
+                                         WarClickHandler clickHandler);
 void removeButtonComponent(WarContext* context, WarEntity* entity);
 
 // Roads

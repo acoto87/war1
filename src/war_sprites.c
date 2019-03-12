@@ -108,10 +108,10 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
     return sprite;
 }
 
-WarSprite createSpriteFromResourceIndex(WarContext* context, s32 resourceIndex, s32 frameIndicesCount, s32 frameIndices[])
+WarSprite createSpriteFromResourceIndex(WarContext* context, WarSpriteResourceRef spriteResourceRef)
 {
-    WarResource* resource = getOrCreateResource(context, resourceIndex);
-    return createSpriteFromResource(context, resource, frameIndicesCount, frameIndices);
+    WarResource* resource = getOrCreateResource(context, spriteResourceRef.resourceIndex);
+    return createSpriteFromResource(context, resource, spriteResourceRef.frameIndicesCount, spriteResourceRef.frameIndices);
 }
 
 void updateSpriteImage(WarContext *context, WarSprite *sprite, u8 data[])

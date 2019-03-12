@@ -9,6 +9,7 @@ List of thing to do in no particular order
   * Corpses are rendered above units.
   * Damage animations are rendered below units.
   * Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.
+  * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -148,8 +149,11 @@ List of thing to do in no particular order
   * Workers don't collide well while harvesting wood or gold when near the townhall.
 
 * UI system
-  * Buttons
+  * > Buttons
   * Dialogues
   * Cut scenes
   * Minimap
     * The minimap has to consider: base layer, chopped wood layer, entities layer. The base layer doesn't change once the map is created, so each frame only add the tiles about chopped wood and entities (position and types).
+  * Make font of original warcraft.
+    * Make a bunch of screenshots and draw the font in pixel art.
+    * Make the system to draw text from a sprite of characters.

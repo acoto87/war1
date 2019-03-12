@@ -61,7 +61,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
             // set the carrying gold sprites
             WarWorkerData workerData = getWorkerData(unit->type);
             removeSpriteComponent(context, entity);
-            addSpriteComponentFromResource(context, entity, workerData.carryingWoodResource, 0, NULL);
+            addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingWoodResource));
 
             // find the closest town hall to deliver the gold
             WarRace race = getUnitRace(entity);

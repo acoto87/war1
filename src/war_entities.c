@@ -21,15 +21,11 @@ void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite
     entity->sprite.sprite = sprite;
 }
 
-void addSpriteComponentFromResource(WarContext* context, 
-                                    WarEntity* entity, 
-                                    s32 resourceIndex, 
-                                    s32 frameIndicesCount, 
-                                    s32 frameIndices[])
+void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef)
 {
-    WarSprite sprite = createSpriteFromResourceIndex(context, resourceIndex, frameIndicesCount, frameIndices);
+    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
     addSpriteComponent(context, entity, sprite);
-    entity->sprite.resourceIndex = resourceIndex;
+    entity->sprite.resourceIndex = spriteResourceRef.resourceIndex;
 }
 
 void removeSpriteComponent(WarContext* context, WarEntity* entity)
@@ -39,7 +35,14 @@ void removeSpriteComponent(WarContext* context, WarEntity* entity)
     entity->sprite = (WarSpriteComponent){0};
 }
 
-void addUnitComponent(WarContext* context, WarEntity* entity, WarUnitType type, s32 x, s32 y, u8 player, WarResourceKind resourceKind, u32 amount)
+void addUnitComponent(WarContext* context, 
+                      WarEntity* entity, 
+                      WarUnitType type, 
+                      s32 x, 
+                      s32 y, 
+                      u8 player, 
+                      WarResourceKind resourceKind, 
+                      u32 amount)
 {
     WarUnitsData unitData = getUnitsData(type);
 
@@ -206,51 +209,76 @@ void addTextButtonComponent(WarContext* context,
                             WarEntity* entity,
                             WarSprite backgroundNormalSprite,
                             WarSprite backgroundPressedSprite,
-                            char* text)
+                            char* text,
+                            char* tooltip,
+                            WarClickHandler clickHandler)
 {
     entity->button = (WarButtonComponent){0};
     entity->button.enabled = true;
     entity->button.backgroundNormalSprite = backgroundNormalSprite;
     entity->button.backgroundPressedSprite = backgroundPressedSprite;
+    entity->button.size = vec2i(backgroundNormalSprite.frameWidth, backgroundNormalSprite.frameHeight);
     entity->button.text = (char *)xmalloc(strlen(text) * sizeof(char));
     strcpy(entity->button.text, text);
+    entity->button.tooltip = tooltip;
+    entity->button.onClick = clickHandler;
 }
 
 void addTextButtonComponentFromResource(WarContext* context,
                                         WarEntity* entity,
-                                        s32 backgroundNormalResourceIndex,
-                                        s32 backgroundPressedResourceIndex,
-                                        char* text)
+                                        WarSpriteResourceRef backgroundNormalRef,
+                                        WarSpriteResourceRef backgroundPressedRef,
+                                        char* text,
+                                        char* tooltip,
+                                        WarClickHandler clickHandler)
 {
-    WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalResourceIndex, 0, NULL);
-    WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedResourceIndex, 0, NULL);
-    addTextButtonComponent(context, entity, backgroundNormalSprite, backgroundPressedSprite, text);
+    WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalRef);
+    WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedRef);
+    addTextButtonComponent(context, 
+                           entity, 
+                           backgroundNormalSprite, 
+                           backgroundPressedSprite, 
+                           text, 
+                           tooltip,
+                           clickHandler);
 }
 
 void addImageButtonComponent(WarContext* context,
                              WarEntity* entity,
                              WarSprite backgroundNormalSprite,
                              WarSprite backgroundPressedSprite,
-                             WarSprite foregroundSprite)
+                             WarSprite foregroundSprite,
+                             char* tooltip,
+                             WarClickHandler clickHandler)
 {
     entity->button = (WarButtonComponent){0};
     entity->button.enabled = true;
     entity->button.backgroundNormalSprite = backgroundNormalSprite;
     entity->button.backgroundPressedSprite = backgroundPressedSprite;
     entity->button.foregroundSprite = foregroundSprite;
+    entity->button.size = vec2i(backgroundNormalSprite.frameWidth, backgroundNormalSprite.frameHeight);
+    entity->button.tooltip = tooltip;
+    entity->button.onClick = clickHandler;
 }
 
 void addImageButtonComponentFromResource(WarContext* context, 
                                          WarEntity* entity, 
-                                         s32 backgroundNormalResourceIndex, 
-                                         s32 backgroundPressedResourceIndex, 
-                                         s32 foregroundResourceIndex,
-                                         s32 foregroundFrameIndex)
+                                         WarSpriteResourceRef backgroundNormalRef,
+                                         WarSpriteResourceRef backgroundPressedRef,
+                                         WarSpriteResourceRef foregroundRef,
+                                         char* tooltip,
+                                         WarClickHandler clickHandler)
 {
-    WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalResourceIndex, 0, NULL);
-    WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedResourceIndex, 0, NULL);
-    WarSprite foregroundSprite = createSpriteFromResourceIndex(context, foregroundResourceIndex, 1, arrayArg(s32, foregroundFrameIndex));
-    addImageButtonComponent(context, entity, backgroundNormalSprite, backgroundPressedSprite, foregroundSprite);
+    WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalRef);
+    WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedRef);
+    WarSprite foregroundSprite = createSpriteFromResourceIndex(context, foregroundRef);
+    addImageButtonComponent(context, 
+                            entity, 
+                            backgroundNormalSprite, 
+                            backgroundPressedSprite, 
+                            foregroundSprite,
+                            tooltip,
+                            clickHandler);
 }
 
 void removeButtonComponent(WarContext* context, WarEntity* entity)

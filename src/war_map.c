@@ -311,7 +311,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", startUnit.type);
                 spriteIndex = 279;
             }
-            addSpriteComponentFromResource(context, entity, spriteIndex, 0, NULL);
+            addSpriteComponentFromResource(context, entity, imageResourceRef(spriteIndex));
 
             addUnitActions(entity);
             addAnimationsComponent(context, entity);
@@ -349,53 +349,101 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // add ui entities
     {
+        vec2 leftTopPanel = rectTopLeft(map->leftTopPanel);
+        vec2 leftBottomPanel = rectTopLeft(map->leftBottomPanel);
+        vec2 topPanel = rectTopLeft(map->topPanel);
+        vec2 rightPanel = rectTopLeft(map->rightPanel);
+        vec2 bottomPanel =rectTopLeft(map->bottomPanel);
+
         // panels
-        createUIImage(context, "panelLeftTop", 224, rectTopLeft(map->leftTopPanel));
-        createUIImage(context, "panelLeftBottom", 226, rectTopLeft(map->leftBottomPanel));
-        createUIImage(context, "panelTop", 218, rectTopLeft(map->topPanel));
-        createUIImage(context, "panelRight", 220, rectTopLeft(map->rightPanel));
-        createUIImage(context, "panelBottom", 222, rectTopLeft(map->bottomPanel));
+        createUIImage(context, "panelLeftTop", imageResourceRef(224), leftTopPanel);
+        createUIImage(context, "panelLeftBottom", imageResourceRef(226), leftBottomPanel);
+        createUIImage(context, "panelTop", imageResourceRef(218), topPanel);
+        createUIImage(context, "panelRight", imageResourceRef(220), rightPanel);
+        createUIImage(context, "panelBottom", imageResourceRef(222), bottomPanel);
 
         // top panel images
-        createUIImage(context, "imgGold", 406, vec2Addv(rectTopLeft(map->topPanel), vec2i(201, 1)));
-        createUIImage(context, "imgLumber", 407, vec2Addv(rectTopLeft(map->topPanel), vec2i(102, 0)));
+        createUIImage(context, "imgGold", imageResourceRef(406), vec2Addv(topPanel, vec2i(201, 1)));
+        createUIImage(context, "imgLumber", imageResourceRef(407), vec2Addv(topPanel, vec2i(102, 0)));
 
         // top panel texts
-        createUIText(context, "txtGold", vec2Addv(rectTopLeft(map->topPanel), vec2i(150, 1)));
-        createUIText(context, "txtWood", vec2Addv(rectTopLeft(map->topPanel), vec2i(50, 1)));
+        createUIText(context, "txtGold", vec2Addv(topPanel, vec2i(150, 1)));
+        createUIText(context, "txtWood", vec2Addv(topPanel, vec2i(50, 1)));
 
         // status text
         createUIText(context, "txtStatus", vec2Addv(rectTopLeft(map->bottomPanel), vec2i(0, 4)));
 
         // selected unit(s) info
-        createUIImage(context, "imgUnitInfo", 360, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 0)));
-        createUIImage(context, "imgUnitPortrait0", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 4)));
-        createUIImage(context, "imgUnitPortrait1", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 1)));
-        createUIImage(context, "imgUnitPortrait2", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 1)));
-        createUIImage(context, "imgUnitPortrait3", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 23)));
-        createUIImage(context, "imgUnitPortrait4", 361, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 23)));
-        createUIImage(context, "imgUnitInfoLife", 360, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(3, 16)));
-        createUIText(context, "txtUnitName", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(6, 25)));
-        createUIRect(context, "rectLifeBar0", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar1", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar2", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 17)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar3", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 39)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar4", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(38, 39)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectMagicBar", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(37, 9)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectPercentBar", vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(4, 37)), vec2i(62, 5), U8COLOR_GREEN);
-        createUIImage(context, "rectPercentText", 410, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(15, 37)));
+        createUIImage(context, "imgUnitInfo", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(2, 0)));
+        createUIImage(context, "imgUnitPortrait0", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(6, 4)));
+        createUIImage(context, "imgUnitPortrait1", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(4, 1)));
+        createUIImage(context, "imgUnitPortrait2", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(38, 1)));
+        createUIImage(context, "imgUnitPortrait3", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(4, 23)));
+        createUIImage(context, "imgUnitPortrait4", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(38, 23)));
+        createUIImage(context, "imgUnitInfoLife", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(3, 16)));
+        createUIText(context, "txtUnitName", vec2Addv(leftBottomPanel, vec2i(6, 25)));
+        createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectLifeBar1", vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectLifeBar2", vec2Addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectLifeBar3", vec2Addv(leftBottomPanel, vec2i(4, 39)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectLifeBar4", vec2Addv(leftBottomPanel, vec2i(38, 39)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectMagicBar", vec2Addv(leftBottomPanel, vec2i(37, 9)), vec2i(27, 3), U8COLOR_GREEN);
+        createUIRect(context, "rectPercentBar", vec2Addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), U8COLOR_GREEN);
+        createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
 
-        createUIImageButton(context, "action0", 364, 365, 361, 33, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 46)));
-        createUIImageButton(context, "action1", 364, 365, 361, 79, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(36, 46)));
-        createUIImageButton(context, "action2", 364, 365, 361, 35, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 69)));
-        createUIImageButton(context, "action3", 364, 365, 361, 36, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(36, 69)));
-        createUIImageButton(context, "action4", 364, 365, 361, 37, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(2, 92)));
-        createUIImageButton(context, "action5", 364, 365, 361, 38, vec2Addv(rectTopLeft(map->leftBottomPanel), vec2i(36, 92)));
+        createUIImageButton(context, 
+                            "action0", 
+                            "Move To",
+                            imageResourceRef(364), 
+                            imageResourceRef(365), 
+                            spriteResourceRef(361, 33), 
+                            vec2Addv(leftBottomPanel, vec2i(2, 46)),
+                            NULL);
 
-        // initial update for the top panel texts
-        updateGoldText(context);
-        updateWoodText(context);
-        updateSelectedUnitsInfo(context);
+        createUIImageButton(context, 
+                            "action1", 
+                            "Move To",
+                            imageResourceRef(364), 
+                            imageResourceRef(365), 
+                            spriteResourceRef(361, 79), 
+                            vec2Addv(leftBottomPanel, vec2i(36, 46)),
+                            NULL);
+
+        createUIImageButton(context, 
+                            "action2", 
+                            "Move To",
+                            imageResourceRef(364), 
+                            imageResourceRef(365), 
+                            spriteResourceRef(361, 35), 
+                            vec2Addv(leftBottomPanel, vec2i(2, 69)),
+                            NULL);
+
+        createUIImageButton(context, 
+                            "action3", 
+                            "Move To",
+                            imageResourceRef(364), 
+                            imageResourceRef(365), 
+                            spriteResourceRef(361, 36), 
+                            vec2Addv(leftBottomPanel, vec2i(36, 69)),
+                            NULL);
+
+        createUIImageButton(context, 
+                            "action4", 
+                            "Move To",
+                            imageResourceRef(364), 
+                            imageResourceRef(365), 
+                            spriteResourceRef(361, 37), 
+                            vec2Addv(leftBottomPanel, vec2i(2, 92)),
+                            NULL);
+
+        createUIImageButton(context, 
+                            "action5", 
+                            "Move To",
+                            imageResourceRef(364), 
+                            imageResourceRef(365), 
+                            spriteResourceRef(361, 38), 
+                            vec2Addv(leftBottomPanel, vec2i(36, 92)),
+                            NULL);
     }
 
     // set the initial state for the tiles
@@ -410,66 +458,71 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // add animations
     {
         // test ruins
-        WarEntity* ruins = createRuins(context);
-        addRuinsPieces(context, ruins, 11, 6, 3);
-        addRuinsPieces(context, ruins, 13, 5, 2);
-        addRuinsPieces(context, ruins, 9, 5, 3);
-        addRuinsPieces(context, ruins, 8, 8, 4);
-        determineRuinTypes(context, ruins);
-
-        context->debugRuin = ruins;
-
-        // test animations
-        WarSprite sprite2 = createSpriteFromResourceIndex(context, 359, 0, NULL);
-        WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.5f, true);
-        anim2->offset = vec2i(100, 100);
-
-        const s32 baseFrameIndices2[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-        const s32 indexOff2 = 0;
-
-        for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
         {
-            addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
+            WarEntity* ruins = createRuins(context);
+            addRuinsPieces(context, ruins, 11, 6, 3);
+            addRuinsPieces(context, ruins, 13, 5, 2);
+            addRuinsPieces(context, ruins, 9, 5, 3);
+            addRuinsPieces(context, ruins, 8, 8, 4);
+            determineRuinTypes(context, ruins);
+
+            context->debugRuin = ruins;
         }
-
-        WarSpriteAnimationListAdd(&map->animations, anim2);
-
-
-
-
-        WarSprite sprite3 = createSpriteFromResourceIndex(context, 360, 0, NULL);
-        WarSpriteAnimation* anim3 = createAnimation("horsie3", sprite3, 0.5f, true);
-        anim3->offset = vec2i(200, 100);
-
-        const s32 baseFrameIndices3[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-        const s32 indexOff3 = 0;
-
-        for(s32 i = 0; i < arrayLength(baseFrameIndices3); i++)
-        {
-            addAnimationFrame(anim3, baseFrameIndices3[i] + indexOff3);
-        }
-
-        WarSpriteAnimationListAdd(&map->animations, anim3);
-
         
-
-
-        WarSprite sprite4 = createSpriteFromResourceIndex(context, 361, 0, NULL);
-        WarSpriteAnimation* anim4 = createAnimation("horsie3", sprite4, 0.5f, true);
-        anim4->offset = vec2i(300, 100);
-
-        s32 baseFrameindices4[93];
-        for (s32 i = 0; i < 93; i++)
-            baseFrameindices4[i] = i;
-
-        const s32 indexOff4 = 0;
-
-        for(s32 i = 0; i < arrayLength(baseFrameindices4); i++)
+        // test animations
         {
-            addAnimationFrame(anim4, baseFrameindices4[i] + indexOff4);
+            WarSpriteResourceRef spriteResourceRef = createSpriteResourceRef(359, 0, NULL);
+            WarSprite sprite2 = createSpriteFromResourceIndex(context, spriteResourceRef);
+            WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.5f, true);
+            anim2->offset = vec2i(100, 100);
+
+            const s32 baseFrameIndices2[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+            const s32 indexOff2 = 0;
+
+            for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
+            {
+                addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
+            }
+
+            WarSpriteAnimationListAdd(&map->animations, anim2);
         }
 
-        WarSpriteAnimationListAdd(&map->animations, anim4);
+        {
+            WarSpriteResourceRef spriteResourceRef = createSpriteResourceRef(360, 0, NULL);
+            WarSprite sprite3 = createSpriteFromResourceIndex(context, spriteResourceRef);
+            WarSpriteAnimation* anim3 = createAnimation("horsie3", sprite3, 0.5f, true);
+            anim3->offset = vec2i(200, 100);
+
+            const s32 baseFrameIndices3[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+            const s32 indexOff3 = 0;
+
+            for(s32 i = 0; i < arrayLength(baseFrameIndices3); i++)
+            {
+                addAnimationFrame(anim3, baseFrameIndices3[i] + indexOff3);
+            }
+
+            WarSpriteAnimationListAdd(&map->animations, anim3);
+        }
+
+        {
+            WarSpriteResourceRef spriteResourceRef = createSpriteResourceRef(361, 0, NULL);
+            WarSprite sprite4 = createSpriteFromResourceIndex(context, spriteResourceRef);
+            WarSpriteAnimation* anim4 = createAnimation("horsie3", sprite4, 0.5f, true);
+            anim4->offset = vec2i(300, 100);
+
+            s32 baseFrameindices4[93];
+            for (s32 i = 0; i < 93; i++)
+                baseFrameindices4[i] = i;
+
+            const s32 indexOff4 = 0;
+
+            for(s32 i = 0; i < arrayLength(baseFrameindices4); i++)
+            {
+                addAnimationFrame(anim4, baseFrameindices4[i] + indexOff4);
+            }
+
+            WarSpriteAnimationListAdd(&map->animations, anim4);
+        }
     }
 }
 
@@ -539,9 +592,7 @@ void updateDragRect(WarContext* context)
 
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        rect mapPanel = map->mapPanel;
-
-        if(rectContainsf(mapPanel, input->pos.x, input->pos.y))
+        if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             if (!input->isDragging)
             {
@@ -596,6 +647,23 @@ void updateSelection(WarContext* context)
                             }
                         }
                     }
+                }
+
+                if (map->selectedEntities.count > 1)
+                {
+                    char buffer[50];
+                    sprintf(buffer, "SELECTED %d UNITS", map->selectedEntities.count);
+                    setStatusText(context, buffer);
+                }
+                else if (map->selectedEntities.count == 1)
+                {
+                    char buffer[50];
+                    sprintf(buffer, "SELECTED UNIT WITH ID %d", map->selectedEntities.items[0]);
+                    setStatusText(context, buffer);
+                }
+                else 
+                {
+                    setStatusText(context, NULL);
                 }
             }
         }
@@ -796,36 +864,50 @@ void updateGlobalScale(WarContext* context)
 
 void updateButtonState(WarContext* context, WarEntity* entity)
 {
-    WarInput* input = &context->input;
-
     assert(entity->type == WAR_ENTITY_TYPE_BUTTON);
 
-    vec2 position = entity->transform.position;
-    vec2 size = vec2i(entity->button.backgroundNormalSprite.frameWidth,
-                      entity->button.backgroundNormalSprite.frameHeight);
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
 
-    rect buttonRect = rectv(position, size);
+    WarTransformComponent* transform = &entity->transform;
+    WarButtonComponent* button = &entity->button;
+
+    rect buttonRect = rectv(transform->position, button->size);
+    bool pointerInside = rectContainsf(buttonRect, input->pos.x, input->pos.y);
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rectContainsf(buttonRect, input->pos.x, input->pos.y))
+        button->hover = pointerInside;
+
+        if (button->hover)
         {
-            // perform action?
-            logInfo("action for button %d\n", entity->id);
+            if (button->onClick)
+                button->onClick(context, entity);
         }
 
-        entity->button.pressed = false;
+        button->pressed = false;
     }
     else if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rectContainsf(buttonRect, input->pos.x, input->pos.y))
+        if (button->hover)
         {
-            entity->button.pressed = true;
+            button->pressed = button->hover;
         }
     }
-    else if (rectContainsf(buttonRect, input->pos.x, input->pos.y))
+    else if (pointerInside)
     {
-        // update status text with description of the button?
-        logInfo("status text for button %d\n", entity->id);
+        for(s32 i = 0; i < map->entities.count; i++)
+        {
+            WarEntity* button = map->entities.items[i];
+            if (button && button->type == WAR_ENTITY_TYPE_BUTTON)
+            {
+                button->button.hover = false;
+                button->button.pressed = false;
+            }
+        }
+
+        button->hover = true;
+
+        setStatusText(context, button->tooltip);
     }
 }
 
@@ -836,12 +918,9 @@ void updateButtons(WarContext* context)
     for(s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
-        if (entity && isUIEntity(entity))
+        if (entity && entity->type == WAR_ENTITY_TYPE_BUTTON)
         {
-            if (entity->type == WAR_ENTITY_TYPE_BUTTON)
-            {
-                updateButtonState(context, entity);
-            }
+            updateButtonState(context, entity);
         }
     }
 }
@@ -853,18 +932,23 @@ void updateMap(WarContext* context)
 
     WarInput* input = &context->input;
 
+    setStatusText(context, NULL);
+
     updateGlobalSpeed(context);
     updateGlobalScale(context);
     updateViewport(context);
     updateDragRect(context);
     updateSelection(context);
+
+    updateGoldText(context);
+    updateWoodText(context);
+    updateSelectedUnitsInfo(context);
+    updateButtons(context);
+
     updateTreesEdit(context);
     updateRoadsEdit(context);
     updateWallsEdit(context);
     updateRuinsEdit(context);
-    updateSelectedUnitsInfo(context);
-    updateStatusText(context);
-    updateButtons(context);
 
     // update all state machines
     for(s32 i = 0; i < map->entities.count; i++)

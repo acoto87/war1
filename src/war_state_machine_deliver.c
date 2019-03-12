@@ -28,7 +28,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
         WarUnitsData unitData = getUnitsData(unit->type);
         removeSpriteComponent(context, entity);
-        addSpriteComponentFromResource(context, entity, unitData.resourceIndex, 0, NULL);
+        addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
 
         if (!changeStateNextState(context, entity, state))
         {
@@ -61,12 +61,10 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     if (unit->resourceKind == WAR_RESOURCE_GOLD)
     {
         map->players[0].gold += unit->amount;
-        updateGoldText(context);
     }
     else if (unit->resourceKind == WAR_RESOURCE_WOOD)
     {
         map->players[0].wood += unit->amount;
-        updateWoodText(context);
     }
 
     unit->resourceKind = WAR_RESOURCE_NONE;

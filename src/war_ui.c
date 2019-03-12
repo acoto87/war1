@@ -54,52 +54,58 @@ WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 siz
     return entity;
 }
 
-WarEntity* createUIImage(WarContext* context, char* name, s32 resourceIndex, vec2 position)
+WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef spriteResourceRef, vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addSpriteComponentFromResource(context, entity, resourceIndex, 0, NULL);
+    addSpriteComponentFromResource(context, entity, spriteResourceRef);
 
     return entity;
 }
 
 WarEntity* createUITextButton(WarContext* context, 
                               char* name,
-                              s32 backgroundNormalResourceIndex, 
-                              s32 backgroundPressedResourceIndex, 
+                              char* tooltip,
                               char* text,
-                              vec2 position)
+                              WarSpriteResourceRef backgroundNormalRef,
+                              WarSpriteResourceRef backgroundPressedRef,
+                              vec2 position,
+                              WarClickHandler clickHandler)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addTextButtonComponentFromResource(context, 
-                                       entity,
-                                       backgroundNormalResourceIndex,
-                                       backgroundPressedResourceIndex, 
-                                       text);
+                                       entity, 
+                                       backgroundNormalRef, 
+                                       backgroundPressedRef, 
+                                       text, 
+                                       tooltip,
+                                       clickHandler);
 
     return entity;
 }
 
 WarEntity* createUIImageButton(WarContext* context, 
                                char* name,
-                               s32 backgroundNormalResourceIndex, 
-                               s32 backgroundPressedResourceIndex, 
-                               s32 foregroundResourceIndex,
-                               s32 foregroundFrameIndex,
-                               vec2 position)
+                               char* tooltip,
+                               WarSpriteResourceRef backgroundNormalRef,
+                               WarSpriteResourceRef backgroundPressedRef,
+                               WarSpriteResourceRef foregroundRef,
+                               vec2 position,
+                               WarClickHandler clickHandler)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addImageButtonComponentFromResource(context, 
-                                        entity,
-                                        backgroundNormalResourceIndex,
-                                        backgroundPressedResourceIndex, 
-                                        foregroundResourceIndex,
-                                        foregroundFrameIndex);
+                                        entity, 
+                                        backgroundNormalRef, 
+                                        backgroundPressedRef, 
+                                        foregroundRef, 
+                                        tooltip,
+                                        clickHandler);
 
     return entity;
 }
@@ -116,32 +122,6 @@ bool isUIEntity(WarEntity* entity)
 
         default:
             return false;
-    }
-}
-
-void updateStatusText(WarContext* context)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    WarEntity* txtStatus = findUIEntity(context, "txtStatus");
-    assert(txtStatus);
-    
-    if (map->selectedEntities.count > 1)
-    {
-        char buffer[50];
-        sprintf(buffer, "SELECTED %d UNITS", map->selectedEntities.count);
-        setUIText(txtStatus, buffer);
-    }
-    else if (map->selectedEntities.count == 1)
-    {
-        char buffer[50];
-        sprintf(buffer, "SELECTED UNIT WITH ID %d", map->selectedEntities.items[0]);
-        setUIText(txtStatus, buffer);
-    }
-    else
-    {
-        clearUIText(txtStatus);
     }
 }
 
@@ -169,6 +149,14 @@ void updateWoodText(WarContext* context)
     char buffer[20];
     sprintf(buffer, "LUMBER: %d", map->players[0].wood);
     setUIText(txtWood, buffer);
+}
+
+void setStatusText(WarContext* context, char* text)
+{
+    WarEntity* txtStatus = findUIEntity(context, "txtStatus");
+    assert(txtStatus);
+
+    setUIText(txtStatus, text);
 }
 
 void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)

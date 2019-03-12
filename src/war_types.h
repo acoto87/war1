@@ -78,6 +78,13 @@ shlDefineList(vec2List, vec2)
 #define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, equalsVec2, NULL}
 
 //
+// Forward references to other structs that need a reference to these ones.
+// See WarButtonComponent, WarState.building.
+//
+struct _WarContext;
+struct _WarEntity;
+
+//
 // Resources
 //
 typedef struct 
@@ -251,6 +258,28 @@ typedef struct
     s32 framesCount;
     WarSpriteFrame frames[MAX_SPRITE_FRAME_COUNT];
 } WarSprite;
+
+typedef struct
+{
+    s32 resourceIndex;
+    s32 frameIndicesCount;
+    s32 frameIndices[MAX_SPRITE_FRAME_COUNT];
+} WarSpriteResourceRef;
+
+WarSpriteResourceRef createSpriteResourceRef(s32 resourceIndex, s32 frameIndicesCount, s32 frameIndices[])
+{
+    WarSpriteResourceRef spriteResourceRef = (WarSpriteResourceRef){0};
+    spriteResourceRef.resourceIndex = resourceIndex;
+    spriteResourceRef.frameIndicesCount = frameIndicesCount;
+    if (frameIndices)
+    {
+        memcpy(spriteResourceRef.frameIndices, frameIndices, frameIndicesCount * sizeof(s32));
+    }
+    return spriteResourceRef;
+}
+
+#define imageResourceRef(resourceIndex) createSpriteResourceRef(resourceIndex, 0, NULL)
+#define spriteResourceRef(resourceIndex, spriteIndex) createSpriteResourceRef(resourceIndex, 1, arrayArg(s32, spriteIndex))
 
 typedef enum
 {
@@ -832,7 +861,7 @@ typedef struct _WarState
 
         struct
         {
-            void* entityToBuild;
+            struct _WarEntity* entityToBuild;
             // NOTE: another type of building unit are the upgrades, represent it
             // here with another field.
             // WarUpgrade* upgradeToBuild;
@@ -967,19 +996,23 @@ typedef struct
     u8Color color;
 } WarRectComponent;
 
+typedef void (*WarClickHandler)(struct _WarContext* context, struct _WarEntity* entity);
+
 typedef struct
 {
     bool enabled;
-
+    bool hover;
     bool pressed;
-
+    vec2 size;
     WarSprite backgroundNormalSprite;
     WarSprite backgroundPressedSprite;
     WarSprite foregroundSprite;
     char* text;
+    char* tooltip;
+    WarClickHandler onClick;
 } WarButtonComponent;
 
-typedef struct
+typedef struct _WarEntity
 {
     bool enabled;
     WarEntityId id;
@@ -1139,7 +1172,7 @@ typedef struct
     rect dragRect;
 } WarInput;
 
-typedef struct 
+typedef struct _WarContext
 {
     f32 time;
     f32 deltaTime;
