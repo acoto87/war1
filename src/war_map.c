@@ -391,59 +391,29 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIRect(context, "rectPercentBar", vec2Addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), U8COLOR_GREEN);
         createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
 
-        createUIImageButton(context, 
-                            "action0", 
-                            "Move To",
-                            imageResourceRef(364), 
-                            imageResourceRef(365), 
-                            spriteResourceRef(361, 33), 
-                            vec2Addv(leftBottomPanel, vec2i(2, 46)),
-                            NULL);
+        WarSpriteResourceRef invalidRef = invalidResourceRef();
 
-        createUIImageButton(context, 
-                            "action1", 
-                            "Move To",
-                            imageResourceRef(364), 
-                            imageResourceRef(365), 
-                            spriteResourceRef(361, 79), 
-                            vec2Addv(leftBottomPanel, vec2i(36, 46)),
-                            NULL);
+        WarEntity* commandButtons[6] = 
+        {
+            createUIImageButton(context, "command0", NULL, invalidRef, invalidRef, invalidRef, vec2Addv(leftBottomPanel, vec2i(2, 46)), NULL),
+            createUIImageButton(context, "command1", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(36, 46)), NULL),
+            createUIImageButton(context, "command2", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(2, 69)), NULL),
+            createUIImageButton(context, "command3", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(36, 69)), NULL),
+            createUIImageButton(context, "command4", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(2, 92)), NULL),
+            createUIImageButton(context, "command5", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(36, 92)), NULL)
+        };
 
-        createUIImageButton(context, 
-                            "action2", 
-                            "Move To",
-                            imageResourceRef(364), 
-                            imageResourceRef(365), 
-                            spriteResourceRef(361, 35), 
-                            vec2Addv(leftBottomPanel, vec2i(2, 69)),
-                            NULL);
+        for (s32 i = 0; i < 6; i++)
+            commandButtons[i]->button.enabled = false;
 
-        createUIImageButton(context, 
-                            "action3", 
-                            "Move To",
-                            imageResourceRef(364), 
-                            imageResourceRef(365), 
-                            spriteResourceRef(361, 36), 
-                            vec2Addv(leftBottomPanel, vec2i(36, 69)),
-                            NULL);
-
-        createUIImageButton(context, 
-                            "action4", 
-                            "Move To",
-                            imageResourceRef(364), 
-                            imageResourceRef(365), 
-                            spriteResourceRef(361, 37), 
-                            vec2Addv(leftBottomPanel, vec2i(2, 92)),
-                            NULL);
-
-        createUIImageButton(context, 
-                            "action5", 
-                            "Move To",
-                            imageResourceRef(364), 
-                            imageResourceRef(365), 
-                            spriteResourceRef(361, 38), 
-                            vec2Addv(leftBottomPanel, vec2i(36, 92)),
-                            NULL);
+        createUIImageButton(context,
+                           "menu",
+                           "MENU (F10)",
+                           imageResourceRef(362),
+                           imageResourceRef(363),
+                           invalidRef,
+                           vec2Addv(leftBottomPanel, vec2i(3, 116)),
+                           NULL);
     }
 
     // set the initial state for the tiles
@@ -631,40 +601,22 @@ void updateSelection(WarContext* context)
                 for(s32 i = 0; i < map->entities.count; i++)
                 {
                     WarEntity* entity = map->entities.items[i];
-                    if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+                    if (entity && isUnit(entity) && entity->unit.enabled)
                     {
-                        if (entity->unit.enabled)
-                        {
-                            rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
+                        rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
 
-                            if (rectIntersects(pointerRect, unitRect))
-                            {
-                                addEntityToSelection(context, entity->id);
-                            }
-                            else if (!input->keys[WAR_KEY_CTRL].pressed)
-                            {
-                                removeEntityFromSelection(context, entity->id);
-                            }
+                        if (rectIntersects(pointerRect, unitRect))
+                        {
+                            addEntityToSelection(context, entity->id);
+                        }
+                        else if (!input->keys[WAR_KEY_CTRL].pressed)
+                        {
+                            removeEntityFromSelection(context, entity->id);
                         }
                     }
                 }
 
-                if (map->selectedEntities.count > 1)
-                {
-                    char buffer[50];
-                    sprintf(buffer, "SELECTED %d UNITS", map->selectedEntities.count);
-                    setStatusText(context, buffer);
-                }
-                else if (map->selectedEntities.count == 1)
-                {
-                    char buffer[50];
-                    sprintf(buffer, "SELECTED UNIT WITH ID %d", map->selectedEntities.items[0]);
-                    setStatusText(context, buffer);
-                }
-                else 
-                {
-                    setStatusText(context, NULL);
-                }
+                
             }
         }
     }
@@ -872,7 +824,7 @@ void updateButtonState(WarContext* context, WarEntity* entity)
     WarTransformComponent* transform = &entity->transform;
     WarButtonComponent* button = &entity->button;
 
-    rect buttonRect = rectv(transform->position, button->size);
+    rect buttonRect = rectv(transform->position, button->backgroundSize);
     bool pointerInside = rectContainsf(buttonRect, input->pos.x, input->pos.y);
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
@@ -909,6 +861,12 @@ void updateButtonState(WarContext* context, WarEntity* entity)
 
         setStatusText(context, button->tooltip);
     }
+    else if (button->hover)
+    {
+        setStatusText(context, NULL);
+
+        button->hover = false;
+    }
 }
 
 void updateButtons(WarContext* context)
@@ -931,8 +889,6 @@ void updateMap(WarContext* context)
     assert(map);
 
     WarInput* input = &context->input;
-
-    setStatusText(context, NULL);
 
     updateGlobalSpeed(context);
     updateGlobalScale(context);
@@ -1448,8 +1404,8 @@ void renderMapPanel(WarContext *context)
 #endif
 
                 WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
-                updateSpriteImage(context, &anim->sprite, frame.data);
-                renderSprite(context, &anim->sprite, VEC2_ZERO, VEC2_ONE);
+                updateSpriteImage(context, anim->sprite, frame.data);
+                renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
                 nvgRestore(gfx);
             }

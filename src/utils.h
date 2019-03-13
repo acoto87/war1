@@ -114,3 +114,23 @@ void* xrealloc(void *ptr, size32 size, char *file, s32 line)
 #define xmalloc(size) xmalloc(size, __FILE__, __LINE__)
 #define xcalloc(count, size) xcalloc(count, size, __FILE__, __LINE__)
 #define xrealloc(ptr, size) xrealloc(ptr, size, __FILE__, __LINE__)
+
+#if __DEBUG__
+/* Obtain a backtrace and print it to stdout. */
+void printTrace()
+{
+#define MAX_STACKTRACE 50
+
+  void *buffer[MAX_STACKTRACE];
+  size32 size = backtrace(buffer, MAX_STACKTRACE);
+  char** strings = backtrace_symbols(buffer, size);
+
+  printf("Obtained %zd stack frames.\n", size);
+
+  for (s32 i = 0; i < size; i++)
+     printf ("%s\n", strings[i]);
+
+  free (strings);
+}
+
+#endif

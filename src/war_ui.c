@@ -70,19 +70,21 @@ WarEntity* createUITextButton(WarContext* context,
                               char* text,
                               WarSpriteResourceRef backgroundNormalRef,
                               WarSpriteResourceRef backgroundPressedRef,
+                              WarSpriteResourceRef foregroundRef,
                               vec2 position,
                               WarClickHandler clickHandler)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addTextButtonComponentFromResource(context, 
-                                       entity, 
-                                       backgroundNormalRef, 
-                                       backgroundPressedRef, 
-                                       text, 
-                                       tooltip,
-                                       clickHandler);
+    addTextComponent(context, entity, text);
+    addButtonComponentFromResource(context, 
+                                   entity, 
+                                   backgroundNormalRef, 
+                                   backgroundPressedRef, 
+                                   foregroundRef,
+                                   tooltip,
+                                   clickHandler);
 
     return entity;
 }
@@ -99,13 +101,13 @@ WarEntity* createUIImageButton(WarContext* context,
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addImageButtonComponentFromResource(context, 
-                                        entity, 
-                                        backgroundNormalRef, 
-                                        backgroundPressedRef, 
-                                        foregroundRef, 
-                                        tooltip,
-                                        clickHandler);
+    addButtonComponentFromResource(context, 
+                                   entity, 
+                                   backgroundNormalRef, 
+                                   backgroundPressedRef, 
+                                   foregroundRef, 
+                                   tooltip,
+                                   clickHandler);
 
     return entity;
 }
@@ -402,8 +404,8 @@ void renderMinimap(WarContext* context)
 
     nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
 
-    updateSpriteImage(context, &map->minimapSprite, map->minimapSprite.frames[0].data);
-    renderSprite(context, &map->minimapSprite, VEC2_ZERO, VEC2_ONE);
+    updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
+    renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
     nvgRestore(gfx);
 }

@@ -16,7 +16,8 @@ GladSrcPath="/home/pi/Projects/glad-gles-2.0/src/glad.c"
 # ProfilerFlags="-pg"
 # OptimizeFlags="-O2"
 # AssemblyFlags="-g -Wa,-ahl"
-CommonCompilerFlags="-std=c99 -Wall -Wno-misleading-indentation -x c $ProfilerFlags $OptimizeFlags $AssemblyFlags -I $GladIncludePath -I $GLFWIncludePath -I $STBIncludePath -I $NANOVGIncludePath -I $SHLIncludePath"
+DebugFlags="__DEBUG__"
+CommonCompilerFlags="-std=c99 -Wall -Wno-misleading-indentation -x c $ProfilerFlags $OptimizeFlags $AssemblyFlags -D $DebugFlags -I $GladIncludePath -I $GLFWIncludePath -I $STBIncludePath -I $NANOVGIncludePath -I $SHLIncludePath"
 CommonLinkerFlags="-L$GLFWLibPath -l glfw -l m"
 
 mkdir -p build

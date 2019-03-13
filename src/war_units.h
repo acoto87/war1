@@ -483,6 +483,31 @@ const WarBuildingStats buildingStats[] =
     { WAR_UNIT_GOLDMINE,                  0,     25500,              -1,     -1,     -1 },
 };
 
+typedef struct
+{
+    char* tooltip;
+    WarSpriteResourceRef spriteResourceRef;
+} WarUnitCommandData;
+
+typedef struct
+{
+    WarUnitType type;
+    s32 commandsCount;
+    WarUnitCommandData commands[6];
+} WarUnitCommandsData;
+
+WarUnitCommandsData commandsData[] = 
+{
+    { 
+        WAR_UNIT_TOWNHALL_HUMANS, 3,
+        { 
+            { "TRAIN PEASANT", 361, 1, 4 },
+            { "BUILD ROAD", 361, 1, 42 },
+            { "BUILD WALL", 361, 1, 41 }
+        },
+    },
+};
+
 WarUnitsData getUnitsData(WarUnitType type)
 {
     s32 index = 0;
@@ -580,6 +605,17 @@ WarBuildingStats getBuildingStats(WarUnitType type)
 
     assert(index < length);
     return buildingStats[index];
+}
+
+WarUnitCommandsData getUnitCommandsData(WarUnitType type)
+{
+    s32 index = 0;
+    s32 length = arrayLength(commandsData);
+    while (index < length && commandsData[index].type != type)
+        index++;
+
+    assert(index < length);
+    return commandsData[index];
 }
 
 #define isUnit(entity) ((entity)->type == WAR_ENTITY_TYPE_UNIT)

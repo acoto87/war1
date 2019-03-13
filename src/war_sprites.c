@@ -28,7 +28,7 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
     sprite.framesCount = frameCount;
 
     sprite.image = nvgCreateImageRGBA(context->gfx, frameWidth, frameHeight, NVG_IMAGE_NEAREST, NULL);
-
+    
     for(s32 i = 0; i < frameCount; i++)
     {
         sprite.frames[i].dx = frames[i].dx;
@@ -81,7 +81,6 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
                     assert(frameIndex >= 0 && frameIndex < framesCount);
 
                     frames[i] = allFrames[frameIndex];
-                    logInfo("frameIndex: %d\n", frameIndex);
                 }
 
                 framesCount = frameIndicesCount;
@@ -110,36 +109,66 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
 
 WarSprite createSpriteFromResourceIndex(WarContext* context, WarSpriteResourceRef spriteResourceRef)
 {
+    if (spriteResourceRef.resourceIndex < 0)
+    {
+        return (WarSprite){0};
+    }
+
     WarResource* resource = getOrCreateResource(context, spriteResourceRef.resourceIndex);
     return createSpriteFromResource(context, resource, spriteResourceRef.frameIndicesCount, spriteResourceRef.frameIndices);
 }
 
-void updateSpriteImage(WarContext *context, WarSprite *sprite, u8 data[])
+void updateSpriteImage(WarContext *context, WarSprite sprite, u8 data[])
 {
-    nvgUpdateImage(context->gfx, sprite->image, data);
+    if (!sprite.image)
+    {
+        logWarning("Trying to update a sprite with image: %d\n", sprite.image);
+        return;
+    }
+
+    nvgUpdateImage(context->gfx, sprite.image, data);
 }
 
-void renderSubSprite(WarContext *context, WarSprite *sprite, rect rs, rect rd, vec2 scale)
+void renderSubSprite(WarContext *context, WarSprite sprite, rect rs, rect rd, vec2 scale)
 {
-    nvgRenderSubImage(context->gfx, sprite->image, rs, rd, scale);
+    if (!sprite.image)
+    {
+        logWarning("Trying to render a sprite with image: %d\n", sprite.image);
+        return;
+    }
+
+    nvgRenderSubImage(context->gfx, sprite.image, rs, rd, scale);
 }
 
-void renderSprite(WarContext *context, WarSprite *sprite, vec2 pos, vec2 scale)
+void renderSprite(WarContext *context, WarSprite sprite, vec2 pos, vec2 scale)
 {
-    vec2 frameSize = vec2i(sprite->frameWidth, sprite->frameHeight);
+    if (!sprite.image)
+    {
+        logWarning("Trying to render a sprite with image: %d\n", sprite.image);
+        return;
+    }
+
+    vec2 frameSize = vec2i(sprite.frameWidth, sprite.frameHeight);
     rect rs = rectv(VEC2_ZERO, frameSize);
     rect rd = rectv(pos, frameSize);
-    nvgRenderSubImage(context->gfx, sprite->image, rs, rd, scale);
+    nvgRenderSubImage(context->gfx, sprite.image, rs, rd, scale);
 }
 
 WarSpriteFrame getSpriteFrame(WarContext* context, WarSprite sprite, s32 frameIndex)
 {
+    assert(sprite.image);
     assert(frameIndex >= 0 && frameIndex < sprite.framesCount);
     return sprite.frames[frameIndex];
 }
 
 void freeSprite(WarContext* context, WarSprite sprite)
 {
+    if (!sprite.image)
+    {
+        logWarning("Trying to free a sprite with image: %d\n", sprite.image);
+        return;
+    }
+
     for (s32 i = 0; i < sprite.framesCount; i++)
     {
         if (sprite.frames[i].data)

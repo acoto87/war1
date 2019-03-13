@@ -278,6 +278,7 @@ WarSpriteResourceRef createSpriteResourceRef(s32 resourceIndex, s32 frameIndices
     return spriteResourceRef;
 }
 
+#define invalidResourceRef() createSpriteResourceRef(-1, 0, NULL)
 #define imageResourceRef(resourceIndex) createSpriteResourceRef(resourceIndex, 0, NULL)
 #define spriteResourceRef(resourceIndex, spriteIndex) createSpriteResourceRef(resourceIndex, 1, arrayArg(s32, spriteIndex))
 
@@ -1003,11 +1004,11 @@ typedef struct
     bool enabled;
     bool hover;
     bool pressed;
-    vec2 size;
+    vec2 backgroundSize;
+    vec2 foregroundSize;
     WarSprite backgroundNormalSprite;
     WarSprite backgroundPressedSprite;
     WarSprite foregroundSprite;
-    char* text;
     char* tooltip;
     WarClickHandler onClick;
 } WarButtonComponent;

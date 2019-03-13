@@ -17,6 +17,10 @@
 #include <time.h>
 #include <math.h>
 
+#if __DEBUG__
+#include <execinfo.h>
+#endif
+
 // #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
 
@@ -40,7 +44,7 @@
 #endif
 #include "nanovg_gl.h"
 
-#if _DEBUG
+#if __DEBUG__
     #define STB_IMAGE_WRITE_IMPLEMENTATION
     #include "stb_image_write.h"
 

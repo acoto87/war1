@@ -205,80 +205,43 @@ void removeRectComponent(WarContext* context, WarEntity* entity)
     entity->rect = (WarRectComponent){0};
 }
 
-void addTextButtonComponent(WarContext* context,
-                            WarEntity* entity,
-                            WarSprite backgroundNormalSprite,
-                            WarSprite backgroundPressedSprite,
-                            char* text,
-                            char* tooltip,
-                            WarClickHandler clickHandler)
-{
-    entity->button = (WarButtonComponent){0};
-    entity->button.enabled = true;
-    entity->button.backgroundNormalSprite = backgroundNormalSprite;
-    entity->button.backgroundPressedSprite = backgroundPressedSprite;
-    entity->button.size = vec2i(backgroundNormalSprite.frameWidth, backgroundNormalSprite.frameHeight);
-    entity->button.text = (char *)xmalloc(strlen(text) * sizeof(char));
-    strcpy(entity->button.text, text);
-    entity->button.tooltip = tooltip;
-    entity->button.onClick = clickHandler;
-}
-
-void addTextButtonComponentFromResource(WarContext* context,
-                                        WarEntity* entity,
-                                        WarSpriteResourceRef backgroundNormalRef,
-                                        WarSpriteResourceRef backgroundPressedRef,
-                                        char* text,
-                                        char* tooltip,
-                                        WarClickHandler clickHandler)
-{
-    WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalRef);
-    WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedRef);
-    addTextButtonComponent(context, 
-                           entity, 
-                           backgroundNormalSprite, 
-                           backgroundPressedSprite, 
-                           text, 
-                           tooltip,
-                           clickHandler);
-}
-
-void addImageButtonComponent(WarContext* context,
-                             WarEntity* entity,
-                             WarSprite backgroundNormalSprite,
-                             WarSprite backgroundPressedSprite,
-                             WarSprite foregroundSprite,
-                             char* tooltip,
-                             WarClickHandler clickHandler)
+void addButtonComponent(WarContext* context,
+                        WarEntity* entity,
+                        WarSprite backgroundNormalSprite,
+                        WarSprite backgroundPressedSprite,
+                        WarSprite foregroundSprite,
+                        char* tooltip,
+                        WarClickHandler clickHandler)
 {
     entity->button = (WarButtonComponent){0};
     entity->button.enabled = true;
     entity->button.backgroundNormalSprite = backgroundNormalSprite;
     entity->button.backgroundPressedSprite = backgroundPressedSprite;
     entity->button.foregroundSprite = foregroundSprite;
-    entity->button.size = vec2i(backgroundNormalSprite.frameWidth, backgroundNormalSprite.frameHeight);
+    entity->button.backgroundSize = vec2i(backgroundNormalSprite.frameWidth, backgroundNormalSprite.frameHeight);
+    entity->button.foregroundSize = vec2i(foregroundSprite.frameWidth, foregroundSprite.frameHeight);
     entity->button.tooltip = tooltip;
     entity->button.onClick = clickHandler;
 }
 
-void addImageButtonComponentFromResource(WarContext* context, 
-                                         WarEntity* entity, 
-                                         WarSpriteResourceRef backgroundNormalRef,
-                                         WarSpriteResourceRef backgroundPressedRef,
-                                         WarSpriteResourceRef foregroundRef,
-                                         char* tooltip,
-                                         WarClickHandler clickHandler)
+void addButtonComponentFromResource(WarContext* context, 
+                                    WarEntity* entity, 
+                                    WarSpriteResourceRef backgroundNormalRef,
+                                    WarSpriteResourceRef backgroundPressedRef,
+                                    WarSpriteResourceRef foregroundRef,
+                                    char* tooltip,
+                                    WarClickHandler clickHandler)
 {
     WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalRef);
     WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedRef);
     WarSprite foregroundSprite = createSpriteFromResourceIndex(context, foregroundRef);
-    addImageButtonComponent(context, 
-                            entity, 
-                            backgroundNormalSprite, 
-                            backgroundPressedSprite, 
-                            foregroundSprite,
-                            tooltip,
-                            clickHandler);
+    addButtonComponent(context, 
+                       entity, 
+                       backgroundNormalSprite, 
+                       backgroundPressedSprite, 
+                       foregroundSprite,
+                       tooltip,
+                       clickHandler);
 }
 
 void removeButtonComponent(WarContext* context, WarEntity* entity)
@@ -286,8 +249,6 @@ void removeButtonComponent(WarContext* context, WarEntity* entity)
     freeSprite(context, entity->button.backgroundNormalSprite);
     freeSprite(context, entity->button.backgroundPressedSprite);
     freeSprite(context, entity->button.foregroundSprite);
-    if (entity->button.text)
-        free(entity->button.text);
     entity->button = (WarButtonComponent){0};
 }
 
@@ -424,13 +385,13 @@ void _renderImage(WarContext* context, WarEntity* entity)
         if (sprite->sprite.framesCount > 1)
         {
             WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-            updateSpriteImage(context, &sprite->sprite, frame.data);
+            updateSpriteImage(context, sprite->sprite, frame.data);
 
             nvgTranslate(gfx, -frame.dx, -frame.dy);
         }
 
         nvgTranslate(gfx, transform.position.x, transform.position.y);
-        renderSprite(context, &sprite->sprite, VEC2_ZERO, VEC2_ONE);
+        renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
         nvgRestore(gfx);
     }
 }
@@ -691,8 +652,8 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
         nvgSave(gfx);
 
         WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-        updateSpriteImage(context, &sprite->sprite, frame.data);
-        renderSprite(context, &sprite->sprite, VEC2_ZERO, scale);
+        updateSpriteImage(context, sprite->sprite, frame.data);
+        renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
 
         nvgRestore(gfx);
 
@@ -728,8 +689,8 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
                 s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
                 WarSpriteFrame frame = getSpriteFrame(context, anim->sprite, spriteFrameIndex);
 
-                updateSpriteImage(context, &anim->sprite, frame.data);
-                renderSprite(context, &anim->sprite, VEC2_ZERO, VEC2_ONE);
+                updateSpriteImage(context, anim->sprite, frame.data);
+                renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
                 nvgRestore(gfx);
             }
@@ -790,6 +751,7 @@ void _renderButton(WarContext* context, WarEntity* entity)
     WarTransformComponent* transform = &entity->transform;
     WarUIComponent* ui = &entity->ui;
     WarButtonComponent* button = &entity->button;
+    WarTextComponent* text = &entity->text;
 
     if (ui->enabled && button->enabled)
     {
@@ -797,22 +759,40 @@ void _renderButton(WarContext* context, WarEntity* entity)
         nvgTranslate(gfx, transform->position.x, transform->position.y);
         nvgScale(gfx, transform->scale.x, transform->scale.y);
 
-        WarSprite* backgroundSprite = button->pressed
-            ? &button->backgroundPressedSprite 
-            : &button->backgroundNormalSprite;;
+        // render background
+        {
+            WarSprite backgroundSprite = button->pressed
+                ? button->backgroundPressedSprite 
+                : button->backgroundNormalSprite;
 
-        WarSprite* foregroundSprite = &button->foregroundSprite;
+            renderSprite(context, backgroundSprite, VEC2_ZERO, VEC2_ONE);
+        }
 
-        renderSprite(context, backgroundSprite, VEC2_ZERO, VEC2_ONE);
+        // render foreground
+        {
+            WarSprite foregroundSprite = button->foregroundSprite;
+            if (foregroundSprite.image)
+            {
+                vec2 offset = vec2Half(vec2Subv(button->backgroundSize, button->foregroundSize));
+                
+                if (button->pressed)
+                    offset = vec2Addv(offset, vec2i(0, 1));
 
-        nvgTranslate(gfx, 2, 2);
+                nvgTranslate(gfx, offset.x, offset.y);
 
-        if (button->pressed)
-            nvgTranslate(gfx, 0, 1);
+                WarSpriteFrame frame = getSpriteFrame(context, foregroundSprite, 0);
+                updateSpriteImage(context, foregroundSprite, frame.data);
+                renderSprite(context, foregroundSprite, VEC2_ZERO, VEC2_ONE);
+            }
+        }
 
-        WarSpriteFrame frame = getSpriteFrame(context, *foregroundSprite, 0);
-        updateSpriteImage(context, foregroundSprite, frame.data);
-        renderSprite(context, foregroundSprite, VEC2_ZERO, VEC2_ONE);
+        // render text
+        {
+            if (text->enabled)
+            {
+
+            }
+        }
 
         nvgRestore(gfx);
     }

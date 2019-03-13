@@ -128,6 +128,14 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
         resource->paletteData.colors[150 * 3 + 0] = 46;
         resource->paletteData.colors[150 * 3 + 1] = 54;
         resource->paletteData.colors[150 * 3 + 2] = 54;
+
+        resource->paletteData.colors[158 * 3 + 0] = 40;
+        resource->paletteData.colors[158 * 3 + 1] = 64;
+        resource->paletteData.colors[158 * 3 + 2] = 112;
+
+        resource->paletteData.colors[215 * 3 + 0] = 32;
+        resource->paletteData.colors[215 * 3 + 1] = 20;
+        resource->paletteData.colors[215 * 3 + 2] = 24;
     }
 }
 
@@ -542,7 +550,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
     
     free(data);
 
-#if _DEBUG
+#if __DEBUG__
     {
         char fp[30];
         sprintf(fp, "output_%d.png", index);

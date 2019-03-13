@@ -17,7 +17,10 @@ REM Lib paths
 SET GLEWLibPath=D:\Work\libs\glew32\lib
 SET GLFWLibPath=D:\Work\libs\glfw-3.2.1_x64\lib-vc2015
 
-SET CommonCompilerFlags=-Od -nologo -fp:fast -fp:except- -Gm- -GR- -EHa- -Zo -FC -Z7 -TC -I %GLEWIncludePath% -I %GLFWIncludePath% -I %STBIncludePath% -I %SHLIncludePath% -I %NVGIncludePath% -D _DEBUG -W2
+REM Flags
+SET DebugFlags=__DEBUG__
+
+SET CommonCompilerFlags=-Od -nologo -fp:fast -fp:except- -Gm- -GR- -EHa- -Zo -FC -Z7 -TC -I %GLEWIncludePath% -I %GLFWIncludePath% -I %STBIncludePath% -I %SHLIncludePath% -I %NVGIncludePath% -D %DebugFlags%  -W2
 SET CommonLinkerFlags= -incremental:no -opt:ref -out:war1.exe -pdb:war1.pdb -libpath:%GLEWLibPath% -libpath:%GLFWLibPath% user32.lib gdi32.lib opengl32.lib glew32.lib glfw3dll.lib
 
 IF NOT EXIST build mkdir build
