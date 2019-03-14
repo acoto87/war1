@@ -761,7 +761,7 @@ void _renderButton(WarContext* context, WarEntity* entity)
 
         // render background
         {
-            WarSprite backgroundSprite = button->pressed
+            WarSprite backgroundSprite = button->active
                 ? button->backgroundPressedSprite 
                 : button->backgroundNormalSprite;
 
@@ -775,7 +775,7 @@ void _renderButton(WarContext* context, WarEntity* entity)
             {
                 vec2 offset = vec2Half(vec2Subv(button->backgroundSize, button->foregroundSize));
                 
-                if (button->pressed)
+                if (button->active)
                     offset = vec2Addv(offset, vec2i(0, 1));
 
                 nvgTranslate(gfx, offset.x, offset.y);

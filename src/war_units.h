@@ -483,30 +483,85 @@ const WarBuildingStats buildingStats[] =
     { WAR_UNIT_GOLDMINE,                  0,     25500,              -1,     -1,     -1 },
 };
 
-typedef struct
-{
-    char* tooltip;
-    WarSpriteResourceRef spriteResourceRef;
-} WarUnitCommandData;
+// typedef struct
+// {
+// 	WarUnitCommandType type;
+//     char* tooltip;
+// 	s32 wood;
+// 	s32 gold;
+// 	s32 magic;
+//     s32 resourceIndex;
+//     s32 frameIndex;
+// } WarUnitCommandData;
 
-typedef struct
-{
-    WarUnitType type;
-    s32 commandsCount;
-    WarUnitCommandData commands[6];
-} WarUnitCommandsData;
+// typedef struct
+// {
+//     WarUnitType type;
+//     WarUnitCommandType commands[6];
+// } WarUnitCommandsData;
 
-WarUnitCommandsData commandsData[] = 
-{
-    { 
-        WAR_UNIT_TOWNHALL_HUMANS, 3,
-        { 
-            { "TRAIN PEASANT", 361, 1, 4 },
-            { "BUILD ROAD", 361, 1, 42 },
-            { "BUILD WALL", 361, 1, 41 }
-        },
-    },
-};
+// const WarUnitCommandData commandsData[] = 
+// {
+//     { WAR_COMMAND_NONE, NULL, 0, 0, 0, 0, 0 },
+
+//     // unit commands
+//     { WAR_COMMAND_MOVE, NULL, 0, 0, 0, 0, 0 },
+//     { WAR_COMMAND_STOP, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_HARVEST, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_DELIVER, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_REPAIR, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_BASIC, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_ADVANCED, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_ATTACK, NULL, 0, 0, 0, 361, 0 },
+
+//     // train commands
+//     { WAR_COMMAND_TRAIN_FOOTMAN, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_GRUNT, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_PEASANT, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_PEON, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_CATAPULT_HUMANS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_CATAPULT_ORCS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_KNIGHT, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_RAIDER, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_ARCHER, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_SPEARMAN, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_CONJURER, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_WARLOCK, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_CLERIC, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_TRAIN_NECROLYTE, NULL, 0, 0, 0, 361, 0 },
+
+//     // spell commands
+//     { WAR_COMMAND_SUMMON_OGRE, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_SPIDER, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_SLIME, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_FIREELEMENTAL,NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_SCORPION, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_BRIGAND, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_THE_DEAD, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_SKELETON, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_DAEMON, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_SUMMON_WATERELEMENTAL, NULL, 0, 0, 0, 361, 0 },
+
+//     // build commands
+//     { WAR_COMMAND_BUILD_FARM_HUMANS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_FARM_ORCS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_BARRACKS_HUMANS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_BARRACKS_ORCS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_CHURCH, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_TEMPLE, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_TOWER_HUMANS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_TOWER_ORCS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_TOWNHALL_HUMANS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_TOWNHALL_ORCS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_LUMBERMILL_HUMANS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_LUMBERMILL_ORCS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_STABLES, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_KENNEL, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_BLACKSMITH_HUMANS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_BLACKSMITH_ORCS, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_STORMWIND, NULL, 0, 0, 0, 361, 0 },
+//     { WAR_COMMAND_BUILD_BLACKROCK, NULL, 0, 0, 0, 361, 0 },
+// };
 
 WarUnitsData getUnitsData(WarUnitType type)
 {
@@ -605,17 +660,6 @@ WarBuildingStats getBuildingStats(WarUnitType type)
 
     assert(index < length);
     return buildingStats[index];
-}
-
-WarUnitCommandsData getUnitCommandsData(WarUnitType type)
-{
-    s32 index = 0;
-    s32 length = arrayLength(commandsData);
-    while (index < length && commandsData[index].type != type)
-        index++;
-
-    assert(index < length);
-    return commandsData[index];
 }
 
 #define isUnit(entity) ((entity)->type == WAR_ENTITY_TYPE_UNIT)
@@ -968,4 +1012,274 @@ bool isCarryingResources(WarEntity* entity)
         case WAR_RESOURCE_WOOD: return entity->unit.amount == UNIT_MAX_CARRY_GOLD;
         default: return false;
     }
+}
+
+WarUnitCommandsData getUnitCommandsData(WarContext* context, WarEntity* entity)
+{
+    assert(entity);
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    WarUnitCommandsData data = { unit->type };
+
+    switch (unit->type)
+    {
+        // units
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_CATAPULT_ORCS:
+        case WAR_UNIT_KNIGHT:
+        case WAR_UNIT_RAIDER:
+        case WAR_UNIT_ARCHER:
+        case WAR_UNIT_SPEARMAN:
+        {
+            data.commands[0] = WAR_COMMAND_MOVE;
+            data.commands[1] = WAR_COMMAND_STOP;
+            data.commands[2] = WAR_COMMAND_ATTACK;
+
+            break;
+        }
+
+        case WAR_UNIT_PEASANT:
+        case WAR_UNIT_PEON:
+        {
+            data.commands[0] = WAR_COMMAND_MOVE;
+            data.commands[1] = WAR_COMMAND_STOP;
+
+            // if the unit is carrying, instead of harvest it should be deliver
+            data.commands[2] = unit->resourceKind == WAR_RESOURCE_NONE
+                ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
+
+            data.commands[3] = WAR_COMMAND_REPAIR;
+            data.commands[4] = WAR_COMMAND_BUILD_BASIC;
+
+            // this only if the advanced structures are permitted
+            // data.commands[5] = WAR_COMMAND_BUILD_ADVANCED;
+
+            break;
+        }
+        case WAR_UNIT_CONJURER:
+        {
+            break;
+        }
+        case WAR_UNIT_WARLOCK:
+        {
+            break;
+        }
+        case WAR_UNIT_CLERIC:
+        {
+            break;
+        }
+        case WAR_UNIT_NECROLYTE:
+        {
+            break;
+        }
+        case WAR_UNIT_MEDIVH:
+        {
+            break;
+        }
+        case WAR_UNIT_LOTHAR:
+        {
+            break;
+        }
+        case WAR_UNIT_WOUNDED:
+        {
+            break;
+        }
+        case WAR_UNIT_GRIZELDA:
+        {
+            break;
+        }
+        case WAR_UNIT_GARONA:
+        {
+            break;
+        }
+        case WAR_UNIT_OGRE:
+        {
+            break;
+        }
+        case WAR_UNIT_SPIDER:
+        {
+            break;
+        }
+        case WAR_UNIT_SLIME:
+        {
+            break;
+        }
+        case WAR_UNIT_FIREELEMENTAL:
+        {
+            break;
+        }
+        case WAR_UNIT_SCORPION:
+        {
+            break;
+        }
+        case WAR_UNIT_BRIGAND:
+        {
+            break;
+        }
+        case WAR_UNIT_THE_DEAD:
+        {
+            break;
+        }
+        case WAR_UNIT_SKELETON:
+        {
+            break;
+        }
+        case WAR_UNIT_DAEMON:
+        {
+            break;
+        }
+        case WAR_UNIT_WATERELEMENTAL:
+        {
+            break;
+        }
+        case WAR_UNIT_DRAGON_CYCLOPS_GIANT:
+        {
+            break;
+        }
+        case WAR_UNIT_26:
+        {
+            break;
+        }
+        case WAR_UNIT_30:
+        {
+            break;
+        }
+
+        // buildings
+        case WAR_UNIT_FARM_HUMANS:
+        {
+            break;
+        }
+        case WAR_UNIT_FARM_ORCS:
+        {
+            break;
+        }
+        case WAR_UNIT_BARRACKS_HUMANS:
+        {
+            break;
+        }
+        case WAR_UNIT_BARRACKS_ORCS:
+        {
+            break;
+        }
+        case WAR_UNIT_CHURCH:
+        {
+            break;
+        }
+        case WAR_UNIT_TEMPLE:
+        {
+            break;
+        }
+        case WAR_UNIT_TOWER_HUMANS:
+        {
+            break;
+        }
+        case WAR_UNIT_TOWER_ORCS:
+        {
+            break;
+        }
+        case WAR_UNIT_TOWNHALL_HUMANS:
+        {
+            break;
+        }
+        case WAR_UNIT_TOWNHALL_ORCS:
+        {
+            break;
+        }
+        case WAR_UNIT_LUMBERMILL_HUMANS:
+        {
+            break;
+        }
+        case WAR_UNIT_LUMBERMILL_ORCS:
+        {
+            break;
+        }
+        case WAR_UNIT_STABLES:
+        {
+            break;
+        }
+        case WAR_UNIT_KENNEL:
+        {
+            break;
+        }
+        case WAR_UNIT_BLACKSMITH_HUMANS:
+        {
+            break;
+        }
+        case WAR_UNIT_BLACKSMITH_ORCS:
+        {
+            break;
+        }
+        case WAR_UNIT_STORMWIND:
+        {
+            break;
+        }
+        case WAR_UNIT_BLACKROCK:
+        {
+            break;
+        }
+    }
+
+    return data;
+}
+
+WarUnitCommandsData getBuildBasicCommandsData(WarContext* context, WarEntity* entity)
+{
+    assert(entity);
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    WarUnitCommandsData data = { unit->type };
+
+    switch (unit->type)
+    {
+        case WAR_UNIT_PEASANT:
+        case WAR_UNIT_PEON:
+        {
+            data.commands[6] = WAR_COMMAND_CANCEL;
+
+            break;
+        }
+
+        default:
+        {
+            logWarning("Trying to get build basic commands for unit of type: %d\n", unit->type);
+            assert(false);
+            break;
+        }
+    }
+
+    return data;
+}
+
+WarUnitCommandsData getBuildAdvancedCommandsData(WarContext* context, WarEntity* entity)
+{
+    assert(entity);
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    WarUnitCommandsData data = { unit->type };
+
+    switch (unit->type)
+    {
+        case WAR_UNIT_PEASANT:
+        case WAR_UNIT_PEON:
+        {
+            data.commands[6] = WAR_COMMAND_CANCEL;
+
+            break;
+        }
+
+        default:
+        {
+            logWarning("Trying to get build advanced commands for unit of type: %d\n", unit->type);
+            assert(false);
+            break;
+        }
+    }
+
+    return data;
 }

@@ -814,73 +814,86 @@ void updateGlobalScale(WarContext* context)
     }
 }
 
-void updateButtonState(WarContext* context, WarEntity* entity)
-{
-    assert(entity->type == WAR_ENTITY_TYPE_BUTTON);
-
-    WarMap* map = context->map;
-    WarInput* input = &context->input;
-
-    WarTransformComponent* transform = &entity->transform;
-    WarButtonComponent* button = &entity->button;
-
-    rect buttonRect = rectv(transform->position, button->backgroundSize);
-    bool pointerInside = rectContainsf(buttonRect, input->pos.x, input->pos.y);
-    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-    {
-        button->hover = pointerInside;
-
-        if (button->hover)
-        {
-            if (button->onClick)
-                button->onClick(context, entity);
-        }
-
-        button->pressed = false;
-    }
-    else if (isButtonPressed(input, WAR_MOUSE_LEFT))
-    {
-        if (button->hover)
-        {
-            button->pressed = button->hover;
-        }
-    }
-    else if (pointerInside)
-    {
-        for(s32 i = 0; i < map->entities.count; i++)
-        {
-            WarEntity* button = map->entities.items[i];
-            if (button && button->type == WAR_ENTITY_TYPE_BUTTON)
-            {
-                button->button.hover = false;
-                button->button.pressed = false;
-            }
-        }
-
-        button->hover = true;
-
-        setStatusText(context, button->tooltip);
-    }
-    else if (button->hover)
-    {
-        setStatusText(context, NULL);
-
-        button->hover = false;
-    }
-}
-
 void updateButtons(WarContext* context)
 {
     WarMap* map = context->map;
+    WarInput* input = &context->input;
 
     for(s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
         if (entity && entity->type == WAR_ENTITY_TYPE_BUTTON)
         {
-            updateButtonState(context, entity);
+            WarTransformComponent* transform = &entity->transform;
+            WarButtonComponent* button = &entity->button;
+
+            rect buttonRect = rectv(transform->position, button->backgroundSize);
+            bool pointerInside = rectContainsf(buttonRect, input->pos.x, input->pos.y);
+
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                button->hot = pointerInside;
+
+                if (button->hot)
+                {
+                    if (button->onClick)
+                        button->onClick(context, entity);
+                }
+
+                button->active = false;
+            }
+            else if (isButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if (button->hot)
+                {
+                    button->active = true;
+                }
+            }
+            else if (pointerInside)
+            {
+                for(s32 j = 0; j < map->entities.count; j++)
+                {
+                    WarEntity* button = map->entities.items[i];
+                    if (button && button->type == WAR_ENTITY_TYPE_BUTTON)
+                    {
+                        button->button.hot = false;
+                        button->button.active = false;
+                    }
+                }
+
+                button->hot = true;
+            }
+            else if (button->hot)
+            {
+                button->hot = false;
+            }
         }
     }
+}
+
+void updateStatusText(WarContext* context)
+{
+    setStatusText(context, NULL);
+
+    WarMap* map = context->map;
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_BUTTON)
+        {
+            if (entity->button.hot)
+            {
+                setStatusText(context, entity->button.tooltip);
+            }
+        }
+    }
+
+    // check here if a selected building is damaged,
+    // how much would cost to repair it and set the text
+
+    // check if a button is for building something, 
+    // how much wood and gold would cost the unit 
+    // and set it in the status bar
 }
 
 void updateMap(WarContext* context)
@@ -900,6 +913,7 @@ void updateMap(WarContext* context)
     updateWoodText(context);
     updateSelectedUnitsInfo(context);
     updateButtons(context);
+    updateStatusText(context);
 
     updateTreesEdit(context);
     updateRoadsEdit(context);
