@@ -10,6 +10,7 @@ List of thing to do in no particular order
   * Damage animations are rendered below units.
   * Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.
   * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
+  * Black pixels in little tree and gold icons.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -34,6 +35,7 @@ List of thing to do in no particular order
   * ~~Make ruins behavior like the trees.~~
   * ~~Update minimap with chopped trees.~~
   * Remove global __log__ and move it to WarContext.
+  * Make so that entities can have multiple sprites.
 
 * Gameplay
   * > Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
@@ -47,6 +49,7 @@ List of thing to do in no particular order
     * ~~Add complete % bar only when there is something building.~~
     * > Add command images based on selected(s) unit types.
     * Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
+    * Add upgrades info to player info.
   * ~~Manage the gold in the mines and explode it when the gold is over.~~
   * ~~Add ruins to collapsed buildings.~~
   * Add explosion animation to living npc units when clicking to many times.

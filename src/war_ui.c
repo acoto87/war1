@@ -1,22 +1,22 @@
-void clearUIText(WarEntity* entity)
+void clearUIText(WarEntity* uiText)
 {
-    if (entity->text.text)
+    if (uiText->text.text)
     {
-        free(entity->text.text);
-        entity->text.text = NULL;
-        entity->text.enabled = false;
+        free(uiText->text.text);
+        uiText->text.text = NULL;
+        uiText->text.enabled = false;
     }
 }
 
-void setUIText(WarEntity* entity, char* text)
+void setUIText(WarEntity* uiText, char* text)
 {
-    clearUIText(entity);
+    clearUIText(uiText);
 
     if (text)
     {
-        entity->text.text = (char*)xmalloc(strlen(text) + 1);
-        strcpy(entity->text.text, text);
-        entity->text.enabled = true;
+        uiText->text.text = (char*)xmalloc(strlen(text) + 1);
+        strcpy(uiText->text.text, text);
+        uiText->text.enabled = true;
     }
 }
 
@@ -30,6 +30,21 @@ void setUIRectWidth(WarEntity* uiRect, s32 width)
 {
     uiRect->rect.size.x = width;
     uiRect->rect.enabled = width > 0;
+}
+
+void clearUITooltip(WarEntity* uiButton)
+{
+    memset(uiButton->button.tooltip, 0, sizeof(uiButton->button.tooltip));
+}
+
+void setUITooltip(WarEntity* uiButton, char* text)
+{
+    clearUITooltip(uiButton);
+
+    if (text)
+    {
+        strcpy(uiButton->button.tooltip, text);
+    }
 }
 
 WarEntity* createUIText(WarContext* context, char* name, vec2 position)
@@ -66,48 +81,34 @@ WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef s
 
 WarEntity* createUITextButton(WarContext* context, 
                               char* name,
-                              char* tooltip,
                               char* text,
                               WarSpriteResourceRef backgroundNormalRef,
                               WarSpriteResourceRef backgroundPressedRef,
                               WarSpriteResourceRef foregroundRef,
-                              vec2 position,
-                              WarClickHandler clickHandler)
+                              vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addTextComponent(context, entity, text);
-    addButtonComponentFromResource(context, 
-                                   entity, 
-                                   backgroundNormalRef, 
-                                   backgroundPressedRef, 
-                                   foregroundRef,
-                                   tooltip,
-                                   clickHandler);
+    addSpriteComponentFromResource(context, entity, foregroundRef);
+    addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
 
     return entity;
 }
 
 WarEntity* createUIImageButton(WarContext* context, 
                                char* name,
-                               char* tooltip,
                                WarSpriteResourceRef backgroundNormalRef,
                                WarSpriteResourceRef backgroundPressedRef,
                                WarSpriteResourceRef foregroundRef,
-                               vec2 position,
-                               WarClickHandler clickHandler)
+                               vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addButtonComponentFromResource(context, 
-                                   entity, 
-                                   backgroundNormalRef, 
-                                   backgroundPressedRef, 
-                                   foregroundRef, 
-                                   tooltip,
-                                   clickHandler);
+    addSpriteComponentFromResource(context, entity, foregroundRef);
+    addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
 
     return entity;
 }
@@ -255,7 +256,7 @@ void updateSelectedUnitsInfo(WarContext* context)
     // TODO: the max number of selected entities shouldn't greater than 4 but
     // that's not implemented right now, so put a min call to guard for that.
     s32 selectedEntitiesCount = mini(map->selectedEntities.count, 4);
-    if (selectedEntitiesCount >= 2)
+    if (selectedEntitiesCount > 1)
     {
         // for 4 units selected -> frame indices 5, 8
         // for 3 units selected -> frame indices 4, 7
@@ -276,7 +277,7 @@ void updateSelectedUnitsInfo(WarContext* context)
             }
         }
     }
-    else if (selectedEntitiesCount >= 1)
+    else if (selectedEntitiesCount == 1)
     {
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
         WarEntity* selectedEntity = findEntity(context, selectedEntityId);
@@ -298,7 +299,7 @@ void updateSelectedUnitsInfo(WarContext* context)
             }
             else if (isBuildingUnit(selectedEntity))
             {
-                if (!unit->building)
+                if (unit->building)
                 {
                     setUIImage(imgUnitInfo, 2);
                     setPercentBar(rectPercentBar, rectPercentText, unit);

@@ -51,20 +51,11 @@ void removeTextComponent(WarContext* context, WarEntity* entity);
 void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color);
 void removeRectComponent(WarContext* context, WarEntity* entity);
 
-void addButtonComponent(WarContext* context,
-                        WarEntity* entity,
-                        WarSprite backgroundNormalSprite,
-                        WarSprite backgroundPressedSprite,
-                        WarSprite foregroundSprite,
-                        char* tooltip,
-                        WarClickHandler clickHandler);
+void addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normalSprite, WarSprite pressedSprite);
 void addButtonComponentFromResource(WarContext* context, 
                                     WarEntity* entity, 
-                                    WarSpriteResourceRef backgroundNormalRef,
-                                    WarSpriteResourceRef backgroundPressedRef,
-                                    WarSpriteResourceRef foregroundRef,
-                                    char* tooltip,
-                                    WarClickHandler clickHandler);
+                                    WarSpriteResourceRef normalRef,
+                                    WarSpriteResourceRef pressedRef);
 void removeButtonComponent(WarContext* context, WarEntity* entity);
 
 // Roads

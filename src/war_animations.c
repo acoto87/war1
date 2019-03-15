@@ -141,7 +141,7 @@ void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
 WarSpriteAnimation* createDamageAnimation(WarContext* context, WarEntity* entity, char* name, int damageLevel)
 {
     s32 resourceIndex = damageLevel == 1 ? BUILDING_DAMAGE_1_RESOURCE : BUILDING_DAMAGE_2_RESOURCE;
-    WarSpriteResourceRef spriteResourceRef = createSpriteResourceRef(resourceIndex, 0, NULL);
+    WarSpriteResourceRef spriteResourceRef = imageResourceRef(resourceIndex);
     WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = createAnimation(name, sprite, 0.2f, true);
     anim->offset = vec2Subv(getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
@@ -159,7 +159,7 @@ WarSpriteAnimation* createCollapseAnimation(WarContext* context, WarEntity* enti
     vec2 unitFrameSize = getUnitFrameSize(entity);
     vec2 unitSpriteSize = getUnitSpriteSize(entity);
 
-    WarSpriteResourceRef spriteResourceRef = createSpriteResourceRef(BUILDING_COLLAPSE_RESOURCE, 0, NULL);
+    WarSpriteResourceRef spriteResourceRef = imageResourceRef(BUILDING_COLLAPSE_RESOURCE);
     WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
 

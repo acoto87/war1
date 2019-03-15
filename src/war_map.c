@@ -355,6 +355,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         vec2 rightPanel = rectTopLeft(map->rightPanel);
         vec2 bottomPanel =rectTopLeft(map->bottomPanel);
 
+        WarSpriteResourceRef invalidRef = invalidResourceRef();
+        WarSpriteResourceRef normalRef = imageResourceRef(364);
+        WarSpriteResourceRef pressedRef = imageResourceRef(365);
+        WarSpriteResourceRef portraitsRef = imageResourceRef(361);
+
         // panels
         createUIImage(context, "panelLeftTop", imageResourceRef(224), leftTopPanel);
         createUIImage(context, "panelLeftBottom", imageResourceRef(226), leftBottomPanel);
@@ -375,11 +380,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
         // selected unit(s) info
         createUIImage(context, "imgUnitInfo", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(2, 0)));
-        createUIImage(context, "imgUnitPortrait0", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(6, 4)));
-        createUIImage(context, "imgUnitPortrait1", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(4, 1)));
-        createUIImage(context, "imgUnitPortrait2", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(38, 1)));
-        createUIImage(context, "imgUnitPortrait3", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(4, 23)));
-        createUIImage(context, "imgUnitPortrait4", imageResourceRef(361), vec2Addv(leftBottomPanel, vec2i(38, 23)));
+        createUIImage(context, "imgUnitPortrait0", portraitsRef, vec2Addv(leftBottomPanel, vec2i(6, 4)));
+        createUIImage(context, "imgUnitPortrait1", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 1)));
+        createUIImage(context, "imgUnitPortrait2", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 1)));
+        createUIImage(context, "imgUnitPortrait3", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 23)));
+        createUIImage(context, "imgUnitPortrait4", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 23)));
         createUIImage(context, "imgUnitInfoLife", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(3, 16)));
         createUIText(context, "txtUnitName", vec2Addv(leftBottomPanel, vec2i(6, 25)));
         createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
@@ -391,29 +396,21 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIRect(context, "rectPercentBar", vec2Addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), U8COLOR_GREEN);
         createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
 
-        WarSpriteResourceRef invalidRef = invalidResourceRef();
+        // command buttons
+        createUIImageButton(context, "command0", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(2, 46)));
+        createUIImageButton(context, "command1", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(36, 46)));
+        createUIImageButton(context, "command2", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(2, 69)));
+        createUIImageButton(context, "command3", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(36, 69)));
+        createUIImageButton(context, "command4", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(2, 92)));
+        createUIImageButton(context, "command5", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(36, 92)));
 
-        WarEntity* commandButtons[6] = 
-        {
-            createUIImageButton(context, "command0", NULL, invalidRef, invalidRef, invalidRef, vec2Addv(leftBottomPanel, vec2i(2, 46)), NULL),
-            createUIImageButton(context, "command1", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(36, 46)), NULL),
-            createUIImageButton(context, "command2", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(2, 69)), NULL),
-            createUIImageButton(context, "command3", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(36, 69)), NULL),
-            createUIImageButton(context, "command4", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(2, 92)), NULL),
-            createUIImageButton(context, "command5", NULL, invalidRef, invalidRef, invalidRef,vec2Addv(leftBottomPanel, vec2i(36, 92)), NULL)
-        };
-
-        for (s32 i = 0; i < 6; i++)
-            commandButtons[i]->button.enabled = false;
-
-        createUIImageButton(context,
-                           "menu",
-                           "MENU (F10)",
-                           imageResourceRef(362),
-                           imageResourceRef(363),
-                           invalidRef,
-                           vec2Addv(leftBottomPanel, vec2i(3, 116)),
-                           NULL);
+        WarEntity* menuButton = createUIImageButton(context,
+                                                    "menu",
+                                                    imageResourceRef(362),
+                                                    imageResourceRef(363),
+                                                    invalidRef,
+                                                    vec2Addv(leftBottomPanel, vec2i(3, 116)));
+        setUITooltip(menuButton, "MENU (F10)");
     }
 
     // set the initial state for the tiles
@@ -441,7 +438,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         
         // test animations
         {
-            WarSpriteResourceRef spriteResourceRef = createSpriteResourceRef(359, 0, NULL);
+            WarSpriteResourceRef spriteResourceRef = imageResourceRef(359);
             WarSprite sprite2 = createSpriteFromResourceIndex(context, spriteResourceRef);
             WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.5f, true);
             anim2->offset = vec2i(100, 100);
@@ -458,7 +455,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         }
 
         {
-            WarSpriteResourceRef spriteResourceRef = createSpriteResourceRef(360, 0, NULL);
+            WarSpriteResourceRef spriteResourceRef = imageResourceRef(360);
             WarSprite sprite3 = createSpriteFromResourceIndex(context, spriteResourceRef);
             WarSpriteAnimation* anim3 = createAnimation("horsie3", sprite3, 0.5f, true);
             anim3->offset = vec2i(200, 100);
@@ -475,7 +472,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         }
 
         {
-            WarSpriteResourceRef spriteResourceRef = createSpriteResourceRef(361, 0, NULL);
+            WarSpriteResourceRef spriteResourceRef = imageResourceRef(361);
             WarSprite sprite4 = createSpriteFromResourceIndex(context, spriteResourceRef);
             WarSpriteAnimation* anim4 = createAnimation("horsie3", sprite4, 0.5f, true);
             anim4->offset = vec2i(300, 100);
@@ -496,7 +493,41 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     }
 }
 
-internal void updateViewport(WarContext *context)
+void updateGlobalSpeed(WarContext* context)
+{
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL) && !isKeyPressed(input, WAR_KEY_SHIFT))
+    {
+        if (wasKeyPressed(input, WAR_KEY_1))
+            setGlobalSpeed(context, 1.0f);
+        else if (wasKeyPressed(input, WAR_KEY_2))
+            setGlobalSpeed(context, 2.0f);
+        else if (wasKeyPressed(input, WAR_KEY_3))
+            setGlobalSpeed(context, 3.0f);
+        else if (wasKeyPressed(input, WAR_KEY_4))
+            setGlobalSpeed(context, 4.0f);
+    }
+}
+
+void updateGlobalScale(WarContext* context)
+{
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL) && isKeyPressed(input, WAR_KEY_SHIFT))
+    {
+        if (wasKeyPressed(input, WAR_KEY_1))
+            setGlobalScale(context, 1.0f);
+        else if (wasKeyPressed(input, WAR_KEY_2))
+            setGlobalScale(context, 2.0f);
+        else if (wasKeyPressed(input, WAR_KEY_3))
+            setGlobalScale(context, 3.0f);
+        else if (wasKeyPressed(input, WAR_KEY_4))
+            setGlobalScale(context, 4.0f);
+    }
+}
+
+void updateViewport(WarContext *context)
 {
     WarMap *map = context->map;
     WarInput *input = &context->input;
@@ -615,8 +646,6 @@ void updateSelection(WarContext* context)
                         }
                     }
                 }
-
-                
             }
         }
     }
@@ -780,37 +809,47 @@ void updateRuinsEdit(WarContext* context)
     }
 }
 
-void updateGlobalSpeed(WarContext* context)
+void updateCommands(WarContext* context)
 {
-    WarInput* input = &context->input;
+    WarMap* map = context->map;
 
-    if (isKeyPressed(input, WAR_KEY_CTRL) && !isKeyPressed(input, WAR_KEY_SHIFT))
+    WarEntity* commandButtons[6] = 
     {
-        if (wasKeyPressed(input, WAR_KEY_1))
-            setGlobalSpeed(context, 1.0f);
-        else if (wasKeyPressed(input, WAR_KEY_2))
-            setGlobalSpeed(context, 2.0f);
-        else if (wasKeyPressed(input, WAR_KEY_3))
-            setGlobalSpeed(context, 3.0f);
-        else if (wasKeyPressed(input, WAR_KEY_4))
-            setGlobalSpeed(context, 4.0f);
+        findUIEntity(context, "command0"),
+        findUIEntity(context, "command1"),
+        findUIEntity(context, "command2"),
+        findUIEntity(context, "command3"),
+        findUIEntity(context, "command4"),
+        findUIEntity(context, "command5")
+    };
+
+    for (s32 i = 0; i < 6; i++)
+        commandButtons[i]->button.enabled = false;
+
+    s32 selectedEntitiesCount = map->selectedEntities.count;
+    if (selectedEntitiesCount > 1)
+    {
+
     }
-}
-
-void updateGlobalScale(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    if (isKeyPressed(input, WAR_KEY_CTRL) && isKeyPressed(input, WAR_KEY_SHIFT))
+    else if (selectedEntitiesCount == 1)
     {
-        if (wasKeyPressed(input, WAR_KEY_1))
-            setGlobalScale(context, 1.0f);
-        else if (wasKeyPressed(input, WAR_KEY_2))
-            setGlobalScale(context, 2.0f);
-        else if (wasKeyPressed(input, WAR_KEY_3))
-            setGlobalScale(context, 3.0f);
-        else if (wasKeyPressed(input, WAR_KEY_4))
-            setGlobalScale(context, 4.0f);
+        WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[0]);
+        if (selectedEntity && isUnit(selectedEntity))
+        {
+            WarUnitCommandType commands[6] = {0};
+            getUnitCommands(context, selectedEntity, commands);
+
+            for (s32 i = 0; i < arrayLength(commands); i++)
+            {
+                if (commands[i] != WAR_COMMAND_NONE)
+                {
+                    WarUnitCommandData commandData = getUnitCommandData(context, selectedEntity, commands[i]);
+                    setUIImage(commandButtons[i], commandData.frameIndex);
+                    setUITooltip(commandButtons[i], commandData.tooltip);
+                    commandButtons[i]->button.enabled = true;
+                }
+            }
+        }
     }
 }
 
@@ -827,7 +866,8 @@ void updateButtons(WarContext* context)
             WarTransformComponent* transform = &entity->transform;
             WarButtonComponent* button = &entity->button;
 
-            rect buttonRect = rectv(transform->position, button->backgroundSize);
+            vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
+            rect buttonRect = rectv(transform->position, backgroundSize);
             bool pointerInside = rectContainsf(buttonRect, input->pos.x, input->pos.y);
 
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
@@ -836,8 +876,8 @@ void updateButtons(WarContext* context)
 
                 if (button->hot)
                 {
-                    if (button->onClick)
-                        button->onClick(context, entity);
+                    if (button->clickHandler)
+                        button->clickHandler(context, entity);
                 }
 
                 button->active = false;
@@ -912,6 +952,7 @@ void updateMap(WarContext* context)
     updateGoldText(context);
     updateWoodText(context);
     updateSelectedUnitsInfo(context);
+    updateCommands(context);
     updateButtons(context);
     updateStatusText(context);
 

@@ -23,6 +23,12 @@ void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite
 
 void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef)
 {
+    if (spriteResourceRef.resourceIndex < 0)
+    {
+        logWarning("Trying to create a sprite component with invalid resource index: %d\n", spriteResourceRef.resourceIndex);
+        return;
+    }
+
     WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
     addSpriteComponent(context, entity, sprite);
     entity->sprite.resourceIndex = spriteResourceRef.resourceIndex;
@@ -205,50 +211,42 @@ void removeRectComponent(WarContext* context, WarEntity* entity)
     entity->rect = (WarRectComponent){0};
 }
 
-void addButtonComponent(WarContext* context,
-                        WarEntity* entity,
-                        WarSprite backgroundNormalSprite,
-                        WarSprite backgroundPressedSprite,
-                        WarSprite foregroundSprite,
-                        char* tooltip,
-                        WarClickHandler clickHandler)
+void addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normalSprite, WarSprite pressedSprite)
 {
     entity->button = (WarButtonComponent){0};
     entity->button.enabled = true;
-    entity->button.backgroundNormalSprite = backgroundNormalSprite;
-    entity->button.backgroundPressedSprite = backgroundPressedSprite;
-    entity->button.foregroundSprite = foregroundSprite;
-    entity->button.backgroundSize = vec2i(backgroundNormalSprite.frameWidth, backgroundNormalSprite.frameHeight);
-    entity->button.foregroundSize = vec2i(foregroundSprite.frameWidth, foregroundSprite.frameHeight);
-    entity->button.tooltip = tooltip;
-    entity->button.onClick = clickHandler;
+    entity->button.normalSprite = normalSprite;
+    entity->button.pressedSprite = pressedSprite;
+    entity->button.clickHandler = NULL;
 }
 
 void addButtonComponentFromResource(WarContext* context, 
                                     WarEntity* entity, 
-                                    WarSpriteResourceRef backgroundNormalRef,
-                                    WarSpriteResourceRef backgroundPressedRef,
-                                    WarSpriteResourceRef foregroundRef,
-                                    char* tooltip,
-                                    WarClickHandler clickHandler)
+                                    WarSpriteResourceRef normalRef,
+                                    WarSpriteResourceRef pressedRef)
 {
-    WarSprite backgroundNormalSprite = createSpriteFromResourceIndex(context, backgroundNormalRef);
-    WarSprite backgroundPressedSprite = createSpriteFromResourceIndex(context, backgroundPressedRef);
-    WarSprite foregroundSprite = createSpriteFromResourceIndex(context, foregroundRef);
-    addButtonComponent(context, 
-                       entity, 
-                       backgroundNormalSprite, 
-                       backgroundPressedSprite, 
-                       foregroundSprite,
-                       tooltip,
-                       clickHandler);
+    if (normalRef.resourceIndex < 0)
+    {
+        logWarning("Trying to create a button component with invalid resource index: %d\n", normalRef.resourceIndex);
+        return;
+    }
+
+    if (pressedRef.resourceIndex < 0)
+    {
+        logWarning("Trying to create a button component with invalid resource index: %d\n", pressedRef.resourceIndex);
+        return;
+    }
+
+    WarSprite normalSprite = createSpriteFromResourceIndex(context, normalRef);
+    WarSprite pressedSprite = createSpriteFromResourceIndex(context, pressedRef);
+    addButtonComponent(context, entity, normalSprite, pressedSprite);
 }
 
 void removeButtonComponent(WarContext* context, WarEntity* entity)
 {
-    freeSprite(context, entity->button.backgroundNormalSprite);
-    freeSprite(context, entity->button.backgroundPressedSprite);
-    freeSprite(context, entity->button.foregroundSprite);
+    clearUITooltip(entity);
+    freeSprite(context, entity->button.normalSprite);
+    freeSprite(context, entity->button.pressedSprite);
     entity->button = (WarButtonComponent){0};
 }
 
@@ -752,6 +750,7 @@ void _renderButton(WarContext* context, WarEntity* entity)
     WarUIComponent* ui = &entity->ui;
     WarButtonComponent* button = &entity->button;
     WarTextComponent* text = &entity->text;
+    WarSpriteComponent* sprite = &entity->sprite;
 
     if (ui->enabled && button->enabled)
     {
@@ -761,28 +760,26 @@ void _renderButton(WarContext* context, WarEntity* entity)
 
         // render background
         {
-            WarSprite backgroundSprite = button->active
-                ? button->backgroundPressedSprite 
-                : button->backgroundNormalSprite;
-
+            WarSprite backgroundSprite = button->active ? button->pressedSprite : button->normalSprite;
             renderSprite(context, backgroundSprite, VEC2_ZERO, VEC2_ONE);
         }
 
         // render foreground
         {
-            WarSprite foregroundSprite = button->foregroundSprite;
-            if (foregroundSprite.image)
+            if (sprite->enabled)
             {
-                vec2 offset = vec2Half(vec2Subv(button->backgroundSize, button->foregroundSize));
+                vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
+                vec2 foregroundSize = vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
+                vec2 offset = vec2Half(vec2Subv(backgroundSize, foregroundSize));
                 
                 if (button->active)
                     offset = vec2Addv(offset, vec2i(0, 1));
 
                 nvgTranslate(gfx, offset.x, offset.y);
 
-                WarSpriteFrame frame = getSpriteFrame(context, foregroundSprite, 0);
-                updateSpriteImage(context, foregroundSprite, frame.data);
-                renderSprite(context, foregroundSprite, VEC2_ZERO, VEC2_ONE);
+                WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+                updateSpriteImage(context, sprite->sprite, frame.data);
+                renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
             }
         }
 
