@@ -827,28 +827,42 @@ void updateCommands(WarContext* context)
         commandButtons[i]->button.enabled = false;
 
     s32 selectedEntitiesCount = map->selectedEntities.count;
+    if (selectedEntitiesCount == 0)
+        return;
+
+    WarEntity* entity = findEntity(context, map->selectedEntities.items[0]);
+    assert(entity && isUnit(entity));
+    
+    WarUnitCommandType commands[6] = {0};
+    getUnitCommands(context, entity, commands);
+
     if (selectedEntitiesCount > 1)
     {
-
-    }
-    else if (selectedEntitiesCount == 1)
-    {
-        WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[0]);
-        if (selectedEntity && isUnit(selectedEntity))
+        WarUnitCommandType selectedCommands[6] = {0};
+        for (s32 i = 1; i < selectedEntitiesCount; i++)
         {
-            WarUnitCommandType commands[6] = {0};
-            getUnitCommands(context, selectedEntity, commands);
+            WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[i]);
+            assert(selectedEntity && isUnit(selectedEntity));
 
-            for (s32 i = 0; i < arrayLength(commands); i++)
+            memset(selectedCommands, 0, sizeof(selectedCommands));
+            getUnitCommands(context, selectedEntity, selectedCommands);
+
+            for (s32 j = 0; j < arrayLength(commands); j++)
             {
-                if (commands[i] != WAR_COMMAND_NONE)
-                {
-                    WarUnitCommandData commandData = getUnitCommandData(context, selectedEntity, commands[i]);
-                    setUIImage(commandButtons[i], commandData.frameIndex);
-                    setUITooltip(commandButtons[i], commandData.tooltip);
-                    commandButtons[i]->button.enabled = true;
-                }
+                if (commands[j] != selectedCommands[j])
+                    commands[j] = WAR_COMMAND_NONE;
             }
+        }
+    }
+
+    for (s32 i = 0; i < arrayLength(commands); i++)
+    {
+        if (commands[i] != WAR_COMMAND_NONE)
+        {
+            WarUnitCommandData commandData = getUnitCommandData(context, entity, commands[i]);
+            setUIImage(commandButtons[i], commandData.frameIndex);
+            setUITooltip(commandButtons[i], commandData.tooltip);
+            commandButtons[i]->button.enabled = true;
         }
     }
 }
