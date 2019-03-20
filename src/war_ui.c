@@ -255,7 +255,7 @@ void updateSelectedUnitsInfo(WarContext* context)
     //
     // TODO: the max number of selected entities shouldn't greater than 4 but
     // that's not implemented right now, so put a min call to guard for that.
-    s32 selectedEntitiesCount = mini(map->selectedEntities.count, 4);
+    s32 selectedEntitiesCount = min(map->selectedEntities.count, 4);
     if (selectedEntitiesCount > 1)
     {
         // for 4 units selected -> frame indices 5, 8

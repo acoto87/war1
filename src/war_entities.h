@@ -4,7 +4,7 @@
 
 s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armour)
 {
-    return minDamage + maxi(rndDamage - armour, 0);
+    return minDamage + max(rndDamage - armour, 0);
 }
 
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);

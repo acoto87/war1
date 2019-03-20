@@ -982,48 +982,64 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             commands[3] = WAR_COMMAND_REPAIR;
             commands[4] = WAR_COMMAND_BUILD_BASIC;
 
-            // this only if the advanced structures are permitted
-            // commands[5] = WAR_COMMAND_BUILD_ADVANCED;
+            // only if there is a lumber mill
+            commands[5] = WAR_COMMAND_BUILD_ADVANCED;
 
             break;
         }
+
         case WAR_UNIT_CONJURER:
         {
             commands[0] = WAR_COMMAND_MOVE;
             commands[1] = WAR_COMMAND_STOP;
             commands[2] = WAR_COMMAND_ATTACK;
 
-            // check spells to other commands
-            
+            // only if these spells are researshed
+            commands[3] = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
+            commands[4] = WAR_COMMAND_SUMMON_SCORPION;
+            commands[5] = WAR_COMMAND_SUMMON_WATERELEMENTAL;
+    
             break;
         }
+
         case WAR_UNIT_WARLOCK:
         {
             commands[0] = WAR_COMMAND_MOVE;
             commands[1] = WAR_COMMAND_STOP;
             commands[2] = WAR_COMMAND_ATTACK;
 
-            // check spells to other commands
+            // only if these spells are researshed
+            commands[3] = WAR_COMMAND_SPELL_POISON_CLOUD;
+            commands[4] = WAR_COMMAND_SUMMON_SPIDER;
+            commands[5] = WAR_COMMAND_SUMMON_DAEMON;
 
             break;
         }
+
         case WAR_UNIT_CLERIC:
         {
             commands[0] = WAR_COMMAND_MOVE;
             commands[1] = WAR_COMMAND_STOP;
             commands[2] = WAR_COMMAND_ATTACK;
 
-            // check spells to other commands
+            // only if these spells are researshed
+            commands[3] = WAR_COMMAND_SPELL_HEAL;
+            commands[4] = WAR_COMMAND_SPELL_FAR_SIGHT;
+            commands[5] = WAR_COMMAND_SPELL_INVISIBILITY;
 
             break;
         }
+
         case WAR_UNIT_NECROLYTE:
         {
             commands[0] = WAR_COMMAND_MOVE;
             commands[1] = WAR_COMMAND_STOP;
             commands[2] = WAR_COMMAND_ATTACK;
 
-            // check spells to other commands
+            // only if these spells are researshed
+            commands[3] = WAR_COMMAND_SPELL_RAISE_DEAD;
+            commands[4] = WAR_COMMAND_SPELL_DARK_VISION;
+            commands[5] = WAR_COMMAND_SPELL_UNHOLY_ARMOUR;
 
             break;
         }
@@ -1031,26 +1047,118 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
         // buildings
         case WAR_UNIT_BARRACKS_HUMANS:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                commands[0] = WAR_COMMAND_TRAIN_FOOTMAN;
+
+                // only if there is a lumber mill
+                commands[1] = WAR_COMMAND_TRAIN_ARCHER;
+
+                // only if there is a stable
+                commands[2] = WAR_COMMAND_TRAIN_KNIGHT;
+
+                // only if there is a blacksmith
+                commands[3] = WAR_COMMAND_TRAIN_CATAPULT_HUMANS;
+            }
+
             break;
         }
         case WAR_UNIT_BARRACKS_ORCS:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                commands[0] = WAR_COMMAND_TRAIN_GRUNT;
+
+                // only if there is a lumber mill
+                commands[1] = WAR_COMMAND_TRAIN_SPEARMAN; 
+
+                // only if there is a kennel
+                commands[2] = WAR_COMMAND_TRAIN_RAIDER;
+
+                // only if there is a blacksmith
+                commands[3] = WAR_COMMAND_TRAIN_CATAPULT_ORCS;
+            }
+
             break;
         }
         case WAR_UNIT_CHURCH:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                commands[0] = WAR_COMMAND_TRAIN_CLERIC;
+
+                // only if this upgrade is not been researched yet
+                commands[1] = WAR_COMMAND_UPGRADE_HEALING;
+                commands[2] = WAR_COMMAND_UPGRADE_FAR_SIGHT;
+                commands[3] = WAR_COMMAND_UPGRADE_INVISIBILITY;
+            }
+
             break;
         }
         case WAR_UNIT_TEMPLE:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                commands[0] = WAR_COMMAND_TRAIN_NECROLYTE;
+
+                // only if this upgrade is not been researched yet
+                commands[1] = WAR_COMMAND_UPGRADE_RAISE_DEAD;
+                commands[2] = WAR_COMMAND_UPGRADE_DARK_VISION;
+                commands[3] = WAR_COMMAND_UPGRADE_UNHOLY_ARMOR;
+            }
+
             break;
         }
         case WAR_UNIT_TOWER_HUMANS:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                commands[0] = WAR_COMMAND_TRAIN_CONJURER;
+
+                // only if this upgrade is not been researched yet
+                commands[1] = WAR_COMMAND_UPGRADE_SCORPION;
+                commands[2] = WAR_COMMAND_UPGRADE_RAIN_OF_FIRE;
+                commands[3] = WAR_COMMAND_UPGRADE_WATERELEMENTAL;
+            }
+
             break;
         }
         case WAR_UNIT_TOWER_ORCS:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                commands[0] = WAR_COMMAND_TRAIN_WARLOCK;
+                
+                // only if this upgrade is not been researched yet
+                commands[1] = WAR_COMMAND_UPGRADE_SPIDER;
+                commands[2] = WAR_COMMAND_UPGRADE_POISON_CLOUD;
+                commands[3] = WAR_COMMAND_UPGRADE_DAEMON;
+            }
+
             break;
         }
         case WAR_UNIT_TOWNHALL_HUMANS:
@@ -1065,6 +1173,8 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = unit->type == WAR_UNIT_TOWNHALL_HUMANS
                     ? WAR_COMMAND_TRAIN_PEASANT : WAR_COMMAND_TRAIN_PEON;
                 commands[1] = WAR_COMMAND_BUILD_ROAD;
+
+                // only if this is allowed
                 commands[2] = WAR_COMMAND_BUILD_WALL;
             }
 
@@ -1072,34 +1182,88 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
         }
         case WAR_UNIT_LUMBERMILL_HUMANS:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                // only if this upgrade is less than level 2
+                commands[0] = WAR_COMMAND_UPGRADE_ARROWS;
+            }
+
             break;
         }
         case WAR_UNIT_LUMBERMILL_ORCS:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                // only if this upgrade is less than level 2
+                commands[0] = WAR_COMMAND_UPGRADE_SPEARS;
+            }
+            
             break;
         }
         case WAR_UNIT_STABLES:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                // only if this upgrade is less than level 2
+                commands[0] = WAR_COMMAND_UPGRADE_HORSES;
+            }
+            
             break;
         }
         case WAR_UNIT_KENNEL:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                // only if this upgrade is less than level 2
+                commands[0] = WAR_COMMAND_UPGRADE_WOLVES;
+            }
+
             break;
         }
         case WAR_UNIT_BLACKSMITH_HUMANS:
         {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                // only if this upgrade is less than level 2
+                commands[0] = WAR_COMMAND_UPGRADE_SWORDS;
+                commands[1] = WAR_COMMAND_UPGRADE_SHIELD_HUMANS;
+            }
+
             break;
         }
         case WAR_UNIT_BLACKSMITH_ORCS:
         {
-            break;
-        }
-        case WAR_UNIT_STORMWIND:
-        {
-            break;
-        }
-        case WAR_UNIT_BLACKROCK:
-        {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                // only if this upgrade is less than level 2
+                commands[0] = WAR_COMMAND_UPGRADE_AXES;
+                commands[1] = WAR_COMMAND_UPGRADE_SHIELD_ORCS;
+            }
+
             break;
         }
     }

@@ -879,7 +879,7 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
     // Minimal damage + [Random damage - Enemy's Armour]
     s32 damage = getTotalDamage(minDamage, rndDamage, unit->armour);
     unit->hp -= damage;
-    unit->hp = maxi(unit->hp, 0);
+    unit->hp = max(unit->hp, 0);
 
     if (unit->hp == 0)
     {
@@ -916,7 +916,7 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
         amount = unit->amount;
 
     unit->amount -= amount;
-    unit->amount = maxi(unit->amount, 0);
+    unit->amount = max(unit->amount, 0);
     
     logDebug("goldmine: %d", unit->amount);
 

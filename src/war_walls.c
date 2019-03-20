@@ -129,5 +129,5 @@ void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece,
     // Minimal damage + [Random damage - Enemy's Armour]
     s32 damage = getTotalDamage(minDamage, rndDamage, 0);
     piece->hp -= damage;
-    piece->hp = maxi(piece->hp, 0);
+    piece->hp = max(piece->hp, 0);
 }

@@ -1005,8 +1005,8 @@ void updateAction(WarContext* context, WarEntity* entity)
                     // NW: 4 - abs(4 - 7) = 4 - 3 = 1
                     //
                     // ... 4 - abs(4 - d)
-
-                    frameIndex += (4 - absi(4 - unit->direction));
+                
+                    frameIndex += (4 - abs(4 - (s32)unit->direction));
 
                     transform->scale.x = inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT) ? -1 : 1;
                 }
