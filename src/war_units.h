@@ -46,6 +46,103 @@ const char* upgradeNames[MAX_UPGRADES_COUNT * 2] =
     "upgrade-orc-shield",   "upgrade-human-shield"
 };
 
+typedef enum
+{
+    WAR_PORTRAIT_FOOTMAN,
+    WAR_PORTRAIT_GRUNT,
+    WAR_PORTRAIT_CONJURER,
+    WAR_PORTRAIT_WARLOCK,
+    WAR_PORTRAIT_PEASANT,
+    WAR_PORTRAIT_PEON,
+    WAR_PORTRAIT_CATAPULT_HUMANS,
+    WAR_PORTRAIT_CATAPULT_ORCS,
+    WAR_PORTRAIT_KNIGHT,
+    WAR_PORTRAIT_RAIDER,
+    WAR_PORTRAIT_ARCHER,
+    WAR_PORTRAIT_SPEARMAN,
+    WAR_PORTRAIT_CLERIC,
+    WAR_PORTRAIT_NECROLYTE,
+    WAR_PORTRAIT_FARM_HUMANS,
+    WAR_PORTRAIT_FARM_ORCS,
+    WAR_PORTRAIT_BARRACKS_HUMANS,
+    WAR_PORTRAIT_BARRACKS_ORCS,
+    WAR_PORTRAIT_TOWER_HUMANS,
+    WAR_PORTRAIT_TOWER_ORCS,
+    WAR_PORTRAIT_TOWNHALL_HUMANS,
+    WAR_PORTRAIT_TOWNHALL_ORCS,
+    WAR_PORTRAIT_LUMBERMILL_HUMANS,
+    WAR_PORTRAIT_LUMBERMILL_ORCS,
+    WAR_PORTRAIT_STABLES,
+    WAR_PORTRAIT_KENNEL,
+    WAR_PORTRAIT_BLACKSMITH_HUMANS,
+    WAR_PORTRAIT_BLACKSMITH_ORCS,
+    WAR_PORTRAIT_CHURCH,
+    WAR_PORTRAIT_TEMPLE,
+    WAR_PORTRAIT_GOLDMINE,
+    WAR_PORTRAIT_STORMWIND,
+    WAR_PORTRAIT_BLACKROCK,
+    WAR_PORTRAIT_MOVE_HUMANS,
+    WAR_PORTRAIT_MOVE_ORCS,
+    WAR_PORTRAIT_REPAIR,
+    WAR_PORTRAIT_HARVEST,
+    WAR_PORTRAIT_BUILD_BASIC,
+    WAR_PORTRAIT_BUILD_ADVANCED,
+    WAR_PORTRAIT_DELIVER,
+    WAR_PORTRAIT_CANCEL,
+    WAR_PORTRAIT_WALL,
+    WAR_PORTRAIT_ROAD,
+    WAR_PORTRAIT_UNKOWN,
+    WAR_PORTRAIT_OGRE,
+    WAR_PORTRAIT_SPIDER,
+    WAR_PORTRAIT_SLIME,
+    WAR_PORTRAIT_FIRE_ELEMENTAL,
+    WAR_PORTRAIT_SCORPION,
+    WAR_PORTRAIT_SKELETON,
+    WAR_PORTRAIT_DEAD,
+    WAR_PORTRAIT_DAEMON,
+    WAR_PORTRAIT_WATER_ELEMENTAL,
+    WAR_PORTRAIT_LOTHAR,
+    WAR_PORTRAIT_MEDIVH,
+    WAR_PORTRAIT_GRIZELDA,
+    WAR_PORTRAIT_GARONA,
+    WAR_PORTRAIT_WOUNDED,
+    WAR_PORTRAIT_BRIGAND,
+    WAR_PORTRAIT_HOLY_LANCE,
+    WAR_PORTRAIT_ELEMENTAL_BLAST,
+    WAR_PORTRAIT_SHADOW_SPEAR,
+    WAR_PORTRAIT_FIREBALL,
+    WAR_PORTRAIT_SWORD_1,
+    WAR_PORTRAIT_SWORD_2,
+    WAR_PORTRAIT_SWORD_3,
+    WAR_PORTRAIT_AXE_1,
+    WAR_PORTRAIT_AXE_2,
+    WAR_PORTRAIT_AXE_3,
+    WAR_PORTRAIT_WOLVES_1,
+    WAR_PORTRAIT_WOLVES_2,
+    WAR_PORTRAIT_ARROW_1,
+    WAR_PORTRAIT_ARROW_2,
+    WAR_PORTRAIT_ARROW_3,
+    WAR_PORTRAIT_SPEAR_1,
+    WAR_PORTRAIT_SPEAR_2,
+    WAR_PORTRAIT_SPEAR_3,
+    WAR_PORTRAIT_HORSE_1,
+    WAR_PORTRAIT_HORSE_2,
+    WAR_PORTRAIT_SHIELD_1_HUMANS,
+    WAR_PORTRAIT_SHIELD_2_HUMANS,
+    WAR_PORTRAIT_SHIELD_3_HUMANS,
+    WAR_PORTRAIT_SHIELD_1_ORCS,
+    WAR_PORTRAIT_SHIELD_2_ORCS,
+    WAR_PORTRAIT_SHIELD_3_ORCS,
+    WAR_PORTRAIT_HEALING,
+    WAR_PORTRAIT_FAR_SIGHT,
+    WAR_PORTRAIT_INVISIBILITY,
+    WAR_PORTRAIT_RAIN_OF_FIRE,
+    WAR_PORTRAIT_RAISE_DEAD,
+    WAR_PORTRAIT_DARK_VISION,
+    WAR_PORTRAIT_UNHOLY_ARMOR,
+    WAR_PORTRAIT_POISON_CLOUD
+} WarUnitPortraits;
+
 typedef struct
 {
     WarUnitType type;
@@ -87,7 +184,7 @@ const WarUnitsData unitsData[] =
     { WAR_UNIT_THE_DEAD,                  303, 50, 1, 1, "THE DEAD" },
     { WAR_UNIT_SKELETON,                  304, 49, 1, 1, "SKELETON" },
     { WAR_UNIT_DAEMON,                    305, 51, 1, 1, "DAEMON" },
-    { WAR_UNIT_WATERELEMENTAL,            306, 52, 1, 1, "WATER ELEMENTAL" },
+    { WAR_UNIT_WATER_ELEMENTAL,            306, 52, 1, 1, "WATER ELEMENTAL" },
 
     // buildings
     { WAR_UNIT_FARM_HUMANS,               307, 14, 2, 2, "FARM" },
@@ -370,7 +467,7 @@ typedef struct
 {
     WarUnitType type;
     s32 range;
-    s32 armour;
+    s32 armor;
     s32 hp;
     s32 magic;
     s32 minDamage;
@@ -419,7 +516,7 @@ typedef struct
 
 const WarUnitStats unitStats[] = 
 {
-    // unit type                range  armour   hp   magic  min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
+    // unit type                range  armor   hp   magic  min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
     { WAR_UNIT_FOOTMAN,           1,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
     { WAR_UNIT_GRUNT,             1,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
     { WAR_UNIT_PEASANT,           1,     0,     40,   -1,     0,      0,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
@@ -446,13 +543,13 @@ const WarUnitStats unitStats[] =
     { WAR_UNIT_BRIGAND,           1,     1,     40,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 16.736f, 16.736f, 16.736f } },
     { WAR_UNIT_SKELETON,          1,     1,     40,   -1,     1,      4,            -1,     -1,     -1,     45,   {  8.992f,  8.992f,  8.992f } },
     { WAR_UNIT_DAEMON,            1,     0,    300,   -1,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_WATERELEMENTAL,    3,     0,    250,   -1,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_WATER_ELEMENTAL,    3,     0,    250,   -1,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
 };
 
 typedef struct
 {
     WarUnitType type;
-    s32 armour;
+    s32 armor;
     s32 hp;
     s32 buildTime;
     s32 goldCost;
@@ -461,7 +558,7 @@ typedef struct
 
 const WarBuildingStats buildingStats[] = 
 {
-    // building type                    armour     hp            build     gold    lumber
+    // building type                    armor     hp            build     gold    lumber
     { WAR_UNIT_FARM_HUMANS,               0,       400,     __bts(1000),    500,    300 },
     { WAR_UNIT_FARM_ORCS,                 0,       400,     __bts(1000),    500,    300 },
     { WAR_UNIT_BARRACKS_HUMANS,           0,       800,     __bts(1500),    600,    500 },
@@ -632,7 +729,7 @@ bool isDudeUnit(WarEntity* entity)
         case WAR_UNIT_THE_DEAD:
         case WAR_UNIT_SKELETON:
         case WAR_UNIT_DAEMON:
-        case WAR_UNIT_WATERELEMENTAL:
+        case WAR_UNIT_WATER_ELEMENTAL:
             return true;
 
         default:
@@ -691,7 +788,7 @@ bool isBuildingUnit(WarEntity* entity)
     }
 }
 
-bool getUnitRace(WarEntity* entity)
+WarRace getUnitRace(WarEntity* entity)
 {
     if (!isUnit(entity))
         return WAR_RACE_NEUTRAL;
@@ -707,7 +804,7 @@ bool getUnitRace(WarEntity* entity)
         case WAR_UNIT_CONJURER:
         case WAR_UNIT_CLERIC:
         case WAR_UNIT_LOTHAR:
-        case WAR_UNIT_WATERELEMENTAL:
+        case WAR_UNIT_WATER_ELEMENTAL:
         case WAR_UNIT_HUMAN_CORPSE:
         // buildings
         case WAR_UNIT_FARM_HUMANS:
@@ -943,12 +1040,44 @@ bool isCarryingResources(WarEntity* entity)
     }
 }
 
+s32 getPlayerUnitCount(WarContext* context, u8 player, WarUnitType unitType)
+{
+    WarMap* map = context->map;
+
+    s32 count = 0;
+
+    for (s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && isUnit(entity))
+        {
+            if (entity->unit.player == player && 
+                entity->unit.type == unitType)
+            {
+                count++;                
+            }
+        }
+    }
+
+    return count;
+}
+
+bool playerHasUnit(WarContext* context, s32 player, WarUnitType unitType)
+{
+    return getPlayerUnitCount(context, player, unitType) > 0;
+}
+
 void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[])
 {
     assert(entity);
     assert(isUnit(entity));
 
+    WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = &entity->unit;
+
+    if (player->race != getUnitRace(entity))
+        return;
 
     switch (unit->type)
     {
@@ -983,8 +1112,12 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             commands[4] = WAR_COMMAND_BUILD_BASIC;
 
             // only if there is a lumber mill
-            commands[5] = WAR_COMMAND_BUILD_ADVANCED;
-
+            WarUnitType lumberMillType = isHuman(player)
+                ? WAR_UNIT_LUMBERMILL_HUMANS : WAR_UNIT_LUMBERMILL_ORCS;
+            if (playerHasUnit(context, player->index, lumberMillType))
+            {
+                commands[5] = WAR_COMMAND_BUILD_ADVANCED;
+            }
             break;
         }
 
@@ -995,9 +1128,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             commands[2] = WAR_COMMAND_ATTACK;
 
             // only if these spells are researshed
-            commands[3] = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
-            commands[4] = WAR_COMMAND_SUMMON_SCORPION;
-            commands[5] = WAR_COMMAND_SUMMON_WATERELEMENTAL;
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAIN_OF_FIRE) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_RAIN_OF_FIRE))
+            {
+                commands[3] = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
+            }
+
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SCORPION) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_SCORPIONS))
+            {
+                commands[4] = WAR_COMMAND_SUMMON_SCORPION;
+            }
+
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_WATER_ELEMENTAL) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_WATER_ELEMENTAL))
+            {
+                commands[5] = WAR_COMMAND_SUMMON_WATER_ELEMENTAL;
+            }
     
             break;
         }
@@ -1009,9 +1156,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             commands[2] = WAR_COMMAND_ATTACK;
 
             // only if these spells are researshed
-            commands[3] = WAR_COMMAND_SPELL_POISON_CLOUD;
-            commands[4] = WAR_COMMAND_SUMMON_SPIDER;
-            commands[5] = WAR_COMMAND_SUMMON_DAEMON;
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_POISON_CLOUD) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_POISON_CLOUD))
+            {
+                commands[3] = WAR_COMMAND_SPELL_POISON_CLOUD;
+            }
+
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SPIDER) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_SPIDERS))
+            {
+                commands[4] = WAR_COMMAND_SUMMON_SPIDER;
+            }
+
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DAEMON) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_DAEMON))
+            {
+                commands[5] = WAR_COMMAND_SUMMON_DAEMON;
+            }
 
             break;
         }
@@ -1023,9 +1184,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             commands[2] = WAR_COMMAND_ATTACK;
 
             // only if these spells are researshed
-            commands[3] = WAR_COMMAND_SPELL_HEAL;
-            commands[4] = WAR_COMMAND_SPELL_FAR_SIGHT;
-            commands[5] = WAR_COMMAND_SPELL_INVISIBILITY;
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_HEALING) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_HEALING))
+            {
+                commands[3] = WAR_COMMAND_SPELL_HEALING;
+            }
+
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_FAR_SIGHT) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_FAR_SIGHT))
+            {
+                commands[4] = WAR_COMMAND_SPELL_FAR_SIGHT;
+            }
+
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_INVISIBILITY) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_INVISIBILITY))
+            {
+                commands[5] = WAR_COMMAND_SPELL_INVISIBILITY;
+            }
 
             break;
         }
@@ -1037,9 +1212,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             commands[2] = WAR_COMMAND_ATTACK;
 
             // only if these spells are researshed
-            commands[3] = WAR_COMMAND_SPELL_RAISE_DEAD;
-            commands[4] = WAR_COMMAND_SPELL_DARK_VISION;
-            commands[5] = WAR_COMMAND_SPELL_UNHOLY_ARMOUR;
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAISE_DEAD) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_RAISE_DEAD))
+            {
+                commands[3] = WAR_COMMAND_SPELL_RAISE_DEAD;
+            }
+
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DARK_VISION) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_DARK_VISION))
+            {
+                commands[4] = WAR_COMMAND_SPELL_DARK_VISION;
+            }
+
+            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_UNHOLY_ARMOR) && 
+                hasAnyUpgrade(player, WAR_UPGRADE_UNHOLY_ARMOR))
+            {
+                commands[5] = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
+            }
 
             break;
         }
@@ -1056,13 +1245,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_FOOTMAN;
 
                 // only if there is a lumber mill
-                commands[1] = WAR_COMMAND_TRAIN_ARCHER;
+                if (playerHasUnit(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
+                {
+                    commands[1] = WAR_COMMAND_TRAIN_ARCHER;
+                }
 
                 // only if there is a stable
-                commands[2] = WAR_COMMAND_TRAIN_KNIGHT;
+                if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS) &&
+                    playerHasUnit(context, player->index, WAR_UNIT_STABLES))
+                {
+                    commands[2] = WAR_COMMAND_TRAIN_KNIGHT;
+                }
 
                 // only if there is a blacksmith
-                commands[3] = WAR_COMMAND_TRAIN_CATAPULT_HUMANS;
+                if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
+                {
+                    commands[3] = WAR_COMMAND_TRAIN_CATAPULT_HUMANS;
+                }
             }
 
             break;
@@ -1078,13 +1277,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_GRUNT;
 
                 // only if there is a lumber mill
-                commands[1] = WAR_COMMAND_TRAIN_SPEARMAN; 
+                if (playerHasUnit(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
+                {
+                    commands[1] = WAR_COMMAND_TRAIN_SPEARMAN;
+                }
 
                 // only if there is a kennel
-                commands[2] = WAR_COMMAND_TRAIN_RAIDER;
+                if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_ORCS) &&
+                    playerHasUnit(context, player->index, WAR_UNIT_KENNEL))
+                {
+                    commands[2] = WAR_COMMAND_TRAIN_RAIDER;
+                }
 
                 // only if there is a blacksmith
-                commands[3] = WAR_COMMAND_TRAIN_CATAPULT_ORCS;
+                if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
+                {
+                    commands[3] = WAR_COMMAND_TRAIN_CATAPULT_ORCS;
+                }
             }
 
             break;
@@ -1100,9 +1309,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_CLERIC;
 
                 // only if this upgrade is not been researched yet
-                commands[1] = WAR_COMMAND_UPGRADE_HEALING;
-                commands[2] = WAR_COMMAND_UPGRADE_FAR_SIGHT;
-                commands[3] = WAR_COMMAND_UPGRADE_INVISIBILITY;
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_HEALING) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_HEALING))
+                {
+                    commands[1] = WAR_COMMAND_UPGRADE_HEALING;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_FAR_SIGHT) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_FAR_SIGHT))
+                {
+                    commands[2] = WAR_COMMAND_UPGRADE_FAR_SIGHT;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_INVISIBILITY) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_INVISIBILITY))
+                {
+                    commands[3] = WAR_COMMAND_UPGRADE_INVISIBILITY;
+                }
             }
 
             break;
@@ -1118,9 +1341,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_NECROLYTE;
 
                 // only if this upgrade is not been researched yet
-                commands[1] = WAR_COMMAND_UPGRADE_RAISE_DEAD;
-                commands[2] = WAR_COMMAND_UPGRADE_DARK_VISION;
-                commands[3] = WAR_COMMAND_UPGRADE_UNHOLY_ARMOR;
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAISE_DEAD) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_RAISE_DEAD))
+                {
+                    commands[1] = WAR_COMMAND_UPGRADE_RAISE_DEAD;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DARK_VISION) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_DARK_VISION))
+                {
+                    commands[2] = WAR_COMMAND_UPGRADE_DARK_VISION;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_UNHOLY_ARMOR) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_UNHOLY_ARMOR))
+                {
+                    commands[3] = WAR_COMMAND_UPGRADE_UNHOLY_ARMOR;
+                }
             }
 
             break;
@@ -1136,9 +1373,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_CONJURER;
 
                 // only if this upgrade is not been researched yet
-                commands[1] = WAR_COMMAND_UPGRADE_SCORPION;
-                commands[2] = WAR_COMMAND_UPGRADE_RAIN_OF_FIRE;
-                commands[3] = WAR_COMMAND_UPGRADE_WATERELEMENTAL;
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SCORPION) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_SCORPIONS))
+                {
+                    commands[1] = WAR_COMMAND_UPGRADE_SCORPION;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAIN_OF_FIRE) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_RAIN_OF_FIRE))
+                {
+                    commands[2] = WAR_COMMAND_UPGRADE_RAIN_OF_FIRE;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_WATER_ELEMENTAL) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_WATER_ELEMENTAL))
+                {
+                    commands[3] = WAR_COMMAND_UPGRADE_WATER_ELEMENTAL;
+                }
             }
 
             break;
@@ -1154,9 +1405,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_WARLOCK;
                 
                 // only if this upgrade is not been researched yet
-                commands[1] = WAR_COMMAND_UPGRADE_SPIDER;
-                commands[2] = WAR_COMMAND_UPGRADE_POISON_CLOUD;
-                commands[3] = WAR_COMMAND_UPGRADE_DAEMON;
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SPIDER) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_SPIDERS))
+                {
+                    commands[1] = WAR_COMMAND_UPGRADE_SPIDER;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_POISON_CLOUD) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_POISON_CLOUD))
+                {
+                    commands[2] = WAR_COMMAND_UPGRADE_POISON_CLOUD;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DAEMON) && 
+                    hasRemainingUpgrade(player, WAR_UPGRADE_DAEMON))
+                {
+                    commands[3] = WAR_COMMAND_UPGRADE_DAEMON;
+                }
             }
 
             break;
@@ -1172,10 +1437,14 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             {
                 commands[0] = unit->type == WAR_UNIT_TOWNHALL_HUMANS
                     ? WAR_COMMAND_TRAIN_PEASANT : WAR_COMMAND_TRAIN_PEON;
+
                 commands[1] = WAR_COMMAND_BUILD_ROAD;
 
                 // only if this is allowed
-                commands[2] = WAR_COMMAND_BUILD_WALL;
+                if (isFeatureAllowed(player, WAR_FEATURE_UNIT_WALL))
+                {
+                    commands[2] = WAR_COMMAND_BUILD_WALL;
+                }
             }
 
             break;
@@ -1189,7 +1458,10 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             else
             {
                 // only if this upgrade is less than level 2
-                commands[0] = WAR_COMMAND_UPGRADE_ARROWS;
+                if (hasRemainingUpgrade(player, WAR_UPGRADE_ARROWS))
+                {
+                    commands[0] = WAR_COMMAND_UPGRADE_ARROWS;
+                }
             }
 
             break;
@@ -1203,7 +1475,10 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             else
             {
                 // only if this upgrade is less than level 2
-                commands[0] = WAR_COMMAND_UPGRADE_SPEARS;
+                if (hasRemainingUpgrade(player, WAR_UPGRADE_SPEARS))
+                {
+                    commands[0] = WAR_COMMAND_UPGRADE_SPEARS;
+                }
             }
             
             break;
@@ -1217,7 +1492,10 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             else
             {
                 // only if this upgrade is less than level 2
-                commands[0] = WAR_COMMAND_UPGRADE_HORSES;
+                if (hasRemainingUpgrade(player, WAR_UPGRADE_HORSES))
+                {
+                    commands[0] = WAR_COMMAND_UPGRADE_HORSES;
+                }
             }
             
             break;
@@ -1231,7 +1509,10 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             else
             {
                 // only if this upgrade is less than level 2
-                commands[0] = WAR_COMMAND_UPGRADE_WOLVES;
+                if (hasRemainingUpgrade(player, WAR_UPGRADE_WOLVES))
+                {
+                    commands[0] = WAR_COMMAND_UPGRADE_WOLVES;
+                }
             }
 
             break;
@@ -1245,8 +1526,15 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             else
             {
                 // only if this upgrade is less than level 2
-                commands[0] = WAR_COMMAND_UPGRADE_SWORDS;
-                commands[1] = WAR_COMMAND_UPGRADE_SHIELD_HUMANS;
+                if (hasRemainingUpgrade(player, WAR_UPGRADE_SWORDS))
+                {
+                    commands[0] = WAR_COMMAND_UPGRADE_SWORDS;
+                }
+
+                if (hasRemainingUpgrade(player, WAR_UPGRADE_SHIELD))
+                {
+                    commands[1] = WAR_COMMAND_UPGRADE_SHIELD_HUMANS;
+                }
             }
 
             break;
@@ -1260,10 +1548,23 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             else
             {
                 // only if this upgrade is less than level 2
-                commands[0] = WAR_COMMAND_UPGRADE_AXES;
-                commands[1] = WAR_COMMAND_UPGRADE_SHIELD_ORCS;
+                if (hasRemainingUpgrade(player, WAR_UPGRADE_AXES))
+                {
+                    commands[0] = WAR_COMMAND_UPGRADE_AXES;
+                }
+
+                if (hasRemainingUpgrade(player, WAR_UPGRADE_SHIELD))
+                {
+                    commands[1] = WAR_COMMAND_UPGRADE_SHIELD_ORCS;
+                }
             }
 
+            break;
+        }
+
+        default:
+        {
+            logWarning("Commands for unit type %d not handled yet.\n", unit->type);
             break;
         }
     }
@@ -1279,10 +1580,19 @@ void getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitComman
     switch (unit->type)
     {
         case WAR_UNIT_PEASANT:
+        {
+            commands[0] = WAR_COMMAND_BUILD_FARM_HUMANS;
+            commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_HUMANS;
+            commands[2] = WAR_COMMAND_BUILD_BARRACKS_HUMANS;
+            commands[6] = WAR_COMMAND_CANCEL;
+            break;
+        }
         case WAR_UNIT_PEON:
         {
+            commands[0] = WAR_COMMAND_BUILD_FARM_ORCS;
+            commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_ORCS;
+            commands[2] = WAR_COMMAND_BUILD_BARRACKS_ORCS;
             commands[6] = WAR_COMMAND_CANCEL;
-
             break;
         }
 
@@ -1300,15 +1610,38 @@ void getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCom
     assert(entity);
     assert(isUnit(entity));
 
+    WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = &entity->unit;
 
     switch (unit->type)
     {
         case WAR_UNIT_PEASANT:
+        {
+            commands[0] = WAR_COMMAND_BUILD_BLACKSMITH_HUMANS;
+            commands[1] = WAR_COMMAND_BUILD_CHURCH;
+            commands[2] = WAR_COMMAND_BUILD_STABLE;
+
+            if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
+            {
+                commands[3] = WAR_COMMAND_BUILD_TOWER_HUMANS;
+            }
+
+            commands[6] = WAR_COMMAND_CANCEL;
+            break;
+        }
         case WAR_UNIT_PEON:
         {
-            commands[6] = WAR_COMMAND_CANCEL;
+            commands[0] = WAR_COMMAND_BUILD_BARRACKS_ORCS;
+            commands[1] = WAR_COMMAND_BUILD_TEMPLE;
+            commands[2] = WAR_COMMAND_BUILD_KENNEL;
+            
+            if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
+            {
+                commands[3] = WAR_COMMAND_BUILD_TOWER_ORCS;
+            }
 
+            commands[6] = WAR_COMMAND_CANCEL;
             break;
         }
 
@@ -1324,7 +1657,7 @@ void getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCom
 WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType)
 {
     WarMap* map = context->map;
-    WarPlayerInfo playerInfo = map->players[0];
+    WarPlayerInfo* player = &map->players[0];
 
     WarUnitCommandData data = (WarUnitCommandData){0};
     data.type = commandType;
@@ -1335,7 +1668,8 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_MOVE:
         {
             strcpy(data.tooltip, "MOVE");
-            data.frameIndex = playerInfo.race == WAR_RACE_HUMANS ? 33 : 34;
+            data.frameIndex = isHuman(player) 
+                ? WAR_PORTRAIT_MOVE_HUMANS : WAR_PORTRAIT_MOVE_ORCS;
             break;
         }
         case WAR_COMMAND_STOP:
@@ -1343,39 +1677,52 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             strcpy(data.tooltip, "STOP");
 
             // check here upgrades for the shields
-            // for humans: level 1: 79, level 2: 80, level 3: 81
-            // for orcs: level 1: 82, level 2: 83, level 3: 84
-            data.frameIndex = playerInfo.race == WAR_RACE_HUMANS ? 79 : 82;
+            if (getUpgradeLevel(player, WAR_UPGRADE_SHIELD) == 2)
+            {
+                data.frameIndex = isHuman(player)
+                    ? WAR_PORTRAIT_SHIELD_3_HUMANS : WAR_PORTRAIT_SHIELD_3_ORCS;
+            }
+            else if (getUpgradeLevel(player, WAR_UPGRADE_SHIELD) == 1)
+            {
+                data.frameIndex = isHuman(player)
+                    ? WAR_PORTRAIT_SHIELD_2_HUMANS : WAR_PORTRAIT_SHIELD_2_ORCS;
+            }
+            else
+            {
+                data.frameIndex = isHuman(player)
+                    ? WAR_PORTRAIT_SHIELD_1_HUMANS : WAR_PORTRAIT_SHIELD_1_ORCS;
+            }
+
             break;
         }
         case WAR_COMMAND_HARVEST:
         {
             strcpy(data.tooltip, "HARVEST LUMBER / MINE GOLD");
-            data.frameIndex = 36;
+            data.frameIndex = WAR_PORTRAIT_HARVEST;
             break;
         }
         case WAR_COMMAND_DELIVER:
         {
             strcpy(data.tooltip, "RETURN GOODS TO TOWN HALL");
-            data.frameIndex = 39;
+            data.frameIndex = WAR_PORTRAIT_DELIVER;
             break;
         }
         case WAR_COMMAND_REPAIR:
         {
             strcpy(data.tooltip, "REPAIR");
-            data.frameIndex = 35;
+            data.frameIndex = WAR_PORTRAIT_REPAIR;
             break;
         }
         case WAR_COMMAND_BUILD_BASIC:
         {
             strcpy(data.tooltip, "BUILD BASIC STRUCTURES");
-            data.frameIndex = 37;
+            data.frameIndex = WAR_PORTRAIT_BUILD_BASIC;
             break;
         }
         case WAR_COMMAND_BUILD_ADVANCED:
         {
             strcpy(data.tooltip, "BUILD ADVANCED STRUCTURES");
-            data.frameIndex = 38;
+            data.frameIndex = WAR_PORTRAIT_BUILD_ADVANCED;
             break;
         }
         case WAR_COMMAND_ATTACK:
@@ -1389,58 +1736,82 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                 {
                     // units
                     case WAR_UNIT_FOOTMAN:
-                    case WAR_UNIT_CATAPULT_HUMANS:
+                    case WAR_UNIT_GRUNT:
                     case WAR_UNIT_KNIGHT:
+                    case WAR_UNIT_RAIDER:
+                    case WAR_UNIT_CATAPULT_HUMANS:
+                    case WAR_UNIT_CATAPULT_ORCS:
                     {
                         // check here upgrades for the sword
-                        data.frameIndex = 63;
-                        break;
-                    }
+                        WarUpgradeType swordAxeUpgrade = isHuman(player)
+                            ? WAR_UPGRADE_SWORDS : WAR_UPGRADE_AXES;
 
-                    case WAR_UNIT_GRUNT:
-                    case WAR_UNIT_CATAPULT_ORCS:
-                    case WAR_UNIT_RAIDER:
-                    {
-                        // check here upgrades for the axe
-                        data.frameIndex = 66;
+                        if (getUpgradeLevel(player, swordAxeUpgrade) == 2)
+                        {
+                            data.frameIndex = isHuman(player)
+                                ? WAR_PORTRAIT_SWORD_3 : WAR_PORTRAIT_AXE_3;
+                        }
+                        else if (getUpgradeLevel(player, swordAxeUpgrade) == 1)
+                        {
+                            data.frameIndex = isHuman(player)
+                                ? WAR_PORTRAIT_SWORD_2 : WAR_PORTRAIT_AXE_2;
+                        }
+                        else
+                        {
+                            data.frameIndex = isHuman(player)
+                                ? WAR_PORTRAIT_SWORD_1 : WAR_PORTRAIT_AXE_1;
+                        }
+
                         break;
                     }
 
                     case WAR_UNIT_ARCHER:
-                    {
-                        // check here upgrades for the arrows
-                        data.frameIndex = 71;
-                        break;
-                    }
-
                     case WAR_UNIT_SPEARMAN:
                     {
-                        // check here upgrades for the spears
-                        data.frameIndex = 74;
+                        // check here upgrades for the arrows
+                        WarUpgradeType arrowSpearUpgrade = isHuman(player)
+                            ? WAR_UPGRADE_ARROWS : WAR_UPGRADE_SPEARS;
+
+                        if (getUpgradeLevel(player, arrowSpearUpgrade) == 2)
+                        {
+                            data.frameIndex = isHuman(player)
+                                ? WAR_PORTRAIT_ARROW_3 : WAR_PORTRAIT_SPEAR_3;
+                        }
+                        else if (getUpgradeLevel(player, arrowSpearUpgrade) == 1)
+                        {
+                            data.frameIndex = isHuman(player)
+                                ? WAR_PORTRAIT_ARROW_2 : WAR_PORTRAIT_SPEAR_2;
+                        }
+                        else
+                        {
+                            data.frameIndex = isHuman(player)
+                                ? WAR_PORTRAIT_ARROW_1 : WAR_PORTRAIT_SPEAR_1;
+                        }
+
                         break;
                     }
 
                     case WAR_UNIT_CONJURER:
                     {
-                        data.frameIndex = 59;
+                        data.frameIndex = WAR_PORTRAIT_ELEMENTAL_BLAST;
                         break;
                     }
 
                     case WAR_UNIT_CLERIC:
                     {
-                        data.frameIndex = 60;
+                        data.frameIndex = WAR_PORTRAIT_HOLY_LANCE;
                         break;
                     }                    
 
                     case WAR_UNIT_NECROLYTE:
                     {
-                        data.frameIndex = 61;
+                        data.frameIndex = WAR_PORTRAIT_SHADOW_SPEAR;
                         break;
                     }
 
                     case WAR_UNIT_WARLOCK:
                     {
-                        data.frameIndex = 62;
+                        data.frameIndex = WAR_PORTRAIT_FIREBALL;
                         break;
                     }
 
@@ -1454,7 +1825,29 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             else
             {
                 // check here upgrades for the sword
-                data.frameIndex = 63;
+                if (isHuman(player))
+                {
+                    if (getUpgradeLevel(player, WAR_UPGRADE_SWORDS) == 2)
+                        data.frameIndex = WAR_PORTRAIT_SWORD_3;
+                    else if (getUpgradeLevel(player, WAR_UPGRADE_SWORDS) == 1)
+                        data.frameIndex = WAR_PORTRAIT_SWORD_2;
+                    else
+                        data.frameIndex = WAR_PORTRAIT_SWORD_1;
+                }
+                else if (isOrc(player))
+                {
+                    if (getUpgradeLevel(player, WAR_UPGRADE_AXES) == 2)
+                        data.frameIndex = WAR_PORTRAIT_AXE_3;
+                    else if (getUpgradeLevel(player, WAR_UPGRADE_AXES) == 1)
+                        data.frameIndex = WAR_PORTRAIT_AXE_2;
+                    else
+                        data.frameIndex = WAR_PORTRAIT_AXE_1;
+                }
+                else
+                {
+                    logWarning("Trying to get a frame index for player race: %d\n", player->race);
+                    assert(false);
+                }
             }
             
             break;
@@ -1465,7 +1858,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             strcpy(data.tooltip, "TRAIN PEASANT");
             data.gold = 0;
             data.wood = 0;
-            data.frameIndex = 4;
+            data.frameIndex = WAR_PORTRAIT_PEASANT;
 
             break;
         }
@@ -1475,7 +1868,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             strcpy(data.tooltip, "TRAIN PEON");
             data.gold = 0;
             data.wood = 0;
-            data.frameIndex = 5;
+            data.frameIndex = WAR_PORTRAIT_PEON;
 
             break;
         }
@@ -1485,7 +1878,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             strcpy(data.tooltip, "BUILD ROAD");
             data.gold = 0;
             data.wood = 0;
-            data.frameIndex = 42;
+            data.frameIndex = WAR_PORTRAIT_ROAD;
 
             break;
         }
@@ -1495,7 +1888,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             strcpy(data.tooltip, "BUILD WALL");
             data.gold = 0;
             data.wood = 0;
-            data.frameIndex = 41;
+            data.frameIndex = WAR_PORTRAIT_WALL;
 
             break;
         }
@@ -1505,7 +1898,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_CANCEL:
         {
             strcpy(data.tooltip, "CANCEL");
-            data.frameIndex = 40;
+            data.frameIndex = WAR_PORTRAIT_CANCEL;
             break;
         }
 

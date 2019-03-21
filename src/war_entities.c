@@ -66,7 +66,7 @@ void addUnitComponent(WarContext* context,
     entity->unit.level = 0;
     entity->unit.hp = 0;
     entity->unit.maxhp = 0;
-    entity->unit.armour = 0;
+    entity->unit.armor = 0;
     entity->unit.range = 0;
     entity->unit.minDamage = 0;
     entity->unit.rndDamage = 0;
@@ -876,8 +876,8 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
 
     WarUnitComponent *unit = &entity->unit;
 
-    // Minimal damage + [Random damage - Enemy's Armour]
-    s32 damage = getTotalDamage(minDamage, rndDamage, unit->armour);
+    // Minimal damage + [Random damage - Enemy's Armor]
+    s32 damage = getTotalDamage(minDamage, rndDamage, unit->armor);
     unit->hp -= damage;
     unit->hp = max(unit->hp, 0);
 

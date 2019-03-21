@@ -289,7 +289,15 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             map->players[i].race = levelInfo->levelInfo.races[i];
             map->players[i].gold = levelInfo->levelInfo.gold[i];
             map->players[i].wood = levelInfo->levelInfo.lumber[i];
-            map->players[i].units = 0;
+
+            for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
+                map->players[i].features[j] = levelInfo->levelInfo.allowedFeatures[j];
+
+            for (s32 j = 0; j < MAX_UPGRADES_COUNT; j++)
+            {
+                map->players[i].upgrades[j].allowed = levelInfo->levelInfo.allowedUpgrades[j][i];
+                map->players[i].upgrades[j].level = 0;
+            }
         }
     }
 
@@ -325,7 +333,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 entity->unit.hp = unitStats.hp;
                 entity->unit.maxMagic = unitStats.magic;
                 entity->unit.magic = 100;
-                entity->unit.armour = unitStats.armour;
+                entity->unit.armor = unitStats.armor;
                 entity->unit.range = unitStats.range;
                 entity->unit.minDamage = unitStats.minDamage;
                 entity->unit.rndDamage = unitStats.rndDamage;
@@ -337,7 +345,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
                 entity->unit.maxhp = buildingStats.hp;
                 entity->unit.hp = buildingStats.hp;
-                entity->unit.armour = buildingStats.armour;
+                entity->unit.armor = buildingStats.armor;
             }
 
             map->players[entity->unit.player].units++;

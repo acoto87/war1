@@ -1,10 +1,6 @@
-#define isNeutral(player) (player == 4)
-#define isEnemy(player) (player != 0 && !isNeutral(player))
-#define isHuman(player) (player == 0)
-
-s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armour)
+s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)
 {
-    return minDamage + max(rndDamage - armour, 0);
+    return minDamage + max(rndDamage - armor, 0);
 }
 
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);

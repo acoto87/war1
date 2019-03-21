@@ -3,8 +3,8 @@
      (__typeof__(x))(_x < 0 ? -1 : 1); })
 
 #define min(a, b) \
-  ({ __typeof__) _a = (a); \
-     __typeof__) _b = (b); \
+  ({ __typeof__(a) _a = (a); \
+     __typeof__(b) _b = (b); \
      _a < _b ? _a : _b; })
 
 #define max(a, b) \

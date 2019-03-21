@@ -685,7 +685,7 @@ void addUnitActions(WarEntity* entity)
             break;
         }
 
-        case WAR_UNIT_WATERELEMENTAL:
+        case WAR_UNIT_WATER_ELEMENTAL:
         {
             walkSpeed = 4;
             attackSound = WAR_ACTION_STEP_SOUND_FIREBALL;
