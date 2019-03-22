@@ -33,7 +33,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
         addUnitComponent(context, corpse, corpseType, (s32)tilePosition.x, (s32)tilePosition.y, WAR_RACE_NEUTRAL, WAR_RESOURCE_NONE, 0);
         addTransformComponent(context, corpse, mapPosition);
 
-        WarUnitsData unitData = getUnitsData(corpseType);
+        WarUnitData unitData = getUnitData(corpseType);
 
         s32 spriteIndex = unitData.resourceIndex;
         if (spriteIndex == 0)

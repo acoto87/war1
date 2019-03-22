@@ -50,7 +50,7 @@ void addUnitComponent(WarContext* context,
                       WarResourceKind resourceKind, 
                       u32 amount)
 {
-    WarUnitsData unitData = getUnitsData(type);
+    WarUnitData unitData = getUnitData(type);
 
     entity->unit = (WarUnitComponent){0};
     entity->unit.enabled = true;
@@ -273,6 +273,61 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
 
     if (addToMap)
         WarEntityListAdd(&map->entities, entity);
+
+    return entity;
+}
+
+WarEntity* createUnit(WarContext* context, 
+                      WarUnitType type, 
+                      s32 x, 
+                      s32 y, 
+                      u8 player, 
+                      WarResourceKind resourceKind, 
+                      u32 amount)
+{
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, true);
+    addUnitComponent(context, entity, type, x, y, player, resourceKind, amount);
+    addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
+
+    WarUnitData unitData = getUnitData(type);
+
+    s32 spriteIndex = unitData.resourceIndex;
+    if (spriteIndex == 0)
+    {
+        logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", type);
+        spriteIndex = 279;
+    }
+    addSpriteComponentFromResource(context, entity, imageResourceRef(spriteIndex));
+
+    addUnitActions(entity);
+    addAnimationsComponent(context, entity);
+    addStateMachineComponent(context, entity);
+
+    if (isDudeUnit(entity))
+    {
+        WarUnitStats unitStats = getUnitStats(type);
+
+        entity->unit.maxhp = unitStats.hp;
+        entity->unit.hp = unitStats.hp;
+        entity->unit.maxMagic = unitStats.magic;
+        entity->unit.magic = 100;
+        entity->unit.armor = unitStats.armor;
+        entity->unit.range = unitStats.range;
+        entity->unit.minDamage = unitStats.minDamage;
+        entity->unit.rndDamage = unitStats.rndDamage;
+        entity->unit.decay = unitStats.decay;
+    }
+    else if(isBuildingUnit(entity))
+    {
+        WarBuildingStats buildingStats = getBuildingStats(type);
+
+        entity->unit.maxhp = buildingStats.hp;
+        entity->unit.hp = buildingStats.hp;
+        entity->unit.armor = buildingStats.armor;
+    }
+
+    WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
+    changeNextState(context, entity, idleState, true, true);
 
     return entity;
 }

@@ -154,12 +154,43 @@ void updateWoodText(WarContext* context)
     setUIText(txtWood, buffer);
 }
 
-void setStatusText(WarContext* context, char* text)
+void setStatusText(WarContext* context, char* text, s32 gold, s32 wood)
 {
     WarEntity* txtStatus = findUIEntity(context, "txtStatus");
     assert(txtStatus);
 
+    WarEntity* imgStatusLumber = findUIEntity(context, "imgStatusLumber");
+    assert(imgStatusLumber);
+
+    WarEntity* imgStatusGold = findUIEntity(context, "imgStatusGold");
+    assert(imgStatusGold);
+
+    WarEntity* txtStatusWood = findUIEntity(context, "txtStatusWood");
+    assert(txtStatusWood);
+
+    WarEntity* txtStatusGold = findUIEntity(context, "txtStatusGold");
+    assert(txtStatusGold);
+
     setUIText(txtStatus, text);
+
+    if (gold == 0 && wood == 0)
+    {
+        imgStatusLumber->sprite.enabled = false;
+        imgStatusGold->sprite.enabled = false;
+        clearUIText(txtStatusWood);
+        clearUIText(txtStatusGold);
+    }
+    else
+    {
+        imgStatusLumber->sprite.enabled = true;
+        imgStatusGold->sprite.enabled = true;
+
+        char buffer[6];
+        sprintf(buffer, "%d", wood);
+        setUIText(txtStatusWood, buffer);
+        sprintf(buffer, "%d", gold);
+        setUIText(txtStatusGold, buffer);
+    }
 }
 
 void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
@@ -271,7 +302,7 @@ void updateSelectedUnitsInfo(WarContext* context)
             if (selectedEntity && isUnit(selectedEntity))
             {
                 WarUnitComponent* unit = &selectedEntity->unit;
-                WarUnitsData unitsData = getUnitsData(unit->type);
+                WarUnitData unitsData = getUnitData(unit->type);
                 setUIImage(imgUnitPortraits[i], unitsData.portraitFrameIndex);
                 setLifeBar(rectLifeBars[i], unit);
             }
@@ -310,7 +341,7 @@ void updateSelectedUnitsInfo(WarContext* context)
                 }
             }
 
-            WarUnitsData unitsData = getUnitsData(unit->type);
+            WarUnitData unitsData = getUnitData(unit->type);
             setUIImage(imgUnitPortraits[0], unitsData.portraitFrameIndex);
             setUIText(txtUnitName, unitsData.name);
             setLifeBar(rectLifeBars[0], unit);

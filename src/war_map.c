@@ -291,11 +291,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             map->players[i].wood = levelInfo->levelInfo.lumber[i];
 
             for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
-                map->players[i].features[j] = levelInfo->levelInfo.allowedFeatures[j];
+                map->players[i].features[j] = true; //levelInfo->levelInfo.allowedFeatures[j];
 
             for (s32 j = 0; j < MAX_UPGRADES_COUNT; j++)
             {
-                map->players[i].upgrades[j].allowed = levelInfo->levelInfo.allowedUpgrades[j][i];
+                map->players[i].upgrades[j].allowed = 2; //levelInfo->levelInfo.allowedUpgrades[j][i];
                 map->players[i].upgrades[j].level = 0;
             }
         }
@@ -306,53 +306,54 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
-
-            WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, true);
-            addUnitComponent(context, entity, startUnit.type, startUnit.x, startUnit.y, startUnit.player, startUnit.resourceKind, startUnit.amount);
-            addTransformComponent(context, entity, vec2i(startUnit.x * MEGA_TILE_WIDTH, startUnit.y * MEGA_TILE_HEIGHT));
-
-            WarUnitsData unitData = getUnitsData(startUnit.type);
-
-            s32 spriteIndex = unitData.resourceIndex;
-            if (spriteIndex == 0)
-            {
-                logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", startUnit.type);
-                spriteIndex = 279;
-            }
-            addSpriteComponentFromResource(context, entity, imageResourceRef(spriteIndex));
-
-            addUnitActions(entity);
-            addAnimationsComponent(context, entity);
-            addStateMachineComponent(context, entity);
-
-            if (isDudeUnit(entity))
-            {
-                WarUnitStats unitStats = getUnitStats(startUnit.type);
-
-                entity->unit.maxhp = unitStats.hp;
-                entity->unit.hp = unitStats.hp;
-                entity->unit.maxMagic = unitStats.magic;
-                entity->unit.magic = 100;
-                entity->unit.armor = unitStats.armor;
-                entity->unit.range = unitStats.range;
-                entity->unit.minDamage = unitStats.minDamage;
-                entity->unit.rndDamage = unitStats.rndDamage;
-                entity->unit.decay = unitStats.decay;
-            }
-            else if(isBuildingUnit(entity))
-            {
-                WarBuildingStats buildingStats = getBuildingStats(startUnit.type);
-
-                entity->unit.maxhp = buildingStats.hp;
-                entity->unit.hp = buildingStats.hp;
-                entity->unit.armor = buildingStats.armor;
-            }
-
-            map->players[entity->unit.player].units++;
-
-            WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
-            changeNextState(context, entity, idleState, true, true);
+            createUnit(context, 
+                       startUnit.type, 
+                       startUnit.x, 
+                       startUnit.y, 
+                       startUnit.player, 
+                       startUnit.resourceKind, 
+                       startUnit.amount);
         }
+
+        createUnit(context, 
+                   WAR_UNIT_BARRACKS_HUMANS, 
+                   37, 
+                   18, 
+                   0, 
+                   WAR_RESOURCE_NONE, 
+                   0);
+
+        createUnit(context, 
+                   WAR_UNIT_LUMBERMILL_HUMANS, 
+                   36, 
+                   22, 
+                   0, 
+                   WAR_RESOURCE_NONE, 
+                   0);
+
+        createUnit(context, 
+                   WAR_UNIT_BLACKSMITH_HUMANS, 
+                   40, 
+                   16, 
+                   0, 
+                   WAR_RESOURCE_NONE, 
+                   0);
+
+        createUnit(context, 
+                   WAR_UNIT_CHURCH, 
+                   45, 
+                   22, 
+                   0, 
+                   WAR_RESOURCE_NONE, 
+                   0);
+
+        createUnit(context, 
+                   WAR_UNIT_STABLES, 
+                   45, 
+                   18, 
+                   0, 
+                   WAR_RESOURCE_NONE, 
+                   0);
     }
 
     // add ui entities
@@ -361,7 +362,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         vec2 leftBottomPanel = rectTopLeft(map->leftBottomPanel);
         vec2 topPanel = rectTopLeft(map->topPanel);
         vec2 rightPanel = rectTopLeft(map->rightPanel);
-        vec2 bottomPanel =rectTopLeft(map->bottomPanel);
+        vec2 bottomPanel = rectTopLeft(map->bottomPanel);
 
         WarSpriteResourceRef invalidRef = invalidResourceRef();
         WarSpriteResourceRef normalRef = imageResourceRef(364);
@@ -384,7 +385,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIText(context, "txtWood", vec2Addv(topPanel, vec2i(50, 1)));
 
         // status text
-        createUIText(context, "txtStatus", vec2Addv(rectTopLeft(map->bottomPanel), vec2i(0, 4)));
+        createUIText(context, "txtStatus", vec2Addv(bottomPanel, vec2i(0, 4)));
+        createUIImage(context, "imgStatusLumber", imageResourceRef(407), vec2Addv(bottomPanel, vec2i(150, 3)));
+        createUIText(context, "txtStatusWood", vec2Addv(bottomPanel, vec2i(165, 4)));
+        createUIImage(context, "imgStatusGold", imageResourceRef(406), vec2Addv(bottomPanel, vec2i(200, 5)));
+        createUIText(context, "txtStatusGold", vec2Addv(bottomPanel, vec2i(220, 4)));
 
         // selected unit(s) info
         createUIImage(context, "imgUnitInfo", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(2, 0)));
@@ -411,6 +416,10 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImageButton(context, "command3", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(36, 69)));
         createUIImageButton(context, "command4", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(2, 92)));
         createUIImageButton(context, "command5", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(36, 92)));
+
+        createUIText(context, "commandText0", vec2Addv(leftBottomPanel, vec2i(2, 46)));
+        createUIText(context, "commandText1", vec2Addv(leftBottomPanel, vec2i(2, 56)));
+        createUIText(context, "commandText2", vec2Addv(leftBottomPanel, vec2i(2, 66)));
 
         WarEntity* menuButton = createUIImageButton(context,
                                                     "menu",
@@ -648,7 +657,7 @@ void updateSelection(WarContext* context)
                         {
                             addEntityToSelection(context, entity->id);
                         }
-                        else if (!input->keys[WAR_KEY_CTRL].pressed)
+                        else if (!isKeyPressed(input, WAR_KEY_CTRL))
                         {
                             removeEntityFromSelection(context, entity->id);
                         }
@@ -831,8 +840,18 @@ void updateCommands(WarContext* context)
         findUIEntity(context, "command5")
     };
 
-    for (s32 i = 0; i < 6; i++)
+    WarEntity* commandTexts[3] =
+    {
+        findUIEntity(context, "commandText0"),
+        findUIEntity(context, "commandText1"),
+        findUIEntity(context, "commandText2")
+    };
+
+    for (s32 i = 0; i < arrayLength(commandButtons); i++)
         commandButtons[i]->button.enabled = false;
+
+    for (s32 i = 0; i < arrayLength(commandTexts); i++)
+        clearUIText(commandTexts[i]);
 
     s32 selectedEntitiesCount = map->selectedEntities.count;
     if (selectedEntitiesCount == 0)
@@ -841,6 +860,41 @@ void updateCommands(WarContext* context)
     WarEntity* entity = findEntity(context, map->selectedEntities.items[0]);
     assert(entity && isUnit(entity));
     
+    // if the selected unit is a farm, 
+    // just show the text about the food consumtion
+    if (entity->unit.type == WAR_UNIT_FARM_HUMANS ||
+        entity->unit.type == WAR_UNIT_FARM_ORCS)
+    {
+        s32 farmsCount = getPlayerUnitCount(context, 0, entity->unit.type);
+        s32 dudesCount = getPlayerDudesCount(context, 0);
+
+        setUIText(commandTexts[0], "FOOD USAGE:");
+
+        char buffer[10];
+        sprintf(buffer, "GROWN %d", farmsCount * 4 + 1);
+        setUIText(commandTexts[1], buffer);
+        sprintf(buffer, " USED %d", dudesCount);
+        setUIText(commandTexts[2], buffer);
+
+        return;
+    }
+    
+    // if the selected unit is a goldmine,
+    // just add the text with the remaining gold
+    if (entity->unit.type == WAR_UNIT_GOLDMINE)
+    {
+        s32 gold = entity->unit.amount;
+
+        setUIText(commandTexts[0], "GOLD:");
+
+        char buffer[10];
+        sprintf(buffer, "%d", gold);
+        setUIText(commandTexts[1], buffer);
+
+        return;
+    }
+
+    // determine the commands for the selected unit(s)
     WarUnitCommandType commands[6] = {0};
     getUnitCommands(context, entity, commands);
 
@@ -870,6 +924,8 @@ void updateCommands(WarContext* context)
             WarUnitCommandData commandData = getUnitCommandData(context, entity, commands[i]);
             setUIImage(commandButtons[i], commandData.frameIndex);
             setUITooltip(commandButtons[i], commandData.tooltip);
+            commandButtons[i]->button.gold = commandData.gold;
+            commandButtons[i]->button.wood = commandData.wood;
             commandButtons[i]->button.enabled = true;
         }
     }
@@ -935,7 +991,8 @@ void updateButtons(WarContext* context)
 
 void updateStatusText(WarContext* context)
 {
-    setStatusText(context, NULL);
+    setStatusText(context, NULL, 0, 0);
+
 
     WarMap* map = context->map;
     for(s32 i = 0; i < map->entities.count; i++)
@@ -945,17 +1002,14 @@ void updateStatusText(WarContext* context)
         {
             if (entity->button.hot)
             {
-                setStatusText(context, entity->button.tooltip);
+                setStatusText(context, entity->button.tooltip, entity->button.gold, entity->button.wood);
+                break;
             }
         }
     }
 
     // check here if a selected building is damaged,
     // how much would cost to repair it and set the text
-
-    // check if a button is for building something, 
-    // how much wood and gold would cost the unit 
-    // and set it in the status bar
 }
 
 void updateMap(WarContext* context)

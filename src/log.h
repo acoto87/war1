@@ -59,7 +59,7 @@ void __logInternal(LogSeverity severity, const char* file, const int32_t line, c
         }
 
         int32_t fileNameIndex = __getFileNameIndex(file);
-        fprintf(stdout, "[%s:(%d)][%s][%s]: ", file + fileNameIndex + 1, line, tstr, severityStr);
+        fprintf(stdout, "[%s][%s][%s:(%d)]: ", severityStr, tstr, file + fileNameIndex + 1, line);
 
         va_list args;
         va_start(args, message);

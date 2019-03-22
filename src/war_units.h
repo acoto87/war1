@@ -151,9 +151,9 @@ typedef struct
     s32 sizex;
     s32 sizey;
     char name[50];
-} WarUnitsData;
+} WarUnitData;
 
-const WarUnitsData unitsData[] = 
+const WarUnitData unitsData[] = 
 {
     // units
     { WAR_UNIT_FOOTMAN,                   279,  0, 1, 1, "FOOTMAN" },
@@ -191,8 +191,8 @@ const WarUnitsData unitsData[] =
     { WAR_UNIT_FARM_ORCS,                 308, 15, 2, 2, "FARM" },
     { WAR_UNIT_BARRACKS_HUMANS,           309, 16, 3, 3, "BARRACKS" },
     { WAR_UNIT_BARRACKS_ORCS,             310, 17, 3, 3, "BARRACKS" },
-    { WAR_UNIT_CHURCH,                    311, 28, 2, 2, "CHURCH" },
-    { WAR_UNIT_TEMPLE,                    312, 29, 2, 2, "TEMPLE" },
+    { WAR_UNIT_CHURCH,                    311, 28, 3, 3, "CHURCH" },
+    { WAR_UNIT_TEMPLE,                    312, 29, 3, 3, "TEMPLE" },
     { WAR_UNIT_TOWER_HUMANS,              313, 18, 2, 2, "TOWER" },
     { WAR_UNIT_TOWER_ORCS,                314, 19, 2, 2, "TOWER" },
     { WAR_UNIT_TOWNHALL_HUMANS,           315, 20, 3, 3, "TOWN HALL" },
@@ -201,8 +201,8 @@ const WarUnitsData unitsData[] =
     { WAR_UNIT_LUMBERMILL_ORCS,           318, 23, 3, 3, "LUMBER MILL" },
     { WAR_UNIT_STABLES,                   319, 24, 3, 3, "STABLES" },
     { WAR_UNIT_KENNEL,                    320, 25, 3, 3, "KENNEL" },
-    { WAR_UNIT_BLACKSMITH_HUMANS,         321, 26, 3, 3, "BLACKSMITH" },
-    { WAR_UNIT_BLACKSMITH_ORCS,           322, 27, 3, 3, "BLACKSMITH" },
+    { WAR_UNIT_BLACKSMITH_HUMANS,         321, 26, 2, 2, "BLACKSMITH" },
+    { WAR_UNIT_BLACKSMITH_ORCS,           322, 27, 2, 2, "BLACKSMITH" },
     { WAR_UNIT_STORMWIND,                 323, 31, 4, 4, "STORMWIND" },
     { WAR_UNIT_BLACKROCK,                 324, 32, 4, 4, "BLACKROCK" },
 
@@ -582,6 +582,37 @@ const WarBuildingStats buildingStats[] =
 
 typedef struct
 {
+    WarUpgradeType type;
+    s32 buildTime;
+    s32 goldCost[2];
+    s32 frameIndices[2];
+} WarUpgradeStats;
+
+const WarUpgradeStats upgradeStats[] =
+{
+    { WAR_UPGRADE_ARROWS,           __bts(120), {  750, 1500 }, { WAR_PORTRAIT_ARROW_2,          WAR_PORTRAIT_ARROW_3            } },
+    { WAR_UPGRADE_SPEARS,           __bts(120), {  750, 1500 }, { WAR_PORTRAIT_SPEAR_2,          WAR_PORTRAIT_SPEAR_3            } },
+    { WAR_UPGRADE_SWORDS,           __bts(140), {  750, 1500 }, { WAR_PORTRAIT_SWORD_2,          WAR_PORTRAIT_SWORD_3            } },
+    { WAR_UPGRADE_AXES,             __bts(140), {  750, 1500 }, { WAR_PORTRAIT_AXE_2,            WAR_PORTRAIT_AXE_3              } },
+    { WAR_UPGRADE_HORSES,           __bts(140), {  750, 1500 }, { WAR_PORTRAIT_HORSE_1,          WAR_PORTRAIT_HORSE_2            } },
+    { WAR_UPGRADE_WOLVES,           __bts(140), {  750, 1500 }, { WAR_PORTRAIT_WOLVES_1,         WAR_PORTRAIT_WOLVES_2           } },
+    { WAR_UPGRADE_SCORPIONS,        __bts(140), {  750,    0 }, { WAR_PORTRAIT_SCORPION,         WAR_PORTRAIT_SCORPION           } },
+    { WAR_UPGRADE_SPIDERS,          __bts(140), {  750,    0 }, { WAR_PORTRAIT_SPIDER,           WAR_PORTRAIT_SPIDER             } },
+    { WAR_UPGRADE_RAIN_OF_FIRE,     __bts(140), { 1500,    0 }, { WAR_PORTRAIT_RAIN_OF_FIRE,     WAR_PORTRAIT_RAIN_OF_FIRE       } },
+    { WAR_UPGRADE_POISON_CLOUD,     __bts(140), { 1500,    0 }, { WAR_PORTRAIT_POISON_CLOUD,     WAR_PORTRAIT_POISON_CLOUD       } },
+    { WAR_UPGRADE_WATER_ELEMENTAL,  __bts(140), { 3000,    0 }, { WAR_PORTRAIT_WATER_ELEMENTAL,  WAR_PORTRAIT_WATER_ELEMENTAL    } },
+    { WAR_UPGRADE_DAEMON,           __bts(140), { 3000,    0 }, { WAR_PORTRAIT_DAEMON,           WAR_PORTRAIT_DAEMON             } },
+    { WAR_UPGRADE_HEALING,          __bts(120), {  750,    0 }, { WAR_PORTRAIT_HEALING,          WAR_PORTRAIT_HEALING            } },
+    { WAR_UPGRADE_RAISE_DEAD,       __bts(120), {  750,    0 }, { WAR_PORTRAIT_RAISE_DEAD,       WAR_PORTRAIT_RAISE_DEAD         } },
+    { WAR_UPGRADE_FAR_SIGHT,        __bts(120), { 1500,    0 }, { WAR_PORTRAIT_FAR_SIGHT,        WAR_PORTRAIT_FAR_SIGHT          } },
+    { WAR_UPGRADE_DARK_VISION,      __bts(120), { 1500,    0 }, { WAR_PORTRAIT_DARK_VISION,      WAR_PORTRAIT_DARK_VISION        } },
+    { WAR_UPGRADE_INVISIBILITY,     __bts(120), { 3000,    0 }, { WAR_PORTRAIT_INVISIBILITY,     WAR_PORTRAIT_INVISIBILITY       } },
+    { WAR_UPGRADE_UNHOLY_ARMOR,     __bts(120), { 3000,    0 }, { WAR_PORTRAIT_UNHOLY_ARMOR,     WAR_PORTRAIT_UNHOLY_ARMOR       } },
+    { WAR_UPGRADE_SHIELD,           __bts(120), {  750, 1500 }, { WAR_PORTRAIT_SHIELD_2_HUMANS,  WAR_PORTRAIT_SHIELD_3_HUMANS    } },
+};
+
+typedef struct
+{
     WarUnitCommandType type;
     s32 gold;
     s32 wood;
@@ -589,7 +620,7 @@ typedef struct
     char tooltip[100];
 } WarUnitCommandData;
 
-WarUnitsData getUnitsData(WarUnitType type)
+WarUnitData getUnitData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(unitsData);
@@ -686,6 +717,17 @@ WarBuildingStats getBuildingStats(WarUnitType type)
 
     assert(index < length);
     return buildingStats[index];
+}
+
+WarUpgradeStats getUpgradeStats(WarUpgradeType type)
+{
+    s32 index = 0;
+    s32 length = arrayLength(upgradeStats);
+    while (index < length && upgradeStats[index].type != type)
+        index++;
+
+    assert(index < length);
+    return upgradeStats[index];
 }
 
 #define isUnit(entity) ((entity)->type == WAR_ENTITY_TYPE_UNIT)
@@ -1040,6 +1082,69 @@ bool isCarryingResources(WarEntity* entity)
     }
 }
 
+s32 getPlayerUnitTotalCount(WarContext* context, u8 player)
+{
+    WarMap* map = context->map;
+
+    s32 count = 0;
+
+    for (s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && isUnit(entity))
+        {
+            if (entity->unit.player == player)
+            {
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
+s32 getPlayerDudesCount(WarContext* context, u8 player)
+{
+    WarMap* map = context->map;
+
+    s32 count = 0;
+
+    for (s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && isUnit(entity))
+        {
+            if (entity->unit.player == player && isDudeUnit(entity))
+            {
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
+s32 getPlayerBuildingsCount(WarContext* context, u8 player)
+{
+    WarMap* map = context->map;
+
+    s32 count = 0;
+
+    for (s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && isUnit(entity))
+        {
+            if (entity->unit.player == player && isBuildingUnit(entity))
+            {
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
 s32 getPlayerUnitCount(WarContext* context, u8 player, WarUnitType unitType)
 {
     WarMap* map = context->map;
@@ -1054,7 +1159,7 @@ s32 getPlayerUnitCount(WarContext* context, u8 player, WarUnitType unitType)
             if (entity->unit.player == player && 
                 entity->unit.type == unitType)
             {
-                count++;                
+                count++;
             }
         }
     }
@@ -1855,9 +1960,11 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         
         case WAR_COMMAND_TRAIN_PEASANT:
         {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_PEASANT);
+
             strcpy(data.tooltip, "TRAIN PEASANT");
-            data.gold = 0;
-            data.wood = 0;
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
             data.frameIndex = WAR_PORTRAIT_PEASANT;
 
             break;
@@ -1865,11 +1972,324 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
 
         case WAR_COMMAND_TRAIN_PEON:
         {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_PEON);
+
             strcpy(data.tooltip, "TRAIN PEON");
-            data.gold = 0;
-            data.wood = 0;
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
             data.frameIndex = WAR_PORTRAIT_PEON;
 
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_FOOTMAN:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_FOOTMAN);
+
+            strcpy(data.tooltip, "TRAIN FOOTMAN");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_FOOTMAN;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_GRUNT:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_GRUNT);
+
+            strcpy(data.tooltip, "TRAIN GRUNT");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_GRUNT;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_CATAPULT_HUMANS:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_CATAPULT_HUMANS);
+
+            strcpy(data.tooltip, "TRAIN CATAPULT");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_CATAPULT_HUMANS;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_CATAPULT_ORCS:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_CATAPULT_ORCS);
+
+            strcpy(data.tooltip, "TRAIN CATAPULT");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_CATAPULT_ORCS;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_KNIGHT:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_KNIGHT);
+
+            strcpy(data.tooltip, "TRAIN KNIGHT");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_KNIGHT;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_RAIDER:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_RAIDER);
+
+            strcpy(data.tooltip, "TRAIN RAIDER");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_RAIDER;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_ARCHER:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_ARCHER);
+
+            strcpy(data.tooltip, "TRAIN ARCHER");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_ARCHER;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_SPEARMAN:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_SPEARMAN);
+
+            strcpy(data.tooltip, "TRAIN SPEARMAN");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_SPEARMAN;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_CONJURER:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_CONJURER);
+
+            strcpy(data.tooltip, "TRAIN CONJURER");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_CONJURER;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_WARLOCK:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_WARLOCK);
+
+            strcpy(data.tooltip, "TRAIN WARLOCK");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_WARLOCK;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_CLERIC:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_CLERIC);
+
+            strcpy(data.tooltip, "TRAIN CLERIC");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_CLERIC;
+            break;
+        }
+
+        case WAR_COMMAND_TRAIN_NECROLYTE:
+        {
+            WarUnitStats stats = getUnitStats(WAR_UNIT_NECROLYTE);
+
+            strcpy(data.tooltip, "TRAIN NECROLYTE");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_NECROLYTE;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_FARM_HUMANS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_FARM_HUMANS);
+
+            strcpy(data.tooltip, "TRAIN FARM");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_FARM_HUMANS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_FARM_ORCS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_FARM_ORCS);
+
+            strcpy(data.tooltip, "TRAIN FARM");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_FARM_ORCS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_BARRACKS_HUMANS);
+
+            strcpy(data.tooltip, "TRAIN BARRACKS");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_BARRACKS_HUMANS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_BARRACKS_ORCS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_BARRACKS_ORCS);
+
+            strcpy(data.tooltip, "TRAIN BARRACKS");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_BARRACKS_ORCS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_CHURCH:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_CHURCH);
+
+            strcpy(data.tooltip, "TRAIN CHURCH");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_CHURCH;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_TEMPLE:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_TEMPLE);
+
+            strcpy(data.tooltip, "TRAIN TEMPLE");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_TEMPLE;
+
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_TOWER_HUMANS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_TOWER_HUMANS);
+
+            strcpy(data.tooltip, "TRAIN TOWER");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_TOWER_HUMANS;
+
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_TOWER_ORCS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_TOWER_ORCS);
+
+            strcpy(data.tooltip, "TRAIN TOWER");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_TOWER_ORCS;
+
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_TOWNHALL_HUMANS);
+
+            strcpy(data.tooltip, "TRAIN TOWNHALL");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_TOWNHALL_HUMANS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_TOWNHALL_ORCS);
+
+            strcpy(data.tooltip, "TRAIN TOWNHALL");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_TOWNHALL_ORCS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_LUMBERMILL_HUMANS);
+
+            strcpy(data.tooltip, "TRAIN LUMBERMILL");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_LUMBERMILL_HUMANS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_LUMBERMILL_ORCS);
+
+            strcpy(data.tooltip, "TRAIN LUMBERMILL");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_LUMBERMILL_ORCS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_STABLE:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_STABLES);
+
+            strcpy(data.tooltip, "TRAIN STABLES");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_STABLES;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_KENNEL:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_KENNEL);
+
+            strcpy(data.tooltip, "TRAIN KENNEL");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_KENNEL;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_BLACKSMITH_HUMANS);
+
+            strcpy(data.tooltip, "TRAIN BLACKSMITH");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_BLACKSMITH_HUMANS;
+            break;
+        }
+
+        case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
+        {
+            WarBuildingStats stats = getBuildingStats(WAR_UNIT_BLACKSMITH_ORCS);
+
+            strcpy(data.tooltip, "TRAIN BLACKSMITH");
+            data.gold = stats.goldCost;
+            data.wood = stats.woodCost;
+            data.frameIndex = WAR_PORTRAIT_BLACKSMITH_ORCS;
             break;
         }
 
@@ -1879,7 +2299,6 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.gold = 0;
             data.wood = 0;
             data.frameIndex = WAR_PORTRAIT_ROAD;
-
             break;
         }
 
@@ -1889,10 +2308,268 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.gold = 0;
             data.wood = 0;
             data.frameIndex = WAR_PORTRAIT_WALL;
-
             break;
         }
 
+        case WAR_COMMAND_UPGRADE_SWORDS:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_SWORDS));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_SWORDS);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_SWORDS);
+
+            strcpy(data.tooltip, "UPGRADE SWORDS");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_AXES:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_AXES));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_AXES);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_AXES);
+
+            strcpy(data.tooltip, "UPGRADE AXES");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_SHIELD_HUMANS:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_SHIELD));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_SHIELD);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_SHIELD);
+
+            strcpy(data.tooltip, "UPGRADE SHIELD");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_SHIELD_ORCS:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_SHIELD));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_SHIELD);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_SHIELD);
+
+            strcpy(data.tooltip, "UPGRADE SHIELD");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_ARROWS:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_ARROWS));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_ARROWS);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_ARROWS);
+
+            strcpy(data.tooltip, "UPGRADE ARROWS");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_SPEARS:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_SPEARS));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_SPEARS);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_SPEARS);
+
+            strcpy(data.tooltip, "UPGRADE SPEARS");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_HORSES:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_HORSES));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_HORSES);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_HORSES);
+
+            strcpy(data.tooltip, "UPGRADE HORSES");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_WOLVES:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_WOLVES));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_WOLVES);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_WOLVES);
+
+            strcpy(data.tooltip, "UPGRADE WOLVES");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_SCORPION:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_SCORPIONS));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_SCORPIONS);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_SCORPIONS);
+
+            strcpy(data.tooltip, "UPGRADE SCORPIONS");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_SPIDER:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_SPIDERS));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_SPIDERS);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_SPIDERS);
+
+            strcpy(data.tooltip, "UPGRADE SPIDERS");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_RAIN_OF_FIRE:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_RAIN_OF_FIRE));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_RAIN_OF_FIRE);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_RAIN_OF_FIRE);
+
+            strcpy(data.tooltip, "UPGRADE RAIN_OF_FIRE");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_POISON_CLOUD:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_POISON_CLOUD));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_POISON_CLOUD);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_POISON_CLOUD);
+
+            strcpy(data.tooltip, "UPGRADE POISON_CLOUD");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_WATER_ELEMENTAL:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_WATER_ELEMENTAL));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_WATER_ELEMENTAL);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_WATER_ELEMENTAL);
+
+            strcpy(data.tooltip, "UPGRADE WATER_ELEMENTAL");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_DAEMON:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_DAEMON));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_DAEMON);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_DAEMON);
+
+            strcpy(data.tooltip, "UPGRADE DAEMON");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_HEALING:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_HEALING));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_HEALING);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_HEALING);
+
+            strcpy(data.tooltip, "UPGRADE HEALING");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_RAISE_DEAD:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_RAISE_DEAD));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_RAISE_DEAD);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_RAISE_DEAD);
+
+            strcpy(data.tooltip, "UPGRADE RAISE_DEAD");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_FAR_SIGHT:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_FAR_SIGHT));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_FAR_SIGHT);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_FAR_SIGHT);
+
+            strcpy(data.tooltip, "UPGRADE FAR_SIGHT");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_DARK_VISION:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_DARK_VISION));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_DARK_VISION);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_DARK_VISION);
+
+            strcpy(data.tooltip, "UPGRADE DARK_VISION");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_INVISIBILITY:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_INVISIBILITY));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_INVISIBILITY);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_INVISIBILITY);
+
+            strcpy(data.tooltip, "UPGRADE INVISIBILITY");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_UPGRADE_UNHOLY_ARMOR:
+        {
+            assert(hasRemainingUpgrade(player, WAR_UPGRADE_UNHOLY_ARMOR));
+
+            WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_UNHOLY_ARMOR);
+            s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_UNHOLY_ARMOR);
+
+            strcpy(data.tooltip, "UPGRADE UNHOLY_ARMOR");
+            data.gold = stats.goldCost[upgradeLevel];
+            data.frameIndex = stats.frameIndices[upgradeLevel];
+            break;
+        }
 
         // cancel
         case WAR_COMMAND_CANCEL:

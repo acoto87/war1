@@ -38,7 +38,7 @@ List of thing to do in no particular order
   * Make so that entities can have multiple sprites.
 
 * Gameplay
-  * > Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
+  * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
     * ~~Fix black areas in human unit portraits images.~~
     * ~~Add selected units back images.~~
     * ~~Add portraits to selected units.~~
@@ -47,20 +47,21 @@ List of thing to do in no particular order
     * ~~Add life bar to the unit portraits.~~
     * ~~Add magic to the unit portraits.~~
     * ~~Add complete % bar only when there is something building.~~
-    * > Add command images based on selected(s) unit types.
-    * Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
-    * Add upgrades info to player info.
+    * ~~Add command images based on selected(s) unit types.~~
+    * ~~Add upgrades info to player info.~~
+  * Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
   * ~~Manage the gold in the mines and explode it when the gold is over.~~
   * ~~Add ruins to collapsed buildings.~~
   * Add explosion animation to living npc units when clicking to many times.
   * ~~Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over.~~
-  * Fix the selection of units to select only dude units or one building.
+  * > Fix the selection of units to select only dude units or one building.
   * Make Ctrl+click select all units of the same type on the screen.
   * ~~Making health system for units.~~
   * ~~Change the behavior of chopping trees when multiple units are chopping the same tree. With each hack of the axe the tree should loose wood, until it ran out of it. Each unit go back to the townhall when has max amount of wood or there is no more trees to chop.~~
   * ~~If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better, and make the necessary changes.~~
     * ~~The solution implemented was that tree islands are forests, and in editing, just determine the tree tiles for each forest, because the edition a less used and slower funcionality and it doesn't matter too much if every tree is checked in each operation.~~
   * Add functionality of building units.
+  * > Add functinality of building buildings.
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~
@@ -152,7 +153,9 @@ List of thing to do in no particular order
   * Workers don't collide well while harvesting wood or gold when near the townhall.
 
 * UI system
-  * > Buttons
+  * ~~Buttons~~
+  * ~~Text~~
+  * ~~Images~~
   * Dialogues
   * Cut scenes
   * Minimap

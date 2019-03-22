@@ -26,7 +26,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
         setUnitCenterPosition(entity, spawnPosition, true);
 
-        WarUnitsData unitData = getUnitsData(unit->type);
+        WarUnitData unitData = getUnitData(unit->type);
         removeSpriteComponent(context, entity);
         addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
 
