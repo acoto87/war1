@@ -1210,6 +1210,7 @@ shlDeclareList(WarEntityList, WarEntity*)
 shlDefineList(WarEntityList, WarEntity*)
 
 #define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, freeEntity}
+#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity, NULL}
 
 typedef enum
 {

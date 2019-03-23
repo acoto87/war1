@@ -3,7 +3,6 @@
 void addEntityToSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
-    assert(map);
 
     // subtitute this with a set data structure that doesn't allow duplicates
     if (!WarEntityIdListContains(&map->selectedEntities, id))
@@ -13,9 +12,13 @@ void addEntityToSelection(WarContext* context, WarEntityId id)
 void removeEntityFromSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
-    assert(map);
-
     WarEntityIdListRemove(&map->selectedEntities, id);
+}
+
+void clearSelection(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarEntityIdListClear(&map->selectedEntities);
 }
 
 vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)

@@ -409,24 +409,47 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIRect(context, "rectPercentBar", vec2Addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), U8COLOR_GREEN);
         createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
 
+        // texts in the command area
+        createUIText(context, "txtCommand0", vec2Addv(leftBottomPanel, vec2i(2, 46)));
+        createUIText(context, "txtCommand1", vec2Addv(leftBottomPanel, vec2i(2, 56)));
+        createUIText(context, "txtCommand2", vec2Addv(leftBottomPanel, vec2i(2, 66)));
+
         // command buttons
-        createUIImageButton(context, "command0", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(2, 46)));
-        createUIImageButton(context, "command1", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(36, 46)));
-        createUIImageButton(context, "command2", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(2, 69)));
-        createUIImageButton(context, "command3", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(36, 69)));
-        createUIImageButton(context, "command4", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(2, 92)));
-        createUIImageButton(context, "command5", normalRef, pressedRef, portraitsRef, vec2Addv(leftBottomPanel, vec2i(36, 92)));
+        createUIImageButton(
+            context, "btnCommand0", 
+            normalRef, pressedRef, portraitsRef, 
+            vec2Addv(leftBottomPanel, vec2i(2, 46)));
 
-        createUIText(context, "commandText0", vec2Addv(leftBottomPanel, vec2i(2, 46)));
-        createUIText(context, "commandText1", vec2Addv(leftBottomPanel, vec2i(2, 56)));
-        createUIText(context, "commandText2", vec2Addv(leftBottomPanel, vec2i(2, 66)));
+        createUIImageButton(
+            context, "btnCommand1", 
+            normalRef, pressedRef, portraitsRef, 
+            vec2Addv(leftBottomPanel, vec2i(36, 46)));
 
-        WarEntity* menuButton = createUIImageButton(context,
-                                                    "menu",
-                                                    imageResourceRef(362),
-                                                    imageResourceRef(363),
-                                                    invalidRef,
-                                                    vec2Addv(leftBottomPanel, vec2i(3, 116)));
+        createUIImageButton(
+            context, "btnCommand2", 
+            normalRef, pressedRef, portraitsRef, 
+            vec2Addv(leftBottomPanel, vec2i(2, 69)));
+
+        createUIImageButton(
+            context, "btnCommand3", 
+            normalRef, pressedRef, portraitsRef, 
+            vec2Addv(leftBottomPanel, vec2i(36, 69)));
+
+        createUIImageButton(
+            context, "btnCommand4", 
+            normalRef, pressedRef, portraitsRef, 
+            vec2Addv(leftBottomPanel, vec2i(2, 92)));
+
+        createUIImageButton(
+            context, "btnCommand5", 
+            normalRef, pressedRef, portraitsRef, 
+            vec2Addv(leftBottomPanel, vec2i(36, 92)));
+
+        WarEntity* menuButton = createUIImageButton(
+            context, "btnMenu", 
+            imageResourceRef(362), imageResourceRef(363), invalidRef, 
+            vec2Addv(leftBottomPanel, vec2i(3, 116)));
+
         setUITooltip(menuButton, "MENU (F10)");
     }
 
@@ -643,6 +666,9 @@ void updateSelection(WarContext* context)
             // check if the click is inside the map panel
             if(input->wasDragging || rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
+                WarEntityList newSelectedEntities;
+                WarEntityListInit(&newSelectedEntities, WarEntityListNonFreeOptions);
+                
                 rect pointerRect = rectScreenToMapCoordinates(context, input->dragRect);
 
                 // select the entities inside the dragging rect
@@ -651,18 +677,72 @@ void updateSelection(WarContext* context)
                     WarEntity* entity = map->entities.items[i];
                     if (entity && isUnit(entity) && entity->unit.enabled)
                     {
+                        // test here to avoid select corpses?
+
                         rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
 
                         if (rectIntersects(pointerRect, unitRect))
                         {
-                            addEntityToSelection(context, entity->id);
-                        }
-                        else if (!isKeyPressed(input, WAR_KEY_CTRL))
-                        {
-                            removeEntityFromSelection(context, entity->id);
+                            WarEntityListAdd(&newSelectedEntities, entity);
                         }
                     }
                 }
+
+                // include the already selected entities if the Ctrl key is pressed
+                if (isKeyPressed(input, WAR_KEY_CTRL))
+                {
+                    // the max number of selected entities is 4, so there is no much
+                    // throuble looking for the actual entities here, it will also
+                    // improve when a hash is make for looking up the entities
+                    for (s32 i = 0; i < map->selectedEntities.count; i++)
+                    {
+                        WarEntity* entity = findEntity(context, map->selectedEntities.items[i]);
+                        if (entity)
+                            WarEntityListAdd(&newSelectedEntities, entity);
+                    }
+                }
+
+                bool areDudesSelected = false;
+                bool areBuildingSelected = false;
+
+                // calculate the number of dudes and building entities in the selection
+                for (s32 i = 0; i < newSelectedEntities.count; i++)
+                {
+                    WarEntity* entity = newSelectedEntities.items[i];
+                    if (isDudeUnit(entity))
+                        areDudesSelected = true;
+                    else if (isBuildingUnit(entity))
+                        areBuildingSelected = true;
+                }
+
+                if (areDudesSelected)
+                {
+                    // remove all new selected buildings
+                    for (s32 i = newSelectedEntities.count - 1; i >= 0; i--)
+                    {
+                        WarEntity* entity = newSelectedEntities.items[i];
+                        if (isBuildingUnit(entity))
+                            WarEntityListRemoveAt(&newSelectedEntities, i);
+                    }
+                }
+                else if (areBuildingSelected)
+                {
+                    // remove all other new selected buildings
+                    WarEntityListRemoveAtRange(&newSelectedEntities, 1, newSelectedEntities.count - 1);
+                }
+
+                // clear the current selection
+                clearSelection(context);
+
+                // and add the new selection
+                s32 selectedEntitiesCount = min(newSelectedEntities.count, 4);
+                for (s32 i = 0; i < selectedEntitiesCount; i++)
+                {
+                    WarEntity* entity = newSelectedEntities.items[i];
+                    addEntityToSelection(context, entity->id);
+                }
+
+                WarEntityListFree(&newSelectedEntities);
             }
         }
     }
@@ -832,19 +912,19 @@ void updateCommands(WarContext* context)
 
     WarEntity* commandButtons[6] = 
     {
-        findUIEntity(context, "command0"),
-        findUIEntity(context, "command1"),
-        findUIEntity(context, "command2"),
-        findUIEntity(context, "command3"),
-        findUIEntity(context, "command4"),
-        findUIEntity(context, "command5")
+        findUIEntity(context, "btnCommand0"),
+        findUIEntity(context, "btnCommand1"),
+        findUIEntity(context, "btnCommand2"),
+        findUIEntity(context, "btnCommand3"),
+        findUIEntity(context, "btnCommand4"),
+        findUIEntity(context, "btnCommand5")
     };
 
     WarEntity* commandTexts[3] =
     {
-        findUIEntity(context, "commandText0"),
-        findUIEntity(context, "commandText1"),
-        findUIEntity(context, "commandText2")
+        findUIEntity(context, "txtCommand0"),
+        findUIEntity(context, "txtCommand1"),
+        findUIEntity(context, "txtCommand2")
     };
 
     for (s32 i = 0; i < arrayLength(commandButtons); i++)

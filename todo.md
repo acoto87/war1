@@ -54,7 +54,7 @@ List of thing to do in no particular order
   * ~~Add ruins to collapsed buildings.~~
   * Add explosion animation to living npc units when clicking to many times.
   * ~~Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over.~~
-  * > Fix the selection of units to select only dude units or one building.
+  * ~~Fix the selection of units to select only dude units or one building.~~
   * Make Ctrl+click select all units of the same type on the screen.
   * ~~Making health system for units.~~
   * ~~Change the behavior of chopping trees when multiple units are chopping the same tree. With each hack of the axe the tree should loose wood, until it ran out of it. Each unit go back to the townhall when has max amount of wood or there is no more trees to chop.~~
