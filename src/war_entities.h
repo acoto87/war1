@@ -92,6 +92,10 @@ s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount);
 
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap);
+WarEntity* createUnit(WarContext* context, WarUnitType type, 
+                      s32 x, s32 y, u8 player, 
+                      WarResourceKind resourceKind, u32 amount,
+                      bool isGoingToTrain);
 s32 findEntityIndex(WarContext* context, WarEntityId id);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);

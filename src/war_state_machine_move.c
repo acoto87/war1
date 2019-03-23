@@ -98,7 +98,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 state->move.waitCount++;
 
-                WarState* waitState = createWaitState(context, entity, getScaledTime(context,  MOVE_WAIT_TIME));
+                WarState* waitState = createWaitState(context, entity, getScaledTime(context, MOVE_WAIT_TIME));
                 waitState->nextState = state;
                 changeNextState(context, entity, waitState, false, true);
 

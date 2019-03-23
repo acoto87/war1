@@ -618,6 +618,7 @@ typedef struct
     s32 wood;
     s32 frameIndex; // always from resource 361
     char tooltip[100];
+    WarClickHandler clickHandler;
 } WarUnitCommandData;
 
 WarUnitData getUnitData(WarUnitType type)
@@ -1966,7 +1967,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
             data.frameIndex = WAR_PORTRAIT_PEASANT;
-
+            data.clickHandler = trainPeasant;
             break;
         }
 
@@ -1978,7 +1979,6 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
             data.frameIndex = WAR_PORTRAIT_PEON;
-
             break;
         }
 
@@ -1990,6 +1990,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
             data.frameIndex = WAR_PORTRAIT_FOOTMAN;
+            data.clickHandler = trainFootman;
             break;
         }
 
@@ -2012,6 +2013,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
             data.frameIndex = WAR_PORTRAIT_CATAPULT_HUMANS;
+            data.clickHandler = trainHumanCatapult;
             break;
         }
 
@@ -2034,6 +2036,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
             data.frameIndex = WAR_PORTRAIT_KNIGHT;
+            data.clickHandler = trainKnight;
             break;
         }
 
@@ -2056,6 +2059,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
             data.frameIndex = WAR_PORTRAIT_ARCHER;
+            data.clickHandler = trainArcher;
             break;
         }
 
@@ -2448,7 +2452,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_RAIN_OF_FIRE);
             s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_RAIN_OF_FIRE);
 
-            strcpy(data.tooltip, "UPGRADE RAIN_OF_FIRE");
+            strcpy(data.tooltip, "UPGRADE RAIN OF FIRE");
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = stats.frameIndices[upgradeLevel];
             break;
@@ -2461,7 +2465,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_POISON_CLOUD);
             s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_POISON_CLOUD);
 
-            strcpy(data.tooltip, "UPGRADE POISON_CLOUD");
+            strcpy(data.tooltip, "UPGRADE POISON CLOUD");
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = stats.frameIndices[upgradeLevel];
             break;
@@ -2474,7 +2478,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_WATER_ELEMENTAL);
             s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_WATER_ELEMENTAL);
 
-            strcpy(data.tooltip, "UPGRADE WATER_ELEMENTAL");
+            strcpy(data.tooltip, "UPGRADE WATER ELEMENTAL");
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = stats.frameIndices[upgradeLevel];
             break;
@@ -2513,7 +2517,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_RAISE_DEAD);
             s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_RAISE_DEAD);
 
-            strcpy(data.tooltip, "UPGRADE RAISE_DEAD");
+            strcpy(data.tooltip, "UPGRADE RAISE DEAD");
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = stats.frameIndices[upgradeLevel];
             break;
@@ -2526,7 +2530,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_FAR_SIGHT);
             s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_FAR_SIGHT);
 
-            strcpy(data.tooltip, "UPGRADE FAR_SIGHT");
+            strcpy(data.tooltip, "UPGRADE FAR SIGHT");
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = stats.frameIndices[upgradeLevel];
             break;
@@ -2539,7 +2543,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_DARK_VISION);
             s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_DARK_VISION);
 
-            strcpy(data.tooltip, "UPGRADE DARK_VISION");
+            strcpy(data.tooltip, "UPGRADE DARK VISION");
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = stats.frameIndices[upgradeLevel];
             break;
@@ -2565,7 +2569,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_UNHOLY_ARMOR);
             s32 upgradeLevel = getUpgradeLevel(player, WAR_UPGRADE_UNHOLY_ARMOR);
 
-            strcpy(data.tooltip, "UPGRADE UNHOLY_ARMOR");
+            strcpy(data.tooltip, "UPGRADE UNHOLY ARMOR");
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = stats.frameIndices[upgradeLevel];
             break;

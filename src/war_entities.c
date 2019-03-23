@@ -283,9 +283,10 @@ WarEntity* createUnit(WarContext* context,
                       s32 y, 
                       u8 player, 
                       WarResourceKind resourceKind, 
-                      u32 amount)
+                      u32 amount,
+                      bool isGoingToTrain)
 {
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, true);
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, !isGoingToTrain);
     addUnitComponent(context, entity, type, x, y, player, resourceKind, amount);
     addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
 
@@ -973,8 +974,6 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
     unit->amount -= amount;
     unit->amount = max(unit->amount, 0);
     
-    logDebug("goldmine: %d", unit->amount);
-
     if (unit->amount == 0)
     {
         if (!isCollapsing(goldmine) && !isGoingToCollapse(goldmine))

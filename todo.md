@@ -11,6 +11,9 @@ List of thing to do in no particular order
   * Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.
   * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
   * Black pixels in little tree and gold icons.
+  * Black pixels in the "% COMPLETE" text.
+  * If a building is damaged then it can't start a train of a unit because it can't have the two states running at the same time.
+  * Changing global speed doesn't change ongoing trainings.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -36,6 +39,7 @@ List of thing to do in no particular order
   * ~~Update minimap with chopped trees.~~
   * Remove global __log__ and move it to WarContext.
   * Make so that entities can have multiple sprites.
+  * Make a `setUITextFormat` method that takes a format with arguments `printf` style.
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
@@ -60,7 +64,8 @@ List of thing to do in no particular order
   * ~~Change the behavior of chopping trees when multiple units are chopping the same tree. With each hack of the axe the tree should loose wood, until it ran out of it. Each unit go back to the townhall when has max amount of wood or there is no more trees to chop.~~
   * ~~If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better, and make the necessary changes.~~
     * ~~The solution implemented was that tree islands are forests, and in editing, just determine the tree tiles for each forest, because the edition a less used and slower funcionality and it doesn't matter too much if every tree is checked in each operation.~~
-  * Add functionality of building units.
+  * > Add functionality of training units.
+  * > Add functionality of building upgrades.
   * > Add functinality of building buildings.
 
 * Animations/actions

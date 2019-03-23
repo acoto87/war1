@@ -10,7 +10,12 @@ WarState* createBuildingState(WarContext* context, WarEntity* entity, WarEntity*
 
 void enterBuildingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
+
+    vec2 unitSize = getUnitSize(entity);
+    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
 
     unit->building = true;
     unit->buildPercent = 0;
@@ -18,7 +23,12 @@ void enterBuildingState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveBuildingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
+
+    vec2 unitSize = getUnitSize(entity);
+    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
 }
@@ -44,17 +54,17 @@ void updateBuildingState(WarContext* context, WarEntity* entity, WarState* state
     // if the building is finished...
     if (state->building.buildTime >= state->building.totalBuildTime)
     {
-        unit->buildPercent = 100;
+        unit->buildPercent = 1;
 
         if (state->building.entityToBuild)
         {
             // ...add the entity to the map
-            WarEntityListAdd(&map->entities, (WarEntity*)state->building.entityToBuild);
+            WarEntityListAdd(&map->entities, state->building.entityToBuild);
 
             // ...find an empty position to put it
             vec2 position = getUnitCenterPosition(entity, true);
             vec2 spawnPosition = findEmptyPosition(map->finder, position);
-            setUnitCenterPosition(entity, spawnPosition, true);
+            setUnitCenterPosition(state->building.entityToBuild, spawnPosition, true);
 
             // assign null to the field because freeBuildingState will try to free it
             state->building.entityToBuild = NULL;
