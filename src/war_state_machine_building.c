@@ -1,7 +1,17 @@
-WarState* createBuildingState(WarContext* context, WarEntity* entity, WarEntity* entityToBuild, f32 buildTime)
+WarState* createBuildingUnitState(WarContext* context, WarEntity* entity, WarEntity* entityToBuild, f32 buildTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_BUILDING);
     state->building.entityToBuild = entityToBuild;
+    state->building.buildTime = 0;
+    state->building.totalBuildTime = buildTime;
+    state->building.cancelled = false;
+    return state;
+}
+
+WarState* createBuildingUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
+{
+    WarState* state = createState(context, entity, WAR_STATE_BUILDING);
+    state->building.upgradeToBuild = upgradeToBuild;
     state->building.buildTime = 0;
     state->building.totalBuildTime = buildTime;
     state->building.cancelled = false;
@@ -36,6 +46,7 @@ void leaveBuildingState(WarContext* context, WarEntity* entity, WarState* state)
 void updateBuildingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = &entity->unit;
 
     if (state->building.cancelled)
@@ -68,6 +79,11 @@ void updateBuildingState(WarContext* context, WarEntity* entity, WarState* state
 
             // assign null to the field because freeBuildingState will try to free it
             state->building.entityToBuild = NULL;
+        }
+        else
+        {
+            increaseUpgradeLevel(player, state->building.upgradeToBuild);
+            assert(checkUpgradeLevel(player, state->building.upgradeToBuild));
         }
 
         if (!changeStateNextState(context, entity, state))

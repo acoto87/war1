@@ -201,7 +201,7 @@ void _chopTree(WarContext* context, WarEntity* forest, WarTree* tree)
 
     WarMap* map = context->map;
 
-    WarTreesData data = getTreesData(WAR_TREE_CHOPPED);
+    WarTreeData data = getTreeData(WAR_TREE_CHOPPED);
     s32 choppedTileIndex = map->tilesetType == MAP_TILESET_FOREST ? data.tileIndexForest : data.tileIndexSwamp;
 
     WarTree choppedTree = *tree;

@@ -40,6 +40,8 @@ List of thing to do in no particular order
   * Remove global __log__ and move it to WarContext.
   * Make so that entities can have multiple sprites.
   * Make a `setUITextFormat` method that takes a format with arguments `printf` style.
+  * Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
+  * Rename `WarCommandTooltip` to something like `WarCommandBaseData`.
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
@@ -65,8 +67,13 @@ List of thing to do in no particular order
   * ~~If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better, and make the necessary changes.~~
     * ~~The solution implemented was that tree islands are forests, and in editing, just determine the tree tiles for each forest, because the edition a less used and slower funcionality and it doesn't matter too much if every tree is checked in each operation.~~
   * > Add functionality of training units.
+    * Make so that train units withdraw gold and lumber.
+    * Handle the case when there is no sufficient gold or lumber (put a message in the status bar).
   * > Add functionality of building upgrades.
-  * > Add functinality of building buildings.
+    * Fix upgrade build times
+    * Make so that build upgrades withdraw gold and lumber.
+    * Handle the case when there is no sufficient gold or lumber (put a message in the status bar).
+  * Add functionality of building buildings.
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~

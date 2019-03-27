@@ -22,7 +22,8 @@ WarState* createMiningState(WarContext* context, WarEntity* entity, WarEntityId 
 WarState* createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 position);
 WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position);
 WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId);
-WarState* createBuildingState(WarContext* context, WarEntity* entity, WarEntity* unitToBuild, f32 buildTime);
+WarState* createBuildingUnitState(WarContext* context, WarEntity* entity, WarEntity* entityToBuild, f32 buildTime);
+WarState* createBuildingUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime);
 
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
 bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* state);
@@ -37,7 +38,6 @@ WarState* getNextState(WarEntity* entity, WarStateType type);
 #define getFollowState(entity) getState(entity, WAR_STATE_FOLLOW)
 #define getAttackState(entity) getState(entity, WAR_STATE_ATTACK)
 #define getDeathState(entity) getState(entity, WAR_STATE_DEATH)
-#define getDamagedState(entity) getState(entity, WAR_STATE_DAMAGED)
 #define getCollapseState(entity) getState(entity, WAR_STATE_COLLAPSE)
 #define getGatherGoldState(entity) getState(entity, WAR_STATE_GOLD)
 #define getMiningState(entity) getState(entity, WAR_STATE_MINING)
@@ -56,7 +56,6 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isFollowing(entity) hasState(entity, WAR_STATE_FOLLOW)
 #define isAttacking(entity) hasState(entity, WAR_STATE_ATTACK)
 #define isDeath(entity) hasState(entity, WAR_STATE_DEATH)
-#define isDamaged(entity) hasState(entity, WAR_STATE_DAMAGED)
 #define isCollapsing(entity) hasState(entity, WAR_STATE_COLLAPSE)
 #define isGatheringGold(entity) hasState(entity, WAR_STATE_GOLD)
 #define isMining(entity) hasState(entity, WAR_STATE_MINING)
@@ -71,7 +70,6 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGoingToFollow(entity) hasNextState(entity, WAR_STATE_FOLLOW)
 #define isGoingToAttack(entity) hasNextState(entity, WAR_STATE_ATTACK)
 #define isGoingToDie(entity) hasNextState(entity, WAR_STATE_DEATH)
-#define isGoingToBeDamaged(entity) hasNextState(entity, WAR_STATE_DAMAGED)
 #define isGoingToCollapse(entity) hasNextState(entity, WAR_STATE_COLLAPSE)
 #define isGoingToGatherGold(entity) hasNextState(entity, WAR_STATE_GOLD)
 #define isGoingToMine(entity) hasNextState(entity, WAR_STATE_MINING)

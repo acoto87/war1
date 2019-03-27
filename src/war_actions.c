@@ -651,7 +651,7 @@ void addUnitActions(WarEntity* entity)
             break;
         }
 
-        case WAR_UNIT_FIREELEMENTAL:
+        case WAR_UNIT_FIRE_ELEMENTAL:
         {
             walkSpeed = 5;
             attackSound = WAR_ACTION_STEP_SOUND_FIREBALL;
@@ -817,7 +817,7 @@ void addUnitActions(WarEntity* entity)
         case WAR_UNIT_TOWNHALL_ORCS:
         case WAR_UNIT_LUMBERMILL_HUMANS:
         case WAR_UNIT_LUMBERMILL_ORCS:
-        case WAR_UNIT_STABLES:
+        case WAR_UNIT_STABLE:
         case WAR_UNIT_KENNEL:
         case WAR_UNIT_BLACKSMITH_HUMANS:
         case WAR_UNIT_BLACKSMITH_ORCS:

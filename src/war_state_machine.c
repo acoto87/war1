@@ -11,7 +11,6 @@ WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
     { WAR_STATE_CHOPPING, enterChoppingState,   leaveChoppingState,   updateChoppingState,   freeChoppingState   },
     { WAR_STATE_DELIVER,  enterDeliverState,    leaveDeliverState,    updateDeliverState,    freeDeliverState    },
     { WAR_STATE_DEATH,    enterDeathState,      leaveDeathState,      updateDeathState,      freeDeathState      },
-    { WAR_STATE_DAMAGED,  enterDamagedState,    leaveDamagedState,    updateDamagedState,    freeDamagedState    },
     { WAR_STATE_COLLAPSE, enterCollapseState,   leaveCollapseState,   updateCollapseState,   freeCollapseState   },
     { WAR_STATE_BUILDING, enterBuildingState,   leaveBuildingState,   updateBuildingState,   freeBuildingState   },
     { WAR_STATE_WAIT,     enterWaitState,       leaveWaitState,       updateWaitState,       freeWaitState       },

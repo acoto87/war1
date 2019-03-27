@@ -471,7 +471,7 @@ void _renderRoad(WarContext* context, WarEntity* entity)
         {
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRoadsData roadsData = getRoadsData(pieces->items[i].type);
+            WarRoadData roadsData = getRoadData(pieces->items[i].type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
                 ? roadsData.tileIndexForest : roadsData.tileIndexSwamp;
@@ -521,7 +521,7 @@ void _renderWall(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarWallsData wallsData = getWallsData(piece->type);
+            WarWallData wallsData = getWallData(piece->type);
 
             s32 tileIndex = 0;
 
@@ -589,7 +589,7 @@ void _renderRuin(WarContext* context, WarEntity* entity)
                 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRuinsData ruinsData = getRuinsData(piece->type);
+            WarRuinData ruinsData = getRuinData(piece->type);
             
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
                 ? ruinsData.tileIndexForest : ruinsData.tileIndexSwamp;
@@ -634,7 +634,7 @@ void _renderForest(WarContext* context, WarEntity* entity)
             if (tree->type == WAR_TREE_NONE)
                 continue;
 
-            WarTreesData data = getTreesData(tree->type);
+            WarTreeData data = getTreeData(tree->type);
 
             // the position in the world of the wood tile
             s32 x = tree->tilex;
@@ -953,10 +953,21 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
     }
     else if (isBuildingUnit(entity))
     {
-        if (!isDamaged(entity))
+        s32 hpPercent = percentabi(unit->hp, unit->maxhp);
+        if(hpPercent <= 33)
         {
-            WarState* damagedState = createDamagedState(context, entity);
-            changeNextState(context, entity, damagedState, true, true);
+            if (!containsAnimation(context, entity, "hugeDamage"))
+            {
+                removeAnimation(context, entity, "littleDamage");
+                createDamageAnimation(context, entity, "hugeDamage", 2);
+            }
+        }
+        else if(hpPercent <= 66)
+        {
+            if (!containsAnimation(context, entity, "littleDamage"))
+            {
+                createDamageAnimation(context, entity, "littleDamage", 1);
+            }
         }
     }
 }

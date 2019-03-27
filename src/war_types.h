@@ -197,7 +197,7 @@ typedef enum
     WAR_UNIT_OGRE,
     WAR_UNIT_SPIDER,
     WAR_UNIT_SLIME,
-    WAR_UNIT_FIREELEMENTAL,
+    WAR_UNIT_FIRE_ELEMENTAL,
     WAR_UNIT_SCORPION,
     WAR_UNIT_BRIGAND,
     WAR_UNIT_THE_DEAD,
@@ -221,7 +221,7 @@ typedef enum
     WAR_UNIT_TOWNHALL_ORCS,
     WAR_UNIT_LUMBERMILL_HUMANS,
     WAR_UNIT_LUMBERMILL_ORCS,
-    WAR_UNIT_STABLES,
+    WAR_UNIT_STABLE,
     WAR_UNIT_KENNEL,
     WAR_UNIT_BLACKSMITH_HUMANS,
     WAR_UNIT_BLACKSMITH_ORCS,
@@ -562,19 +562,13 @@ typedef enum
     WAR_COMMAND_SPELL_UNHOLY_ARMOR,
 
     // summons
-    WAR_COMMAND_SUMMON_OGRE, // 31
-    WAR_COMMAND_SUMMON_SPIDER,
-    WAR_COMMAND_SUMMON_SLIME,
-    WAR_COMMAND_SUMMON_FIREELEMENTAL,
+    WAR_COMMAND_SUMMON_SPIDER, // 31
     WAR_COMMAND_SUMMON_SCORPION,
-    WAR_COMMAND_SUMMON_BRIGAND,
-    WAR_COMMAND_SUMMON_THE_DEAD,
-    WAR_COMMAND_SUMMON_SKELETON,
     WAR_COMMAND_SUMMON_DAEMON,
     WAR_COMMAND_SUMMON_WATER_ELEMENTAL,
 
     // build commands
-    WAR_COMMAND_BUILD_FARM_HUMANS, // 41
+    WAR_COMMAND_BUILD_FARM_HUMANS, // 35
     WAR_COMMAND_BUILD_FARM_ORCS,
     WAR_COMMAND_BUILD_BARRACKS_HUMANS,
     WAR_COMMAND_BUILD_BARRACKS_ORCS,
@@ -590,13 +584,11 @@ typedef enum
     WAR_COMMAND_BUILD_KENNEL,
     WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,
     WAR_COMMAND_BUILD_BLACKSMITH_ORCS,
-    WAR_COMMAND_BUILD_STORMWIND,
-    WAR_COMMAND_BUILD_BLACKROCK,
     WAR_COMMAND_BUILD_ROAD,
     WAR_COMMAND_BUILD_WALL,
 
     // upgrades
-    WAR_COMMAND_UPGRADE_SWORDS, // 61
+    WAR_COMMAND_UPGRADE_SWORDS, // 53
     WAR_COMMAND_UPGRADE_AXES,
     WAR_COMMAND_UPGRADE_SHIELD_HUMANS,
     WAR_COMMAND_UPGRADE_SHIELD_ORCS,
@@ -618,7 +610,7 @@ typedef enum
     WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,
 
     // cancel
-    WAR_COMMAND_CANCEL
+    WAR_COMMAND_CANCEL // 73
 } WarUnitCommandType;
 
 typedef enum
@@ -936,7 +928,6 @@ typedef enum
     WAR_STATE_CHOPPING,
     WAR_STATE_DELIVER,
     WAR_STATE_DEATH,
-    WAR_STATE_DAMAGED,
     WAR_STATE_COLLAPSE,
     WAR_STATE_BUILDING,
     WAR_STATE_WAIT,
@@ -1027,11 +1018,9 @@ typedef struct _WarState
         struct
         {
             struct _WarEntity* entityToBuild;
-            // NOTE: another type of building unit are the upgrades, represent it
-            // here with another field.
-            // WarUpgrade* upgradeToBuild;
+            WarUpgradeType upgradeToBuild;
 
-            // many time has passed since start building (in seconds)
+            // how much time has passed since start building (in seconds)
             f32 buildTime;
             // total time to build (in seconds)
             f32 totalBuildTime;
@@ -1238,7 +1227,6 @@ typedef struct
     WarRace race;
     s32 gold;
     s32 wood;
-    s32 units;
     bool features[MAX_FEATURES_COUNT];
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
 } WarPlayerInfo;
@@ -1246,14 +1234,21 @@ typedef struct
 #define isHuman(player) ((player)->race == WAR_RACE_HUMANS)
 #define isOrc(player) ((player)->race == WAR_RACE_ORCS)
 #define isNeutral(player) ((player)->race == WAR_RACE_NEUTRAL)
+
 #define isFeatureAllowed(player, feature) \
-    ((player)->features[feature])
+    ((player)->features[(feature)])
+
 #define hasAnyUpgrade(player, upgrade) \
-    ((player)->upgrades[upgrade].allowed > 0 && \
-     (player)->upgrades[upgrade].level > 0)
+    ((player)->upgrades[(upgrade)].allowed > 0 && \
+     (player)->upgrades[(upgrade)].level > 0)
 #define hasRemainingUpgrade(player, upgrade) \
-    ((player)->upgrades[upgrade].level < (player)->upgrades[upgrade].allowed)
-#define getUpgradeLevel(player, upgrade) ((player)->upgrades[upgrade].level)
+    ((player)->upgrades[(upgrade)].level < (player)->upgrades[(upgrade)].allowed)
+#define getUpgradeLevel(player, upgrade) \
+    ((player)->upgrades[(upgrade)].level)
+#define increaseUpgradeLevel(player, upgrade) \
+    ((player)->upgrades[(upgrade)].level++)
+#define checkUpgradeLevel(player, upgrade) \
+    ((player)->upgrades[(upgrade)].level <= (player)->upgrades[(upgrade)].allowed)
 
 typedef struct
 {
