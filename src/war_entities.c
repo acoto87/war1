@@ -63,7 +63,7 @@ void addUnitComponent(WarContext* context,
     entity->unit.player = player;
     entity->unit.resourceKind = resourceKind;
     entity->unit.amount = amount;
-    entity->unit.level = 0;
+    entity->unit.speed = 0;
     entity->unit.hp = 0;
     entity->unit.maxhp = 0;
     entity->unit.armor = 0;
@@ -926,6 +926,131 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
     }
 }
 
+void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade)
+{
+    WarMap* map = context->map;
+
+    assert(hasRemainingUpgrade(player, upgrade));
+
+    player->upgrades[upgrade].level++;
+
+    switch (upgrade)
+    {
+        case WAR_UPGRADE_ARROWS:
+        // case WAR_UPGRADE_SPEARS:
+        {
+            for (s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity* entity = map->entities.items[i];
+                if (entity && isUnit(entity) && entity->unit.player == player->index)
+                {
+                    if (entity->unit.type == WAR_UNIT_ARCHER || 
+                        entity->unit.type == WAR_UNIT_SPEARMAN)
+                    {
+                        entity->unit.minDamage += 2;
+                    }
+                }
+            }
+
+            break;
+        }
+
+        case WAR_UPGRADE_SWORDS:
+        // case WAR_UPGRADE_AXES:
+        {
+            for (s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity* entity = map->entities.items[i];
+                if (entity && isUnit(entity) && entity->unit.player == player->index)
+                {
+                    if (entity->unit.type == WAR_UNIT_FOOTMAN || 
+                        entity->unit.type == WAR_UNIT_GRUNT ||
+                        entity->unit.type == WAR_UNIT_KNIGHT ||
+                        entity->unit.type == WAR_UNIT_RAIDER)
+                    {
+                        if (player->upgrades[upgrade].level == 1)
+                        {
+                            entity->unit.minDamage += 1;
+                            entity->unit.rndDamage += 1;
+                        }
+                        else if (player->upgrades[upgrade].level == 2)
+                        {
+                            entity->unit.minDamage += 2;
+                            entity->unit.rndDamage += 2;
+                        }
+                    }
+                }
+            }
+
+            break;
+        }
+        
+        case WAR_UPGRADE_HORSES:
+        // case WAR_UPGRADE_WOLVES:
+        {
+            for (s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity* entity = map->entities.items[i];
+                if (entity && isUnit(entity) && entity->unit.player == player->index)
+                {
+                    if (isDudeUnit(entity))
+                    {
+                        entity->unit.speed++;
+                    }
+                }
+            }
+
+            break;
+        }
+        
+        case WAR_UPGRADE_SHIELD:
+        {
+            for (s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity* entity = map->entities.items[i];
+                if (entity && isUnit(entity) && entity->unit.player == player->index)
+                {
+                    if (player->upgrades[upgrade].level == 1)
+                    {
+                        entity->unit.armor += 1;
+                    }
+                    else if (player->upgrades[upgrade].level == 2)
+                    {
+                        entity->unit.armor += 2;
+                    }
+                }
+            }
+
+            break;
+        }
+
+        default:
+        {
+            logInfo("This upgrade type %d doesn't increase any value of the units\n");
+            break;
+        }
+    }
+}
+
+bool withdrawFromPlayer(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+{
+    if (player->gold < gold)
+    {
+        setFlashStatus(context, 1.5f, "NOT ENOUGH GOLD... MINE MORE GOLD");
+        return false;
+    }
+
+    if (player->wood < wood)
+    {
+        setFlashStatus(context, 1.5f, "NOT ENOUGH LUMBER... CHOP MORE TREES");
+        return false;
+    }
+
+    player->gold -= gold;
+    player->wood -= wood;
+    return true;
+}
+
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
 {
     assert(isUnit(entity));
@@ -970,6 +1095,16 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
             }
         }
     }
+}
+
+void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage)
+{
+    assert(isWall(entity));
+
+    // Minimal damage + [Random damage - Enemy's Armor]
+    s32 damage = getTotalDamage(minDamage, rndDamage, 0);
+    piece->hp -= damage;
+    piece->hp = max(piece->hp, 0);
 }
 
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)

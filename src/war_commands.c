@@ -2,6 +2,7 @@
 void trainUnit(WarContext* context, WarUnitType unitToTrain, WarUnitType buildingUnit)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
     
     assert(map->selectedEntities.count == 1);
 
@@ -11,9 +12,12 @@ void trainUnit(WarContext* context, WarUnitType unitToTrain, WarUnitType buildin
     assert(selectedEntity->unit.type == buildingUnit);
 
     WarUnitStats stats = getUnitStats(unitToTrain);
-    WarEntity* peasant = createUnit(context, unitToTrain, 0, 0, 0, WAR_RESOURCE_NONE, 0, true);
-    WarState* buildingState = createBuildingUnitState(context, selectedEntity, peasant, getScaledTime(context, stats.buildTime));
-    changeNextState(context, selectedEntity, buildingState, true, true);
+    if (withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost))
+    {
+        WarEntity* peasant = createUnit(context, unitToTrain, 0, 0, 0, WAR_RESOURCE_NONE, 0, true);
+        WarState* buildingState = createBuildingUnitState(context, selectedEntity, peasant, getScaledTime(context, stats.buildTime));
+        changeNextState(context, selectedEntity, buildingState, true, true);
+    }
 }
 
 void trainFootman(WarContext* context, WarEntity* entity)
@@ -90,6 +94,7 @@ void trainNecrolyte(WarContext* context, WarEntity* entity)
 void upgradeUpgrade(WarContext* context, WarUpgradeType upgradeToBuild, WarUnitType buildingUnit)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
     
     assert(map->selectedEntities.count == 1);
 
@@ -98,9 +103,15 @@ void upgradeUpgrade(WarContext* context, WarUpgradeType upgradeToBuild, WarUnitT
     assert(selectedEntity && isBuildingUnit(selectedEntity));
     assert(selectedEntity->unit.type == buildingUnit);
 
+    assert(hasRemainingUpgrade(player, upgradeToBuild));
+
     WarUpgradeStats stats = getUpgradeStats(WAR_UPGRADE_SWORDS);
-    WarState* buildingState = createBuildingUpgradeState(context, selectedEntity, upgradeToBuild, getScaledTime(context, stats.buildTime));
-    changeNextState(context, selectedEntity, buildingState, true, true);
+    s32 level = getUpgradeLevel(player, upgradeToBuild);
+    if (withdrawFromPlayer(context, player, stats.goldCost[level], 0))
+    {
+        WarState* buildingState = createBuildingUpgradeState(context, selectedEntity, upgradeToBuild, getScaledTime(context, stats.buildTime));
+        changeNextState(context, selectedEntity, buildingState, true, true);
+    }
 }
 
 void upgradeSwords(WarContext* context, WarEntity* entity)

@@ -618,25 +618,25 @@ typedef struct
 
 const WarUpgradeStats upgradeStats[] =
 {
-    { WAR_UPGRADE_ARROWS,           __bts(120), {  750, 1500 } },
-    { WAR_UPGRADE_SPEARS,           __bts(120), {  750, 1500 } },
-    { WAR_UPGRADE_SWORDS,           __bts(140), {  750, 1500 } },
-    { WAR_UPGRADE_AXES,             __bts(140), {  750, 1500 } },
-    { WAR_UPGRADE_HORSES,           __bts(140), {  750, 1500 } },
-    { WAR_UPGRADE_WOLVES,           __bts(140), {  750, 1500 } },
-    { WAR_UPGRADE_SCORPIONS,        __bts(140), {  750,    0 } },
-    { WAR_UPGRADE_SPIDERS,          __bts(140), {  750,    0 } },
-    { WAR_UPGRADE_RAIN_OF_FIRE,     __bts(140), { 1500,    0 } },
-    { WAR_UPGRADE_POISON_CLOUD,     __bts(140), { 1500,    0 } },
-    { WAR_UPGRADE_WATER_ELEMENTAL,  __bts(140), { 3000,    0 } },
-    { WAR_UPGRADE_DAEMON,           __bts(140), { 3000,    0 } },
-    { WAR_UPGRADE_HEALING,          __bts(120), {  750,    0 } },
-    { WAR_UPGRADE_RAISE_DEAD,       __bts(120), {  750,    0 } },
-    { WAR_UPGRADE_FAR_SIGHT,        __bts(120), { 1500,    0 } },
-    { WAR_UPGRADE_DARK_VISION,      __bts(120), { 1500,    0 } },
-    { WAR_UPGRADE_INVISIBILITY,     __bts(120), { 3000,    0 } },
-    { WAR_UPGRADE_UNHOLY_ARMOR,     __bts(120), { 3000,    0 } },
-    { WAR_UPGRADE_SHIELD,           __bts(120), {  750, 1500 } },
+    { WAR_UPGRADE_ARROWS,           __bts(1600), {  750, 1500 } },
+    { WAR_UPGRADE_SPEARS,           __bts(1600), {  750, 1500 } },
+    { WAR_UPGRADE_SWORDS,           __bts(1750), {  750, 1500 } },
+    { WAR_UPGRADE_AXES,             __bts(1750), {  750, 1500 } },
+    { WAR_UPGRADE_HORSES,           __bts(1750), {  750, 1500 } },
+    { WAR_UPGRADE_WOLVES,           __bts(1750), {  750, 1500 } },
+    { WAR_UPGRADE_SCORPIONS,        __bts(1750), {  750,    0 } },
+    { WAR_UPGRADE_SPIDERS,          __bts(1750), {  750,    0 } },
+    { WAR_UPGRADE_RAIN_OF_FIRE,     __bts(1750), { 1500,    0 } },
+    { WAR_UPGRADE_POISON_CLOUD,     __bts(1750), { 1500,    0 } },
+    { WAR_UPGRADE_WATER_ELEMENTAL,  __bts(1750), { 3000,    0 } },
+    { WAR_UPGRADE_DAEMON,           __bts(1750), { 3000,    0 } },
+    { WAR_UPGRADE_HEALING,          __bts(1600), {  750,    0 } },
+    { WAR_UPGRADE_RAISE_DEAD,       __bts(1600), {  750,    0 } },
+    { WAR_UPGRADE_FAR_SIGHT,        __bts(1600), { 1500,    0 } },
+    { WAR_UPGRADE_DARK_VISION,      __bts(1600), { 1500,    0 } },
+    { WAR_UPGRADE_INVISIBILITY,     __bts(1600), { 3000,    0 } },
+    { WAR_UPGRADE_UNHOLY_ARMOR,     __bts(1600), { 3000,    0 } },
+    { WAR_UPGRADE_SHIELD,           __bts(1600), {  750, 1500 } },
 };
 
 typedef struct
@@ -1242,10 +1242,10 @@ f32 getUnitActionScale(WarEntity* entity)
     // the lower the less time is the transition between the frames 
     // thus the animation goes faster.
     //
-    // level 0 -> 1.0f
-    // level 1 -> 0.9f
-    // level 2 -> 0.8f
-    return 1 - entity->unit.level * 0.1f;
+    // speed 0 -> 1.0f
+    // speed 1 -> 0.9f
+    // speed 2 -> 0.8f
+    return 1 - entity->unit.speed * 0.1f;
 }
 
 vec2 unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)

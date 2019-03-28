@@ -82,7 +82,8 @@ void updateBuildingState(WarContext* context, WarEntity* entity, WarState* state
         }
         else
         {
-            increaseUpgradeLevel(player, state->building.upgradeToBuild);
+            // increase the level of the upgrade
+            increaseUpgradeLevel(context, player, state->building.upgradeToBuild);
             assert(checkUpgradeLevel(player, state->building.upgradeToBuild));
         }
 

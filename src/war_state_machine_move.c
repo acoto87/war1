@@ -137,7 +137,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 direction = vec2Subv(target, position);
     f32 directionLength = vec2Length(direction);
 
-    f32 speed = getScaledSpeed(context, stats.speeds[entity->unit.level]);
+    f32 speed = getScaledSpeed(context, stats.speeds[entity->unit.speed]);
     vec2 step = vec2Mulf(vec2Normalize(direction), speed * context->deltaTime);
     f32 stepLength = vec2Length(step);
 

@@ -1034,12 +1034,25 @@ void updateButtons(WarContext* context)
     }
 }
 
-void updateStatusText(WarContext* context)
+void updateStatus(WarContext* context)
 {
-    setStatusText(context, NULL, 0, 0);
-
-
     WarMap* map = context->map;
+    WarFlashStatus* flashStatus = &map->flashStatus;
+
+    setStatus(context, NULL, 0, 0);
+
+    if (flashStatus->enabled)
+    {
+        if (flashStatus->startTime + flashStatus->duration >= context->time)
+        {
+            setStatus(context, flashStatus->text, 0, 0);
+            return;
+        }
+        
+        // if the time for the flash status is over, just disabled it
+        flashStatus->enabled = false;
+    }
+
     for(s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
@@ -1047,7 +1060,7 @@ void updateStatusText(WarContext* context)
         {
             if (entity->button.hot)
             {
-                setStatusText(context, entity->button.tooltip, entity->button.gold, entity->button.wood);
+                setStatus(context, entity->button.tooltip, entity->button.gold, entity->button.wood);
                 break;
             }
         }
@@ -1075,7 +1088,7 @@ void updateMap(WarContext* context)
     updateSelectedUnitsInfo(context);
     updateCommands(context);
     updateButtons(context);
-    updateStatusText(context);
+    updateStatus(context);
 
     updateTreesEdit(context);
     updateRoadsEdit(context);

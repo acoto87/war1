@@ -83,8 +83,10 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             }
             else
             {
-                // every unit has a 20 percent chance to miss
-                if (chance(80))
+                // every unit has a 20 percent chance to miss (except catapults)
+                if (unit->type == WAR_UNIT_CATAPULT_HUMANS ||
+                    unit->type == WAR_UNIT_CATAPULT_ORCS || 
+                    chance(80))
                 {
                     takeDamage(context, targetEntity, unit->minDamage, unit->rndDamage);
                 }

@@ -67,13 +67,20 @@ List of thing to do in no particular order
   * ~~If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better, and make the necessary changes.~~
     * ~~The solution implemented was that tree islands are forests, and in editing, just determine the tree tiles for each forest, because the edition a less used and slower funcionality and it doesn't matter too much if every tree is checked in each operation.~~
   * > Add functionality of training units.
-    * Make so that train units withdraw gold and lumber.
-    * Handle the case when there is no sufficient gold or lumber (put a message in the status bar).
+    * ~~Fix upgrade build times.~~
+    * ~~Make so that train units withdraw gold and lumber.~~
+    * ~~Handle the case when there is no sufficient gold or lumber (put a message in the status bar).~~
+    * Add keyboard shortcuts to train units.
   * > Add functionality of building upgrades.
-    * Fix upgrade build times
+    * ~~Fix upgrade build times.~~
+    * ~~Make so that build upgrades withdraw gold and lumber.~~
+    * ~~Handle the case when there is no sufficient gold or lumber (put a message in the status bar).~~
+    * ~~Make so that the upgrades increase the corresponding values for the damage, armor and so.~~
+    * Add keyboard shortcuts to build upgrades.
+  * Add functionality of building buildings.
     * Make so that build upgrades withdraw gold and lumber.
     * Handle the case when there is no sufficient gold or lumber (put a message in the status bar).
-  * Add functionality of building buildings.
+    * Add keyboard shortcuts to train units.
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~

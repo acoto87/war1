@@ -1080,8 +1080,8 @@ typedef struct
     s32 rndDamage;
     s32 decay;
 
-    // indicate the level of the unit
-    s32 level;
+    // index of the array of speeds of the unit
+    s32 speed;
 
     // the current and action list for the unit
     s32 actionIndex;
@@ -1245,10 +1245,16 @@ typedef struct
     ((player)->upgrades[(upgrade)].level < (player)->upgrades[(upgrade)].allowed)
 #define getUpgradeLevel(player, upgrade) \
     ((player)->upgrades[(upgrade)].level)
-#define increaseUpgradeLevel(player, upgrade) \
-    ((player)->upgrades[(upgrade)].level++)
 #define checkUpgradeLevel(player, upgrade) \
     ((player)->upgrades[(upgrade)].level <= (player)->upgrades[(upgrade)].allowed)
+
+typedef struct
+{
+    bool enabled;
+    f32 startTime;
+    f32 duration;
+    char text[100];
+} WarFlashStatus;
 
 typedef struct
 {
@@ -1285,6 +1291,8 @@ typedef struct
 
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
     WarSpriteAnimationList animations;
+
+    WarFlashStatus flashStatus;
 } WarMap;
 
 typedef enum

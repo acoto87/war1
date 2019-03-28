@@ -154,7 +154,7 @@ void updateWoodText(WarContext* context)
     setUIText(txtWood, buffer);
 }
 
-void setStatusText(WarContext* context, char* text, s32 gold, s32 wood)
+void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
 {
     WarEntity* txtStatus = findUIEntity(context, "txtStatus");
     assert(txtStatus);
@@ -191,6 +191,20 @@ void setStatusText(WarContext* context, char* text, s32 gold, s32 wood)
         sprintf(buffer, "%d", gold);
         setUIText(txtStatusGold, buffer);
     }
+}
+
+void setFlashStatus(WarContext* context, f32 duration, char* text)
+{
+    WarMap* map = context->map;
+    WarFlashStatus* flashStatus = &map->flashStatus;
+
+    assert(duration >= 0);
+    assert(text);
+
+    flashStatus->enabled = true;
+    flashStatus->startTime = context->time;
+    flashStatus->duration = duration;
+    strcpy(flashStatus->text, text);
 }
 
 void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)

@@ -121,13 +121,3 @@ WarEntity* createWall(WarContext* context)
 
     return entity;
 }
-
-void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage)
-{
-    assert(isWall(entity));
-
-    // Minimal damage + [Random damage - Enemy's Armor]
-    s32 damage = getTotalDamage(minDamage, rndDamage, 0);
-    piece->hp -= damage;
-    piece->hp = max(piece->hp, 0);
-}
