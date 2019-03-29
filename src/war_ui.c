@@ -20,6 +20,18 @@ void setUIText(WarEntity* uiText, char* text)
     }
 }
 
+void setUITextFormat(WarEntity* uiText, char* format, ...)
+{
+    char buffer[256];
+
+    va_list args;
+    va_start (args, format);
+    vsprintf (buffer, format, args);
+    va_end (args);
+
+    setUIText(uiText, buffer);
+}
+
 void setUIImage(WarEntity* uiImage, s32 frameIndex)
 {
     uiImage->sprite.frameIndex = frameIndex;
@@ -136,9 +148,7 @@ void updateGoldText(WarContext* context)
     WarEntity* txtGold = findUIEntity(context, "txtGold");
     assert(txtGold);
 
-    char buffer[20];
-    sprintf(buffer, "GOLD: %d", map->players[0].gold);
-    setUIText(txtGold, buffer);
+    setUITextFormat(txtGold, "GOLD: %d", map->players[0].gold);
 }
 
 void updateWoodText(WarContext* context)
@@ -149,9 +159,7 @@ void updateWoodText(WarContext* context)
     WarEntity* txtWood = findUIEntity(context, "txtWood");
     assert(txtWood);
 
-    char buffer[20];
-    sprintf(buffer, "LUMBER: %d", map->players[0].wood);
-    setUIText(txtWood, buffer);
+    setUITextFormat(txtWood, "LUMBER: %d", map->players[0].wood);
 }
 
 void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
@@ -184,12 +192,8 @@ void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
     {
         imgStatusLumber->sprite.enabled = true;
         imgStatusGold->sprite.enabled = true;
-
-        char buffer[6];
-        sprintf(buffer, "%d", wood);
-        setUIText(txtStatusWood, buffer);
-        sprintf(buffer, "%d", gold);
-        setUIText(txtStatusGold, buffer);
+        setUITextFormat(txtStatusWood, "%d", wood);
+        setUITextFormat(txtStatusGold, "%d", gold);
     }
 }
 

@@ -644,9 +644,9 @@ typedef struct
     WarUnitCommandType type;
     WarClickHandler clickHandler;
     char tooltip[100];
-} WarCommandTooltip;
+} WarCommandBaseData;
 
-const WarCommandTooltip commandTooltips[] = 
+const WarCommandBaseData commandBaseData[] = 
 {
     { WAR_COMMAND_NONE,                     NULL, ""                          },
 
@@ -934,15 +934,15 @@ WarUpgradeStats getUpgradeStats(WarUpgradeType type)
     return upgradeStats[index];
 }
 
-WarCommandTooltip getCommandTooltip(WarUnitCommandType type)
+WarCommandBaseData getCommandBaseData(WarUnitCommandType type)
 {
     s32 index = 0;
-    s32 length = arrayLength(commandTooltips);
-    while (index < length && commandTooltips[index].type != type)
+    s32 length = arrayLength(commandBaseData);
+    while (index < length && commandBaseData[index].type != type)
         index++;
 
     assert(index < length);
-    return commandTooltips[index];
+    return commandBaseData[index];
 }
 
 WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)

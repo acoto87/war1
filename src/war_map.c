@@ -911,13 +911,8 @@ void updateCommands(WarContext* context)
         s32 dudesCount = getPlayerDudesCount(context, 0);
 
         setUIText(commandTexts[0], "FOOD USAGE:");
-
-        char buffer[10];
-        sprintf(buffer, "GROWN %d", farmsCount * 4 + 1);
-        setUIText(commandTexts[1], buffer);
-        sprintf(buffer, " USED %d", dudesCount);
-        setUIText(commandTexts[2], buffer);
-
+        setUITextFormat(commandTexts[1], "GROWN %d", farmsCount * 4 + 1);
+        setUITextFormat(commandTexts[2], " USED %d", dudesCount);
         return;
     }
     
@@ -928,11 +923,7 @@ void updateCommands(WarContext* context)
         s32 gold = entity->unit.amount;
 
         setUIText(commandTexts[0], "GOLD:");
-
-        char buffer[10];
-        sprintf(buffer, "%d", gold);
-        setUIText(commandTexts[1], buffer);
-
+        setUITextFormat(commandTexts[1], "%d", gold);
         return;
     }
 

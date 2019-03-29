@@ -39,9 +39,9 @@ List of thing to do in no particular order
   * ~~Update minimap with chopped trees.~~
   * Remove global __log__ and move it to WarContext.
   * Make so that entities can have multiple sprites.
-  * Make a `setUITextFormat` method that takes a format with arguments `printf` style.
+  * ~~Make a `setUITextFormat` method that takes a format with arguments `printf` style.~~
   * Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
-  * Rename `WarCommandTooltip` to something like `WarCommandBaseData`.
+  * ~~Rename `WarCommandBaseData` to something like `WarCommandBaseData`.~~
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
@@ -71,6 +71,7 @@ List of thing to do in no particular order
     * ~~Make so that train units withdraw gold and lumber.~~
     * ~~Handle the case when there is no sufficient gold or lumber (put a message in the status bar).~~
     * Add keyboard shortcuts to train units.
+    * Handle the case when there is no sufficient farm food for the new training (put a message in the status bar).
   * > Add functionality of building upgrades.
     * ~~Fix upgrade build times.~~
     * ~~Make so that build upgrades withdraw gold and lumber.~~
@@ -78,7 +79,7 @@ List of thing to do in no particular order
     * ~~Make so that the upgrades increase the corresponding values for the damage, armor and so.~~
     * Add keyboard shortcuts to build upgrades.
   * Add functionality of building buildings.
-    * Make so that build upgrades withdraw gold and lumber.
+    * Make so that build buildings withdraw gold and lumber.
     * Handle the case when there is no sufficient gold or lumber (put a message in the status bar).
     * Add keyboard shortcuts to train units.
 

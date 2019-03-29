@@ -670,7 +670,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    WarCommandTooltip commandTooltip = getCommandTooltip(commandType);
+    WarCommandBaseData commandTooltip = getCommandBaseData(commandType);
 
     WarUnitCommandData data = (WarUnitCommandData){0};
     data.type = commandType;
