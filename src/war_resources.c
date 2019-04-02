@@ -151,15 +151,24 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     u16 height = readu16(rawResource.data, 2);
 
     u8 *pixels = (u8*)xmalloc(width * height * 4);
-    for (int i = 0; i < width * height; ++i)
+    for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
+
         pixels[i * 4 + 0] = readu8(paletteData, colorIndex * 3 + 0);
         pixels[i * 4 + 1] = readu8(paletteData, colorIndex * 3 + 1);
         pixels[i * 4 + 2] = readu8(paletteData, colorIndex * 3 + 2);
-        pixels[i * 4 + 3] = 255;
-    }
 
+        // assuming that colorIndex == 0 is the transparent color
+        if (pixels[i * 4 + 0] > 0 ||
+            pixels[i * 4 + 1] > 0 ||
+            pixels[i * 4 + 2] > 0 ||
+            colorIndex != 0)
+        {
+            pixels[i * 4 + 3] = 255;
+        }
+    }
+    
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_IMAGE;
     resource->imageData.width = width;
@@ -209,25 +218,26 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
                 u32 pixel = (x + y * frameWidth) * 4;
                 u32 colorIndex = rawResource.data[off++];
 
-                if (colorIndex == 96)
-                {
-                    // Shadow
-                    frame->data[pixel + 0] = 0;
-                    frame->data[pixel + 1] = 0;
-                    frame->data[pixel + 2] = 0;
-                    frame->data[pixel + 3] = 127;
-                    continue;
-                }
-
                 frame->data[pixel + 0] = readu8(paletteData, colorIndex * 3 + 0);
                 frame->data[pixel + 1] = readu8(paletteData, colorIndex * 3 + 1);
                 frame->data[pixel + 2] = readu8(paletteData, colorIndex * 3 + 2);
 
+                // assuming that colorIndex == 0 is the transparent color
                 if (frame->data[pixel + 0] > 0 ||
                     frame->data[pixel + 1] > 0 ||
-                    frame->data[pixel + 2] > 0)
+                    frame->data[pixel + 2] > 0 ||
+                    colorIndex != 0)
                 {
+                    // Make shadow not so dark
+                    //
+                    // Altough it seem that the original game has (0, 0, 0) as
+                    // the color for shadows
+                    //
+                    // if (colorIndex == 96)
+                    //    frame->data[pixel + 3] = 150;
+
                     frame->data[pixel + 3] = 255;
+                    
                 }
             }
         }

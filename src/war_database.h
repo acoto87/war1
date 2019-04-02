@@ -342,7 +342,7 @@ DatabaseEntry assets[] =
     { 407, DB_ENTRY_TYPE_IMAGE,             "lumber_1",                                     217,   0, 0 },
     { 408, DB_ENTRY_TYPE_IMAGE,             "gold_2",                                       191, 217, 0 },
     { 409, DB_ENTRY_TYPE_IMAGE,             "lumber_2",                                     217,   0, 0 },
-    { 410, DB_ENTRY_TYPE_IMAGE,             "percent_complete",                             217,   0, 0 },
+    { 410, DB_ENTRY_TYPE_IMAGE,             "percent_complete",                             191, 217, 0 },
     { 411, DB_ENTRY_TYPE_IMAGE,             "points_summary_humans",                        413,   0, 0 },
     { 412, DB_ENTRY_TYPE_IMAGE,             "points_summary_orcs",                          413,   0, 0 },
     { 415, DB_ENTRY_TYPE_IMAGE,             "victory_background",                           416,   0, 0 },

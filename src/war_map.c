@@ -639,7 +639,14 @@ void updateSelection(WarContext* context)
                     WarEntity* entity = map->entities.items[i];
                     if (entity && isUnit(entity) && entity->unit.enabled)
                     {
-                        // test here to avoid select corpses?
+                        // don't select dead entities or corpses
+                        if (isDead(entity) || 
+                            isGoingToDie(entity) || 
+                            entity->unit.type == WAR_UNIT_HUMAN_CORPSE || 
+                            entity->unit.type == WAR_UNIT_ORC_CORPSE)
+                        {
+                            continue;
+                        }
 
                         rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
 

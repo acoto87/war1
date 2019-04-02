@@ -55,7 +55,7 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isPatrolling(entity) hasState(entity, WAR_STATE_PATROL)
 #define isFollowing(entity) hasState(entity, WAR_STATE_FOLLOW)
 #define isAttacking(entity) hasState(entity, WAR_STATE_ATTACK)
-#define isDeath(entity) hasState(entity, WAR_STATE_DEATH)
+#define isDead(entity) hasState(entity, WAR_STATE_DEATH)
 #define isCollapsing(entity) hasState(entity, WAR_STATE_COLLAPSE)
 #define isGatheringGold(entity) hasState(entity, WAR_STATE_GOLD)
 #define isMining(entity) hasState(entity, WAR_STATE_MINING)

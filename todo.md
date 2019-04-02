@@ -5,14 +5,15 @@ List of thing to do in no particular order
 * Bugs
   * Check for memory leaks in the removing animations functionality.
   * Check why the changing of the global scale renders with the previous global scale after a change.
-  * Corpses can be selected, it shouldn't.
+  * ~~Corpses can be selected, it shouldn't be.~~
   * Corpses are rendered above units.
   * Damage animations are rendered below units.
   * Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.
   * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
-  * Black pixels in little tree and gold icons.
-  * Black pixels in the "% COMPLETE" text.
-  * If a building is damaged then it can't start a train of a unit because it can't have the two states running at the same time.
+  * ~~Black pixels in little tree and gold icons.~~
+  * ~~Black pixels in the "% COMPLETE" text.~~
+  * ~~If a building is damaged then it can't start a train of a unit because it can't have the two states running at the same time.~~
+    * ~~The Damaged state of buildings was removed, the damage animations are set in the takeDamage function now the building can build/train while is damaged.~~
   * Changing global speed doesn't change ongoing trainings.
 
 * General

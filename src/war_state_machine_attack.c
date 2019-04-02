@@ -75,7 +75,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             // if the target entity is dead or is collapsing (in case of buildings), go to idle
             // do this check before apply damage in case of multiple units attacking.
             // one of them could cause the unit to die, so the other should stop doing further damage.
-            if (isDeath(targetEntity) || isGoingToDie(targetEntity) || 
+            if (isDead(targetEntity) || isGoingToDie(targetEntity) || 
                 isCollapsing(targetEntity) || isGoingToCollapse(targetEntity))
             {
                 WarState* idleState = createIdleState(context, entity, true);

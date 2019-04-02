@@ -27,8 +27,9 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
         vec2 mapPosition = entity->transform.position;
         vec2 tilePosition = vec2MapToTileCoordinates(mapPosition);
 
-        // TODO: check here for the race of the unit to spawn the correct corpse type
-        WarUnitType corpseType = WAR_UNIT_HUMAN_CORPSE; // entity->unit.race == WAR_RACE_ORCS ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
+        WarUnitType corpseType = getUnitRace(entity) == WAR_RACE_ORCS 
+            ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
+
         WarEntity* corpse = createEntity(context, WAR_ENTITY_TYPE_UNIT, true);
         addUnitComponent(context, corpse, corpseType, (s32)tilePosition.x, (s32)tilePosition.y, WAR_RACE_NEUTRAL, WAR_RESOURCE_NONE, 0);
         addTransformComponent(context, corpse, mapPosition);
