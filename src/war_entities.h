@@ -105,5 +105,6 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected);
 
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade);
 bool withdrawFromPlayer(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
+bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage);
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount);

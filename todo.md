@@ -72,7 +72,7 @@ List of thing to do in no particular order
     * ~~Make so that train units withdraw gold and lumber.~~
     * ~~Handle the case when there is no sufficient gold or lumber (put a message in the status bar).~~
     * Add keyboard shortcuts to train units.
-    * Handle the case when there is no sufficient farm food for the new training (put a message in the status bar).
+    * ~~Handle the case when there is no sufficient farm food for the new training (put a message in the status bar).~~
   * > Add functionality of building upgrades.
     * ~~Fix upgrade build times.~~
     * ~~Make so that build upgrades withdraw gold and lumber.~~

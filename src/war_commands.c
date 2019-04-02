@@ -12,7 +12,8 @@ void trainUnit(WarContext* context, WarUnitType unitToTrain, WarUnitType buildin
     assert(selectedEntity->unit.type == buildingUnit);
 
     WarUnitStats stats = getUnitStats(unitToTrain);
-    if (withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost))
+    if (withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost) &&
+        checkFarmFood(context, player))
     {
         WarEntity* peasant = createUnit(context, unitToTrain, 0, 0, 0, WAR_RESOURCE_NONE, 0, true);
         WarState* buildingState = createBuildingUnitState(context, selectedEntity, peasant, getScaledTime(context, stats.buildTime));

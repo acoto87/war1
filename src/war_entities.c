@@ -1051,6 +1051,24 @@ bool withdrawFromPlayer(WarContext* context, WarPlayerInfo* player, s32 gold, s3
     return true;
 }
 
+bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
+{
+    s32 dudesCount = getPlayerDudesCount(context, player->index);
+
+    WarUnitType farmType = player->race == WAR_RACE_HUMANS 
+        ? WAR_UNIT_FARM_HUMANS : WAR_UNIT_FARM_ORCS;
+    s32 farmCount = getPlayerUnitCount(context, player->index, farmType);
+    s32 foodCount = farmCount * 4 + 1;
+
+    if (dudesCount + 1 > foodCount)
+    {
+        setFlashStatus(context, 1.5f, "NOT ENOUGH FOOD... BUILD MORE FARMS");
+        return false;
+    }
+
+    return true;
+}
+
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
 {
     assert(isUnit(entity));
