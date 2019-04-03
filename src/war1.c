@@ -35,29 +35,29 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#include "nanovg.c"
+#include "nanovg/nanovg.c"
 #define NVG_DISABLE_CULL_FACE
 #ifdef WAR_OPENGL
 #define NANOVG_GL3_IMPLEMENTATION
 #else
 #define NANOVG_GLES2_IMPLEMENTATION
 #endif
-#include "nanovg_gl.h"
+#include "nanovg/nanovg_gl.h"
 
 #if __DEBUG__
     #define STB_IMAGE_WRITE_IMPLEMENTATION
-    #include "stb_image_write.h"
+    #include "stb/stb_image_write.h"
 
     #define STB_IMAGE_RESIZE_IMPLEMENTATION
     #define STBIR_DEFAULT_FILTER_UPSAMPLE STBIR_FILTER_BOX
-    #include "stb_image_resize.h"
+    #include "stb/stb_image_resize.h"
 #endif
 
-#include "array.h"
-#include "list.h"
-#include "queue.h"
-#include "binary_heap.h"
-#include "map.h"
+#include "shl/array.h"
+#include "shl/list.h"
+#include "shl/queue.h"
+#include "shl/binary_heap.h"
+#include "shl/map.h"
 
 #include "log.h"
 #include "utils.h"
