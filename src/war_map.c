@@ -640,10 +640,7 @@ void updateSelection(WarContext* context)
                     if (entity && isUnit(entity) && entity->unit.enabled)
                     {
                         // don't select dead entities or corpses
-                        if (isDead(entity) || 
-                            isGoingToDie(entity) || 
-                            entity->unit.type == WAR_UNIT_HUMAN_CORPSE || 
-                            entity->unit.type == WAR_UNIT_ORC_CORPSE)
+                        if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
                         {
                             continue;
                         }
@@ -1166,8 +1163,7 @@ void updateMap(WarContext* context)
                         {
                             if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                             {
-                                if (isUnitOfType(entity, WAR_UNIT_PEASANT) ||
-                                    isUnitOfType(entity, WAR_UNIT_PEON))
+                                if (isWorkerUnit(entity))
                                 {
                                     if (isCarryingResources(entity))
                                     {
@@ -1203,8 +1199,7 @@ void updateMap(WarContext* context)
                             }
                             else if(targetEntity->type == WAR_ENTITY_TYPE_FOREST)
                             {
-                                if (isUnitOfType(entity, WAR_UNIT_PEASANT) ||
-                                    isUnitOfType(entity, WAR_UNIT_PEON))
+                                if (isWorkerUnit(entity))
                                 {
                                     if (isCarryingResources(entity))
                                     {
@@ -1240,7 +1235,7 @@ void updateMap(WarContext* context)
                             }
                             else if (isUnit(targetEntity) && (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) || isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS)))
                             {
-                                if (isUnitOfType(entity, WAR_UNIT_PEASANT) || isUnitOfType(entity, WAR_UNIT_PEON))
+                                if (isWorkerUnit(entity))
                                 {
                                     if (isCarryingResources(entity))
                                     {

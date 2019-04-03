@@ -1,3 +1,19 @@
+bool isEnemy(WarContext* context, WarEntity* entity, WarEntity* other)
+{
+    if (!isUnit(entity) || !isUnit(other))
+        return false;
+
+    if (entity->unit.player == other->unit.player)
+        return false;
+
+    if (isDead(other) || isGoingToDie(other) || isCorpseUnit(other))
+        return false;
+
+    WarMap* map = context->map;
+    WarPlayerInfo* otherPlayer = &map->players[other->unit.player];
+    return !isNeutral(otherPlayer);
+}
+
 s32 getPlayerUnitTotalCount(WarContext* context, u8 player)
 {
     WarMap* map = context->map;

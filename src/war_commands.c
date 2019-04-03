@@ -229,3 +229,18 @@ void cancelTrainOrUpgrade(WarContext* context, WarEntity* entity)
     WarState* idleState = createIdleState(context, entity, false);
     changeNextState(context, selectedEntity, idleState, true, true);
 }
+
+// basic
+void stop(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    for (s32 i = 0; i < map->selectedEntities.count; i++)
+    {
+        WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[i]);
+        assert(selectedEntity && isDudeUnit(selectedEntity));
+
+        WarState* idleState = createIdleState(context, entity, true);
+        changeNextState(context, selectedEntity, idleState, true, true);
+    }
+}

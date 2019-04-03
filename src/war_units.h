@@ -652,7 +652,7 @@ const WarCommandBaseData commandBaseData[] =
 
     // unit commands
     { WAR_COMMAND_MOVE,                     NULL, "MOVE"                      },
-    { WAR_COMMAND_STOP,                     NULL, "STOP"                      },
+    { WAR_COMMAND_STOP,                     stop, "STOP"                      },
     { WAR_COMMAND_HARVEST,                  NULL, "HARVEST LUMBER/MINE GOLD"  },
     { WAR_COMMAND_DELIVER,                  NULL, "RETURN GOODS TO TOWN HALL" },
     { WAR_COMMAND_REPAIR,                   NULL, "REPAIR"                    },
@@ -1056,6 +1056,77 @@ bool isBuildingUnit(WarEntity* entity)
     }
 }
 
+bool isWorkerUnit(WarEntity* entity)
+{
+    if (!isUnit(entity))
+        return false;
+
+    switch (entity->unit.type)
+    {
+        case WAR_UNIT_PEASANT:
+        case WAR_UNIT_PEON:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool isWarriorUnit(WarEntity* entity)
+{
+    if (!isUnit(entity))
+        return false;
+
+    switch (entity->unit.type)
+    {
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_CATAPULT_ORCS:
+        case WAR_UNIT_KNIGHT:
+        case WAR_UNIT_RAIDER:
+        case WAR_UNIT_ARCHER:
+        case WAR_UNIT_SPEARMAN:
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_NECROLYTE:
+        case WAR_UNIT_MEDIVH:
+        case WAR_UNIT_LOTHAR:
+        case WAR_UNIT_WOUNDED:
+        case WAR_UNIT_OGRE:
+        case WAR_UNIT_SPIDER:
+        case WAR_UNIT_SLIME:
+        case WAR_UNIT_FIRE_ELEMENTAL:
+        case WAR_UNIT_SCORPION:
+        case WAR_UNIT_BRIGAND:
+        case WAR_UNIT_THE_DEAD:
+        case WAR_UNIT_SKELETON:
+        case WAR_UNIT_DAEMON:
+        case WAR_UNIT_WATER_ELEMENTAL:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool isCorpseUnit(WarEntity* entity)
+{
+    if (!isUnit(entity))
+        return false;
+
+    switch (entity->unit.type)
+    {
+        case WAR_UNIT_HUMAN_CORPSE:
+        case WAR_UNIT_ORC_CORPSE:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 WarRace getUnitRace(WarEntity* entity)
 {
     if (!isUnit(entity))
@@ -1114,6 +1185,8 @@ WarRace getUnitRace(WarEntity* entity)
             return WAR_RACE_NEUTRAL;
     }
 }
+
+bool isEnemy(WarContext* context, WarEntity* entity, WarEntity* other);
 
 WarUnitType getTownHallOfRace(WarRace race)
 {

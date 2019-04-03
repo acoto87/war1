@@ -30,6 +30,8 @@ void leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
 
 void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    WarMap* map = context->map;
+
     if (isUnit(entity))
     {
         if (state->idle.lookAround)
@@ -47,18 +49,26 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
 
         // look for foe units to attack them if they are in range
         //
-        // for(s32 i = 0; i < map->entities.count; i++)
-        // {
-        //     WarEntity* other = context->map->entities[i];
-        //     if (other && other->type == WAR_ENTITY_TYPE_UNIT)
-        //     {
-        //         WarUnitComponent* unit = &other->unit;
-        //         if (isDudeUnit(unit->type) && isEnemy(unit->player))
-        //         {
-                    
-        //         }
-        //     }
-        // }
+        if (isWarriorUnit(entity))
+        {
+            vec2 position = getUnitCenterPosition(entity, true);
+
+            for(s32 i = 0; i < map->entities.count; i++)
+            {
+                WarEntity* other = map->entities.items[i];
+                if (other && isUnit(other) && isEnemy(context, entity, other))
+                {
+                    vec2 targetPosition = getUnitCenterPosition(other, true);
+                    if (vec2Distance(position, targetPosition) < 5)
+                    {
+                        WarState* attackState = createAttackState(context, entity, other->id, targetPosition);
+                        changeNextState(context, entity, attackState, true, true);
+
+                        break;
+                    }
+                }
+            }
+        }
 
         // this is a way to tell the state machine engine to not update this state for the specified amount of time
         state->delay = 1.0f;

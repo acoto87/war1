@@ -38,3 +38,6 @@ void upgradeUnholyArmor(WarContext* context, WarEntity* entity);
 
 // cancel
 void cancelTrainOrUpgrade(WarContext* context, WarEntity* entity);
+
+// basic
+void stop(WarContext* context, WarEntity* entity);
