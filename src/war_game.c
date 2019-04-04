@@ -1,20 +1,3 @@
-WarSprite loadFontSprite(WarContext* context)
-{
-    const char* fontPath = context->fontPath;
-
-    WarSprite sprite = {0};
-
-    s32 width, height, bitsPerPixel;
-    u8* data = stbi_load(fontPath, &width, &height, &bitsPerPixel, 0);
-    if (data)
-    {
-        sprite = createSprite(context, width, height, data);
-        stbi_image_free(data);
-    }
-
-    return sprite;
-}
-
 bool initGame(WarContext* context)
 {
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -76,7 +59,7 @@ bool initGame(WarContext* context)
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    context->fontPath = "./build/font.png";
+    context->fontPath = "./build/war1_font.png";
     context->fontSprite = loadFontSprite(context);
 
     context->warFilePath = "./build/DATA.WAR";

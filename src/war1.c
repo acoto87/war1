@@ -78,6 +78,7 @@
 #include "war_render.c"
 #include "war_resources.c"
 #include "war_sprites.c"
+#include "war_font.c"
 #include "war_animations.c"
 #include "war_roads.c"
 #include "war_walls.c"

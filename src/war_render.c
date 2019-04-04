@@ -52,8 +52,8 @@ void nvgRenderBatchImage(NVGcontext* gfx, NVGimageBatch* batch, rect rs, rect rd
     // positions of the four vertices
     f32 px = rd.x;
     f32 py = rd.y;
-    f32 pw = rd.x + rd.width;
-    f32 ph = rd.y + rd.height;
+    f32 pw = rd.width;
+    f32 ph = rd.height;
 
     // tex-coords of the four vertices
     f32 tx = rs.x / batch->iw;
