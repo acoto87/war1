@@ -528,9 +528,5 @@ void renderMapUI(WarContext* context)
         nvgMultilineText(gfx, debugText, r.x, r.y, r.width, r.height, params);
     }
 
-    renderSprite(context, context->fontSprite, vec2i(0, 0), VEC2_ONE);
-    
-    renderSubSprite(context, context->fontSprite, recti(160, 48, 40, 48), recti(160, 48, 40, 48), VEC2_ONE);
-
     nvgRestore(gfx);
 }

@@ -185,7 +185,7 @@ void addTextComponent(WarContext* context, WarEntity* entity, char* text)
     entity->text = (WarTextComponent){0};
     entity->text.enabled = true;
     entity->text.font = "defaultFont";
-    entity->text.fontSize = 8.0f;
+    entity->text.fontSize = 6.0f;
     entity->text.shadowBlur = 0.0f;
     entity->text.shadowOffset = VEC2_ZERO;
 
@@ -768,10 +768,12 @@ void _renderText(WarContext* context, WarEntity* entity)
 
         NVGfontParams params = nvgCreateFontParams(text->font, text->fontSize, nvgRGBA(0, 0, 0, 255));
         params.blur = text->shadowBlur;
-        nvgSingleText(gfx, text->text, text->shadowOffset.x, text->shadowOffset.y, params);
+        // nvgSingleText(gfx, text->text, text->shadowOffset.x, text->shadowOffset.y, params);
 
-        params = nvgCreateFontParams(text->font, text->fontSize, nvgRGBA(255, 255, 255, 255));
-        nvgSingleText(gfx, text->text, 0, 0, params);
+        renderSingleText(context, text->text, 0, 0, params);
+
+        // params = nvgCreateFontParams(text->font, text->fontSize, nvgRGBA(255, 255, 255, 255));
+        // nvgSingleText(gfx, text->text, 0, 0, params);
 
         nvgRestore(gfx);
     }
