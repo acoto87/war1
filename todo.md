@@ -189,5 +189,6 @@ List of thing to do in no particular order
   * Minimap
     * The minimap has to consider: base layer, chopped wood layer, entities layer. The base layer doesn't change once the map is created, so each frame only add the tiles about chopped wood and entities (position and types).
   * Make font of original warcraft.
-    * Make a bunch of screenshots and draw the font in pixel art.
-    * Make the system to draw text from a sprite of characters.
+    * ~~Make a bunch of screenshots and draw the font in pixel art.~~
+    * ~~Make the system to draw text from a sprite of characters.~~
+    * Make font of menus

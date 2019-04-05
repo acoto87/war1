@@ -343,15 +343,15 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "imgLumber", imageResourceRef(407), vec2Addv(topPanel, vec2i(102, 0)));
 
         // top panel texts
-        createUIText(context, "txtGold", vec2Addv(topPanel, vec2i(150, 1)));
-        createUIText(context, "txtWood", vec2Addv(topPanel, vec2i(50, 1)));
+        createUIText(context, "txtGold", vec2Addv(topPanel, vec2i(135, 2)));
+        createUIText(context, "txtWood", vec2Addv(topPanel, vec2i(24, 2)));
 
         // status text
-        createUIText(context, "txtStatus", vec2Addv(bottomPanel, vec2i(0, 4)));
-        createUIImage(context, "imgStatusLumber", imageResourceRef(407), vec2Addv(bottomPanel, vec2i(150, 3)));
-        createUIText(context, "txtStatusWood", vec2Addv(bottomPanel, vec2i(165, 4)));
+        createUIText(context, "txtStatus", vec2Addv(bottomPanel, vec2i(2, 5)));
+        createUIImage(context, "imgStatusWood", imageResourceRef(407), vec2Addv(bottomPanel, vec2i(163, 3)));
         createUIImage(context, "imgStatusGold", imageResourceRef(406), vec2Addv(bottomPanel, vec2i(200, 5)));
-        createUIText(context, "txtStatusGold", vec2Addv(bottomPanel, vec2i(220, 4)));
+        createUIText(context, "txtStatusWood", vec2Addv(bottomPanel, vec2i(179, 5)));
+        createUIText(context, "txtStatusGold", vec2Addv(bottomPanel, vec2i(218, 5)));
 
         // selected unit(s) info
         createUIImage(context, "imgUnitInfo", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(2, 0)));
@@ -361,7 +361,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "imgUnitPortrait3", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 23)));
         createUIImage(context, "imgUnitPortrait4", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 23)));
         createUIImage(context, "imgUnitInfoLife", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(3, 16)));
-        createUIText(context, "txtUnitName", vec2Addv(leftBottomPanel, vec2i(6, 25)));
+        createUIText(context, "txtUnitName", vec2Addv(leftBottomPanel, vec2i(6, 26)));
         createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectLifeBar1", vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectLifeBar2", vec2Addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), U8COLOR_GREEN);
@@ -372,40 +372,41 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
 
         // texts in the command area
-        createUIText(context, "txtCommand0", vec2Addv(leftBottomPanel, vec2i(2, 46)));
-        createUIText(context, "txtCommand1", vec2Addv(leftBottomPanel, vec2i(2, 56)));
-        createUIText(context, "txtCommand2", vec2Addv(leftBottomPanel, vec2i(2, 66)));
+        createUIText(context, "txtCommand0", vec2Addv(leftBottomPanel, vec2i(3, 46)));
+        createUIText(context, "txtCommand1", vec2Addv(leftBottomPanel, vec2i(3, 56)));
+        createUIText(context, "txtCommand2", vec2Addv(leftBottomPanel, vec2i(7, 64)));
+        createUIText(context, "txtCommand3", vec2Addv(leftBottomPanel, vec2i(11, 54)));
 
         // command buttons
         createUIImageButton(
             context, "btnCommand0", 
             normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(2, 46)));
+            vec2Addv(leftBottomPanel, vec2i(2, 44)));
 
         createUIImageButton(
             context, "btnCommand1", 
             normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(36, 46)));
+            vec2Addv(leftBottomPanel, vec2i(36, 44)));
 
         createUIImageButton(
             context, "btnCommand2", 
             normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(2, 69)));
+            vec2Addv(leftBottomPanel, vec2i(2, 67)));
 
         createUIImageButton(
             context, "btnCommand3", 
             normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(36, 69)));
+            vec2Addv(leftBottomPanel, vec2i(36, 67)));
 
         createUIImageButton(
             context, "btnCommand4", 
             normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(2, 92)));
+            vec2Addv(leftBottomPanel, vec2i(2, 90)));
 
         createUIImageButton(
             context, "btnCommand5", 
             normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(36, 92)));
+            vec2Addv(leftBottomPanel, vec2i(36, 90)));
 
         WarEntity* menuButton = createUIImageButton(
             context, "btnMenu", 
@@ -886,11 +887,12 @@ void updateCommands(WarContext* context)
         findUIEntity(context, "btnCommand5")
     };
 
-    WarEntity* commandTexts[3] =
+    WarEntity* commandTexts[4] =
     {
         findUIEntity(context, "txtCommand0"),
         findUIEntity(context, "txtCommand1"),
-        findUIEntity(context, "txtCommand2")
+        findUIEntity(context, "txtCommand2"),
+        findUIEntity(context, "txtCommand3")
     };
 
     for (s32 i = 0; i < arrayLength(commandButtons); i++)
@@ -926,8 +928,8 @@ void updateCommands(WarContext* context)
     {
         s32 gold = entity->unit.amount;
 
-        setUIText(commandTexts[0], "GOLD:");
-        setUITextFormat(commandTexts[1], "%d", gold);
+        setUIText(commandTexts[0], "GOLD LEFT");
+        setUITextFormat(commandTexts[3], "%d", gold);
         return;
     }
 

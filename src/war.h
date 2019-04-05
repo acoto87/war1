@@ -33,15 +33,6 @@ void setWindowSize(WarContext* context, u32 width, u32 height);
 void setGlobalScale(WarContext* context, f32 scale);
 void setGlobalSpeed(WarContext* context, f32 speed);
 
-#define FONT_SPRITE_WIDTH_PX 192
-#define FONT_SPRITE_HEIGHT_PX 192
-#define FONT_SPRITE_CHARS_PER_ROW 16
-#define FONT_SPRITE_CHAR_WIDTH_PX 12
-#define FONT_SPRITE_CHAR_HEIGHT_PX 12
-#define FONT_LINE_HEIGHT_PX 14
-
-#define getCharIndex(c) ((c) > 0 ? (c) - 32 : 0)
-
 vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
 {
     vec2 dir = VEC2_ZERO;

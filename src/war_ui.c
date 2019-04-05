@@ -148,7 +148,19 @@ void updateGoldText(WarContext* context)
     WarEntity* txtGold = findUIEntity(context, "txtGold");
     assert(txtGold);
 
-    setUITextFormat(txtGold, "GOLD: %d", map->players[0].gold);
+    s32 gold = map->players[0].gold;
+    if (gold < 10)
+        setUITextFormat(txtGold, "GOLD:     %d", gold);
+    else if (gold < 100)
+        setUITextFormat(txtGold, "GOLD:    %d", gold);
+    else if (gold < 1000)
+        setUITextFormat(txtGold, "GOLD:   %d", gold);
+    else if (gold < 10000)
+        setUITextFormat(txtGold, "GOLD:  %d", gold);
+    else if (gold < 100000)
+        setUITextFormat(txtGold, "GOLD: %d", gold);
+    else if (gold < 1000000)
+        setUITextFormat(txtGold, "GOLD:%d", gold);
 }
 
 void updateWoodText(WarContext* context)
@@ -159,7 +171,19 @@ void updateWoodText(WarContext* context)
     WarEntity* txtWood = findUIEntity(context, "txtWood");
     assert(txtWood);
 
-    setUITextFormat(txtWood, "LUMBER: %d", map->players[0].wood);
+    s32 wood = map->players[0].wood;
+    if (wood < 10)
+        setUITextFormat(txtWood, "LUMBER:     %d", wood);
+    else if (wood < 100)
+        setUITextFormat(txtWood, "LUMBER:    %d", wood);
+    else if (wood < 1000)
+        setUITextFormat(txtWood, "LUMBER:   %d", wood);
+    else if (wood < 10000)
+        setUITextFormat(txtWood, "LUMBER:  %d", wood);
+    else if (wood < 100000)
+        setUITextFormat(txtWood, "LUMBER: %d", wood);
+    else if (wood < 1000000)
+        setUITextFormat(txtWood, "LUMBER:%d", wood);
 }
 
 void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
@@ -167,8 +191,8 @@ void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
     WarEntity* txtStatus = findUIEntity(context, "txtStatus");
     assert(txtStatus);
 
-    WarEntity* imgStatusLumber = findUIEntity(context, "imgStatusLumber");
-    assert(imgStatusLumber);
+    WarEntity* imgStatusWood = findUIEntity(context, "imgStatusWood");
+    assert(imgStatusWood);
 
     WarEntity* imgStatusGold = findUIEntity(context, "imgStatusGold");
     assert(imgStatusGold);
@@ -183,14 +207,14 @@ void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
 
     if (gold == 0 && wood == 0)
     {
-        imgStatusLumber->sprite.enabled = false;
+        imgStatusWood->sprite.enabled = false;
         imgStatusGold->sprite.enabled = false;
         clearUIText(txtStatusWood);
         clearUIText(txtStatusGold);
     }
     else
     {
-        imgStatusLumber->sprite.enabled = true;
+        imgStatusWood->sprite.enabled = true;
         imgStatusGold->sprite.enabled = true;
         setUITextFormat(txtStatusWood, "%d", wood);
         setUITextFormat(txtStatusGold, "%d", gold);

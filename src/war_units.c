@@ -137,10 +137,11 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             commands[1] = WAR_COMMAND_STOP;
 
             // if the unit is carrying, instead of harvest it should be deliver
-            commands[2] = unit->resourceKind == WAR_RESOURCE_NONE
+            commands[2] = WAR_COMMAND_REPAIR;
+            
+            commands[3] = unit->resourceKind == WAR_RESOURCE_NONE
                 ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
 
-            commands[3] = WAR_COMMAND_REPAIR;
             commands[4] = WAR_COMMAND_BUILD_BASIC;
 
             // only if there is a lumber mill

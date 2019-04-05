@@ -1,6 +1,6 @@
 rect fontData[] = 
 {
-    {  0 * 8,  0 * 8, 5 * 8, 6 * 8 }, // 
+    {  0 * 8,  0 * 8, 3 * 8, 6 * 8 }, // 
     {  5 * 8,  0 * 8, 2 * 8, 6 * 8 }, // !
     {  7 * 8,  0 * 8, 4 * 8, 6 * 8 }, // "
     { 11 * 8,  0 * 8, 6 * 8, 6 * 8 }, // #
@@ -97,6 +97,13 @@ rect fontData[] =
     { 28 * 8, 42 * 8, 6 * 8, 6 * 8 }, // ~
 };
 
+#define FONT_SPRITE_WIDTH_PX 512
+#define FONT_SPRITE_HEIGHT_PX 512
+#define FONT_LINE_HEIGHT_PX 48
+#define FONT_HORIZONTAL_GAP_PX 8
+
+#define getCharIndex(c) ((s32)((c) > 0 ? (c) - 32 : 0))
+
 WarSprite loadFontSprite(WarContext* context)
 {
     const char* fontPath = context->fontPath;
@@ -130,8 +137,6 @@ void renderSingleText(WarContext* context, const char* text, f32 x, f32 y, NVGfo
     if (params.blur < 0)
         params.blur = 0;
 
-	nvgSave(gfx);
-    
     // nvgFontSize(gfx, params.fontSize);
     // nvgFontFace(gfx, params.fontFace);
     // nvgFillColor(gfx, params.fontColor);
@@ -139,28 +144,33 @@ void renderSingleText(WarContext* context, const char* text, f32 x, f32 y, NVGfo
     // nvgFontBlur(gfx, params.blur);
     // nvgText(gfx, x, y, text, NULL);
 
-    char* c = text;
-    while (*c) {
-        // if (c == ' ')
-        // {
-        //     x += 3 * 8;
-        //     c++;
-        //     continue;
-        // }
+    size32 len = strlen(text);
+    f32 scale = params.fontSize / FONT_LINE_HEIGHT_PX;
 
-        nvgSave(gfx);
-        nvgScale(gfx, params.fontSize / 48, params.fontSize / 48);
+    NVGimageBatch* batch = nvgBeginImageBatch(gfx, context->fontSprite.image, len);
 
-        rect rs = fontData[(s32)(*c) - 32];
+    nvgSave(gfx);
+    nvgScale(gfx, scale, scale);
+
+    for (s32 i = 0; i < len; i++)
+    {
+        char c = text[i];
+
+        rect rs = fontData[getCharIndex(c)];
         rect rd = rectf(x, y, rs.width, rs.height);
-        renderSubSprite(context, context->fontSprite, rs, rd, VEC2_ONE);
 
-        nvgRestore(gfx);
+        if (c != ' ')
+        {
+#ifdef __DEBUG__
+            nvgFillRect(context->gfx, rd, NVG_GREEN_SELECTION);
+#endif
 
-        x += rs.width;
+            nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+        }
 
-        c++;
+        x += rs.width + FONT_HORIZONTAL_GAP_PX;
     }
 
+    nvgEndImageBatch(gfx, batch);
     nvgRestore(gfx);
 }

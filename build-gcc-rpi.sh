@@ -4,7 +4,7 @@
 IncludePath="../deps/include"
 
 # Lib paths
-LibPath="../deps/lib"
+LibPath="../deps/lib/arm32"
 
 # ProfilerFlags="-pg"
 # OptimizeFlags="-O2"
