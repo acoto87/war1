@@ -184,12 +184,12 @@ void addTextComponent(WarContext* context, WarEntity* entity, char* text)
 {
     entity->text = (WarTextComponent){0};
     entity->text.enabled = true;
-    entity->text.font = "defaultFont";
+    entity->text.font = context->fontSprite;
     entity->text.fontSize = 6.0f;
-    entity->text.shadowBlur = 0.0f;
-    entity->text.shadowOffset = VEC2_ZERO;
+    entity->text.highlightIndex = NO_HIGHLIGHT;
+    entity->text.fontColor = FONT_NORMAL_COLOR;
 
-    setUIText(entity, text);
+    setUIText(entity, NO_HIGHLIGHT, text);
 }
 
 void removeTextComponent(WarContext* context, WarEntity* entity)
@@ -766,14 +766,10 @@ void _renderText(WarContext* context, WarEntity* entity)
         nvgTranslate(gfx, transform->position.x, transform->position.y);
         nvgScale(gfx, transform->scale.x, transform->scale.y);
 
-        NVGfontParams params = nvgCreateFontParams(text->font, text->fontSize, nvgRGBA(0, 0, 0, 255));
-        params.blur = text->shadowBlur;
-        // nvgSingleText(gfx, text->text, text->shadowOffset.x, text->shadowOffset.y, params);
-
-        renderSingleText(context, text->text, 0, 0, params);
-
-        // params = nvgCreateFontParams(text->font, text->fontSize, nvgRGBA(255, 255, 255, 255));
-        // nvgSingleText(gfx, text->text, 0, 0, params);
+        NVGfontParams params = nvgCreateFontSpriteParams(
+            text->font, text->fontSize, u8ColorToNVGcolor(text->fontColor));
+        params.highlightIndex = text->highlightIndex;
+        nvgSingleSpriteText(gfx, text->text, 0, 0, params);
 
         nvgRestore(gfx);
     }

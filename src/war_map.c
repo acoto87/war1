@@ -413,7 +413,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             imageResourceRef(362), imageResourceRef(363), invalidRef, 
             vec2Addv(leftBottomPanel, vec2i(3, 116)));
 
-        setUITooltip(menuButton, "MENU (F10)");
+        setUITooltip(menuButton, NO_HIGHLIGHT, "MENU (F10)");
     }
 
     // set the initial state for the tiles
@@ -916,9 +916,9 @@ void updateCommands(WarContext* context)
         s32 farmsCount = getPlayerUnitCount(context, 0, entity->unit.type);
         s32 dudesCount = getPlayerDudesCount(context, 0);
 
-        setUIText(commandTexts[0], "FOOD USAGE:");
-        setUITextFormat(commandTexts[1], "GROWN %d", farmsCount * 4 + 1);
-        setUITextFormat(commandTexts[2], " USED %d", dudesCount);
+        setUIText(commandTexts[0], NO_HIGHLIGHT, "FOOD USAGE:");
+        setUITextFormat(commandTexts[1], NO_HIGHLIGHT, "GROWN %d", farmsCount * 4 + 1);
+        setUITextFormat(commandTexts[2], NO_HIGHLIGHT, " USED %d", dudesCount);
         return;
     }
     
@@ -928,8 +928,8 @@ void updateCommands(WarContext* context)
     {
         s32 gold = entity->unit.amount;
 
-        setUIText(commandTexts[0], "GOLD LEFT");
-        setUITextFormat(commandTexts[3], "%d", gold);
+        setUIText(commandTexts[0], NO_HIGHLIGHT, "GOLD LEFT");
+        setUITextFormat(commandTexts[3], NO_HIGHLIGHT, "%d", gold);
         return;
     }
 
@@ -962,7 +962,7 @@ void updateCommands(WarContext* context)
         {
             WarUnitCommandData commandData = getUnitCommandData(context, entity, commands[i]);
             setUIImage(commandButtons[i], commandData.frameIndex);
-            setUITooltip(commandButtons[i], commandData.tooltip);
+            setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.tooltip);
             commandButtons[i]->button.gold = commandData.gold;
             commandButtons[i]->button.wood = commandData.wood;
             commandButtons[i]->button.clickHandler = commandData.clickHandler;
@@ -1036,13 +1036,13 @@ void updateStatus(WarContext* context)
     WarMap* map = context->map;
     WarFlashStatus* flashStatus = &map->flashStatus;
 
-    setStatus(context, NULL, 0, 0);
+    setStatus(context, NO_HIGHLIGHT, NULL, 0, 0);
 
     if (flashStatus->enabled)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            setStatus(context, flashStatus->text, 0, 0);
+            setStatus(context, NO_HIGHLIGHT, flashStatus->text, 0, 0);
             return;
         }
         
@@ -1055,9 +1055,10 @@ void updateStatus(WarContext* context)
         WarEntity* entity = map->entities.items[i];
         if (entity && entity->type == WAR_ENTITY_TYPE_BUTTON)
         {
-            if (entity->button.hot)
+            WarButtonComponent* button = &entity->button;
+            if (button->hot)
             {
-                setStatus(context, entity->button.tooltip, entity->button.gold, entity->button.wood);
+                setStatus(context, button->highlightIndex, button->tooltip, button->gold, button->wood);
                 break;
             }
         }

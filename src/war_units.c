@@ -687,12 +687,13 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    WarCommandBaseData commandTooltip = getCommandBaseData(commandType);
+    WarCommandBaseData commandBaseData = getCommandBaseData(commandType);
 
     WarUnitCommandData data = (WarUnitCommandData){0};
     data.type = commandType;
-    data.clickHandler = commandTooltip.clickHandler;
-    strcpy(data.tooltip, commandTooltip.tooltip);
+    data.clickHandler = commandBaseData.clickHandler;
+    data.highlightIndex = commandBaseData.highlightIndex;
+    strcpy(data.tooltip, commandBaseData.tooltip);
 
     switch (commandType)
     {

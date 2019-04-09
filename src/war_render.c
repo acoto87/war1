@@ -348,11 +348,14 @@ typedef struct
     char* fontFace;
     f32 fontSize;
     NVGcolor fontColor;
+    WarSprite fontSprite;
     s32 textAlign;
     f32 blur;
+    s32 highlightIndex;
 } NVGfontParams;
 
-#define nvgCreateFontParams(fontFace, fontSize, fontColor) ((NVGfontParams){(fontFace), (fontSize), (fontColor), 0, 0})
+#define nvgCreateFontParams(fontFace, fontSize, fontColor) ((NVGfontParams){(fontFace), (fontSize), (fontColor), (WarSprite){0}, 0, 0, NO_HIGHLIGHT})
+#define nvgCreateFontSpriteParams(fontSprite, fontSize, fontColor)  ((NVGfontParams){NULL, (fontSize), (fontColor), (fontSprite), 0, 0, NO_HIGHLIGHT})
 
 void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {

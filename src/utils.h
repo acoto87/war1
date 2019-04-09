@@ -46,6 +46,8 @@ typedef union {
 #define U8COLOR_GREEN ((u8Color){{0, 199, 0, 255}})
 #define U8COLOR_BLUE ((u8Color){{0, 0, 199, 255}})
 #define U8COLOR_YELLOW ((u8Color){{199, 199, 0, 255}})
+#define u8RgbaColor(r, g, b, a) ((u8Color){{r, g, b, a}})
+#define u8RgbColor(r, g, b) u8RgbaColor(r, g, b, 255)
 
 #define NULL 0
 

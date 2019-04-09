@@ -1137,10 +1137,10 @@ typedef struct
 {
     bool enabled;
     char* text;
-    char* font;
+    WarSprite font;
     f32 fontSize;
-    f32 shadowBlur;
-    vec2 shadowOffset;
+    u8Color fontColor;
+    s32 highlightIndex;
 } WarTextComponent;
 
 typedef struct
@@ -1157,6 +1157,7 @@ typedef struct
     bool enabled;
     bool hot;
     bool active;
+    s32 highlightIndex;
     char tooltip[100];
     s32 gold;
     s32 wood;

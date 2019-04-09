@@ -8,19 +8,20 @@ void clearUIText(WarEntity* uiText)
     }
 }
 
-void setUIText(WarEntity* uiText, char* text)
+void setUIText(WarEntity* uiText, s32 highlightIndex, char* text)
 {
     clearUIText(uiText);
 
     if (text)
     {
         uiText->text.text = (char*)xmalloc(strlen(text) + 1);
+        uiText->text.highlightIndex = highlightIndex;
         strcpy(uiText->text.text, text);
         uiText->text.enabled = true;
     }
 }
 
-void setUITextFormat(WarEntity* uiText, char* format, ...)
+void setUITextFormat(WarEntity* uiText, s32 highlightIndex, char* format, ...)
 {
     char buffer[256];
 
@@ -29,7 +30,7 @@ void setUITextFormat(WarEntity* uiText, char* format, ...)
     vsprintf (buffer, format, args);
     va_end (args);
 
-    setUIText(uiText, buffer);
+    setUIText(uiText, highlightIndex, buffer);
 }
 
 void setUIImage(WarEntity* uiImage, s32 frameIndex)
@@ -49,12 +50,13 @@ void clearUITooltip(WarEntity* uiButton)
     memset(uiButton->button.tooltip, 0, sizeof(uiButton->button.tooltip));
 }
 
-void setUITooltip(WarEntity* uiButton, char* text)
+void setUITooltip(WarEntity* uiButton, s32 highlightIndex, char* text)
 {
     clearUITooltip(uiButton);
 
     if (text)
     {
+        uiButton->button.highlightIndex = highlightIndex;
         strcpy(uiButton->button.tooltip, text);
     }
 }
@@ -65,8 +67,6 @@ WarEntity* createUIText(WarContext* context, char* name, vec2 position)
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addTextComponent(context, entity, NULL);
-    entity->text.shadowBlur = 1.0f;
-    entity->text.shadowOffset = VEC2_ONE;
 
     return entity;
 }
@@ -149,18 +149,7 @@ void updateGoldText(WarContext* context)
     assert(txtGold);
 
     s32 gold = map->players[0].gold;
-    if (gold < 10)
-        setUITextFormat(txtGold, "GOLD:     %d", gold);
-    else if (gold < 100)
-        setUITextFormat(txtGold, "GOLD:    %d", gold);
-    else if (gold < 1000)
-        setUITextFormat(txtGold, "GOLD:   %d", gold);
-    else if (gold < 10000)
-        setUITextFormat(txtGold, "GOLD:  %d", gold);
-    else if (gold < 100000)
-        setUITextFormat(txtGold, "GOLD: %d", gold);
-    else if (gold < 1000000)
-        setUITextFormat(txtGold, "GOLD:%d", gold);
+    setUITextFormat(txtGold, NO_HIGHLIGHT, "GOLD:%*d", 6, gold);
 }
 
 void updateWoodText(WarContext* context)
@@ -172,21 +161,10 @@ void updateWoodText(WarContext* context)
     assert(txtWood);
 
     s32 wood = map->players[0].wood;
-    if (wood < 10)
-        setUITextFormat(txtWood, "LUMBER:     %d", wood);
-    else if (wood < 100)
-        setUITextFormat(txtWood, "LUMBER:    %d", wood);
-    else if (wood < 1000)
-        setUITextFormat(txtWood, "LUMBER:   %d", wood);
-    else if (wood < 10000)
-        setUITextFormat(txtWood, "LUMBER:  %d", wood);
-    else if (wood < 100000)
-        setUITextFormat(txtWood, "LUMBER: %d", wood);
-    else if (wood < 1000000)
-        setUITextFormat(txtWood, "LUMBER:%d", wood);
+    setUITextFormat(txtWood, NO_HIGHLIGHT, "LUMBER:%*d", 6, wood);
 }
 
-void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
+void setStatus(WarContext* context, s32 highlightIndex, char* text, s32 gold, s32 wood)
 {
     WarEntity* txtStatus = findUIEntity(context, "txtStatus");
     assert(txtStatus);
@@ -203,7 +181,7 @@ void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
     WarEntity* txtStatusGold = findUIEntity(context, "txtStatusGold");
     assert(txtStatusGold);
 
-    setUIText(txtStatus, text);
+    setUIText(txtStatus, highlightIndex, text);
 
     if (gold == 0 && wood == 0)
     {
@@ -216,8 +194,8 @@ void setStatus(WarContext* context, char* text, s32 gold, s32 wood)
     {
         imgStatusWood->sprite.enabled = true;
         imgStatusGold->sprite.enabled = true;
-        setUITextFormat(txtStatusWood, "%d", wood);
-        setUITextFormat(txtStatusGold, "%d", gold);
+        setUITextFormat(txtStatusWood, NO_HIGHLIGHT, "%d", wood);
+        setUITextFormat(txtStatusGold, NO_HIGHLIGHT, "%d", gold);
     }
 }
 
@@ -321,7 +299,7 @@ void updateSelectedUnitsInfo(WarContext* context)
     setUIRectWidth(rectMagicBar, 0);
     setUIRectWidth(rectPercentBar, 0);
     setUIImage(rectPercentText, -1);
-    setUIText(txtUnitName, NULL);
+    setUIText(txtUnitName, NO_HIGHLIGHT, NULL);
 
     // update the frame index of unit info/portraits 
     // based on the number of entities selected
@@ -385,7 +363,7 @@ void updateSelectedUnitsInfo(WarContext* context)
 
             WarUnitData unitsData = getUnitData(unit->type);
             setUIImage(imgUnitPortraits[0], unitsData.portraitFrameIndex);
-            setUIText(txtUnitName, unitsData.name);
+            setUIText(txtUnitName, NO_HIGHLIGHT, unitsData.name);
             setLifeBar(rectLifeBars[0], unit);
         }
     }
