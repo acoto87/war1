@@ -131,46 +131,70 @@ WarSprite loadFontSprite(WarContext* context)
     return sprite;
 }
 
+s32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text, s32 index, s32 count, f32 x, f32 y, NVGfontParams params)
+{
+    if (count > 0)
+    {
+        nvgSave(gfx);
+        nvgFillColor(gfx, params.fontColor);
+
+        NVGimageBatch* batch = nvgBeginImageBatch(gfx, params.fontSprite.image, count);
+
+        for (s32 i = 0; i < count; i++)
+        {
+            rect rs = fontData[getCharIndex(text[index + i])];
+            rect rd = rectf(x, y, rs.width, rs.height);
+
+            if (text[index + i] != ' ')
+            {
+#ifdef __DEBUG__
+                nvgFillRect(gfx, rd, NVG_GREEN_SELECTION);
+#endif
+                
+                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+            }
+
+            x += rs.width + FONT_HORIZONTAL_GAP_PX;
+        }
+
+        nvgEndImageBatch(gfx, batch);
+        nvgRestore(gfx);
+    }
+    
+    return x;
+}
+
 void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {
     if (params.fontSize <= 0)
         params.fontSize = 6.0f;
 
-    size32 len = strlen(text);
+    s32 len = strlen(text);
     f32 scale = params.fontSize / FONT_LINE_HEIGHT_PX;
+    s32 highlightIndex = params.highlightIndex;
 
-    NVGimageBatch* batch = nvgBeginImageBatch(gfx, params.fontSprite.image, len);
+    NVGcolor fontColor = params.fontColor;
+    NVGcolor highlightColor = u8ColorToNVGcolor(FONT_HIGHLIGHT_COLOR);
 
     nvgSave(gfx);
     nvgScale(gfx, scale, scale);
 
-    for (s32 i = 0; i < len; i++)
+    if (highlightIndex >= 0)
     {
-        char c = text[i];
+        params.fontColor = fontColor;
+        x = nvgSingleSpriteTextSpan(gfx, text, 0, highlightIndex, x, y, params);
 
-        rect rs = fontData[getCharIndex(c)];
-        rect rd = rectf(x, y, rs.width, rs.height);
+        params.fontColor = highlightColor;
+        x = nvgSingleSpriteTextSpan(gfx, text, highlightIndex, 1, x, y, params);
 
-        if (c != ' ')
-        {
-#ifdef __DEBUG__
-            nvgFillRect(gfx, rd, NVG_GREEN_SELECTION);
-#endif
-            
-            if (params.highlightIndex == i)
-            {
-                logInfo("highlight index = %d\n", i);
-                nvgFillColor(gfx, u8ColorToNVGcolor(FONT_HIGHLIGHT_COLOR));
-            }
-            else
-                nvgFillColor(gfx, params.fontColor);
-
-            nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
-        }
-
-        x += rs.width + FONT_HORIZONTAL_GAP_PX;
+        params.fontColor = fontColor;
+        x = nvgSingleSpriteTextSpan(gfx, text, highlightIndex + 1, len - highlightIndex, x, y, params);
+    }
+    else
+    {
+        params.fontColor = fontColor;
+        nvgSingleSpriteTextSpan(gfx, text, 0, len, x, y, params);
     }
 
-    nvgEndImageBatch(gfx, batch);
     nvgRestore(gfx);
 }

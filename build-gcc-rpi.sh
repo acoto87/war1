@@ -15,8 +15,13 @@ CommonCompilerFlags="-std=c99 -Wall -Wno-misleading-indentation -x c $ProfilerFl
 CommonLinkerFlags="-L $LibPath -l glfw -l m"
 
 mkdir -p build
-cd build
 
+cd build
 rm -f war1
 
-gcc $CommonCompilerFlags $CommonLinkerFlags ../src/war1.c ../deps/include/glad/glad.c $GladSrcPath -o war1
+if gcc $CommonCompilerFlags $CommonLinkerFlags ../src/war1.c ../deps/include/glad/glad.c $GladSrcPath -o war1; then
+cd ..
+echo "Generating ctags - Start";
+ctags --tag-relative --extra=f --language-force=C --recurse=yes
+echo "Generating ctags - Done";
+fi
