@@ -523,7 +523,7 @@ typedef enum
 
 typedef enum
 {
-    WAR_COMMAND_NONE,
+    WAR_COMMAND_NONE, // 0
 
     // unit commands
     WAR_COMMAND_MOVE, // 1
@@ -531,12 +531,10 @@ typedef enum
     WAR_COMMAND_HARVEST,
     WAR_COMMAND_DELIVER,
     WAR_COMMAND_REPAIR,
-    WAR_COMMAND_BUILD_BASIC,
-    WAR_COMMAND_BUILD_ADVANCED,
     WAR_COMMAND_ATTACK,
 
     // train commands
-    WAR_COMMAND_TRAIN_FOOTMAN, // 9
+    WAR_COMMAND_TRAIN_FOOTMAN, // 7
     WAR_COMMAND_TRAIN_GRUNT,
     WAR_COMMAND_TRAIN_PEASANT,
     WAR_COMMAND_TRAIN_PEON,
@@ -552,7 +550,7 @@ typedef enum
     WAR_COMMAND_TRAIN_NECROLYTE, 
 
     // spell commands
-    WAR_COMMAND_SPELL_HEALING, // 23
+    WAR_COMMAND_SPELL_HEALING, // 21
     WAR_COMMAND_SPELL_FAR_SIGHT,
     WAR_COMMAND_SPELL_INVISIBILITY,
     WAR_COMMAND_SPELL_RAIN_OF_FIRE,
@@ -562,13 +560,15 @@ typedef enum
     WAR_COMMAND_SPELL_UNHOLY_ARMOR,
 
     // summons
-    WAR_COMMAND_SUMMON_SPIDER, // 31
+    WAR_COMMAND_SUMMON_SPIDER, // 29
     WAR_COMMAND_SUMMON_SCORPION,
     WAR_COMMAND_SUMMON_DAEMON,
     WAR_COMMAND_SUMMON_WATER_ELEMENTAL,
 
     // build commands
-    WAR_COMMAND_BUILD_FARM_HUMANS, // 35
+    WAR_COMMAND_BUILD_BASIC, // 33
+    WAR_COMMAND_BUILD_ADVANCED,
+    WAR_COMMAND_BUILD_FARM_HUMANS,
     WAR_COMMAND_BUILD_FARM_ORCS,
     WAR_COMMAND_BUILD_BARRACKS_HUMANS,
     WAR_COMMAND_BUILD_BARRACKS_ORCS,
@@ -612,6 +612,26 @@ typedef enum
     // cancel
     WAR_COMMAND_CANCEL // 73
 } WarUnitCommandType;
+
+typedef struct
+{
+    WarUnitCommandType type;
+
+    union
+    {
+        struct 
+        {
+            WarUnitType unitToTrain;
+            WarUnitType buildingUnit;
+        } train;
+
+        struct 
+        {
+            WarUpgradeType upgradeToBuild;
+            WarUnitType buildingUnit;
+        } upgrade;
+    };
+} WarUnitCommand;
 
 typedef enum
 {
@@ -1293,6 +1313,8 @@ typedef struct
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
     WarSpriteAnimationList animations;
 
+    WarUnitCommand command;
+
     WarFlashStatus flashStatus;
 } WarMap;
 
@@ -1392,9 +1414,10 @@ typedef struct _WarContext
 
     NVGcontext* gfx;
     WarResource *resources[MAX_RESOURCES_COUNT];
-    WarMap* map;
 
     WarInput input;
+
+    WarMap* map;
 
     // DEBUG:
     bool editingTrees;

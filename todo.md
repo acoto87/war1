@@ -42,7 +42,7 @@ List of thing to do in no particular order
   * Make so that entities can have multiple sprites.
   * ~~Make a `setUITextFormat` method that takes a format with arguments `printf` style.~~
   * Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
-  * ~~Rename `WarCommandBaseData` to something like `WarCommandBaseData`.~~
+  * ~~Rename `WarUnitCommandBaseData` to something like `WarUnitCommandBaseData`.~~
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~

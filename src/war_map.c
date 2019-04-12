@@ -1068,15 +1068,66 @@ void updateStatus(WarContext* context)
     // how much would cost to repair it and set the text
 }
 
+void updateStateMachines(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity)
+        {
+            updateStateMachine(context, entity);
+        }
+    }
+}
+
+void updateActions(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && isUnit(entity))
+        {
+            updateAction(context, entity);
+        }
+    }
+}
+
+void updateAnimations(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    // update all animations of entities
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity)
+        {
+            updateEntityAnimations(context, entity);
+        }
+    }
+
+    // update all animations of the map
+    for(s32 i = 0; i < map->animations.count; i++)
+    {
+        WarSpriteAnimation* anim = map->animations.items[i];
+        updateAnimation(context, anim);
+    }
+}
+
 void updateMap(WarContext* context)
 {
     WarMap* map = context->map;
-    assert(map);
-
     WarInput* input = &context->input;
 
     updateGlobalSpeed(context);
     updateGlobalScale(context);
+
+    executeCommand(context);
+
     updateViewport(context);
     updateDragRect(context);
     updateSelection(context);
@@ -1093,42 +1144,9 @@ void updateMap(WarContext* context)
     updateWallsEdit(context);
     updateRuinsEdit(context);
 
-    // update all state machines
-    for(s32 i = 0; i < map->entities.count; i++)
-    {
-        WarEntity* entity = map->entities.items[i];
-        if (entity)
-        {
-            updateStateMachine(context, entity);
-        }
-    }
-
-    // update all actions
-    for(s32 i = 0; i < map->entities.count; i++)
-    {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && isUnit(entity))
-        {
-            updateAction(context, entity);
-        }
-    }
-
-    // update all animations of entities
-    for(s32 i = 0; i < map->entities.count; i++)
-    {
-        WarEntity* entity = map->entities.items[i];
-        if (entity)
-        {
-            updateAnimations(context, entity);
-        }
-    }
-
-    // update all animations of the map
-    for(s32 i = 0; i < map->animations.count; i++)
-    {
-        WarSpriteAnimation* anim = map->animations.items[i];
-        updateAnimation(context, anim);
-    }
+    updateStateMachines(context);
+    updateActions(context);
+    updateAnimations(context);
 
     //
     // TODO: Refactor this code to an order system that is more robust

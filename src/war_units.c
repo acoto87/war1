@@ -105,11 +105,15 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
     assert(isUnit(entity));
 
     WarMap* map = context->map;
+    WarUnitCommand* command = &map->command;
     WarPlayerInfo* player = &map->players[0];
+
     WarUnitComponent* unit = &entity->unit;
 
     if (player->race != getUnitRace(entity))
+    {
         return;
+    }
 
     switch (unit->type)
     {
@@ -123,141 +127,236 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
         case WAR_UNIT_ARCHER:
         case WAR_UNIT_SPEARMAN:
         {
-            commands[0] = WAR_COMMAND_MOVE;
-            commands[1] = WAR_COMMAND_STOP;
-            commands[2] = WAR_COMMAND_ATTACK;
+            if (command->type != WAR_COMMAND_NONE)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                commands[0] = WAR_COMMAND_MOVE;
+                commands[1] = WAR_COMMAND_STOP;
+                commands[2] = WAR_COMMAND_ATTACK;
+            }
 
             break;
         }
 
         case WAR_UNIT_PEASANT:
+        {
+            if (command->type != WAR_COMMAND_NONE)
+            {
+                if (command->type == WAR_COMMAND_BUILD_BASIC)
+                {
+                    commands[0] = WAR_COMMAND_BUILD_FARM_HUMANS;
+                    commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_HUMANS;
+                    commands[2] = WAR_COMMAND_BUILD_BARRACKS_HUMANS;
+                }
+                else if (command->type == WAR_COMMAND_BUILD_ADVANCED)
+                {
+                    commands[0] = WAR_COMMAND_BUILD_BLACKSMITH_HUMANS;
+                    commands[1] = WAR_COMMAND_BUILD_CHURCH;
+                    commands[2] = WAR_COMMAND_BUILD_STABLE;
+
+                    if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
+                    {
+                        commands[3] = WAR_COMMAND_BUILD_TOWER_HUMANS;
+                    }
+                }
+
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            else
+            {
+                commands[0] = WAR_COMMAND_MOVE;
+                commands[1] = WAR_COMMAND_STOP;
+                commands[2] = WAR_COMMAND_REPAIR;
+                commands[3] = unit->resourceKind == WAR_RESOURCE_NONE
+                    ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
+
+                commands[4] = WAR_COMMAND_BUILD_BASIC;
+
+                if (playerHasUnit(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
+                {
+                    commands[5] = WAR_COMMAND_BUILD_ADVANCED;
+                }
+            }
+
+            break;
+        }
         case WAR_UNIT_PEON:
         {
-            commands[0] = WAR_COMMAND_MOVE;
-            commands[1] = WAR_COMMAND_STOP;
-
-            // if the unit is carrying, instead of harvest it should be deliver
-            commands[2] = WAR_COMMAND_REPAIR;
-            
-            commands[3] = unit->resourceKind == WAR_RESOURCE_NONE
-                ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
-
-            commands[4] = WAR_COMMAND_BUILD_BASIC;
-
-            // only if there is a lumber mill
-            WarUnitType lumberMillType = isHuman(player)
-                ? WAR_UNIT_LUMBERMILL_HUMANS : WAR_UNIT_LUMBERMILL_ORCS;
-
-            if (playerHasUnit(context, player->index, lumberMillType))
+            if (command->type != WAR_COMMAND_NONE)
             {
-                commands[5] = WAR_COMMAND_BUILD_ADVANCED;
+                if (command->type == WAR_COMMAND_BUILD_BASIC)
+                {
+                    commands[0] = WAR_COMMAND_BUILD_FARM_ORCS;
+                    commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_ORCS;
+                    commands[2] = WAR_COMMAND_BUILD_BARRACKS_ORCS;
+                }
+                else if (command->type == WAR_COMMAND_BUILD_ADVANCED)
+                {
+                    commands[0] = WAR_COMMAND_BUILD_BARRACKS_ORCS;
+                    commands[1] = WAR_COMMAND_BUILD_TEMPLE;
+                    commands[2] = WAR_COMMAND_BUILD_KENNEL;
+                    
+                    if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
+                    {
+                        commands[3] = WAR_COMMAND_BUILD_TOWER_ORCS;
+                    }
+                }
+
+                commands[5] = WAR_COMMAND_CANCEL;
             }
+            else
+            {
+                commands[0] = WAR_COMMAND_MOVE;
+                commands[1] = WAR_COMMAND_STOP;
+                commands[2] = WAR_COMMAND_REPAIR;
+                commands[3] = unit->resourceKind == WAR_RESOURCE_NONE
+                    ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
+
+                commands[4] = WAR_COMMAND_BUILD_BASIC;
+
+                if (playerHasUnit(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
+                {
+                    commands[5] = WAR_COMMAND_BUILD_ADVANCED;
+                }
+            }
+            
             break;
         }
         case WAR_UNIT_CONJURER:
         {
-            commands[0] = WAR_COMMAND_MOVE;
-            commands[1] = WAR_COMMAND_STOP;
-            commands[2] = WAR_COMMAND_ATTACK;
-
-            // only if these spells are researshed
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAIN_OF_FIRE) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_RAIN_OF_FIRE))
+            if (command->type != WAR_COMMAND_NONE)
             {
-                commands[3] = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
+                commands[5] = WAR_COMMAND_CANCEL;
             }
-
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SCORPION) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_SCORPIONS))
+            else
             {
-                commands[4] = WAR_COMMAND_SUMMON_SCORPION;
-            }
+                commands[0] = WAR_COMMAND_MOVE;
+                commands[1] = WAR_COMMAND_STOP;
+                commands[2] = WAR_COMMAND_ATTACK;
 
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_WATER_ELEMENTAL) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_WATER_ELEMENTAL))
-            {
-                commands[5] = WAR_COMMAND_SUMMON_WATER_ELEMENTAL;
+                // only if these spells are researshed
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAIN_OF_FIRE) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_RAIN_OF_FIRE))
+                {
+                    commands[3] = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SCORPION) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_SCORPIONS))
+                {
+                    commands[4] = WAR_COMMAND_SUMMON_SCORPION;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_WATER_ELEMENTAL) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_WATER_ELEMENTAL))
+                {
+                    commands[5] = WAR_COMMAND_SUMMON_WATER_ELEMENTAL;
+                }
             }
     
             break;
         }
         case WAR_UNIT_WARLOCK:
         {
-            commands[0] = WAR_COMMAND_MOVE;
-            commands[1] = WAR_COMMAND_STOP;
-            commands[2] = WAR_COMMAND_ATTACK;
-
-            // only if these spells are researshed
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_POISON_CLOUD) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_POISON_CLOUD))
+            if (command->type != WAR_COMMAND_NONE)
             {
-                commands[3] = WAR_COMMAND_SPELL_POISON_CLOUD;
+                commands[5] = WAR_COMMAND_CANCEL;
             }
-
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SPIDER) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_SPIDERS))
+            else
             {
-                commands[4] = WAR_COMMAND_SUMMON_SPIDER;
-            }
+                commands[0] = WAR_COMMAND_MOVE;
+                commands[1] = WAR_COMMAND_STOP;
+                commands[2] = WAR_COMMAND_ATTACK;
 
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DAEMON) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_DAEMON))
-            {
-                commands[5] = WAR_COMMAND_SUMMON_DAEMON;
+                // only if these spells are researshed
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_POISON_CLOUD) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_POISON_CLOUD))
+                {
+                    commands[3] = WAR_COMMAND_SPELL_POISON_CLOUD;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SPIDER) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_SPIDERS))
+                {
+                    commands[4] = WAR_COMMAND_SUMMON_SPIDER;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DAEMON) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_DAEMON))
+                {
+                    commands[5] = WAR_COMMAND_SUMMON_DAEMON;
+                }
             }
 
             break;
         }
         case WAR_UNIT_CLERIC:
         {
-            commands[0] = WAR_COMMAND_MOVE;
-            commands[1] = WAR_COMMAND_STOP;
-            commands[2] = WAR_COMMAND_ATTACK;
-
-            // only if these spells are researshed
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_HEALING) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_HEALING))
+            if (command->type != WAR_COMMAND_NONE)
             {
-                commands[3] = WAR_COMMAND_SPELL_HEALING;
+                commands[5] = WAR_COMMAND_CANCEL;
             }
-
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_FAR_SIGHT) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_FAR_SIGHT))
+            else
             {
-                commands[4] = WAR_COMMAND_SPELL_FAR_SIGHT;
-            }
+                commands[0] = WAR_COMMAND_MOVE;
+                commands[1] = WAR_COMMAND_STOP;
+                commands[2] = WAR_COMMAND_ATTACK;
 
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_INVISIBILITY) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_INVISIBILITY))
-            {
-                commands[5] = WAR_COMMAND_SPELL_INVISIBILITY;
+                // only if these spells are researshed
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_HEALING) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_HEALING))
+                {
+                    commands[3] = WAR_COMMAND_SPELL_HEALING;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_FAR_SIGHT) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_FAR_SIGHT))
+                {
+                    commands[4] = WAR_COMMAND_SPELL_FAR_SIGHT;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_INVISIBILITY) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_INVISIBILITY))
+                {
+                    commands[5] = WAR_COMMAND_SPELL_INVISIBILITY;
+                }
             }
 
             break;
         }
         case WAR_UNIT_NECROLYTE:
         {
-            commands[0] = WAR_COMMAND_MOVE;
-            commands[1] = WAR_COMMAND_STOP;
-            commands[2] = WAR_COMMAND_ATTACK;
-
-            // only if these spells are researshed
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAISE_DEAD) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_RAISE_DEAD))
+            if (command->type != WAR_COMMAND_NONE)
             {
-                commands[3] = WAR_COMMAND_SPELL_RAISE_DEAD;
+                commands[5] = WAR_COMMAND_CANCEL;
             }
-
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DARK_VISION) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_DARK_VISION))
+            else
             {
-                commands[4] = WAR_COMMAND_SPELL_DARK_VISION;
-            }
+                commands[0] = WAR_COMMAND_MOVE;
+                commands[1] = WAR_COMMAND_STOP;
+                commands[2] = WAR_COMMAND_ATTACK;
 
-            if (isFeatureAllowed(player, WAR_FEATURE_SPELL_UNHOLY_ARMOR) && 
-                hasAnyUpgrade(player, WAR_UPGRADE_UNHOLY_ARMOR))
-            {
-                commands[5] = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
+                // only if these spells are researshed
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAISE_DEAD) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_RAISE_DEAD))
+                {
+                    commands[3] = WAR_COMMAND_SPELL_RAISE_DEAD;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DARK_VISION) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_DARK_VISION))
+                {
+                    commands[4] = WAR_COMMAND_SPELL_DARK_VISION;
+                }
+
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_UNHOLY_ARMOR) && 
+                    hasAnyUpgrade(player, WAR_UPGRADE_UNHOLY_ARMOR))
+                {
+                    commands[5] = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
+                }
             }
 
             break;
@@ -598,96 +697,12 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
     }
 }
 
-void getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[])
-{
-    assert(entity);
-    assert(isUnit(entity));
-
-    WarUnitComponent* unit = &entity->unit;
-
-    switch (unit->type)
-    {
-        case WAR_UNIT_PEASANT:
-        {
-            commands[0] = WAR_COMMAND_BUILD_FARM_HUMANS;
-            commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_HUMANS;
-            commands[2] = WAR_COMMAND_BUILD_BARRACKS_HUMANS;
-            commands[6] = WAR_COMMAND_CANCEL;
-            break;
-        }
-        case WAR_UNIT_PEON:
-        {
-            commands[0] = WAR_COMMAND_BUILD_FARM_ORCS;
-            commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_ORCS;
-            commands[2] = WAR_COMMAND_BUILD_BARRACKS_ORCS;
-            commands[6] = WAR_COMMAND_CANCEL;
-            break;
-        }
-
-        default:
-        {
-            logWarning("Trying to get build basic commands for unit of type: %d\n", unit->type);
-            assert(false);
-            break;
-        }
-    }
-}
-
-void getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[])
-{
-    assert(entity);
-    assert(isUnit(entity));
-
-    WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
-    WarUnitComponent* unit = &entity->unit;
-
-    switch (unit->type)
-    {
-        case WAR_UNIT_PEASANT:
-        {
-            commands[0] = WAR_COMMAND_BUILD_BLACKSMITH_HUMANS;
-            commands[1] = WAR_COMMAND_BUILD_CHURCH;
-            commands[2] = WAR_COMMAND_BUILD_STABLE;
-
-            if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
-            {
-                commands[3] = WAR_COMMAND_BUILD_TOWER_HUMANS;
-            }
-
-            commands[6] = WAR_COMMAND_CANCEL;
-            break;
-        }
-        case WAR_UNIT_PEON:
-        {
-            commands[0] = WAR_COMMAND_BUILD_BARRACKS_ORCS;
-            commands[1] = WAR_COMMAND_BUILD_TEMPLE;
-            commands[2] = WAR_COMMAND_BUILD_KENNEL;
-            
-            if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
-            {
-                commands[3] = WAR_COMMAND_BUILD_TOWER_ORCS;
-            }
-
-            commands[6] = WAR_COMMAND_CANCEL;
-            break;
-        }
-
-        default:
-        {
-            logWarning("Trying to get build advanced commands for unit of type: %d\n", unit->type);
-            assert(false);
-            break;
-        }
-    }
-}
-
 WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    WarCommandBaseData commandBaseData = getCommandBaseData(commandType);
+    WarUnitCommandBaseData commandBaseData = getCommandBaseData(commandType);
 
     WarUnitCommandData data = (WarUnitCommandData){0};
     data.type = commandType;

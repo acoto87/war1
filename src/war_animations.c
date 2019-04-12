@@ -63,7 +63,7 @@ void updateAnimation(WarContext* context, WarSpriteAnimation* anim)
     }
 }
 
-void updateAnimations(WarContext* context, WarEntity* entity)
+void updateEntityAnimations(WarContext* context, WarEntity* entity)
 {
     WarAnimationsComponent* animations = &entity->animations;
     if (animations->enabled)

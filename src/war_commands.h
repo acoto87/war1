@@ -40,4 +40,8 @@ void upgradeUnholyArmor(WarContext* context, WarEntity* entity);
 void cancelTrainOrUpgrade(WarContext* context, WarEntity* entity);
 
 // basic
+void move(WarContext* context, WarEntity* entity);
 void stop(WarContext* context, WarEntity* entity);
+void harvest(WarContext* context, WarEntity* entity);
+void buildBasic(WarContext* context, WarEntity* entity);
+void buildAdvanced(WarContext* context, WarEntity* entity);

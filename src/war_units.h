@@ -645,20 +645,20 @@ typedef struct
     WarClickHandler clickHandler;
     s32 highlightIndex;
     char tooltip[100];
-} WarCommandBaseData;
+} WarUnitCommandBaseData;
 
-const WarCommandBaseData commandBaseData[] = 
+const WarUnitCommandBaseData commandBaseData[] = 
 {
     { WAR_COMMAND_NONE,                     NULL,                   -1, ""                          },
 
     // unit commands
-    { WAR_COMMAND_MOVE,                     NULL,                    0, "MOVE"                      },
+    { WAR_COMMAND_MOVE,                     move,                    0, "MOVE"                      },
     { WAR_COMMAND_STOP,                     stop,                    0, "STOP"                      },
-    { WAR_COMMAND_HARVEST,                  NULL,                    0, "HARVEST LUMBER/MINE GOLD"  },
+    { WAR_COMMAND_HARVEST,                  harvest,                 0, "HARVEST LUMBER/MINE GOLD"  },
     { WAR_COMMAND_DELIVER,                  NULL,                   16, "RETURN GOODS TO TOWN HALL" },
     { WAR_COMMAND_REPAIR,                   NULL,                    0, "REPAIR"                    },
-    { WAR_COMMAND_BUILD_BASIC,              NULL,                    0, "BUILD BASIC STRUCTURE"     },
-    { WAR_COMMAND_BUILD_ADVANCED,           NULL,                    6, "BUILD ADVANCED STRUCTURE"  },
+    { WAR_COMMAND_BUILD_BASIC,              buildBasic,              0, "BUILD BASIC STRUCTURE"     },
+    { WAR_COMMAND_BUILD_ADVANCED,           buildAdvanced,           6, "BUILD ADVANCED STRUCTURE"  },
     { WAR_COMMAND_ATTACK,                   NULL,                    0, "ATTACK"                    },
 
     // train commands
@@ -745,6 +745,7 @@ typedef struct
     s32 unitOrUpgradeType;
 } WarUnitCommandMapping;
 
+// this is a mapping between a type of command and the unit it affects
 const WarUnitCommandMapping commandMappings[] = 
 {
     // train commands
@@ -936,7 +937,7 @@ WarUpgradeStats getUpgradeStats(WarUpgradeType type)
     return upgradeStats[index];
 }
 
-WarCommandBaseData getCommandBaseData(WarUnitCommandType type)
+WarUnitCommandBaseData getCommandBaseData(WarUnitCommandType type)
 {
     s32 index = 0;
     s32 length = arrayLength(commandBaseData);
