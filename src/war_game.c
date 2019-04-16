@@ -53,6 +53,15 @@ bool initGame(WarContext* context)
 		return -1;
 	}
 
+    context->fb = nvgluCreateFramebuffer(context->gfx, context->windowWidth, context->windowHeight, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+    if (!context->fb) 
+    {
+        logError("Could not create FBO.\n");
+        glfwDestroyWindow(context->window);
+        glfwTerminate();
+        return -1;
+    }
+
     // load fonts
     nvgCreateFont(context->gfx, "defaultFont", "./build/Roboto-Regular.ttf");
 
@@ -252,15 +261,63 @@ void updateGame(WarContext* context)
 
 void renderGame(WarContext *context)
 {
-    NVGcontext *gfx = context->gfx;
-    
-    glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
+    NVGcontext* gfx = context->gfx;
+    NVGLUframebuffer* fb = context->fb;
+
+    s32 framebufferWidth = context->framebufferWidth;
+    s32 framebufferHeight = context->framebufferHeight;
+
+    s32 windowWidth = context->windowWidth;
+    s32 windowHeight = context->windowHeight;
+
+    f32 devicePixelRatio = context->devicePixelRatio;
+
+    // render the whole scene to the FBO
+    nvgluBindFramebuffer(fb);
+
+    glViewport(0, 0, framebufferWidth, framebufferHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    nvgBeginFrame(gfx, (f32)context->windowWidth, (f32)context->windowHeight, context->devicePixelRatio);
-
+    nvgBeginFrame(gfx, windowWidth, windowHeight, devicePixelRatio);
     renderMap(context);
+    nvgEndFrame(gfx);
 
+    u8 pixels[windowWidth * windowHeight * 4];
+    glReadPixels(0, 0, windowWidth, windowHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    stbi_flip_vertically_on_write(true);
+    stbi_write_png("frame.png", windowWidth, windowHeight, 4, pixels, windowWidth * 4);
+
+    nvgluBindFramebuffer(NULL);
+
+    // then render a quad with the texture geneate with the FBO
+    glViewport(0, 0, framebufferWidth, framebufferHeight);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    nvgBeginFrame(gfx, windowWidth, windowHeight, devicePixelRatio);
+    nvgSave(gfx);
+
+    NVGpaint img = nvgImagePattern(gfx, 0, 0, windowWidth, windowHeight, 0, fb->image, 1.0f);
+    nvgBeginPath(gfx);
+    nvgRect(gfx, 0, 0, windowWidth, windowHeight);
+    nvgFillPaint(gfx, img);
+    nvgFill(gfx);
+
+    // This is a test to render 4 copies of the framebuffer on the screen
+    //
+    // vec2 center = vec2f(windowWidth / 2, windowHeight / 2);
+    // for (s32 i = 0; i < 2; i++)
+    // {
+    //     for (s32 j = 0; j < 2; j++)
+    //     {
+    //         NVGpaint img = nvgImagePattern(gfx, i * center.x, j * center.y, windowWidth/2, windowHeight/2, 0, fb->image, 1.0f);
+    //         nvgBeginPath(gfx);
+    //         nvgRect(gfx, i * center.x, j * center.y, windowWidth/2, windowHeight/2);
+    //         nvgFillPaint(gfx, img);
+    //         nvgFill(gfx);
+    //     }
+    // }
+
+    nvgRestore(gfx);
     nvgEndFrame(gfx);
 }
 

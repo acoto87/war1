@@ -43,11 +43,12 @@
 #define NANOVG_GLES2_IMPLEMENTATION
 #endif
 #include "nanovg/nanovg_gl.h"
+#include "nanovg/nanovg_gl_utils.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
 
 #if __DEBUG__
-    #define STB_IMAGE_WRITE_IMPLEMENTATION
-    #include "stb/stb_image_write.h"
-
     #define STB_IMAGE_RESIZE_IMPLEMENTATION
     #define STBIR_DEFAULT_FILTER_UPSAMPLE STBIR_FILTER_BOX
     #include "stb/stb_image_resize.h"

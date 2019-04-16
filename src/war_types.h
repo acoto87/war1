@@ -1413,6 +1413,8 @@ typedef struct _WarContext
     s32 staticEntityId;
 
     NVGcontext* gfx;
+    NVGLUframebuffer* fb;
+    
     WarResource *resources[MAX_RESOURCES_COUNT];
 
     WarInput input;
