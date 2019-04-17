@@ -53,7 +53,11 @@ bool initGame(WarContext* context)
 		return -1;
 	}
 
-    context->fb = nvgluCreateFramebuffer(context->gfx, context->windowWidth, context->windowHeight, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+    context->fb = nvgluCreateFramebuffer(context->gfx, 
+                                         context->framebufferWidth, 
+                                         context->framebufferHeight, 
+                                         NVG_IMAGE_NEAREST);
+
     if (!context->fb) 
     {
         logError("Could not create FBO.\n");
@@ -148,14 +152,19 @@ bool initGame(WarContext* context)
     return true;
 }
 
-void setWindowSize(WarContext* context, u32 width, u32 height)
+void setWindowSize(WarContext* context, s32 width, s32 height)
 {
     context->windowWidth = width;
     context->windowHeight = height;
     glfwSetWindowSize(context->window, context->windowWidth, context->windowHeight);
-    
     glfwGetFramebufferSize(context->window, &context->framebufferWidth, &context->framebufferHeight);
     context->devicePixelRatio = (f32)context->framebufferWidth / (f32)context->windowWidth;
+
+    nvgluDeleteFramebuffer(context->fb);
+    context->fb = nvgluCreateFramebuffer(context->gfx,
+                                         context->framebufferWidth,
+                                         context->framebufferHeight,
+                                         NVG_IMAGE_NEAREST);
 }
 
 void setGlobalScale(WarContext* context, f32 scale)
@@ -164,8 +173,8 @@ void setGlobalScale(WarContext* context, f32 scale)
 
     context->globalScale = scale;
 
-    u32 newWidth = (u32)(context->originalWindowWidth * context->globalScale);
-    u32 newHeight = (u32)(context->originalWindowHeight * context->globalScale);
+    s32 newWidth = (s32)(context->originalWindowWidth * context->globalScale);
+    s32 newHeight = (s32)(context->originalWindowHeight * context->globalScale);
     setWindowSize(context, newWidth, newHeight);
 }
 
@@ -222,6 +231,7 @@ void inputGame(WarContext *context)
     setInputKey(context, WAR_KEY_R, glfwGetKey(context->window, GLFW_KEY_R) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_U, glfwGetKey(context->window, GLFW_KEY_U) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_W, glfwGetKey(context->window, GLFW_KEY_W) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_G, glfwGetKey(context->window, GLFW_KEY_G) == GLFW_PRESS);
 
     setInputKey(context, WAR_KEY_1, glfwGetKey(context->window, GLFW_KEY_1) == GLFW_PRESS ||
                                     glfwGetKey(context->window, GLFW_KEY_KP_1) == GLFW_PRESS);
@@ -282,11 +292,6 @@ void renderGame(WarContext *context)
     renderMap(context);
     nvgEndFrame(gfx);
 
-    u8 pixels[windowWidth * windowHeight * 4];
-    glReadPixels(0, 0, windowWidth, windowHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    stbi_flip_vertically_on_write(true);
-    stbi_write_png("frame.png", windowWidth, windowHeight, 4, pixels, windowWidth * 4);
-
     nvgluBindFramebuffer(NULL);
 
     // then render a quad with the texture geneate with the FBO
@@ -301,22 +306,7 @@ void renderGame(WarContext *context)
     nvgRect(gfx, 0, 0, windowWidth, windowHeight);
     nvgFillPaint(gfx, img);
     nvgFill(gfx);
-
-    // This is a test to render 4 copies of the framebuffer on the screen
-    //
-    // vec2 center = vec2f(windowWidth / 2, windowHeight / 2);
-    // for (s32 i = 0; i < 2; i++)
-    // {
-    //     for (s32 j = 0; j < 2; j++)
-    //     {
-    //         NVGpaint img = nvgImagePattern(gfx, i * center.x, j * center.y, windowWidth/2, windowHeight/2, 0, fb->image, 1.0f);
-    //         nvgBeginPath(gfx);
-    //         nvgRect(gfx, i * center.x, j * center.y, windowWidth/2, windowHeight/2);
-    //         nvgFillPaint(gfx, img);
-    //         nvgFill(gfx);
-    //     }
-    // }
-
+    
     nvgRestore(gfx);
     nvgEndFrame(gfx);
 }

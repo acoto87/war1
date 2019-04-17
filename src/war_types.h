@@ -1341,6 +1341,7 @@ typedef enum
     WAR_KEY_R,
     WAR_KEY_U,
     WAR_KEY_W,
+    WAR_KEY_G,
 
     WAR_KEY_1,
     WAR_KEY_2,

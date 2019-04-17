@@ -48,12 +48,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#if __DEBUG__
-    #define STB_IMAGE_RESIZE_IMPLEMENTATION
-    #define STBIR_DEFAULT_FILTER_UPSAMPLE STBIR_FILTER_BOX
-    #include "stb/stb_image_resize.h"
-#endif
-
 #include "shl/array.h"
 #include "shl/list.h"
 #include "shl/queue.h"
@@ -136,7 +130,7 @@ int main(int argc, char *argv[])
 
     while (!glfwWindowShouldClose(context.window))
     {
-        sprintf(context.windowTitle, "War 1: %.2f at %d fps", context.time, context.fps);
+        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
         glfwSetWindowTitle(context.window, context.windowTitle);
 
         if (glfwGetKey(context.window, GLFW_KEY_ESCAPE) == GLFW_PRESS)

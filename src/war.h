@@ -29,7 +29,7 @@
 #define getScaledSpeed(context, t) ((t) * (context)->globalSpeed)
 #define getScaledTime(context, t) ((t) / (context)->globalSpeed)
 
-void setWindowSize(WarContext* context, u32 width, u32 height);
+void setWindowSize(WarContext* context, s32 width, s32 height);
 void setGlobalScale(WarContext* context, f32 scale);
 void setGlobalSpeed(WarContext* context, f32 speed);
 
