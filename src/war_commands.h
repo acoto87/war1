@@ -1,3 +1,5 @@
+bool executeCommand(WarContext* context);
+
 // train units
 void trainFootman(WarContext* context, WarEntity* entity);
 void trainGrunt(WarContext* context, WarEntity* entity);
@@ -43,5 +45,7 @@ void cancelTrainOrUpgrade(WarContext* context, WarEntity* entity);
 void move(WarContext* context, WarEntity* entity);
 void stop(WarContext* context, WarEntity* entity);
 void harvest(WarContext* context, WarEntity* entity);
+void deliver(WarContext* context, WarEntity* entity);
+void attack(WarContext* context, WarEntity* entity);
 void buildBasic(WarContext* context, WarEntity* entity);
 void buildAdvanced(WarContext* context, WarEntity* entity);

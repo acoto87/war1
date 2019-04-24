@@ -655,11 +655,11 @@ const WarUnitCommandBaseData commandBaseData[] =
     { WAR_COMMAND_MOVE,                     move,                    0, "MOVE"                      },
     { WAR_COMMAND_STOP,                     stop,                    0, "STOP"                      },
     { WAR_COMMAND_HARVEST,                  harvest,                 0, "HARVEST LUMBER/MINE GOLD"  },
-    { WAR_COMMAND_DELIVER,                  NULL,                   16, "RETURN GOODS TO TOWN HALL" },
+    { WAR_COMMAND_DELIVER,                  deliver,                16, "RETURN GOODS TO TOWN HALL" },
     { WAR_COMMAND_REPAIR,                   NULL,                    0, "REPAIR"                    },
     { WAR_COMMAND_BUILD_BASIC,              buildBasic,              0, "BUILD BASIC STRUCTURE"     },
     { WAR_COMMAND_BUILD_ADVANCED,           buildAdvanced,           6, "BUILD ADVANCED STRUCTURE"  },
-    { WAR_COMMAND_ATTACK,                   NULL,                    0, "ATTACK"                    },
+    { WAR_COMMAND_ATTACK,                   attack,                  0, "ATTACK"                    },
 
     // train commands
     { WAR_COMMAND_TRAIN_FOOTMAN,            trainFootman,            6, "TRAIN FOOTMAN"             },

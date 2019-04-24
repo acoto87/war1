@@ -1,4 +1,4 @@
-void executeCommand(WarContext* context)
+bool executeCommand(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -7,7 +7,7 @@ void executeCommand(WarContext* context)
     
     if (command->type == WAR_COMMAND_NONE)
     {
-        return;
+        return false;
     }
 
     switch (command->type)
@@ -46,7 +46,7 @@ void executeCommand(WarContext* context)
             }
 
             command->type = WAR_COMMAND_NONE;
-            break;
+            return true;
         }
 
         case WAR_COMMAND_UPGRADE_SWORDS:
@@ -91,135 +91,139 @@ void executeCommand(WarContext* context)
             }
 
             command->type = WAR_COMMAND_NONE;
-            break;
+            return true;
         }
 
         case WAR_COMMAND_MOVE:
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                s32 selEntitiesCount = map->selectedEntities.count;
-                if (selEntitiesCount > 0)
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
-                    if (targetEntityId > 0)
+                    s32 selEntitiesCount = map->selectedEntities.count;
+                    if (selEntitiesCount > 0)
                     {
-                        WarEntity* targetEntity = findEntity(context, targetEntityId);
-                        if (targetEntity)
+                        vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                        vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                        WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                        if (targetEntityId > 0)
                         {
+                            WarEntity* targetEntity = findEntity(context, targetEntityId);
+                            if (targetEntity)
+                            {
+                                for(s32 i = 0; i < selEntitiesCount; i++)
+                                {
+                                    WarEntityId entityId = map->selectedEntities.items[i];
+                                    WarEntity* entity = findEntity(context, entityId);
+                                    assert(entity);
+
+                                    WarState* followState = createFollowState(context, entity, targetEntityId, 1);
+                                    changeNextState(context, entity, followState, true, true);
+                                }                    
+                            }
+                        }
+                        else
+                        {
+                            rect* rs = (rect*)xcalloc(selEntitiesCount, sizeof(rect));
+
                             for(s32 i = 0; i < selEntitiesCount; i++)
                             {
                                 WarEntityId entityId = map->selectedEntities.items[i];
                                 WarEntity* entity = findEntity(context, entityId);
                                 assert(entity);
 
-                                WarState* followState = createFollowState(context, entity, targetEntityId, 1);
-                                changeNextState(context, entity, followState, true, true);
-                            }                    
-                        }
-                    }
-                    else
-                    {
-                        rect* rs = (rect*)xcalloc(selEntitiesCount, sizeof(rect));
+                                rs[i] = rectv(entity->transform.position, getUnitSpriteSize(entity));
+                            }
 
-                        for(s32 i = 0; i < selEntitiesCount; i++)
-                        {
-                            WarEntityId entityId = map->selectedEntities.items[i];
-                            WarEntity* entity = findEntity(context, entityId);
-                            assert(entity);
+                            rect bbox = rs[0];
 
-                            rs[i] = rectv(entity->transform.position, getUnitSpriteSize(entity));
-                        }
-
-                        rect bbox = rs[0];
-
-                        for(s32 i = 1; i < selEntitiesCount; i++)
-                        {
-                            if (rs[i].x < bbox.x)
-                                bbox.x = rs[i].x;
-                            if (rs[i].y < bbox.y)
-                                bbox.y = rs[i].y;
-                            if (rs[i].x + rs[i].width > bbox.x + bbox.width)
-                                bbox.width = (rs[i].x + rs[i].width) - bbox.x;
-                            if (rs[i].y + rs[i].height > bbox.y + bbox.height)
-                                bbox.height = (rs[i].y + rs[i].height) - bbox.y;
-                        }
-
-                        rect targetbbox = rectf(
-                            targetPoint.x - halff(bbox.width),
-                            targetPoint.y - halff(bbox.height),
-                            bbox.width,
-                            bbox.height);
-
-                        for(s32 i = 0; i < selEntitiesCount; i++)
-                        {
-                            WarEntityId entityId = map->selectedEntities.items[i];
-                            WarEntity* entity = findEntity(context, entityId);
-                            assert(entity);
-
-                            vec2 position = vec2f(
-                                rs[i].x + halff(rs[i].width), 
-                                rs[i].y + halff(rs[i].height));
-
-                            position = vec2MapToTileCoordinates(position);
-
-                            rect targetRect = rectf(
-                                targetbbox.x + (rs[i].x - bbox.x),
-                                targetbbox.y + (rs[i].y - bbox.y),
-                                rs[i].width, 
-                                rs[i].height);
-
-                            vec2 target = vec2f(
-                                targetRect.x + halff(targetRect.width), 
-                                targetRect.y + halff(targetRect.height));
-
-                            target = vec2MapToTileCoordinates(target);
-
-                            if (isKeyPressed(input, WAR_KEY_SHIFT))
+                            for(s32 i = 1; i < selEntitiesCount; i++)
                             {
-                                if (isPatrolling(entity))
+                                if (rs[i].x < bbox.x)
+                                    bbox.x = rs[i].x;
+                                if (rs[i].y < bbox.y)
+                                    bbox.y = rs[i].y;
+                                if (rs[i].x + rs[i].width > bbox.x + bbox.width)
+                                    bbox.width = (rs[i].x + rs[i].width) - bbox.x;
+                                if (rs[i].y + rs[i].height > bbox.y + bbox.height)
+                                    bbox.height = (rs[i].y + rs[i].height) - bbox.y;
+                            }
+
+                            rect targetbbox = rectf(
+                                targetPoint.x - halff(bbox.width),
+                                targetPoint.y - halff(bbox.height),
+                                bbox.width,
+                                bbox.height);
+
+                            for(s32 i = 0; i < selEntitiesCount; i++)
+                            {
+                                WarEntityId entityId = map->selectedEntities.items[i];
+                                WarEntity* entity = findEntity(context, entityId);
+                                assert(entity);
+
+                                vec2 position = vec2f(
+                                    rs[i].x + halff(rs[i].width), 
+                                    rs[i].y + halff(rs[i].height));
+
+                                position = vec2MapToTileCoordinates(position);
+
+                                rect targetRect = rectf(
+                                    targetbbox.x + (rs[i].x - bbox.x),
+                                    targetbbox.y + (rs[i].y - bbox.y),
+                                    rs[i].width, 
+                                    rs[i].height);
+
+                                vec2 target = vec2f(
+                                    targetRect.x + halff(targetRect.width), 
+                                    targetRect.y + halff(targetRect.height));
+
+                                target = vec2MapToTileCoordinates(target);
+
+                                if (isKeyPressed(input, WAR_KEY_SHIFT))
                                 {
-                                    if(isMoving(entity))
+                                    if (isPatrolling(entity))
+                                    {
+                                        if(isMoving(entity))
+                                        {
+                                            WarState* moveState = getMoveState(entity);
+                                            vec2ListAdd(&moveState->move.positions, target);
+                                        }
+                                        
+                                        WarState* patrolState = getPatrolState(entity);
+                                        vec2ListAdd(&patrolState->patrol.positions, target);
+                                    }
+                                    else if(isMoving(entity) && !isAttacking(entity))
                                     {
                                         WarState* moveState = getMoveState(entity);
                                         vec2ListAdd(&moveState->move.positions, target);
                                     }
-                                    
-                                    WarState* patrolState = getPatrolState(entity);
-                                    vec2ListAdd(&patrolState->patrol.positions, target);
-                                }
-                                else if(isMoving(entity) && !isAttacking(entity))
-                                {
-                                    WarState* moveState = getMoveState(entity);
-                                    vec2ListAdd(&moveState->move.positions, target);
+                                    else
+                                    {
+                                        WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
+                                        changeNextState(context, entity, moveState, true, true);
+                                    }
                                 }
                                 else
                                 {
                                     WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
                                     changeNextState(context, entity, moveState, true, true);
+
+                                    // WarState* patrolState = createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
+                                    // changeNextState(context, entity, patrolState, true, true);
                                 }
                             }
-                            else
-                            {
-                                WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
-                                changeNextState(context, entity, moveState, true, true);
 
-                                // WarState* patrolState = createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
-                                // changeNextState(context, entity, patrolState, true, true);
-                            }
+                            free(rs);
                         }
-
-                        free(rs);
                     }
-                }
 
-                command->type = WAR_COMMAND_NONE;
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
             }
 
-            break;
+            return false;
         }
 
         case WAR_COMMAND_STOP:
@@ -234,101 +238,185 @@ void executeCommand(WarContext* context)
             }
 
             command->type = WAR_COMMAND_NONE;
-            break;
+            return true;
         }
 
         case WAR_COMMAND_HARVEST:
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                s32 selEntitiesCount = map->selectedEntities.count;
-                if (selEntitiesCount > 0)
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
-                    if (targetEntityId > 0)
+                    s32 selEntitiesCount = map->selectedEntities.count;
+                    if (selEntitiesCount > 0)
                     {
-                        WarEntity* targetEntity = findEntity(context, targetEntityId);
-                        if (targetEntity)
+                        vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                        vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                        WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                        if (targetEntityId > 0)
                         {
-                            for(s32 i = 0; i < selEntitiesCount; i++)
+                            WarEntity* targetEntity = findEntity(context, targetEntityId);
+                            if (targetEntity)
                             {
-                                WarEntityId entityId = map->selectedEntities.items[i];
-                                WarEntity* entity = findEntity(context, entityId);
-                                assert(entity);
-
-                                if (isWorkerUnit(entity))
+                                for(s32 i = 0; i < selEntitiesCount; i++)
                                 {
-                                    if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
-                                    {
-                                        if (isCarryingResources(entity))
-                                        {
-                                            // find the closest town hall to deliver the gold
-                                            WarRace race = getUnitRace(entity);
-                                            WarUnitType townHallType = getTownHallOfRace(race);
-                                            WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+                                    WarEntityId entityId = map->selectedEntities.items[i];
+                                    WarEntity* entity = findEntity(context, entityId);
+                                    assert(entity);
 
-                                            // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
-                                            if (!townHall)
+                                    if (isWorkerUnit(entity))
+                                    {
+                                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
+                                        {
+                                            if (isCarryingResources(entity))
                                             {
-                                                WarState* idleState = createIdleState(context, entity, true);
-                                                changeNextState(context, entity, idleState, true, true);
+                                                // find the closest town hall to deliver the gold
+                                                WarRace race = getUnitRace(entity);
+                                                WarUnitType townHallType = getTownHallOfRace(race);
+                                                WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+
+                                                // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
+                                                if (!townHall)
+                                                {
+                                                    WarState* idleState = createIdleState(context, entity, true);
+                                                    changeNextState(context, entity, idleState, true, true);
+                                                }
+                                                else
+                                                {
+                                                    WarState* deliverState = createDeliverState(context, entity, townHall->id);
+                                                    deliverState->nextState = createGatherGoldState(context, entity, targetEntity->id);
+                                                    changeNextState(context, entity, deliverState, true, true);
+                                                }
                                             }
                                             else
                                             {
-                                                WarState* deliverState = createDeliverState(context, entity, townHall->id);
-                                                deliverState->nextState = createGatherGoldState(context, entity, targetEntity->id);
-                                                changeNextState(context, entity, deliverState, true, true);
+                                                WarState* gatherGoldState = createGatherGoldState(context, entity, targetEntity->id);
+                                                changeNextState(context, entity, gatherGoldState, true, true);        
                                             }
                                         }
-                                        else
+                                        else if(targetEntity->type == WAR_ENTITY_TYPE_FOREST)
                                         {
-                                            WarState* gatherGoldState = createGatherGoldState(context, entity, targetEntity->id);
-                                            changeNextState(context, entity, gatherGoldState, true, true);        
-                                        }
-                                    }
-                                    else if(targetEntity->type == WAR_ENTITY_TYPE_FOREST)
-                                    {
-                                        if (isCarryingResources(entity))
-                                        {
-                                            // find the closest town hall to deliver the gold
-                                            WarRace race = getUnitRace(entity);
-                                            WarUnitType townHallType = getTownHallOfRace(race);
-                                            WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
-
-                                            // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
-                                            if (!townHall)
+                                            if (isCarryingResources(entity))
                                             {
-                                                WarState* idleState = createIdleState(context, entity, true);
-                                                changeNextState(context, entity, idleState, true, true);
+                                                // find the closest town hall to deliver the gold
+                                                WarRace race = getUnitRace(entity);
+                                                WarUnitType townHallType = getTownHallOfRace(race);
+                                                WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+
+                                                // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
+                                                if (!townHall)
+                                                {
+                                                    WarState* idleState = createIdleState(context, entity, true);
+                                                    changeNextState(context, entity, idleState, true, true);
+                                                }
+                                                else
+                                                {
+                                                    WarState* deliverState = createDeliverState(context, entity, townHall->id);
+                                                    deliverState->nextState = createGatherWoodState(context, entity, targetEntityId, targetTile);
+                                                    changeNextState(context, entity, deliverState, true, true);
+                                                }
                                             }
                                             else
                                             {
-                                                WarState* deliverState = createDeliverState(context, entity, townHall->id);
-                                                deliverState->nextState = createGatherWoodState(context, entity, targetEntityId, targetTile);
-                                                changeNextState(context, entity, deliverState, true, true);
+                                                WarState* gatherWoodState = createGatherWoodState(context, entity, targetEntityId, targetTile);
+                                                changeNextState(context, entity, gatherWoodState, true, true);        
                                             }
                                         }
-                                        else
-                                        {
-                                            WarState* gatherWoodState = createGatherWoodState(context, entity, targetEntityId, targetTile);
-                                            changeNextState(context, entity, gatherWoodState, true, true);        
-                                        }
                                     }
-                                }
-                            }                    
+                                }                    
+                            }
+                        }
+                        
+                    }
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        case WAR_COMMAND_DELIVER:
+        {
+            for(s32 i = 0; i < map->selectedEntities.count; i++)
+            {
+                WarEntityId entityId = map->selectedEntities.items[i];
+                WarEntity* entity = findEntity(context, entityId);
+                assert(entity);
+
+                if (isWorkerUnit(entity) && isCarryingResources(entity))
+                {
+                    // find the closest town hall to deliver the gold
+                    WarRace race = getUnitRace(entity);
+                    WarUnitType townHallType = getTownHallOfRace(race);
+                    WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+
+                    // if the town hall exists (it could be under attack and get destroyed)
+                    if (townHall)
+                    {
+                        WarState* deliverState = createDeliverState(context, entity, townHall->id);
+                        changeNextState(context, entity, deliverState, true, true);
+                    }
+                }
+            }
+
+            command->type = WAR_COMMAND_NONE;
+            return true;
+        }
+
+        case WAR_COMMAND_ATTACK:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    s32 selEntitiesCount = map->selectedEntities.count;
+                    if (selEntitiesCount > 0)
+                    {
+                        vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                        vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                        WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                        if (targetEntityId > 0)
+                        {
+                            WarEntity* targetEntity = findEntity(context, targetEntityId);
+                            if (targetEntity)
+                            {
+                                for(s32 i = 0; i < selEntitiesCount; i++)
+                                {
+                                    WarEntityId entityId = map->selectedEntities.items[i];
+                                    WarEntity* entity = findEntity(context, entityId);
+                                    assert(entity);
+
+                                    // TODO: check here if the attacker can attack the target entity
+                                    // if it can, the attacker go to attack state
+                                    // if it can't, do nothing
+
+                                    if (entity->id != targetEntity->id)
+                                    {
+                                        if (isUnit(targetEntity) || isWall(targetEntity))
+                                        {
+                                            WarState* attackState = createAttackState(context, entity, targetEntityId, targetTile);
+                                            changeNextState(context, entity, attackState, true, true);
+                                        }                                    
+                                    }
+                                }                    
+                            }
                         }
                     }
-                    
-                }
 
-                command->type = WAR_COMMAND_NONE;
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
             }
-            break;
+            
+            return false;
         }
     }
+
+    return false;
 }
 
 // train units
@@ -556,6 +644,20 @@ void harvest(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_HARVEST;
+}
+
+void deliver(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_DELIVER;
+}
+
+void attack(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_ATTACK;
 }
 
 void buildBasic(WarContext* context, WarEntity* entity)

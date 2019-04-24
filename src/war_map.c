@@ -543,11 +543,8 @@ void updateViewport(WarContext *context)
     // if there was a click in the minimap, then update the position of the viewport
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        rect minimapPanel = map->minimapPanel;
-        rect mapPanel = map->mapPanel;
-
         // check if the click is inside the minimap panel        
-        if (rectContainsf(minimapPanel, input->pos.x, input->pos.y))
+        if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
         {
             vec2 minimapSize = vec2i(MINIMAP_WIDTH, MINIMAP_HEIGHT);
             vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
@@ -556,7 +553,7 @@ void updateViewport(WarContext *context)
             map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
         }
         // check if it was at the edge of the map to scroll also and update the position of the viewport
-        else if(!input->isDragging && rectContainsf(mapPanel, input->pos.x, input->pos.y))
+        else if(!input->isDragging && rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             dir = getDirFromMousePos(context, input);
         }
@@ -576,7 +573,9 @@ void updateViewport(WarContext *context)
     map->isScrolling = !vec2IsZero(dir);
 
     if (!map->isScrolling)
+    {
         map->wasScrolling = wasScrolling;
+    }
 }
 
 void updateDragRect(WarContext* context)
@@ -1126,11 +1125,18 @@ void updateMap(WarContext* context)
     updateGlobalSpeed(context);
     updateGlobalScale(context);
 
-    executeCommand(context);
-
     updateViewport(context);
     updateDragRect(context);
-    updateSelection(context);
+
+    if (!executeCommand(context))
+    {
+        // only update the selection if the current command doesn't get
+        // executed or there is no command at all.
+        // the reason is because some commands are executed by the left click
+        // as well as the selection, and if a command get executed the current 
+        // selection shouldn't be lost
+        updateSelection(context);
+    }
 
     updateGoldText(context);
     updateWoodText(context);
@@ -1139,14 +1145,14 @@ void updateMap(WarContext* context)
     updateButtons(context);
     updateStatus(context);
 
-    updateTreesEdit(context);
-    updateRoadsEdit(context);
-    updateWallsEdit(context);
-    updateRuinsEdit(context);
-
     updateStateMachines(context);
     updateActions(context);
     updateAnimations(context);
+
+    updateTreesEdit(context);
+    updateRoadsEdit(context);
+    updateWallsEdit(context);
+    updateRuinsEdit(context);  
 
     //
     // TODO: Refactor this code to an order system that is more robust

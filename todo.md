@@ -15,6 +15,7 @@ List of thing to do in no particular order
   * ~~If a building is damaged then it can't start a train of a unit because it can't have the two states running at the same time.~~
     * ~~The Damaged state of buildings was removed, the damage animations are set in the takeDamage function now the building can build/train while is damaged.~~
   * Changing global speed doesn't change ongoing trainings.
+  * Select footman -> right click on a tree, and assertion is hit.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -84,10 +85,11 @@ List of thing to do in no particular order
     * Handle the case when there is no sufficient gold or lumber (put a message in the status bar).
     * Add keyboard shortcuts to train units.
   * > Add functionality of basic commands
-    * Move command
+    * ~~Move command~~
     * ~~Stop command~~
-    * Attack command
-    * Harvest command
+    * ~~Attack command~~
+      * Check that the selected units can attack the target unit.
+    * ~~Harvest command~~
     * Repair command
   * Add functionality of spell commands
 
