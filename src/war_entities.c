@@ -1067,6 +1067,37 @@ bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
     return true;
 }
 
+bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
+{
+    WarMap* map = context->map;
+
+    for (s32 dy = 0; dy < h; dy++)
+    {
+        for (s32 dx = 0; dx < w; dx++)
+        {
+            if (!isEmpty(map->finder, x + dx, y + dy))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y)
+{
+    WarUnitData data = getUnitData(buildingToBuild);
+
+    if (!checkRectToBuild(context, x, y, data.sizex, data.sizey))
+    {
+        setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
+        return false;
+    }
+
+    return true;
+}
+
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
 {
     assert(isUnit(entity));

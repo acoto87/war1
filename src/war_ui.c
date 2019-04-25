@@ -385,23 +385,76 @@ void renderSelectionRect(WarContext* context)
     nvgRestore(gfx);
 }
 
-void renderPanels(WarContext* context)
+void renderCommand(WarContext* context)
 {
     WarMap* map = context->map;
+    WarUnitCommand* command = &map->command;
+
+    WarInput* input = &context->input;
+
     NVGcontext* gfx = context->gfx;
 
     nvgSave(gfx);
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    switch (command->type)
     {
-        WarEntity *entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_IMAGE)
+        case WAR_COMMAND_BUILD_FARM_HUMANS:
+        case WAR_COMMAND_BUILD_FARM_ORCS:
+        case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
+        case WAR_COMMAND_BUILD_BARRACKS_ORCS:
+        case WAR_COMMAND_BUILD_CHURCH:
+        case WAR_COMMAND_BUILD_TEMPLE:
+        case WAR_COMMAND_BUILD_TOWER_HUMANS:
+        case WAR_COMMAND_BUILD_TOWER_ORCS:
+        case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
+        case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
+        case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
+        case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
+        case WAR_COMMAND_BUILD_STABLE:
+        case WAR_COMMAND_BUILD_KENNEL:
+        case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
+        case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
-            renderEntity(context, entity, false);
+            vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
+            position = vec2MapToTileCoordinates(position);
+
+            WarUnitType buildingToBuild = command->build.buildingToBuild;
+            WarUnitData data = getUnitData(buildingToBuild);
+
+            NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, data.sizex, data.sizey) 
+                ? NVG_GRAY_TRANSPARENT : NVG_RED_TRANSPARENT;
+
+            position = vec2TileToMapCoordinates(position, false);
+            position = vec2MapToScreenCoordinates(context, position);
+            vec2 size = vec2i(data.sizex * MEGA_TILE_WIDTH, data.sizey * MEGA_TILE_HEIGHT);
+            rect buildingRect = rectv(position, size);
+            nvgFillRect(gfx, buildingRect, fillColor);
+
+            break;
+        }
+
+        default:
+        {
+            // don't render the rest of the commands
+            break;
         }
     }
 
     nvgRestore(gfx);
+}
+
+void renderUIEntities(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity *entity = map->entities.items[i];
+        if (entity && isUIEntity(entity))
+        {
+            renderEntity(context, entity, false);
+        }
+    }
 }
 
 void renderMinimap(WarContext* context)
@@ -487,17 +540,11 @@ void renderMapUI(WarContext* context)
     // render selection rect
     renderSelectionRect(context);
 
-    // render ui elements
-    {
-        for(s32 i = 0; i < map->entities.count; i++)
-        {
-            WarEntity *entity = map->entities.items[i];
-            if (entity && isUIEntity(entity))
-            {
-                renderEntity(context, entity, false);
-            }
-        }
-    }
+    // render command
+    renderCommand(context);
+
+    // render ui entities
+    renderUIEntities(context);
 
     // render minimap
     renderMinimap(context);

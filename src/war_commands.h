@@ -49,3 +49,21 @@ void deliver(WarContext* context, WarEntity* entity);
 void attack(WarContext* context, WarEntity* entity);
 void buildBasic(WarContext* context, WarEntity* entity);
 void buildAdvanced(WarContext* context, WarEntity* entity);
+
+// build buildings
+void buildFarmHumans(WarContext* context, WarEntity* entity);
+void buildFarmOrcs(WarContext* context, WarEntity* entity);
+void buildBarracksHumans(WarContext* context, WarEntity* entity);
+void buildBarracksOrcs(WarContext* context, WarEntity* entity);
+void buildChurch(WarContext* context, WarEntity* entity);
+void buildTemple(WarContext* context, WarEntity* entity);
+void buildTowerHumans(WarContext* context, WarEntity* entity);
+void buildTowerOrcs(WarContext* context, WarEntity* entity);
+void buildTownHallHumans(WarContext* context, WarEntity* entity);
+void buildTownHallOrcs(WarContext* context, WarEntity* entity);
+void buildLumbermillHumans(WarContext* context, WarEntity* entity);
+void buildLumbermillOrcs(WarContext* context, WarEntity* entity);
+void buildStable(WarContext* context, WarEntity* entity);
+void buildKennel(WarContext* context, WarEntity* entity);
+void buildBlacksmithHumans(WarContext* context, WarEntity* entity);
+void buildBlacksmithOrcs(WarContext* context, WarEntity* entity);

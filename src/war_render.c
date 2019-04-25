@@ -2,6 +2,7 @@
 #define NVG_BLACK nvgRGBA(0, 0, 0, 255)
 #define NVG_GRAY_TRANSPARENT nvgRGBA(128, 128, 128, 128)
 #define NVG_GREEN_SELECTION nvgRGBA(0, 199, 0, 255)
+#define NVG_RED_TRANSPARENT nvgRGBA(128, 0, 0, 128)
 
 typedef struct
 {

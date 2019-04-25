@@ -630,6 +630,11 @@ typedef struct
             WarUpgradeType upgradeToBuild;
             WarUnitType buildingUnit;
         } upgrade;
+
+        struct
+        {
+            WarUnitType buildingToBuild;
+        } build;
     };
 } WarUnitCommand;
 

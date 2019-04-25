@@ -414,6 +414,45 @@ bool executeCommand(WarContext* context)
             
             return false;
         }
+
+        case WAR_COMMAND_BUILD_FARM_HUMANS:
+        case WAR_COMMAND_BUILD_FARM_ORCS:
+        case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
+        case WAR_COMMAND_BUILD_BARRACKS_ORCS:
+        case WAR_COMMAND_BUILD_CHURCH:
+        case WAR_COMMAND_BUILD_TEMPLE:
+        case WAR_COMMAND_BUILD_TOWER_HUMANS:
+        case WAR_COMMAND_BUILD_TOWER_ORCS:
+        case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
+        case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
+        case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
+        case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
+        case WAR_COMMAND_BUILD_STABLE:
+        case WAR_COMMAND_BUILD_KENNEL:
+        case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
+        case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    WarUnitType buildingToBuild = command->build.buildingToBuild;
+
+                    if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y))
+                    {
+                        createUnit(context, buildingToBuild, targetTile.x, targetTile.y, 0, WAR_RESOURCE_NONE, 0, false);
+
+                        command->type = WAR_COMMAND_NONE;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 
     return false;
@@ -672,4 +711,92 @@ void buildAdvanced(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_BUILD_ADVANCED;
+}
+
+void buildBuilding(WarContext* context, WarUnitCommandType commandType, WarUnitType buildingToBuild)
+{
+    WarMap* map = context->map;
+    
+    map->command.type = commandType;
+    map->command.build.buildingToBuild = buildingToBuild;
+}
+
+void buildFarmHumans(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_FARM_HUMANS, WAR_UNIT_FARM_HUMANS);
+}
+
+void buildFarmOrcs(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_FARM_ORCS, WAR_UNIT_FARM_ORCS);
+}
+
+void buildBarracksHumans(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_BARRACKS_HUMANS, WAR_UNIT_BARRACKS_HUMANS);
+}
+
+void buildBarracksOrcs(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_BARRACKS_ORCS, WAR_UNIT_BARRACKS_ORCS);
+}
+
+void buildChurch(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_CHURCH, WAR_UNIT_CHURCH);
+}
+
+void buildTemple(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_TEMPLE, WAR_UNIT_TEMPLE);
+}
+
+void buildTowerHumans(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_TOWER_HUMANS, WAR_UNIT_TOWER_HUMANS);
+}
+
+void buildTowerOrcs(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_TOWER_ORCS, WAR_UNIT_TOWER_ORCS);
+}
+
+void buildTownHallHumans(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_TOWNHALL_HUMANS, WAR_UNIT_TOWNHALL_HUMANS);
+}
+
+void buildTownHallOrcs(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_TOWNHALL_ORCS, WAR_UNIT_TOWNHALL_ORCS);
+}
+
+void buildLumbermillHumans(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_LUMBERMILL_HUMANS, WAR_UNIT_LUMBERMILL_HUMANS);
+}
+
+void buildLumbermillOrcs(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_LUMBERMILL_ORCS, WAR_UNIT_LUMBERMILL_ORCS);
+}
+
+void buildStable(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_STABLE, WAR_UNIT_STABLE);
+}
+
+void buildKennel(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_KENNEL, WAR_UNIT_KENNEL);
+}
+
+void buildBlacksmithHumans(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_HUMANS, WAR_UNIT_BLACKSMITH_HUMANS);
+}
+
+void buildBlacksmithOrcs(WarContext* context, WarEntity* entity)
+{
+    buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_ORCS, WAR_UNIT_BLACKSMITH_HUMANS);
 }

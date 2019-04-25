@@ -1138,16 +1138,16 @@ void updateMap(WarContext* context)
         updateSelection(context);
     }
 
+    updateStateMachines(context);
+    updateActions(context);
+    updateAnimations(context);
+
     updateGoldText(context);
     updateWoodText(context);
     updateSelectedUnitsInfo(context);
     updateCommands(context);
     updateButtons(context);
     updateStatus(context);
-
-    updateStateMachines(context);
-    updateActions(context);
-    updateAnimations(context);
 
     updateTreesEdit(context);
     updateRoadsEdit(context);
