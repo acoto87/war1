@@ -272,7 +272,9 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
     entity->animations = (WarAnimationsComponent){0};
 
     if (addToMap)
+    {
         WarEntityListAdd(&map->entities, entity);
+    }
 
     return entity;
 }
@@ -284,9 +286,9 @@ WarEntity* createUnit(WarContext* context,
                       u8 player, 
                       WarResourceKind resourceKind, 
                       u32 amount,
-                      bool isGoingToTrain)
+                      bool addToMap)
 {
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, !isGoingToTrain);
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
     addUnitComponent(context, entity, type, x, y, player, resourceKind, amount);
     addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
 
@@ -329,6 +331,40 @@ WarEntity* createUnit(WarContext* context,
 
     WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
     changeNextState(context, entity, idleState, true, true);
+
+    return entity;
+}
+
+WarEntity* createDude(WarContext* context, 
+                          WarUnitType type, 
+                          s32 x, 
+                          s32 y, 
+                          u8 player, 
+                          bool isGoingToTrain)
+{
+    assert(isDudeUnitType(type));
+
+    return createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, !isGoingToTrain);
+}
+
+WarEntity* createBuilding(WarContext* context, 
+                          WarUnitType type, 
+                          s32 x, 
+                          s32 y, 
+                          u8 player, 
+                          bool isGoingToBuild)
+{
+    assert(isBuildingUnitType(type));
+
+    WarEntity* entity = createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, true);
+
+    if (isGoingToBuild)
+    {
+        WarBuildingStats stats = getBuildingStats(type);
+        f32 buildTime = getScaledTime(context, stats.buildTime);
+        WarState* buildState = createBuildState(context, entity, stats.buildTime);
+        changeNextState(context, entity, buildState, true, true);
+    }
 
     return entity;
 }

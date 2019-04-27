@@ -22,8 +22,9 @@ WarState* createMiningState(WarContext* context, WarEntity* entity, WarEntityId 
 WarState* createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 position);
 WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position);
 WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId);
-WarState* createBuildingUnitState(WarContext* context, WarEntity* entity, WarEntity* entityToBuild, f32 buildTime);
-WarState* createBuildingUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime);
+WarState* createTrainState(WarContext* context, WarEntity* entity, WarEntity* entityToBuild, f32 buildTime);
+WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime);
+WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime);
 
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
 bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* state);
@@ -44,7 +45,9 @@ WarState* getNextState(WarEntity* entity, WarStateType type);
 #define getGatherWoodState(entity) getState(entity, WAR_STATE_WOOD)
 #define getChoppingState(entity) getState(entity, WAR_STATE_CHOP)
 #define getDeliverState(entity) getState(entity, WAR_STATE_DELIVER)
-#define getBuildingState(entity) getState(entity, WAR_STATE_BUILDING)
+#define getTrainState(entity) getState(entity, WAR_STATE_TRAIN)
+#define getUpgradeState(entity) getState(entity, WAR_STATE_UPGRADE)
+#define getBuildState(entity) getState(entity, WAR_STATE_BUILD)
 
 bool hasState(WarEntity* entity, WarStateType type);
 bool hasDirectState(WarEntity* entity, WarStateType type);
@@ -62,7 +65,9 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGatheringWood(entity) hasState(entity, WAR_STATE_WOOD)
 #define isChopping(entity) hasState(entity, WAR_STATE_CHOP)
 #define isDelivering(entity) hasState(entity, WAR_STATE_DELIVER)
-#define isBuilding(entity) hasState(entity, WAR_STATE_BUILDING)
+#define isTraining(entity) hasState(entity, WAR_STATE_TRAIN)
+#define isUpgrading(entity) hasState(entity, WAR_STATE_UPGRADE)
+#define isBuilding(entity) hasState(entity, WAR_STATE_BUILD)
 
 #define isGoingToIdle(entity) hasNextState(entity, WAR_STATE_IDLE)
 #define isGoingToMove(entity) hasNextState(entity, WAR_STATE_MOVE)
@@ -76,14 +81,18 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGoingToGatherWood(entity) hasNextState(entity, WAR_STATE_WOOD)
 #define isGoingToChop(entity) hasNextState(entity, WAR_STATE_CHOP)
 #define isGoingToDeliver(entity) hasNextState(entity, WAR_STATE_DELIVER)
-#define isGoingToBuild(entity) hasNextState(entity, WAR_STATE_BUILDING)
+#define isGoingToTrain(entity) hasNextState(entity, WAR_STATE_TRAIN)
+#define isGoingToUpgrade(entity) hasNextState(entity, WAR_STATE_UPGRADE)
+#define isGoingToBuild(entity) hasNextState(entity, WAR_STATE_BUILD)
 
 #define setDelay(state, seconds) ((state)->delay = (seconds))
 
 bool isInsideBuilding(WarEntity* entity)
 {
     if (isMining(entity))
+    {
         return true;
+    }
 
     if(isDelivering(entity))
     {

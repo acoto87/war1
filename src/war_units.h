@@ -965,12 +965,9 @@ WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)
 #define isWall(entity) ((entity)->type == WAR_ENTITY_TYPE_WALL)
 #define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
 
-bool isDudeUnit(WarEntity* entity)
+bool isDudeUnitType(WarUnitType type)
 {
-    if (!isUnit(entity))
-        return false;
-
-    switch (entity->unit.type)
+    switch (type)
     {
         case WAR_UNIT_FOOTMAN:
         case WAR_UNIT_GRUNT:
@@ -1008,12 +1005,9 @@ bool isDudeUnit(WarEntity* entity)
     }
 }
 
-bool isMagicUnit(WarEntity* entity)
+bool isMagicUnitType(WarUnitType type)
 {
-    if (!isUnit(entity))
-        return false;
-
-    switch (entity->unit.type)
+    switch (type)
     {
         case WAR_UNIT_CONJURER:
         case WAR_UNIT_WARLOCK:
@@ -1026,12 +1020,9 @@ bool isMagicUnit(WarEntity* entity)
     }
 }
 
-bool isBuildingUnit(WarEntity* entity)
+bool isBuildingUnitType(WarUnitType type)
 {
-    if (!isUnit(entity))
-        return false;
-
-    switch (entity->unit.type)
+    switch (type)
     {
         case WAR_UNIT_FARM_HUMANS:
         case WAR_UNIT_FARM_ORCS:
@@ -1059,12 +1050,9 @@ bool isBuildingUnit(WarEntity* entity)
     }
 }
 
-bool isWorkerUnit(WarEntity* entity)
+bool isWorkerUnitType(WarUnitType type)
 {
-    if (!isUnit(entity))
-        return false;
-
-    switch (entity->unit.type)
+    switch (type)
     {
         case WAR_UNIT_PEASANT:
         case WAR_UNIT_PEON:
@@ -1075,12 +1063,9 @@ bool isWorkerUnit(WarEntity* entity)
     }
 }
 
-bool isWarriorUnit(WarEntity* entity)
+bool isWarriorUnitType(WarUnitType type)
 {
-    if (!isUnit(entity))
-        return false;
-
-    switch (entity->unit.type)
+    switch (type)
     {
         case WAR_UNIT_FOOTMAN:
         case WAR_UNIT_GRUNT:
@@ -1114,12 +1099,9 @@ bool isWarriorUnit(WarEntity* entity)
     }
 }
 
-bool isCorpseUnit(WarEntity* entity)
+bool isCorpseUnitType(WarUnitType type)
 {
-    if (!isUnit(entity))
-        return false;
-
-    switch (entity->unit.type)
+    switch (type)
     {
         case WAR_UNIT_HUMAN_CORPSE:
         case WAR_UNIT_ORC_CORPSE:
@@ -1128,6 +1110,36 @@ bool isCorpseUnit(WarEntity* entity)
         default:
             return false;
     }
+}
+
+bool isDudeUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isDudeUnitType(entity->unit.type);
+}
+
+bool isMagicUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isMagicUnitType(entity->unit.type);
+}
+
+bool isBuildingUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isBuildingUnitType(entity->unit.type);
+}
+
+bool isWorkerUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isWorkerUnitType(entity->unit.type);
+}
+
+bool isWarriorUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isWarriorUnitType(entity->unit.type);
+}
+
+bool isCorpseUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isCorpseUnitType(entity->unit.type);
 }
 
 WarRace getUnitRace(WarEntity* entity)

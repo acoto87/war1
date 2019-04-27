@@ -12,7 +12,9 @@ WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
     { WAR_STATE_DELIVER,  enterDeliverState,    leaveDeliverState,    updateDeliverState,    freeDeliverState    },
     { WAR_STATE_DEATH,    enterDeathState,      leaveDeathState,      updateDeathState,      freeDeathState      },
     { WAR_STATE_COLLAPSE, enterCollapseState,   leaveCollapseState,   updateCollapseState,   freeCollapseState   },
-    { WAR_STATE_BUILDING, enterBuildingState,   leaveBuildingState,   updateBuildingState,   freeBuildingState   },
+    { WAR_STATE_TRAIN,    enterTrainState,      leaveTrainState,      updateTrainState,      freeTrainState      },
+    { WAR_STATE_UPGRADE,  enterUpgradeState,    leaveUpgradeState,    updateUpgradeState,    freeUpgradeState    },
+    { WAR_STATE_BUILD,    enterBuildState,      leaveBuildState,      updateBuildState,      freeBuildState      },
     { WAR_STATE_WAIT,     enterWaitState,       leaveWaitState,       updateWaitState,       freeWaitState       },
 };
 

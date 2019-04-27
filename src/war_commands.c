@@ -37,12 +37,13 @@ bool executeCommand(WarContext* context)
             assert(selectedEntity->unit.type == buildingUnit);
 
             WarUnitStats stats = getUnitStats(unitToTrain);
-            if (withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost) &&
-                checkFarmFood(context, player))
+            if (checkFarmFood(context, player) && 
+                withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost))
             {
-                WarEntity* unit = createUnit(context, unitToTrain, 0, 0, 0, WAR_RESOURCE_NONE, 0, true);
-                WarState* buildingState = createBuildingUnitState(context, selectedEntity, unit, getScaledTime(context, stats.buildTime));
-                changeNextState(context, selectedEntity, buildingState, true, true);
+                WarEntity* unit = createDude(context, unitToTrain, 0, 0, 0, true);
+                f32 buildTime = getScaledTime(context, stats.buildTime);
+                WarState* trainState = createTrainState(context, selectedEntity, unit, buildTime);
+                changeNextState(context, selectedEntity, trainState, true, true);
             }
 
             command->type = WAR_COMMAND_NONE;
@@ -86,8 +87,8 @@ bool executeCommand(WarContext* context)
             if (withdrawFromPlayer(context, player, stats.goldCost[level], 0))
             {
                 f32 buildTime = getScaledTime(context, stats.buildTime);
-                WarState* buildingState = createBuildingUpgradeState(context, selectedEntity, upgradeToBuild, buildTime);
-                changeNextState(context, selectedEntity, buildingState, true, true);
+                WarState* upgradeState = createUpgradeState(context, selectedEntity, upgradeToBuild, buildTime);
+                changeNextState(context, selectedEntity, upgradeState, true, true);
             }
 
             command->type = WAR_COMMAND_NONE;
@@ -441,9 +442,11 @@ bool executeCommand(WarContext* context)
 
                     WarUnitType buildingToBuild = command->build.buildingToBuild;
 
-                    if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y))
+                    WarBuildingStats stats = getBuildingStats(buildingToBuild);
+                    if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y) &&
+                        withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost))
                     {
-                        createUnit(context, buildingToBuild, targetTile.x, targetTile.y, 0, WAR_RESOURCE_NONE, 0, false);
+                        createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
 
                         command->type = WAR_COMMAND_NONE;
                         return true;

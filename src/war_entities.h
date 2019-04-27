@@ -95,7 +95,9 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap);
 WarEntity* createUnit(WarContext* context, WarUnitType type, 
                       s32 x, s32 y, u8 player, 
                       WarResourceKind resourceKind, u32 amount,
-                      bool isGoingToTrain);
+                      bool addToMap);
+WarEntity* createDude(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToTrain);
+WarEntity* createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToBuild);
 s32 findEntityIndex(WarContext* context, WarEntityId id);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);

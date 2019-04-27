@@ -16,6 +16,7 @@ List of thing to do in no particular order
     * ~~The Damaged state of buildings was removed, the damage animations are set in the takeDamage function now the building can build/train while is damaged.~~
   * Changing global speed doesn't change ongoing trainings.
   * Select footman -> right click on a tree, and assertion is hit.
+  * When a building is being built dont show command buttons or command texts.
 
 * General
   * ~~Test the new implementation for lists.~~

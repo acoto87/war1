@@ -307,15 +307,15 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
-                       startUnit.resourceKind, startUnit.amount, false);
+                       startUnit.resourceKind, startUnit.amount, true);
         }
 
-        createUnit(context, WAR_UNIT_BARRACKS_HUMANS, 37, 18, 0, WAR_RESOURCE_NONE, 0, false);
-        createUnit(context, WAR_UNIT_LUMBERMILL_HUMANS, 36, 22, 0, WAR_RESOURCE_NONE, 0, false);
-        createUnit(context, WAR_UNIT_BLACKSMITH_HUMANS, 40, 16, 0, WAR_RESOURCE_NONE, 0, false);
-        createUnit(context, WAR_UNIT_CHURCH, 45, 22, 0, WAR_RESOURCE_NONE, 0, false);
-        createUnit(context, WAR_UNIT_STABLE, 45, 18, 0, WAR_RESOURCE_NONE, 0, false);
-        createUnit(context, WAR_UNIT_TOWER_HUMANS, 45, 16, 0, WAR_RESOURCE_NONE, 0, false);
+        createBuilding(context, WAR_UNIT_BARRACKS_HUMANS, 37, 18, 0, false);
+        createBuilding(context, WAR_UNIT_LUMBERMILL_HUMANS, 36, 22, 0, false);
+        createBuilding(context, WAR_UNIT_BLACKSMITH_HUMANS, 40, 16, 0, false);
+        createBuilding(context, WAR_UNIT_CHURCH, 45, 22, 0, false);
+        createBuilding(context, WAR_UNIT_STABLE, 45, 18, 0, false);
+        createBuilding(context, WAR_UNIT_TOWER_HUMANS, 45, 16, 0, false);
     }
 
     // add ui entities

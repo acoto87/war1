@@ -954,7 +954,9 @@ typedef enum
     WAR_STATE_DELIVER,
     WAR_STATE_DEATH,
     WAR_STATE_COLLAPSE,
-    WAR_STATE_BUILDING,
+    WAR_STATE_TRAIN,
+    WAR_STATE_UPGRADE,
+    WAR_STATE_BUILD,
     WAR_STATE_WAIT,
 
     WAR_STATE_COUNT
@@ -1043,15 +1045,26 @@ typedef struct _WarState
         struct
         {
             struct _WarEntity* entityToBuild;
-            WarUpgradeType upgradeToBuild;
-
-            // how much time has passed since start building (in seconds)
-            f32 buildTime;
-            // total time to build (in seconds)
-            f32 totalBuildTime;
-
+            f32 buildTime; // how much time has passed since start building (in seconds)
+            f32 totalBuildTime; // total time to build (in seconds)
             bool cancelled;
-        } building;
+        } train;
+
+        struct
+        {
+            WarUpgradeType upgradeToBuild;
+            f32 buildTime; // how much time has passed since start building (in seconds)
+            f32 totalBuildTime; // total time to build (in seconds)
+            bool cancelled;
+        } upgrade;
+
+        struct
+        {
+            struct _WarEntity* worker; // the worker that is building the building            
+            f32 buildTime; // how much time has passed since start building (in seconds)
+            f32 totalBuildTime; // total time to build (in seconds)
+            bool cancelled;
+        } build;
     };
 } WarState;
 

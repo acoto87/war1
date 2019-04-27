@@ -255,6 +255,7 @@ WarUnitAction* buildDeathAction(s32 nframes, s32 frames[], s32 waitTime, bool di
 WarUnitAction* buildBuildAction(s32 nframes, s32 frames[], s32 waitTime)
 {
     WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_BUILD);
+    action->loop = false;
 
     addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
     
@@ -929,14 +930,15 @@ void updateAction(WarContext* context, WarEntity* entity)
     WarUnitComponent* unit = &entity->unit;
 
     if (!unit || unit->actions.count == 0 || unit->actionIndex < 0)
+    {
         return;
+    }
 
     WarUnitAction* action = unit->actions.items[unit->actionIndex];
-    if (!action)
+    if (!action || action->status == WAR_ACTION_FINISHED)
+    {
         return;
-
-    if (action->status == WAR_ACTION_FINISHED)
-        return;
+    }
 
     if (action->stepIndex < 0)
     {
@@ -950,7 +952,9 @@ void updateAction(WarContext* context, WarEntity* entity)
     {
         action->waitCount -= context->deltaTime;
         if (action->waitCount > 0)
+        {
             return;
+        }
         
         action->waitCount = 0;
 
@@ -1060,7 +1064,7 @@ void updateAction(WarContext* context, WarEntity* entity)
         step = action->steps.items[action->stepIndex];
     }
 
-    action->waitCount = __frameCountToSeconds(step.param) * getScaledTime(context, action->scale);
+    action->waitCount = getScaledTime(context, __frameCountToSeconds(step.param) * action->scale);
 }
 
 // peasant: 40s
