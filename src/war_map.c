@@ -912,13 +912,17 @@ void updateCommands(WarContext* context)
     if (entity->unit.type == WAR_UNIT_FARM_HUMANS ||
         entity->unit.type == WAR_UNIT_FARM_ORCS)
     {
-        s32 farmsCount = getPlayerUnitCount(context, 0, entity->unit.type);
-        s32 dudesCount = getPlayerDudesCount(context, 0);
+        if (!entity->unit.building)
+        {
+            s32 farmsCount = getPlayerUnitCount(context, 0, entity->unit.type);
+            s32 dudesCount = getPlayerDudesCount(context, 0);
 
-        setUIText(commandTexts[0], NO_HIGHLIGHT, "FOOD USAGE:");
-        setUITextFormat(commandTexts[1], NO_HIGHLIGHT, "GROWN %d", farmsCount * 4 + 1);
-        setUITextFormat(commandTexts[2], NO_HIGHLIGHT, " USED %d", dudesCount);
-        return;
+            setUIText(commandTexts[0], NO_HIGHLIGHT, "FOOD USAGE:");
+            setUITextFormat(commandTexts[1], NO_HIGHLIGHT, "GROWN %d", farmsCount * 4 + 1);
+            setUITextFormat(commandTexts[2], NO_HIGHLIGHT, " USED %d", dudesCount);
+
+            return;
+        }
     }
     
     // if the selected unit is a goldmine,
@@ -950,7 +954,9 @@ void updateCommands(WarContext* context)
             for (s32 j = 0; j < arrayLength(commands); j++)
             {
                 if (commands[j] != selectedCommands[j])
+                {
                     commands[j] = WAR_COMMAND_NONE;
+                }
             }
         }
     }

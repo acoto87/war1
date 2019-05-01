@@ -437,6 +437,12 @@ bool executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
+                    assert(map->selectedEntities.count > 0);
+
+                    WarEntityId workerId = map->selectedEntities.items[0];
+                    WarEntity* worker = findEntity(context, workerId);
+                    assert(worker);
+
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
@@ -446,7 +452,10 @@ bool executeCommand(WarContext* context)
                     if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y) &&
                         withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost))
                     {
-                        createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
+                        WarEntity* building = createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
+
+                        WarState* repairState = createRepairState(context, worker, building->id);
+                        changeNextState(context, worker, repairState, true, true);
 
                         command->type = WAR_COMMAND_NONE;
                         return true;

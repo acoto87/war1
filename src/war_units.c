@@ -363,6 +363,17 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
         }
 
         // buildings
+        case WAR_UNIT_FARM_HUMANS:
+        case WAR_UNIT_FARM_ORCS:
+        {
+            if (unit->building)
+            {
+                commands[5] = WAR_COMMAND_CANCEL;
+            }
+            
+            break;
+        }
+
         case WAR_UNIT_BARRACKS_HUMANS:
         {
             if (unit->building)

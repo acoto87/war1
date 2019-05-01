@@ -1,7 +1,7 @@
 WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_BUILD);
-    state->build.worker = NULL;
+    state->build.workerId = 0;
     state->build.buildTime = 0;
     state->build.totalBuildTime = buildTime;
     state->build.cancelled = false;
@@ -24,9 +24,8 @@ void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
     WarBuildingData buildingData = getBuildingData(entity->unit.type);
     addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.buildingResource));
 
-    // finally set the action of build on the building
-    f32 scale = state->build.totalBuildTime / __frameCountToSeconds(3 * 50);
-    setAction(context, entity, WAR_ACTION_TYPE_BUILD, true, scale);
+    // set the action to NONE because the sprite changes will be handled by this state
+    setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
 
     unit->building = true;
     unit->buildPercent = 0;
@@ -60,12 +59,11 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    // if there is no worker building the building,
-    // don't advance build time
-    // if (!state->build.worker)
-    // {
-    //     return;
-    // }
+    // if there is no worker building the building, don't advance build time
+    if (state->build.workerId <= 0)
+    {
+        return;
+    }
 
     state->build.buildTime += context->deltaTime;
 
@@ -74,13 +72,14 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
     {
         unit->buildPercent = 1;
 
+        // find the worker that is building the building
+        WarEntity* worker = findEntity(context, state->build.workerId);
+        assert(worker);
+
         // ...find an empty position to put it
         vec2 position = getUnitCenterPosition(entity, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(state->build.worker, spawnPosition, true);
-
-        // assign null to the field because freeBuildingState will try to free it
-        state->build.worker = NULL;
+        setUnitCenterPosition(worker, spawnPosition, true);
 
         // remove the building sprite...
         removeSpriteComponent(context, entity);
@@ -99,6 +98,24 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
     }
     
     unit->buildPercent = percentabf01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
+
+    // update the sprite of the building to show the construction steps
+    //
+    // NOTE: maybe this could be handled by the BUILD action if I add a `pauseAction`
+    // and `resumeAction` functions to be able to pause it or resume it according
+    // to the presence of the worker at the construction site
+    //
+    s32 framesCount = entity->sprite.sprite.framesCount;
+    s32 frameIndex = entity->sprite.frameIndex;
+    f32 frameIndexStep = 1.0f / framesCount;
+    if (unit->buildPercent >= (frameIndex + 1) * frameIndexStep)
+    {
+        if (frameIndex + 1 < framesCount)
+        {
+            frameIndex += 1;
+        }
+    }
+    entity->sprite.frameIndex = frameIndex;
 }
 
 void freeBuildState(WarState* state)

@@ -205,6 +205,40 @@ WarUnitAction* buildAttackAction(s32 nframes, s32 frames[], s32 attackSpeed, s32
     return action;
 }
 
+WarUnitAction* buildRepairAction(s32 nframes, s32 frames[], s32 attackSpeed, s32 attackSound, s32 coolOffTime, bool directional)
+{
+    WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_REPAIR);
+    action->directional = directional;
+
+    s32 halfIndex = nframes%2 == 0 ? nframes/2 : (nframes+1)/2;
+
+    addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
+    
+    for(s32 i = 0; i < nframes; i++)
+    {
+        addActionStep(action, WAR_ACTION_STEP_FRAME, frames[i]);
+
+        if (i == halfIndex)
+        {
+            addActionStep(action, WAR_ACTION_STEP_ATTACK, 0);
+            addActionStep(action, attackSound, 0);
+        }
+
+        addActionStep(action, WAR_ACTION_STEP_WAIT, attackSpeed);
+    }
+
+    // make sure we don't attack faster just because we have fewer frames
+    addActionStep(action, WAR_ACTION_STEP_WAIT, (5 - nframes) * attackSpeed);
+    addActionStep(action, WAR_ACTION_STEP_FRAME, 0);
+    addActionStep(action, WAR_ACTION_STEP_WAIT, coolOffTime);
+
+    addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
+    addActionStep(action, WAR_ACTION_STEP_FRAME, 0);
+    addActionStep(action, WAR_ACTION_STEP_WAIT, 1);
+
+    return action;
+}
+
 WarUnitAction* buildHarvestAction(s32 nframes, s32 frames[], s32 harvestSpeed, WarUnitActionStepType harvestSound, bool directional)
 {
     WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_HARVEST);
@@ -374,7 +408,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
             WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
-            WarUnitAction* repairAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
+            WarUnitAction* repairAction = buildRepairAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
             WarUnitAction* harvestAction = buildHarvestAction(framesHarvest.attackFramesCount, framesHarvest.attackFrames, 5, attackSound, directional);
 
             addActions(entity, 6, idleAction, walkAction, attackAction, deathAction, repairAction, harvestAction);
@@ -871,7 +905,7 @@ void addUnitActions(WarEntity* entity)
     }
 }
 
-s32 findAction(WarEntity* entity, WarUnitActionType type)
+s32 findActionIndex(WarEntity* entity, WarUnitActionType type)
 {
     WarUnitComponent* unit = &entity->unit;
     if (unit)
@@ -901,26 +935,28 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
 
     WarUnitComponent* unit = &entity->unit;
     
-    s32 actionIndex = findAction(entity, type);
-    if (actionIndex < 0)
+    if (type == WAR_ACTION_TYPE_NONE)
     {
-        logError("Entity of type %d doesn't have a %d animation. Defaulting to WAR_ACTION_TYPE_IDLE\n", entity->type, type);
-        actionIndex = findAction(entity, WAR_ACTION_TYPE_IDLE);
-    }
-
-    if (actionIndex < 0)
-    {
-        logError("Entity of type %d doesn't have a %d or %d animations\n", entity->type, type, WAR_ACTION_TYPE_IDLE);
+        unit->actionIndex = -1;
         return;
     }
-
-    unit->actionIndex = actionIndex;
-
+    
+    unit->actionIndex = findActionIndex(entity, type);
+    if (unit->actionIndex < 0)
+    {
+        logError("Entity of type %d doesn't have a %d or %d animations\n", entity->type, type);
+        return;
+    }
+    
     if (scale >= 0)
+    {
         unit->actions.items[unit->actionIndex]->scale = scale;
+    }
 
     if (reset)
+    {
         resetAction(unit->actions.items[unit->actionIndex]);
+    }
 }
 
 void updateAction(WarContext* context, WarEntity* entity)

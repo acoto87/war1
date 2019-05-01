@@ -272,7 +272,6 @@ void updateGame(WarContext* context)
 void renderGame(WarContext *context)
 {
     NVGcontext* gfx = context->gfx;
-    NVGLUframebuffer* fb = context->fb;
 
     s32 framebufferWidth = context->framebufferWidth;
     s32 framebufferHeight = context->framebufferHeight;
@@ -283,7 +282,15 @@ void renderGame(WarContext *context)
     f32 devicePixelRatio = context->devicePixelRatio;
 
     // render the whole scene to the FBO
-    nvgluBindFramebuffer(fb);
+    //
+    // NOTE: This framebuffer stuff is to be able to make post-processing
+    // (generating gifs, or other kind of techniques like old TV effects).
+    // I'm commenting it out the framebuffer stuff because there is performance
+    // reasons with OpenGL ES `glReadPixels`, since is the way to read back
+    // pixels from the framebuffer (there is PBO on OpenGL ES 2.0).
+    //
+    // NVGLUframebuffer* fb = context->fb;
+    // nvgluBindFramebuffer(fb);
 
     glViewport(0, 0, framebufferWidth, framebufferHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -292,23 +299,23 @@ void renderGame(WarContext *context)
     renderMap(context);
     nvgEndFrame(gfx);
 
-    nvgluBindFramebuffer(NULL);
+    // nvgluBindFramebuffer(NULL);
 
     // then render a quad with the texture geneate with the FBO
-    glViewport(0, 0, framebufferWidth, framebufferHeight);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    // glViewport(0, 0, framebufferWidth, framebufferHeight);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    nvgBeginFrame(gfx, windowWidth, windowHeight, devicePixelRatio);
-    nvgSave(gfx);
+    // nvgBeginFrame(gfx, windowWidth, windowHeight, devicePixelRatio);
+    // nvgSave(gfx);
 
-    NVGpaint img = nvgImagePattern(gfx, 0, 0, windowWidth, windowHeight, 0, fb->image, 1.0f);
-    nvgBeginPath(gfx);
-    nvgRect(gfx, 0, 0, windowWidth, windowHeight);
-    nvgFillPaint(gfx, img);
-    nvgFill(gfx);
+    // NVGpaint img = nvgImagePattern(gfx, 0, 0, windowWidth, windowHeight, 0, fb->image, 1.0f);
+    // nvgBeginPath(gfx);
+    // nvgRect(gfx, 0, 0, windowWidth, windowHeight);
+    // nvgFillPaint(gfx, img);
+    // nvgFill(gfx);
     
-    nvgRestore(gfx);
-    nvgEndFrame(gfx);
+    // nvgRestore(gfx);
+    // nvgEndFrame(gfx);
 }
 
 void presentGame(WarContext *context)

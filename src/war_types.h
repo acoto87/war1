@@ -869,6 +869,7 @@ shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 
 typedef enum
 {
+    WAR_ACTION_TYPE_NONE = -1,
     WAR_ACTION_TYPE_IDLE,
     WAR_ACTION_TYPE_WALK,
     WAR_ACTION_TYPE_ATTACK,
@@ -957,6 +958,8 @@ typedef enum
     WAR_STATE_TRAIN,
     WAR_STATE_UPGRADE,
     WAR_STATE_BUILD,
+    WAR_STATE_REPAIR,
+    WAR_STATE_REPAIRING,
     WAR_STATE_WAIT,
 
     WAR_STATE_COUNT
@@ -1060,11 +1063,23 @@ typedef struct _WarState
 
         struct
         {
-            struct _WarEntity* worker; // the worker that is building the building            
+            WarEntityId workerId; // the worker that is building the building            
             f32 buildTime; // how much time has passed since start building (in seconds)
             f32 totalBuildTime; // total time to build (in seconds)
             bool cancelled;
         } build;
+
+        struct
+        {
+            WarEntityId buildingId;
+        } repair;
+
+        struct
+        {
+            WarEntityId buildingId;
+            bool insideBuilding;
+            f32 repairTime;
+        } repairing;
     };
 } WarState;
 
