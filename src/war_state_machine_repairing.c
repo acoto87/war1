@@ -98,7 +98,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     {
         if (context->time - state->repairing.repairTime >= 1.0f)
         {
-            if (!withdrawFromPlayer(context, player, 1, 1))
+            if (!decreasePlayerResources(context, player, 1, 1))
             {
                 WarState* idleState = createIdleState(context, entity, true);
                 changeNextState(context, entity, idleState, true, true);

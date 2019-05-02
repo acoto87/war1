@@ -1065,7 +1065,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
     }
 }
 
-bool withdrawFromPlayer(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
 {
     if (player->gold < gold)
     {
@@ -1082,6 +1082,12 @@ bool withdrawFromPlayer(WarContext* context, WarPlayerInfo* player, s32 gold, s3
     player->gold -= gold;
     player->wood -= wood;
     return true;
+}
+
+void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+{
+    player->gold += gold;
+    player->wood += wood;
 }
 
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player)

@@ -38,7 +38,7 @@ bool executeCommand(WarContext* context)
 
             WarUnitStats stats = getUnitStats(unitToTrain);
             if (checkFarmFood(context, player) && 
-                withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost))
+                decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
             {
                 WarEntity* unit = createDude(context, unitToTrain, 0, 0, 0, true);
                 f32 buildTime = getScaledTime(context, stats.buildTime);
@@ -84,7 +84,7 @@ bool executeCommand(WarContext* context)
 
             WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
             s32 level = getUpgradeLevel(player, upgradeToBuild);
-            if (withdrawFromPlayer(context, player, stats.goldCost[level], 0))
+            if (decreasePlayerResources(context, player, stats.goldCost[level], 0))
             {
                 f32 buildTime = getScaledTime(context, stats.buildTime);
                 WarState* upgradeState = createUpgradeState(context, selectedEntity, upgradeToBuild, buildTime);
@@ -495,7 +495,7 @@ bool executeCommand(WarContext* context)
 
                     WarBuildingStats stats = getBuildingStats(buildingToBuild);
                     if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y) &&
-                        withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost))
+                        decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
                     {
                         WarEntity* building = createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
                         WarState* repairState = createRepairState(context, worker, building->id);
@@ -705,18 +705,56 @@ void upgradeUnholyArmor(WarContext* context, WarEntity* entity)
 }
 
 // cancel
-void cancelTrainOrUpgrade(WarContext* context, WarEntity* entity)
+void cancel(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
-    
-    assert(map->selectedEntities.count == 1);
+    WarPlayerInfo* player = &map->players[0];
 
-    WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[0]);
-    
-    assert(selectedEntity && isBuildingUnit(selectedEntity));
+    map->command.type = WAR_COMMAND_NONE;
 
-    WarState* idleState = createIdleState(context, entity, false);
-    changeNextState(context, selectedEntity, idleState, true, true);
+    for (s32 i = 0; i < map->selectedEntities.count; i++)
+    {
+        WarEntityId selectedEntityId = map->selectedEntities.items[i];
+        WarEntity* selectedEntity = findEntity(context, selectedEntityId);
+
+        if (isBuildingUnit(selectedEntity))
+        {
+            if (isBuilding(selectedEntity) || isGoingToBuild(selectedEntity))
+            {
+                WarBuildingStats stats = getBuildingStats(selectedEntity->unit.type);
+                increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
+
+                WarState* collapseState = createCollapseState(context, selectedEntity);
+                changeNextState(context, selectedEntity, collapseState, true, true);
+            }
+            else if (selectedEntity->unit.building)
+            {
+                if (isTraining(selectedEntity) || isGoingToTrain(selectedEntity))
+                {
+                    WarState* trainState = getTrainState(selectedEntity);
+                    WarEntity* entityToBuild = trainState->train.entityToBuild;
+                    assert(entityToBuild && isUnit(entityToBuild));
+
+                    WarUnitStats stats = getUnitStats(entityToBuild->unit.type);
+                    increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
+                }
+                else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
+                {
+                    WarState* upgradeState = getUpgradeState(selectedEntity);
+                    WarUpgradeType upgradeToBuild = upgradeState->upgrade.upgradeToBuild;
+                    assert(hasRemainingUpgrade(player, upgradeToBuild));
+
+                    s32 upgradeLevel = getUpgradeLevel(player, upgradeToBuild);
+                    logInfo("upgradeLevel: %d\n", upgradeLevel);
+                    WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
+                    increasePlayerResources(context, player, stats.goldCost[upgradeLevel], 0);
+                }
+
+                WarState* idleState = createIdleState(context, entity, false);
+                changeNextState(context, selectedEntity, idleState, true, true);
+            }
+        }
+    }
 }
 
 // basic

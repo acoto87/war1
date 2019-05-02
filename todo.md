@@ -82,16 +82,17 @@ List of thing to do in no particular order
     * ~~Make so that the upgrades increase the corresponding values for the damage, armor and so.~~
     * Add keyboard shortcuts to build upgrades.
   * Add functionality of building buildings.
-    * Make so that build buildings withdraw gold and lumber.
-    * Handle the case when there is no sufficient gold or lumber (put a message in the status bar).
+    * ~~Make so that build buildings withdraw gold and lumber.~~
+    * ~~Handle the case when there is no sufficient gold or lumber (put a message in the status bar).~~
     * Add keyboard shortcuts to train units.
   * > Add functionality of basic commands
     * ~~Move command~~
     * ~~Stop command~~
     * ~~Attack command~~
       * Check that the selected units can attack the target unit.
+      * Attack on the ground
     * ~~Harvest command~~
-    * Repair command
+    * ~~Repair command~~
   * Add functionality of spell commands
 
 * Animations/actions

@@ -147,7 +147,7 @@ s32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text, s32 index, s32 co
 
             if (text[index + i] != ' ')
             {
-#ifdef __DEBUG__
+#ifdef DEBUG_RENDER_FONT
                 nvgFillRect(gfx, rd, NVG_GREEN_SELECTION);
 #endif
                 

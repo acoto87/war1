@@ -39,7 +39,7 @@ void upgradeInvisibility(WarContext* context, WarEntity* entity);
 void upgradeUnholyArmor(WarContext* context, WarEntity* entity);
 
 // cancel
-void cancelTrainOrUpgrade(WarContext* context, WarEntity* entity);
+void cancel(WarContext* context, WarEntity* entity);
 
 // basic
 void move(WarContext* context, WarEntity* entity);

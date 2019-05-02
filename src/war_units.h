@@ -645,98 +645,99 @@ typedef struct
     WarClickHandler clickHandler;
     s32 highlightIndex;
     char tooltip[100];
+    char tooltip2[100];
 } WarUnitCommandBaseData;
 
 const WarUnitCommandBaseData commandBaseData[] = 
 {
-    { WAR_COMMAND_NONE,                     NULL,                   -1, ""                          },
+    { WAR_COMMAND_NONE,                     NULL,                   -1, "",                             "" },
 
     // unit commands
-    { WAR_COMMAND_MOVE,                     move,                    0, "MOVE"                      },
-    { WAR_COMMAND_STOP,                     stop,                    0, "STOP"                      },
-    { WAR_COMMAND_HARVEST,                  harvest,                 0, "HARVEST LUMBER/MINE GOLD"  },
-    { WAR_COMMAND_DELIVER,                  deliver,                16, "RETURN GOODS TO TOWN HALL" },
-    { WAR_COMMAND_REPAIR,                   repair,                  0, "REPAIR"                    },
-    { WAR_COMMAND_BUILD_BASIC,              buildBasic,              0, "BUILD BASIC STRUCTURE"     },
-    { WAR_COMMAND_BUILD_ADVANCED,           buildAdvanced,           6, "BUILD ADVANCED STRUCTURE"  },
-    { WAR_COMMAND_ATTACK,                   attack,                  0, "ATTACK"                    },
+    { WAR_COMMAND_MOVE,                     move,                    0, "MOVE",                         "" },
+    { WAR_COMMAND_STOP,                     stop,                    0, "STOP",                         "" },
+    { WAR_COMMAND_HARVEST,                  harvest,                 0, "HARVEST LUMBER/MINE GOLD",     "" },
+    { WAR_COMMAND_DELIVER,                  deliver,                16, "RETURN GOODS TO TOWN HALL",    "" },
+    { WAR_COMMAND_REPAIR,                   repair,                  0, "REPAIR",                       "" },
+    { WAR_COMMAND_BUILD_BASIC,              buildBasic,              0, "BUILD BASIC STRUCTURE",        "" },
+    { WAR_COMMAND_BUILD_ADVANCED,           buildAdvanced,           6, "BUILD ADVANCED STRUCTURE",     "" },
+    { WAR_COMMAND_ATTACK,                   attack,                  0, "ATTACK",                       "" },
 
     // train commands
-    { WAR_COMMAND_TRAIN_FOOTMAN,            trainFootman,            6, "TRAIN FOOTMAN"             },
-    { WAR_COMMAND_TRAIN_GRUNT,              trainGrunt,              8, "TRAIN GRUNT"               },
-    { WAR_COMMAND_TRAIN_PEASANT,            trainPeasant,            6, "TRAIN PEASANT"             },
-    { WAR_COMMAND_TRAIN_PEON,               trainPeon,               6, "TRAIN PEON"                },
-    { WAR_COMMAND_TRAIN_CATAPULT_HUMANS,    trainHumanCatapult,      8, "BUILD CATAPULT"            },
-    { WAR_COMMAND_TRAIN_CATAPULT_ORCS,      trainOrcCatapult,        8, "BUILD CATAPULT"            },
-    { WAR_COMMAND_TRAIN_KNIGHT,             trainKnight,             6, "TRAIN KNIGHT"              },
-    { WAR_COMMAND_TRAIN_RAIDER,             trainRaider,             6, "TRAIN RAIDER"              },
-    { WAR_COMMAND_TRAIN_ARCHER,             trainArcher,             6, "TRAIN ARCHER"              },
-    { WAR_COMMAND_TRAIN_SPEARMAN,           trainSpearman,           6, "TRAIN SPEARMAN"            },
-    { WAR_COMMAND_TRAIN_CONJURER,           trainConjurer,           0, "TRAIN CONJURER"            },
-    { WAR_COMMAND_TRAIN_WARLOCK,            trainWarlock,            0, "TRAIN WARLOCK"             },
-    { WAR_COMMAND_TRAIN_CLERIC,             trainCleric,             0, "TRAIN CLERIC"              },
-    { WAR_COMMAND_TRAIN_NECROLYTE,          trainNecrolyte,          0, "TRAIN NECROLYTE"           },
+    { WAR_COMMAND_TRAIN_FOOTMAN,            trainFootman,            6, "TRAIN FOOTMAN",                "TRAINING A FOOTMAN"        },
+    { WAR_COMMAND_TRAIN_GRUNT,              trainGrunt,              8, "TRAIN GRUNT",                  "TRAINING A GRUNT"          },
+    { WAR_COMMAND_TRAIN_PEASANT,            trainPeasant,            6, "TRAIN PEASANT",                "TRAINING A PEASANT"        },
+    { WAR_COMMAND_TRAIN_PEON,               trainPeon,               6, "TRAIN PEON",                   "TRAINING A PEON"           },
+    { WAR_COMMAND_TRAIN_CATAPULT_HUMANS,    trainHumanCatapult,      8, "BUILD CATAPULT",               "TRAINING A CATAPULT CREW"  },
+    { WAR_COMMAND_TRAIN_CATAPULT_ORCS,      trainOrcCatapult,        8, "BUILD CATAPULT",               "TRAINING A CATAPULT CREW"  },
+    { WAR_COMMAND_TRAIN_KNIGHT,             trainKnight,             6, "TRAIN KNIGHT",                 "TRAINING A KNIGHT"         },
+    { WAR_COMMAND_TRAIN_RAIDER,             trainRaider,             6, "TRAIN RAIDER",                 "TRAINING A RAIDER"         },
+    { WAR_COMMAND_TRAIN_ARCHER,             trainArcher,             6, "TRAIN ARCHER",                 "TRAINING AN ARCHER"        },
+    { WAR_COMMAND_TRAIN_SPEARMAN,           trainSpearman,           6, "TRAIN SPEARMAN",               "TRAINING A SPEARMAN"       },
+    { WAR_COMMAND_TRAIN_CONJURER,           trainConjurer,           0, "TRAIN CONJURER",               "TRAINING A CONJURER"       },
+    { WAR_COMMAND_TRAIN_WARLOCK,            trainWarlock,            0, "TRAIN WARLOCK",                "TRAINING A WARLOCK"        },
+    { WAR_COMMAND_TRAIN_CLERIC,             trainCleric,             0, "TRAIN CLERIC",                 "TRAINING A CLERIC"         },
+    { WAR_COMMAND_TRAIN_NECROLYTE,          trainNecrolyte,          0, "TRAIN NECROLYTE",              "TRAINING A NECROLYTE"      },
 
     // spell commands
-    { WAR_COMMAND_SPELL_HEALING,            NULL,                    0, "HEALING"                   },
-    { WAR_COMMAND_SPELL_POISON_CLOUD,       NULL,                    9, "CLOUD OF POISON"           },
-    { WAR_COMMAND_SPELL_FAR_SIGHT,          NULL,                    0, "FAR SEEING"                },
-    { WAR_COMMAND_SPELL_DARK_VISION,        NULL,                    0, "DARK VISION"               },
-    { WAR_COMMAND_SPELL_INVISIBILITY,       NULL,                    0, "INVISIBILITY"              },
-    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       NULL,                    0, "UNHOLY ARMOR"              },
-    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       NULL,                    0, "RAIN OF FIRE"              },
-    { WAR_COMMAND_SPELL_RAISE_DEAD,         NULL,                    0, "RAISE DEAD"                },
+    { WAR_COMMAND_SPELL_HEALING,            NULL,                    0, "HEALING",                      ""                          },
+    { WAR_COMMAND_SPELL_POISON_CLOUD,       NULL,                    9, "CLOUD OF POISON",              ""                          },
+    { WAR_COMMAND_SPELL_FAR_SIGHT,          NULL,                    0, "FAR SEEING",                   ""                          },
+    { WAR_COMMAND_SPELL_DARK_VISION,        NULL,                    0, "DARK VISION",                  ""                          },
+    { WAR_COMMAND_SPELL_INVISIBILITY,       NULL,                    0, "INVISIBILITY",                 ""                          },
+    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       NULL,                    0, "UNHOLY ARMOR",                 ""                          },
+    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       NULL,                    0, "RAIN OF FIRE",                 ""                          },
+    { WAR_COMMAND_SPELL_RAISE_DEAD,         NULL,                    0, "RAISE DEAD",                   ""                          },
 
     // summons
-    { WAR_COMMAND_SUMMON_SCORPION,          NULL,                    9, "SUMMON SCORPIONS"          },
-    { WAR_COMMAND_SUMMON_SPIDER,            NULL,                   12, "SUMMON SPIDERS"            },
-    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   NULL,                    7, "SUMMON WATER ELEMENTAL"    },
-    { WAR_COMMAND_SUMMON_DAEMON,            NULL,                    7, "SUMMON DAEMON"             },
+    { WAR_COMMAND_SUMMON_SCORPION,          NULL,                    9, "SUMMON SCORPIONS",             ""                          },
+    { WAR_COMMAND_SUMMON_SPIDER,            NULL,                   12, "SUMMON SPIDERS",               ""                          },
+    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   NULL,                    7, "SUMMON WATER ELEMENTAL",       ""                          },
+    { WAR_COMMAND_SUMMON_DAEMON,            NULL,                    7, "SUMMON DAEMON",                ""                          },
 
     // build commands
-    { WAR_COMMAND_BUILD_FARM_HUMANS,        buildFarmHumans,         6, "BUILD FARM"                },
-    { WAR_COMMAND_BUILD_FARM_ORCS,          buildFarmOrcs,           6, "BUILD FARM"                },
-    { WAR_COMMAND_BUILD_BARRACKS_HUMANS,    buildBarracksHumans,     6, "BUILD BARRACKS"            },
-    { WAR_COMMAND_BUILD_BARRACKS_ORCS,      buildBarracksOrcs,       6, "BUILD BARRACKS"            },
-    { WAR_COMMAND_BUILD_CHURCH,             buildChurch,             8, "BUILD CHURCH"              },
-    { WAR_COMMAND_BUILD_TEMPLE,             buildTemple,             7, "BUILD TEMPLE"              },
-    { WAR_COMMAND_BUILD_TOWER_HUMANS,       buildTowerHumans,        6, "BUILD TOWER"               },
-    { WAR_COMMAND_BUILD_TOWER_ORCS,         buildTowerOrcs,          6, "BUILD TOWER"               },
-    { WAR_COMMAND_BUILD_TOWNHALL_HUMANS,    buildTownHallHumans,    11, "BUILD TOWN HALL"           },
-    { WAR_COMMAND_BUILD_TOWNHALL_ORCS,      buildTownHallOrcs,      11, "BUILD TOWN HALL"           },
-    { WAR_COMMAND_BUILD_LUMBERMILL_HUMANS,  buildLumbermillHumans,   6, "BUILD LUMBER MILL"         },
-    { WAR_COMMAND_BUILD_LUMBERMILL_ORCS,    buildLumbermillOrcs,     6, "BUILD LUMBER MILL"         },
-    { WAR_COMMAND_BUILD_STABLE,             buildStable,             6, "BUILD STABLES"             },
-    { WAR_COMMAND_BUILD_KENNEL,             buildKennel,             6, "BUILD KENNEL"              },
-    { WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,  buildBlacksmithHumans,   6, "BUILD BLACKSMITH"          },
-    { WAR_COMMAND_BUILD_BLACKSMITH_ORCS,    buildBlacksmithOrcs,     6, "BUILD BLACKSMITH"          },
-    { WAR_COMMAND_BUILD_ROAD,               NULL,                    6, "BUILD ROAD"                },
-    { WAR_COMMAND_BUILD_WALL,               NULL,                    6, "BUILD WALL"                },
+    { WAR_COMMAND_BUILD_FARM_HUMANS,        buildFarmHumans,         6, "BUILD FARM",                   ""                          },
+    { WAR_COMMAND_BUILD_FARM_ORCS,          buildFarmOrcs,           6, "BUILD FARM",                   ""                          },
+    { WAR_COMMAND_BUILD_BARRACKS_HUMANS,    buildBarracksHumans,     6, "BUILD BARRACKS",               ""                          },
+    { WAR_COMMAND_BUILD_BARRACKS_ORCS,      buildBarracksOrcs,       6, "BUILD BARRACKS",               ""                          },
+    { WAR_COMMAND_BUILD_CHURCH,             buildChurch,             8, "BUILD CHURCH",                 ""                          },
+    { WAR_COMMAND_BUILD_TEMPLE,             buildTemple,             7, "BUILD TEMPLE",                 ""                          },
+    { WAR_COMMAND_BUILD_TOWER_HUMANS,       buildTowerHumans,        6, "BUILD TOWER",                  ""                          },
+    { WAR_COMMAND_BUILD_TOWER_ORCS,         buildTowerOrcs,          6, "BUILD TOWER",                  ""                          },
+    { WAR_COMMAND_BUILD_TOWNHALL_HUMANS,    buildTownHallHumans,    11, "BUILD TOWN HALL",              ""                          },
+    { WAR_COMMAND_BUILD_TOWNHALL_ORCS,      buildTownHallOrcs,      11, "BUILD TOWN HALL",              ""                          },
+    { WAR_COMMAND_BUILD_LUMBERMILL_HUMANS,  buildLumbermillHumans,   6, "BUILD LUMBER MILL",            ""                          },
+    { WAR_COMMAND_BUILD_LUMBERMILL_ORCS,    buildLumbermillOrcs,     6, "BUILD LUMBER MILL",            ""                          },
+    { WAR_COMMAND_BUILD_STABLE,             buildStable,             6, "BUILD STABLES",                ""                          },
+    { WAR_COMMAND_BUILD_KENNEL,             buildKennel,             6, "BUILD KENNEL",                 ""                          },
+    { WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,  buildBlacksmithHumans,   6, "BUILD BLACKSMITH",             ""                          },
+    { WAR_COMMAND_BUILD_BLACKSMITH_ORCS,    buildBlacksmithOrcs,     6, "BUILD BLACKSMITH",             ""                          },
+    { WAR_COMMAND_BUILD_ROAD,               NULL,                    6, "BUILD ROAD",                   ""                          },
+    { WAR_COMMAND_BUILD_WALL,               NULL,                    6, "BUILD WALL",                   ""                          },
 
     // upgrades
-    { WAR_COMMAND_UPGRADE_SWORDS,           upgradeSwords,           9, "UPGRADE SWORD STRENGTH"    },
-    { WAR_COMMAND_UPGRADE_AXES,             upgradeAxes,             8, "UPGRADE AXE STRENGTH"      },
-    { WAR_COMMAND_UPGRADE_SHIELD_HUMANS,    upgradeHumanShields,     9, "UPGRADE SHIELD STRENGTH"   },
-    { WAR_COMMAND_UPGRADE_SHIELD_ORCS,      upgradeOrcsShields,      9, "UPGRADE SHIELD STRENGTH"   },
-    { WAR_COMMAND_UPGRADE_ARROWS,           upgradeArrows,           0, "UPGRADE ARROW STRENGTH"    },
-    { WAR_COMMAND_UPGRADE_SPEARS,           upgradeSpears,           0, "UPGRADE SPEAR STRENGTH"    },
-    { WAR_COMMAND_UPGRADE_HORSES,           upgradeHorses,           0, "BREED FASTER HORSES"       },
-    { WAR_COMMAND_UPGRADE_WOLVES,           upgradeWolves,           0, "BREED FASTER WOLVES"       },
-    { WAR_COMMAND_UPGRADE_SCORPION,         upgradeScorpions,        9, "RESEARCH MINOR SUMMONING"  },
-    { WAR_COMMAND_UPGRADE_SPIDER,           upgradeSpiders,          9, "RESEARCH MINOR SUMMONING"  },
-    { WAR_COMMAND_UPGRADE_RAIN_OF_FIRE,     upgradeRainOfFire,       9, "RESEARCH RAIN OF FIRE"     },
-    { WAR_COMMAND_UPGRADE_POISON_CLOUD,     upgradePoisonCloud,     18, "RESEARCH CLOUD OF POISON"  },
-    { WAR_COMMAND_UPGRADE_WATER_ELEMENTAL,  upgradeWaterElemental,  10, "RESEARCH MAJOR SUMMONING"  },
-    { WAR_COMMAND_UPGRADE_DAEMON,           upgradeDaemon,          10, "RESEARCH MAJOR SUMMONING"  },
-    { WAR_COMMAND_UPGRADE_HEALING,          upgradeHealing,          9, "RESEARCH HEALING"          },
-    { WAR_COMMAND_UPGRADE_RAISE_DEAD,       upgradeRaiseDead,        9, "RESEARCH RAISING DEAD"     },
-    { WAR_COMMAND_UPGRADE_FAR_SIGHT,        upgradeFarSight,         9, "RESEARCH FAR SEEING"       },
-    { WAR_COMMAND_UPGRADE_DARK_VISION,      upgradeDarkVision,       9, "RESEARCH DARK VISION"      },
-    { WAR_COMMAND_UPGRADE_INVISIBILITY,     upgradeInvisibility,     9, "RESEARCH INVISIBILITY"     },
-    { WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,     upgradeUnholyArmor,      9, "RESEARCH UNHOLY ARMOR"     },
+    { WAR_COMMAND_UPGRADE_SWORDS,           upgradeSwords,           9, "UPGRADE SWORD STRENGTH",       "RESEARCHING WEAPONRY"      },
+    { WAR_COMMAND_UPGRADE_AXES,             upgradeAxes,             8, "UPGRADE AXE STRENGTH",         "RESEARCHING WEAPONRY"      },
+    { WAR_COMMAND_UPGRADE_SHIELD_HUMANS,    upgradeHumanShields,     9, "UPGRADE SHIELD STRENGTH",      "RESEARCHING ARMOR"         },
+    { WAR_COMMAND_UPGRADE_SHIELD_ORCS,      upgradeOrcsShields,      9, "UPGRADE SHIELD STRENGTH",      "RESEARCHING ARMOR"         },
+    { WAR_COMMAND_UPGRADE_ARROWS,           upgradeArrows,           0, "UPGRADE ARROW STRENGTH",       "RESEARCHING WEAPONRY"      },
+    { WAR_COMMAND_UPGRADE_SPEARS,           upgradeSpears,           0, "UPGRADE SPEAR STRENGTH",       "RESEARCHING WEAPONRY"      },
+    { WAR_COMMAND_UPGRADE_HORSES,           upgradeHorses,           0, "BREED FASTER HORSES",          "BREADING BETTER STOCK"     },
+    { WAR_COMMAND_UPGRADE_WOLVES,           upgradeWolves,           0, "BREED FASTER WOLVES",          "BREADING BETTER STOCK"     },
+    { WAR_COMMAND_UPGRADE_SCORPION,         upgradeScorpions,        9, "RESEARCH MINOR SUMMONING",     "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_SPIDER,           upgradeSpiders,          9, "RESEARCH MINOR SUMMONING",     "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_RAIN_OF_FIRE,     upgradeRainOfFire,       9, "RESEARCH RAIN OF FIRE",        "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_POISON_CLOUD,     upgradePoisonCloud,     18, "RESEARCH CLOUD OF POISON",     "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_WATER_ELEMENTAL,  upgradeWaterElemental,  10, "RESEARCH MAJOR SUMMONING",     "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_DAEMON,           upgradeDaemon,          10, "RESEARCH MAJOR SUMMONING",     "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_HEALING,          upgradeHealing,          9, "RESEARCH HEALING",             "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_RAISE_DEAD,       upgradeRaiseDead,        9, "RESEARCH RAISING DEAD",        "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_FAR_SIGHT,        upgradeFarSight,         9, "RESEARCH FAR SEEING",          "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_DARK_VISION,      upgradeDarkVision,       9, "RESEARCH DARK VISION",         "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_INVISIBILITY,     upgradeInvisibility,     9, "RESEARCH INVISIBILITY",        "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,     upgradeUnholyArmor,      9, "RESEARCH UNHOLY ARMOR",        "RESEARCHING NEW SPELL"     },
 
     // cancel
-    { WAR_COMMAND_CANCEL,                   cancelTrainOrUpgrade,   -1, "ESC - CANCEL"              }
+    { WAR_COMMAND_CANCEL,                   cancel,                 -1, "ESC - CANCEL",                 ""                          }
 };
 
 typedef struct
@@ -953,6 +954,28 @@ WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)
     s32 index = 0;
     s32 length = arrayLength(commandMappings);
     while (index < length && commandMappings[index].type != type)
+        index++;
+
+    assert(index < length);
+    return commandMappings[index];
+}
+
+WarUnitCommandMapping getCommandMappingFromUnitType(WarUnitType unitType)
+{
+    s32 index = 0;
+    s32 length = min(arrayLength(commandMappings), 30);
+    while (index < length && commandMappings[index].unitOrUpgradeType != unitType)
+        index++;
+
+    assert(index < length);
+    return commandMappings[index];
+}
+
+WarUnitCommandMapping getCommandMappingFromUpgradeType(WarUpgradeType upgradeType)
+{
+    s32 index = 30;
+    s32 length = arrayLength(commandMappings);
+    while (index < length && commandMappings[index].unitOrUpgradeType != upgradeType)
         index++;
 
     assert(index < length);

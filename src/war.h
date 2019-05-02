@@ -20,6 +20,7 @@
 // #define DEBUG_RENDER_UNIT_STATS
 // #define DEBUG_RENDER_UNIT_ANIMATIONS
 // #define DEBUG_RENDER_MAP_ANIMATIONS
+// #define DEBUG_RENDER_FONT
 
 #define isButtonPressed(input, btn) (input->buttons[btn].pressed)
 #define wasButtonPressed(input, btn) (input->buttons[btn].wasPressed)

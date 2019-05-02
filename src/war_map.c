@@ -989,7 +989,11 @@ void updateButtons(WarContext* context)
             WarTransformComponent* transform = &entity->transform;
             WarButtonComponent* button = &entity->button;
             if (!button->enabled)
+            {
+                button->hot = false;
+                button->active = false;
                 continue;
+            }
 
             vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
             rect buttonRect = rectv(transform->position, backgroundSize);
@@ -1002,7 +1006,9 @@ void updateButtons(WarContext* context)
                 if (button->hot)
                 {
                     if (button->clickHandler)
+                    {
                         button->clickHandler(context, entity);
+                    }
                 }
 
                 button->active = false;
@@ -1028,7 +1034,7 @@ void updateButtons(WarContext* context)
 
                 button->hot = true;
             }
-            else if (button->hot)
+            else
             {
                 button->hot = false;
             }
@@ -1040,8 +1046,6 @@ void updateStatus(WarContext* context)
 {
     WarMap* map = context->map;
     WarFlashStatus* flashStatus = &map->flashStatus;
-
-    setStatus(context, NO_HIGHLIGHT, 0, 0, NULL);
 
     if (flashStatus->enabled)
     {
@@ -1055,19 +1059,12 @@ void updateStatus(WarContext* context)
         flashStatus->enabled = false;
     }
 
-    for(s32 i = 0; i < map->entities.count; i++)
-    {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_BUTTON)
-        {
-            WarButtonComponent* button = &entity->button;
-            if (button->hot)
-            {
-                setStatus(context, button->highlightIndex, button->gold, button->wood, button->tooltip);
-                break;
-            }
-        }
-    }
+    char* statusText = NULL;
+    s32 highlightIndex = NO_HIGHLIGHT;
+    s32 goldCost = 0;
+    s32 woodCost = 0;
+
+    bool freeStatusText = false;
 
     if (map->selectedEntities.count > 0)
     {
@@ -1081,17 +1078,31 @@ void updateStatus(WarContext* context)
             {
                 if (isTraining(selectedEntity) || isGoingToTrain(selectedEntity))
                 {
-                    // TRAINING A {PEASANT|FOOTMAN|...}
-                    // TRAINING AN ARCHER
-                    // TRAINING A CATAPULT CREW
+                    WarState* trainState = getTrainState(selectedEntity);
+                    WarEntity* entityToBuild = trainState->train.entityToBuild;
+                    if (entityToBuild)
+                    {
+                        assert(isUnit(entityToBuild));
+
+                        WarUnitCommandMapping commandMapping = getCommandMappingFromUnitType(entityToBuild->unit.type);
+                        WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
+
+                        statusText = commandData.tooltip2;
+                        highlightIndex = NO_HIGHLIGHT;
+                        goldCost = 0;
+                        woodCost = 0;
+                    }
                 }
                 else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
                 {
-                    // RESEARCHING WEAPONRY
-                    // RESEARCHING ARMOR
-                    // RESEARCHING NEW SPELL
-
-                    // BREADING BETTER STOCK
+                    WarState* upgradeState = getUpgradeState(selectedEntity);
+                    WarUnitCommandMapping commandMapping = getCommandMappingFromUpgradeType(upgradeState->upgrade.upgradeToBuild);
+                    WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
+                    
+                    statusText = commandData.tooltip2;
+                    highlightIndex = NO_HIGHLIGHT;
+                    goldCost = 0;
+                    woodCost = 0;
 
                     // CANCEL UPGRADE
                     // CANCEL UNIT TRAINING
@@ -1110,38 +1121,61 @@ void updateStatus(WarContext* context)
                         // wood and gold would be 200 * 0.12 = 24.
                         //
                         s32 repairCost = (s32)ceil((maxhp - hp) * 0.12f);
-                        setStatus(context, NO_HIGHLIGHT, 0, 0, "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
+
+                        statusText = (char*)xmalloc(50);
+                        sprintf(statusText, "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
+                        freeStatusText = true;
+
+                        highlightIndex = NO_HIGHLIGHT;
+                        goldCost = 0;
+                        woodCost = 0;
                     }
                 }
             }
             else if (isWorkerUnit(selectedEntity))
             {
-                switch (selectedEntity->unit.resourceKind)
+                if (isCarryingResources(selectedEntity))
                 {
-                    case WAR_RESOURCE_GOLD:
+                    if (selectedEntity->unit.resourceKind == WAR_RESOURCE_GOLD)
                     {
-                        setStatus(context, NO_HIGHLIGHT, 0, 0, "CARRYING GOLD");
-                        break;
+                        statusText = "CARRYING GOLD";
+                    }
+                    else if (selectedEntity->unit.resourceKind == WAR_RESOURCE_WOOD)
+                    {
+                        statusText = "CARRYING LUMBER";
                     }
 
-                    case WAR_RESOURCE_WOOD:
-                    {
-                        setStatus(context, NO_HIGHLIGHT, 0, 0, "CARRYING LUMBER");
-                        break;
-                    }
-
-                    default:
-                    {
-                        // nothing to do here
-                        break;
-                    }
+                    highlightIndex = NO_HIGHLIGHT;
+                    goldCost = 0;
+                    woodCost = 0;
                 }
             }
         }
     }
 
-    // check here if a selected building is damaged,
-    // how much would cost to repair it and set the text
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_BUTTON)
+        {
+            WarButtonComponent* button = &entity->button;
+            if (button->hot)
+            {
+                statusText = button->tooltip;
+                goldCost = button->gold;
+                woodCost = button->wood;
+                highlightIndex = button->highlightIndex;
+                break;
+            }
+        }
+    }
+
+    setStatus(context, highlightIndex, goldCost, woodCost, statusText);
+
+    if (freeStatusText)
+    {
+        free(statusText);
+    }
 }
 
 void updateStateMachines(WarContext* context)
