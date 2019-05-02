@@ -21,16 +21,19 @@ void setUIText(WarEntity* uiText, s32 highlightIndex, char* text)
     }
 }
 
-void setUITextFormat(WarEntity* uiText, s32 highlightIndex, char* format, ...)
+void setUITextFormatv(WarEntity* uiText, s32 highlightIndex, char* format, va_list args)
 {
     char buffer[256];
-
-    va_list args;
-    va_start (args, format);
-    vsprintf (buffer, format, args);
-    va_end (args);
-
+    vsprintf(buffer, format, args);
     setUIText(uiText, highlightIndex, buffer);
+}
+
+void setUITextFormat(WarEntity* uiText, s32 highlightIndex, char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    setUITextFormatv(uiText, highlightIndex, format, args);
+    va_end(args);
 }
 
 void setUIImage(WarEntity* uiImage, s32 frameIndex)
@@ -164,7 +167,7 @@ void updateWoodText(WarContext* context)
     setUITextFormat(txtWood, NO_HIGHLIGHT, "LUMBER:%*d", 6, wood);
 }
 
-void setStatus(WarContext* context, s32 highlightIndex, char* text, s32 gold, s32 wood)
+void setStatus(WarContext* context, s32 highlightIndex, s32 gold, s32 wood, char* text, ...)
 {
     WarEntity* txtStatus = findUIEntity(context, "txtStatus");
     assert(txtStatus);
@@ -181,7 +184,10 @@ void setStatus(WarContext* context, s32 highlightIndex, char* text, s32 gold, s3
     WarEntity* txtStatusGold = findUIEntity(context, "txtStatusGold");
     assert(txtStatusGold);
 
-    setUIText(txtStatus, highlightIndex, text);
+    va_list args;
+    va_start (args, text);
+    setUITextFormatv(txtStatus, highlightIndex, text, args);
+    va_end (args);
 
     if (gold == 0 && wood == 0)
     {

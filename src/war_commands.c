@@ -367,6 +367,51 @@ bool executeCommand(WarContext* context)
             return true;
         }
 
+        case WAR_COMMAND_REPAIR:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    s32 selEntitiesCount = map->selectedEntities.count;
+                    if (selEntitiesCount > 0)
+                    {
+                        vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                        vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                        WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                        if (targetEntityId > 0)
+                        {
+                            WarEntity* targetEntity = findEntity(context, targetEntityId);
+                            if (targetEntity)
+                            {
+                                for(s32 i = 0; i < selEntitiesCount; i++)
+                                {
+                                    WarEntityId entityId = map->selectedEntities.items[i];
+                                    WarEntity* entity = findEntity(context, entityId);
+                                    assert(entity);
+
+                                    if (isWorkerUnit(entity))
+                                    {
+                                        if (isBuildingUnit(targetEntity))
+                                        {
+                                            WarState* repairState = createRepairState(context, entity, targetEntityId);
+                                            changeNextState(context, entity, repairState, true, true);
+                                        }
+                                    }
+                                }                    
+                            }
+                        }
+                    }
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         case WAR_COMMAND_ATTACK:
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
@@ -453,7 +498,6 @@ bool executeCommand(WarContext* context)
                         withdrawFromPlayer(context, player, stats.goldCost, stats.woodCost))
                     {
                         WarEntity* building = createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
-
                         WarState* repairState = createRepairState(context, worker, building->id);
                         changeNextState(context, worker, repairState, true, true);
 
@@ -702,6 +746,13 @@ void deliver(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_DELIVER;
+}
+
+void repair(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_REPAIR;
 }
 
 void attack(WarContext* context, WarEntity* entity)

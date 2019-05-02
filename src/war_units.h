@@ -656,7 +656,7 @@ const WarUnitCommandBaseData commandBaseData[] =
     { WAR_COMMAND_STOP,                     stop,                    0, "STOP"                      },
     { WAR_COMMAND_HARVEST,                  harvest,                 0, "HARVEST LUMBER/MINE GOLD"  },
     { WAR_COMMAND_DELIVER,                  deliver,                16, "RETURN GOODS TO TOWN HALL" },
-    { WAR_COMMAND_REPAIR,                   NULL,                    0, "REPAIR"                    },
+    { WAR_COMMAND_REPAIR,                   repair,                  0, "REPAIR"                    },
     { WAR_COMMAND_BUILD_BASIC,              buildBasic,              0, "BUILD BASIC STRUCTURE"     },
     { WAR_COMMAND_BUILD_ADVANCED,           buildAdvanced,           6, "BUILD ADVANCED STRUCTURE"  },
     { WAR_COMMAND_ATTACK,                   attack,                  0, "ATTACK"                    },
@@ -1256,6 +1256,12 @@ vec2 getUnitSpriteCenter(WarEntity* entity)
     return vec2Addv(pos, vec2Half(unitSize));
 }
 
+vec2 getUnitPosition(WarEntity* entity, bool inTiles)
+{
+    vec2 position = entity->transform.position;
+    return inTiles ? vec2MapToTileCoordinates(position) : position;
+}
+
 vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
 {
     WarTransformComponent* transform = &entity->transform;
@@ -1265,10 +1271,22 @@ vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
     return inTiles ? vec2MapToTileCoordinates(position) : position;
 }
 
+void setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
+{
+    if (inTiles)
+    {
+        position = vec2TileToMapCoordinates(position, true);
+    }
+
+    entity->transform.position = position;
+}
+
 void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
+    {
         position = vec2TileToMapCoordinates(position, true);
+    }
 
     WarTransformComponent* transform = &entity->transform;
     vec2 spriteSize = getUnitSpriteSize(entity);

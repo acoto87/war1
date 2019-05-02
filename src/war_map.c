@@ -1041,13 +1041,13 @@ void updateStatus(WarContext* context)
     WarMap* map = context->map;
     WarFlashStatus* flashStatus = &map->flashStatus;
 
-    setStatus(context, NO_HIGHLIGHT, NULL, 0, 0);
+    setStatus(context, NO_HIGHLIGHT, 0, 0, NULL);
 
     if (flashStatus->enabled)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            setStatus(context, NO_HIGHLIGHT, flashStatus->text, 0, 0);
+            setStatus(context, NO_HIGHLIGHT, 0, 0, flashStatus->text);
             return;
         }
         
@@ -1063,8 +1063,79 @@ void updateStatus(WarContext* context)
             WarButtonComponent* button = &entity->button;
             if (button->hot)
             {
-                setStatus(context, button->highlightIndex, button->tooltip, button->gold, button->wood);
+                setStatus(context, button->highlightIndex, button->gold, button->wood, button->tooltip);
                 break;
+            }
+        }
+    }
+
+    if (map->selectedEntities.count > 0)
+    {
+        for (s32 i = 0; i < map->selectedEntities.count; i++)
+        {
+            WarEntityId selectedEntityId = map->selectedEntities.items[i];
+            WarEntity* selectedEntity = findEntity(context, selectedEntityId);
+            assert(selectedEntity);
+
+            if (isBuildingUnit(selectedEntity))
+            {
+                if (isTraining(selectedEntity) || isGoingToTrain(selectedEntity))
+                {
+                    // TRAINING A {PEASANT|FOOTMAN|...}
+                    // TRAINING AN ARCHER
+                    // TRAINING A CATAPULT CREW
+                }
+                else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
+                {
+                    // RESEARCHING WEAPONRY
+                    // RESEARCHING ARMOR
+                    // RESEARCHING NEW SPELL
+
+                    // BREADING BETTER STOCK
+
+                    // CANCEL UPGRADE
+                    // CANCEL UNIT TRAINING
+
+                    // SELECT LOCATION
+                }
+                else
+                {
+                    s32 hp = selectedEntity->unit.hp;
+                    s32 maxhp = selectedEntity->unit.maxhp;
+                    if (hp < maxhp)
+                    {
+                        // to calculate the amount of wood and gold needed to repair a 
+                        // building I'm taking the 12% of the damage of the building,
+                        // so for the a FARM if it has a damage of 200, the amount of 
+                        // wood and gold would be 200 * 0.12 = 24.
+                        //
+                        s32 repairCost = (s32)ceil((maxhp - hp) * 0.12f);
+                        setStatus(context, NO_HIGHLIGHT, 0, 0, "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
+                    }
+                }
+            }
+            else if (isWorkerUnit(selectedEntity))
+            {
+                switch (selectedEntity->unit.resourceKind)
+                {
+                    case WAR_RESOURCE_GOLD:
+                    {
+                        setStatus(context, NO_HIGHLIGHT, 0, 0, "CARRYING GOLD");
+                        break;
+                    }
+
+                    case WAR_RESOURCE_WOOD:
+                    {
+                        setStatus(context, NO_HIGHLIGHT, 0, 0, "CARRYING LUMBER");
+                        break;
+                    }
+
+                    default:
+                    {
+                        // nothing to do here
+                        break;
+                    }
+                }
             }
         }
     }

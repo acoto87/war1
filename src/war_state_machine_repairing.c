@@ -7,6 +7,8 @@ WarState* createRepairingState(WarContext* context, WarEntity* entity, WarEntity
 
 void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    WarMap* map = context->map;
+
     WarEntity* building = findEntity(context, state->repairing.buildingId);
     assert(isBuildingUnit(building));
 
@@ -22,26 +24,47 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
     // if the building needs to be built, enter the building and build it
     if (isBuilding(building) || isGoingToBuild(building))
     {
+        WarState* buildState = getBuildState(building);
+        assert(buildState);
+
+        if (buildState->build.workerId)
+        {
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState, true, true);
+
+            return;
+        }
+
         // disable the sprite to simulate the building process
         entity->sprite.enabled = false;
 
         // set the unit as inside the building
         state->repairing.insideBuilding = true;
 
-        WarState* buildState = getBuildState(building);
-        assert(buildState);
-
+        // set up that this worker is the one building the building
         buildState->build.workerId = entity->id;
     }
     else
     {
         state->repairing.repairTime = context->time;
+
+        vec2 unitSize = getUnitSize(entity);
+        vec2 position = getUnitCenterPosition(entity, true);
+        vec2 targetPosition = getUnitCenterPosition(building, true);
+
+        setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+        setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
         setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
 }
 
 void leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    WarMap* map = context->map;
+
+    vec2 unitSize = getUnitSize(entity);
+    vec2 position = getUnitCenterPosition(entity, true);
+    setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
 }
 
 void updateRepairingState(WarContext* context, WarEntity* entity, WarState* state)

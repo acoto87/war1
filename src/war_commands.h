@@ -46,6 +46,7 @@ void move(WarContext* context, WarEntity* entity);
 void stop(WarContext* context, WarEntity* entity);
 void harvest(WarContext* context, WarEntity* entity);
 void deliver(WarContext* context, WarEntity* entity);
+void repair(WarContext* context, WarEntity* entity);
 void attack(WarContext* context, WarEntity* entity);
 void buildBasic(WarContext* context, WarEntity* entity);
 void buildAdvanced(WarContext* context, WarEntity* entity);
