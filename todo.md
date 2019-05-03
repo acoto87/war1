@@ -17,6 +17,7 @@ List of thing to do in no particular order
   * Changing global speed doesn't change ongoing trainings.
   * Select footman -> right click on a tree, and assertion is hit.
   * ~~When a building is being built dont show command buttons or command texts.~~
+  * When different buildings are collapsed in near positions, the ruins doesn't merge well.
 
 * General
   * ~~Test the new implementation for lists.~~

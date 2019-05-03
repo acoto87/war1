@@ -73,13 +73,14 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     WarPlayerInfo* player = &map->players[0];
 
     WarEntity* building = findEntity(context, state->repairing.buildingId);
-    assert(isBuildingUnit(building));
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
     {
         if (state->repairing.insideBuilding)
         {
+            entity->sprite.enabled = true;
+
             // find a valid spawn position for the unit
             vec2 position = getUnitCenterPosition(entity, true);
             vec2 spawnPosition = findEmptyPosition(map->finder, position);
@@ -93,7 +94,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     }
 
     // if the worker is inside the building then he is building it
-    // so don't make anything since new buildings always spawn with full hp
+    // so don't make any repairing since new buildings always spawn with full hp
     if (!state->repairing.insideBuilding)
     {
         if (context->time - state->repairing.repairTime >= 1.0f)

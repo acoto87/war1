@@ -22,7 +22,7 @@ WarState* createMiningState(WarContext* context, WarEntity* entity, WarEntityId 
 WarState* createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 position);
 WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position);
 WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId);
-WarState* createTrainState(WarContext* context, WarEntity* entity, WarEntity* entityToBuild, f32 buildTime);
+WarState* createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime);
 WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime);
 WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime);
 WarState* createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId);

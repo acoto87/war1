@@ -1079,24 +1079,20 @@ void updateStatus(WarContext* context)
                 if (isTraining(selectedEntity) || isGoingToTrain(selectedEntity))
                 {
                     WarState* trainState = getTrainState(selectedEntity);
-                    WarEntity* entityToBuild = trainState->train.entityToBuild;
-                    if (entityToBuild)
-                    {
-                        assert(isUnit(entityToBuild));
+                    WarUnitType unitToBuild = trainState->train.unitToBuild;
+                    WarUnitCommandMapping commandMapping = getCommandMappingFromUnitType(unitToBuild);
+                    WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
 
-                        WarUnitCommandMapping commandMapping = getCommandMappingFromUnitType(entityToBuild->unit.type);
-                        WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
-
-                        statusText = commandData.tooltip2;
-                        highlightIndex = NO_HIGHLIGHT;
-                        goldCost = 0;
-                        woodCost = 0;
-                    }
+                    statusText = commandData.tooltip2;
+                    highlightIndex = NO_HIGHLIGHT;
+                    goldCost = 0;
+                    woodCost = 0;
                 }
                 else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
                 {
                     WarState* upgradeState = getUpgradeState(selectedEntity);
-                    WarUnitCommandMapping commandMapping = getCommandMappingFromUpgradeType(upgradeState->upgrade.upgradeToBuild);
+                    WarUpgradeType upgradeToBuild = upgradeState->upgrade.upgradeToBuild;
+                    WarUnitCommandMapping commandMapping = getCommandMappingFromUpgradeType(upgradeToBuild);
                     WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
                     
                     statusText = commandData.tooltip2;

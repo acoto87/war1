@@ -102,6 +102,7 @@ s32 findEntityIndex(WarContext* context, WarEntityId id);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
 WarEntity* findUIEntity(WarContext* context, char* name);
+void removeEntity(WarContext* context, WarEntity* entity);
 void removeEntityById(WarContext* context, WarEntityId id);
 void renderEntity(WarContext* context, WarEntity* entity, bool selected);
 

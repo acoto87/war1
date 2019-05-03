@@ -19,26 +19,6 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = getUnitStats(unit->type);
 
-    if (state->deliver.insideBuilding)
-    {
-        // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(entity, true);
-        vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(entity, spawnPosition, true);
-
-        WarUnitData unitData = getUnitData(unit->type);
-        removeSpriteComponent(context, entity);
-        addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
-
-        if (!changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
-        }
-        
-        return;
-    }
-
     WarEntity* townHall = findEntity(context, state->deliver.townHallId);
 
     // if the goldmine doesn't exists (it could ran out of gold, or other units attacking it), go idle
@@ -57,14 +37,34 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
+    if (state->deliver.insideBuilding)
+    {
+        // find a valid spawn position for the unit
+        vec2 position = getUnitCenterPosition(townHall, true);
+        vec2 spawnPosition = findEmptyPosition(map->finder, position);
+        setUnitCenterPosition(entity, spawnPosition, true);
+
+        WarUnitData unitData = getUnitData(unit->type);
+        removeSpriteComponent(context, entity);
+        addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
+
+        if (!changeStateNextState(context, entity, state))
+        {
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState, true, true);
+        }
+        
+        return;
+    }
+
     // TODO: deliver goods here to the player!!
     if (unit->resourceKind == WAR_RESOURCE_GOLD)
     {
-        map->players[0].gold += unit->amount;
+        increasePlayerResources(context, &map->players[0], unit->amount, 0);
     }
     else if (unit->resourceKind == WAR_RESOURCE_WOOD)
     {
-        map->players[0].wood += unit->amount;
+        increasePlayerResources(context, &map->players[0], 0, unit->amount);
     }
 
     unit->resourceKind = WAR_RESOURCE_NONE;

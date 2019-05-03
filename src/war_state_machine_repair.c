@@ -21,16 +21,10 @@ void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitStats stats = getUnitStats(unit->type);
 
     WarEntity* building = findEntity(context, state->repair.buildingId);
-    assert(isBuildingUnit(building));
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
     {
-        // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(entity, true);
-        vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(entity, spawnPosition, true);
-
         WarState* idleState = createIdleState(context, entity, true);
         changeNextState(context, entity, idleState, true, true);
         return;

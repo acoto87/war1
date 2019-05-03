@@ -336,11 +336,11 @@ WarEntity* createUnit(WarContext* context,
 }
 
 WarEntity* createDude(WarContext* context, 
-                          WarUnitType type, 
-                          s32 x, 
-                          s32 y, 
-                          u8 player, 
-                          bool isGoingToTrain)
+                      WarUnitType type, 
+                      s32 x, 
+                      s32 y, 
+                      u8 player, 
+                      bool isGoingToTrain)
 {
     assert(isDudeUnitType(type));
 
@@ -436,16 +436,8 @@ WarEntity* findUIEntity(WarContext* context, char* name)
     return NULL;
 }
 
-void removeEntityById(WarContext* context, WarEntityId id)
+void removeEntity(WarContext* context, WarEntity* entity)
 {
-    WarMap* map = context->map;
-    assert(map);
-
-    s32 index = findEntityIndex(context, id);
-    assert(index >= 0);
-
-    WarEntity* entity = map->entities.items[index];
-
     removeTransformComponent(context, entity);
     removeSpriteComponent(context, entity);
     removeRoadComponent(context, entity);
@@ -455,7 +447,18 @@ void removeEntityById(WarContext* context, WarEntityId id)
     removeUnitComponent(context, entity);
     removeStateMachineComponent(context, entity);
     removeAnimationsComponent(context, entity);
+}
 
+void removeEntityById(WarContext* context, WarEntityId id)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    s32 index = findEntityIndex(context, id);
+    assert(index >= 0);
+
+    WarEntity* entity = map->entities.items[index];
+    removeEntity(context, entity);
     WarEntityListRemoveAt(&map->entities, index);
 }
 
@@ -1131,6 +1134,17 @@ bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s
     WarUnitData data = getUnitData(buildingToBuild);
 
     if (!checkRectToBuild(context, x, y, data.sizex, data.sizey))
+    {
+        setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
+        return false;
+    }
+
+    return true;
+}
+
+bool checkTileToBuildWall(WarContext* context, s32 x, s32 y)
+{
+    if (!checkRectToBuild(context, x, y, 1, 1))
     {
         setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
         return false;

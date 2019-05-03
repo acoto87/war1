@@ -1,7 +1,7 @@
-WarState* createTrainState(WarContext* context, WarEntity* entity, WarEntity* entityToBuild, f32 buildTime)
+WarState* createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_TRAIN);
-    state->train.entityToBuild = entityToBuild;
+    state->train.unitToBuild = unitToBuild;
     state->train.buildTime = 0;
     state->train.totalBuildTime = buildTime;
     state->train.cancelled = false;
@@ -56,16 +56,13 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
     {
         unit->buildPercent = 1;
 
-        // ...add the entity to the map
-        WarEntityListAdd(&map->entities, state->train.entityToBuild);
+        // ...create the unit
+        WarEntity* unitToBuild = createDude(context, state->train.unitToBuild, 0, 0, 0, false);
 
         // ...find an empty position to put it
         vec2 position = getUnitCenterPosition(entity, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(state->train.entityToBuild, spawnPosition, true);
-
-        // assign null to the field because freeBuildingState will try to free it
-        state->train.entityToBuild = NULL;
+        setUnitCenterPosition(unitToBuild, spawnPosition, true);
 
         if (!changeStateNextState(context, entity, state))
         {
@@ -81,9 +78,4 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeTrainState(WarState* state)
 {
-    if (state->train.cancelled)
-    {
-        if (state->train.entityToBuild)
-            freeEntity(state->train.entityToBuild);
-    }
 }

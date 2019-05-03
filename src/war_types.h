@@ -1047,7 +1047,7 @@ typedef struct _WarState
 
         struct
         {
-            struct _WarEntity* entityToBuild;
+            WarUnitType unitToBuild;
             f32 buildTime; // how much time has passed since start building (in seconds)
             f32 totalBuildTime; // total time to build (in seconds)
             bool cancelled;

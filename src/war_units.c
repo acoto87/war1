@@ -963,7 +963,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
 
         case WAR_COMMAND_BUILD_WALL:
         {
-            data.gold = 100;
+            data.gold = WAR_WALL_GOLD_COST;
             data.frameIndex = WAR_PORTRAIT_WALL;
             break;
         }

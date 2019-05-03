@@ -33,7 +33,7 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
     if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
     {
         // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(entity, true);
+        vec2 position = getUnitCenterPosition(goldmine, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
         setUnitCenterPosition(entity, spawnPosition, true);
 
@@ -51,7 +51,7 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
         }
 
         // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(entity, true);
+        vec2 position = getUnitCenterPosition(goldmine, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
         setUnitCenterPosition(entity, spawnPosition, true);
 

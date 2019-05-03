@@ -328,6 +328,10 @@ const WarWallPieceType wallTileTypeMap[16] =
     0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10, 
 };
 
+#define WAR_WALL_GOLD_COST 100
+#define WAR_WALL_WOOD_COST 0
+#define WAR_WALL_BUILD_TIME __bts(200)
+
 typedef struct
 {
     WarRuinPieceType type;
@@ -712,7 +716,7 @@ const WarUnitCommandBaseData commandBaseData[] =
     { WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,  buildBlacksmithHumans,   6, "BUILD BLACKSMITH",             ""                          },
     { WAR_COMMAND_BUILD_BLACKSMITH_ORCS,    buildBlacksmithOrcs,     6, "BUILD BLACKSMITH",             ""                          },
     { WAR_COMMAND_BUILD_ROAD,               NULL,                    6, "BUILD ROAD",                   ""                          },
-    { WAR_COMMAND_BUILD_WALL,               NULL,                    6, "BUILD WALL",                   ""                          },
+    { WAR_COMMAND_BUILD_WALL,               buildWall,               6, "BUILD WALL",                   "BUILDING WALL"             },
 
     // upgrades
     { WAR_COMMAND_UPGRADE_SWORDS,           upgradeSwords,           9, "UPGRADE SWORD STRENGTH",       "RESEARCHING WEAPONRY"      },

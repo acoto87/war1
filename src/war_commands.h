@@ -68,3 +68,4 @@ void buildStable(WarContext* context, WarEntity* entity);
 void buildKennel(WarContext* context, WarEntity* entity);
 void buildBlacksmithHumans(WarContext* context, WarEntity* entity);
 void buildBlacksmithOrcs(WarContext* context, WarEntity* entity);
+void buildWall(WarContext* context, WarEntity* entity);

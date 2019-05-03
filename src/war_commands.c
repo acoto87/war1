@@ -40,9 +40,8 @@ bool executeCommand(WarContext* context)
             if (checkFarmFood(context, player) && 
                 decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
             {
-                WarEntity* unit = createDude(context, unitToTrain, 0, 0, 0, true);
                 f32 buildTime = getScaledTime(context, stats.buildTime);
-                WarState* trainState = createTrainState(context, selectedEntity, unit, buildTime);
+                WarState* trainState = createTrainState(context, selectedEntity, unitToTrain, buildTime);
                 changeNextState(context, selectedEntity, trainState, true, true);
             }
 
@@ -502,7 +501,43 @@ bool executeCommand(WarContext* context)
                         changeNextState(context, worker, repairState, true, true);
 
                         command->type = WAR_COMMAND_NONE;
-                        return true;
+                    }
+                    
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        case WAR_COMMAND_BUILD_WALL:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    assert(map->selectedEntities.count > 0);
+
+                    WarEntityId townHallId = map->selectedEntities.items[0];
+                    WarEntity* townHall = findEntity(context, townHallId);
+
+                    WarUnitType townHallType = getTownHallOfRace(player->race);
+                    assert(isUnitOfType(townHall, townHallType));
+
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    if (checkTileToBuildWall(context, targetTile.x, targetTile.y) &&
+                        decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
+                    {
+                        // TODO: create an entity that has all the walls in the map
+                        // and add the wall piece there
+
+                        f32 buildTime = getScaledTime(context, WAR_WALL_BUILD_TIME);
+                        WarState* buildWallState = createBuildWallState(context, townHall, targetTile, buildTime);
+                        changeNextState(context, selectedEntity, buildWallState, true, true);
+
+                        command->type = WAR_COMMAND_NONE;
                     }
                 }
             }
@@ -732,10 +767,9 @@ void cancel(WarContext* context, WarEntity* entity)
                 if (isTraining(selectedEntity) || isGoingToTrain(selectedEntity))
                 {
                     WarState* trainState = getTrainState(selectedEntity);
-                    WarEntity* entityToBuild = trainState->train.entityToBuild;
-                    assert(entityToBuild && isUnit(entityToBuild));
+                    WarUnitType unitToBuild = trainState->train.unitToBuild;
 
-                    WarUnitStats stats = getUnitStats(entityToBuild->unit.type);
+                    WarUnitStats stats = getUnitStats(unitToBuild);
                     increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
                 }
                 else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
@@ -745,7 +779,6 @@ void cancel(WarContext* context, WarEntity* entity)
                     assert(hasRemainingUpgrade(player, upgradeToBuild));
 
                     s32 upgradeLevel = getUpgradeLevel(player, upgradeToBuild);
-                    logInfo("upgradeLevel: %d\n", upgradeLevel);
                     WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
                     increasePlayerResources(context, player, stats.goldCost[upgradeLevel], 0);
                 }
@@ -900,4 +933,11 @@ void buildBlacksmithHumans(WarContext* context, WarEntity* entity)
 void buildBlacksmithOrcs(WarContext* context, WarEntity* entity)
 {
     buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_ORCS, WAR_UNIT_BLACKSMITH_HUMANS);
+}
+
+void buildWall(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+    
+    map->command.type = WAR_COMMAND_BUILD_WALL;
 }
