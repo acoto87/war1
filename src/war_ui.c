@@ -439,6 +439,24 @@ void renderCommand(WarContext* context)
             break;
         }
 
+        case WAR_COMMAND_BUILD_WALL:
+        case WAR_COMMAND_BUILD_ROAD:
+        {
+            vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
+            position = vec2MapToTileCoordinates(position);
+
+            NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, 1, 1)
+                ? NVG_GRAY_TRANSPARENT : NVG_RED_TRANSPARENT;
+
+            position = vec2TileToMapCoordinates(position, false);
+            position = vec2MapToScreenCoordinates(context, position);
+            vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            rect buildingRect = rectv(position, size);
+            nvgFillRect(gfx, buildingRect, fillColor);
+
+            break;
+        }
+
         default:
         {
             // don't render the rest of the commands
@@ -571,10 +589,10 @@ void renderMapUI(WarContext* context)
             "editing ruins = %d\n",
             context->globalSpeed,
             context->globalScale,
-            context->editingTrees,
-            context->editingRoads,
-            context->editingWalls,
-            context->editingRuins);
+            map->editingTrees,
+            map->editingRoads,
+            map->editingWalls,
+            map->editingRuins);
 
         rect r = recti(map->mapPanel.x + 2, map->mapPanel.y + 2, 50, 50);
         nvgFillRect(gfx, r, nvgRGBA(50, 50, 50, 200));

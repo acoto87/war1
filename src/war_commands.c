@@ -527,21 +527,66 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    if (checkTileToBuildWall(context, targetTile.x, targetTile.y) &&
+                    if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y) &&
                         decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
                     {
-                        // TODO: create an entity that has all the walls in the map
-                        // and add the wall piece there
+                        WarEntity* wall = map->wall;
+                        WarWallPiece* piece = addWallPiece(wall, targetTile.x, targetTile.y, 0);
+                        piece->hp = WAR_WALL_MAX_HP;
+                        piece->maxhp = WAR_WALL_MAX_HP;
 
-                        f32 buildTime = getScaledTime(context, WAR_WALL_BUILD_TIME);
-                        WarState* buildWallState = createBuildWallState(context, townHall, targetTile, buildTime);
-                        changeNextState(context, selectedEntity, buildWallState, true, true);
+                        determineWallTypes(context, wall);
 
                         command->type = WAR_COMMAND_NONE;
                     }
+
+                    return true;
                 }
             }
 
+            return false;
+        }
+
+        case WAR_COMMAND_BUILD_ROAD:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    assert(map->selectedEntities.count > 0);
+
+                    WarEntityId townHallId = map->selectedEntities.items[0];
+                    WarEntity* townHall = findEntity(context, townHallId);
+
+                    WarUnitType townHallType = getTownHallOfRace(player->race);
+                    assert(isUnitOfType(townHall, townHallType));
+
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y) &&
+                        decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
+                    {
+                        WarEntity* road = map->road;
+                        addRoadPiece(road, targetTile.x, targetTile.y, 0);
+
+                        determineRoadTypes(context, road);
+
+                        command->type = WAR_COMMAND_NONE;
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        case WAR_COMMAND_BUILD_BASIC:
+        case WAR_COMMAND_BUILD_ADVANCED:
+        case WAR_COMMAND_CANCEL:
+        {
+            // nothing here
             return false;
         }
     }
@@ -940,4 +985,11 @@ void buildWall(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
     
     map->command.type = WAR_COMMAND_BUILD_WALL;
+}
+
+void buildRoad(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+    
+    map->command.type = WAR_COMMAND_BUILD_ROAD;
 }

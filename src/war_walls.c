@@ -58,10 +58,11 @@ void determineWallTypes(WarContext* context, WarEntity* entity)
     }
 }
 
-void addWallPiece(WarEntity* entity, s32 x, s32 y, s32 player)
+WarWallPiece* addWallPiece(WarEntity* entity, s32 x, s32 y, s32 player)
 {
     WarWallPieceList* pieces = &entity->wall.pieces;
     WarWallPieceListAdd(pieces, createWallPiece(x, y, player));
+    return &pieces->items[pieces->count - 1];
 }
 
 void addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)

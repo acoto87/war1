@@ -1142,7 +1142,7 @@ bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s
     return true;
 }
 
-bool checkTileToBuildWall(WarContext* context, s32 x, s32 y)
+bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 {
     if (!checkRectToBuild(context, x, y, 1, 1))
     {

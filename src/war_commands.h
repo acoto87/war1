@@ -69,3 +69,4 @@ void buildKennel(WarContext* context, WarEntity* entity);
 void buildBlacksmithHumans(WarContext* context, WarEntity* entity);
 void buildBlacksmithOrcs(WarContext* context, WarEntity* entity);
 void buildWall(WarContext* context, WarEntity* entity);
+void buildRoad(WarContext* context, WarEntity* entity);

@@ -10,7 +10,6 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
     WarMap* map = context->map;
 
     WarEntity* building = findEntity(context, state->repairing.buildingId);
-    assert(isBuildingUnit(building));
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))

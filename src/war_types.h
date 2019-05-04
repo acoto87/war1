@@ -1341,6 +1341,16 @@ typedef struct
     WarEntityList entities;
     WarEntityIdList selectedEntities;
 
+    WarEntity* forest;
+    WarEntity* wall;
+    WarEntity* road;
+    WarEntity* ruin;
+
+    bool editingTrees;
+    bool editingWalls;
+    bool editingRoads;
+    bool editingRuins;
+
     WarPathFinder finder;
 
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
@@ -1454,17 +1464,4 @@ typedef struct _WarContext
     WarInput input;
 
     WarMap* map;
-
-    // DEBUG:
-    bool editingTrees;
-    WarEntity* debugForest;
-    
-    bool editingRoads;
-    WarEntity* debugRoad;
-
-    bool editingWalls;
-    WarEntity* debugWall;
-
-    bool editingRuins;
-    WarEntity* debugRuin;
 } WarContext;

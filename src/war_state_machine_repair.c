@@ -15,8 +15,6 @@ void leaveRepairState(WarContext* context, WarEntity* entity, WarState* state)
 
 void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = getUnitStats(unit->type);
 

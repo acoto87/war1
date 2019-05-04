@@ -224,13 +224,12 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             }
         }
 
-        // DEBUG: create debug forest
         WarTreeList trees;
         WarTreeListInit(&trees, WarTreeListDefaultOptions);
-        WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
-        addSpriteComponent(context, entity, map->sprite);
-        addForestComponent(context, entity, trees);
-        context->debugForest = entity;
+        WarEntity *forest = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
+        addSpriteComponent(context, forest, map->sprite);
+        addForestComponent(context, forest, trees);
+        map->forest = forest;
     }
 
     // create the starting roads
@@ -248,7 +247,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
         determineRoadTypes(context, road);
 
-        context->debugRoad = road;
+        map->road = road;
     }
 
     // create the starting walls
@@ -269,8 +268,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < wall->wall.pieces.count; i++)
         {
             WarWallPiece* piece = &wall->wall.pieces.items[i];
-            piece->hp = WALL_MAX_HP;
-            piece->maxhp = WALL_MAX_HP;
+            piece->hp = WAR_WALL_MAX_HP;
+            piece->maxhp = WAR_WALL_MAX_HP;
         }
 
         addStateMachineComponent(context, wall);
@@ -278,7 +277,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         WarState* idleState = createIdleState(context, wall, false);
         changeNextState(context, wall, idleState, true, true);
 
-        context->debugWall = wall;
+        map->wall = wall;
     }
 
     // create players info
@@ -436,7 +435,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             addRuinsPieces(context, ruins, 8, 8, 4);
             determineRuinTypes(context, ruins);
 
-            context->debugRuin = ruins;
+            map->ruin = ruins;
         }
         
         // test animations
@@ -721,12 +720,12 @@ void updateTreesEdit(WarContext* context)
 
     if (wasKeyPressed(input, WAR_KEY_T))
     {
-        context->editingTrees = !context->editingTrees;
+        map->editingTrees = !map->editingTrees;
     }
 
     if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (context->editingTrees)
+        if (map->editingTrees)
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
             pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -738,7 +737,7 @@ void updateTreesEdit(WarContext* context)
             WarEntity* entity = findEntity(context, entityId);
             if (!entity)
             {
-                entity = context->debugForest;
+                entity = map->forest;
 
                 plantTree(context, entity, x, y);
                 determineAllTreeTiles(context);
@@ -758,16 +757,17 @@ void updateTreesEdit(WarContext* context)
 
 void updateRoadsEdit(WarContext* context)
 {
+    WarMap* map = context->map;
     WarInput* input = &context->input;
 
     if (wasKeyPressed(input, WAR_KEY_R))
     {
-        context->editingRoads = !context->editingRoads;
+        map->editingRoads = !map->editingRoads;
     }
 
     if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (context->editingRoads)
+        if (map->editingRoads)
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
             pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -775,7 +775,7 @@ void updateRoadsEdit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntity* road = context->debugRoad;
+            WarEntity* road = map->road;
 
             WarRoadPiece* piece = getRoadPieceAtPosition(road, x, y);
             if (!piece)
@@ -794,16 +794,17 @@ void updateRoadsEdit(WarContext* context)
 
 void updateWallsEdit(WarContext* context)
 {
+    WarMap* map = context->map;
     WarInput* input = &context->input;
 
     if (wasKeyPressed(input, WAR_KEY_W))
     {
-        context->editingWalls = !context->editingWalls;
+        map->editingWalls = !map->editingWalls;
     }
 
     if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (context->editingWalls)
+        if (map->editingWalls)
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
             pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -811,20 +812,15 @@ void updateWallsEdit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntity* wall = context->debugWall;
+            WarEntity* wall = map->wall;
 
             WarWallPiece* piece = getWallPieceAtPosition(wall, x, y);
             if (!piece)
             {
-                addWallPiece(wall, x, y, 0);
-
-                for(s32 i = 0; i < wall->wall.pieces.count; i++)
-                {
-                    WarWallPiece* piece = &wall->wall.pieces.items[i];
-                    piece->hp = 60;
-                    piece->maxhp = 60;
-                }
-
+                WarWallPiece* piece = addWallPiece(wall, x, y, 0);
+                piece->hp = WAR_WALL_MAX_HP;
+                piece->maxhp = WAR_WALL_MAX_HP;
+                
                 determineWallTypes(context, wall);
             }
             else
@@ -838,16 +834,17 @@ void updateWallsEdit(WarContext* context)
 
 void updateRuinsEdit(WarContext* context)
 {
+    WarMap* map = context->map;
     WarInput* input = &context->input;
 
     if (wasKeyPressed(input, WAR_KEY_U))
     {
-        context->editingRuins = !context->editingRuins;
+        map->editingRuins = !map->editingRuins;
     }
 
     if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (context->editingRuins)
+        if (map->editingRuins)
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
             pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -855,7 +852,7 @@ void updateRuinsEdit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntity* ruin = context->debugRuin;
+            WarEntity* ruin = map->ruin;
 
             WarRuinPiece* piece = getRuinPieceAtPosition(ruin, x, y);
             if (!piece)

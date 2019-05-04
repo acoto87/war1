@@ -19,7 +19,7 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 
     createCollapseAnimation(context, entity, "collapse");
 
-    WarEntity* ruins = createRuins(context);
+    WarEntity* ruins = map->ruin;
     addRuinsPieces(context, ruins, position.x, position.y, unitSize.x);
     determineRuinTypes(context, ruins);
     

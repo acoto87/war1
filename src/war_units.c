@@ -567,7 +567,9 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
         case WAR_UNIT_TOWNHALL_HUMANS:
         case WAR_UNIT_TOWNHALL_ORCS:
         {
-            if (unit->building)
+            if (command->type == WAR_COMMAND_BUILD_WALL ||
+                command->type == WAR_COMMAND_BUILD_ROAD ||
+                unit->building)
             {
                 commands[5] = WAR_COMMAND_CANCEL;
             }

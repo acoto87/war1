@@ -65,7 +65,7 @@ void determineRoadTypes(WarContext* context, WarEntity* entity);
 
 // Walls
 WarEntity* createWall(WarContext* context);
-void addWallPiece(WarEntity* entity, s32 x, s32 y, s32 player);
+WarWallPiece* addWallPiece(WarEntity* entity, s32 x, s32 y, s32 player);
 void addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct);
 bool hasWallPieceAtPosition(WarEntity* entity, s32 x, s32 y);
 WarWallPiece* getWallPieceAtPosition(WarEntity* entity, s32 x, s32 y);
@@ -112,5 +112,6 @@ void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h);
 bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y);
+bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y);
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage);
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount);
