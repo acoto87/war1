@@ -56,7 +56,7 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
             for(s32 i = 0; i < map->entities.count; i++)
             {
                 WarEntity* other = map->entities.items[i];
-                if (other && isUnit(other) && isEnemy(context, entity, other))
+                if (other && isUnit(other) && canAttack(context, entity, other))
                 {
                     vec2 targetPosition = getUnitCenterPosition(other, true);
                     if (vec2Distance(position, targetPosition) < 5)

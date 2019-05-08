@@ -19,10 +19,14 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     WarMap* map = context->map;
 
     WarUnitComponent* unit = &entity->unit;
+
     vec2 unitSize = getUnitSize(entity);
     WarUnitStats stats = getUnitStats(unit->type);
 
-    WarEntity* targetEntity = findEntity(context, state->attack.targetEntityId);
+    vec2 targetTile = state->attack.targetTile;
+
+    WarEntityId targetEntityId = state->attack.targetEntityId;
+    WarEntity* targetEntity = findEntity(context, targetEntityId);
 
     // if the entity to attack doesn't exists, go idle
     if (!targetEntity)
@@ -32,19 +36,20 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-    vec2 targetPosition = isUnit(targetEntity) ? unitPointOnTarget(entity, targetEntity) : state->attack.targetTile;
-
     // if the unit is not in range to attack, chase it
     if (isUnit(targetEntity) && !unitInRange(entity, targetEntity, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, state->attack.targetEntityId, stats.range);
+        WarState* followState = createFollowState(context, entity, targetEntityId, stats.range);
         followState->nextState = state;
         changeNextState(context, entity, followState, false, true);
         return;
     }
-    
-    if(isWall(targetEntity) && !positionInRange(entity, state->attack.targetTile, stats.range))
+
+    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 targetPosition = isUnit(targetEntity) 
+        ? unitPointOnTarget(entity, targetEntity) : targetTile;
+
+    if(isWall(targetEntity) && !positionInRange(entity, targetTile, stats.range))
     {
         WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
         moveState->nextState = state;

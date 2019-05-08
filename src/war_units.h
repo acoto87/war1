@@ -1232,7 +1232,9 @@ WarRace getUnitRace(WarEntity* entity)
     }
 }
 
-bool isEnemy(WarContext* context, WarEntity* entity, WarEntity* other);
+bool isEnemy(WarContext* context, WarEntity* entity);
+bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other);
+bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
 
 WarUnitType getTownHallOfRace(WarRace race)
 {

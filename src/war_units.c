@@ -1,17 +1,37 @@
-bool isEnemy(WarContext* context, WarEntity* entity, WarEntity* other)
+bool isEnemy(WarContext* context, WarEntity* entity)
 {
+    WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+
+    if (!isUnit(entity))
+        return false;
+
+    if (entity->unit.player == player->index)
+        return false;
+
+    WarPlayerInfo* otherPlayer = &map->players[entity->unit.player];
+    return !isNeutral(otherPlayer);
+}
+
+bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other)
+{
+    WarMap* map = context->map;
+
     if (!isUnit(entity) || !isUnit(other))
         return false;
 
     if (entity->unit.player == other->unit.player)
         return false;
 
-    if (isDead(other) || isGoingToDie(other) || isCorpseUnit(other))
-        return false;
-
-    WarMap* map = context->map;
     WarPlayerInfo* otherPlayer = &map->players[other->unit.player];
     return !isNeutral(otherPlayer);
+}
+
+bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
+{
+    return isWarriorUnit(entity) && areEnemies(context, entity, targetEntity) &&
+           !isDead(entity) && !isGoingToDie(entity) && 
+           !isDead(targetEntity) && !isGoingToDie(targetEntity) && !isCorpseUnit(targetEntity);
 }
 
 s32 getPlayerUnitTotalCount(WarContext* context, u8 player)
