@@ -134,9 +134,12 @@ void executeStopCommand(WarContext* context)
     }
 }
 
-void executeHarvestGoldCommand(WarContext* context, WarEntity* goldmine)
+void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
+
+    assert(isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
+           targetEntity->type == WAR_ENTITY_TYPE_FOREST);
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -158,61 +161,36 @@ void executeHarvestGoldCommand(WarContext* context, WarEntity* goldmine)
                 if (townHall)
                 {
                     WarState* deliverState = createDeliverState(context, entity, townHall->id);
-                    deliverState->nextState = createGatherGoldState(context, entity, goldmine->id);
+
+                    if (targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                    {
+                        deliverState->nextState = createGatherWoodState(context, entity, targetEntity->id, targetTile);
+                    }
+                    else
+                    {
+                        deliverState->nextState = createGatherGoldState(context, entity, targetEntity->id);
+                    }
+
                     changeNextState(context, entity, deliverState, true, true);
                 }
             }
             else
             {
-                WarState* gatherGoldState = createGatherGoldState(context, entity, goldmine->id);
-                changeNextState(context, entity, gatherGoldState, true, true);        
+                if (targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                {
+                    WarState* gatherWoodState = createGatherWoodState(context, entity, targetEntity->id, targetTile);
+                    changeNextState(context, entity, gatherWoodState, true, true);
+                }
+                else
+                {
+                    WarState* gatherGoldState = createGatherGoldState(context, entity, targetEntity->id);
+                    changeNextState(context, entity, gatherGoldState, true, true);
+                }
             }
         }
-        else
+        else if (isDudeUnit(entity))
         {
             WarState* followState = createFollowState(context, entity, goldmine->id, 1);
-            changeNextState(context, entity, followState, true, true);
-        }
-    }
-}
-
-void executeHarvestWoodCommand(WarContext* context, WarEntity* forest, vec2 targetTile)
-{
-    WarMap* map = context->map;
-
-    s32 selEntitiesCount = map->selectedEntities.count;
-    for(s32 i = 0; i < selEntitiesCount; i++)
-    {
-        WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
-        assert(entity);
-
-        if (isWorkerUnit(entity))
-        {
-            if (isCarryingResources(entity))
-            {
-                // find the closest town hall to deliver the gold
-                WarRace race = getUnitRace(entity);
-                WarUnitType townHallType = getTownHallOfRace(race);
-                WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
-
-                // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
-                if (townHall)
-                {
-                    WarState* deliverState = createDeliverState(context, entity, townHall->id);
-                    deliverState->nextState = createGatherWoodState(context, entity, forest->id, targetTile);
-                    changeNextState(context, entity, deliverState, true, true);
-                }
-            }
-            else
-            {
-                WarState* gatherWoodState = createGatherWoodState(context, entity, forest->id, targetTile);
-                changeNextState(context, entity, gatherWoodState, true, true);        
-            }
-        }
-        else
-        {
-            WarState* followState = createFollowState(context, entity, forest->id, 1);
             changeNextState(context, entity, followState, true, true);
         }
     }
@@ -243,7 +221,7 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
             WarState* deliverState = createDeliverState(context, entity, townHall->id);
             changeNextState(context, entity, deliverState, true, true);
         }
-        else
+        else if (isDudeUnit(entity))
         {
             WarState* followState = createFollowState(context, entity, townHall->id, 1);
             changeNextState(context, entity, followState, true, true);
@@ -352,13 +330,10 @@ bool executeCommand(WarContext* context)
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
-                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
+                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
+                            targetEntity->type == WAR_ENTITY_TYPE_FOREST)
                         {
-                            executeHarvestGoldCommand(context, targetEntity);
-                        }
-                        else if(targetEntity->type == WAR_ENTITY_TYPE_FOREST)
-                        {
-                            executeHarvestWoodCommand(context, targetEntity, targetTile);
+                            executeHarvestCommand(context, targetEntity, targetTile);
                         }
                     }
 

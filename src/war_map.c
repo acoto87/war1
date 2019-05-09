@@ -1059,13 +1059,10 @@ void updateCommandFromRightClick(WarContext* context)
                 WarEntity* targetEntity = findEntity(context, targetEntityId);
                 if (targetEntity)
                 {
-                    if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
+                    if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
+                        targetEntity->type == WAR_ENTITY_TYPE_FOREST)
                     {
-                        executeHarvestGoldCommand(context, targetEntity);
-                    }
-                    else if(targetEntity->type == WAR_ENTITY_TYPE_FOREST)
-                    {
-                        executeHarvestWoodCommand(context, targetEntity, targetTile);
+                        executeHarvestCommand(context, targetEntity, targetTile);
                     }
                     else if (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) || 
                              isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
