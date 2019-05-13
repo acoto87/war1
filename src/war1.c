@@ -2,12 +2,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#ifdef _WIN64
-#define WAR_OPENGL
-#else
-#define WAR_OPENGL_ES
-#endif
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -28,20 +22,13 @@
 // https://blog.kowalczyk.info/article/j/guide-to-predefined-macros-in-c-compilers-gcc-clang-msvc-etc..html
 #include <glad/glad.h>
 
-#if defined(_WIN64)
 #define GLFW_DLL
-#endif
-
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include "nanovg/nanovg.c"
 #define NVG_DISABLE_CULL_FACE
-#ifdef WAR_OPENGL
-#define NANOVG_GL3_IMPLEMENTATION
-#else
 #define NANOVG_GLES2_IMPLEMENTATION
-#endif
 #include "nanovg/nanovg_gl.h"
 #include "nanovg/nanovg_gl_utils.h"
 
@@ -111,7 +98,7 @@ void glfwErrorCallback(int error, const char* description)
     logError("Error: %d, %s\n", error, description);
 }
 
-int main(int argc, char *argv[]) 
+int main() 
 {
     srand(time(NULL));
 
@@ -149,11 +136,7 @@ int main(int argc, char *argv[])
         presentGame(&context);
     }
 
-#ifdef WAR_OPENGL
-    nvgDeleteGL3(context.gfx);
-#else
     nvgDeleteGLES2(context.gfx);
-#endif
     glfwDestroyWindow(context.window);
     glfwTerminate();
 	return 0;

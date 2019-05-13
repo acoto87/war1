@@ -1,17 +1,9 @@
 bool initGame(WarContext* context)
 {
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-#ifdef WAR_OPENGL
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#else
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-#endif
 
     context->globalScale = 3;
     context->globalSpeed = 1;
@@ -39,12 +31,7 @@ bool initGame(WarContext* context)
 
     glCheckOpenGLVersion();
 
-#ifdef WAR_OPENGL
-    context->gfx = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_DEBUG);
-#else
     context->gfx = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_DEBUG);
-#endif
-
     if (!context->gfx) 
     {
         logError("Could not init nanovg.\n");

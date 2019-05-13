@@ -19,7 +19,7 @@ mkdir -p build
 cd build
 rm -f war1
 
-if gcc $CommonCompilerFlags $CommonLinkerFlags ../src/war1.c ../deps/include/glad/glad.c $GladSrcPath -o war1; then
+if gcc $CommonCompilerFlags $CommonLinkerFlags ../src/war1.c ../deps/include/glad/glad.c -o war1; then
 cd ..
 echo "Generating ctags - Start";
 ctags --tag-relative --extra=f --language-force=C --recurse=yes

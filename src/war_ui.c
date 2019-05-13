@@ -23,9 +23,12 @@ void setUIText(WarEntity* uiText, s32 highlightIndex, char* text)
 
 void setUITextFormatv(WarEntity* uiText, s32 highlightIndex, char* format, va_list args)
 {
-    char buffer[256];
-    vsprintf(buffer, format, args);
-    setUIText(uiText, highlightIndex, buffer);
+	if (format)
+	{
+    	char buffer[256];
+    	vsprintf(buffer, format, args);
+    	setUIText(uiText, highlightIndex, buffer);
+	}
 }
 
 void setUITextFormat(WarEntity* uiText, s32 highlightIndex, char* format, ...)

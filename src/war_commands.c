@@ -190,7 +190,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
         }
         else if (isDudeUnit(entity))
         {
-            WarState* followState = createFollowState(context, entity, goldmine->id, 1);
+            WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
             changeNextState(context, entity, followState, true, true);
         }
     }
