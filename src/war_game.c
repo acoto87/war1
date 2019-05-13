@@ -54,15 +54,15 @@ bool initGame(WarContext* context)
     }
 
     // load fonts
-    nvgCreateFont(context->gfx, "defaultFont", "./build/Roboto-Regular.ttf");
+    nvgCreateFont(context->gfx, "defaultFont", "./Roboto-Regular.ttf");
 
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    context->fontPath = "./build/war1_font.png";
+    context->fontPath = "./war1_font.png";
     context->fontSprite = loadFontSprite(context);
 
-    context->warFilePath = "./build/DATA.WAR";
+    context->warFilePath = "./DATA.WAR";
     context->warFile = loadWarFile(context);
 
     for (int i = 0; i < arrayLength(assets); ++i)
