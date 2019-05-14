@@ -1,7 +1,4 @@
-s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)
-{
-    return minDamage + max(rndDamage - armor, 0);
-}
+#define isEntityOfType(entity, entityType) ((entity)->type == (entityType))
 
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);
 void removeTransformComponent(WarContext* context, WarEntity* entity);
@@ -113,5 +110,6 @@ bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h);
 bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y);
 bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y);
+s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor);
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage);
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount);

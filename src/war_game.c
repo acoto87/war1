@@ -203,6 +203,7 @@ void inputGame(WarContext *context)
     setInputButton(context, WAR_MOUSE_RIGHT, glfwGetMouseButton(context->window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
     
     // keyboard keys
+    setInputKey(context, WAR_KEY_ESC, glfwGetKey(context->window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_CTRL, glfwGetKey(context->window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
                                        glfwGetKey(context->window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_SHIFT, glfwGetKey(context->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
@@ -213,12 +214,32 @@ void inputGame(WarContext *context)
     setInputKey(context, WAR_KEY_UP, glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_DOWN, glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS);
 
-    setInputKey(context, WAR_KEY_P, glfwGetKey(context->window, GLFW_KEY_P) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_T, glfwGetKey(context->window, GLFW_KEY_T) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_R, glfwGetKey(context->window, GLFW_KEY_R) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_U, glfwGetKey(context->window, GLFW_KEY_U) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_W, glfwGetKey(context->window, GLFW_KEY_W) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_A, glfwGetKey(context->window, GLFW_KEY_A) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_B, glfwGetKey(context->window, GLFW_KEY_B) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_C, glfwGetKey(context->window, GLFW_KEY_C) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_D, glfwGetKey(context->window, GLFW_KEY_D) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_E, glfwGetKey(context->window, GLFW_KEY_E) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_F, glfwGetKey(context->window, GLFW_KEY_F) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_G, glfwGetKey(context->window, GLFW_KEY_G) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_H, glfwGetKey(context->window, GLFW_KEY_H) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_I, glfwGetKey(context->window, GLFW_KEY_I) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_J, glfwGetKey(context->window, GLFW_KEY_J) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_K, glfwGetKey(context->window, GLFW_KEY_K) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_L, glfwGetKey(context->window, GLFW_KEY_L) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_M, glfwGetKey(context->window, GLFW_KEY_M) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_N, glfwGetKey(context->window, GLFW_KEY_N) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_O, glfwGetKey(context->window, GLFW_KEY_O) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_P, glfwGetKey(context->window, GLFW_KEY_P) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_Q, glfwGetKey(context->window, GLFW_KEY_Q) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_R, glfwGetKey(context->window, GLFW_KEY_R) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_S, glfwGetKey(context->window, GLFW_KEY_S) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_T, glfwGetKey(context->window, GLFW_KEY_T) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_U, glfwGetKey(context->window, GLFW_KEY_U) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_V, glfwGetKey(context->window, GLFW_KEY_V) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_W, glfwGetKey(context->window, GLFW_KEY_W) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_X, glfwGetKey(context->window, GLFW_KEY_X) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_Y, glfwGetKey(context->window, GLFW_KEY_Y) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_Z, glfwGetKey(context->window, GLFW_KEY_Z) == GLFW_PRESS);
 
     setInputKey(context, WAR_KEY_1, glfwGetKey(context->window, GLFW_KEY_1) == GLFW_PRESS ||
                                     glfwGetKey(context->window, GLFW_KEY_KP_1) == GLFW_PRESS);

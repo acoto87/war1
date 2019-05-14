@@ -547,6 +547,7 @@ void updateViewport(WarContext *context)
         {
             vec2 minimapSize = vec2i(MINIMAP_WIDTH, MINIMAP_HEIGHT);
             vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
+            offset = vec2MinimapToViewportCoordinates(context, offset);
 
             map->viewport.x = offset.x * MAP_WIDTH / minimapSize.x;
             map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
@@ -969,6 +970,7 @@ void updateCommands(WarContext* context)
             commandButtons[i]->button.wood = commandData.wood;
             commandButtons[i]->button.clickHandler = commandData.clickHandler;
             commandButtons[i]->button.enabled = true;
+            commandButtons[i]->button.hotKey = commandData.hotKey;
         }
     }
 }
@@ -981,15 +983,31 @@ void updateCommandFromButtons(WarContext* context)
     for(s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_BUTTON)
+        if (entity && isEntityOfType(entity, WAR_ENTITY_TYPE_BUTTON))
         {
             WarTransformComponent* transform = &entity->transform;
             WarButtonComponent* button = &entity->button;
+            
             if (!button->enabled)
             {
                 button->hot = false;
                 button->active = false;
                 continue;
+            }
+
+            if (isKeyPressed(input, button->hotKey))
+            {
+                if (button->clickHandler)
+                {
+                    button->hot = false;
+                    button->active = false;
+
+                    button->clickHandler(context, entity);
+
+                    // in this case break to not allow pressing multiple keys
+                    // and executing all of the command for those keys
+                    break;
+                }
             }
 
             vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
@@ -1021,11 +1039,11 @@ void updateCommandFromButtons(WarContext* context)
             {
                 for(s32 j = 0; j < map->entities.count; j++)
                 {
-                    WarEntity* button = map->entities.items[i];
-                    if (button && button->type == WAR_ENTITY_TYPE_BUTTON)
+                    WarEntity* otherButton = map->entities.items[i];
+                    if (otherButton && isEntityOfType(otherButton, WAR_ENTITY_TYPE_BUTTON))
                     {
-                        button->button.hot = false;
-                        button->button.active = false;
+                        otherButton->button.hot = false;
+                        otherButton->button.active = false;
                     }
                 }
 
@@ -1060,14 +1078,14 @@ void updateCommandFromRightClick(WarContext* context)
                 if (targetEntity)
                 {
                     if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
-                        targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                        isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                     {
                         executeHarvestCommand(context, targetEntity, targetTile);
                     }
                     else if (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) || 
                              isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
                     {
-                        if (isEnemy(context, targetEntity))
+                        if (isEnemyUnit(context, targetEntity))
                         {
                             executeAttackCommand(context, targetEntity, targetTile);
                         }
@@ -1078,7 +1096,7 @@ void updateCommandFromRightClick(WarContext* context)
                     }
                     else
                     {
-                        if (isEnemy(context, targetEntity))
+                        if (isEnemyUnit(context, targetEntity))
                         {
                             executeAttackCommand(context, targetEntity, targetTile);
                         }
@@ -1096,7 +1114,10 @@ void updateCommandFromRightClick(WarContext* context)
             // if the right click was on the minimap
             else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
             {
+                vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
+                vec2 targetPoint = vec2TileToMapCoordinates(offset, true);
 
+                executeMoveCommand(context, targetPoint);
             }    
         }
     }

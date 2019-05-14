@@ -40,13 +40,8 @@ vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
     assert(map);
 
     rect minimapPanel = map->minimapPanel;
-    vec2 minimapPanelSize = vec2f(minimapPanel.width, minimapPanel.height);
-
-    vec2 minimapViewportSize = vec2f(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
-
+    
     v = vec2Translatef(v, -minimapPanel.x, -minimapPanel.y);
-    v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
-    v = vec2Clampv(v, VEC2_ZERO, vec2Subv(minimapPanelSize, minimapViewportSize));
     return v;
 }
 
@@ -101,6 +96,21 @@ vec2 vec2TileToMapCoordinates(vec2 v, bool centeredInTile)
         v.y += halfi(MEGA_TILE_HEIGHT);
     }
 
+    return v;
+}
+
+vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    rect minimapPanel = map->minimapPanel;
+    vec2 minimapPanelSize = vec2f(minimapPanel.width, minimapPanel.height);
+
+    vec2 minimapViewportSize = vec2f(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
+
+    v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
+    v = vec2Clampv(v, VEC2_ZERO, vec2Subv(minimapPanelSize, minimapViewportSize));
     return v;
 }
 

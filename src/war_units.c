@@ -1,4 +1,12 @@
-bool isEnemy(WarContext* context, WarEntity* entity)
+bool isFriendlyUnit(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+
+    return isUnit(entity) && entity->unit.player == player->index;
+}
+
+bool isEnemyUnit(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -10,7 +18,7 @@ bool isEnemy(WarContext* context, WarEntity* entity)
         return false;
 
     WarPlayerInfo* otherPlayer = &map->players[entity->unit.player];
-    return !isNeutral(otherPlayer);
+    return !isNeutralPlayer(otherPlayer);
 }
 
 bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other)
@@ -24,7 +32,7 @@ bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other)
         return false;
 
     WarPlayerInfo* otherPlayer = &map->players[other->unit.player];
-    return !isNeutral(otherPlayer);
+    return !isNeutralPlayer(otherPlayer);
 }
 
 bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
@@ -739,16 +747,17 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
 
     WarUnitCommandData data = (WarUnitCommandData){0};
     data.type = commandType;
-    data.clickHandler = commandBaseData.clickHandler;
+    data.hotKey = commandBaseData.hotKey;
     data.highlightIndex = commandBaseData.highlightIndex;
     strcpy(data.tooltip, commandBaseData.tooltip);
+    data.clickHandler = commandBaseData.clickHandler;
 
     switch (commandType)
     {
         // unit commands
         case WAR_COMMAND_MOVE:
         {
-            data.frameIndex = isHuman(player) 
+            data.frameIndex = isHumanPlayer(player) 
                 ? WAR_PORTRAIT_MOVE_HUMANS : WAR_PORTRAIT_MOVE_ORCS;
             break;
         }
@@ -757,17 +766,17 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             // check here upgrades for the shields
             if (getUpgradeLevel(player, WAR_UPGRADE_SHIELD) == 2)
             {
-                data.frameIndex = isHuman(player)
+                data.frameIndex = isHumanPlayer(player)
                     ? WAR_PORTRAIT_SHIELD_3_HUMANS : WAR_PORTRAIT_SHIELD_3_ORCS;
             }
             else if (getUpgradeLevel(player, WAR_UPGRADE_SHIELD) == 1)
             {
-                data.frameIndex = isHuman(player)
+                data.frameIndex = isHumanPlayer(player)
                     ? WAR_PORTRAIT_SHIELD_2_HUMANS : WAR_PORTRAIT_SHIELD_2_ORCS;
             }
             else
             {
-                data.frameIndex = isHuman(player)
+                data.frameIndex = isHumanPlayer(player)
                     ? WAR_PORTRAIT_SHIELD_1_HUMANS : WAR_PORTRAIT_SHIELD_1_ORCS;
             }
 
@@ -814,22 +823,22 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                     case WAR_UNIT_CATAPULT_ORCS:
                     {
                         // check here upgrades for the sword
-                        WarUpgradeType swordAxeUpgrade = isHuman(player)
+                        WarUpgradeType swordAxeUpgrade = isHumanPlayer(player)
                             ? WAR_UPGRADE_SWORDS : WAR_UPGRADE_AXES;
 
                         if (getUpgradeLevel(player, swordAxeUpgrade) == 2)
                         {
-                            data.frameIndex = isHuman(player)
+                            data.frameIndex = isHumanPlayer(player)
                                 ? WAR_PORTRAIT_SWORD_3 : WAR_PORTRAIT_AXE_3;
                         }
                         else if (getUpgradeLevel(player, swordAxeUpgrade) == 1)
                         {
-                            data.frameIndex = isHuman(player)
+                            data.frameIndex = isHumanPlayer(player)
                                 ? WAR_PORTRAIT_SWORD_2 : WAR_PORTRAIT_AXE_2;
                         }
                         else
                         {
-                            data.frameIndex = isHuman(player)
+                            data.frameIndex = isHumanPlayer(player)
                                 ? WAR_PORTRAIT_SWORD_1 : WAR_PORTRAIT_AXE_1;
                         }
 
@@ -840,22 +849,22 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                     case WAR_UNIT_SPEARMAN:
                     {
                         // check here upgrades for the arrows
-                        WarUpgradeType arrowSpearUpgrade = isHuman(player)
+                        WarUpgradeType arrowSpearUpgrade = isHumanPlayer(player)
                             ? WAR_UPGRADE_ARROWS : WAR_UPGRADE_SPEARS;
 
                         if (getUpgradeLevel(player, arrowSpearUpgrade) == 2)
                         {
-                            data.frameIndex = isHuman(player)
+                            data.frameIndex = isHumanPlayer(player)
                                 ? WAR_PORTRAIT_ARROW_3 : WAR_PORTRAIT_SPEAR_3;
                         }
                         else if (getUpgradeLevel(player, arrowSpearUpgrade) == 1)
                         {
-                            data.frameIndex = isHuman(player)
+                            data.frameIndex = isHumanPlayer(player)
                                 ? WAR_PORTRAIT_ARROW_2 : WAR_PORTRAIT_SPEAR_2;
                         }
                         else
                         {
-                            data.frameIndex = isHuman(player)
+                            data.frameIndex = isHumanPlayer(player)
                                 ? WAR_PORTRAIT_ARROW_1 : WAR_PORTRAIT_SPEAR_1;
                         }
 
@@ -896,7 +905,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             else
             {
                 // check here upgrades for the sword
-                if (isHuman(player))
+                if (isHumanPlayer(player))
                 {
                     if (getUpgradeLevel(player, WAR_UPGRADE_SWORDS) == 2)
                         data.frameIndex = WAR_PORTRAIT_SWORD_3;
@@ -905,7 +914,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                     else
                         data.frameIndex = WAR_PORTRAIT_SWORD_1;
                 }
-                else if (isOrc(player))
+                else if (isOrcPlayer(player))
                 {
                     if (getUpgradeLevel(player, WAR_UPGRADE_AXES) == 2)
                         data.frameIndex = WAR_PORTRAIT_AXE_3;

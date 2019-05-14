@@ -84,6 +84,96 @@ shlDefineList(vec2List, vec2)
 struct _WarContext;
 struct _WarEntity;
 
+// Input
+typedef enum
+{
+    WAR_MOUSE_LEFT,
+    WAR_MOUSE_RIGHT,
+
+    WAR_MOUSE_COUNT
+} WarMouseButtons;
+
+typedef enum _WarKeys
+{
+    WAR_KEY_NONE,
+
+    WAR_KEY_ESC,
+    WAR_KEY_CTRL,
+    WAR_KEY_SHIFT,
+
+    WAR_KEY_LEFT,
+    WAR_KEY_RIGHT,
+    WAR_KEY_DOWN,
+    WAR_KEY_UP,
+
+    WAR_KEY_A,
+    WAR_KEY_B,
+    WAR_KEY_C,
+    WAR_KEY_D,
+    WAR_KEY_E,
+    WAR_KEY_F,
+    WAR_KEY_G,
+    WAR_KEY_H,
+    WAR_KEY_I,
+    WAR_KEY_J,
+    WAR_KEY_K,
+    WAR_KEY_L,
+    WAR_KEY_M,
+    WAR_KEY_N,
+    WAR_KEY_O,
+    WAR_KEY_P,
+    WAR_KEY_Q,
+    WAR_KEY_R,
+    WAR_KEY_S,
+    WAR_KEY_T,
+    WAR_KEY_U,
+    WAR_KEY_V,
+    WAR_KEY_W,
+    WAR_KEY_X,
+    WAR_KEY_Y,
+    WAR_KEY_Z,
+
+    WAR_KEY_1,
+    WAR_KEY_2,
+    WAR_KEY_3,
+    WAR_KEY_4,
+    WAR_KEY_5,
+    WAR_KEY_6,
+    WAR_KEY_7,
+    WAR_KEY_8,
+    WAR_KEY_9,
+    WAR_KEY_0,
+
+    WAR_KEY_COUNT
+} WarKeys;
+
+typedef struct
+{
+    // indicates if the key is pressed in the current frame
+    bool pressed; 
+
+    // indicate if the key was pressed in the previous frame
+    bool wasPressed; 
+} WarKeyButtonState;
+
+typedef struct
+{
+    // current mouse position
+    vec2 pos;
+
+    // state of the mouse buttons
+    WarKeyButtonState buttons[WAR_MOUSE_COUNT];
+
+    // state of the keys
+    WarKeyButtonState keys[WAR_KEY_COUNT];
+
+    // drag
+    bool isDragging;
+    bool wasDragging;
+    vec2 dragPos;
+    rect dragRect;
+} WarInput;
+
 //
 // Resources
 //
@@ -1210,6 +1300,7 @@ typedef struct
     bool enabled;
     bool hot;
     bool active;
+    WarKeys hotKey;
     s32 highlightIndex;
     char tooltip[100];
     s32 gold;
@@ -1285,9 +1376,9 @@ typedef struct
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
 } WarPlayerInfo;
 
-#define isHuman(player) ((player)->race == WAR_RACE_HUMANS)
-#define isOrc(player) ((player)->race == WAR_RACE_ORCS)
-#define isNeutral(player) ((player)->race == WAR_RACE_NEUTRAL)
+#define isHumanPlayer(player) ((player)->race == WAR_RACE_HUMANS)
+#define isOrcPlayer(player) ((player)->race == WAR_RACE_ORCS)
+#define isNeutralPlayer(player) ((player)->race == WAR_RACE_NEUTRAL)
 
 #define isFeatureAllowed(player, feature) \
     ((player)->features[(feature)])
@@ -1360,72 +1451,6 @@ typedef struct
 
     WarFlashStatus flashStatus;
 } WarMap;
-
-typedef enum
-{
-    WAR_MOUSE_LEFT,
-    WAR_MOUSE_RIGHT,
-
-    WAR_MOUSE_COUNT
-} WarMouseButtons;
-
-typedef enum
-{
-    WAR_KEY_CTRL,
-    WAR_KEY_SHIFT,
-
-    WAR_KEY_LEFT,
-    WAR_KEY_RIGHT,
-    WAR_KEY_DOWN,
-    WAR_KEY_UP,
-
-    WAR_KEY_P,
-    WAR_KEY_T,
-    WAR_KEY_R,
-    WAR_KEY_U,
-    WAR_KEY_W,
-    WAR_KEY_G,
-
-    WAR_KEY_1,
-    WAR_KEY_2,
-    WAR_KEY_3,
-    WAR_KEY_4,
-    WAR_KEY_5,
-    WAR_KEY_6,
-    WAR_KEY_7,
-    WAR_KEY_8,
-    WAR_KEY_9,
-    WAR_KEY_0,
-
-    WAR_KEY_COUNT
-} WarKeys;
-
-typedef struct
-{
-    // indicates if the key is pressed in the current frame
-    bool pressed; 
-
-    // indicate if the key was pressed in the previous frame
-    bool wasPressed; 
-} WarKeyButtonState;
-
-typedef struct
-{
-    // current mouse position
-    vec2 pos;
-
-    // state of the mouse buttons
-    WarKeyButtonState buttons[WAR_MOUSE_COUNT];
-
-    // state of the keys
-    WarKeyButtonState keys[WAR_KEY_COUNT];
-
-    // drag
-    bool isDragging;
-    bool wasDragging;
-    vec2 dragPos;
-    rect dragRect;
-} WarInput;
 
 typedef struct _WarContext
 {

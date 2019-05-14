@@ -65,37 +65,40 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
 
         target = vec2MapToTileCoordinates(target);
 
-        if (isKeyPressed(input, WAR_KEY_SHIFT))
+        if (isFriendlyUnit(context, entity))
         {
-            if (isPatrolling(entity))
+            if (isKeyPressed(input, WAR_KEY_SHIFT))
             {
-                if(isMoving(entity))
+                if (isPatrolling(entity))
+                {
+                    if(isMoving(entity))
+                    {
+                        WarState* moveState = getMoveState(entity);
+                        vec2ListAdd(&moveState->move.positions, target);
+                    }
+                    
+                    WarState* patrolState = getPatrolState(entity);
+                    vec2ListAdd(&patrolState->patrol.positions, target);
+                }
+                else if(isMoving(entity) && !isAttacking(entity))
                 {
                     WarState* moveState = getMoveState(entity);
                     vec2ListAdd(&moveState->move.positions, target);
                 }
-                
-                WarState* patrolState = getPatrolState(entity);
-                vec2ListAdd(&patrolState->patrol.positions, target);
-            }
-            else if(isMoving(entity) && !isAttacking(entity))
-            {
-                WarState* moveState = getMoveState(entity);
-                vec2ListAdd(&moveState->move.positions, target);
+                else
+                {
+                    WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
+                    changeNextState(context, entity, moveState, true, true);
+                }
             }
             else
             {
                 WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
                 changeNextState(context, entity, moveState, true, true);
-            }
-        }
-        else
-        {
-            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, target));
-            changeNextState(context, entity, moveState, true, true);
 
-            // WarState* patrolState = createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
-            // changeNextState(context, entity, patrolState, true, true);
+                // WarState* patrolState = createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
+                // changeNextState(context, entity, patrolState, true, true);
+            }
         }
     }
 
@@ -113,8 +116,11 @@ void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
-        changeNextState(context, entity, followState, true, true);
+        if (isFriendlyUnit(context, entity))
+        {
+            WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
+            changeNextState(context, entity, followState, true, true);
+        }
     }
 }
 
@@ -129,8 +135,11 @@ void executeStopCommand(WarContext* context)
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        if (isFriendlyUnit(context, entity))
+        {
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState, true, true);
+        }
     }
 }
 
@@ -139,7 +148,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
     WarMap* map = context->map;
 
     assert(isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
-           targetEntity->type == WAR_ENTITY_TYPE_FOREST);
+           isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST));
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -148,50 +157,43 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        if (isWorkerUnit(entity))
+        if (isFriendlyUnit(context, entity))
         {
-            if (isCarryingResources(entity))
+            if (isWorkerUnit(entity))
             {
-                // find the closest town hall to deliver the gold
-                WarRace race = getUnitRace(entity);
-                WarUnitType townHallType = getTownHallOfRace(race);
-                WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
-
-                // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
-                if (townHall)
+                if (isCarryingResources(entity))
                 {
-                    WarState* deliverState = createDeliverState(context, entity, townHall->id);
+                    // find the closest town hall to deliver the gold
+                    WarRace race = getUnitRace(entity);
+                    WarUnitType townHallType = getTownHallOfRace(race);
+                    WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
 
-                    if (targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                    // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
+                    if (townHall)
                     {
-                        deliverState->nextState = createGatherWoodState(context, entity, targetEntity->id, targetTile);
-                    }
-                    else
-                    {
-                        deliverState->nextState = createGatherGoldState(context, entity, targetEntity->id);
-                    }
+                        WarState* deliverState = createDeliverState(context, entity, townHall->id);
 
-                    changeNextState(context, entity, deliverState, true, true);
-                }
-            }
-            else
-            {
-                if (targetEntity->type == WAR_ENTITY_TYPE_FOREST)
-                {
-                    WarState* gatherWoodState = createGatherWoodState(context, entity, targetEntity->id, targetTile);
-                    changeNextState(context, entity, gatherWoodState, true, true);
+                        deliverState->nextState = isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST)
+                            ? createGatherWoodState(context, entity, targetEntity->id, targetTile)
+                            : createGatherGoldState(context, entity, targetEntity->id);
+
+                        changeNextState(context, entity, deliverState, true, true);
+                    }
                 }
                 else
                 {
-                    WarState* gatherGoldState = createGatherGoldState(context, entity, targetEntity->id);
-                    changeNextState(context, entity, gatherGoldState, true, true);
+                    WarState* gatherGoldOrWoodState = isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST)
+                        ? createGatherWoodState(context, entity, targetEntity->id, targetTile)
+                        : createGatherGoldState(context, entity, targetEntity->id);
+
+                    changeNextState(context, entity, gatherGoldOrWoodState, true, true);
                 }
             }
-        }
-        else if (isDudeUnit(entity))
-        {
-            WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
-            changeNextState(context, entity, followState, true, true);
+            else if (isDudeUnit(entity))
+            {
+                WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
+                changeNextState(context, entity, followState, true, true);
+            }
         }
     }
 }
@@ -207,24 +209,27 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        WarEntity* townHall = targetEntity;
-        if (!townHall)
+        if (isFriendlyUnit(context, entity))
         {
-            WarRace race = getUnitRace(entity);
-            WarUnitType townHallType = getTownHallOfRace(race);
-            townHall = findClosestUnitOfType(context, entity, townHallType);
-            assert(townHall);
-        }
+            WarEntity* townHall = targetEntity;
+            if (!townHall)
+            {
+                WarRace race = getUnitRace(entity);
+                WarUnitType townHallType = getTownHallOfRace(race);
+                townHall = findClosestUnitOfType(context, entity, townHallType);
+                assert(townHall);
+            }
 
-        if (isWorkerUnit(entity) && isCarryingResources(entity))
-        {
-            WarState* deliverState = createDeliverState(context, entity, townHall->id);
-            changeNextState(context, entity, deliverState, true, true);
-        }
-        else if (isDudeUnit(entity))
-        {
-            WarState* followState = createFollowState(context, entity, townHall->id, 1);
-            changeNextState(context, entity, followState, true, true);
+            if (isWorkerUnit(entity) && isCarryingResources(entity))
+            {
+                WarState* deliverState = createDeliverState(context, entity, townHall->id);
+                changeNextState(context, entity, deliverState, true, true);
+            }
+            else if (isDudeUnit(entity))
+            {
+                WarState* followState = createFollowState(context, entity, townHall->id, 1);
+                changeNextState(context, entity, followState, true, true);
+            }
         }
     }
 }
@@ -240,16 +245,19 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        // the unit can't repair itself
-        if (entity->id == targetEntity->id)
+        if (isFriendlyUnit(context, entity))
         {
-            continue;
-        }
+            // the unit can't repair itself
+            if (entity->id == targetEntity->id)
+            {
+                continue;
+            }
 
-        if (isWorkerUnit(entity))
-        {
-            WarState* repairState = createRepairState(context, entity, targetEntity->id);
-            changeNextState(context, entity, repairState, true, true);
+            if (isWorkerUnit(entity))
+            {
+                WarState* repairState = createRepairState(context, entity, targetEntity->id);
+                changeNextState(context, entity, repairState, true, true);
+            }
         }
     }
 }
@@ -265,13 +273,16 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        // the unit can't attack itself
-        if (entity->id != targetEntity->id)
+        if (isFriendlyUnit(context, entity))
         {
-            if (canAttack(context, entity, targetEntity))
+            // the unit can't attack itself
+            if (entity->id != targetEntity->id)
             {
-                WarState* attackState = createAttackState(context, entity, targetEntity->id, targetTile);
-                changeNextState(context, entity, attackState, true, true);
+                if (canAttack(context, entity, targetEntity))
+                {
+                    WarState* attackState = createAttackState(context, entity, targetEntity->id, targetTile);
+                    changeNextState(context, entity, attackState, true, true);
+                }
             }
         }
     }

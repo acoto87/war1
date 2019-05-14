@@ -1153,6 +1153,11 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
     return true;
 }
 
+s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)
+{
+    return minDamage + max(rndDamage - armor, 0);
+}
+
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
 {
     assert(isUnit(entity));
