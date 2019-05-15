@@ -34,6 +34,7 @@ internal s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
 }
 
 #ifdef __GNUC__
+// this is to silence GCC about this warning, I don't want to remove this function yet
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif

@@ -49,7 +49,9 @@ typedef union {
 #define u8RgbaColor(r, g, b, a) ((u8Color){{r, g, b, a}})
 #define u8RgbColor(r, g, b) u8RgbaColor(r, g, b, 255)
 
-#define NULL 0
+#ifndef NULL
+#define NULL ((void*)0)
+#endif
 
 #define internal static
 #define global static
@@ -58,6 +60,8 @@ typedef union {
 #define DEFAULT_BUFFER_SIZE 1024
 
 #define NOT_IMPLEMENTED fprintf(stderr, "Not implemented at %s (%d)", __FILE__, __LINE__)
+
+#define NOT_USED(expr) do { (void)(expr); } while (0)
 
 #define readu8(arr, index) (arr[index])
 #define reads16(arr, index) (*(s16*)((arr) + (index)))

@@ -37,9 +37,12 @@ bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other)
 
 bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
-    return isWarriorUnit(entity) && areEnemies(context, entity, targetEntity) &&
-           !isDead(entity) && !isGoingToDie(entity) && 
-           !isDead(targetEntity) && !isGoingToDie(targetEntity) && !isCorpseUnit(targetEntity);
+    return isWarriorUnit(entity) && 
+           !isDead(entity) && 
+           !isGoingToDie(entity) && 
+           !isDead(targetEntity) && 
+           !isGoingToDie(targetEntity) && 
+           !isCorpseUnit(targetEntity);
 }
 
 s32 getPlayerUnitTotalCount(WarContext* context, u8 player)

@@ -18,7 +18,8 @@ List of thing to do in no particular order
   * Select footman -> right click on a tree, and assertion is hit.
   * ~~When a building is being built dont show command buttons or command texts.~~
   * ~~When different buildings are collapsed in near positions, the ruins doesn't merge well.~~
-  * when building roads the player needs to go back and click on the build road button again to build the next one.
+  * When building roads the player needs to go back and click on the build road button again to build the next one.
+  * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -71,27 +72,27 @@ List of thing to do in no particular order
   * ~~Change the behavior of chopping trees when multiple units are chopping the same tree. With each hack of the axe the tree should loose wood, until it ran out of it. Each unit go back to the townhall when has max amount of wood or there is no more trees to chop.~~
   * ~~If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better, and make the necessary changes.~~
     * ~~The solution implemented was that tree islands are forests, and in editing, just determine the tree tiles for each forest, because the edition a less used and slower funcionality and it doesn't matter too much if every tree is checked in each operation.~~
-  * > Add functionality of training units.
+  * ~~Add functionality of training units.~~
     * ~~Fix upgrade build times.~~
     * ~~Make so that train units withdraw gold and lumber.~~
     * ~~Handle the case when there is no sufficient gold or lumber (put a message in the status bar).~~
-    * Add keyboard shortcuts to train units.
+    * ~~Add keyboard shortcuts to train units.~~
     * ~~Handle the case when there is no sufficient farm food for the new training (put a message in the status bar).~~
-  * > Add functionality of building upgrades.
+  * ~~Add functionality of building upgrades.~~
     * ~~Fix upgrade build times.~~
     * ~~Make so that build upgrades withdraw gold and lumber.~~
     * ~~Handle the case when there is no sufficient gold or lumber (put a message in the status bar).~~
     * ~~Make so that the upgrades increase the corresponding values for the damage, armor and so.~~
-    * Add keyboard shortcuts to build upgrades.
+    * ~~Add keyboard shortcuts to build upgrades.~~
   * Add functionality of building buildings.
     * ~~Make so that build buildings withdraw gold and lumber.~~
     * ~~Handle the case when there is no sufficient gold or lumber (put a message in the status bar).~~
-    * Add keyboard shortcuts to train units.
+    * ~~Add keyboard shortcuts to build buildings.~~
   * > Add functionality of basic commands
     * ~~Move command~~
     * ~~Stop command~~
     * ~~Attack command~~
-      * Check that the selected units can attack the target unit.
+      * ~~Check that the selected units can attack the target unit.~~
       * Attack on the ground
     * ~~Harvest command~~
     * ~~Repair command~~
@@ -104,7 +105,7 @@ List of thing to do in no particular order
   * ~~Add little damage, huge damage and collapse animations to buildings.~~
   * ~~Add animation system, again.~~
   * ~~Switch animations without reseting the new animation to the start. This will allow have one animation for each orientation of then switch to the correct one depending of the orientation but conserving the state.~~
-  * Change the concept of animations by a sequence of frames, to a more complex but powerful system of actions. Each unit can have several actions, which can have steps and the steps of the actions describe what the unit does. For example, this is the `Attack` action of the footman:
+  * ~~Change the concept of animations by a sequence of frames, to a more complex but powerful system of actions. Each unit can have several actions, which can have steps and the steps of the actions describe what the unit does. For example, this is the `Attack` action of the footman:~~
 
   ```c
   Attack={
@@ -135,13 +136,12 @@ List of thing to do in no particular order
   * Projectiles (arrows, and fireballs).
 
 * State machine
-  * Idle state
-  * Move state
+  * ~~Idle state~~
+  * ~~Move state~~
     * ~~When the last position of a path is occupied and the unit waits is period but then continue to the last position when isn't clear.~~
     * ~~Mark the pathfinding data with id of the units, so they can clear it appropiately when leaving states.~~
     * ~~Moving with multiple waypoints.~~
     * ~~When the last few positions in a path are occupied and the final position is no longer reachable, the unit should get to the closest position posible.~~
-    * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
   * ~~Patrol state~~
     * ~~Patrol is a combination of move behaviors.~~
     * ~~Patrol with multiple waypoints.~~
@@ -159,9 +159,9 @@ List of thing to do in no particular order
   * Ground-attack state
     * Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.
   * ~~Damaged state (for buildings)~~
-  * Collapse state (for buildings)~~
+  * ~~Collapse state (for buildings)~~
     * ~~Spawn ruins after the collapse of a building.~~
-    * Check if the new spawning ruins could merge with a previous one. This occurs when a building is built above a ruins.
+    * ~~Check if the new spawning ruins could merge with a previous one. This occurs when a building is built above a ruins.~~
   * ~~Build state~~
   * ~~Gathering resources state~~
     * ~~Gathering gold.~~
@@ -180,7 +180,7 @@ List of thing to do in no particular order
   * ~~Include the current position of the unit in the path to support the patrol behaviour.~~
   * ~~Manage the case when there is no path to a position. It should stay or should go the closest position?~~
   * ~~Optimize the path finding when the destination is unreachable (e.g. when the unit is moving to another unit's position)~~
-  * When right click in the minimap, the selected unit should go there.
+  * ~~When right click in the minimap, the selected unit should go there.~~
   * Give greater cost to diagonal movements than to straight movements.
   * Remove BFS implementation.
   * Check again the path finding stuff, because now the units will go for side edges of buildings when a corner is closest.

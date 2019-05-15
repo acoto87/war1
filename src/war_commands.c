@@ -65,7 +65,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
 
         target = vec2MapToTileCoordinates(target);
 
-        if (isFriendlyUnit(context, entity))
+        if (isDudeUnit(entity) && isFriendlyUnit(context, entity))
         {
             if (isKeyPressed(input, WAR_KEY_SHIFT))
             {
@@ -401,6 +401,7 @@ bool executeCommand(WarContext* context)
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
                     if (targetEntity && (isUnit(targetEntity) || isWall(targetEntity)))
                     {
+                        // force the attack since the player did it via the command button or hotkey
                         executeAttackCommand(context, targetEntity, targetTile);
                     }
 
@@ -616,11 +617,9 @@ bool executeCommand(WarContext* context)
             return false;
         }
 
-        case WAR_COMMAND_BUILD_BASIC:
-        case WAR_COMMAND_BUILD_ADVANCED:
-        case WAR_COMMAND_CANCEL:
+        default:
         {
-            // nothing here
+            logError("Not implemented command: %d\n", command->type);
             return false;
         }
     }

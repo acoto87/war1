@@ -17,7 +17,7 @@ LibPath="../../deps/lib/arm32"
 # OptimizeFlags="-O2"
 # AssemblyFlags="-g -Wa,-ahl"
 # DebugFlags="-g -O1 -D __DEBUG__"
-CommonCompilerFlags="-std=c99 -Wall -Wno-misleading-indentation -x c $ProfilerFlags $OptimizeFlags $AssemblyFlags $DebugFlags -I $IncludePath"
+CommonCompilerFlags="-std=c99 -Wall -x c $ProfilerFlags $OptimizeFlags $AssemblyFlags $DebugFlags -I $IncludePath"
 CommonLinkerFlags="-L $LibPath -l glfw -l m"
 
 # Create output path if doesn't exists

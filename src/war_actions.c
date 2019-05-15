@@ -359,14 +359,8 @@ void addUnitActions(WarEntity* entity)
     WarUnitFrameNumbers frameNumbers_5_3_5_3 = getFrameNumbers(5, arrayArg(s32, 3, 5, 3));
     WarUnitFrameNumbers frameNumbers_5_2_5_3 = getFrameNumbers(5, arrayArg(s32, 2, 5, 3));
 
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
     WarUnitFrameNumbers frameNumbers_5_4_3_3 = getFrameNumbers(5, arrayArg(s32, 4, 3, 3));
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
+    NOT_USED(frameNumbers_5_4_3_3);
     
     WarUnitFrameNumbers frameNumbers_5_5_5_0 = getFrameNumbers(5, arrayArg(s32, 5, 5, 0));
 

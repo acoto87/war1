@@ -266,7 +266,9 @@ void inputGame(WarContext *context)
 void updateGame(WarContext* context)
 {
     WarInput* input = &context->input;
-    if (wasKeyPressed(input, WAR_KEY_P))
+    
+    if (isKeyPressed(input, WAR_KEY_CTRL) && 
+        wasKeyPressed(input, WAR_KEY_P))
     {
         context->paused = !context->paused;
     }

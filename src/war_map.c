@@ -719,14 +719,15 @@ void updateTreesEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (wasKeyPressed(input, WAR_KEY_T))
+    if (isKeyPressed(input, WAR_KEY_CTRL) && 
+        wasKeyPressed(input, WAR_KEY_T))
     {
         map->editingTrees = !map->editingTrees;
     }
 
-    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (map->editingTrees)
     {
-        if (map->editingTrees)
+        if(wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
             pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -761,14 +762,15 @@ void updateRoadsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (wasKeyPressed(input, WAR_KEY_R))
+    if (isKeyPressed(input, WAR_KEY_CTRL) && 
+        wasKeyPressed(input, WAR_KEY_R))
     {
         map->editingRoads = !map->editingRoads;
     }
 
-    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (map->editingRoads)
     {
-        if (map->editingRoads)
+        if(wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
             pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -798,14 +800,15 @@ void updateWallsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (wasKeyPressed(input, WAR_KEY_W))
+    if (isKeyPressed(input, WAR_KEY_CTRL) && 
+        wasKeyPressed(input, WAR_KEY_W))
     {
         map->editingWalls = !map->editingWalls;
     }
 
-    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (map->editingWalls)
     {
-        if (map->editingWalls)
+        if(wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
             pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -838,14 +841,15 @@ void updateRuinsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (wasKeyPressed(input, WAR_KEY_U))
+    if (isKeyPressed(input, WAR_KEY_CTRL) && 
+        wasKeyPressed(input, WAR_KEY_U))
     {
         map->editingRuins = !map->editingRuins;
     }
 
-    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (map->editingRuins)
     {
-        if (map->editingRuins)
+        if(wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
             pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -995,7 +999,7 @@ void updateCommandFromButtons(WarContext* context)
                 continue;
             }
 
-            if (isKeyPressed(input, button->hotKey))
+            if (wasKeyPressed(input, button->hotKey))
             {
                 if (button->clickHandler)
                 {

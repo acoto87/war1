@@ -2,6 +2,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#ifdef __GNUC__
+// this is to silence GCC about this warning since nanovg is full of them
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#endif
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -123,12 +128,6 @@ int main()
     {
         sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
         glfwSetWindowTitle(context.window, context.windowTitle);
-
-        if (glfwGetKey(context.window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        {
-            glfwSetWindowShouldClose(context.window, GL_TRUE);
-            continue;
-        }
 
         inputGame(&context);
         updateGame(&context);
