@@ -21,17 +21,20 @@ bool isEnemyUnit(WarContext* context, WarEntity* entity)
     return !isNeutralPlayer(otherPlayer);
 }
 
-bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other)
+bool areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 {
     WarMap* map = context->map;
 
-    if (!isUnit(entity) || !isUnit(other))
+    if (!isUnit(entity1) || !isUnit(entity2))
         return false;
 
-    if (entity->unit.player == other->unit.player)
+	if (entity1->id == entity2->id)
+		return false;
+
+    if (entity1->unit.player == entity2->unit.player)
         return false;
 
-    WarPlayerInfo* otherPlayer = &map->players[other->unit.player];
+    WarPlayerInfo* otherPlayer = &map->players[entity2->unit.player];
     return !isNeutralPlayer(otherPlayer);
 }
 

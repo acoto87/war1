@@ -314,7 +314,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createBuilding(context, WAR_UNIT_BLACKSMITH_HUMANS, 40, 16, 0, false);
         createBuilding(context, WAR_UNIT_CHURCH, 45, 22, 0, false);
         createBuilding(context, WAR_UNIT_STABLE, 45, 18, 0, false);
-        createBuilding(context, WAR_UNIT_TOWER_HUMANS, 45, 16, 0, false);
+        createBuilding(context, WAR_UNIT_TOWER_HUMANS, 34, 16, 0, false);
     }
 
     // add ui entities
