@@ -51,22 +51,12 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
         //
         if (isWarriorUnit(entity))
         {
-            vec2 position = getUnitCenterPosition(entity, true);
-
-            for(s32 i = 0; i < map->entities.count; i++)
+            WarEntity* enemy = getNearEnemy(context, entity);
+            if (enemy)
             {
-                WarEntity* other = map->entities.items[i];
-                if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
-                {
-					vec2 targetPosition = getUnitCenterPosition(other, true);
-                    if (vec2Distance(position, targetPosition) < 5)
-                    {
-                        WarState* attackState = createAttackState(context, entity, other->id, targetPosition);
-                        changeNextState(context, entity, attackState, true, true);
-
-                        break;
-                    }
-                }
+                vec2 enemyPosition = getUnitPosition(enemy, true);
+                WarState* attackState = createAttackState(context, entity, enemy->id, enemyPosition);
+                changeNextState(context, entity, attackState, true, true);
             }
         }
 
@@ -75,7 +65,6 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
     }
     else if(isWall(entity))
     {
-        WarMap* map = context->map;
         WarWallComponent* wall = &entity->wall;
         for(s32 i = 0; i < wall->pieces.count; i++)
         {

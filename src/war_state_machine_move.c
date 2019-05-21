@@ -88,6 +88,19 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
     vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
 
+    if (state->move.checkForAttacks)
+    {
+        WarEntity* enemy = getAttackerEnemy(context, entity);
+        if (enemy)
+        {
+            vec2 enemyPosition = getUnitPosition(enemy, true);
+            WarState* attackState = createAttackState(context, entity, enemy->id, enemyPosition);
+            changeNextState(context, entity, attackState, true, true);
+
+            return;
+        }
+    }
+
     // if this unit is waiting
     if (state->move.waitCount > 0)
     {
@@ -142,7 +155,9 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     f32 stepLength = vec2Length(step);
 
     if (directionLength < stepLength)
+    {
         step = direction;
+    }
 
     vec2 newPosition = vec2Addv(position, step);
     setUnitCenterPosition(entity, newPosition, false);

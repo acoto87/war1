@@ -23,6 +23,8 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 unitSize = getUnitSize(entity);
     WarUnitStats stats = getUnitStats(unit->type);
 
+    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+
     vec2 targetTile = state->attack.targetTile;
 
     WarEntityId targetEntityId = state->attack.targetEntityId;
@@ -31,6 +33,15 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     // if the entity to attack doesn't exists, go idle
     if (!targetEntity)
     {
+        if(!positionInRange(entity, targetTile, stats.range))
+        {
+            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
+            moveState->nextState = state;
+            moveState->move.checkForAttacks = true;
+            changeNextState(context, entity, moveState, false, true);
+            return;
+        }
+
         WarState* idleState = createIdleState(context, entity, true);
         changeNextState(context, entity, idleState, true, true);
         return;
@@ -45,7 +56,6 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
     vec2 targetPosition = isUnit(targetEntity) 
         ? unitPointOnTarget(entity, targetEntity) : targetTile;
 

@@ -275,14 +275,19 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
 
         if (isFriendlyUnit(context, entity))
         {
-            // the unit can't attack itself
-            if (entity->id != targetEntity->id)
+            if (targetEntity)
             {
-                if (canAttack(context, entity, targetEntity))
+                // the unit can't attack itself
+                if (entity->id != targetEntity->id && canAttack(context, entity, targetEntity))
                 {
                     WarState* attackState = createAttackState(context, entity, targetEntity->id, targetTile);
                     changeNextState(context, entity, attackState, true, true);
                 }
+            }
+            else
+            {
+                WarState* attackState = createAttackState(context, entity, 0, targetTile);
+                changeNextState(context, entity, attackState, true, true);
             }
         }
     }
@@ -399,11 +404,8 @@ bool executeCommand(WarContext* context)
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
-                    if (targetEntity && (isUnit(targetEntity) || isWall(targetEntity)))
-                    {
-                        // force the attack since the player did it via the command button or hotkey
-                        executeAttackCommand(context, targetEntity, targetTile);
-                    }
+
+                    executeAttackCommand(context, targetEntity, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;

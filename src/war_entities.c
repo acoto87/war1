@@ -1153,6 +1153,58 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
     return true;
 }
 
+WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    vec2 position = getUnitCenterPosition(entity, true);
+
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* other = map->entities.items[i];
+        if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
+        {
+            vec2 targetPosition = getUnitCenterPosition(other, true);
+            if (vec2Distance(position, targetPosition) <= WAR_NEAR_ENEMY_RADIUS)
+            {
+                return other;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+WarEntity* getAttackerEnemy(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    for(s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* other = map->entities.items[i];
+        if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
+        {
+            if (isBeingAttackedBy(entity, other))
+            {
+                return other;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+bool isBeingAttackedBy(WarEntity* entity, WarEntity* other)
+{
+    if (!isFollowing(other) && !isMoving(other))
+    {
+        WarState* attackState = getAttackState(other);
+        return attackState && attackState->attack.targetEntityId == entity->id
+    }
+
+    return false;    
+}
+
 s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)
 {
     return minDamage + max(rndDamage - armor, 0);

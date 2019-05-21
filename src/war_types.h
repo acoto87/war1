@@ -1079,6 +1079,7 @@ typedef struct _WarState
             WarMapPath path;
 
             s32 waitCount;
+            bool checkForAttacks;
         } move;
 
         struct
