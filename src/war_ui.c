@@ -70,12 +70,12 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, char* text)
     }
 }
 
-WarEntity* createUIText(WarContext* context, char* name, vec2 position)
+WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addTextComponent(context, entity, NULL);
+    addTextComponent(context, entity, fontIndex, NULL);
 
     return entity;
 }
@@ -102,6 +102,7 @@ WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef s
 
 WarEntity* createUITextButton(WarContext* context, 
                               char* name,
+                              s32 fontIndex,
                               char* text,
                               WarSpriteResourceRef backgroundNormalRef,
                               WarSpriteResourceRef backgroundPressedRef,
@@ -111,7 +112,7 @@ WarEntity* createUITextButton(WarContext* context,
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addTextComponent(context, entity, text);
+    addTextComponent(context, entity, fontIndex, text);
     addSpriteComponentFromResource(context, entity, foregroundRef);
     addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
 
@@ -603,7 +604,11 @@ void renderMapUI(WarContext* context)
         rect r = recti(map->mapPanel.x + 2, map->mapPanel.y + 2, 50, 50);
         nvgFillRect(gfx, r, nvgRGBA(50, 50, 50, 200));
 
-        NVGfontParams params = nvgCreateFontParams("defaultFont", 5.0f, nvgRGBA(200, 200, 200, 255));
+        NVGfontParams params;
+        params.fontFace = "defaultFont";
+        params.fontSize = 5.0f;
+        params.fontColor = nvgRGBA(200, 200, 200, 255);
+
         nvgMultilineText(gfx, debugText, r.x, r.y, r.width, r.height, params);
     }
 

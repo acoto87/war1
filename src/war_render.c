@@ -344,19 +344,28 @@ void nvgStrokePolyline(NVGcontext* gfx, s32 count, vec2 points[], NVGcolor color
     nvgRestore(gfx);
 }
 
+typedef struct
+{
+    s32 spriteWidth;
+    s32 spriteHeight;
+    s32 lineHeight;
+    s32 advance;
+    rect data[95];
+} WarFontData;
+
 typedef struct 
 {
     char* fontFace;
+    s32 textAlign;
+    f32 blur;
+
+    s32 fontIndex;
     f32 fontSize;
     NVGcolor fontColor;
     WarSprite fontSprite;
-    s32 textAlign;
-    f32 blur;
     s32 highlightIndex;
+    WarFontData fontData;
 } NVGfontParams;
-
-#define nvgCreateFontParams(fontFace, fontSize, fontColor) ((NVGfontParams){(fontFace), (fontSize), (fontColor), (WarSprite){0}, 0, 0, NO_HIGHLIGHT})
-#define nvgCreateFontSpriteParams(fontSprite, fontSize, fontColor)  ((NVGfontParams){NULL, (fontSize), (fontColor), (fontSprite), 0, 0, NO_HIGHLIGHT})
 
 void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {

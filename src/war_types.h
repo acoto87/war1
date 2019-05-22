@@ -1281,7 +1281,7 @@ typedef struct
 {
     bool enabled;
     char* text;
-    WarSprite font;
+    s32 fontIndex;
     f32 fontSize;
     u8Color fontColor;
     s32 highlightIndex;
@@ -1477,8 +1477,7 @@ typedef struct _WarContext
     char* warFilePath;
     WarFile* warFile;
 
-    char* fontPath;
-    WarSprite fontSprite;
+    WarSprite fontSprites[2];
     
     s32 staticEntityId;
 

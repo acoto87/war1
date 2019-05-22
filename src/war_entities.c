@@ -180,11 +180,11 @@ void removeUIComponent(WarContext* context, WarEntity* entity)
     entity->ui = (WarUIComponent){0};
 }
 
-void addTextComponent(WarContext* context, WarEntity* entity, char* text)
+void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, char* text)
 {
     entity->text = (WarTextComponent){0};
     entity->text.enabled = true;
-    entity->text.font = context->fontSprite;
+    entity->text.fontIndex = fontIndex;
     entity->text.fontSize = 6.0f;
     entity->text.highlightIndex = NO_HIGHLIGHT;
     entity->text.fontColor = FONT_NORMAL_COLOR;
@@ -803,10 +803,15 @@ void _renderText(WarContext* context, WarEntity* entity)
         nvgSave(gfx);
         nvgTranslate(gfx, transform->position.x, transform->position.y);
         nvgScale(gfx, transform->scale.x, transform->scale.y);
-
-        NVGfontParams params = nvgCreateFontSpriteParams(
-            text->font, text->fontSize, u8ColorToNVGcolor(text->fontColor));
+        
+        NVGfontParams params;
+        params.fontIndex = text->fontIndex;
+        params.fontSprite = context->fontSprites[text->fontIndex];
+        params.fontSize = text->fontSize;
+        params.fontColor = u8ColorToNVGcolor(text->fontColor);
+        params.fontData = fontsData[text->fontIndex];
         params.highlightIndex = text->highlightIndex;
+        
         nvgSingleSpriteText(gfx, text->text, 0, 0, params);
 
         nvgRestore(gfx);
@@ -1199,7 +1204,7 @@ bool isBeingAttackedBy(WarEntity* entity, WarEntity* other)
     if (!isFollowing(other) && !isMoving(other))
     {
         WarState* attackState = getAttackState(other);
-        return attackState && attackState->attack.targetEntityId == entity->id
+        return attackState && attackState->attack.targetEntityId == entity->id;
     }
 
     return false;    

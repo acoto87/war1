@@ -59,8 +59,8 @@ bool initGame(WarContext* context)
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    context->fontPath = "./war1_font.png";
-    context->fontSprite = loadFontSprite(context);
+    context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
+    context->fontSprites[1] = loadFontSprite(context, "./war1_font_2.png");
 
     context->warFilePath = "./DATA.WAR";
     context->warFile = loadWarFile(context);

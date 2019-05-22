@@ -342,15 +342,15 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "imgLumber", imageResourceRef(407), vec2Addv(topPanel, vec2i(102, 0)));
 
         // top panel texts
-        createUIText(context, "txtGold", vec2Addv(topPanel, vec2i(135, 2)));
-        createUIText(context, "txtWood", vec2Addv(topPanel, vec2i(24, 2)));
+        createUIText(context, "txtGold", 0, vec2Addv(topPanel, vec2i(135, 2)));
+        createUIText(context, "txtWood", 0, vec2Addv(topPanel, vec2i(24, 2)));
 
         // status text
-        createUIText(context, "txtStatus", vec2Addv(bottomPanel, vec2i(2, 5)));
+        createUIText(context, "txtStatus", 0, vec2Addv(bottomPanel, vec2i(2, 5)));
         createUIImage(context, "imgStatusWood", imageResourceRef(407), vec2Addv(bottomPanel, vec2i(163, 3)));
         createUIImage(context, "imgStatusGold", imageResourceRef(406), vec2Addv(bottomPanel, vec2i(200, 5)));
-        createUIText(context, "txtStatusWood", vec2Addv(bottomPanel, vec2i(179, 5)));
-        createUIText(context, "txtStatusGold", vec2Addv(bottomPanel, vec2i(218, 5)));
+        createUIText(context, "txtStatusWood", 0, vec2Addv(bottomPanel, vec2i(179, 5)));
+        createUIText(context, "txtStatusGold", 0, vec2Addv(bottomPanel, vec2i(218, 5)));
 
         // selected unit(s) info
         createUIImage(context, "imgUnitInfo", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(2, 0)));
@@ -360,7 +360,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "imgUnitPortrait3", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 23)));
         createUIImage(context, "imgUnitPortrait4", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 23)));
         createUIImage(context, "imgUnitInfoLife", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(3, 16)));
-        createUIText(context, "txtUnitName", vec2Addv(leftBottomPanel, vec2i(6, 26)));
+        createUIText(context, "txtUnitName", 0, vec2Addv(leftBottomPanel, vec2i(6, 26)));
         createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectLifeBar1", vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectLifeBar2", vec2Addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), U8COLOR_GREEN);
@@ -371,10 +371,10 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
 
         // texts in the command area
-        createUIText(context, "txtCommand0", vec2Addv(leftBottomPanel, vec2i(3, 46)));
-        createUIText(context, "txtCommand1", vec2Addv(leftBottomPanel, vec2i(3, 56)));
-        createUIText(context, "txtCommand2", vec2Addv(leftBottomPanel, vec2i(7, 64)));
-        createUIText(context, "txtCommand3", vec2Addv(leftBottomPanel, vec2i(11, 54)));
+        createUIText(context, "txtCommand0", 0, vec2Addv(leftBottomPanel, vec2i(3, 46)));
+        createUIText(context, "txtCommand1", 0, vec2Addv(leftBottomPanel, vec2i(3, 56)));
+        createUIText(context, "txtCommand2", 0, vec2Addv(leftBottomPanel, vec2i(7, 64)));
+        createUIText(context, "txtCommand3", 0, vec2Addv(leftBottomPanel, vec2i(11, 54)));
 
         // command buttons
         createUIImageButton(
