@@ -37,6 +37,9 @@
 #include "nanovg/nanovg_gl.h"
 #include "nanovg/nanovg_gl_utils.h"
 
+#include <AL/al.h>
+#include <AL/alc.h>
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
@@ -103,40 +106,184 @@ void glfwErrorCallback(int error, const char* description)
     logError("Error: %d, %s\n", error, description);
 }
 
+static void list_audio_devices(const ALCchar *devices)
+{
+        const ALCchar *device = devices, *next = devices + 1;
+        size_t len = 0;
+
+        fprintf(stdout, "Devices list:\n");
+        fprintf(stdout, "----------\n");
+        while (device && *device != '\0' && next && *next != '\0') {
+                fprintf(stdout, "%s\n", device);
+                len = strlen(device);
+                device += (len + 1);
+                next += (len + 2);
+        }
+        fprintf(stdout, "----------\n");
+}
+
+static void checkOpenAlError()
+{
+    ALCenum err = alGetError();
+    switch (err) 
+    {
+        case AL_NO_ERROR:
+            printf("AL_NO_ERROR\n");
+            break;
+        case AL_INVALID_NAME:
+            printf("AL_INVALID_NAME\n");
+            break;
+        case AL_INVALID_ENUM:
+            printf("AL_INVALID_ENUM\n");
+            break;
+        case AL_INVALID_VALUE:
+            printf("AL_INVALID_VALUE\n");
+            break;
+        case AL_INVALID_OPERATION:
+            printf("AL_INVALID_OPERATION\n");
+            break;
+        case AL_OUT_OF_MEMORY:
+            printf("AL_OUT_OF_MEMORY\n");
+            break;
+        default:
+            printf("UNKOWN ERROR\n");
+            break;
+    }
+}
+
+void testAudioStuff()
+{
+    ALCdevice* device = alcOpenDevice(NULL);
+    if (!device)
+    {
+        logError("Error initializing OpenAL!\n");
+        return -1;
+    }
+
+    checkOpenAlError();
+
+    ALboolean enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
+    if (enumeration == AL_FALSE)
+        printf("enumeration not supported\n");
+    else
+        printf("enumeration supported\n");
+
+    checkOpenAlError();
+
+    list_audio_devices(alcGetString(NULL, ALC_DEVICE_SPECIFIER));
+    checkOpenAlError();
+
+    ALCcontext* context = alcCreateContext(device, NULL);
+    if (!alcMakeContextCurrent(context))
+    {
+        printf("failed to make context current\n");
+    }
+
+    checkOpenAlError();
+
+    ALuint source;
+    alGenSources((ALuint)1, &source);
+    checkOpenAlError();
+
+    alSourcef(source, AL_PITCH, 1);
+    checkOpenAlError();
+    alSourcef(source, AL_GAIN, 1);
+    checkOpenAlError();
+    alSource3f(source, AL_POSITION, 0, 0, 0);
+    checkOpenAlError();
+    alSource3f(source, AL_VELOCITY, 0, 0, 0);
+    checkOpenAlError();
+    alSourcei(source, AL_LOOPING, AL_FALSE);
+    checkOpenAlError();
+
+    ALuint buffer;
+
+    alGenBuffers((ALuint)1, &buffer);
+    checkOpenAlError();
+
+    // fill buffer
+
+    ALenum format = AL_FORMAT_MONO16;
+    s32 samplesPerSecond = 44100;
+    s32 toneHz = 256;
+    s32 wavePeriod = samplesPerSecond / toneHz;
+    s32 bytesPerSample = sizeof(s16);
+    s32 len = samplesPerSecond * bytesPerSample * 5;
+    s32 toneVolume = 3000;
+    u32 wavePos = 0;
+    #define PI 3.14159265359f
+    s16 *data = (s16*)malloc(len / bytesPerSample);
+    for (s32 i = 0; i < len / bytesPerSample; i++)
+    {
+        f32 t = 2.0f * PI * (f32)wavePos / (f32)wavePeriod;
+        f32 sineValue = sinf(t);
+        f32 sampleValue = (s16)(sineValue * toneVolume);
+        data[i] = sampleValue;
+        ++wavePos;
+    }
+
+    alBufferData(buffer, format, data, len, samplesPerSecond);
+
+    alSourcei(source, AL_BUFFER, buffer);
+    checkOpenAlError();
+
+    alSourcePlay(source);
+    checkOpenAlError();
+
+    ALenum source_state;
+    alGetSourcei(source, AL_SOURCE_STATE, &source_state);
+    checkOpenAlError();
+
+    while (source_state == AL_PLAYING) 
+    {
+        alGetSourcei(source, AL_SOURCE_STATE, &source_state);
+        checkOpenAlError();
+    }
+
+    alDeleteSources(1, &source);
+    alDeleteBuffers(1, &buffer);
+    device = alcGetContextsDevice(context);
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(context);
+    alcCloseDevice(device);
+}
+
 int main() 
 {
     srand(time(NULL));
 
     initLog(LOG_SEVERITY_DEBUG);
 
-    glfwSetErrorCallback(glfwErrorCallback);
+    testAudioStuff();
 
-    if (!glfwInit())
-    {
-        logError("Error initializing GLFW!\n");
-        return -1;
-    }
+    // glfwSetErrorCallback(glfwErrorCallback);
 
-    WarContext context = {0};
-    if (!initGame(&context))
-    {
-        logError("Can't initialize the game!\n");
-        return -1;
-    }
+    // if (!glfwInit())
+    // {
+    //     logError("Error initializing GLFW!\n");
+    //     return -1;
+    // }
 
-    while (!glfwWindowShouldClose(context.window))
-    {
-        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
-        glfwSetWindowTitle(context.window, context.windowTitle);
+    // WarContext context = {0};
+    // if (!initGame(&context))
+    // {
+    //     logError("Can't initialize the game!\n");
+    //     return -1;
+    // }
 
-        inputGame(&context);
-        updateGame(&context);
-        renderGame(&context);
-        presentGame(&context);
-    }
+    // while (!glfwWindowShouldClose(context.window))
+    // {
+    //     sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
+    //     glfwSetWindowTitle(context.window, context.windowTitle);
 
-    nvgDeleteGLES2(context.gfx);
-    glfwDestroyWindow(context.window);
-    glfwTerminate();
+    //     inputGame(&context);
+    //     updateGame(&context);
+    //     renderGame(&context);
+    //     presentGame(&context);
+    // }
+
+    // nvgDeleteGLES2(context.gfx);
+    // glfwDestroyWindow(context.window);
+    // glfwTerminate();
 	return 0;
 }
