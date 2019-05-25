@@ -493,6 +493,22 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             WarSpriteAnimationListAdd(&map->animations, anim4);
         }
     }
+
+    // WarEntity* txtDebug = createUIText(context, "txtDebug", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 60)));
+    // txtDebug->text.fontSize = 8;
+    // setUIText(txtDebug, NO_HIGHLIGHT, "Warcraft: Orcs & Humans");
+
+    // txtDebug = createUIText(context, "txtDebug2", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 80)));
+    // txtDebug->text.fontSize = 6;
+    // setUIText(txtDebug, NO_HIGHLIGHT, "Yes, my lord.");
+
+    // txtDebug = createUIText(context, "txtDebug3", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 100)));
+    // txtDebug->text.fontSize = 6;
+    // setUIText(txtDebug, NO_HIGHLIGHT, "What do you want?");
+
+    // txtDebug = createUIText(context, "txtDebug4", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 120)));
+    // txtDebug->text.fontSize = 6;
+    // setUIText(txtDebug, NO_HIGHLIGHT, "Stop poking me!");
 }
 
 void updateGlobalSpeed(WarContext* context)

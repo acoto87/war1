@@ -584,32 +584,32 @@ void renderMapUI(WarContext* context)
     // DEBUG:
     // Render debug info
     {
-        char debugText[256];
+        // char debugText[256];
 
-        sprintf(debugText, 
-            "Debug info:\n"
-            "speed: %.2f\n"
-            "scale: %.2f\n"
-            "editing trees = %d\n"
-            "editing roads = %d\n"
-            "editing walls = %d\n"
-            "editing ruins = %d\n",
-            context->globalSpeed,
-            context->globalScale,
-            map->editingTrees,
-            map->editingRoads,
-            map->editingWalls,
-            map->editingRuins);
+        // sprintf(debugText, 
+        //     "Debug info:\n"
+        //     "speed: %.2f\n"
+        //     "scale: %.2f\n"
+        //     "editing trees = %d\n"
+        //     "editing roads = %d\n"
+        //     "editing walls = %d\n"
+        //     "editing ruins = %d\n",
+        //     context->globalSpeed,
+        //     context->globalScale,
+        //     map->editingTrees,
+        //     map->editingRoads,
+        //     map->editingWalls,
+        //     map->editingRuins);
 
-        rect r = recti(map->mapPanel.x + 2, map->mapPanel.y + 2, 50, 50);
-        nvgFillRect(gfx, r, nvgRGBA(50, 50, 50, 200));
+        // rect r = recti(map->mapPanel.x + 2, map->mapPanel.y + 2, 50, 50);
+        // nvgFillRect(gfx, r, nvgRGBA(50, 50, 50, 200));
 
-        NVGfontParams params;
-        params.fontFace = "defaultFont";
-        params.fontSize = 5.0f;
-        params.fontColor = nvgRGBA(200, 200, 200, 255);
+        // NVGfontParams params;
+        // params.fontFace = "defaultFont";
+        // params.fontSize = 5.0f;
+        // params.fontColor = nvgRGBA(200, 200, 200, 255);
 
-        nvgMultilineText(gfx, debugText, r.x, r.y, r.width, r.height, params);
+        // nvgMultilineText(gfx, debugText, r.x, r.y, r.width, r.height, params);
     }
 
     nvgRestore(gfx);
