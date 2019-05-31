@@ -51,55 +51,55 @@
 
 #include "log.h"
 #include "utils.h"
-// #include "war_math.h"
-// #include "io.h"
-// #include "glutils.h"
-// #include "war_types.h"
-// #include "war.h"
-// #include "war_database.h"
-// #include "war_map.h"
-// #include "war_commands.h"
-// #include "war_units.h"
-// #include "war_entities.h"
-// #include "war_pathfinder.h"
-// #include "war_state_machine.h"
-// #include "war_file.c"
-// #include "war_actions.c"
-// #include "war_render.c"
-// #include "war_resources.c"
-// #include "war_sprites.c"
-// #include "war_font.c"
-// #include "war_animations.c"
-// #include "war_roads.c"
-// #include "war_walls.c"
-// #include "war_ruins.c"
-// #include "war_trees.c"
-// #include "war_ui.c"
-// #include "war_commands.c"
-// #include "war_units.c"
-// #include "war_entities.c"
-// #include "war_pathfinder.c"
-// #include "war_state_machine_idle.c"
-// #include "war_state_machine_move.c"
-// #include "war_state_machine_follow.c"
-// #include "war_state_machine_patrol.c"
-// #include "war_state_machine_attack.c"
-// #include "war_state_machine_death.c"
-// #include "war_state_machine_collapse.c"
-// #include "war_state_machine_wait.c"
-// #include "war_state_machine_gather_gold.c"
-// #include "war_state_machine_mining.c"
-// #include "war_state_machine_gather_wood.c"
-// #include "war_state_machine_chopping.c"
-// #include "war_state_machine_deliver.c"
-// #include "war_state_machine_train.c"
-// #include "war_state_machine_upgrade.c"
-// #include "war_state_machine_build.c"
-// #include "war_state_machine_repair.c"
-// #include "war_state_machine_repairing.c"
-// #include "war_state_machine.c"
-// #include "war_map.c"
-// #include "war_game.c"
+#include "war_math.h"
+#include "io.h"
+#include "glutils.h"
+#include "war_types.h"
+#include "war.h"
+#include "war_database.h"
+#include "war_map.h"
+#include "war_commands.h"
+#include "war_units.h"
+#include "war_entities.h"
+#include "war_pathfinder.h"
+#include "war_state_machine.h"
+#include "war_file.c"
+#include "war_actions.c"
+#include "war_render.c"
+#include "war_resources.c"
+#include "war_sprites.c"
+#include "war_font.c"
+#include "war_animations.c"
+#include "war_roads.c"
+#include "war_walls.c"
+#include "war_ruins.c"
+#include "war_trees.c"
+#include "war_ui.c"
+#include "war_commands.c"
+#include "war_units.c"
+#include "war_entities.c"
+#include "war_pathfinder.c"
+#include "war_state_machine_idle.c"
+#include "war_state_machine_move.c"
+#include "war_state_machine_follow.c"
+#include "war_state_machine_patrol.c"
+#include "war_state_machine_attack.c"
+#include "war_state_machine_death.c"
+#include "war_state_machine_collapse.c"
+#include "war_state_machine_wait.c"
+#include "war_state_machine_gather_gold.c"
+#include "war_state_machine_mining.c"
+#include "war_state_machine_gather_wood.c"
+#include "war_state_machine_chopping.c"
+#include "war_state_machine_deliver.c"
+#include "war_state_machine_train.c"
+#include "war_state_machine_upgrade.c"
+#include "war_state_machine_build.c"
+#include "war_state_machine_repair.c"
+#include "war_state_machine_repairing.c"
+#include "war_state_machine.c"
+#include "war_map.c"
+#include "war_game.c"
 
 void glfwErrorCallback(int error, const char* description)
 {
@@ -256,45 +256,43 @@ void glfwErrorCallback(int error, const char* description)
 //     alcCloseDevice(device);
 // }
 
-// int main() 
-// {
-//     srand(time(NULL));
+int main() 
+{
+    srand(time(NULL));
 
-//     initLog(LOG_SEVERITY_DEBUG);
+    initLog(LOG_SEVERITY_DEBUG);
 
-//     testAudioStuff();
+    glfwSetErrorCallback(glfwErrorCallback);
 
-//     // glfwSetErrorCallback(glfwErrorCallback);
+    if (!glfwInit())
+    {
+        logError("Error initializing GLFW!\n");
+        return -1;
+    }
 
-//     // if (!glfwInit())
-//     // {
-//     //     logError("Error initializing GLFW!\n");
-//     //     return -1;
-//     // }
+    WarContext context = {0};
+    if (!initGame(&context))
+    {
+        logError("Can't initialize the game!\n");
+        return -1;
+    }
 
-//     // WarContext context = {0};
-//     // if (!initGame(&context))
-//     // {
-//     //     logError("Can't initialize the game!\n");
-//     //     return -1;
-//     // }
+    while (!glfwWindowShouldClose(context.window))
+    {
+        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
+        glfwSetWindowTitle(context.window, context.windowTitle);
 
-//     // while (!glfwWindowShouldClose(context.window))
-//     // {
-//     //     sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
-//     //     glfwSetWindowTitle(context.window, context.windowTitle);
+        inputGame(&context);
+        updateGame(&context);
+        renderGame(&context);
+        presentGame(&context);
+    }
 
-//     //     inputGame(&context);
-//     //     updateGame(&context);
-//     //     renderGame(&context);
-//     //     presentGame(&context);
-//     // }
-
-//     // nvgDeleteGLES2(context.gfx);
-//     // glfwDestroyWindow(context.window);
-//     // glfwTerminate();
-// 	return 0;
-// }
+    nvgDeleteGLES2(context.gfx);
+    glfwDestroyWindow(context.window);
+    glfwTerminate();
+	return 0;
+}
 
 // #include <unistd.h>
 
@@ -393,73 +391,73 @@ void glfwErrorCallback(int error, const char* description)
 //     return 0;
 // }
 
-#define DR_FLAC_IMPLEMENTATION
-#include "dr_flac.h"  /* Enables FLAC decoding. */
-#define DR_MP3_IMPLEMENTATION
-#include "dr_mp3.h"   /* Enables MP3 decoding. */
-#define DR_WAV_IMPLEMENTATION
-#include "dr_wav.h"   /* Enables WAV decoding. */
+// #define DR_FLAC_IMPLEMENTATION
+// #include "dr_flac.h"  /* Enables FLAC decoding. */
+// #define DR_MP3_IMPLEMENTATION
+// #include "dr_mp3.h"   /* Enables MP3 decoding. */
+// #define DR_WAV_IMPLEMENTATION
+// #include "dr_wav.h"   /* Enables WAV decoding. */
 
-#define MINIAUDIO_IMPLEMENTATION
-#include "miniaudio.h"
+// #define MINIAUDIO_IMPLEMENTATION
+// #include "miniaudio.h"
 
 
-// check this: https://github.com/dr-soft/miniaudio
+// // check this: https://github.com/dr-soft/miniaudio
 
-void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
-{
-    ma_decoder* pDecoder = (ma_decoder*)pDevice->pUserData;
-    if (pDecoder == NULL) {
-        return;
-    }
+// void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+// {
+//     ma_decoder* pDecoder = (ma_decoder*)pDevice->pUserData;
+//     if (pDecoder == NULL) {
+//         return;
+//     }
 
-    ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount);
+//     ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount);
 
-    (void)pInput;
-}
+//     (void)pInput;
+// }
 
-int main(int argc, char** argv)
-{
-    ma_result result;
-    ma_decoder decoder;
-    ma_device_config deviceConfig;
-    ma_device device;
+// int main(int argc, char** argv)
+// {
+//     ma_result result;
+//     ma_decoder decoder;
+//     ma_device_config deviceConfig;
+//     ma_device device;
 
-    if (argc < 2) {
-        printf("No input file.\n");
-        return -1;
-    }
+//     if (argc < 2) {
+//         printf("No input file.\n");
+//         return -1;
+//     }
 
-    result = ma_decoder_init_file(argv[1], NULL, &decoder);
-    if (result != MA_SUCCESS) {
-        return -2;
-    }
+//     result = ma_decoder_init_file(argv[1], NULL, &decoder);
+//     if (result != MA_SUCCESS) {
+//         return -2;
+//     }
 
-    deviceConfig = ma_device_config_init(ma_device_type_playback);
-    deviceConfig.playback.format   = decoder.outputFormat;
-    deviceConfig.playback.channels = decoder.outputChannels;
-    deviceConfig.sampleRate        = decoder.outputSampleRate;
-    deviceConfig.dataCallback      = data_callback;
-    deviceConfig.pUserData         = &decoder;
+//     deviceConfig = ma_device_config_init(ma_device_type_playback);
+//     deviceConfig.playback.format   = decoder.outputFormat;
+//     deviceConfig.playback.channels = decoder.outputChannels;
+//     deviceConfig.sampleRate        = decoder.outputSampleRate;
+//     deviceConfig.dataCallback      = data_callback;
+//     deviceConfig.pUserData         = &decoder;
 
-    if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
-        printf("Failed to open playback device.\n");
-        ma_decoder_uninit(&decoder);
-        return -3;
-    }
+//     if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
+//         printf("Failed to open playback device.\n");
+//         ma_decoder_uninit(&decoder);
+//         return -3;
+//     }
 
-    if (ma_device_start(&device) != MA_SUCCESS) {
-        printf("Failed to start playback device.\n");
-        ma_device_uninit(&device);
-        ma_decoder_uninit(&decoder);
-        return -4;
-    }
+//     if (ma_device_start(&device) != MA_SUCCESS) {
+//         printf("Failed to start playback device.\n");
+//         ma_device_uninit(&device);
+//         ma_decoder_uninit(&decoder);
+//         return -4;
+//     }
 
-    printf("Press Enter to quit...");
-    getchar();
+//     printf("Press Enter to quit...");
+//     getchar();
 
-    ma_device_uninit(&device);
-    ma_decoder_uninit(&decoder);
+//     ma_device_uninit(&device);
+//     ma_decoder_uninit(&decoder);
 
-    return 0;
-}
+//     return 0;
+// }

@@ -597,3 +597,87 @@ void loadText(WarContext *context, DatabaseEntry *entry)
     resource->textData.text = (char *)xcalloc(resource->textData.length, sizeof(char));
     memcpy(resource->textData.text, rawResource.data, resource->textData.length);
 }
+
+void loadXmi(WarContext *context, DatabaseEntry *entry)
+{
+    s32 index = entry->index;
+    WarRawResource rawResource = context->warFile->resources[index];
+
+    char fileName[3];
+    sprintf(fileName, "%02d.xmi", index);
+    FILE* f = fopen(fileName, "wb");
+    fwrite(rawResource.data, sizeof(u8), rawResource.length, f);
+    fclose(f);
+}
+
+void loadResource(WarContext *context, DatabaseEntry *entry)
+{
+    switch (entry->type)
+    {
+        case DB_ENTRY_TYPE_PALETTE:
+        {
+            loadPaletteResource(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_IMAGE:
+        {
+            loadImageResource(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_SPRITE:
+        {
+            loadSpriteResource(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_LEVEL_INFO:
+        {
+            loadLevelInfo(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_LEVEL_VISUAL:
+        {
+            loadLevelVisual(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_LEVEL_PASSABLE:
+        {
+            loadLevelPassable(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_TILESET:
+        {
+            loadTileset(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_TILES:
+        {
+            loadTiles(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_TEXT:
+        {
+            loadText(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_XMID:
+        {
+            loadXmi(context, entry);
+            break;
+        }
+
+        default:
+        {
+            logInfo("DB entries of type %d aren't handled yet.\n", entry->type);
+            break;
+        }
+    }
+}

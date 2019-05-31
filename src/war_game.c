@@ -68,68 +68,7 @@ bool initGame(WarContext* context)
     for (int i = 0; i < arrayLength(assets); ++i)
     {
         DatabaseEntry entry = assets[i];
-        switch (entry.type)
-        {
-            case DB_ENTRY_TYPE_PALETTE:
-            {
-                loadPaletteResource(context, &entry);
-                break;
-            }
-
-            case DB_ENTRY_TYPE_IMAGE:
-            {
-                loadImageResource(context, &entry);
-                break;
-            }
-
-            case DB_ENTRY_TYPE_SPRITE:
-            {
-                loadSpriteResource(context, &entry);
-                break;
-            }
-
-            case DB_ENTRY_TYPE_LEVEL_INFO:
-            {
-                loadLevelInfo(context, &entry);
-                break;
-            }
-
-            case DB_ENTRY_TYPE_LEVEL_VISUAL:
-            {
-                loadLevelVisual(context, &entry);
-                break;
-            }
-
-            case DB_ENTRY_TYPE_LEVEL_PASSABLE:
-            {
-                loadLevelPassable(context, &entry);
-                break;
-            }
-
-            case DB_ENTRY_TYPE_TILESET:
-            {
-                loadTileset(context, &entry);
-                break;
-            }
-
-            case DB_ENTRY_TYPE_TILES:
-            {
-                loadTiles(context, &entry);
-                break;
-            }
-
-            case DB_ENTRY_TYPE_TEXT:
-            {
-                loadText(context, &entry);
-                break;
-            }
-
-            default:
-            {
-                logInfo("DB entries of type %d aren't handled yet.\n", entry.type);
-                break;
-            }
-        }
+        loadResource(context, &entry);
     }
 
     //createEmptyScene(context);
