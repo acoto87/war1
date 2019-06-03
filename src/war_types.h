@@ -529,6 +529,12 @@ typedef struct
             u32 length;
             char* text;
         } textData;
+
+        struct
+        {
+            u8* data;
+            size32 length;
+        } xmi;
     };
 } WarResource;
 

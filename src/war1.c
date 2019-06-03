@@ -37,8 +37,15 @@
 #include "nanovg/nanovg_gl.h"
 #include "nanovg/nanovg_gl_utils.h"
 
-#include <AL/al.h>
-#include <AL/alc.h>
+// https://github.com/schellingb/TinySoundFont
+#define TSF_IMPLEMENTATION
+#include "TinySoundFont/tsf.h"
+#define TML_IMPLEMENTATION
+#include "TinySoundFont/tml.h"
+
+// https://github.com/dr-soft/miniaudio
+#define MINIAUDIO_IMPLEMENTATION
+#include "miniaudio/miniaudio.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
@@ -48,6 +55,8 @@
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
 #include "shl/map.h"
+
+#include "xmi2mid.c"
 
 #include "log.h"
 #include "utils.h"
@@ -101,160 +110,124 @@
 #include "war_map.c"
 #include "war_game.c"
 
+// Holds the global instance pointer
+static tsf* g_TinySoundFont;
+
+// Holds global MIDI playback state
+static double g_Msec;               //current playback time
+static tml_message* g_MidiMessage;  //next message to be played
+
 void glfwErrorCallback(int error, const char* description)
 {
     logError("Error: %d, %s\n", error, description);
 }
 
-// static void list_audio_devices(const ALCchar *devices)
-// {
-//         const ALCchar *device = devices, *next = devices + 1;
-//         size_t len = 0;
+void data_callback(ma_device* pDevice, void* output, const void* input, ma_uint32 frameCount)
+{
+    NOT_USED(input);
 
-//         fprintf(stdout, "Devices list:\n");
-//         fprintf(stdout, "----------\n");
-//         while (device && *device != '\0' && next && *next != '\0') {
-//                 fprintf(stdout, "%s\n", device);
-//                 len = strlen(device);
-//                 device += (len + 1);
-//                 next += (len + 2);
-//         }
-//         fprintf(stdout, "----------\n");
-// }
+    WarContext* context = (WarContext*)pDevice->pUserData;
+    if (!context) 
+    {
+        return;
+    }
 
-// static void checkOpenAlError()
-// {
-//     ALCenum err = alGetError();
-//     switch (err) 
-//     {
-//         case AL_NO_ERROR:
-//             printf("AL_NO_ERROR\n");
-//             break;
-//         case AL_INVALID_NAME:
-//             printf("AL_INVALID_NAME\n");
-//             break;
-//         case AL_INVALID_ENUM:
-//             printf("AL_INVALID_ENUM\n");
-//             break;
-//         case AL_INVALID_VALUE:
-//             printf("AL_INVALID_VALUE\n");
-//             break;
-//         case AL_INVALID_OPERATION:
-//             printf("AL_INVALID_OPERATION\n");
-//             break;
-//         case AL_OUT_OF_MEMORY:
-//             printf("AL_OUT_OF_MEMORY\n");
-//             break;
-//         default:
-//             printf("UNKOWN ERROR\n");
-//             break;
-//     }
-// }
+    s16 *stream = (s16*)output;
 
-// void testAudioStuff()
-// {
-//     checkOpenAlError();
+    // s32 samplesPerSecond = 44100;
+    // s32 toneHz = 256;
+    // s32 wavePeriod = samplesPerSecond / toneHz;
+    s32 sampleSize = sizeof(s16);
+    // s32 toneVolume = 32767;
+    // #define PI 3.14159265359f
 
-//     ALCdevice* device = alcOpenDevice(NULL);
-//     if (!device)
-//     {
-//         logError("Error initializing OpenAL!\n");
-//         return;
-//     }
+    // static u32 wavePos = 0;
+    // s16 *data = (s16*)output;
+    // for (s32 i = 0; i < frameCount ; i++)
+    // {
+    //     f32 t = 2.0f * PI * (f32)wavePos / (f32)wavePeriod;
+    //     f32 sineValue = sinf(t);
+    //     s16 sampleValue = (s16)(sineValue * toneVolume);
+    //     data[i] = sampleValue;
+    //     ++wavePos;
+    // }
 
-//     checkOpenAlError();
+	s32 sampleBlock = TSF_RENDER_EFFECTSAMPLEBLOCK;
 
-//     ALboolean enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
-//     if (enumeration == AL_FALSE)
-//         printf("enumeration not supported\n");
-//     else
-//         printf("enumeration supported\n");
+    while (frameCount)
+    {
+        //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
+		if (sampleBlock > frameCount)
+        {
+            sampleBlock = frameCount;
+        }
 
-//     checkOpenAlError();
+        g_Msec += sampleBlock * (1000.0 / 44100.0);
 
-//     list_audio_devices(alcGetString(NULL, ALC_DEVICE_SPECIFIER));
-//     checkOpenAlError();
+        //Loop through all MIDI messages which need to be played up until the current playback time
+        while (g_MidiMessage && g_MidiMessage->time <= g_Msec)
+        {
+            switch (g_MidiMessage->type)
+			{
+				case TML_PROGRAM_CHANGE: //channel program (preset) change (special handling for 10th MIDI channel with drums)
+					tsf_channel_set_presetnumber(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->program, (g_MidiMessage->channel == 9));
+					break;
+				case TML_NOTE_ON: //play a note
+					tsf_channel_note_on(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key, g_MidiMessage->velocity / 127.0f);
+					break;
+				case TML_NOTE_OFF: //stop a note
+					tsf_channel_note_off(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key);
+					break;
+				case TML_PITCH_BEND: //pitch wheel modification
+					tsf_channel_set_pitchwheel(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->pitch_bend);
+					break;
+				case TML_CONTROL_CHANGE: //MIDI controller messages
+					tsf_channel_midi_control(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
+					break;
+			}
 
-//     ALCcontext* context = alcCreateContext(device, NULL);
-//     if (!alcMakeContextCurrent(context))
-//     {
-//         printf("failed to make context current\n");
-//         return;
-//     }
+            g_MidiMessage = g_MidiMessage->next;
+        }
 
-//     checkOpenAlError();
+		// Render the block of audio samples in float format
+		tsf_render_short(g_TinySoundFont, stream, sampleBlock, 0);
 
-//     ALuint source;
-//     alGenSources((ALuint)1, &source);
-//     checkOpenAlError();
+        frameCount -= sampleBlock;
+        stream += sampleBlock;
+    }
 
-//     alSourcef(source, AL_PITCH, 1);
-//     checkOpenAlError();
-//     alSourcef(source, AL_GAIN, 1);
-//     checkOpenAlError();
-//     alSource3f(source, AL_POSITION, 0, 0, 0);
-//     checkOpenAlError();
-//     alSource3f(source, AL_VELOCITY, 0, 0, 0);
-//     checkOpenAlError();
-//     alSourcei(source, AL_LOOPING, AL_FALSE);
-//     checkOpenAlError();
+	for (sampleBlock = TSF_RENDER_EFFECTSAMPLEBLOCK; frameCount; frameCount -= sampleBlock, stream += (sampleBlock * (2 * sizeof(float))))
+	{
+		//We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
+		if (sampleBlock > frameCount) sampleBlock = frameCount;
 
-//     ALuint buffer;
-//     alGenBuffers((ALuint)1, &buffer);
-//     checkOpenAlError();
+		//Loop through all MIDI messages which need to be played up until the current playback time
+		for (g_Msec += sampleBlock * (1000.0 / 44100.0); g_MidiMessage && g_Msec >= g_MidiMessage->time; g_MidiMessage = g_MidiMessage->next)
+		{
+			switch (g_MidiMessage->type)
+			{
+				case TML_PROGRAM_CHANGE: //channel program (preset) change (special handling for 10th MIDI channel with drums)
+					tsf_channel_set_presetnumber(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->program, (g_MidiMessage->channel == 9));
+					break;
+				case TML_NOTE_ON: //play a note
+					tsf_channel_note_on(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key, g_MidiMessage->velocity / 127.0f);
+					break;
+				case TML_NOTE_OFF: //stop a note
+					tsf_channel_note_off(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key);
+					break;
+				case TML_PITCH_BEND: //pitch wheel modification
+					tsf_channel_set_pitchwheel(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->pitch_bend);
+					break;
+				case TML_CONTROL_CHANGE: //MIDI controller messages
+					tsf_channel_midi_control(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
+					break;
+			}
+		}
 
-//     ALenum format = AL_FORMAT_MONO16;
-//     s32 samplesPerSecond = 44100;
-//     s32 toneHz = 256;
-//     s32 wavePeriod = samplesPerSecond / toneHz;
-//     s32 bytesPerSample = sizeof(s16);
-//     s32 len = samplesPerSecond * bytesPerSample * 5;
-//     s32 toneVolume = 32767;
-
-//     printf("Start - Buffer fill\n");
-
-//     u32 wavePos = 0;
-//     #define PI 3.14159265359f
-//     s16 *data = (s16*)malloc(len);
-//     for (s32 i = 0; i < len / bytesPerSample; i++)
-//     {
-//         f32 t = 2.0f * PI * (f32)wavePos / (f32)wavePeriod;
-//         f32 sineValue = sinf(t);
-//         s16 sampleValue = (s16)(sineValue * toneVolume);
-//         data[i] = sampleValue;
-//         // printf("%d ", data[i]);
-//         ++wavePos;
-//     }
-
-//     printf("\n");
-
-//     printf("End - Buffer fill\n");
-
-//     alBufferData(buffer, format, data, len, samplesPerSecond);
-
-//     alSourcei(source, AL_BUFFER, buffer);
-//     checkOpenAlError();
-
-//     alSourcePlay(source);
-//     checkOpenAlError();
-
-//     ALenum source_state;
-//     alGetSourcei(source, AL_SOURCE_STATE, &source_state);
-//     checkOpenAlError();
-
-//     while (source_state == AL_PLAYING) 
-//     {
-//         alGetSourcei(source, AL_SOURCE_STATE, &source_state);
-//         // checkOpenAlError();
-//     }
-
-//     alDeleteSources(1, &source);
-//     alDeleteBuffers(1, &buffer);
-//     device = alcGetContextsDevice(context);
-//     alcMakeContextCurrent(NULL);
-//     alcDestroyContext(context);
-//     alcCloseDevice(device);
-// }
+		// Render the block of audio samples in float format
+		tsf_render_float(g_TinySoundFont, (float*)stream, sampleBlock, 0);
+	}
+}
 
 int main() 
 {
@@ -277,6 +250,49 @@ int main()
         return -1;
     }
 
+    u8* midiData = context.resources[1]->xmi.data;
+    size32 midiLength = context.resources[1]->xmi.length;
+
+    g_MidiMessage = tml_load_memory(midiData, midiLength);
+	if (!g_MidiMessage)
+	{
+		logError("Could not load MIDI file\n");
+		return 1;
+	}
+
+    g_TinySoundFont = tsf_load_filename("GMGeneric.SF2");
+	if (!g_TinySoundFont)
+	{
+		logError("Could not load SoundFont\n");
+		return 1;
+	}
+
+    //Initialize preset on special 10th MIDI channel to use percussion sound bank (128) if available
+	tsf_channel_set_bank_preset(g_TinySoundFont, 9, 128, 0);
+
+	// Set the SoundFont rendering output mode
+	tsf_set_output(g_TinySoundFont, TSF_MONO, 44100, 0.0f);
+
+    ma_device_config deviceConfig;
+    deviceConfig = ma_device_config_init(ma_device_type_playback);
+    deviceConfig.playback.format = ma_format_s16;
+    deviceConfig.playback.channels = 1;
+    deviceConfig.sampleRate = 44100;
+    deviceConfig.dataCallback = data_callback;
+    deviceConfig.pUserData = &context;
+
+    ma_device device;
+    if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
+        logError("Failed to open playback device.\n");
+        return -1;
+    }
+
+    if (ma_device_start(&device) != MA_SUCCESS) {
+        logError("Failed to start playback device.\n");
+        ma_device_uninit(&device);
+        return -1;
+    }
+
     while (!glfwWindowShouldClose(context.window))
     {
         sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
@@ -288,176 +304,10 @@ int main()
         presentGame(&context);
     }
 
+    ma_device_uninit(&device);
+
     nvgDeleteGLES2(context.gfx);
     glfwDestroyWindow(context.window);
     glfwTerminate();
 	return 0;
 }
-
-// #include <unistd.h>
-
-// #define CASE_RETURN(err) case (err): return "##err"
-// const char* al_err_str(ALenum err) {
-//     switch(err) {
-//         CASE_RETURN(AL_NO_ERROR);
-//         CASE_RETURN(AL_INVALID_NAME);
-//         CASE_RETURN(AL_INVALID_ENUM);
-//         CASE_RETURN(AL_INVALID_VALUE);
-//         CASE_RETURN(AL_INVALID_OPERATION);
-//         CASE_RETURN(AL_OUT_OF_MEMORY);
-//     }
-//     return "unknown";
-// }
-// #undef CASE_RETURN
-
-// #define __al_check_error(file,line) \
-//     do { \
-//         ALenum err = alGetError(); \
-//         for(; err!=AL_NO_ERROR; err=alGetError()) { \
-//             printf("AL Error %s at %s:%d", al_err_str(err), file, line); \
-//         } \
-//     }while(0)
-
-// #define al_check_error() \
-//     __al_check_error(__FILE__, __LINE__)
-
-
-// void init_al() {
-//     ALCdevice *dev = NULL;
-//     ALCcontext *ctx = NULL;
-
-//     const char *defname = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-//     printf("Default device: %s\n", defname);
-
-//     dev = alcOpenDevice(defname);
-//     ctx = alcCreateContext(dev, NULL);
-//     alcMakeContextCurrent(ctx);
-// }
-
-// void exit_al() {
-//     ALCdevice *dev = NULL;
-//     ALCcontext *ctx = NULL;
-//     ctx = alcGetCurrentContext();
-//     dev = alcGetContextsDevice(ctx);
-
-//     alcMakeContextCurrent(NULL);
-//     alcDestroyContext(ctx);
-//     alcCloseDevice(dev);
-// }
-
-// int main(int argc, char* argv[]) {
-//     /* initialize OpenAL */
-//     init_al();
-
-//     /* Create buffer to store samples */
-//     ALuint buf;
-//     alGenBuffers(1, &buf);
-//     al_check_error();
-
-//     /* Fill buffer with Sine-Wave */
-//     float freq = 440.f;
-//     int seconds = 4;
-//     unsigned sample_rate = 22050;
-//     size_t buf_size = seconds * sample_rate;
-
-//     short *samples;
-//     samples = (short*)malloc(buf_size);
-//     for(int i=0; i<buf_size; ++i) {
-//      #define M_PI 3.14159265359f
-//         samples[i] = 32760 * sin( (2.f*(float)M_PI*freq)/sample_rate * i );
-//     }
-
-//     /* Download buffer to OpenAL */
-//     alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
-//     al_check_error();
-
-//     printf("play!\n");
-
-//     /* Set-up sound source and play buffer */
-//     ALuint src = 0;
-//     alGenSources(1, &src);
-//     alSourcei(src, AL_BUFFER, buf);
-//     alSourcePlay(src);
-
-//     /* While sound is playing, sleep */
-//     al_check_error();
-//     sleep(seconds);
-
-//     printf("stop!\n");
-
-//     /* Dealloc OpenAL */
-//     exit_al();
-//     al_check_error();
-//     return 0;
-// }
-
-// #define DR_FLAC_IMPLEMENTATION
-// #include "dr_flac.h"  /* Enables FLAC decoding. */
-// #define DR_MP3_IMPLEMENTATION
-// #include "dr_mp3.h"   /* Enables MP3 decoding. */
-// #define DR_WAV_IMPLEMENTATION
-// #include "dr_wav.h"   /* Enables WAV decoding. */
-
-// #define MINIAUDIO_IMPLEMENTATION
-// #include "miniaudio.h"
-
-
-// // check this: https://github.com/dr-soft/miniaudio
-
-// void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
-// {
-//     ma_decoder* pDecoder = (ma_decoder*)pDevice->pUserData;
-//     if (pDecoder == NULL) {
-//         return;
-//     }
-
-//     ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount);
-
-//     (void)pInput;
-// }
-
-// int main(int argc, char** argv)
-// {
-//     ma_result result;
-//     ma_decoder decoder;
-//     ma_device_config deviceConfig;
-//     ma_device device;
-
-//     if (argc < 2) {
-//         printf("No input file.\n");
-//         return -1;
-//     }
-
-//     result = ma_decoder_init_file(argv[1], NULL, &decoder);
-//     if (result != MA_SUCCESS) {
-//         return -2;
-//     }
-
-//     deviceConfig = ma_device_config_init(ma_device_type_playback);
-//     deviceConfig.playback.format   = decoder.outputFormat;
-//     deviceConfig.playback.channels = decoder.outputChannels;
-//     deviceConfig.sampleRate        = decoder.outputSampleRate;
-//     deviceConfig.dataCallback      = data_callback;
-//     deviceConfig.pUserData         = &decoder;
-
-//     if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
-//         printf("Failed to open playback device.\n");
-//         ma_decoder_uninit(&decoder);
-//         return -3;
-//     }
-
-//     if (ma_device_start(&device) != MA_SUCCESS) {
-//         printf("Failed to start playback device.\n");
-//         ma_device_uninit(&device);
-//         ma_decoder_uninit(&decoder);
-//         return -4;
-//     }
-
-//     printf("Press Enter to quit...");
-//     getchar();
-
-//     ma_device_uninit(&device);
-//     ma_decoder_uninit(&decoder);
-
-//     return 0;
-// }

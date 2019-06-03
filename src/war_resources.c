@@ -603,11 +603,21 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
 
-    char fileName[3];
-    sprintf(fileName, "%02d.xmi", index);
-    FILE* f = fopen(fileName, "wb");
-    fwrite(rawResource.data, sizeof(u8), rawResource.length, f);
-    fclose(f);
+    u8* xmiData = rawResource.data;
+    size32 xmiLength = rawResource.length;
+
+    size32 midiLength;
+    u8* midiData = transcodeXmiToMid(xmiData, xmiLength, &midiLength);
+    if (!midiData)
+    {
+        logError("Can't convert XMI file of resource %d\n", index);
+        return;
+    }
+
+    WarResource* resource = getOrCreateResource(context, index);
+    resource->type = WAR_RESOURCE_TYPE_XMID;
+    resource->xmi.data = midiData;
+    resource->xmi.length = midiLength;
 }
 
 void loadResource(WarContext *context, DatabaseEntry *entry)
