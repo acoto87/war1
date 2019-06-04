@@ -606,9 +606,9 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
     u8* xmiData = rawResource.data;
     size32 xmiLength = rawResource.length;
 
-    size32 midiLength;
-    u8* midiData = transcodeXmiToMid(xmiData, xmiLength, &midiLength);
-    if (!midiData)
+    size32 midLength;
+    uint8_t* midData = transcodeXmiToMid(xmiData, xmiLength, &midLength);
+    if (!midData)
     {
         logError("Can't convert XMI file of resource %d\n", index);
         return;
@@ -616,8 +616,128 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
 
     WarResource* resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_XMID;
-    resource->xmi.data = midiData;
-    resource->xmi.length = midiLength;
+    resource->xmi.data = midData;
+    resource->xmi.length = midLength;
+}
+
+void loadWave(WarContext *context, DatabaseEntry *entry)
+{
+    s32 index = entry->index;
+    WarRawResource rawResource = context->warFile->resources[index];
+
+    MemoryBuffer bufInput = {0};
+    mbInitFromMemory(&bufInput, rawResource.data, rawResource.length);
+
+    // skip "RIFF"
+    assert(mbSkip(&bufInput, 4));
+    // skip file length, always 36 + dataLength
+    assert(mbSkip(&bufInput, sizeof(s32)));
+    // skip "WAVE"
+    assert(mbSkip(&bufInput, 4));
+    // skip "fmt "
+    assert(mbSkip(&bufInput, 4));
+    // skip fmt length, always 10
+    assert(mbSkip(&bufInput, sizeof(s32)));
+    // skip uncompressed, always 1
+    assert(mbSkip(&bufInput, sizeof(s16)));
+    // skip channel count, always 1
+    assert(mbSkip(&bufInput, sizeof(s16)));
+    // skip sample rate, always 11025
+    assert(mbSkip(&bufInput, sizeof(s32)));
+    // skip byte rate, always 11025
+    assert(mbSkip(&bufInput, sizeof(s32)));
+    // skip block align, always 1
+    assert(mbSkip(&bufInput, sizeof(s16)));
+    // skip bits per sample, always 8
+    assert(mbSkip(&bufInput, sizeof(s16)));
+    // skip "data"
+    assert(mbSkip(&bufInput, 4));
+
+    s32 dataLength;
+    assert(mbReadInt32LE(&bufInput, &dataLength));
+    assert(dataLength > 0);
+
+    u8* data = (u8*)xmalloc(dataLength);
+    mbReadBytes(&bufInput, data, dataLength);
+
+    WarResource* resource = getOrCreateResource(context, index);
+    resource->type = WAR_RESOURCE_TYPE_WAVE;
+    resource->wave.data = data;
+    resource->wave.length = dataLength;
+
+    if (index == 472)
+    {
+        FILE* f = fopen("output12.wav", "wb");
+        fwrite(rawResource.data, 1, rawResource.length, f);
+        fclose(f);
+    }
+    
+}
+
+void loadVoc(WarContext *context, DatabaseEntry *entry)
+{
+    s32 index = entry->index;
+    WarRawResource rawResource = context->warFile->resources[index];
+
+    MemoryBuffer bufInput = {0};
+    mbInitFromMemory(&bufInput, rawResource.data, rawResource.length);
+
+    char vocHeader[19];
+    assert(mbReadString(&bufInput, vocHeader, sizeof(vocHeader)));
+    assert(strncmp(vocHeader, "Creative Voice File", sizeof(vocHeader)) == 0);
+
+    // skip 0x1A
+    mbSkip(&bufInput, 1);
+
+    // skip offset to data, always 26
+    assert(mbSkip(&bufInput, 2));
+
+    // skip version, always 266
+    assert(mbSkip(&bufInput, 2));
+    // skip 2's comp of version, always 4393
+    assert(mbSkip(&bufInput, 2));
+    
+    u8 type;
+    assert(mbRead(&bufInput, &type));
+
+    u8* vocData = NULL;
+    s32 vocLength = 0;
+    s32 w = 0;
+
+    while (type)
+    {
+        s32 length;
+        assert(mbReadInt24LE(&bufInput, &length));
+
+        if (type == 1)
+        {
+            // the length of the data is this value - 2
+            // for the next two skipped bytes
+            length -= 2;
+
+            // skip sample rate and compression type
+            assert(mbSkip(&bufInput, 2));
+
+            vocLength += length;
+            vocData = (u8*)xrealloc(vocData, vocLength);
+            while (length--)
+            {
+                assert(mbRead(&bufInput, &vocData[w++]));
+            }
+        }
+        else
+        {
+            logWarning("Unsupported voc type: %d\n", type);
+        }
+
+        // read the next type
+        assert(mbRead(&bufInput, &type));
+    }
+
+    WarResource* resource = getOrCreateResource(context, index);
+    resource->type = WAR_RESOURCE_TYPE_VOC;
+    resource->voc.data = vocData;
+    resource->voc.length = vocLength;
 }
 
 void loadResource(WarContext *context, DatabaseEntry *entry)
@@ -681,6 +801,18 @@ void loadResource(WarContext *context, DatabaseEntry *entry)
         case DB_ENTRY_TYPE_XMID:
         {
             loadXmi(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_WAVE:
+        {
+            loadWave(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_VOC:
+        {
+            loadVoc(context, entry);
             break;
         }
 

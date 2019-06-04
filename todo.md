@@ -20,6 +20,25 @@ List of thing to do in no particular order
   * ~~When different buildings are collapsed in near positions, the ruins doesn't merge well.~~
   * When building roads the player needs to go back and click on the build road button again to build the next one.
   * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
+  * Make a call to `sleep` instead of waiting in a cycle until the frame end. This will probably increase effiency and decrease CPU usage. I need a portable sleep function, maybe something like:
+    ```c
+    void msleep(s32 milliseconds) // cross-platform sleep function
+    {
+      #ifdef WIN32
+        // windows.h need to be include for this
+        Sleep(milliseconds);
+      #elif _POSIX_C_SOURCE >= 199309L
+        // this is the posix call, _POSIX_C_SOURCE need to be defined
+        struct timespec ts;
+        ts.tv_sec = milliseconds / 1000;
+        ts.tv_nsec = (milliseconds % 1000) * 1000000;
+        nanosleep(&ts, NULL);
+      #else
+        // unistd.h need to be include for this
+        usleep(milliseconds * 1000);
+      #endif
+    }
+    ```
 
 * General
   * ~~Test the new implementation for lists.~~

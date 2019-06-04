@@ -533,8 +533,22 @@ typedef struct
         struct
         {
             u8* data;
-            size32 length;
+            s32 length;
         } xmi;
+
+        struct
+        {
+            u8* data;
+            s32 length;
+
+            s32 pos;
+        } wave;
+
+        struct
+        {
+            u8* data;
+            s32 length;
+        } voc;
     };
 } WarResource;
 
@@ -1483,14 +1497,14 @@ typedef struct _WarContext
     char* warFilePath;
     WarFile* warFile;
 
+    WarResource *resources[MAX_RESOURCES_COUNT];
+
     WarSprite fontSprites[2];
-    
+
     s32 staticEntityId;
 
     NVGcontext* gfx;
     NVGLUframebuffer* fb;
-    
-    WarResource *resources[MAX_RESOURCES_COUNT];
 
     WarInput input;
 

@@ -1,21 +1,4 @@
 /**
- * This code is a port in C of the XMI2MID converter by Peter "Corsix" Cawley 
- * in the War1gus repository. You can find the original C++ code here: 
- * https://github.com/Wargus/war1gus/blob/master/xmi2mid.cpp
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <time.h>
-#include <assert.h>
-
-#include "shl/list.h"
-
-#define SHL_MEMORY_BUFFER_IMPLEMENTATION
-#include "shl/memory_buffer.h"
-
-/**
  * Extension function of MemoryBuffer to read variable lengths integer values.
  */
 bool mbReadUIntVar(MemoryBuffer* buffer, uint32_t* value)
@@ -86,6 +69,11 @@ static MidiToken* MidiTokenListAppend(MidiTokenList* list, int32_t time, uint8_t
     return &list->items[list->count - 1];
 }
 
+/**
+ * This code is a port in C of the XMI2MID converter by Peter "Corsix" Cawley 
+ * in the War1gus repository. You can find the original C++ code here: 
+ * https://github.com/Wargus/war1gus/blob/master/xmi2mid.cpp
+ */
 uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength)
 {
     MemoryBuffer bufInput = {0};
@@ -96,14 +84,12 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
 
     if (!mbScanTo(&bufInput, "EVNT", 4))
     {
-        mbFree(&bufInput);
         mbFree(&bufOutput);
         return NULL;
     }
 
     if (!mbSkip(&bufInput, 8))
     {
-        mbFree(&bufInput);
         mbFree(&bufOutput);
         return NULL;
     }
@@ -127,7 +113,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
         {
             if (!mbRead(&bufInput, &tokenType))
             {
-                mbFree(&bufInput);
                 mbFree(&bufOutput);
                 return NULL;
             }
@@ -148,7 +133,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
             {
                 if (!mbRead(&bufInput, &token->data))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
@@ -164,14 +148,12 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
             {
                 if (!mbRead(&bufInput, &token->data))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
 
                 if (!mbSkip(&bufInput, 1))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
@@ -183,7 +165,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
             {
                 if (!mbRead(&bufInput, &extendedType))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
@@ -192,7 +173,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
 
                 if (!mbSkip(&bufInput, 1))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
@@ -213,7 +193,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
                 {
                     if (!mbRead(&bufInput, &extendedType))
                     {
-                        mbFree(&bufInput);
                         mbFree(&bufOutput);
                         return NULL;
                     }
@@ -236,7 +215,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
                             mbReadUIntVar(&bufInput, &intVar);
                             if (!mbSkip(&bufInput, intVar))
                             {
-                                mbFree(&bufInput);
                                 mbFree(&bufOutput);
                                 return NULL;
                             }
@@ -251,7 +229,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
 
                 if (!mbSkip(&bufInput, token->bufferLength))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
@@ -263,25 +240,21 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
 
     if (lstTokens.count == 0)
     {
-        mbFree(&bufInput);
         mbFree(&bufOutput);
         return NULL;
     }
     if (!mbWriteString(&bufOutput, "MThd\0\0\0\x06\0\0\0\x01", 12))
     {
-        mbFree(&bufInput);
         mbFree(&bufOutput);
         return NULL;
     }
     if (!mbWriteUInt16BE(&bufOutput, (tempo * 3) / 25000))
     {
-        mbFree(&bufInput);
         mbFree(&bufOutput);
         return NULL;
     }
     if (!mbWriteString(&bufOutput, "MTrk\xBA\xAD\xF0\x0D", 8))
     {
-        mbFree(&bufInput);
         mbFree(&bufOutput);
         return NULL;
     }
@@ -298,7 +271,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
 
         if (!mbWriteUIntVar(&bufOutput, t.time - tokenTime))
         {
-            mbFree(&bufInput);
             mbFree(&bufOutput);
             return NULL;
         }
@@ -310,7 +282,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
             tokenType = t.type;
             if (!mbWrite(&bufOutput, tokenType))
             {
-                mbFree(&bufInput);
                 mbFree(&bufOutput);
                 return NULL;
             }
@@ -319,7 +290,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
             {
                 if (!mbWrite(&bufOutput, t.data))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
@@ -330,13 +300,11 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
 
             if (!mbWriteUIntVar(&bufOutput, t.bufferLength))
             {
-                mbFree(&bufInput);
                 mbFree(&bufOutput);
                 return NULL;
             }
             if (!mbWriteBytes(&bufOutput, t.buffer, t.bufferLength))
             {
-                mbFree(&bufInput);
                 mbFree(&bufOutput);
                 return NULL;
             }
@@ -349,7 +317,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
 
                 if (!mbWrite(&bufOutput, tokenType))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
@@ -357,7 +324,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
 
             if (!mbWrite(&bufOutput, t.data))
             {
-                mbFree(&bufInput);
                 mbFree(&bufOutput);
                 return NULL;
             }
@@ -366,7 +332,6 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
             {
                 if (!mbWriteBytes(&bufOutput, t.buffer, 1))
                 {
-                    mbFree(&bufInput);
                     mbFree(&bufOutput);
                     return NULL;
                 }
@@ -378,5 +343,8 @@ uint8_t* transcodeXmiToMid(uint8_t* xmiData, size_t xmiLength, size_t* midLength
     mbSeek(&bufOutput, 18);
     mbWriteUInt32BE(&bufOutput, length);
 
-    return mbGetData(&bufOutput, midLength);
+    uint8_t* midData = mbGetData(&bufOutput, midLength);
+
+    mbFree(&bufOutput);
+    return midData;
 }

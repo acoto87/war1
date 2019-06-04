@@ -55,8 +55,8 @@
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
 #include "shl/map.h"
-
-#include "xmi2mid.c"
+#define SHL_MEMORY_BUFFER_IMPLEMENTATION
+#include "shl/memory_buffer.h"
 
 #include "log.h"
 #include "utils.h"
@@ -73,6 +73,7 @@
 #include "war_pathfinder.h"
 #include "war_state_machine.h"
 #include "war_file.c"
+#include "war_audio.c"
 #include "war_actions.c"
 #include "war_render.c"
 #include "war_resources.c"
@@ -132,12 +133,12 @@ void data_callback(ma_device* pDevice, void* output, const void* input, ma_uint3
         return;
     }
 
-    s16 *stream = (s16*)output;
+    s16* stream = (s16*)output;
 
     // s32 samplesPerSecond = 44100;
     // s32 toneHz = 256;
     // s32 wavePeriod = samplesPerSecond / toneHz;
-    s32 sampleSize = sizeof(s16);
+    // s32 sampleSize = sizeof(s16);
     // s32 toneVolume = 32767;
     // #define PI 3.14159265359f
 
@@ -152,81 +153,65 @@ void data_callback(ma_device* pDevice, void* output, const void* input, ma_uint3
     //     ++wavePos;
     // }
 
-	s32 sampleBlock = TSF_RENDER_EFFECTSAMPLEBLOCK;
+    u8* data = context->resources[472]->wave.data;
+    s32 dataLength = context->resources[472]->wave.length;
+    
+    printf("frameCount: %d\n", frameCount);
+    printf("pos: %d\n", context->resources[472]->wave.pos);
 
-    while (frameCount)
+    for (s32 i = 0; i < frameCount; i++)
     {
-        //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
-		if (sampleBlock > frameCount)
+        if (context->resources[472]->wave.pos >= dataLength)
         {
-            sampleBlock = frameCount;
+            context->resources[472]->wave.pos = 0;
         }
 
-        g_Msec += sampleBlock * (1000.0 / 44100.0);
-
-        //Loop through all MIDI messages which need to be played up until the current playback time
-        while (g_MidiMessage && g_MidiMessage->time <= g_Msec)
-        {
-            switch (g_MidiMessage->type)
-			{
-				case TML_PROGRAM_CHANGE: //channel program (preset) change (special handling for 10th MIDI channel with drums)
-					tsf_channel_set_presetnumber(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->program, (g_MidiMessage->channel == 9));
-					break;
-				case TML_NOTE_ON: //play a note
-					tsf_channel_note_on(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key, g_MidiMessage->velocity / 127.0f);
-					break;
-				case TML_NOTE_OFF: //stop a note
-					tsf_channel_note_off(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key);
-					break;
-				case TML_PITCH_BEND: //pitch wheel modification
-					tsf_channel_set_pitchwheel(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->pitch_bend);
-					break;
-				case TML_CONTROL_CHANGE: //MIDI controller messages
-					tsf_channel_midi_control(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
-					break;
-			}
-
-            g_MidiMessage = g_MidiMessage->next;
-        }
-
-		// Render the block of audio samples in float format
-		tsf_render_short(g_TinySoundFont, stream, sampleBlock, 0);
-
-        frameCount -= sampleBlock;
-        stream += sampleBlock;
+        stream[i] = (s16)(data[context->resources[472]->wave.pos++] * (1 << 15) / (1 << 8));
     }
 
-	for (sampleBlock = TSF_RENDER_EFFECTSAMPLEBLOCK; frameCount; frameCount -= sampleBlock, stream += (sampleBlock * (2 * sizeof(float))))
-	{
-		//We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
-		if (sampleBlock > frameCount) sampleBlock = frameCount;
+	// s32 sampleBlock = TSF_RENDER_EFFECTSAMPLEBLOCK;
 
-		//Loop through all MIDI messages which need to be played up until the current playback time
-		for (g_Msec += sampleBlock * (1000.0 / 44100.0); g_MidiMessage && g_Msec >= g_MidiMessage->time; g_MidiMessage = g_MidiMessage->next)
-		{
-			switch (g_MidiMessage->type)
-			{
-				case TML_PROGRAM_CHANGE: //channel program (preset) change (special handling for 10th MIDI channel with drums)
-					tsf_channel_set_presetnumber(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->program, (g_MidiMessage->channel == 9));
-					break;
-				case TML_NOTE_ON: //play a note
-					tsf_channel_note_on(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key, g_MidiMessage->velocity / 127.0f);
-					break;
-				case TML_NOTE_OFF: //stop a note
-					tsf_channel_note_off(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key);
-					break;
-				case TML_PITCH_BEND: //pitch wheel modification
-					tsf_channel_set_pitchwheel(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->pitch_bend);
-					break;
-				case TML_CONTROL_CHANGE: //MIDI controller messages
-					tsf_channel_midi_control(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
-					break;
-			}
-		}
+    // while (frameCount)
+    // {
+    //     //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
+	// 	if (sampleBlock > frameCount)
+    //     {
+    //         sampleBlock = frameCount;
+    //     }
 
-		// Render the block of audio samples in float format
-		tsf_render_float(g_TinySoundFont, (float*)stream, sampleBlock, 0);
-	}
+    //     g_Msec += sampleBlock * (1000.0 / 44100.0);
+
+    //     //Loop through all MIDI messages which need to be played up until the current playback time
+    //     while (g_MidiMessage && g_MidiMessage->time <= g_Msec)
+    //     {
+    //         switch (g_MidiMessage->type)
+	// 		{
+	// 			case TML_PROGRAM_CHANGE: //channel program (preset) change (special handling for 10th MIDI channel with drums)
+	// 				tsf_channel_set_presetnumber(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->program, (g_MidiMessage->channel == 9));
+	// 				break;
+	// 			case TML_NOTE_ON: //play a note
+	// 				tsf_channel_note_on(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key, g_MidiMessage->velocity / 127.0f);
+	// 				break;
+	// 			case TML_NOTE_OFF: //stop a note
+	// 				tsf_channel_note_off(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key);
+	// 				break;
+	// 			case TML_PITCH_BEND: //pitch wheel modification
+	// 				tsf_channel_set_pitchwheel(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->pitch_bend);
+	// 				break;
+	// 			case TML_CONTROL_CHANGE: //MIDI controller messages
+	// 				tsf_channel_midi_control(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
+	// 				break;
+	// 		}
+
+    //         g_MidiMessage = g_MidiMessage->next;
+    //     }
+
+	// 	// Render the block of audio samples in float format
+	// 	tsf_render_short(g_TinySoundFont, stream, sampleBlock, 0);
+
+    //     frameCount -= sampleBlock;
+    //     stream += sampleBlock;
+    // }
 }
 
 int main() 
@@ -277,7 +262,7 @@ int main()
     deviceConfig = ma_device_config_init(ma_device_type_playback);
     deviceConfig.playback.format = ma_format_s16;
     deviceConfig.playback.channels = 1;
-    deviceConfig.sampleRate = 44100;
+    deviceConfig.sampleRate = 11025;
     deviceConfig.dataCallback = data_callback;
     deviceConfig.pUserData = &context;
 

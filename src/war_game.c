@@ -275,7 +275,9 @@ void presentGame(WarContext *context)
     f32 currentTime = glfwGetTime();
     context->deltaTime = (currentTime - context->time);
 
-    // force to 60 fps
+    // TODO: call sleep function instead of doing this, 
+    // because this will get the CPU busy all the time,
+    // give it a break!
     while (context->deltaTime <= SECONDS_PER_FRAME)
     {
         currentTime = (f32)glfwGetTime();
