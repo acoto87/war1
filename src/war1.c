@@ -57,6 +57,8 @@
 #include "shl/map.h"
 #define SHL_MEMORY_BUFFER_IMPLEMENTATION
 #include "shl/memory_buffer.h"
+#define SHL_WAVE_WRITER_IMPLEMENTATION
+#include "shl/wave_writer.h"
 
 #include "log.h"
 #include "utils.h"
@@ -153,20 +155,20 @@ void data_callback(ma_device* pDevice, void* output, const void* input, ma_uint3
     //     ++wavePos;
     // }
 
-    u8* data = context->resources[472]->wave.data;
-    s32 dataLength = context->resources[472]->wave.length;
+    u8* data = context->resources[501]->wave.data;
+    s32 dataLength = context->resources[501]->wave.length;
     
-    printf("frameCount: %d\n", frameCount);
-    printf("pos: %d\n", context->resources[472]->wave.pos);
+    // printf("frameCount: %d\n", frameCount);
+    // printf("pos: %d\n", context->resources[501]->wave.pos);
 
     for (s32 i = 0; i < frameCount; i++)
     {
-        if (context->resources[472]->wave.pos >= dataLength)
+        if (context->resources[501]->wave.pos >= dataLength)
         {
-            context->resources[472]->wave.pos = 0;
+            context->resources[501]->wave.pos = 0;
         }
 
-        stream[i] = (s16)(data[context->resources[472]->wave.pos++] * (1 << 15) / (1 << 8));
+        stream[i] = (s16)(data[context->resources[501]->wave.pos++] - 0x80) << 8;
     }
 
 	// s32 sampleBlock = TSF_RENDER_EFFECTSAMPLEBLOCK;

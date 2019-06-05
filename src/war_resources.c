@@ -667,11 +667,23 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
 
     if (index == 472)
     {
+        s16* samples = (s16*)malloc(dataLength * sizeof(s16));
+        for (s32 i = 0; i < dataLength; i++)
+        {
+            samples[i] = (s16)(data[i] - 0x80) << 8;
+            printf("%d -> %d\n", data[i], samples[i]);
+        }
+
+        shlWaveFile waveFile;
+        shlWaveInit(&waveFile, 11025, "472.wav");
+        shlWaveStereo(&waveFile, false);
+        shlWaveWrite(&waveFile, samples, dataLength, 1);
+        shlWaveFlush(&waveFile, true);
+
         FILE* f = fopen("output12.wav", "wb");
         fwrite(rawResource.data, 1, rawResource.length, f);
         fclose(f);
     }
-    
 }
 
 void loadVoc(WarContext *context, DatabaseEntry *entry)

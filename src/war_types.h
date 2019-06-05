@@ -548,6 +548,8 @@ typedef struct
         {
             u8* data;
             s32 length;
+
+            s32 pos;
         } voc;
     };
 } WarResource;
