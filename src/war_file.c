@@ -1,7 +1,5 @@
-WarFile* loadWarFile(WarContext* context)
+WarFile* loadWarFile(WarContext* context, const char* filePath)
 {
-    const char *filePath = context->warFilePath;
-
     FILE *file = fopen(filePath, "rb");
     if (!file)
     {

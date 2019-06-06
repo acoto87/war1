@@ -1170,7 +1170,7 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
         if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
         {
             vec2 targetPosition = getUnitCenterPosition(other, true);
-            if (vec2Distance(position, targetPosition) <= WAR_NEAR_ENEMY_RADIUS)
+            if (vec2Distance(position, targetPosition) <= NEAR_ENEMY_RADIUS)
             {
                 return other;
             }

@@ -113,107 +113,9 @@
 #include "war_map.c"
 #include "war_game.c"
 
-// Holds the global instance pointer
-static tsf* g_TinySoundFont;
-
-// Holds global MIDI playback state
-static double g_Msec;               //current playback time
-static tml_message* g_MidiMessage;  //next message to be played
-
 void glfwErrorCallback(int error, const char* description)
 {
     logError("Error: %d, %s\n", error, description);
-}
-
-void data_callback(ma_device* pDevice, void* output, const void* input, ma_uint32 frameCount)
-{
-    NOT_USED(input);
-
-    WarContext* context = (WarContext*)pDevice->pUserData;
-    if (!context) 
-    {
-        return;
-    }
-
-    s16* stream = (s16*)output;
-
-    // s32 samplesPerSecond = 44100;
-    // s32 toneHz = 256;
-    // s32 wavePeriod = samplesPerSecond / toneHz;
-    // s32 sampleSize = sizeof(s16);
-    // s32 toneVolume = 32767;
-    // #define PI 3.14159265359f
-
-    // static u32 wavePos = 0;
-    // s16 *data = (s16*)output;
-    // for (s32 i = 0; i < frameCount ; i++)
-    // {
-    //     f32 t = 2.0f * PI * (f32)wavePos / (f32)wavePeriod;
-    //     f32 sineValue = sinf(t);
-    //     s16 sampleValue = (s16)(sineValue * toneVolume);
-    //     data[i] = sampleValue;
-    //     ++wavePos;
-    // }
-
-    u8* data = context->resources[501]->wave.data;
-    s32 dataLength = context->resources[501]->wave.length;
-    
-    // printf("frameCount: %d\n", frameCount);
-    // printf("pos: %d\n", context->resources[501]->wave.pos);
-
-    for (s32 i = 0; i < frameCount; i++)
-    {
-        if (context->resources[501]->wave.pos >= dataLength)
-        {
-            context->resources[501]->wave.pos = 0;
-        }
-
-        stream[i] = (s16)(data[context->resources[501]->wave.pos++] - 0x80) << 8;
-    }
-
-	// s32 sampleBlock = TSF_RENDER_EFFECTSAMPLEBLOCK;
-
-    // while (frameCount)
-    // {
-    //     //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
-	// 	if (sampleBlock > frameCount)
-    //     {
-    //         sampleBlock = frameCount;
-    //     }
-
-    //     g_Msec += sampleBlock * (1000.0 / 44100.0);
-
-    //     //Loop through all MIDI messages which need to be played up until the current playback time
-    //     while (g_MidiMessage && g_MidiMessage->time <= g_Msec)
-    //     {
-    //         switch (g_MidiMessage->type)
-	// 		{
-	// 			case TML_PROGRAM_CHANGE: //channel program (preset) change (special handling for 10th MIDI channel with drums)
-	// 				tsf_channel_set_presetnumber(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->program, (g_MidiMessage->channel == 9));
-	// 				break;
-	// 			case TML_NOTE_ON: //play a note
-	// 				tsf_channel_note_on(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key, g_MidiMessage->velocity / 127.0f);
-	// 				break;
-	// 			case TML_NOTE_OFF: //stop a note
-	// 				tsf_channel_note_off(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key);
-	// 				break;
-	// 			case TML_PITCH_BEND: //pitch wheel modification
-	// 				tsf_channel_set_pitchwheel(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->pitch_bend);
-	// 				break;
-	// 			case TML_CONTROL_CHANGE: //MIDI controller messages
-	// 				tsf_channel_midi_control(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
-	// 				break;
-	// 		}
-
-    //         g_MidiMessage = g_MidiMessage->next;
-    //     }
-
-	// 	// Render the block of audio samples in float format
-	// 	tsf_render_short(g_TinySoundFont, stream, sampleBlock, 0);
-
-    //     frameCount -= sampleBlock;
-    //     stream += sampleBlock;
-    // }
 }
 
 int main() 
@@ -237,49 +139,6 @@ int main()
         return -1;
     }
 
-    u8* midiData = context.resources[1]->xmi.data;
-    size32 midiLength = context.resources[1]->xmi.length;
-
-    g_MidiMessage = tml_load_memory(midiData, midiLength);
-	if (!g_MidiMessage)
-	{
-		logError("Could not load MIDI file\n");
-		return 1;
-	}
-
-    g_TinySoundFont = tsf_load_filename("GMGeneric.SF2");
-	if (!g_TinySoundFont)
-	{
-		logError("Could not load SoundFont\n");
-		return 1;
-	}
-
-    //Initialize preset on special 10th MIDI channel to use percussion sound bank (128) if available
-	tsf_channel_set_bank_preset(g_TinySoundFont, 9, 128, 0);
-
-	// Set the SoundFont rendering output mode
-	tsf_set_output(g_TinySoundFont, TSF_MONO, 44100, 0.0f);
-
-    ma_device_config deviceConfig;
-    deviceConfig = ma_device_config_init(ma_device_type_playback);
-    deviceConfig.playback.format = ma_format_s16;
-    deviceConfig.playback.channels = 1;
-    deviceConfig.sampleRate = 11025;
-    deviceConfig.dataCallback = data_callback;
-    deviceConfig.pUserData = &context;
-
-    ma_device device;
-    if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
-        logError("Failed to open playback device.\n");
-        return -1;
-    }
-
-    if (ma_device_start(&device) != MA_SUCCESS) {
-        logError("Failed to start playback device.\n");
-        ma_device_uninit(&device);
-        return -1;
-    }
-
     while (!glfwWindowShouldClose(context.window))
     {
         sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
@@ -291,8 +150,7 @@ int main()
         presentGame(&context);
     }
 
-    ma_device_uninit(&device);
-
+    ma_device_uninit(&context.sfx);
     nvgDeleteGLES2(context.gfx);
     glfwDestroyWindow(context.window);
     glfwTerminate();

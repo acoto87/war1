@@ -1496,17 +1496,17 @@ typedef struct _WarContext
     char windowTitle[256];
     GLFWwindow* window;
 
-    char* warFilePath;
     WarFile* warFile;
-
     WarResource *resources[MAX_RESOURCES_COUNT];
-
     WarSprite fontSprites[2];
 
     s32 staticEntityId;
 
     NVGcontext* gfx;
-    NVGLUframebuffer* fb;
+    // NVGLUframebuffer* fb;
+
+    ma_device sfx;
+    tsf* soundFont;
 
     WarInput input;
 

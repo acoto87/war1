@@ -31,39 +31,45 @@ bool initGame(WarContext* context)
 
     glCheckOpenGLVersion();
 
+    // init graphics
     context->gfx = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_DEBUG);
     if (!context->gfx) 
     {
         logError("Could not init nanovg.\n");
         glfwDestroyWindow(context->window);
         glfwTerminate();
-		return -1;
+		return false;
 	}
 
-    context->fb = nvgluCreateFramebuffer(context->gfx, 
-                                         context->framebufferWidth, 
-                                         context->framebufferHeight, 
-                                         NVG_IMAGE_NEAREST);
+    // context->fb = nvgluCreateFramebuffer(context->gfx, 
+    //                                      context->framebufferWidth, 
+    //                                      context->framebufferHeight, 
+    //                                      NVG_IMAGE_NEAREST);
 
-    if (!context->fb) 
+    // if (!context->fb) 
+    // {
+    //     logError("Could not create FBO.\n");
+    //     glfwDestroyWindow(context->window);
+    //     glfwTerminate();
+    //     return false;
+    // }
+
+    // init audio
+    if (!initAudio(context))
     {
-        logError("Could not create FBO.\n");
-        glfwDestroyWindow(context->window);
-        glfwTerminate();
-        return -1;
+        logError("Could not initialize audio.\n");
+        return false;
     }
 
     // load fonts
     nvgCreateFont(context->gfx, "defaultFont", "./Roboto-Regular.ttf");
+    context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
+    context->fontSprites[1] = loadFontSprite(context, "./war1_font_2.png");
 
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
-    context->fontSprites[1] = loadFontSprite(context, "./war1_font_2.png");
-
-    context->warFilePath = "./DATA.WAR";
-    context->warFile = loadWarFile(context);
+    context->warFile = loadWarFile(context, "./DATA.WAR");
 
     for (int i = 0; i < arrayLength(assets); ++i)
     {
@@ -86,11 +92,11 @@ void setWindowSize(WarContext* context, s32 width, s32 height)
     glfwGetFramebufferSize(context->window, &context->framebufferWidth, &context->framebufferHeight);
     context->devicePixelRatio = (f32)context->framebufferWidth / (f32)context->windowWidth;
 
-    nvgluDeleteFramebuffer(context->fb);
-    context->fb = nvgluCreateFramebuffer(context->gfx,
-                                         context->framebufferWidth,
-                                         context->framebufferHeight,
-                                         NVG_IMAGE_NEAREST);
+    // nvgluDeleteFramebuffer(context->fb);
+    // context->fb = nvgluCreateFramebuffer(context->gfx,
+    //                                      context->framebufferWidth,
+    //                                      context->framebufferHeight,
+    //                                      NVG_IMAGE_NEAREST);
 }
 
 void setGlobalScale(WarContext* context, f32 scale)

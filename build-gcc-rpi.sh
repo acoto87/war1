@@ -18,7 +18,7 @@ LibPath="../../deps/lib/arm32"
 # AssemblyFlags="-g -Wa,-ahl"
 # DebugFlags="-g -O1 -D __DEBUG__"
 CommonCompilerFlags="-std=c99 -Wall -x c $ProfilerFlags $OptimizeFlags $AssemblyFlags $DebugFlags -I $IncludePath"
-CommonLinkerFlags="-L $LibPath -l glfw -l m -l openal -lpthread -ldl"
+CommonLinkerFlags="-L $LibPath -lglfw -lm -lopenal -lpthread -ldl"
 
 # Create output path if doesn't exists
 mkdir -p $OutputPath

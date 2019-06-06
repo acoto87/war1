@@ -658,32 +658,40 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
     assert(dataLength > 0);
 
     u8* data = (u8*)xmalloc(dataLength);
-    mbReadBytes(&bufInput, data, dataLength);
+    assert(mbReadBytes(&bufInput, data, dataLength));
+
+    // this data is at 11025khz, and for playing it back I needed at 44100khz
+    // so I need to upsampling it here by a factor of 4
+    u8* newData = changeSampleRate(data, dataLength, 4);
+    s32 newDataLength = dataLength * 4;
 
     WarResource* resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_WAVE;
-    resource->wave.data = data;
-    resource->wave.length = dataLength;
+    resource->wave.data = newData;
+    resource->wave.length = newDataLength;
 
-    if (index == 472)
-    {
-        s16* samples = (s16*)malloc(dataLength * sizeof(s16));
-        for (s32 i = 0; i < dataLength; i++)
-        {
-            samples[i] = (s16)(data[i] - 0x80) << 8;
-            printf("%d -> %d\n", data[i], samples[i]);
-        }
+    free(data);
 
-        shlWaveFile waveFile;
-        shlWaveInit(&waveFile, 11025, "472.wav");
-        shlWaveStereo(&waveFile, false);
-        shlWaveWrite(&waveFile, samples, dataLength, 1);
-        shlWaveFlush(&waveFile, true);
+    // TODO: remove this
+    //
+    // if (index == 497)
+    // {
+    //     s16* samples = (s16*)malloc(dataLength * sizeof(s16));
+    //     for (s32 i = 0; i < dataLength; i++)
+    //     {
+    //         samples[i] = (s16)(data[i] - 0x80) << 8;
+    //     }
 
-        FILE* f = fopen("output12.wav", "wb");
-        fwrite(rawResource.data, 1, rawResource.length, f);
-        fclose(f);
-    }
+    //     shlWaveFile waveFile;
+    //     shlWaveInit(&waveFile, 44100, "497.wav");
+    //     shlWaveStereo(&waveFile, false);
+    //     shlWaveWrite(&waveFile, samples, dataLength, 1);
+    //     shlWaveFlush(&waveFile, true);
+
+    //     FILE* f = fopen("output12.wav", "wb");
+    //     fwrite(rawResource.data, 1, rawResource.length, f);
+    //     fclose(f);
+    // }
 }
 
 void loadVoc(WarContext *context, DatabaseEntry *entry)
@@ -699,7 +707,7 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     assert(strncmp(vocHeader, "Creative Voice File", sizeof(vocHeader)) == 0);
 
     // skip 0x1A
-    mbSkip(&bufInput, 1);
+    assert(mbSkip(&bufInput, 1));
 
     // skip offset to data, always 26
     assert(mbSkip(&bufInput, 2));
@@ -711,45 +719,33 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     
     u8 type;
     assert(mbRead(&bufInput, &type));
+    assert(type == 1);
 
-    u8* vocData = NULL;
-    s32 vocLength = 0;
-    s32 w = 0;
+    s32 dataLength;
+    assert(mbReadInt24LE(&bufInput, &dataLength));
+    assert(dataLength > 0);
 
-    while (type)
-    {
-        s32 length;
-        assert(mbReadInt24LE(&bufInput, &length));
+    // the length of the data is this value - 2
+    // for the next two skipped bytes
+    dataLength -= 2;
 
-        if (type == 1)
-        {
-            // the length of the data is this value - 2
-            // for the next two skipped bytes
-            length -= 2;
+    // skip sample rate and compression type
+    assert(mbSkip(&bufInput, 2));
 
-            // skip sample rate and compression type
-            assert(mbSkip(&bufInput, 2));
+    u8* data = (u8*)xmalloc(dataLength);
+    assert(mbReadBytes(&bufInput, data, dataLength));
 
-            vocLength += length;
-            vocData = (u8*)xrealloc(vocData, vocLength);
-            while (length--)
-            {
-                assert(mbRead(&bufInput, &vocData[w++]));
-            }
-        }
-        else
-        {
-            logWarning("Unsupported voc type: %d\n", type);
-        }
-
-        // read the next type
-        assert(mbRead(&bufInput, &type));
-    }
+    // this data is at 11025khz, and for playing it back I needed at 44100khz
+    // so I need to upsampling it here by a factor of 4
+    u8* newData = changeSampleRate(data, dataLength, 4);
+    s32 newDataLength = dataLength * 4;
 
     WarResource* resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_VOC;
-    resource->voc.data = vocData;
-    resource->voc.length = vocLength;
+    resource->voc.data = newData;
+    resource->voc.length = newDataLength;
+
+    free(data);
 }
 
 void loadResource(WarContext *context, DatabaseEntry *entry)
