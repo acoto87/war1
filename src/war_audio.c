@@ -1,109 +1,172 @@
-// Holds global MIDI playback state
-static double g_Msec;               //current playback time
-static tml_message* g_MidiMessage;  //next message to be played
+void playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
+{
+    WarAudioComponent* audio = &entity->audio;
 
-void audioDataCallback(ma_device* sfx, void* output, const void* input, ma_uint32 frameCount)
+    while (sampleCount)
+    {
+        //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
+        u32 sampleBlock = min(TSF_RENDER_EFFECTSAMPLEBLOCK, sampleCount);
+
+        audio->playbackTime += sampleBlock * (1000.0 / 44100.0);
+
+        //Loop through all MIDI messages which need to be played up until the current playback time
+        tml_message* midiMessage = audio->currentMessage;
+        while (midiMessage && midiMessage->time <= audio->playbackTime)
+        {
+            switch (midiMessage->type)
+            {
+                //channel program (preset) change (special handling for 10th MIDI channel with drums)
+                case TML_PROGRAM_CHANGE: 
+                {
+                    tsf_channel_set_presetnumber(context->soundFont, midiMessage->channel, midiMessage->program, (midiMessage->channel == 9));
+                    break;
+                }
+
+                //play a note
+                case TML_NOTE_ON:
+                {
+                    tsf_channel_note_on(context->soundFont, midiMessage->channel, midiMessage->key, midiMessage->velocity / 127.0f);
+                    break;
+                }
+
+                //stop a note
+                case TML_NOTE_OFF:
+                {
+                    tsf_channel_note_off(context->soundFont, midiMessage->channel, midiMessage->key);
+                    break;
+                }
+                
+                //pitch wheel modification
+                case TML_PITCH_BEND:
+                {
+                    tsf_channel_set_pitchwheel(context->soundFont, midiMessage->channel, midiMessage->pitch_bend);
+                    break;
+                }
+                    
+                //MIDI controller messages
+                case TML_CONTROL_CHANGE:
+                {
+                    tsf_channel_midi_control(context->soundFont, midiMessage->channel, midiMessage->control, midiMessage->control_value);
+                    break;
+                }
+            }
+
+            midiMessage = midiMessage->next;
+        }
+
+        // Render the block of audio samples in float format
+        tsf_render_short(context->soundFont, outputStream, sampleBlock, TSF_TRUE);
+
+        audio->currentMessage = midiMessage;
+        if (!audio->currentMessage && audio->loop)
+            audio->currentMessage = audio->firstMessage;
+
+        sampleCount -= sampleBlock;
+        outputStream += sampleBlock;
+    }
+}
+
+void playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
+{
+    WarAudioComponent* audio = &entity->audio;
+
+    WarResource* resource = context->resources[audio->resourceIndex];
+    if (!resource)
+    {
+        logError("Can't play audio %d, resource: %d\n", entity->id, audio->resourceIndex);
+        return;
+    }
+
+    s32 waveLength = resource->audio.length;
+
+    while (sampleCount > 0)
+    {
+        if (audio->sampleIndex >= waveLength)
+            audio->sampleIndex = 0;
+
+        u8* waveData = &resource->audio.data[audio->sampleIndex];
+
+        u32 sampleBlock = min(sampleCount, waveLength - audio->sampleIndex);
+        for (s32 i = 0; i < sampleBlock; i++)
+        {
+            s16 x = *waveData;
+            x = x - 128;
+            x = x << 8;
+            x += *outputStream;
+            *outputStream = clamp(x, INT16_MIN, INT16_MAX); // (x < -32768 ? (short)-32768 : (x > 32767 ? (short)32767 : (short)x));
+
+            waveData++;
+            outputStream++;
+        }
+
+        audio->playbackTime += sampleBlock * (1000.0 / 44100.0);
+        audio->sampleIndex += sampleBlock;
+        
+        sampleCount -= sampleBlock;
+
+        if (!audio->loop)
+        {
+            break;
+        }
+    }
+
+    if (audio->sampleIndex >= waveLength && !audio->loop)
+    {
+        audio->enabled = false;
+    }
+}
+
+void playAudio(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
+{
+    WarAudioComponent* audio = &entity->audio;
+    if (audio->enabled)
+    {
+        switch (audio->type)
+        {
+            case WAR_AUDIO_MIDI:
+            {
+                playMidi(context, entity, sampleCount, outputStream);
+                break;
+            }
+
+            case WAR_AUDIO_WAVE:
+            {
+                playWave(context, entity, sampleCount, outputStream);
+                break;
+            }
+        }
+    }
+}
+
+void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 sampleCount)
 {
     NOT_USED(input);
 
-    // WarContext* context = (WarContext*)sfx->pUserData;
-    // if (!context) 
-    // {
-    //     return;
-    // }
+    WarContext* context = (WarContext*)sfx->pUserData;
+    if (!context) 
+    {
+        return;
+    }
 
-    // s16* stream = (s16*)output;
+    WarMap* map = context->map;
+    if (!map)
+    {
+        return;
+    }
 
-    // s32 samplesPerSecond = 44100;
-    // s32 toneHz = 256;
-    // s32 wavePeriod = samplesPerSecond / toneHz;
-    // s32 sampleSize = sizeof(s16);
-    // s32 toneVolume = 32767;
-    // #define PI 3.14159265359f
-
-    // static u32 wavePos = 0;
-    // s16 *data = (s16*)output;
-    // for (s32 i = 0; i < frameCount ; i++)
-    // {
-    //     f32 t = 2.0f * PI * (f32)wavePos / (f32)wavePeriod;
-    //     f32 sineValue = sinf(t);
-    //     s16 sampleValue = (s16)(sineValue * toneVolume);
-    //     data[i] = sampleValue;
-    //     ++wavePos;
-    // }
-
-    // u8* data = context->resources[501]->wave.data;
-    // s32 dataLength = context->resources[501]->wave.length;
-    
-    // printf("frameCount: %d\n", frameCount);
-    // printf("pos: %d\n", context->resources[501]->wave.pos);
-
-    // for (s32 i = 0; i < frameCount; i++)
-    // {
-    //     if (context->resources[501]->wave.pos >= dataLength)
-    //     {
-    //         context->resources[501]->wave.pos = 0;
-    //     }
-
-    //     // this internally do this: (sample - 0x80) << 8;
-    //     // this can be used smarter, and copy whole pieces of the samples
-    //     ma_pcm_u8_to_s16(&stream[i], &data[context->resources[501]->wave.pos++], 1, ma_dither_mode_none);
-    // }
-
-	// s32 sampleBlock = TSF_RENDER_EFFECTSAMPLEBLOCK;
-
-    // while (frameCount)
-    // {
-    //     //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
-	// 	if (sampleBlock > frameCount)
-    //     {
-    //         sampleBlock = frameCount;
-    //     }
-
-    //     g_Msec += sampleBlock * (1000.0 / 44100.0);
-
-    //     //Loop through all MIDI messages which need to be played up until the current playback time
-    //     while (g_MidiMessage && g_MidiMessage->time <= g_Msec)
-    //     {
-    //         switch (g_MidiMessage->type)
-	// 		{
-	// 			case TML_PROGRAM_CHANGE: //channel program (preset) change (special handling for 10th MIDI channel with drums)
-	// 				tsf_channel_set_presetnumber(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->program, (g_MidiMessage->channel == 9));
-	// 				break;
-	// 			case TML_NOTE_ON: //play a note
-	// 				tsf_channel_note_on(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key, g_MidiMessage->velocity / 127.0f);
-	// 				break;
-	// 			case TML_NOTE_OFF: //stop a note
-	// 				tsf_channel_note_off(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->key);
-	// 				break;
-	// 			case TML_PITCH_BEND: //pitch wheel modification
-	// 				tsf_channel_set_pitchwheel(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->pitch_bend);
-	// 				break;
-	// 			case TML_CONTROL_CHANGE: //MIDI controller messages
-	// 				tsf_channel_midi_control(g_TinySoundFont, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
-	// 				break;
-	// 		}
-
-    //         g_MidiMessage = g_MidiMessage->next;
-    //     }
-
-	// 	// Render the block of audio samples in float format
-	// 	tsf_render_short(g_TinySoundFont, stream, sampleBlock, 0);
-
-    //     frameCount -= sampleBlock;
-    //     stream += sampleBlock;
-    // }
+    s16* outputStream = (s16*)output;
+    for (s32 i = 0; i < map->entities.count; i++)
+    {
+        WarEntity* entity = map->entities.items[i];
+        if (entity && entity->type == WAR_ENTITY_TYPE_AUDIO)
+        {
+            playAudio(context, entity, sampleCount, outputStream);
+        }
+    }
 }
 
 bool initAudio(WarContext* context)
 {
-    // g_MidiMessage = tml_load_memory(midiData, midiLength);
-    // if (!g_MidiMessage)
-    // {
-    //     logError("Could not load MIDI file\n");
-    //     return 1;
-    // }
-
     context->soundFont = tsf_load_filename("GMGeneric.SF2");
     if (!context->soundFont)
     {
@@ -125,14 +188,10 @@ bool initAudio(WarContext* context)
     sfxConfig.dataCallback = audioDataCallback;
     sfxConfig.pUserData = context;
 
-    printf("1\n");
-
     if (ma_device_init(NULL, &sfxConfig, &context->sfx) != MA_SUCCESS) {
         logError("Failed to open playback device.\n");
         return false;
     }
-
-    printf("2\n");
 
     if (ma_device_start(&context->sfx) != MA_SUCCESS) {
         logError("Failed to start playback device.\n");
@@ -141,6 +200,14 @@ bool initAudio(WarContext* context)
     }
 
    return true;
+}
+
+WarEntity* createAudio(WarContext* context, WarAudioType type, s32 resourceIndex, bool loop)
+{
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
+    addAudioComponent(context, entity, type, resourceIndex, loop);
+
+    return entity;
 }
 
 /**
@@ -322,7 +389,7 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
                     return NULL;
                 }
 
-                mbReadUIntVar(&bufInput, &intVar);
+                assert(mbReadUIntVar(&bufInput, &intVar));
                 token = MidiTokenListAppend(&lstTokens, tokenTime + intVar * 3, tokenType);
                 token->data = extendedType;
                 token->buffer = (u8*)"\0";
@@ -348,16 +415,16 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
                     {
                         if (tempoSet)
                         {
-                            mbSkip(&bufInput, 1);
-                            mbReadInt24BE(&bufInput, &tempo);
+                            assert(mbSkip(&bufInput, 1));
+                            assert(mbReadInt24BE(&bufInput, &tempo));
                             tempo *= 3;
                             tempoSet = true;
-                            mbSkip(&bufInput, 1);
+                            assert(mbSkip(&bufInput, 1));
                         }
                         else
                         {
                             MidiTokenListRemoveAt(&lstTokens, lstTokens.count - 1);
-                            mbReadUIntVar(&bufInput, &intVar);
+                            assert(mbReadUIntVar(&bufInput, &intVar));
                             if (!mbSkip(&bufInput, intVar))
                             {
                                 mbFree(&bufOutput);
@@ -369,7 +436,7 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
                 }
 
                 token->data = extendedType;
-                mbReadUIntVar(&bufInput, &token->bufferLength);
+                assert(mbReadUIntVar(&bufInput, &token->bufferLength));
                 token->buffer = bufInput._pointer;
 
                 if (!mbSkip(&bufInput, token->bufferLength))
@@ -485,8 +552,8 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
     }
 
     size32 length = mbPosition(&bufOutput) - 22;
-    mbSeek(&bufOutput, 18);
-    mbWriteUInt32BE(&bufOutput, length);
+    assert(mbSeek(&bufOutput, 18));
+    assert(mbWriteUInt32BE(&bufOutput, length));
 
     u8* midData = mbGetData(&bufOutput, midLength);
 

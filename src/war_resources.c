@@ -616,8 +616,8 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
 
     WarResource* resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_XMID;
-    resource->xmi.data = midData;
-    resource->xmi.length = midLength;
+    resource->audio.data = midData;
+    resource->audio.length = midLength;
 }
 
 void loadWave(WarContext *context, DatabaseEntry *entry)
@@ -667,8 +667,8 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
 
     WarResource* resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_WAVE;
-    resource->wave.data = newData;
-    resource->wave.length = newDataLength;
+    resource->audio.data = newData;
+    resource->audio.length = newDataLength;
 
     free(data);
 
@@ -742,8 +742,8 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
 
     WarResource* resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_VOC;
-    resource->voc.data = newData;
-    resource->voc.length = newDataLength;
+    resource->audio.data = newData;
+    resource->audio.length = newDataLength;
 
     free(data);
 }

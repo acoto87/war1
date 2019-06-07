@@ -250,6 +250,42 @@ void removeButtonComponent(WarContext* context, WarEntity* entity)
     entity->button = (WarButtonComponent){0};
 }
 
+void addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType type, s32 resourceIndex, bool loop)
+{
+    entity->audio = (WarAudioComponent){0};
+    entity->audio.enabled = true;
+    entity->audio.type = type;
+    entity->audio.resourceIndex = resourceIndex;
+    entity->audio.loop = loop;
+
+    if (type == WAR_AUDIO_MIDI)
+    {
+        WarResource* resource = context->resources[resourceIndex];
+        u8* midiData = resource->audio.data;
+        s32 midiLength = resource->audio.length;
+
+        entity->audio.firstMessage = tml_load_memory(midiData, midiLength);
+        entity->audio.currentMessage = entity->audio.firstMessage;
+        if (!entity->audio.firstMessage)
+        {
+            logError("Could not load MIDI from resource: %d\n", resourceIndex);
+        }
+    }
+}
+
+void removeAudioComponent(WarContext* context, WarEntity* entity)
+{
+    if (entity->audio.firstMessage)
+    {
+        tml_free(entity->audio.firstMessage);
+
+        entity->audio.firstMessage = NULL;
+        entity->audio.currentMessage = NULL;
+    }
+
+    entity->audio = (WarAudioComponent){0};
+}
+
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
 {

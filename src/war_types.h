@@ -534,23 +534,7 @@ typedef struct
         {
             u8* data;
             s32 length;
-        } xmi;
-
-        struct
-        {
-            u8* data;
-            s32 length;
-
-            s32 pos;
-        } wave;
-
-        struct
-        {
-            u8* data;
-            s32 length;
-
-            s32 pos;
-        } voc;
+        } audio;
     };
 } WarResource;
 
@@ -762,6 +746,7 @@ typedef enum
     WAR_ENTITY_TYPE_TEXT,
     WAR_ENTITY_TYPE_RECT,
     WAR_ENTITY_TYPE_BUTTON,
+    WAR_ENTITY_TYPE_AUDIO,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -1333,6 +1318,24 @@ typedef struct
     WarClickHandler clickHandler;
 } WarButtonComponent;
 
+typedef enum
+{
+    WAR_AUDIO_MIDI,
+    WAR_AUDIO_WAVE
+} WarAudioType;
+
+typedef struct
+{
+    bool enabled;
+    WarAudioType type;
+    s32 resourceIndex;
+    bool loop;
+    f32 playbackTime;
+    s32 sampleIndex;
+    tml_message* firstMessage;
+    tml_message* currentMessage;
+} WarAudioComponent;
+
 typedef struct _WarEntity
 {
     bool enabled;
@@ -1351,6 +1354,7 @@ typedef struct _WarEntity
     WarTextComponent text;
     WarRectComponent rect;
     WarButtonComponent button;
+    WarAudioComponent audio;
 } WarEntity;
 
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
