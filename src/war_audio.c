@@ -1,4 +1,181 @@
-void playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
+typedef struct
+{
+    WarAudioId id;
+    WarAudioType type;
+} WarAudioData;
+
+WarAudioData audioData[] =
+{
+    { WAR_MUSIC_00,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_01,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_02,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_03,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_04,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_05,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_06,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_07,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_08,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_09,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_10,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_11,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_12,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_13,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_14,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_15,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_16,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_17,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_18,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_19,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_20,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_21,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_22,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_23,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_24,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_25,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_26,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_27,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_28,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_29,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_30,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_31,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_32,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_33,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_34,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_35,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_36,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_37,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_38,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_39,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_40,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_41,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_42,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_43,                         WAR_AUDIO_MIDI },
+    { WAR_MUSIC_44,                         WAR_AUDIO_MIDI },
+    { WAR_LOGO,                             WAR_AUDIO_WAVE },
+    { WAR_INTRO_DOOR,                       WAR_AUDIO_WAVE },
+    { WAR_MISC_BUILDING,                    WAR_AUDIO_WAVE },
+    { WAR_MISC_EXPLOSION,                   WAR_AUDIO_WAVE },
+    { WAR_MISSILES_CATAPULT_ROCK_FIRED,     WAR_AUDIO_WAVE },
+    { WAR_MISC_TREE_CHOPPING_1,             WAR_AUDIO_WAVE },
+    { WAR_MISC_TREE_CHOPPING_2,             WAR_AUDIO_WAVE },
+    { WAR_MISC_TREE_CHOPPING_3,             WAR_AUDIO_WAVE },
+    { WAR_MISC_TREE_CHOPPING_4,             WAR_AUDIO_WAVE },
+    { WAR_MISC_BUILDING_COLLAPSE_1,         WAR_AUDIO_WAVE },
+    { WAR_MISC_BUILDING_COLLAPSE_2,         WAR_AUDIO_WAVE },
+    { WAR_MISC_BUILDING_COLLAPSE_3,         WAR_AUDIO_WAVE },
+    { WAR_UI_CHIME,                         WAR_AUDIO_WAVE },
+    { WAR_UI_CLICK,                         WAR_AUDIO_WAVE },
+    { WAR_UI_CANCEL,                        WAR_AUDIO_WAVE },
+    { WAR_MISSILES_SWORD_ATTACK_1,          WAR_AUDIO_WAVE },
+    { WAR_MISSILES_SWORD_ATTACK_2,          WAR_AUDIO_WAVE },
+    { WAR_MISSILES_SWORD_ATTACK_3,          WAR_AUDIO_WAVE },
+    { WAR_MISSILES_FIST_ATTACK,             WAR_AUDIO_WAVE },
+    { WAR_MISSILES_CATAPULT_FIRE_EXPLOSION, WAR_AUDIO_WAVE },
+    { WAR_MISSILES_FIREBALL,                WAR_AUDIO_WAVE },
+    { WAR_MISSILES_ARROW_SPEAR,             WAR_AUDIO_WAVE },
+    { WAR_MISSILES_ARROW_SPEAR_HIT,         WAR_AUDIO_WAVE },
+    { WAR_ORC_HELP_1,                       WAR_AUDIO_WAVE },
+    { WAR_ORC_HELP_2,                       WAR_AUDIO_WAVE },
+    { WAR_HUMAN_HELP_2,                     WAR_AUDIO_WAVE },
+    { WAR_HUMAN_HELP_1,                     WAR_AUDIO_WAVE },
+    { WAR_ORC_DEAD,                         WAR_AUDIO_WAVE },
+    { WAR_HUMAN_DEAD,                       WAR_AUDIO_WAVE },
+    { WAR_ORC_WORK_COMPLETE,                WAR_AUDIO_WAVE },
+    { WAR_HUMAN_WORK_COMPLETE,              WAR_AUDIO_WAVE },
+    { WAR_ORC_HELP_3,                       WAR_AUDIO_WAVE },
+    { WAR_ORC_HELP_4,                       WAR_AUDIO_WAVE },
+    { WAR_HUMAN_HELP_3,                     WAR_AUDIO_WAVE },
+    { WAR_HUMAN_HELP_4,                     WAR_AUDIO_WAVE },
+    { WAR_ORC_READY,                        WAR_AUDIO_WAVE },
+    { WAR_HUMAN_READY,                      WAR_AUDIO_WAVE },
+    { WAR_ORC_ACKNOWLEDGEMENT_1,            WAR_AUDIO_WAVE },
+    { WAR_ORC_ACKNOWLEDGEMENT_2,            WAR_AUDIO_WAVE },
+    { WAR_ORC_ACKNOWLEDGEMENT_3,            WAR_AUDIO_WAVE },
+    { WAR_ORC_ACKNOWLEDGEMENT_4,            WAR_AUDIO_WAVE },
+    { WAR_HUMAN_ACKNOWLEDGEMENT_1,          WAR_AUDIO_WAVE },
+    { WAR_HUMAN_ACKNOWLEDGEMENT_2,          WAR_AUDIO_WAVE },
+    { WAR_ORC_SELECTED_1,                   WAR_AUDIO_WAVE },
+    { WAR_ORC_SELECTED_2,                   WAR_AUDIO_WAVE },
+    { WAR_ORC_SELECTED_3,                   WAR_AUDIO_WAVE },
+    { WAR_ORC_SELECTED_4,                   WAR_AUDIO_WAVE },
+    { WAR_ORC_SELECTED_5,                   WAR_AUDIO_WAVE },
+    { WAR_HUMAN_SELECTED_1,                 WAR_AUDIO_WAVE },
+    { WAR_HUMAN_SELECTED_2,                 WAR_AUDIO_WAVE },
+    { WAR_HUMAN_SELECTED_3,                 WAR_AUDIO_WAVE },
+    { WAR_HUMAN_SELECTED_4,                 WAR_AUDIO_WAVE },
+    { WAR_HUMAN_SELECTED_5,                 WAR_AUDIO_WAVE },
+    { WAR_ORC_ANNOYED_1,                    WAR_AUDIO_WAVE },
+    { WAR_ORC_ANNOYED_2,                    WAR_AUDIO_WAVE },
+    { WAR_ORC_ANNOYED_3,                    WAR_AUDIO_WAVE },
+    { WAR_HUMAN_ANNOYED_1,                  WAR_AUDIO_WAVE },
+    { WAR_HUMAN_ANNOYED_2,                  WAR_AUDIO_WAVE },
+    { WAR_HUMAN_ANNOYED_3,                  WAR_AUDIO_WAVE },
+    { WAR_DEAD_SPIDER_SCORPION,             WAR_AUDIO_WAVE },
+    { WAR_NORMAL_SPELL,                     WAR_AUDIO_WAVE },
+    { WAR_MISC_BUILD_ROAD,                  WAR_AUDIO_WAVE },
+    { WAR_ORC_TEMPLE,                       WAR_AUDIO_WAVE },
+    { WAR_HUMAN_CHURCH,                     WAR_AUDIO_WAVE },
+    { WAR_ORC_KENNEL,                       WAR_AUDIO_WAVE },
+    { WAR_HUMAN_STABLE,                     WAR_AUDIO_WAVE },
+    { WAR_BLACKSMITH,                       WAR_AUDIO_WAVE },
+    { WAR_MISC_FIRE_CRACKLING,              WAR_AUDIO_WAVE },
+    { WAR_CANNON,                           WAR_AUDIO_WAVE },
+    { WAR_CANNON2,                          WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_ENDING_1,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_ENDING_2,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_ENDING_1,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_ENDING_2,           WAR_AUDIO_WAVE },
+    { WAR_INTRO_1,                          WAR_AUDIO_WAVE },
+    { WAR_INTRO_2,                          WAR_AUDIO_WAVE },
+    { WAR_INTRO_3,                          WAR_AUDIO_WAVE },
+    { WAR_INTRO_4,                          WAR_AUDIO_WAVE },
+    { WAR_INTRO_5,                          WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_01_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_02_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_03_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_04_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_05_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_06_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_07_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_08_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_09_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_10_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_11_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_HUMAN_12_INTRO,         WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_01_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_02_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_03_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_04_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_05_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_06_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_07_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_08_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_09_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_10_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_11_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_CAMPAIGNS_ORC_12_INTRO,           WAR_AUDIO_WAVE },
+    { WAR_HUMAN_DEFEAT,                     WAR_AUDIO_WAVE },
+    { WAR_ORC_DEFEAT,                       WAR_AUDIO_WAVE },
+    { WAR_ORC_VICTORY_1,                    WAR_AUDIO_WAVE },
+    { WAR_ORC_VICTORY_2,                    WAR_AUDIO_WAVE },
+    { WAR_ORC_VICTORY_3,                    WAR_AUDIO_WAVE },
+    { WAR_HUMAN_VICTORY_1,                  WAR_AUDIO_WAVE },
+    { WAR_HUMAN_VICTORY_2,                  WAR_AUDIO_WAVE },
+    { WAR_HUMAN_VICTORY_3,                  WAR_AUDIO_WAVE },
+};
+
+WarAudioData getAudioData(WarAudioId audioId)
+{
+    s32 index = 0;
+    s32 length = arrayLength(audioData);
+    while (index < length && audioData[index].id != audioId)
+        index++;
+
+    assert(index < length);
+    return audioData[index];
+}
+
+bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
 {
     WarAudioComponent* audio = &entity->audio;
 
@@ -7,7 +184,7 @@ void playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
         //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
         u32 sampleBlock = min(TSF_RENDER_EFFECTSAMPLEBLOCK, sampleCount);
 
-        audio->playbackTime += sampleBlock * (1000.0 / 44100.0);
+        audio->playbackTime += sampleBlock * (1000.0f / 44100);
 
         //Loop through all MIDI messages which need to be played up until the current playback time
         tml_message* midiMessage = audio->currentMessage;
@@ -57,16 +234,25 @@ void playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
         // Render the block of audio samples in float format
         tsf_render_short(context->soundFont, outputStream, sampleBlock, TSF_TRUE);
 
-        audio->currentMessage = midiMessage;
-        if (!audio->currentMessage && audio->loop)
-            audio->currentMessage = audio->firstMessage;
-
         sampleCount -= sampleBlock;
         outputStream += sampleBlock;
+
+        audio->currentMessage = midiMessage;
+        if (!audio->currentMessage)
+        {
+            if (!audio->loop)
+            {
+                break;
+            }
+
+            audio->currentMessage = audio->firstMessage;
+        }
     }
+
+    return !audio->currentMessage && !audio->loop;
 }
 
-void playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
+bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
 {
     WarAudioComponent* audio = &entity->audio;
 
@@ -74,12 +260,12 @@ void playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     if (!resource)
     {
         logError("Can't play audio %d, resource: %d\n", entity->id, audio->resourceIndex);
-        return;
+        return false;
     }
 
     s32 waveLength = resource->audio.length;
 
-    while (sampleCount > 0)
+    do
     {
         if (audio->sampleIndex >= waveLength)
             audio->sampleIndex = 0;
@@ -89,11 +275,11 @@ void playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
         u32 sampleBlock = min(sampleCount, waveLength - audio->sampleIndex);
         for (s32 i = 0; i < sampleBlock; i++)
         {
-            s16 x = *waveData;
-            x = x - 128;
-            x = x << 8;
-            x += *outputStream;
-            *outputStream = clamp(x, INT16_MIN, INT16_MAX); // (x < -32768 ? (short)-32768 : (x > 32767 ? (short)32767 : (short)x));
+            s16 value = *waveData;
+            value = value - 128;
+            value = value << 8;
+            value += *outputStream;
+            *outputStream = clamp(value, INT16_MIN, INT16_MAX);
 
             waveData++;
             outputStream++;
@@ -103,20 +289,12 @@ void playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
         audio->sampleIndex += sampleBlock;
         
         sampleCount -= sampleBlock;
+    } while (sampleCount > 0 && audio->loop);
 
-        if (!audio->loop)
-        {
-            break;
-        }
-    }
-
-    if (audio->sampleIndex >= waveLength && !audio->loop)
-    {
-        audio->enabled = false;
-    }
+    return audio->sampleIndex >= waveLength && !audio->loop;
 }
 
-void playAudio(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
+bool playAudio(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
 {
     WarAudioComponent* audio = &entity->audio;
     if (audio->enabled)
@@ -125,17 +303,23 @@ void playAudio(WarContext* context, WarEntity* entity, u32 sampleCount, s16* out
         {
             case WAR_AUDIO_MIDI:
             {
-                playMidi(context, entity, sampleCount, outputStream);
-                break;
+                return playMidi(context, entity, sampleCount, outputStream);
             }
 
             case WAR_AUDIO_WAVE:
             {
-                playWave(context, entity, sampleCount, outputStream);
+                return playWave(context, entity, sampleCount, outputStream);
+            }
+
+            default:
+            {
+                logWarning("Unkown audio type: %d\n", audio->type);
                 break;
             }
         }
     }
+
+    return false;
 }
 
 void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 sampleCount)
@@ -154,15 +338,30 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
         return;
     }
 
+    WarEntityIdList toRemove;
+    WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
+
     s16* outputStream = (s16*)output;
     for (s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
         if (entity && entity->type == WAR_ENTITY_TYPE_AUDIO)
         {
-            playAudio(context, entity, sampleCount, outputStream);
+            if (playAudio(context, entity, sampleCount, outputStream))
+            {
+                // if the audio finish, mark it to remove it
+                WarEntityIdListAdd(&toRemove, entity->id);
+            }
         }
     }
+
+    for (s32 i = 0; i < toRemove.count; i++)
+    {
+        WarEntityId entityId  = toRemove.items[i];
+        removeEntityById(context, entityId);
+    }
+
+    WarEntityIdListFree(&toRemove);
 }
 
 bool initAudio(WarContext* context)
@@ -202,8 +401,13 @@ bool initAudio(WarContext* context)
    return true;
 }
 
-WarEntity* createAudio(WarContext* context, WarAudioType type, s32 resourceIndex, bool loop)
+WarEntity* createAudio(WarContext* context, WarAudioId audioId, bool loop)
 {
+    WarAudioData data = getAudioData(audioId);
+
+    s32 resourceIndex = (s32)audioId;
+    WarAudioType type = data.type;
+
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
     addAudioComponent(context, entity, type, resourceIndex, loop);
 

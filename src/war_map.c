@@ -493,7 +493,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             WarSpriteAnimationListAdd(&map->animations, anim4);
         }
 
-        createAudio(context, WAR_AUDIO_MIDI, 3, false);
+        createAudio(context, WAR_MUSIC_10, false);
     }
 
     // WarEntity* txtDebug = createUIText(context, "txtDebug", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 60)));
@@ -728,7 +728,8 @@ void updateSelection(WarContext* context)
 
                 if (areDudesSelected)
                 {
-                    createAudio(context, WAR_AUDIO_WAVE, randomi(520, 525), false);
+                    WarAudioId audioId = randomi(WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5 + 1);
+                    createAudio(context, audioId, false);
                 }
 
                 WarEntityListFree(&newSelectedEntities);

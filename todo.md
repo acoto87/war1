@@ -39,6 +39,7 @@ List of thing to do in no particular order
       #endif
     }
     ```
+  * > Check why is failing when trying to determine if the midi is finish playing. Check that the entity removes correctly after the midi finish playing.
 
 * General
   * ~~Test the new implementation for lists.~~
