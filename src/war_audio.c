@@ -192,38 +192,44 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
         {
             switch (midiMessage->type)
             {
-                //channel program (preset) change (special handling for 10th MIDI channel with drums)
+                // channel program (preset) change (special handling for 10th MIDI channel with drums)
                 case TML_PROGRAM_CHANGE: 
                 {
                     tsf_channel_set_presetnumber(context->soundFont, midiMessage->channel, midiMessage->program, (midiMessage->channel == 9));
                     break;
                 }
 
-                //play a note
+                // play a note
                 case TML_NOTE_ON:
                 {
                     tsf_channel_note_on(context->soundFont, midiMessage->channel, midiMessage->key, midiMessage->velocity / 127.0f);
                     break;
                 }
 
-                //stop a note
+                // stop a note
                 case TML_NOTE_OFF:
                 {
                     tsf_channel_note_off(context->soundFont, midiMessage->channel, midiMessage->key);
                     break;
                 }
                 
-                //pitch wheel modification
+                // pitch wheel modification
                 case TML_PITCH_BEND:
                 {
                     tsf_channel_set_pitchwheel(context->soundFont, midiMessage->channel, midiMessage->pitch_bend);
                     break;
                 }
                     
-                //MIDI controller messages
+                // MIDI controller messages
                 case TML_CONTROL_CHANGE:
                 {
                     tsf_channel_midi_control(context->soundFont, midiMessage->channel, midiMessage->control, midiMessage->control_value);
+                    break;
+                }
+
+                // end of track
+                case TML_EOT:
+                {
                     break;
                 }
             }
@@ -360,7 +366,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
         WarEntityId entityId  = toRemove.items[i];
         removeEntityById(context, entityId);
     }
-
+    
     WarEntityIdListFree(&toRemove);
 }
 
