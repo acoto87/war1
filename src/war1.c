@@ -41,6 +41,8 @@
 #define TSF_IMPLEMENTATION
 #include "TinySoundFont/tsf.h"
 #define TML_IMPLEMENTATION
+#define TML_ERROR(msg) printf("ERROR: %s\n", msg)
+#define TML_WARN(msg) printf("WARNING: %s\n", msg)
 #include "TinySoundFont/tml.h"
 
 // https://github.com/dr-soft/miniaudio

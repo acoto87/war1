@@ -483,6 +483,11 @@ void removeEntity(WarContext* context, WarEntity* entity)
     removeUnitComponent(context, entity);
     removeStateMachineComponent(context, entity);
     removeAnimationsComponent(context, entity);
+    removeUIComponent(context, entity);
+    removeTextComponent(context, entity);
+    removeRectComponent(context, entity);
+    removeButtonComponent(context, entity);
+    removeAudioComponent(context, entity);
 }
 
 void removeEntityById(WarContext* context, WarEntityId id)

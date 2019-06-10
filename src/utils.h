@@ -9,7 +9,7 @@
 #define createArray(type, count, reset) (reset ? (type *)xcalloc(count, sizeof(type)) : (type *)xmalloc(count * sizeof(type))) 
 #define arrayLength(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define chance(p) ((rand() % 100) < p)
-#define chancef(p) ((rand() / RAND_MAX) < p)
+#define chancef01(p) ((rand() / RAND_MAX) < p)
 #define randomi(a, b) ((a) + (rand() % ((b) - (a))))
 #define randomf(a, b) ((a) + ((f32)rand() / RAND_MAX) * ((b) - (a)))
 #define inRange(x, a, b) ((x) >= (a) && (x) < (b))
@@ -34,9 +34,7 @@ typedef size_t size32;
 
 typedef union {
     u8 rgba[4];
-    struct {
-        u8 r,g,b,a;
-    };
+    struct { u8 r, g, b, a; };
 } u8Color;
 
 #define U8COLOR_TRANSPARENT ((u8Color){{0, 0, 0, 0}})
@@ -60,7 +58,6 @@ typedef union {
 #define DEFAULT_BUFFER_SIZE 1024
 
 #define NOT_IMPLEMENTED fprintf(stderr, "Not implemented at %s (%d)", __FILE__, __LINE__)
-
 #define NOT_USED(expr) do { (void)(expr); } while (0)
 
 #define readu8(arr, index) (arr[index])

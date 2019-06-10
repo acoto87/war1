@@ -22,7 +22,7 @@ void initLog(LogSeverity severity)
     __log__.severity = severity;
 }
 
-int32_t __getFileNameIndex(const char* file)
+static int32_t __getFileNameIndex(const char* file)
 {
     int32_t index = 0;
 

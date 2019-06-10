@@ -420,6 +420,11 @@ WarEntity* createAudio(WarContext* context, WarAudioId audioId, bool loop)
     return entity;
 }
 
+WarEntity* createAudioRandom(WarContext* context, WarAudioId fromId, WarAudioId toId, bool loop)
+{
+    return createAudio(context, randomi(fromId, toId + 1), loop);
+}
+
 /**
  * Extension function of MemoryBuffer to read variable lengths integer values.
  */
