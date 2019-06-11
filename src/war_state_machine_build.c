@@ -46,6 +46,7 @@ void leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
 void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = &entity->unit;
 
     if (state->build.cancelled)
@@ -93,6 +94,9 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
             WarState* idleState = createIdleState(context, entity, false);
             changeNextState(context, entity, idleState, true, true);
         }
+
+        WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;
+        createAudio(context, audioId, false);
 
         return;
     }

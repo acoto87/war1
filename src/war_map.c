@@ -493,7 +493,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             WarSpriteAnimationListAdd(&map->animations, anim4);
         }
 
-        createAudio(context, WAR_MUSIC_10, false);
+        createAudio(context, WAR_MUSIC_00, false);
     }
 
     // WarEntity* txtDebug = createUIText(context, "txtDebug", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 60)));
@@ -715,6 +715,50 @@ void updateSelection(WarContext* context)
                     WarEntityListRemoveAtRange(&newSelectedEntities, 1, newSelectedEntities.count - 1);
                 }
 
+                if (areDudesSelected)
+                {
+                    if (newSelectedEntities.count == 1)
+                        createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
+                }
+                else if (areBuildingSelected)
+                {
+                    WarEntity* entity = newSelectedEntities.items[0];
+                    switch (entity->unit.type)
+                    {
+                        case WAR_UNIT_CHURCH:
+                        {
+                            createAudio(context, WAR_HUMAN_CHURCH, false);
+                            break;
+                        }
+                        case WAR_UNIT_TEMPLE:
+                        {
+                            createAudio(context, WAR_ORC_TEMPLE, false);
+                            break;
+                        }
+                        case WAR_UNIT_STABLE:
+                        {
+                            createAudio(context, WAR_HUMAN_STABLE, false);
+                            break;
+                        }
+                        case WAR_UNIT_KENNEL:
+                        {
+                            createAudio(context, WAR_ORC_KENNEL, false);
+                            break;
+                        }
+                        case WAR_UNIT_BLACKSMITH_HUMANS:
+                        case WAR_UNIT_BLACKSMITH_ORCS:
+                        {
+                            createAudio(context, WAR_BLACKSMITH, false);
+                            break;
+                        }
+                        default:
+                        {
+                            // no audio for other buildings
+                            break;
+                        }
+                    }
+                }
+
                 // clear the current selection
                 clearSelection(context);
 
@@ -724,12 +768,6 @@ void updateSelection(WarContext* context)
                 {
                     WarEntity* entity = newSelectedEntities.items[i];
                     addEntityToSelection(context, entity->id);
-                }
-
-                if (areDudesSelected)
-                {
-                    WarAudioId audioId = randomi(WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5 + 1);
-                    createAudio(context, audioId, false);
                 }
 
                 WarEntityListFree(&newSelectedEntities);
@@ -1051,6 +1089,8 @@ void updateCommandFromButtons(WarContext* context)
                     if (button->clickHandler)
                     {
                         button->clickHandler(context, entity);
+
+                        createAudio(context, WAR_UI_CLICK, false);
                     }
                 }
 

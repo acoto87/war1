@@ -54,7 +54,14 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     {
         unit->amount += chopTree(context, forest, tree, 2);
         if (unit->amount > 0)
+        {
             unit->resourceKind = WAR_RESOURCE_WOOD;
+        }
+
+        // with repetitive sounds like this one (attacking should be another)
+        // there maybe issues with the timing and overlapping of one sound with
+        // the next one if the speed scale is greater than 1.
+        createAudioRandom(context, WAR_MISC_TREE_CHOPPING_1, WAR_MISC_TREE_CHOPPING_4, false);
 
         if (unit->amount == UNIT_MAX_CARRY_WOOD)
         {
@@ -81,7 +88,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
             changeNextState(context, entity, deliverState, true, true);
         }
 
-        state->chop.chopTime = context->time + getScaledTime(context, 0.5f);
+        state->chop.chopTime = context->time + getScaledTime(context, 1);
     }
 }
 

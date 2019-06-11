@@ -25,6 +25,8 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     
     setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
     removeEntityFromSelection(context, entity->id);
+
+    createAudioRandom(context, WAR_MISC_BUILDING_COLLAPSE_1, WAR_MISC_BUILDING_COLLAPSE_3, false);
 }
 
 void leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)

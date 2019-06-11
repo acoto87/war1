@@ -530,14 +530,20 @@ bool executeCommand(WarContext* context)
                     WarUnitType buildingToBuild = command->build.buildingToBuild;
 
                     WarBuildingStats stats = getBuildingStats(buildingToBuild);
-                    if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y) &&
-                        decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
+                    if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y))
                     {
-                        WarEntity* building = createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
-                        WarState* repairState = createRepairState(context, worker, building->id);
-                        changeNextState(context, worker, repairState, true, true);
+                        if (decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
+                        {
+                            WarEntity* building = createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
+                            WarState* repairState = createRepairState(context, worker, building->id);
+                            changeNextState(context, worker, repairState, true, true);
 
-                        command->type = WAR_COMMAND_NONE;
+                            command->type = WAR_COMMAND_NONE;
+                        }
+                    }
+                    else
+                    {
+                        createAudio(context, WAR_UI_CANCEL, false);
                     }
                     
                     return true;
@@ -564,17 +570,25 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y) &&
-                        decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
+                    if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y))
                     {
-                        WarEntity* wall = map->wall;
-                        WarWallPiece* piece = addWallPiece(wall, targetTile.x, targetTile.y, 0);
-                        piece->hp = WAR_WALL_MAX_HP;
-                        piece->maxhp = WAR_WALL_MAX_HP;
+                        if (decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
+                        {
+                            WarEntity* wall = map->wall;
+                            WarWallPiece* piece = addWallPiece(wall, targetTile.x, targetTile.y, 0);
+                            piece->hp = WAR_WALL_MAX_HP;
+                            piece->maxhp = WAR_WALL_MAX_HP;
 
-                        determineWallTypes(context, wall);
+                            determineWallTypes(context, wall);
 
-                        command->type = WAR_COMMAND_NONE;
+                            command->type = WAR_COMMAND_NONE;
+
+                            createAudio(context, WAR_MISC_BUILD_ROAD, false);
+                        }
+                    }
+                    else
+                    {
+                        createAudio(context, WAR_UI_CANCEL, false);
                     }
 
                     return true;
@@ -601,15 +615,23 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y) &&
-                        decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
+                    if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y))
                     {
-                        WarEntity* road = map->road;
-                        addRoadPiece(road, targetTile.x, targetTile.y, 0);
+                        if (decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
+                        {
+                            WarEntity* road = map->road;
+                            addRoadPiece(road, targetTile.x, targetTile.y, 0);
 
-                        determineRoadTypes(context, road);
+                            determineRoadTypes(context, road);
 
-                        command->type = WAR_COMMAND_NONE;
+                            command->type = WAR_COMMAND_NONE;
+
+                            createAudio(context, WAR_MISC_BUILD_ROAD, false);
+                        }
+                    }
+                    else
+                    {
+                        createAudio(context, WAR_UI_CANCEL, false);
                     }
 
                     return true;
