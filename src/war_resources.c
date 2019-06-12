@@ -671,27 +671,6 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
     resource->audio.length = newDataLength;
 
     free(data);
-
-    // TODO: remove this
-    //
-    // if (index == 497)
-    // {
-    //     s16* samples = (s16*)malloc(dataLength * sizeof(s16));
-    //     for (s32 i = 0; i < dataLength; i++)
-    //     {
-    //         samples[i] = (s16)(data[i] - 0x80) << 8;
-    //     }
-
-    //     shlWaveFile waveFile;
-    //     shlWaveInit(&waveFile, 44100, "497.wav");
-    //     shlWaveStereo(&waveFile, false);
-    //     shlWaveWrite(&waveFile, samples, dataLength, 1);
-    //     shlWaveFlush(&waveFile, true);
-
-    //     FILE* f = fopen("output12.wav", "wb");
-    //     fwrite(rawResource.data, 1, rawResource.length, f);
-    //     fclose(f);
-    // }
 }
 
 void loadVoc(WarContext *context, DatabaseEntry *entry)

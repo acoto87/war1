@@ -184,12 +184,24 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
         //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
         u32 sampleBlock = min(TSF_RENDER_EFFECTSAMPLEBLOCK, sampleCount);
 
-        audio->playbackTime += sampleBlock * (1000.0f / 44100);
+        audio->playbackTime += sampleBlock * (1000.0f / PLAYBACK_FREQ);
 
         //Loop through all MIDI messages which need to be played up until the current playback time
         tml_message* midiMessage = audio->currentMessage;
-        while (midiMessage && midiMessage->time <= audio->playbackTime)
+        while (midiMessage)
         {
+            // end of track
+            if (midiMessage->type == TML_EOT)
+            {
+                logInfo("EOF detected, loop?: %d\n", audio->loop);
+                midiMessage = audio->loop ? audio->firstMessage : NULL;
+            }
+
+            if (!midiMessage || midiMessage->time > audio->playbackTime)
+            {
+                break;
+            }
+
             switch (midiMessage->type)
             {
                 // channel program (preset) change (special handling for 10th MIDI channel with drums)
@@ -226,12 +238,6 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
                     tsf_channel_midi_control(context->soundFont, midiMessage->channel, midiMessage->control, midiMessage->control_value);
                     break;
                 }
-
-                // end of track
-                case TML_EOT:
-                {
-                    break;
-                }
             }
 
             midiMessage = midiMessage->next;
@@ -244,15 +250,6 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
         outputStream += sampleBlock;
 
         audio->currentMessage = midiMessage;
-        if (!audio->currentMessage)
-        {
-            if (!audio->loop)
-            {
-                break;
-            }
-
-            audio->currentMessage = audio->firstMessage;
-        }
     }
 
     return !audio->currentMessage && !audio->loop;
@@ -291,7 +288,7 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
             outputStream++;
         }
 
-        audio->playbackTime += sampleBlock * (1000.0 / 44100.0);
+        audio->playbackTime += sampleBlock * (1000.0f / PLAYBACK_FREQ);
         audio->sampleIndex += sampleBlock;
         
         sampleCount -= sampleBlock;
@@ -383,13 +380,13 @@ bool initAudio(WarContext* context)
     tsf_channel_set_bank_preset(context->soundFont, 9, 128, 0);
 
     // Set the SoundFont rendering output mode
-    tsf_set_output(context->soundFont, TSF_MONO, 44100, 0.0f);
+    tsf_set_output(context->soundFont, TSF_MONO, PLAYBACK_FREQ, 0.0f);
 
     ma_device_config sfxConfig;
     sfxConfig = ma_device_config_init(ma_device_type_playback);
     sfxConfig.playback.format = ma_format_s16;
     sfxConfig.playback.channels = 1;
-    sfxConfig.sampleRate = 44100;
+    sfxConfig.sampleRate = PLAYBACK_FREQ;
     sfxConfig.dataCallback = audioDataCallback;
     sfxConfig.pUserData = context;
 
@@ -499,7 +496,12 @@ static MidiToken* MidiTokenListAppend(MidiTokenList* list, s32 time, u8 type)
 /**
  * This code is a port in C of the XMI2MID converter by Peter "Corsix" Cawley 
  * in the War1gus repository. You can find the original C++ code here: 
- * https://github.com/Wargus/war1gus/blob/master/xmi2mid.cpp
+ * https://github.com/Wargus/war1gus/blob/master/xmi2mid.cpp.
+ * 
+ * To understand more about these formats see:
+ * http://www.shikadi.net/moddingwiki/XMI_Format
+ * http://www.shikadi.net/moddingwiki/MID_Format
+ * https://github.com/colxi/midi-parser-js/wiki/MIDI-File-Format-Specifications
  */
 u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
 {
@@ -628,13 +630,13 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
                         end = true;
                     else if (extendedType == 0x51)
                     {
-                        if (tempoSet)
+                        if (!tempoSet)
                         {
                             assert(mbSkip(&bufInput, 1));
                             assert(mbReadInt24BE(&bufInput, &tempo));
                             tempo *= 3;
                             tempoSet = true;
-                            assert(mbSkip(&bufInput, 1));
+                            assert(mbSkip(&bufInput, -4));
                         }
                         else
                         {

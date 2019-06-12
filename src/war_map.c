@@ -493,7 +493,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             WarSpriteAnimationListAdd(&map->animations, anim4);
         }
 
-        createAudio(context, WAR_MUSIC_00, false);
+        createAudio(context, WAR_MUSIC_00, true);
     }
 
     // WarEntity* txtDebug = createUIText(context, "txtDebug", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 60)));
