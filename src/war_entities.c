@@ -1273,12 +1273,26 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
         {
             WarState* collapseState = createCollapseState(context, entity);
             changeNextState(context, entity, collapseState, true, true);
+
+            createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
         else
         {
             WarState* deathState = createDeathState(context, entity);
             deathState->delay = __frameCountToSeconds(108);
             changeNextState(context, entity, deathState, true, true);
+
+            if (entity->unit.type == WAR_UNIT_SCORPION ||
+                entity->unit.type == WAR_UNIT_SPIDER)
+            {
+                createAudio(context, WAR_DEAD_SPIDER_SCORPION, false);
+            }
+            else
+            {
+                WarAudioId audioId = getUnitRace(entity) == WAR_RACE_HUMANS 
+                    ? WAR_HUMAN_DEAD : WAR_ORC_DEAD;
+                createAudio(context, audioId, false);
+            }
         }
     }
     else if (isBuildingUnit(entity))
@@ -1331,6 +1345,8 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
         {
             WarState* collapseState = createCollapseState(context, goldmine);
             changeNextState(context, goldmine, collapseState, true, true);
+
+            createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
     }
 

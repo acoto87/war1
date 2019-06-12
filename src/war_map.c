@@ -718,43 +718,96 @@ void updateSelection(WarContext* context)
                 if (areDudesSelected)
                 {
                     if (newSelectedEntities.count == 1)
-                        createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
+                    {
+                        WarEntity* newSelectedEntity = newSelectedEntities.items[0];
+
+                        if (isFriendlyUnit(context, newSelectedEntity))
+                        {
+                            if (map->selectedEntities.count == 1)
+                            {
+                                WarEntityId oldSelectedEntityId = map->selectedEntities.items[0];
+                                if (oldSelectedEntityId == newSelectedEntity->id)
+                                {
+                                    if (getUnitRace(newSelectedEntity) == WAR_RACE_HUMANS)
+                                    {
+                                        createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false);
+                                    }
+                                    else
+                                    {
+                                        createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
+                                    }
+                                }
+                                else
+                                {
+                                    if (getUnitRace(newSelectedEntity) == WAR_RACE_HUMANS)
+                                    {
+                                        createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
+                                    }
+                                    else
+                                    {
+                                        createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (getUnitRace(newSelectedEntity) == WAR_RACE_HUMANS)
+                                {
+                                    createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
+                                }
+                                else
+                                {
+                                    createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
+                                }
+                            }
+                        }
+                    }
                 }
                 else if (areBuildingSelected)
                 {
-                    WarEntity* entity = newSelectedEntities.items[0];
-                    switch (entity->unit.type)
+                    WarEntity* newSelectedEntity = newSelectedEntities.items[0];
+                    if (isFriendlyUnit(context, newSelectedEntity))
                     {
-                        case WAR_UNIT_CHURCH:
+                        if (isBuilding(newSelectedEntity) || isGoingToBuild(newSelectedEntity))
                         {
-                            createAudio(context, WAR_HUMAN_CHURCH, false);
-                            break;
+                            createAudio(context, WAR_BUILDING, false);
                         }
-                        case WAR_UNIT_TEMPLE:
+                        else
                         {
-                            createAudio(context, WAR_ORC_TEMPLE, false);
-                            break;
-                        }
-                        case WAR_UNIT_STABLE:
-                        {
-                            createAudio(context, WAR_HUMAN_STABLE, false);
-                            break;
-                        }
-                        case WAR_UNIT_KENNEL:
-                        {
-                            createAudio(context, WAR_ORC_KENNEL, false);
-                            break;
-                        }
-                        case WAR_UNIT_BLACKSMITH_HUMANS:
-                        case WAR_UNIT_BLACKSMITH_ORCS:
-                        {
-                            createAudio(context, WAR_BLACKSMITH, false);
-                            break;
-                        }
-                        default:
-                        {
-                            // no audio for other buildings
-                            break;
+                            switch (newSelectedEntity->unit.type)
+                            {
+                                case WAR_UNIT_CHURCH:
+                                {
+                                    createAudio(context, WAR_HUMAN_CHURCH, false);
+                                    break;
+                                }
+                                case WAR_UNIT_TEMPLE:
+                                {
+                                    createAudio(context, WAR_ORC_TEMPLE, false);
+                                    break;
+                                }
+                                case WAR_UNIT_STABLE:
+                                {
+                                    createAudio(context, WAR_HUMAN_STABLE, false);
+                                    break;
+                                }
+                                case WAR_UNIT_KENNEL:
+                                {
+                                    createAudio(context, WAR_ORC_KENNEL, false);
+                                    break;
+                                }
+                                case WAR_UNIT_BLACKSMITH_HUMANS:
+                                case WAR_UNIT_BLACKSMITH_ORCS:
+                                {
+                                    createAudio(context, WAR_BLACKSMITH, false);
+                                    break;
+                                }
+                                default:
+                                {
+                                    // no audio for other buildings
+                                    break;
+                                }
+                            }
                         }
                     }
                 }

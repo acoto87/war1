@@ -1037,21 +1037,6 @@ bool isDudeUnitType(WarUnitType type)
     }
 }
 
-bool isMagicUnitType(WarUnitType type)
-{
-    switch (type)
-    {
-        case WAR_UNIT_CONJURER:
-        case WAR_UNIT_WARLOCK:
-        case WAR_UNIT_CLERIC:
-        case WAR_UNIT_NECROLYTE:
-            return true;
-    
-        default:
-            return false;
-    }
-}
-
 bool isBuildingUnitType(WarUnitType type)
 {
     switch (type)
@@ -1131,6 +1116,101 @@ bool isWarriorUnitType(WarUnitType type)
     }
 }
 
+bool isRangeUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_CATAPULT_ORCS:
+        case WAR_UNIT_ARCHER:
+        case WAR_UNIT_SPEARMAN:
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_NECROLYTE:
+        case WAR_UNIT_MEDIVH:
+        case WAR_UNIT_WATER_ELEMENTAL:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool isMeleeUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_KNIGHT:
+        case WAR_UNIT_RAIDER:
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_LOTHAR:
+        case WAR_UNIT_OGRE:
+        case WAR_UNIT_SPIDER:
+        case WAR_UNIT_SLIME:
+        case WAR_UNIT_FIRE_ELEMENTAL:
+        case WAR_UNIT_SCORPION:
+        case WAR_UNIT_BRIGAND:
+        case WAR_UNIT_SKELETON:
+        case WAR_UNIT_DAEMON:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool isFistUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_OGRE:
+        case WAR_UNIT_SPIDER:
+        case WAR_UNIT_SLIME:
+        case WAR_UNIT_FIRE_ELEMENTAL:
+        case WAR_UNIT_SCORPION:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool isSwordUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_KNIGHT:
+        case WAR_UNIT_RAIDER:
+        case WAR_UNIT_LOTHAR:
+        case WAR_UNIT_BRIGAND:
+        case WAR_UNIT_SKELETON:
+        case WAR_UNIT_DAEMON:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool isMagicUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_NECROLYTE:
+            return true;
+    
+        default:
+            return false;
+    }
+}
+
 bool isCorpseUnitType(WarUnitType type)
 {
     switch (type)
@@ -1149,11 +1229,6 @@ bool isDudeUnit(WarEntity* entity)
     return isUnit(entity) && isDudeUnitType(entity->unit.type);
 }
 
-bool isMagicUnit(WarEntity* entity)
-{
-    return isUnit(entity) && isMagicUnitType(entity->unit.type);
-}
-
 bool isBuildingUnit(WarEntity* entity)
 {
     return isUnit(entity) && isBuildingUnitType(entity->unit.type);
@@ -1167,6 +1242,31 @@ bool isWorkerUnit(WarEntity* entity)
 bool isWarriorUnit(WarEntity* entity)
 {
     return isUnit(entity) && isWarriorUnitType(entity->unit.type);
+}
+
+bool isRangeUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isRangeUnitType(entity->unit.type);
+}
+
+bool isMeleeUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isMeleeUnitType(entity->unit.type);
+}
+
+bool isFistUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isFistUnitType(entity->unit.type);
+}
+
+bool isSwordUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isSwordUnitType(entity->unit.type);
+}
+
+bool isMagicUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isMagicUnitType(entity->unit.type);
 }
 
 bool isCorpseUnit(WarEntity* entity)

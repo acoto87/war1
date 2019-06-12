@@ -239,10 +239,12 @@ WarUnitAction* buildRepairAction(s32 nframes, s32 frames[], s32 attackSpeed, s32
     return action;
 }
 
-WarUnitAction* buildHarvestAction(s32 nframes, s32 frames[], s32 harvestSpeed, WarUnitActionStepType harvestSound, bool directional)
+WarUnitAction* buildHarvestAction(s32 nframes, s32 frames[], s32 harvestSpeed, s32 harvestSound, s32 coolOffTime, bool directional)
 {
     WarUnitAction* action = createUnitAction(WAR_ACTION_TYPE_HARVEST);
     action->directional = directional;
+
+    s32 halfIndex = nframes%2 == 0 ? nframes/2 : (nframes+1)/2;
 
     addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
     addActionStep(action, WAR_ACTION_STEP_WAIT, 5);
@@ -251,11 +253,19 @@ WarUnitAction* buildHarvestAction(s32 nframes, s32 frames[], s32 harvestSpeed, W
     {
         addActionStep(action, WAR_ACTION_STEP_FRAME, frames[i]);
 
-        if (i == nframes/2)
+        if (i == halfIndex)
+        {
+            addActionStep(action, WAR_ACTION_STEP_ATTACK, 0);
             addActionStep(action, harvestSound, 0);
+        }
 
         addActionStep(action, WAR_ACTION_STEP_WAIT, harvestSpeed);
     }
+
+    // make sure we don't attack faster just because we have fewer frames
+    addActionStep(action, WAR_ACTION_STEP_WAIT, (5 - nframes) * harvestSpeed);
+    addActionStep(action, WAR_ACTION_STEP_FRAME, 0);
+    addActionStep(action, WAR_ACTION_STEP_WAIT, coolOffTime);
 
     addActionStep(action, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addActionStep(action, WAR_ACTION_STEP_FRAME, 0);
@@ -402,8 +412,8 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
             WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
-            WarUnitAction* repairAction = buildRepairAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* harvestAction = buildHarvestAction(framesHarvest.attackFramesCount, framesHarvest.attackFrames, 5, attackSound, directional);
+            WarUnitAction* repairAction = buildRepairAction(framesHarvest.attackFramesCount, framesHarvest.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
+            WarUnitAction* harvestAction = buildHarvestAction(framesHarvest.attackFramesCount, framesHarvest.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
 
             addActions(entity, 6, idleAction, walkAction, attackAction, deathAction, repairAction, harvestAction);
             break;
@@ -936,6 +946,7 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
     }
     
     unit->actionIndex = findActionIndex(entity, type);
+
     if (unit->actionIndex < 0)
     {
         logError("Entity of type %d doesn't have a %d or %d animations\n", entity->type, type);

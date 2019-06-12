@@ -99,6 +99,15 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
                 // WarState* patrolState = createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
                 // changeNextState(context, entity, patrolState, true, true);
             }
+
+            if (getUnitRace(entity) == WAR_RACE_HUMANS)
+            {
+                createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+            }
+            else
+            {
+                createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
+            }
         }
     }
 
@@ -282,12 +291,30 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
                 {
                     WarState* attackState = createAttackState(context, entity, targetEntity->id, targetTile);
                     changeNextState(context, entity, attackState, true, true);
+
+                    if (getUnitRace(entity) == WAR_RACE_HUMANS)
+                    {
+                        createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+                    }
+                    else
+                    {
+                        createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
+                    }
                 }
             }
             else
             {
                 WarState* attackState = createAttackState(context, entity, 0, targetTile);
                 changeNextState(context, entity, attackState, true, true);
+
+                if (getUnitRace(entity) == WAR_RACE_HUMANS)
+                {
+                    createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+                }
+                else
+                {
+                    createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
+                }
             }
         }
     }
@@ -583,7 +610,7 @@ bool executeCommand(WarContext* context)
 
                             command->type = WAR_COMMAND_NONE;
 
-                            createAudio(context, WAR_MISC_BUILD_ROAD, false);
+                            createAudio(context, WAR_BUILD_ROAD, false);
                         }
                     }
                     else
@@ -626,7 +653,7 @@ bool executeCommand(WarContext* context)
 
                             command->type = WAR_COMMAND_NONE;
 
-                            createAudio(context, WAR_MISC_BUILD_ROAD, false);
+                            createAudio(context, WAR_BUILD_ROAD, false);
                         }
                     }
                     else
@@ -639,6 +666,13 @@ bool executeCommand(WarContext* context)
             }
 
             return false;
+        }
+
+        case WAR_COMMAND_BUILD_BASIC:
+        case WAR_COMMAND_BUILD_ADVANCED:
+        {
+            // do nothing here
+            break;
         }
 
         default:
@@ -863,6 +897,8 @@ void cancel(WarContext* context, WarEntity* entity)
 
                 WarState* collapseState = createCollapseState(context, selectedEntity);
                 changeNextState(context, selectedEntity, collapseState, true, true);
+
+                createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
             }
             else if (selectedEntity->unit.building)
             {

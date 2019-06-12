@@ -39,7 +39,8 @@ List of thing to do in no particular order
       #endif
     }
     ```
-  * > Check why is failing when trying to determine if the midi is finish playing. Check that the entity removes correctly after the midi finish playing.
+  * ~~Check why is failing when trying to determine if the midi is finish playing. Check that the entity removes correctly after the midi finish playing.~~
+  * > The lastActionStep for the harvest action is the same for multiples frames. Investigate what is happening there to correctly chop the tree and play the chop sound. Do the same for the repairing state.
 
 * General
   * ~~Test the new implementation for lists.~~

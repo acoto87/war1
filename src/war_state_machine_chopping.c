@@ -3,7 +3,6 @@ WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityI
     WarState* state = createState(context, entity, WAR_STATE_CHOPPING);
     state->chop.forestId = forestId;
     state->chop.position = position;
-    state->chop.chopTime = 0;
     return state;
 }
 
@@ -17,9 +16,7 @@ void enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 
     setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
     setUnitDirectionFromDiff(entity, treePosition.x - position.x, treePosition.y - position.y);
-    setAction(context, entity, WAR_ACTION_TYPE_HARVEST, false, 1.0f);
-
-    state->chop.chopTime = context->time + getScaledTime(context, 0.5f);
+    setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 }
 
 void leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state)
@@ -50,18 +47,21 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
         return;
     }
 
-    if (context->time >= state->chop.chopTime)
+    WarUnitAction* action = unit->actions.items[unit->actionIndex];
+    if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
+        logDebug("%d\n", action->stepIndex);
+
         unit->amount += chopTree(context, forest, tree, 2);
         if (unit->amount > 0)
         {
             unit->resourceKind = WAR_RESOURCE_WOOD;
         }
 
-        // with repetitive sounds like this one (attacking should be another)
-        // there maybe issues with the timing and overlapping of one sound with
-        // the next one if the speed scale is greater than 1.
-        createAudioRandom(context, WAR_MISC_TREE_CHOPPING_1, WAR_MISC_TREE_CHOPPING_4, false);
+        if (action->lastSoundStep == WAR_ACTION_STEP_SOUND_CHOPPING)
+        {
+            createAudioRandom(context, WAR_TREE_CHOPPING_1, WAR_TREE_CHOPPING_4, false);
+        }
 
         if (unit->amount == UNIT_MAX_CARRY_WOOD)
         {
@@ -87,8 +87,6 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
             deliverState->nextState = createGatherWoodState(context, entity, forest->id, treePosition);
             changeNextState(context, entity, deliverState, true, true);
         }
-
-        state->chop.chopTime = context->time + getScaledTime(context, 1);
     }
 }
 

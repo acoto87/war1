@@ -70,6 +70,10 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
             changeNextState(context, entity, idleState, true, true);
         }
 
+        WarAudioId audioId = getUnitRace(unitToBuild) == WAR_RACE_HUMANS
+            ? WAR_HUMAN_READY : WAR_ORC_READY;
+        createAudio(context, audioId, false);
+
         return;
     }
         
