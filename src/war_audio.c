@@ -183,18 +183,18 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     {
         //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
         u32 sampleBlock = min(TSF_RENDER_EFFECTSAMPLEBLOCK, sampleCount);
-
         audio->playbackTime += sampleBlock * (1000.0f / PLAYBACK_FREQ);
 
         //Loop through all MIDI messages which need to be played up until the current playback time
         tml_message* midiMessage = audio->currentMessage;
+        tml_message* prevMessage = midiMessage;
         while (midiMessage)
         {
             // end of track
             if (midiMessage->type == TML_EOT)
             {
-                logInfo("EOF detected, loop?: %d\n", audio->loop);
                 midiMessage = audio->loop ? audio->firstMessage : NULL;
+                audio->playbackTime -= prevMessage->time;
             }
 
             if (!midiMessage || midiMessage->time > audio->playbackTime)
@@ -240,6 +240,7 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
                 }
             }
 
+            prevMessage = midiMessage;
             midiMessage = midiMessage->next;
         }
 
@@ -271,7 +272,10 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     do
     {
         if (audio->sampleIndex >= waveLength)
+        {
             audio->sampleIndex = 0;
+            audio->playbackTime = 0;
+        }
 
         u8* waveData = &resource->audio.data[audio->sampleIndex];
 
