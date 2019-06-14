@@ -1665,7 +1665,7 @@ typedef struct _WarContext
     GLFWwindow* window;
 
     WarFile* warFile;
-    WarResource *resources[MAX_RESOURCES_COUNT];
+    WarResource* resources[MAX_RESOURCES_COUNT];
     WarSprite fontSprites[2];
 
     s32 staticEntityId;
@@ -1675,6 +1675,8 @@ typedef struct _WarContext
 
     ma_device sfx;
     tsf* soundFont;
+    f32 musicVolume;
+    f32 soundVolume;
 
     WarInput input;
 

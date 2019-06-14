@@ -35,7 +35,13 @@
 
 void setWindowSize(WarContext* context, s32 width, s32 height);
 void setGlobalScale(WarContext* context, f32 scale);
+void changeGlobalScale(WarContext* context, f32 deltaScale);
 void setGlobalSpeed(WarContext* context, f32 speed);
+void changeGlobalSpeed(WarContext* context, f32 deltaSpeed);
+void setMusicVolume(WarContext* context, f32 volume);
+void changeMusicVolume(WarContext* context, f32 deltaVolume);
+void setSoundVolume(WarContext* context, f32 volume);
+void changeSoundVolume(WarContext* context, f32 deltaVolume);
 
 vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
 {

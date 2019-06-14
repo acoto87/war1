@@ -547,6 +547,29 @@ void updateGlobalScale(WarContext* context)
     }
 }
 
+void updateVolume(WarContext* context)
+{
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL))
+    {
+        if (isKeyPressed(input, WAR_KEY_SHIFT))
+        {
+            if (wasKeyPressed(input, WAR_KEY_UP))
+                changeMusicVolume(context, 0.1f);
+            else if (wasKeyPressed(input, WAR_KEY_DOWN))
+                changeMusicVolume(context, -0.1f);
+        }
+        else
+        {
+            if (wasKeyPressed(input, WAR_KEY_UP))
+                changeSoundVolume(context, 0.1f);
+            else if (wasKeyPressed(input, WAR_KEY_DOWN))
+                changeSoundVolume(context, -0.1f);
+        }
+    }
+}
+
 void updateViewport(WarContext *context)
 {
     WarMap *map = context->map;
@@ -579,7 +602,11 @@ void updateViewport(WarContext *context)
     // check for the arrows keys and update the position of the viewport
     else
     {
-        dir = getDirFromArrowKeys(context, input);
+        if (!isKeyPressed(input, WAR_KEY_CTRL) && 
+            !isKeyPressed(input, WAR_KEY_SHIFT))
+        {
+            dir = getDirFromArrowKeys(context, input);
+        }
     }
 
     map->viewport.x += map->scrollSpeed * dir.x * context->deltaTime;
@@ -1430,6 +1457,7 @@ void updateMap(WarContext* context)
 {
     updateGlobalSpeed(context);
     updateGlobalScale(context);
+    updateVolume(context);
 
     updateViewport(context);
     updateDragRect(context);
