@@ -540,6 +540,15 @@ typedef struct
             u8* data;
             s32 length;
         } audio;
+
+        struct
+        {
+            u16 hotx;
+            u16 hoty;
+            u16 width;
+            u16 height;
+            u8* pixels;
+        } cursor;
     };
 } WarResource;
 

@@ -100,6 +100,16 @@ WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef s
     return entity;
 }
 
+WarEntity* createUICursor(WarContext* context, char* name, WarSpriteResourceRef spriteResourceRef, vec2 position)
+{
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE, true);
+    addTransformComponent(context, entity, position);
+    addUIComponent(context, entity, name);
+    addSpriteComponentFromResource(context, entity, spriteResourceRef);
+
+    return entity;
+}
+
 WarEntity* createUITextButton(WarContext* context, 
                               char* name,
                               s32 fontIndex,
@@ -483,8 +493,20 @@ void renderUIEntities(WarContext* context)
         WarEntity *entity = map->entities.items[i];
         if (entity && isUIEntity(entity))
         {
-            renderEntity(context, entity, false);
+            if (!strEquals(entity->ui.name, "cursor"))
+            {
+                renderEntity(context, entity, false);
+            }
         }
+    }
+}
+
+void renderCursor(WarContext* context)
+{
+    WarEntity* entity = findUIEntity(context, "cursor");
+    if (entity)
+    {
+        renderEntity(context, entity, false);
     }
 }
 
@@ -580,6 +602,9 @@ void renderMapUI(WarContext* context)
     // render minimap
     renderMinimap(context);
     renderMinimapViewport(context);
+
+    // render the cursor at the end
+    renderCursor(context);
 
     // DEBUG:
     // Render debug info

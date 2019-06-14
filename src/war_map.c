@@ -413,6 +413,20 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             vec2Addv(leftBottomPanel, vec2i(3, 116)));
 
         setUITooltip(menuButton, NO_HIGHLIGHT, "MENU (F10)");
+
+        createUICursor(context, "cursor", imageResourceRef(266), VEC2_ZERO);
+
+        // WarResource* cursorRes = getOrCreateResource(context, 266);
+
+        // GLFWimage image;
+        // image.width = cursorRes->cursor.width;
+        // image.height = cursorRes->cursor.height;
+        // image.pixels = cursorRes->cursor.pixels;
+        // GLFWcursor* cursor = glfwCreateCursor(&image, 0, 0);
+        // if (cursor)
+        // {
+        //     glfwSetCursor(context->window, cursor);
+        // }
     }
 
     // set the initial state for the tiles
@@ -1403,6 +1417,19 @@ void updateStatus(WarContext* context)
     }
 }
 
+void updateCursor(WarContext* context)
+{
+    WarInput* input = &context->input;
+    
+    WarEntity* entity = findUIEntity(context, "cursor");
+    if (entity)
+    {
+        WarResource* resource = getOrCreateResource(context, entity->sprite.resourceIndex);
+        vec2 hot = vec2i(resource->cursor.hotx, resource->cursor.hoty);
+        entity->transform.position = vec2Subv(input->pos, hot);
+    }
+}
+
 void updateStateMachines(WarContext* context)
 {
     WarMap* map = context->map;
@@ -1483,6 +1510,7 @@ void updateMap(WarContext* context)
     updateCommandFromButtons(context);
     updateCommandFromRightClick(context);
     updateStatus(context);
+    updateCursor(context);
 
     updateTreesEdit(context);
     updateRoadsEdit(context);

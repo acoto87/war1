@@ -101,7 +101,7 @@ WarEntity* createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u
 s32 findEntityIndex(WarContext* context, WarEntityId id);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
-WarEntity* findUIEntity(WarContext* context, char* name);
+WarEntity* findUIEntity(WarContext* context, const char* name);
 void removeEntity(WarContext* context, WarEntity* entity);
 void removeEntityById(WarContext* context, WarEntityId id);
 void renderEntity(WarContext* context, WarEntity* entity, bool selected);

@@ -457,7 +457,7 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
-WarEntity* findUIEntity(WarContext* context, char* name)
+WarEntity* findUIEntity(WarContext* context, const char* name)
 {
     WarMap* map = context->map;
     assert(map);
@@ -465,8 +465,13 @@ WarEntity* findUIEntity(WarContext* context, char* name)
     for (s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
-        if (entity && entity->ui.enabled && !strcmp(entity->ui.name, name))
+        if (entity && 
+            isUIEntity(entity) && 
+            entity->ui.enabled && 
+            strEquals(entity->ui.name, name))
+        {
             return entity;
+        }
     }
 
     return NULL;
