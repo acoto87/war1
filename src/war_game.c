@@ -27,6 +27,8 @@ bool initGame(WarContext* context)
 
     glfwMakeContextCurrent(context->window);
 
+    glfwSetInputMode(context->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
     gladLoadGLES2Loader((GLADloadproc) glfwGetProcAddress);
 
     glCheckOpenGLVersion();

@@ -735,8 +735,8 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
 
-    u16 hoty = readu16(rawResource.data, 0);
-    u16 hotx = readu16(rawResource.data, 2);
+    u16 hotx = readu16(rawResource.data, 0);
+    u16 hoty = readu16(rawResource.data, 2);
     u16 width = readu16(rawResource.data, 4);
     u16 height = readu16(rawResource.data, 6);
 
@@ -759,6 +759,18 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
         }
     }
     
+    // printf("%d, %d, %d\n", readu8(paletteData, 0), readu8(paletteData, 1), readu8(paletteData, 2));
+
+    // for (s32 y = 0; y < height; y++)
+    // {
+    //     for (s32 x = 0; x < width; x++)
+    //     {
+    //         u32 colorIndex = readu8(rawResource.data, 8 + y * width + x);
+    //         printf("%03d ", colorIndex);
+    //     }
+    //     printf("\n");
+    // }
+
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_CURSOR;
     resource->cursor.hotx = hotx;

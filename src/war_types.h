@@ -760,6 +760,7 @@ typedef enum
     WAR_ENTITY_TYPE_TEXT,
     WAR_ENTITY_TYPE_RECT,
     WAR_ENTITY_TYPE_BUTTON,
+    WAR_ENTITY_TYPE_CURSOR,
     WAR_ENTITY_TYPE_AUDIO,
 
     WAR_ENTITY_TYPE_COUNT
@@ -1509,6 +1510,33 @@ typedef struct
     tml_message* currentMessage;
 } WarAudioComponent;
 
+typedef enum
+{
+    WAR_CURSOR_ARROW = 263,
+    WAR_CURSOR_INVALID = 264,
+    WAR_CURSOR_YELLOW_CROSSHAIR = 265,
+    WAR_CURSOR_RED_CROSSHAIR = 266,
+    WAR_CURSOR_YELLOW_CROSSHAIR_2 = 267,
+    WAR_CURSOR_MAGNIFYING_GLASS = 268,
+    WAR_CURSOR_GREEN_CROSSHAIR = 269,
+    WAR_CURSOR_WATCH = 270,
+    WAR_CURSOR_ARROW_UP = 271,
+    WAR_CURSOR_ARROW_UP_RIGHT = 272,
+    WAR_CURSOR_ARROW_RIGHT = 273,
+    WAR_CURSOR_ARROW_BOTTOM_RIGHT = 274,
+    WAR_CURSOR_ARROW_BOTTOM = 275,
+    WAR_CURSOR_ARROW_BOTTOM_LEFT = 276,
+    WAR_CURSOR_ARROW_LEFT = 277,
+    WAR_CURSOR_ARROW_UP_LEFT = 278
+} WarCursorType;
+
+typedef struct
+{
+    bool enabled;
+    WarCursorType type;
+    vec2 hot;
+} WarCursorComponent;
+
 typedef struct _WarEntity
 {
     bool enabled;
@@ -1528,6 +1556,7 @@ typedef struct _WarEntity
     WarRectComponent rect;
     WarButtonComponent button;
     WarAudioComponent audio;
+    WarCursorComponent cursor;
 } WarEntity;
 
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)

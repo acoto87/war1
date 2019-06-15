@@ -100,12 +100,16 @@ WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef s
     return entity;
 }
 
-WarEntity* createUICursor(WarContext* context, char* name, WarSpriteResourceRef spriteResourceRef, vec2 position)
+WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE, true);
+    WarResource* resource = getOrCreateResource(context, type);
+    assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
+
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_CURSOR, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addSpriteComponentFromResource(context, entity, spriteResourceRef);
+    addSpriteComponentFromResource(context, entity, imageResourceRef(type));
+    addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
 
     return entity;
 }
@@ -153,6 +157,7 @@ bool isUIEntity(WarEntity* entity)
         case WAR_ENTITY_TYPE_TEXT:
         case WAR_ENTITY_TYPE_RECT:
         case WAR_ENTITY_TYPE_BUTTON:
+        case WAR_ENTITY_TYPE_CURSOR:
             return true;
 
         default:
