@@ -41,6 +41,12 @@ List of thing to do in no particular order
     ```
   * ~~Check why is failing when trying to determine if the midi is finish playing. Check that the entity removes correctly after the midi finish playing.~~
   * > The lastActionStep for the harvest action is the same for multiples frames. Investigate what is happening there to correctly chop the tree and play the chop sound. Do the same for the repairing state.
+  * Arrows for scrolling on the windows edges instead of viewport edges.
+  * ~~Cursor have a some pixels without transparency.~~
+  * ~~Right click when a command that needs a target should cancel the command.~~
+  * Sounds are freed 3 times!, what's up with that?
+  * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
+  * When executing a command with a multiple selection all units play the corresponding sound, it saturate the channel and it sounds horrible.
 
 * General
   * ~~Test the new implementation for lists.~~

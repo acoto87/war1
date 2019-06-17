@@ -1222,65 +1222,73 @@ void updateCommandFromButtons(WarContext* context)
 void updateCommandFromRightClick(WarContext* context)
 {
     WarMap* map = context->map;
+    WarUnitCommand* command = &map->command;
     WarInput* input = &context->input;
 
     if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
     {
-        s32 selEntitiesCount = map->selectedEntities.count;
-        if (selEntitiesCount > 0)
+        if (command->type == WAR_COMMAND_NONE)
         {
-            // if the right click was on the map
-            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            s32 selEntitiesCount = map->selectedEntities.count;
+            if (selEntitiesCount > 0)
             {
-                vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-                vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-                WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
-                WarEntity* targetEntity = findEntity(context, targetEntityId);
-                if (targetEntity)
+                // if the right click was on the map
+                if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
-                        isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    if (targetEntity)
                     {
-                        executeHarvestCommand(context, targetEntity, targetTile);
-                    }
-                    else if (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) || 
-                             isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
-                    {
-                        if (isEnemyUnit(context, targetEntity))
+                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
+                            isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
-                            executeAttackCommand(context, targetEntity, targetTile);
+                            executeHarvestCommand(context, targetEntity, targetTile);
+                        }
+                        else if (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) || 
+                                isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
+                        {
+                            if (isEnemyUnit(context, targetEntity))
+                            {
+                                executeAttackCommand(context, targetEntity, targetTile);
+                            }
+                            else
+                            {
+                                executeDeliverCommand(context, targetEntity);
+                            }
                         }
                         else
                         {
-                            executeDeliverCommand(context, targetEntity);
+                            if (isEnemyUnit(context, targetEntity))
+                            {
+                                executeAttackCommand(context, targetEntity, targetTile);
+                            }
+                            else
+                            {
+                                executeFollowCommand(context, targetEntity);
+                            }
                         }
                     }
                     else
                     {
-                        if (isEnemyUnit(context, targetEntity))
-                        {
-                            executeAttackCommand(context, targetEntity, targetTile);
-                        }
-                        else
-                        {
-                            executeFollowCommand(context, targetEntity);
-                        }
+                        executeMoveCommand(context, targetPoint);
                     }
                 }
-                else
+                // if the right click was on the minimap
+                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
-                    executeMoveCommand(context, targetPoint);
-                }
-            }
-            // if the right click was on the minimap
-            else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
-            {
-                vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
-                vec2 targetPoint = vec2TileToMapCoordinates(offset, true);
+                    vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
+                    vec2 targetPoint = vec2TileToMapCoordinates(offset, true);
 
-                executeMoveCommand(context, targetPoint);
-            }    
+                    executeMoveCommand(context, targetPoint);
+                }    
+            }
+        }
+        else
+        {
+            cancel(context, NULL);
         }
     }
 }

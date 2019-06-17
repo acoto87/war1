@@ -150,7 +150,7 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     u16 width = readu16(rawResource.data, 0);
     u16 height = readu16(rawResource.data, 2);
 
-    u8 *pixels = (u8*)xmalloc(width * height * 4);
+    u8 *pixels = (u8*)xcalloc(width * height * 4, sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
@@ -740,7 +740,7 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
     u16 width = readu16(rawResource.data, 4);
     u16 height = readu16(rawResource.data, 6);
 
-    u8 *pixels = (u8*)xmalloc(width * height * 4);
+    u8 *pixels = (u8*)xcalloc(width * height * 4, sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 8 + i);
@@ -759,18 +759,6 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
         }
     }
     
-    // printf("%d, %d, %d\n", readu8(paletteData, 0), readu8(paletteData, 1), readu8(paletteData, 2));
-
-    // for (s32 y = 0; y < height; y++)
-    // {
-    //     for (s32 x = 0; x < width; x++)
-    //     {
-    //         u32 colorIndex = readu8(rawResource.data, 8 + y * width + x);
-    //         printf("%03d ", colorIndex);
-    //     }
-    //     printf("\n");
-    // }
-
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_CURSOR;
     resource->cursor.hotx = hotx;
