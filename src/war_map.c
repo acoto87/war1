@@ -608,7 +608,7 @@ void updateViewport(WarContext *context)
             map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
         }
         // check if it was at the edge of the map to scroll also and update the position of the viewport
-        else if(!input->isDragging && rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        else if(!input->isDragging)
         {
             dir = getDirFromMousePos(context, input);
         }
@@ -1458,6 +1458,87 @@ void updateCursor(WarContext* context)
         }
         else if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
+            WarUnitCommand* command = &map->command;
+            switch (command->type)
+            {
+                case WAR_COMMAND_ATTACK:
+                {
+                    changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
+                    break;
+                }
+
+                case WAR_COMMAND_MOVE:
+                case WAR_COMMAND_STOP:
+                case WAR_COMMAND_HARVEST:
+                case WAR_COMMAND_DELIVER:
+                case WAR_COMMAND_REPAIR:
+                {
+                    changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
+                    break;
+                }
+
+                case WAR_COMMAND_BUILD_FARM_HUMANS:
+                case WAR_COMMAND_BUILD_FARM_ORCS:
+                case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
+                case WAR_COMMAND_BUILD_BARRACKS_ORCS:
+                case WAR_COMMAND_BUILD_CHURCH:
+                case WAR_COMMAND_BUILD_TEMPLE:
+                case WAR_COMMAND_BUILD_TOWER_HUMANS:
+                case WAR_COMMAND_BUILD_TOWER_ORCS:
+                case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
+                case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
+                case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
+                case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
+                case WAR_COMMAND_BUILD_STABLE:
+                case WAR_COMMAND_BUILD_KENNEL:
+                case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
+                case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
+                case WAR_COMMAND_BUILD_ROAD:
+                case WAR_COMMAND_BUILD_WALL:
+                {
+                    changeCursorType(context, entity, WAR_CURSOR_ARROW);
+                    break;
+                }
+
+                default:
+                {
+                    bool entityUnderCursor = false;
+
+                    vec2 pointerRect = vec2ScreenToMapCoordinates(context, input->pos);
+                    for(s32 i = 0; i < map->entities.count; i++)
+                    {
+                        WarEntity* entity = map->entities.items[i];
+                        if (entity && isUnit(entity) && entity->unit.enabled)
+                        {
+                            // don't change the cursor for dead entities or corpses
+                            if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                            {
+                                continue;
+                            }
+                            
+                            rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
+                            if (rectContainsf(unitRect, pointerRect.x, pointerRect.y))
+                            {
+                                entityUnderCursor = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (entityUnderCursor)
+                    {
+                        changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);                        
+                    }
+                    else
+                    {
+                        changeCursorType(context, entity, WAR_CURSOR_ARROW);
+                    }
+                    break;
+                }
+            }
+        }
+        else
+        {
             vec2 dir = getDirFromMousePos(context, input);
             if (dir.x < 0 && dir.y < 0)         // -1, -1
                 changeCursorType(context, entity, WAR_CURSOR_ARROW_UP_LEFT);
@@ -1476,90 +1557,7 @@ void updateCursor(WarContext* context)
             else if (dir.y > 0)                 //  0,  1
                 changeCursorType(context, entity, WAR_CURSOR_ARROW_BOTTOM);
             else                                //  0,  0
-            {
-                WarUnitCommand* command = &map->command;
-                switch (command->type)
-                {
-                    case WAR_COMMAND_ATTACK:
-                    {
-                        changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
-                        break;
-                    }
-
-                    case WAR_COMMAND_MOVE:
-                    case WAR_COMMAND_STOP:
-                    case WAR_COMMAND_HARVEST:
-                    case WAR_COMMAND_DELIVER:
-                    case WAR_COMMAND_REPAIR:
-                    {
-                        changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
-                        break;
-                    }
-
-                    case WAR_COMMAND_BUILD_FARM_HUMANS:
-                    case WAR_COMMAND_BUILD_FARM_ORCS:
-                    case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
-                    case WAR_COMMAND_BUILD_BARRACKS_ORCS:
-                    case WAR_COMMAND_BUILD_CHURCH:
-                    case WAR_COMMAND_BUILD_TEMPLE:
-                    case WAR_COMMAND_BUILD_TOWER_HUMANS:
-                    case WAR_COMMAND_BUILD_TOWER_ORCS:
-                    case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
-                    case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
-                    case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
-                    case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
-                    case WAR_COMMAND_BUILD_STABLE:
-                    case WAR_COMMAND_BUILD_KENNEL:
-                    case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
-                    case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
-                    case WAR_COMMAND_BUILD_ROAD:
-                    case WAR_COMMAND_BUILD_WALL:
-                    {
-                        changeCursorType(context, entity, WAR_CURSOR_ARROW);
-                        break;
-                    }
-
-                    default:
-                    {
-                        bool entityUnderCursor = false;
-
-                        vec2 pointerRect = vec2ScreenToMapCoordinates(context, input->pos);
-                        for(s32 i = 0; i < map->entities.count; i++)
-                        {
-                            WarEntity* entity = map->entities.items[i];
-                            if (entity && isUnit(entity) && entity->unit.enabled)
-                            {
-                                // don't change the cursor for dead entities or corpses
-                                if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
-                                {
-                                    continue;
-                                }
-                                
-                                rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
-                                if (rectContainsf(unitRect, pointerRect.x, pointerRect.y))
-                                {
-                                    entityUnderCursor = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (entityUnderCursor)
-                        {
-                            changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);                        
-                        }
-                        else
-                        {
-                            changeCursorType(context, entity, WAR_CURSOR_ARROW);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            changeCursorType(context, entity, WAR_CURSOR_ARROW);
+                changeCursorType(context, entity, WAR_CURSOR_ARROW);                
         }
 
         vec2 hot = entity->cursor.hot;

@@ -590,7 +590,7 @@ void renderMinimapViewport(WarContext* context)
 
 void renderMapUI(WarContext* context)
 {
-    WarMap* map = context->map;
+    // WarMap* map = context->map;
     NVGcontext* gfx = context->gfx;
 
     nvgSave(gfx);
