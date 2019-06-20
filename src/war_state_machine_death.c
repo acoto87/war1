@@ -24,29 +24,14 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
     // using the delay field of the states
     if (!isCorpseUnit(entity))
     {
-        vec2 mapPosition = entity->transform.position;
-        vec2 tilePosition = vec2MapToTileCoordinates(mapPosition);
+        vec2 position = entity->transform.position;
+        vec2 tile = vec2MapToTileCoordinates(position);
 
         WarUnitType corpseType = getUnitRace(entity) == WAR_RACE_ORCS 
             ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
 
-        WarEntity* corpse = createEntity(context, WAR_ENTITY_TYPE_UNIT, true);
-        addUnitComponent(context, corpse, corpseType, (s32)tilePosition.x, (s32)tilePosition.y, WAR_RACE_NEUTRAL, WAR_RESOURCE_NONE, 0);
-        addTransformComponent(context, corpse, mapPosition);
-
-        WarUnitData unitData = getUnitData(corpseType);
-
-        s32 spriteIndex = unitData.resourceIndex;
-        if (spriteIndex == 0)
-        {
-            logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", corpseType);
-            spriteIndex = 279;
-        }
-        addSpriteComponentFromResource(context, corpse, imageResourceRef(spriteIndex));
-
-        addUnitActions(corpse);
-        addAnimationsComponent(context, corpse);
-        addStateMachineComponent(context, corpse);
+        WarEntity* corpse = createUnit(context, corpseType, tile.x, tile.y, 4, 
+                                       WAR_RESOURCE_NONE, 0, true);
 
         WarState* deathState = createDeathState(context, corpse);
         deathState->delay = __frameCountToSeconds(1201);

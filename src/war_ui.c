@@ -153,7 +153,6 @@ bool isUIEntity(WarEntity* entity)
 void updateGoldText(WarContext* context)
 {
     WarMap* map = context->map;
-    assert(map);
 
     WarEntity* txtGold = findUIEntity(context, "txtGold");
     assert(txtGold);
@@ -165,7 +164,6 @@ void updateGoldText(WarContext* context)
 void updateWoodText(WarContext* context)
 {
     WarMap* map = context->map;
-    assert(map);
 
     WarEntity* txtWood = findUIEntity(context, "txtWood");
     assert(txtWood);

@@ -24,7 +24,6 @@ void clearSelection(WarContext* context)
 vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
-    assert(map);
 
     rect mapPanel = map->mapPanel;
     rect viewport = map->viewport;
@@ -37,7 +36,6 @@ vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
 vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
-    assert(map);
 
     rect minimapPanel = map->minimapPanel;
     
@@ -48,7 +46,6 @@ vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
 rect rectScreenToMapCoordinates(WarContext* context, rect r)
 {
     WarMap* map = context->map;
-    assert(map);
 
     rect mapPanel = map->mapPanel;
     rect viewport = map->viewport;
@@ -61,7 +58,6 @@ rect rectScreenToMapCoordinates(WarContext* context, rect r)
 vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
-    assert(map);
 
     v = vec2Translatef(v, -map->viewport.x, -map->viewport.y);
     v = vec2Translatef(v, map->mapPanel.x, map->mapPanel.y);
@@ -71,7 +67,6 @@ vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
 rect rectMapToScreenCoordinates(WarContext* context, rect r)
 {
     WarMap* map = context->map;
-    assert(map);
 
     r = rectTranslatef(r, -map->viewport.x, -map->viewport.y);
     r = rectTranslatef(r, map->mapPanel.x, map->mapPanel.y);
@@ -102,7 +97,6 @@ vec2 vec2TileToMapCoordinates(vec2 v, bool centeredInTile)
 vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
-    assert(map);
 
     rect minimapPanel = map->minimapPanel;
     vec2 minimapPanelSize = vec2f(minimapPanel.width, minimapPanel.height);

@@ -290,7 +290,6 @@ void removeAudioComponent(WarContext* context, WarEntity* entity)
 WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
 {
     WarMap* map = context->map;
-    assert(map);
 
     WarEntity* entity = (WarEntity *)xcalloc(1, sizeof(WarEntity));
     entity->id = ++context->staticEntityId;
@@ -310,6 +309,11 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
     if (addToMap)
     {
         WarEntityListAdd(&map->entities, entity);
+        WarEntityIdMapSet(&map->entitiesById, entity->id, entity);
+
+        WarEntityList* list = WarEntityMapGet(&map->entitiesByType, type);
+        assert(list);
+        WarEntityListAdd(list, entity);
     }
 
     return entity;
@@ -324,7 +328,9 @@ WarEntity* createUnit(WarContext* context,
                       u32 amount,
                       bool addToMap)
 {
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
+    WarMap* map = context->map;
+
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
     addUnitComponent(context, entity, type, x, y, player, resourceKind, amount);
     addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
 
@@ -368,6 +374,12 @@ WarEntity* createUnit(WarContext* context,
     WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
     changeNextState(context, entity, idleState, true, true);
 
+    if (addToMap)
+    {
+        WarEntityList* list = WarUnitMapGet(&map->unitsByType, type);
+        WarEntityListAdd(list, entity);
+    }
+
     return entity;
 }
 
@@ -404,45 +416,25 @@ WarEntity* createBuilding(WarContext* context,
     return entity;
 }
 
-s32 findEntityIndex(WarContext* context, WarEntityId id)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    for (s32 i = 0; i < map->entities.count; i++)
-    {
-        if (map->entities.items[i]->id == id)
-            return i;
-    }
-
-    return -1;
-}
-
 WarEntity* findEntity(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    for (s32 i = 0; i < map->entities.count; i++)
-    {
-        if (map->entities.items[i]->id == id)
-            return map->entities.items[i];
-    }
-
-    return NULL;
+    return WarEntityIdMapGet(&map->entitiesById, id);
 }
 
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
 {
     WarMap* map = context->map;
-    assert(map);
 
     WarEntity* result = NULL;
     f32 minDst = INT32_MAX;
 
-    for (s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* units = WarEntityMapGet(&map->entitiesByType, WAR_ENTITY_TYPE_UNIT);
+    assert(units);
+    
+    for (s32 i = 0; i < units->count; i++)
     {
-        WarEntity* target = map->entities.items[i];
+        WarEntity* target = units->items[i];
         if (isUnitOfType(target, type))
         {
             s32 dst = unitDistanceInTiles(entity, target);
@@ -460,7 +452,6 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
 WarEntity* findUIEntity(WarContext* context, char* name)
 {
     WarMap* map = context->map;
-    assert(map);
 
     for (s32 i = 0; i < map->entities.count; i++)
     {
@@ -493,14 +484,24 @@ void removeEntity(WarContext* context, WarEntity* entity)
 void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
-    assert(map);
 
-    s32 index = findEntityIndex(context, id);
-    assert(index >= 0);
+    WarEntity* entity = findEntity(context, id);
+    if (entity)
+    {
+        removeEntity(context, entity);
 
-    WarEntity* entity = map->entities.items[index];
-    removeEntity(context, entity);
-    WarEntityListRemoveAt(&map->entities, index);
+        if (isUnit(entity))
+        {
+            WarEntityList* unitTypeList = WarUnitMapGet(&map->unitsByType, entity->unit.type);
+            WarEntityListRemove(unitTypeList, entity);
+        }
+
+        WarEntityList* entityTypeList = WarEntityMapGet(&map->entitiesByType, entity->type);
+        WarEntityListRemove(entityTypeList, entity);
+
+        WarEntityIdMapRemove(&map->entitiesById, entity->id);
+        WarEntityListRemove(&map->entities, entity);
+    }
 }
 
 // Render entities

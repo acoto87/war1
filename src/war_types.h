@@ -1537,6 +1537,45 @@ shlDefineList(WarEntityList, WarEntity*)
 #define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, freeEntity}
 #define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity, NULL}
 
+uint32_t hashEntityType(const WarEntityType type)
+{
+    return type;
+}
+
+bool equalsEntityType(const WarEntityType t1, const WarEntityType t2)
+{
+    return t1 == t2;
+}
+
+void freeEntityList(WarEntityList* list)
+{
+    WarEntityListFree(list);
+}
+
+shlDeclareMap(WarEntityMap, WarEntityType, WarEntityList*)
+shlDefineMap(WarEntityMap, WarEntityType, WarEntityList*)
+
+uint32_t hashUnitType(const WarUnitType type)
+{
+    return type;
+}
+
+bool equalsUnitType(const WarUnitType t1, const WarUnitType t2)
+{
+    return t1 == t2;
+}
+
+shlDeclareMap(WarUnitMap, WarUnitType, WarEntityList*)
+shlDefineMap(WarUnitMap, WarUnitType, WarEntityList*)
+
+uint32_t hashEntityId(const WarEntityId id)
+{
+    return id;
+}
+
+shlDeclareMap(WarEntityIdMap, WarEntityId, WarEntity*)
+shlDefineMap(WarEntityIdMap, WarEntityId, WarEntity*)
+
 typedef enum
 {
     MAP_TILESET_FOREST,
@@ -1621,6 +1660,10 @@ typedef struct
     WarMapTileState tileStates[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
 
     WarEntityList entities;
+    WarEntityMap entitiesByType;
+    WarUnitMap unitsByType;
+    WarEntityIdMap entitiesById;
+    
     WarEntityIdList selectedEntities;
 
     WarEntity* forest;

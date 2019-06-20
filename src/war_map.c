@@ -100,8 +100,48 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
+    // initialize entities list
     WarEntityListInit(&map->entities, WarEntityListDefaultOptions);
+
+    // initialize entity by type map
+    WarEntityMapOptions entitiesByTypeOptions = (WarEntityMapOptions){0};
+    entitiesByTypeOptions.defaultValue = NULL;
+    entitiesByTypeOptions.hashFn = hashEntityType;
+    entitiesByTypeOptions.equalsFn = equalsEntityType;
+    entitiesByTypeOptions.freeFn = freeEntityList;
+    WarEntityMapInit(&map->entitiesByType, entitiesByTypeOptions);
+    for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
+    {
+        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+        WarEntityListInit(list, WarEntityListNonFreeOptions);
+        WarEntityMapSet(&map->entitiesByType, type, list);
+    }
+
+    // initialize unit by type map
+    WarUnitMapOptions unitsByTypeOptions = (WarUnitMapOptions){0};
+    unitsByTypeOptions.defaultValue = NULL;
+    unitsByTypeOptions.hashFn = hashUnitType;
+    unitsByTypeOptions.equalsFn = equalsUnitType;
+    unitsByTypeOptions.freeFn = freeEntityList;
+    WarUnitMapInit(&map->unitsByType, unitsByTypeOptions);
+    for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
+    {
+        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+        WarEntityListInit(list, WarEntityListNonFreeOptions);
+        WarUnitMapSet(&map->unitsByType, type, list);
+    }
+
+    // initialize the entities by id map
+    WarEntityIdMapOptions entitiesByIdOptions = (WarEntityIdMapOptions){0};
+    entitiesByIdOptions.defaultValue = NULL;
+    entitiesByIdOptions.hashFn = hashEntityId;
+    entitiesByIdOptions.equalsFn = equalsEntityId;
+    WarEntityIdMapInit(&map->entitiesById, entitiesByIdOptions);
+
+    // initialize selected entities list
     WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
+
+    // initialize map animations lists
     WarSpriteAnimationListInit(&map->animations, WarSpriteAnimationListDefaultOptions);
 
     map->finder = initPathFinder(PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
@@ -1301,11 +1341,6 @@ void updateStatus(WarContext* context)
                     highlightIndex = NO_HIGHLIGHT;
                     goldCost = 0;
                     woodCost = 0;
-
-                    // CANCEL UPGRADE
-                    // CANCEL UNIT TRAINING
-
-                    // SELECT LOCATION
                 }
                 else
                 {
@@ -1687,8 +1722,6 @@ void renderMapPanel(WarContext *context)
 void renderMap(WarContext *context)
 {
     WarMap *map = context->map;
-    assert(map);
-    if (!map) return;
 
     NVGcontext* gfx = context->gfx;
 
