@@ -203,7 +203,25 @@ DatabaseEntry assets[] =
     { 189, DB_ENTRY_TYPE_TILESET,           "forest",                                       190, 0, 0 },
     { 192, DB_ENTRY_TYPE_TILESET,           "swamp",                                        193, 0, 0 },
     { 195, DB_ENTRY_TYPE_TILESET,           "dungeon",                                      196, 0, 0 },
-    
+
+    // Cursors
+    { 263, DB_ENTRY_TYPE_CURSOR,            "arrow",                                        262, 0, 0 },
+    { 264, DB_ENTRY_TYPE_CURSOR,            "invalid_command",                              262, 0, 0 },
+    { 265, DB_ENTRY_TYPE_CURSOR,            "yellow_crosshair",                             262, 0, 0 },
+    { 266, DB_ENTRY_TYPE_CURSOR,            "red_crosshair",                                262, 0, 0 },
+    { 267, DB_ENTRY_TYPE_CURSOR,            "yellow_crosshair_2",                           262, 0, 0 },
+    { 268, DB_ENTRY_TYPE_CURSOR,            "magnifying_glass",                             262, 0, 0 },
+    { 269, DB_ENTRY_TYPE_CURSOR,            "small_green_crosshair",                        262, 0, 0 },
+    { 270, DB_ENTRY_TYPE_CURSOR,            "watch",                                        262, 0, 0 },
+    { 271, DB_ENTRY_TYPE_CURSOR,            "up_arrow",                                     262, 0, 0 },
+    { 272, DB_ENTRY_TYPE_CURSOR,            "upper_right_arrow",                            262, 0, 0 },
+    { 273, DB_ENTRY_TYPE_CURSOR,            "right_arrow",                                  262, 0, 0 },
+    { 274, DB_ENTRY_TYPE_CURSOR,            "lower_right_arrow",                            262, 0, 0 },
+    { 275, DB_ENTRY_TYPE_CURSOR,            "down_arrow",                                   262, 0, 0 },
+    { 276, DB_ENTRY_TYPE_CURSOR,            "lower_left_arrow",                             262, 0, 0 },
+    { 277, DB_ENTRY_TYPE_CURSOR,            "left_arrow",                                   262, 0, 0 },
+    { 278, DB_ENTRY_TYPE_CURSOR,            "upper_left_arrow",                             262, 0, 0 },
+
     // Sprites
     { 279, DB_ENTRY_TYPE_SPRITE,            "footman_humans",                               191, 217, 0 },
     { 280, DB_ENTRY_TYPE_SPRITE,            "grunt_orcs",                                   191, 217, 0 },

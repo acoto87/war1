@@ -2,6 +2,9 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
+    WarPlayerInfo* player = &map->players[0];
+
+    bool playSound = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
 
@@ -100,14 +103,19 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
                 // changeNextState(context, entity, patrolState, true, true);
             }
 
-            if (getUnitRace(entity) == WAR_RACE_HUMANS)
-            {
-                createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-            }
-            else
-            {
-                createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-            }
+            playSound = true;
+        }
+    }
+
+    if (playSound)
+    {
+        if (isHumanPlayer(player))
+        {
+            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+        }
+        else
+        {
+            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
         }
     }
 
@@ -117,6 +125,9 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
 void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+
+    bool playSound = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for (s32 i = 0; i < selEntitiesCount; i++)
@@ -129,6 +140,20 @@ void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
         {
             WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
             changeNextState(context, entity, followState, true, true);
+
+            playSound = true;
+        }
+    }
+
+    if (playSound)
+    {
+        if (isHumanPlayer(player))
+        {
+            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+        }
+        else
+        {
+            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
         }
     }
 }
@@ -155,9 +180,12 @@ void executeStopCommand(WarContext* context)
 void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
-
+    WarPlayerInfo* player = &map->players[0];
+    
     assert(isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
            isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST));
+
+    bool playSound = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -197,12 +225,28 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
 
                     changeNextState(context, entity, gatherGoldOrWoodState, true, true);
                 }
+
+                playSound = true;
             }
             else if (isDudeUnit(entity))
             {
                 WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
                 changeNextState(context, entity, followState, true, true);
+
+                playSound = true;
             }
+        }
+    }
+
+    if (playSound)
+    {
+        if (isHumanPlayer(player))
+        {
+            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+        }
+        else
+        {
+            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
         }
     }
 }
@@ -210,6 +254,9 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
 void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+
+    bool playSound = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -233,12 +280,28 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
             {
                 WarState* deliverState = createDeliverState(context, entity, townHall->id);
                 changeNextState(context, entity, deliverState, true, true);
+
+                playSound = true;
             }
             else if (isDudeUnit(entity))
             {
                 WarState* followState = createFollowState(context, entity, townHall->id, 1);
                 changeNextState(context, entity, followState, true, true);
+
+                playSound = true;
             }
+        }
+    }
+
+    if (playSound)
+    {
+        if (isHumanPlayer(player))
+        {
+            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+        }
+        else
+        {
+            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
         }
     }
 }
@@ -246,6 +309,9 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
 void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+
+    bool playSound = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -266,7 +332,21 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
             {
                 WarState* repairState = createRepairState(context, entity, targetEntity->id);
                 changeNextState(context, entity, repairState, true, true);
+
+                playSound = true;
             }
+        }
+    }
+
+    if (playSound)
+    {
+        if (isHumanPlayer(player))
+        {
+            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+        }
+        else
+        {
+            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
         }
     }
 }
@@ -274,6 +354,9 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+
+    bool playSound = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -292,14 +375,7 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
                     WarState* attackState = createAttackState(context, entity, targetEntity->id, targetTile);
                     changeNextState(context, entity, attackState, true, true);
 
-                    if (getUnitRace(entity) == WAR_RACE_HUMANS)
-                    {
-                        createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-                    }
-                    else
-                    {
-                        createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-                    }
+                    playSound = true;
                 }
             }
             else
@@ -307,15 +383,20 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
                 WarState* attackState = createAttackState(context, entity, 0, targetTile);
                 changeNextState(context, entity, attackState, true, true);
 
-                if (getUnitRace(entity) == WAR_RACE_HUMANS)
-                {
-                    createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-                }
-                else
-                {
-                    createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-                }
+                playSound = true;
             }
+        }
+    }
+
+    if (playSound)
+    {
+        if (isHumanPlayer(player))
+        {
+            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
+        }
+        else
+        {
+            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
         }
     }
 }

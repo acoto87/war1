@@ -178,23 +178,24 @@ WarAudioData getAudioData(WarAudioId audioId)
 bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
 {
     WarAudioComponent* audio = &entity->audio;
+    tsf* soundFont = context->soundFont;
 
     while (sampleCount)
     {
         //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
         u32 sampleBlock = min(TSF_RENDER_EFFECTSAMPLEBLOCK, sampleCount);
-
         audio->playbackTime += sampleBlock * (1000.0f / PLAYBACK_FREQ);
 
         //Loop through all MIDI messages which need to be played up until the current playback time
         tml_message* midiMessage = audio->currentMessage;
+        tml_message* prevMessage = midiMessage;
         while (midiMessage)
         {
             // end of track
             if (midiMessage->type == TML_EOT)
             {
-                logInfo("EOF detected, loop?: %d\n", audio->loop);
                 midiMessage = audio->loop ? audio->firstMessage : NULL;
+                audio->playbackTime -= prevMessage->time;
             }
 
             if (!midiMessage || midiMessage->time > audio->playbackTime)
@@ -202,49 +203,59 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
                 break;
             }
 
+            u8 channel = midiMessage->channel;
+
             switch (midiMessage->type)
             {
                 // channel program (preset) change (special handling for 10th MIDI channel with drums)
                 case TML_PROGRAM_CHANGE: 
                 {
-                    tsf_channel_set_presetnumber(context->soundFont, midiMessage->channel, midiMessage->program, (midiMessage->channel == 9));
+                    s8 program = midiMessage->program;
+                    tsf_channel_set_presetnumber(soundFont, channel, program, (channel == 9));
                     break;
                 }
 
                 // play a note
                 case TML_NOTE_ON:
                 {
-                    tsf_channel_note_on(context->soundFont, midiMessage->channel, midiMessage->key, midiMessage->velocity / 127.0f);
+                    s8 key = midiMessage->key;
+                    f32 velocity = midiMessage->velocity / 127.0f;
+                    tsf_channel_note_on(soundFont, channel, key, velocity * context->musicVolume);
                     break;
                 }
 
                 // stop a note
                 case TML_NOTE_OFF:
                 {
-                    tsf_channel_note_off(context->soundFont, midiMessage->channel, midiMessage->key);
+                    s8 key = midiMessage->key;
+                    tsf_channel_note_off(soundFont, channel, key);
                     break;
                 }
                 
                 // pitch wheel modification
                 case TML_PITCH_BEND:
                 {
-                    tsf_channel_set_pitchwheel(context->soundFont, midiMessage->channel, midiMessage->pitch_bend);
+                    u16 pitchBend = midiMessage->pitch_bend;
+                    tsf_channel_set_pitchwheel(soundFont, channel, pitchBend);
                     break;
                 }
                     
                 // MIDI controller messages
                 case TML_CONTROL_CHANGE:
                 {
-                    tsf_channel_midi_control(context->soundFont, midiMessage->channel, midiMessage->control, midiMessage->control_value);
+                    s8 control = midiMessage->control;
+                    s8 controlValue = midiMessage->control_value;
+                    tsf_channel_midi_control(soundFont, channel, control, controlValue);
                     break;
                 }
             }
 
+            prevMessage = midiMessage;
             midiMessage = midiMessage->next;
         }
 
         // Render the block of audio samples in float format
-        tsf_render_short(context->soundFont, outputStream, sampleBlock, TSF_TRUE);
+        tsf_render_short(soundFont, outputStream, sampleBlock, TSF_TRUE);
 
         sampleCount -= sampleBlock;
         outputStream += sampleBlock;
@@ -271,7 +282,10 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     do
     {
         if (audio->sampleIndex >= waveLength)
+        {
             audio->sampleIndex = 0;
+            audio->playbackTime = 0;
+        }
 
         u8* waveData = &resource->audio.data[audio->sampleIndex];
 
@@ -281,8 +295,10 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
             s16 value = *waveData;
             value = value - 128;
             value = value << 8;
+            value = (s16)(value * context->soundVolume);
             value += *outputStream;
-            *outputStream = clamp(value, INT16_MIN, INT16_MAX);
+            value = clamp(value, INT16_MIN, INT16_MAX);
+            *outputStream = value;
 
             waveData++;
             outputStream++;
@@ -401,7 +417,10 @@ bool initAudio(WarContext* context)
         return false;
     }
 
-   return true;
+    context->musicVolume = 1.0f;
+    context->soundVolume = 1.0f;
+
+    return true;
 }
 
 WarEntity* createAudio(WarContext* context, WarAudioId audioId, bool loop)

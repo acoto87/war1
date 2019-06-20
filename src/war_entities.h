@@ -54,6 +54,9 @@ void removeButtonComponent(WarContext* context, WarEntity* entity);
 void addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType type, s32 resourceIndex, bool loop);
 void removeAudioComponent(WarContext* context, WarEntity* entity);
 
+void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType type, vec2 hot);
+void removeCursorComponent(WarContext* context, WarEntity* entity);
+
 // Roads
 WarEntity* createRoad(WarContext* context);
 void addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player);
@@ -100,7 +103,7 @@ WarEntity* createDude(WarContext* context, WarUnitType type, s32 x, s32 y, u8 pl
 WarEntity* createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToBuild);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
-WarEntity* findUIEntity(WarContext* context, char* name);
+WarEntity* findUIEntity(WarContext* context, const char* name);
 void removeEntity(WarContext* context, WarEntity* entity);
 void removeEntityById(WarContext* context, WarEntityId id);
 void renderEntity(WarContext* context, WarEntity* entity, bool selected);

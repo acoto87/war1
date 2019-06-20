@@ -35,7 +35,13 @@
 
 void setWindowSize(WarContext* context, s32 width, s32 height);
 void setGlobalScale(WarContext* context, f32 scale);
+void changeGlobalScale(WarContext* context, f32 deltaScale);
 void setGlobalSpeed(WarContext* context, f32 speed);
+void changeGlobalSpeed(WarContext* context, f32 deltaSpeed);
+void setMusicVolume(WarContext* context, f32 volume);
+void changeMusicVolume(WarContext* context, f32 deltaVolume);
+void setSoundVolume(WarContext* context, f32 volume);
+void changeSoundVolume(WarContext* context, f32 deltaVolume);
 
 vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
 {
@@ -57,19 +63,16 @@ vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
 
 vec2 getDirFromMousePos(WarContext* context, WarInput* input)
 {
-    WarMap *map = context->map;
-    rect mapPanel = map->mapPanel;
-
     vec2 dir = VEC2_ZERO;
 
-    if (input->pos.x < mapPanel.x + MAP_EDGE_SCROLL_GAP)
+    if (input->pos.x < MAP_EDGE_SCROLL_GAP)
         dir.x = -1;
-    else if (input->pos.x > mapPanel.x + mapPanel.width - MAP_EDGE_SCROLL_GAP)
+    else if (input->pos.x > context->originalWindowWidth - MAP_EDGE_SCROLL_GAP)
         dir.x = 1;
 
-    if (input->pos.y < mapPanel.y + MAP_EDGE_SCROLL_GAP)
+    if (input->pos.y < MAP_EDGE_SCROLL_GAP)
         dir.y = -1;
-    else if (input->pos.y > mapPanel.y + mapPanel.height - MAP_EDGE_SCROLL_GAP)
+    else if (input->pos.y > context->originalWindowHeight - MAP_EDGE_SCROLL_GAP)
         dir.y = 1;
 
     dir = vec2Normalize(dir);

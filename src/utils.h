@@ -14,6 +14,7 @@
 #define randomf(a, b) ((a) + ((f32)rand() / RAND_MAX) * ((b) - (a)))
 #define inRange(x, a, b) ((x) >= (a) && (x) < (b))
 #define debugVar(x) printf("variable "#x" = %d\n", x)
+#define strEquals(str1, str2) (strcmp((str1), (str2)) == 0)
 
 typedef int8_t s8;
 typedef int16_t s16;

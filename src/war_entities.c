@@ -286,6 +286,19 @@ void removeAudioComponent(WarContext* context, WarEntity* entity)
     entity->audio = (WarAudioComponent){0};
 }
 
+void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType type, vec2 hot)
+{
+    entity->cursor = (WarCursorComponent){0};
+    entity->cursor.enabled = true;
+    entity->cursor.type = type;
+    entity->cursor.hot = hot;
+}
+
+void removeCursorComponent(WarContext* context, WarEntity* entity)
+{
+    entity->cursor = (WarCursorComponent){0};
+}
+
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
 {
@@ -449,15 +462,20 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
-WarEntity* findUIEntity(WarContext* context, char* name)
+WarEntity* findUIEntity(WarContext* context, const char* name)
 {
     WarMap* map = context->map;
 
     for (s32 i = 0; i < map->entities.count; i++)
     {
         WarEntity* entity = map->entities.items[i];
-        if (entity && entity->ui.enabled && !strcmp(entity->ui.name, name))
+        if (entity && 
+            isUIEntity(entity) && 
+            entity->ui.enabled && 
+            strEquals(entity->ui.name, name))
+        {
             return entity;
+        }
     }
 
     return NULL;
@@ -479,6 +497,7 @@ void removeEntity(WarContext* context, WarEntity* entity)
     removeRectComponent(context, entity);
     removeButtonComponent(context, entity);
     removeAudioComponent(context, entity);
+    removeCursorComponent(context, entity);
 }
 
 void removeEntityById(WarContext* context, WarEntityId id)
@@ -505,7 +524,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
 }
 
 // Render entities
-void _renderImage(WarContext* context, WarEntity* entity)
+void renderImage(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -530,7 +549,7 @@ void _renderImage(WarContext* context, WarEntity* entity)
     }
 }
 
-void _renderRoad(WarContext* context, WarEntity* entity)
+void renderRoad(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -578,7 +597,7 @@ void _renderRoad(WarContext* context, WarEntity* entity)
     }
 }
 
-void _renderWall(WarContext* context, WarEntity* entity)
+void renderWall(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -644,7 +663,7 @@ void _renderWall(WarContext* context, WarEntity* entity)
     }
 }
 
-void _renderRuin(WarContext* context, WarEntity* entity)
+void renderRuin(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -696,7 +715,7 @@ void _renderRuin(WarContext* context, WarEntity* entity)
     }
 }
 
-void _renderForest(WarContext* context, WarEntity* entity)
+void renderForest(WarContext* context, WarEntity* entity)
 {
     WarForestComponent* forest = &entity->forest;
 
@@ -731,7 +750,7 @@ void _renderForest(WarContext* context, WarEntity* entity)
     }
 }
 
-void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
+void renderUnit(WarContext* context, WarEntity* entity, bool selected)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -832,7 +851,7 @@ void _renderUnit(WarContext* context, WarEntity* entity, bool selected)
     }
 }
 
-void _renderText(WarContext* context, WarEntity* entity)
+void renderText(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -860,7 +879,7 @@ void _renderText(WarContext* context, WarEntity* entity)
     }
 }
 
-void _renderRect(WarContext* context, WarEntity* entity)
+void renderRect(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -881,7 +900,7 @@ void _renderRect(WarContext* context, WarEntity* entity)
     }
 }
 
-void _renderButton(WarContext* context, WarEntity* entity)
+void renderButton(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
 
@@ -946,55 +965,61 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
         {
             case WAR_ENTITY_TYPE_IMAGE:
             {
-                _renderImage(context, entity);
+                renderImage(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_UNIT:
             {
-                _renderUnit(context, entity, selected);
+                renderUnit(context, entity, selected);
                 break;
             }
 
             case WAR_ENTITY_TYPE_ROAD:
             {
-                _renderRoad(context, entity);
+                renderRoad(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_WALL:
             {
-                _renderWall(context, entity);
+                renderWall(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_RUIN:
             {
-                _renderRuin(context, entity);
+                renderRuin(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_FOREST:
             {
-                _renderForest(context, entity);
+                renderForest(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_TEXT:
             {
-                _renderText(context, entity);
+                renderText(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_RECT:
             {
-                _renderRect(context, entity);
+                renderRect(context, entity);
                 break;
             }
 
             case WAR_ENTITY_TYPE_BUTTON:
             {
-                _renderButton(context, entity);
+                renderButton(context, entity);
+                break;
+            }
+
+            case WAR_ENTITY_TYPE_CURSOR:
+            {
+                renderImage(context, entity);
                 break;
             }
 

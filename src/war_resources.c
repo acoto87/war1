@@ -150,7 +150,7 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     u16 width = readu16(rawResource.data, 0);
     u16 height = readu16(rawResource.data, 2);
 
-    u8 *pixels = (u8*)xmalloc(width * height * 4);
+    u8 *pixels = (u8*)xcalloc(width * height * 4, sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
@@ -727,6 +727,47 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     free(data);
 }
 
+void loadCursor(WarContext* context, DatabaseEntry* entry)
+{
+    u8 paletteData[PALETTE_LENGTH];
+    getPalette(context, entry->param1, entry->param2, paletteData);
+
+    s32 index = entry->index;
+    WarRawResource rawResource = context->warFile->resources[index];
+
+    u16 hotx = readu16(rawResource.data, 0);
+    u16 hoty = readu16(rawResource.data, 2);
+    u16 width = readu16(rawResource.data, 4);
+    u16 height = readu16(rawResource.data, 6);
+
+    u8 *pixels = (u8*)xcalloc(width * height * 4, sizeof(u8));
+    for (s32 i = 0; i < width * height; ++i)
+    {
+        u32 colorIndex = readu8(rawResource.data, 8 + i);
+
+        pixels[i * 4 + 0] = readu8(paletteData, colorIndex * 3 + 0);
+        pixels[i * 4 + 1] = readu8(paletteData, colorIndex * 3 + 1);
+        pixels[i * 4 + 2] = readu8(paletteData, colorIndex * 3 + 2);
+
+        // assuming that colorIndex == 0 is the transparent color
+        if (pixels[i * 4 + 0] > 0 ||
+            pixels[i * 4 + 1] > 0 ||
+            pixels[i * 4 + 2] > 0 ||
+            colorIndex != 0)
+        {
+            pixels[i * 4 + 3] = 255;
+        }
+    }
+    
+    WarResource *resource = getOrCreateResource(context, index);
+    resource->type = WAR_RESOURCE_TYPE_CURSOR;
+    resource->cursor.hotx = hotx;
+    resource->cursor.hoty = hoty;
+    resource->cursor.width = width;
+    resource->cursor.height = height;
+    resource->cursor.pixels = pixels;
+}
+
 void loadResource(WarContext *context, DatabaseEntry *entry)
 {
     switch (entry->type)
@@ -800,6 +841,12 @@ void loadResource(WarContext *context, DatabaseEntry *entry)
         case DB_ENTRY_TYPE_VOC:
         {
             loadVoc(context, entry);
+            break;
+        }
+
+        case DB_ENTRY_TYPE_CURSOR:
+        {
+            loadCursor(context, entry);
             break;
         }
 

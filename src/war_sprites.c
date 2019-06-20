@@ -48,7 +48,9 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
 WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s32 frameIndicesCount, s32 frameIndices[])
 {
     assert(resource);
-    assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || resource->type == WAR_RESOURCE_TYPE_SPRITE);
+    assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || 
+           resource->type == WAR_RESOURCE_TYPE_SPRITE || 
+           resource->type == WAR_RESOURCE_TYPE_CURSOR);
 
     WarSprite sprite;
 
@@ -93,6 +95,15 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
                 free(frames);
             }
 
+            break;
+        }
+
+        case WAR_RESOURCE_TYPE_CURSOR:
+        {
+            u32 width = resource->cursor.width;
+            u32 height = resource->cursor.height;
+            u8* data = resource->cursor.pixels;
+            sprite = createSprite(context, width, height, data);
             break;
         }
 

@@ -100,6 +100,20 @@ WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef s
     return entity;
 }
 
+WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, vec2 position)
+{
+    WarResource* resource = getOrCreateResource(context, type);
+    assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
+
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_CURSOR, true);
+    addTransformComponent(context, entity, position);
+    addUIComponent(context, entity, name);
+    addSpriteComponentFromResource(context, entity, imageResourceRef(type));
+    addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
+
+    return entity;
+}
+
 WarEntity* createUITextButton(WarContext* context, 
                               char* name,
                               s32 fontIndex,
@@ -143,6 +157,7 @@ bool isUIEntity(WarEntity* entity)
         case WAR_ENTITY_TYPE_TEXT:
         case WAR_ENTITY_TYPE_RECT:
         case WAR_ENTITY_TYPE_BUTTON:
+        case WAR_ENTITY_TYPE_CURSOR:
             return true;
 
         default:
@@ -481,8 +496,20 @@ void renderUIEntities(WarContext* context)
         WarEntity *entity = map->entities.items[i];
         if (entity && isUIEntity(entity))
         {
-            renderEntity(context, entity, false);
+            if (!strEquals(entity->ui.name, "cursor"))
+            {
+                renderEntity(context, entity, false);
+            }
         }
+    }
+}
+
+void renderCursor(WarContext* context)
+{
+    WarEntity* entity = findUIEntity(context, "cursor");
+    if (entity)
+    {
+        renderEntity(context, entity, false);
     }
 }
 
@@ -561,7 +588,7 @@ void renderMinimapViewport(WarContext* context)
 
 void renderMapUI(WarContext* context)
 {
-    WarMap* map = context->map;
+    // WarMap* map = context->map;
     NVGcontext* gfx = context->gfx;
 
     nvgSave(gfx);
@@ -578,6 +605,9 @@ void renderMapUI(WarContext* context)
     // render minimap
     renderMinimap(context);
     renderMinimapViewport(context);
+
+    // render the cursor at the end
+    renderCursor(context);
 
     // DEBUG:
     // Render debug info

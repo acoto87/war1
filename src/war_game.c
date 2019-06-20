@@ -27,6 +27,8 @@ bool initGame(WarContext* context)
 
     glfwMakeContextCurrent(context->window);
 
+    glfwSetInputMode(context->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
     gladLoadGLES2Loader((GLADloadproc) glfwGetProcAddress);
 
     glCheckOpenGLVersion();
@@ -60,7 +62,7 @@ bool initGame(WarContext* context)
         logError("Could not initialize audio.\n");
         return false;
     }
-
+    
     // load fonts
     nvgCreateFont(context->gfx, "defaultFont", "./Roboto-Regular.ttf");
     context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
@@ -101,20 +103,50 @@ void setWindowSize(WarContext* context, s32 width, s32 height)
 
 void setGlobalScale(WarContext* context, f32 scale)
 {
-    assert(scale >= 1);
-
-    context->globalScale = scale;
+    context->globalScale = max(scale, 1.0f);
+    logDebug("set global scale to: %.2f\n", context->globalScale);
 
     s32 newWidth = (s32)(context->originalWindowWidth * context->globalScale);
     s32 newHeight = (s32)(context->originalWindowHeight * context->globalScale);
     setWindowSize(context, newWidth, newHeight);
 }
 
+void changeGlobalScale(WarContext* context, f32 deltaScale)
+{
+    setGlobalScale(context, context->globalScale + deltaScale);
+}
+
 void setGlobalSpeed(WarContext* context, f32 speed)
 {
-    assert(speed >= 1);
+    context->globalSpeed = max(speed, 1.0f);
+    logDebug("set global speed to: %.2f\n", context->globalSpeed);
+}
 
-    context->globalSpeed = speed;
+void changeGlobalSpeed(WarContext* context, f32 deltaSpeed)
+{
+    setGlobalSpeed(context, context->globalSpeed + deltaSpeed);
+}
+
+void setMusicVolume(WarContext* context, f32 volume)
+{
+    context->musicVolume = clamp(volume, 0.0f, 1.0f);
+    logDebug("set music volume to: %.2f\n", context->musicVolume);
+}
+
+void changeMusicVolume(WarContext* context, f32 deltaVolume)
+{
+    setMusicVolume(context, context->musicVolume + deltaVolume);
+}
+
+void setSoundVolume(WarContext* context, f32 volume)
+{
+    context->soundVolume = clamp(volume, 0.0f, 1.0f);
+    logDebug("set sound volume to: %.2f\n", context->soundVolume);
+}
+
+void changeSoundVolume(WarContext* context, f32 deltaVolume)
+{
+    setSoundVolume(context, context->soundVolume + deltaVolume);
 }
 
 void setInputButton(WarContext* context, s32 button, bool pressed)
