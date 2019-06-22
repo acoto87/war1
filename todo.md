@@ -54,6 +54,7 @@ List of thing to do in no particular order
       #endif
     }
     ```
+  * Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR
 
 * General
   * ~~Test the new implementation for lists.~~

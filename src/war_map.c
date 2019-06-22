@@ -1653,6 +1653,110 @@ void updateAnimations(WarContext* context)
     }
 }
 
+void updateProjectile(WarContext* context, WarEntity* entity)
+{
+    WarTransformComponent* transform = &entity->transform;
+    WarSpriteComponent* sprite = &entity->sprite;
+    WarProjectileComponent* projectile = &entity->projectile;
+
+    if (sprite->enabled && projectile->enabled)
+    {
+        switch (projectile->type)
+        {
+            case WAR_PROJECTILE_ARROW:
+            {
+                vec2 position = transform->position;
+                
+                vec2 direction = vec2Subv(projectile->target, projectile->origin);
+                f32 directionLength = vec2Length(direction);
+                direction = vec2Normalize(direction);
+
+                f32 speed = getScaledSpeed(context, projectile->speed);
+                vec2 step = vec2Mulf(direction, speed * context->deltaTime);
+                f32 stepLength = vec2Length(step);
+
+                if (directionLength < stepLength)
+                {
+                    step = direction;
+                }
+
+                position = vec2Addv(position, step);
+
+                s32 frameIndex = 2;
+                vec2 scale = VEC2_ONE;
+
+                f32 angle = vec2Angle(VEC2_RIGHT, direction);
+                if (angle >= 22.5f && angle < 67.5f)
+                    frameIndex = 1;
+                else if (angle >= 67.5f && angle < 112.5f)
+                    frameIndex = 0;
+                else if (angle >= 112.5f && angle < 157.5f)
+                    frameIndex = 1;
+                    scale.x *= -1;
+                else if (angle >= 157.5f && angle < 202.5f)
+                    frameIndex = 2;
+                    scale.x *= -1;
+                else if (angle >= 202.5f && angle < 247.5f)
+                    frameIndex = 3;
+                    scale.x *= -1;
+                else if (angle >= 247.5f && angle < 292.5f)
+                    frameIndex = 4;
+                else if (angle >= 292.5f && angle < 337.5f)
+                    frameIndex = 3;
+                else
+                    frameIndex = 2;
+
+                transform->position = position;
+                transform->scale = scale;
+                sprite->frameIndex = frameIndex;
+
+                break;
+            }
+            case WAR_PROJECTILE_CATAPULT:
+            {
+                break;
+            }
+            case WAR_PROJECTILE_FIREBALL:
+            {
+                break;
+            }
+            case WAR_PROJECTILE_FIREBALL_2:
+            {
+                break;
+            }
+            case WAR_PROJECTILE_WATER_ELEMENTAL:
+            {
+                break;
+            }
+            case WAR_PROJECTILE_RAIN_OF_FIR:
+            {
+                break;
+            }
+        }
+
+        WarProjectileType type;
+        WarEntityId owner;
+        vec2 fromTile;
+        vec2 toTile;
+        f32 speed;
+    }
+}
+
+void updateProjectiles(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    WarEntityList* projectiles = getEntitiesOfType(map, WAR_ENTITY_TYPE_PROJECTILE);
+    for (s32 i = 0; i < projectiles->count; i++)
+    {
+        WarEntity* entity = projectiles->items[i];
+        if (entity)
+        {
+            updateProjectile(context, entity);
+        }
+    }
+}
+
 void updateMap(WarContext* context)
 {
     updateGlobalSpeed(context);
@@ -1675,6 +1779,7 @@ void updateMap(WarContext* context)
     updateStateMachines(context);
     updateActions(context);
     updateAnimations(context);
+    updateProjectiles(context);
 
     updateGoldText(context);
     updateWoodText(context);

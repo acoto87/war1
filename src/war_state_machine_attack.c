@@ -100,7 +100,55 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (isRangeUnit(entity))
                 {
-                    // TODO: fire the projectile here
+                    s32 resourceIndex;
+                    WarProjectileType projectileType;
+
+                    switch (entity->unit.type)
+                    {
+                        case WAR_UNIT_ARCHER:
+                        case WAR_UNIT_SPEARMAN:
+                        {
+                            resourceIndex = 349;
+                            projectileType = WAR_PROJECTILE_ARROW;
+                            break;
+                        }
+
+                        case WAR_UNIT_CATAPULT_HUMANS:
+                        case WAR_UNIT_CATAPULT_ORCS:
+                        {
+                            resourceIndex = 348;
+                            projectileType = WAR_PROJECTILE_CATAPULT;
+                            break;
+                        }
+
+                        case WAR_UNIT_CONJURER:
+                        case WAR_UNIT_WARLOCK:
+                        case WAR_UNIT_NECROLYTE:
+                        case WAR_UNIT_MEDIVH:
+                        {
+                            resourceIndex = 347;
+                            projectileType = WAR_PROJECTILE_FIREBALL;
+                            break;
+                        }
+
+                        case WAR_UNIT_WATER_ELEMENTAL:
+                        {
+                            resourceIndex = 357;
+                            projectileType = WAR_PROJECTILE_WATER_ELEMENTAL;
+                            break;
+                        }
+                        
+                        default:
+                        {
+                            // unreachable
+                            logWarning("Invalid unit firing a projectile: %d\n", entity->unit.type);
+                            break;
+                        }
+                    }
+                    
+                    WarEntity* projectile = createEntity(conext, WAR_ENTITY_TYPE_PROJECTILE, true);
+                    addSpriteComponentFromResource(context, projectile, imageResourceRef(resourceIndex));
+                    addProjectileComponent(context, projectile, entity->id, projectileType, from, to);
                 }
                 else
                 {

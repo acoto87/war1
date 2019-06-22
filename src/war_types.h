@@ -762,6 +762,7 @@ typedef enum
     WAR_ENTITY_TYPE_BUTTON,
     WAR_ENTITY_TYPE_CURSOR,
     WAR_ENTITY_TYPE_AUDIO,
+    WAR_ENTITY_TYPE_PROJECTILE,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -1536,6 +1537,26 @@ typedef struct
     vec2 hot;
 } WarCursorComponent;
 
+typedef enum
+{
+    WAR_PROJECTILE_ARROW,
+    WAR_PROJECTILE_CATAPULT,
+    WAR_PROJECTILE_FIREBALL,
+    WAR_PROJECTILE_FIREBALL_2,
+    WAR_PROJECTILE_WATER_ELEMENTAL,
+    WAR_PROJECTILE_RAIN_OF_FIRE
+} WarProjectileType;
+
+typedef struct
+{
+    bool enabled;
+    WarProjectileType type;
+    WarEntityId owner;
+    vec2 origin;
+    vec2 target;
+    f32 speed;
+} WarProjectileComponent;
+
 typedef struct _WarEntity
 {
     bool enabled;
@@ -1556,6 +1577,7 @@ typedef struct _WarEntity
     WarButtonComponent button;
     WarAudioComponent audio;
     WarCursorComponent cursor;
+    WarProjectileComponent projectile;
 } WarEntity;
 
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
