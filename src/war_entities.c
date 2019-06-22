@@ -822,7 +822,12 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
         if (selected)
         {
             rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
-            nvgStrokeRect(gfx, selr, NVG_GREEN_SELECTION, 1.0f);
+            NVGcolor color = NVG_WHITE_SELECTION;
+            if (isFriendlyUnit(context, entity))
+                color = NVG_GREEN_SELECTION;
+            else if (isEnemyUnit(context, entity))
+                color = NVG_RED_SELECTION;
+            nvgStrokeRect(gfx, selr, color, 1.0f);
         }
     }
 

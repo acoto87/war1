@@ -3,23 +3,38 @@
 List of thing to do in no particular order
 
 * Bugs
-  * Check for memory leaks in the removing animations functionality.
-  * Check why the changing of the global scale renders with the previous global scale after a change.
   * ~~Corpses can be selected, it shouldn't be.~~
-  * Corpses are rendered above units.
-  * Damage animations are rendered below units.
-  * Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.
-  * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
   * ~~Black pixels in little tree and gold icons.~~
   * ~~Black pixels in the "% COMPLETE" text.~~
   * ~~If a building is damaged then it can't start a train of a unit because it can't have the two states running at the same time.~~
     * ~~The Damaged state of buildings was removed, the damage animations are set in the takeDamage function now the building can build/train while is damaged.~~
-  * Changing global speed doesn't change ongoing trainings.
-  * Select footman -> right click on a tree, and assertion is hit.
   * ~~When a building is being built dont show command buttons or command texts.~~
   * ~~When different buildings are collapsed in near positions, the ruins doesn't merge well.~~
+  * ~~Check why is failing when trying to determine if the midi is finish playing. Check that the entity removes correctly after the midi finish playing.~~
+  * ~~Arrows for scrolling on the windows edges instead of viewport edges.~~
+  * ~~Cursor have a some pixels without transparency.~~
+  * ~~Right click when a command that needs a target should cancel the command.~~
+  * ~~~Sounds are freed 3 times!, what's up with that?~~
+    This was the result of deleting the entity and the engine trying to free the sprites associated with the sprite and button components.
+  * ~~When executing a command with a multiple selection all units play the corresponding sound, it saturate the channel and it sounds horrible.~~
+  * ~~The lastActionStep for the harvest action is the same for multiples frames. Investigate what is happening there to correctly chop the tree and play the chop sound. Do the same for the repairing state.~~
+  * ~~Sounds of the goldmine?~~
+    There is no sound for the goldmine.
+  * ~~Selection rect green for friendly units, red for enemies and white for neutral.~~
+  * Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.
+  * In the minimap corpses are shown.
+  * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
+  * When a unit is selected, say a warrior, and it cursor is over an enemy unit, it shows the magnifying glass because there is no active command. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
   * When building roads the player needs to go back and click on the build road button again to build the next one.
   * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
+  * Changing global speed doesn't change ongoing trainings.
+  * Select footman -> right click on a tree, and assertion is hit.
+  * Check for memory leaks in the removing animations functionality.
+  * Check why the changing of the global scale renders with the previous global scale after a change (only on Linux, on Windows it doesn't happen).
+  * Corpses are rendered above units.
+  * Damage animations are rendered below units.
+  * Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.
+  * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
   * Make a call to `sleep` instead of waiting in a cycle until the frame end. This will probably increase effiency and decrease CPU usage. I need a portable sleep function, maybe something like:
     ```c
     void msleep(s32 milliseconds) // cross-platform sleep function
@@ -39,21 +54,6 @@ List of thing to do in no particular order
       #endif
     }
     ```
-  * ~~Check why is failing when trying to determine if the midi is finish playing. Check that the entity removes correctly after the midi finish playing.~~
-  * ~~Arrows for scrolling on the windows edges instead of viewport edges.~~
-  * ~~Cursor have a some pixels without transparency.~~
-  * ~~Right click when a command that needs a target should cancel the command.~~
-  * ~~~Sounds are freed 3 times!, what's up with that?~~
-    This was the result of deleting the entity and the engine trying to free the sprites associated with the sprite and button components.
-  * ~~When executing a command with a multiple selection all units play the corresponding sound, it saturate the channel and it sounds horrible.~~
-  * ~~The lastActionStep for the harvest action is the same for multiples frames. Investigate what is happening there to correctly chop the tree and play the chop sound. Do the same for the repairing state.~~
-  * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
-  * When a unit is selected, say a warrior, and it cursor is over an enemy unit, it shows the magnifying glass because there is no active command. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
-  * ~~Sounds of the goldmine?~~
-    There is no sound for the goldmine.
-  * Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.
-  * In the minimap corpses are shown.
-  * Selection rect green for friendly units, red for enemies and white for neutral.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -67,10 +67,10 @@ List of thing to do in no particular order
   * ~~Factorize state_machine.c in files (maybe `state_machine_update.c`, `state_machine_enter.c`, etc.).~~
   * Draw text system (to debug and other texts).
   * ~~Walls (same system like roads).~~
-  * Make a better input system
+  * ~~Make a better input system~~
     * ~~Map scrolling and positioning by clicking in the minimap is now all under `updateViewport` function.~~
     * ~~Selection drag is now all under `updateDragRect` function.~~
-    * Refactor right click code into a more robust order system.
+    * ~~Refactor right click code into a more robust order system.~~
   * ~~Make trees behavior~~
     * ~~Test different configurations and update the excel and the array of tree index to tile mappings.~~
   * ~~Make roads behavior like the trees.~~
@@ -140,7 +140,6 @@ List of thing to do in no particular order
   * ~~Add animation system, again.~~
   * ~~Switch animations without reseting the new animation to the start. This will allow have one animation for each orientation of then switch to the correct one depending of the orientation but conserving the state.~~
   * ~~Change the concept of animations by a sequence of frames, to a more complex but powerful system of actions. Each unit can have several actions, which can have steps and the steps of the actions describe what the unit does. For example, this is the `Attack` action of the footman:~~
-
   ```c
   Attack={
     "unbreakable begin",
@@ -164,10 +163,9 @@ List of thing to do in no particular order
     "wait 1" 
   }
   ```
-
   * Move actions system to animations, again? :| 
     The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
-  * Projectiles (arrows, and fireballs).
+  * > Projectiles (arrows, and fireballs).
 
 * State machine
   * ~~Idle state~~
@@ -190,8 +188,8 @@ List of thing to do in no particular order
       * ~~Do damage to buildings.~~
       * Do damage with splash (catapults).
       * Do damage with magic.
-  * Ground-attack state
-    * Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.
+  * ~~Ground-attack state~~
+    * ~~Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.~~
   * ~~Damaged state (for buildings)~~
   * ~~Collapse state (for buildings)~~
     * ~~Spawn ruins after the collapse of a building.~~
@@ -228,7 +226,7 @@ List of thing to do in no particular order
   * Cut scenes
   * Minimap
     * The minimap has to consider: base layer, chopped wood layer, entities layer. The base layer doesn't change once the map is created, so each frame only add the tiles about chopped wood and entities (position and types).
-  * Make font of original warcraft.
+  * ~~Make font of original warcraft.~~
     * ~~Make a bunch of screenshots and draw the font in pixel art.~~
     * ~~Make the system to draw text from a sprite of characters.~~
-    * Make font of menus
+    * ~~Make font of menus~~
