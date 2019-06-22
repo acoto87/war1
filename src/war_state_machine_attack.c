@@ -161,13 +161,26 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                             takeWallDamage(context, targetEntity, piece, unit->minDamage, unit->rndDamage);
                         }
 
-                        if (isFistUnit(entity))
+                        switch (action->lastSoundStep)
                         {
-                            createAudio(context, WAR_FIST_ATTACK, false);
-                        }
-                        else
-                        {
-                            createAudioRandom(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, false);
+                            case WAR_ACTION_STEP_SOUND_SWORD:
+                                createAudioRandom(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, false);
+                                break;
+                            case WAR_ACTION_STEP_SOUND_FIST:
+                                createAudio(context, WAR_FIST_ATTACK, false);
+                                break;
+                            case WAR_ACTION_STEP_SOUND_FIREBALL:
+                                createAudio(context, WAR_FIREBALL, false);
+                                break;
+                            case WAR_ACTION_STEP_SOUND_CATAPULT:
+                                createAudio(context, WAR_CATAPULT_ROCK_FIRED, false);
+                                break;
+                            case WAR_ACTION_STEP_SOUND_ARROW:
+                                createAudio(context, WAR_ARROW_SPEAR, false);
+                                break;
+                            default:
+                                // do nothing here
+                                break;
                         }
                     }
                 }

@@ -1190,7 +1190,6 @@ typedef struct _WarState
         {
             WarEntityId buildingId;
             bool insideBuilding;
-            f32 repairTime;
         } repairing;
     };
 } WarState;
@@ -1701,6 +1700,7 @@ typedef struct
     WarEntityMap entitiesByType;
     WarUnitMap unitsByType;
     WarEntityIdMap entitiesById;
+    WarEntityList uiEntities;
     
     WarEntityIdList selectedEntities;
 

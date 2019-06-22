@@ -491,10 +491,11 @@ void renderUIEntities(WarContext* context)
 {
     WarMap* map = context->map;
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* entities = getUIEntities(map);
+    for(s32 i = 0; i < entities->count; i++)
     {
-        WarEntity *entity = map->entities.items[i];
-        if (entity && isUIEntity(entity))
+        WarEntity *entity = entities->items[i];
+        if (entity)
         {
             if (!strEquals(entity->ui.name, "cursor"))
             {
@@ -523,12 +524,13 @@ void renderMinimap(WarContext* context)
     // copy the minimap base to the first frame which is the one that will be rendered
     memcpy(map->minimapSprite.frames[0].data, map->minimapSprite.frames[1].data, MINIMAP_WIDTH * MINIMAP_HEIGHT * 4);
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for(s32 i = 0; i < units->count; i++)
     {
         u8 r = 211, g = 211, b = 211;
 
-        WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+        WarEntity* entity = units->items[i];
+        if (entity)
         {
             WarUnitComponent unit = entity->unit;
 

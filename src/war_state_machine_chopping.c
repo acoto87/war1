@@ -87,6 +87,10 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
             deliverState->nextState = createGatherWoodState(context, entity, forest->id, treePosition);
             changeNextState(context, entity, deliverState, true, true);
         }
+
+        // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
+        action->lastActionStep = WAR_ACTION_STEP_NONE;
+        action->lastSoundStep =  WAR_ACTION_STEP_NONE;
     }
 }
 

@@ -361,10 +361,12 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
     WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
 
     s16* outputStream = (s16*)output;
-    for (s32 i = 0; i < map->entities.count; i++)
+
+    WarEntityList* audios = getEntitiesOfType(map, WAR_ENTITY_TYPE_AUDIO);
+    for (s32 i = 0; i < audios->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_AUDIO)
+        WarEntity* entity = audios->items[i];
+        if (entity)
         {
             if (playAudio(context, entity, sampleCount, outputStream))
             {

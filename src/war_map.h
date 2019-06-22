@@ -21,6 +21,26 @@ void clearSelection(WarContext* context)
     WarEntityIdListClear(&map->selectedEntities);
 }
 
+WarEntityList* getEntities(WarMap* map)
+{
+    return &map->entities;
+}
+
+WarEntityList* getEntitiesOfType(WarMap* map, WarEntityType type)
+{
+    return WarEntityMapGet(&map->entitiesByType, type);
+}
+
+WarEntityList* getUnitsOfType(WarMap* map, WarUnitType type)
+{
+    return WarUnitMapGet(&map->unitsByType, type);
+}
+
+WarEntityList* getUIEntities(WarMap* map)
+{
+    return &map->uiEntities;
+}
+
 vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;

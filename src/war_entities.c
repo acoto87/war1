@@ -324,9 +324,13 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
         WarEntityListAdd(&map->entities, entity);
         WarEntityIdMapSet(&map->entitiesById, entity->id, entity);
 
-        WarEntityList* list = WarEntityMapGet(&map->entitiesByType, type);
-        assert(list);
-        WarEntityListAdd(list, entity);
+        WarEntityList* entitiesOfType = getEntitiesOfType(map, type);
+        WarEntityListAdd(entitiesOfType, entity);
+
+        if (isUIEntity(entity))
+        {
+            WarEntityListAdd(&map->uiEntities, entity);
+        }
     }
 
     return entity;
@@ -466,9 +470,10 @@ WarEntity* findUIEntity(WarContext* context, const char* name)
 {
     WarMap* map = context->map;
 
-    for (s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* entities = getUIEntities(map);
+    for (s32 i = 0; i < entities->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
+        WarEntity* entity = entities->items[i];
         if (entity && 
             isUIEntity(entity) && 
             entity->ui.enabled && 
@@ -509,7 +514,11 @@ void removeEntityById(WarContext* context, WarEntityId id)
     {
         removeEntity(context, entity);
 
-        if (isUnit(entity))
+        if (isUIEntity(entity))
+        {
+            WarEntityListRemove(&map->uiEntities, entity);
+        }
+        else if (isUnit(entity))
         {
             WarEntityList* unitTypeList = WarUnitMapGet(&map->unitsByType, entity->unit.type);
             WarEntityListRemove(unitTypeList, entity);
@@ -1047,10 +1056,11 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_ARROWS:
         // case WAR_UPGRADE_SPEARS:
         {
-            for (s32 i = 0; i < map->entities.count; i++)
+            WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+            for (s32 i = 0; i < units->count; i++)
             {
-                WarEntity* entity = map->entities.items[i];
-                if (entity && isUnit(entity) && entity->unit.player == player->index)
+                WarEntity* entity = units->items[i];
+                if (entity && entity->unit.player == player->index)
                 {
                     if (entity->unit.type == WAR_UNIT_ARCHER || 
                         entity->unit.type == WAR_UNIT_SPEARMAN)
@@ -1066,10 +1076,11 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_SWORDS:
         // case WAR_UPGRADE_AXES:
         {
-            for (s32 i = 0; i < map->entities.count; i++)
+            WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+            for (s32 i = 0; i < units->count; i++)
             {
-                WarEntity* entity = map->entities.items[i];
-                if (entity && isUnit(entity) && entity->unit.player == player->index)
+                WarEntity* entity = units->items[i];
+                if (entity && entity->unit.player == player->index)
                 {
                     if (entity->unit.type == WAR_UNIT_FOOTMAN || 
                         entity->unit.type == WAR_UNIT_GRUNT ||
@@ -1096,10 +1107,11 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_HORSES:
         // case WAR_UPGRADE_WOLVES:
         {
-            for (s32 i = 0; i < map->entities.count; i++)
+            WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+            for (s32 i = 0; i < units->count; i++)
             {
-                WarEntity* entity = map->entities.items[i];
-                if (entity && isUnit(entity) && entity->unit.player == player->index)
+                WarEntity* entity = units->items[i];
+                if (entity && entity->unit.player == player->index)
                 {
                     if (isDudeUnit(entity))
                     {
@@ -1113,10 +1125,11 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         
         case WAR_UPGRADE_SHIELD:
         {
-            for (s32 i = 0; i < map->entities.count; i++)
+            WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+            for (s32 i = 0; i < units->count; i++)
             {
-                WarEntity* entity = map->entities.items[i];
-                if (entity && isUnit(entity) && entity->unit.player == player->index)
+                WarEntity* entity = units->items[i];
+                if (entity && entity->unit.player == player->index)
                 {
                     if (player->upgrades[upgrade].level == 1)
                     {
@@ -1231,9 +1244,10 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
 
     vec2 position = getUnitCenterPosition(entity, true);
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* entities = getEntities(map);
+    for(s32 i = 0; i < entities->count; i++)
     {
-        WarEntity* other = map->entities.items[i];
+        WarEntity* other = entities->items[i];
         if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
         {
             vec2 targetPosition = getUnitCenterPosition(other, true);
@@ -1251,9 +1265,10 @@ WarEntity* getAttackerEnemy(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* entities = getEntities(map);
+    for(s32 i = 0; i < entities->count; i++)
     {
-        WarEntity* other = map->entities.items[i];
+        WarEntity* other = entities->items[i];
         if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
         {
             if (isBeingAttackedBy(entity, other))

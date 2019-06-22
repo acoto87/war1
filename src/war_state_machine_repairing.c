@@ -2,6 +2,7 @@ WarState* createRepairingState(WarContext* context, WarEntity* entity, WarEntity
 {
     WarState* state = createState(context, entity, WAR_STATE_REPAIRING);
     state->repairing.buildingId = buildingId;
+    state->repairing.insideBuilding = false;
     return state;
 }
 
@@ -26,6 +27,7 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
         WarState* buildState = getBuildState(building);
         assert(buildState);
 
+        // if there is already someone building it, go idle
         if (buildState->build.workerId)
         {
             WarState* idleState = createIdleState(context, entity, true);
@@ -45,8 +47,6 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
     }
     else
     {
-        state->repairing.repairTime = context->time;
-
         vec2 unitSize = getUnitSize(entity);
         vec2 position = getUnitCenterPosition(entity, true);
         vec2 targetPosition = getUnitCenterPosition(building, true);
@@ -70,6 +70,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
+    WarUnitComponent* unit = &entity->unit;
 
     WarEntity* building = findEntity(context, state->repairing.buildingId);
 
@@ -96,7 +97,8 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     // so don't make any repairing since new buildings always spawn with full hp
     if (!state->repairing.insideBuilding)
     {
-        if (context->time - state->repairing.repairTime >= 1.0f)
+        WarUnitAction* action = unit->actions.items[unit->actionIndex];
+        if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
         {
             if (!decreasePlayerResources(context, player, 1, 1))
             {
@@ -119,19 +121,11 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
             {
                 building->unit.hp = building->unit.maxhp;
 
-                if (state->repairing.insideBuilding)
-                {
-                    // find a valid spawn position for the unit
-                    vec2 position = getUnitCenterPosition(entity, true);
-                    vec2 spawnPosition = findEmptyPosition(map->finder, position);
-                    setUnitCenterPosition(entity, spawnPosition, true);
-                }
-
                 WarState* idleState = createIdleState(context, entity, true);
                 changeNextState(context, entity, idleState, true, true);
             }
 
-            state->repairing.repairTime = context->time;
+            action->lastActionStep = WAR_ACTION_STEP_NONE;
         }
     }
     else if (!isBuilding(building) && !isGoingToBuild(building))

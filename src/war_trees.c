@@ -85,10 +85,11 @@ void determineAllTreeTiles(WarContext* context)
 {
     WarMap* map = context->map;
     
-    for (s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* forests = getEntitiesOfType(map, WAR_ENTITY_TYPE_FOREST);
+    for (s32 i = 0; i < forests->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_FOREST)
+        WarEntity* entity = forests->items[i];
+        if (entity)
         {
             determineTreeTiles(context, entity);
         }
@@ -193,7 +194,7 @@ bool validTree(WarContext* context, WarEntity* forest, WarTree* tree)
     return false;
 }
 
-void _chopTree(WarContext* context, WarEntity* forest, WarTree* tree)
+void takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
 {
     assert(forest);
     assert(forest->type == WAR_ENTITY_TYPE_FOREST);
@@ -212,11 +213,11 @@ void _chopTree(WarContext* context, WarEntity* forest, WarTree* tree)
 
     WarTree* aboveTree = getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley - 1);
     if (aboveTree && !validTree(context, forest, aboveTree))
-        _chopTree(context, forest, aboveTree);
+        takeTreeDown(context, forest, aboveTree);
 
     WarTree* belowTree = getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley + 1);
     if (belowTree && !validTree(context, forest, belowTree))
-        _chopTree(context, forest, belowTree);
+        takeTreeDown(context, forest, belowTree);
 }
 
 s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
@@ -229,7 +230,7 @@ s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
     
     if (tree->amount == 0)
     {
-        _chopTree(context, forest, tree);
+        takeTreeDown(context, forest, tree);
         determineTreeTiles(context, forest);
     }
 

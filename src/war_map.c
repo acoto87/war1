@@ -138,6 +138,9 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     entitiesByIdOptions.equalsFn = equalsEntityId;
     WarEntityIdMapInit(&map->entitiesById, entitiesByIdOptions);
 
+    // initialize ui entities list
+    WarEntityListInit(&map->uiEntities, WarEntityListNonFreeOptions);
+
     // initialize selected entities list
     WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
 
@@ -455,18 +458,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         setUITooltip(menuButton, NO_HIGHLIGHT, "MENU (F10)");
 
         createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
-
-        // WarResource* cursorRes = getOrCreateResource(context, 266);
-
-        // GLFWimage image;
-        // image.width = cursorRes->cursor.width;
-        // image.height = cursorRes->cursor.height;
-        // image.pixels = cursorRes->cursor.pixels;
-        // GLFWcursor* cursor = glfwCreateCursor(&image, 0, 0);
-        // if (cursor)
-        // {
-        //     glfwSetCursor(context->window, cursor);
-        // }
     }
 
     // set the initial state for the tiles
@@ -733,10 +724,11 @@ void updateSelection(WarContext* context)
                 rect pointerRect = rectScreenToMapCoordinates(context, input->dragRect);
 
                 // select the entities inside the dragging rect
-                for(s32 i = 0; i < map->entities.count; i++)
+                WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+                for(s32 i = 0; i < units->count; i++)
                 {
-                    WarEntity* entity = map->entities.items[i];
-                    if (entity && isUnit(entity) && entity->unit.enabled)
+                    WarEntity* entity = units->items[i];
+                    if (entity && entity->unit.enabled)
                     {
                         // don't select dead entities or corpses
                         if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
@@ -842,6 +834,10 @@ void updateSelection(WarContext* context)
                                 }
                             }
                         }
+                        else
+                        {
+                            createAudio(context, WAR_UI_CLICK, false);
+                        }
                     }
                 }
                 else if (areBuildingSelected)
@@ -885,7 +881,7 @@ void updateSelection(WarContext* context)
                                 }
                                 default:
                                 {
-                                    // no audio for other buildings
+                                    createAudio(context, WAR_UI_CLICK, false);
                                     break;
                                 }
                             }
@@ -1180,10 +1176,11 @@ void updateCommandFromButtons(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* buttons = getEntitiesOfType(map, WAR_ENTITY_TYPE_BUTTON);
+    for(s32 i = 0; i < buttons->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && isEntityOfType(entity, WAR_ENTITY_TYPE_BUTTON))
+        WarEntity* entity = buttons->items[i];
+        if (entity)
         {
             WarTransformComponent* transform = &entity->transform;
             WarButtonComponent* button = &entity->button;
@@ -1239,10 +1236,10 @@ void updateCommandFromButtons(WarContext* context)
             }
             else if (pointerInside)
             {
-                for(s32 j = 0; j < map->entities.count; j++)
+                for(s32 j = 0; j < buttons->count; j++)
                 {
-                    WarEntity* otherButton = map->entities.items[i];
-                    if (otherButton && isEntityOfType(otherButton, WAR_ENTITY_TYPE_BUTTON))
+                    WarEntity* otherButton = buttons->items[i];
+                    if (otherButton)
                     {
                         otherButton->button.hot = false;
                         otherButton->button.active = false;
@@ -1435,10 +1432,11 @@ void updateStatus(WarContext* context)
         }
     }
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* buttons = getEntitiesOfType(map, WAR_ENTITY_TYPE_BUTTON);
+    for(s32 i = 0; i < buttons->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_BUTTON)
+        WarEntity* entity = buttons->items[i];
+        if (entity)
         {
             WarButtonComponent* button = &entity->button;
             if (button->hot)
@@ -1540,10 +1538,12 @@ void updateCursor(WarContext* context)
                     bool entityUnderCursor = false;
 
                     vec2 pointerRect = vec2ScreenToMapCoordinates(context, input->pos);
-                    for(s32 i = 0; i < map->entities.count; i++)
+
+                    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+                    for(s32 i = 0; i < units->count; i++)
                     {
-                        WarEntity* entity = map->entities.items[i];
-                        if (entity && isUnit(entity) && entity->unit.enabled)
+                        WarEntity* entity = units->items[i];
+                        if (entity && entity->unit.enabled)
                         {
                             // don't change the cursor for dead entities or corpses
                             if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
@@ -1604,9 +1604,10 @@ void updateStateMachines(WarContext* context)
 {
     WarMap* map = context->map;
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* entities = getEntities(map);
+    for(s32 i = 0; i < entities->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
+        WarEntity* entity = entities->items[i];
         if (entity)
         {
             updateStateMachine(context, entity);
@@ -1618,10 +1619,11 @@ void updateActions(WarContext* context)
 {
     WarMap* map = context->map;
 
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for(s32 i = 0; i < units->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && isUnit(entity))
+        WarEntity* entity = units->items[i];
+        if (entity)
         {
             updateAction(context, entity);
         }
@@ -1633,9 +1635,10 @@ void updateAnimations(WarContext* context)
     WarMap* map = context->map;
 
     // update all animations of entities
-    for(s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* entities = getEntities(map);
+    for(s32 i = 0; i < entities->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
+        WarEntity* entity = entities->items[i];
         if (entity)
         {
             updateEntityAnimations(context, entity);
@@ -1736,10 +1739,11 @@ void renderMapPanel(WarContext *context)
 
     // render roads
     {
-        for(s32 i = 0; i < map->entities.count; i++)
+        WarEntityList* roads = getEntitiesOfType(map, WAR_ENTITY_TYPE_ROAD);
+        for(s32 i = 0; i < roads->count; i++)
         {
-            WarEntity *entity = map->entities.items[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_ROAD)
+            WarEntity *entity = roads->items[i];
+            if (entity)
             {
                 renderEntity(context, entity, false);
             }
@@ -1748,10 +1752,11 @@ void renderMapPanel(WarContext *context)
 
     // render walls
     {
-        for(s32 i = 0; i < map->entities.count; i++)
+        WarEntityList* walls = getEntitiesOfType(map, WAR_ENTITY_TYPE_WALL);
+        for(s32 i = 0; i < walls->count; i++)
         {
-            WarEntity *entity = map->entities.items[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_WALL)
+            WarEntity *entity = walls->items[i];
+            if (entity)
             {
                 renderEntity(context, entity, false);
             }
@@ -1760,10 +1765,11 @@ void renderMapPanel(WarContext *context)
 
     // render ruins
     {
-        for(s32 i = 0; i < map->entities.count; i++)
+        WarEntityList* ruins = getEntitiesOfType(map, WAR_ENTITY_TYPE_RUIN);
+        for(s32 i = 0; i < ruins->count; i++)
         {
-            WarEntity* entity = map->entities.items[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_RUIN)
+            WarEntity* entity = ruins->items[i];
+            if (entity)
             {
                 renderEntity(context, entity, false);
             }
@@ -1772,100 +1778,108 @@ void renderMapPanel(WarContext *context)
 
     // render wood
     {
-        for(s32 i = 0; i < map->entities.count; i++)
+        WarEntityList* forests = getEntitiesOfType(map, WAR_ENTITY_TYPE_FOREST);
+        for(s32 i = 0; i < forests->count; i++)
         {
-            WarEntity* entity = map->entities.items[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_FOREST)
+            WarEntity* entity = forests->items[i];
+            if (entity)
             {
                 renderEntity(context, entity, false);
             }
         }
     }
 
-#ifdef DEBUG_RENDER_UNIT_PATHS
-    for(s32 i = 0; i < map->entities.count; i++)
     {
-        WarEntity *entity = map->entities.items[i];
-        if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+#ifdef DEBUG_RENDER_UNIT_PATHS
+        WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+        for(s32 i = 0; i < units->count; i++)
         {
-            WarStateMachineComponent* stateMachine = &entity->stateMachine;
-            WarState* currentState = stateMachine->currentState;
-            if (currentState && currentState->type == WAR_STATE_MOVE)
+            WarEntity *entity = units->items[i];
+            if (entity)
             {
-                vec2List positions = currentState->move.positions;
-                for(s32 k = currentState->move.positionIndex; k < positions.count; k++)
+                WarState* moveState = getDirectState(entity, WAR_STATE_MOVE)
+                if (moveState)
                 {
-                    vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
-                    pos = vec2Subv(pos, vec2i(2, 2));
-                    nvgFillRect(gfx, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
-                }
-                
-                s32 index = currentState->move.pathNodeIndex;
-                WarMapPath path = currentState->move.path;
-                
-                if (index >= 0)
-                {
-                    vec2 prevPos;
-                    for(s32 k = 0; k < path.nodes.count; k++)
+                    vec2List positions = moveState->move.positions;
+                    for(s32 k = moveState->move.positionIndex; k < positions.count; k++)
                     {
-                        vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
+                        vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
+                        pos = vec2Subv(pos, vec2i(2, 2));
+                        nvgFillRect(gfx, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
+                    }
+                    
+                    s32 index = moveState->move.pathNodeIndex;
+                    WarMapPath path = moveState->move.path;
+                    
+                    if (index >= 0)
+                    {
+                        vec2 prevPos;
+                        for(s32 k = 0; k < path.nodes.count; k++)
+                        {
+                            vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
 
-                        if (k > 0)
-                            nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
+                            if (k > 0)
+                                nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
 
-                        nvgFillRect(gfx, rectv(pos, VEC2_ONE), k == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
+                            nvgFillRect(gfx, rectv(pos, VEC2_ONE), k == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
 
-                        prevPos = pos;
+                            prevPos = pos;
+                        }
                     }
                 }
             }
         }
-    }
 #endif
+    }
 
-#ifdef DEBUG_RENDER_PASSABLE_INFO
-    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
-        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+#ifdef DEBUG_RENDER_PASSABLE_INFO
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
         {
-            if (isStatic(map->finder, x, y))
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 0, 0, 100));
-            }
-            else if(isDynamic(map->finder, x, y))
-            {
-                vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 150, 100, 100));
+                if (isStatic(map->finder, x, y))
+                {
+                    vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                    vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 0, 0, 100));
+                }
+                else if(isDynamic(map->finder, x, y))
+                {
+                    vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                    vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 150, 100, 100));
+                }
             }
         }
-    }
 #endif
+    }
 
+    {
 #ifdef DEBUG_RENDER_MAP_GRID
-    for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
-    {
-        vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
-        vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
-        nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
-    }
+        for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
+        {
+            vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
+            vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
+            nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
+        }
 
-    for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
-    {
-        vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
-        vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
-        nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
-    }
+        for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
+        {
+            vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
+            vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
+            nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
+        }
 #endif
+    }
 
     // render units
     {
-        for(s32 i = 0; i < map->entities.count; i++)
+        WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+        for(s32 i = 0; i < units->count; i++)
         {
-            WarEntity *entity = map->entities.items[i];
-            if (entity && entity->type == WAR_ENTITY_TYPE_UNIT)
+            WarEntity *entity = units->items[i];
+            if (entity)
             {
                 bool selected = WarEntityIdListContains(&map->selectedEntities, entity->id);
                 renderEntity(context, entity, selected);

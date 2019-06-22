@@ -54,10 +54,11 @@ s32 getPlayerUnitTotalCount(WarContext* context, u8 player)
 
     s32 count = 0;
 
-    for (s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && isUnit(entity))
+        WarEntity* entity = units->items[i];
+        if (entity)
         {
             if (entity->unit.player == player)
             {
@@ -75,10 +76,11 @@ s32 getPlayerDudesCount(WarContext* context, u8 player)
 
     s32 count = 0;
 
-    for (s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && isUnit(entity))
+        WarEntity* entity = units->items[i];
+        if (entity)
         {
             if (entity->unit.player == player && isDudeUnit(entity))
             {
@@ -96,10 +98,11 @@ s32 getPlayerBuildingsCount(WarContext* context, u8 player)
 
     s32 count = 0;
 
-    for (s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && isUnit(entity))
+        WarEntity* entity = units->items[i];
+        if (entity)
         {
             if (entity->unit.player == player && isBuildingUnit(entity))
             {
@@ -117,10 +120,11 @@ s32 getPlayerUnitCount(WarContext* context, u8 player, WarUnitType unitType)
 
     s32 count = 0;
 
-    for (s32 i = 0; i < map->entities.count; i++)
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
     {
-        WarEntity* entity = map->entities.items[i];
-        if (entity && isUnit(entity))
+        WarEntity* entity = units->items[i];
+        if (entity)
         {
             if (entity->unit.player == player && 
                 entity->unit.type == unitType)
