@@ -1551,7 +1551,7 @@ typedef struct
 {
     bool enabled;
     WarProjectileType type;
-    WarEntityId owner;
+    WarEntityId ownerId;
     vec2 origin;
     vec2 target;
     f32 speed;

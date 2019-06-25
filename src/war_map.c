@@ -348,6 +348,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
+            if (startUnit.type == WAR_UNIT_FOOTMAN)
+                startUnit.type = WAR_UNIT_ARCHER;
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
                        startUnit.resourceKind, startUnit.amount, true);
         }
@@ -1682,29 +1684,30 @@ void updateProjectile(WarContext* context, WarEntity* entity)
 
                 position = vec2Addv(position, step);
 
-                s32 frameIndex = 2;
+                f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
+                // FIX: WRONG ANGLE HERE!!!!!
+                logInfo("angle: %f\n", angle);
+                // these are the angles at wich the frame index of the arrow
+                // sprite needs to change and also where the x-scale needs to
+                // be reversed
+                f32 controlAngles[] = { 0, 45, 90, 135, 180, 225, 270, 315, 360 };
+                s32 frameIndices[]  = { 2,  3,  4,   3,   2,   1,   0,   1,   2 };
+                s32 frameScales[]   = { 1,  1,  1,  -1,  -1,  -1,   1,   1,   1 };
+
+                s32 frameIndex = 0;
                 vec2 scale = VEC2_ONE;
 
-                f32 angle = vec2Angle(VEC2_RIGHT, direction);
-                if (angle >= 22.5f && angle < 67.5f)
-                    frameIndex = 1;
-                else if (angle >= 67.5f && angle < 112.5f)
-                    frameIndex = 0;
-                else if (angle >= 112.5f && angle < 157.5f)
-                    frameIndex = 1;
-                    scale.x *= -1;
-                else if (angle >= 157.5f && angle < 202.5f)
-                    frameIndex = 2;
-                    scale.x *= -1;
-                else if (angle >= 202.5f && angle < 247.5f)
-                    frameIndex = 3;
-                    scale.x *= -1;
-                else if (angle >= 247.5f && angle < 292.5f)
-                    frameIndex = 4;
-                else if (angle >= 292.5f && angle < 337.5f)
-                    frameIndex = 3;
-                else
-                    frameIndex = 2;
+                // find the current frame index and scale
+                for (s32 i = 0; i < arrayLength(controlAngles); i++)
+                {
+                    if (angle >= controlAngles[i] - halff(45) && 
+                        angle < controlAngles[i] + halff(45))
+                    {
+                        frameIndex = frameIndices[i];
+                        scale.x *= frameScales[i];
+                        break;
+                    }
+                }
 
                 transform->position = position;
                 transform->scale = scale;
@@ -1728,17 +1731,11 @@ void updateProjectile(WarContext* context, WarEntity* entity)
             {
                 break;
             }
-            case WAR_PROJECTILE_RAIN_OF_FIR:
+            case WAR_PROJECTILE_RAIN_OF_FIRE:
             {
                 break;
             }
         }
-
-        WarProjectileType type;
-        WarEntityId owner;
-        vec2 fromTile;
-        vec2 toTile;
-        f32 speed;
     }
 }
 
@@ -1988,6 +1985,19 @@ void renderMapPanel(WarContext *context)
             {
                 bool selected = WarEntityIdListContains(&map->selectedEntities, entity->id);
                 renderEntity(context, entity, selected);
+            }
+        }
+    }
+
+    // render projectiles
+    {
+        WarEntityList* projectiles = getEntitiesOfType(map, WAR_ENTITY_TYPE_PROJECTILE);
+        for (s32 i = 0; i < projectiles->count; i++)
+        {
+            WarEntity* entity = projectiles->items[i];
+            if (entity)
+            {
+                renderEntity(context, entity, false);
             }
         }
     }

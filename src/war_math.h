@@ -28,6 +28,11 @@
 #define percentabf(a, b) percentf(percentabf01(a, b))
 #define percentabi(a, b) percenti(percentabf01(a, b))
 
+#define PI 3.14159265358979323846264338327f
+
+#define rad2Deg(x) ((x) * 180 / PI)
+#define deg2Rad(x) ((x) * PI / 180)
+
 /*
  * vec2 types and functions
 */
@@ -168,6 +173,39 @@ vec2 vec2Normalize(vec2 v)
 {
     f32 len = vec2Length(v);
     return len != 0 ? vec2Scalef(v, 1 / len) : VEC2_ZERO;
+}
+
+f32 vec2Dot(vec2 v1, vec2 v2)
+{
+    return v1.x * v2.x + v1.y * v2.y;
+}
+
+f32 vec2Determinant(vec2 v1, vec2 v2)
+{
+    return v1.x * v2.x - v1.y * v2.y;
+}
+
+f32 vec2Angle(vec2 v1, vec2 v2)
+{
+    f32 v1Length = vec2Length(v1);
+    f32 v2Length = vec2Length(v2);
+    if (v1Length == 0 || v2Length == 0)
+        return 0;
+
+    f32 dot = vec2Dot(v1, v2);
+    f32 angleRad = acosf(dot / (v1Length * v2Length));
+    return rad2Deg(angleRad);
+}
+
+f32 vec2ClockwiseAngle(vec2 v1, vec2 v2)
+{
+    v1 = vec2Normalize(v1);
+    v2 = vec2Normalize(v2);
+
+    f32 dot = vec2Dot(v1, v2);
+    f32 det = vec2Determinant(v1, v2);
+    f32 angleRad = atan2(dot, det);
+    return rad2Deg(angleRad);
 }
 
 vec2 vec2Clampf(vec2 v, f32 a, f32 b)

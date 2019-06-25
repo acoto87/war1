@@ -146,7 +146,11 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                         }
                     }
                     
-                    WarEntity* projectile = createEntity(conext, WAR_ENTITY_TYPE_PROJECTILE, true);
+                    vec2 from = getUnitCenterPosition(entity, false);
+                    vec2 to = getUnitCenterPosition(targetEntity, false);
+
+                    WarEntity* projectile = createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
+                    addTransformComponent(context, projectile, from);
                     addSpriteComponentFromResource(context, projectile, imageResourceRef(resourceIndex));
                     addProjectileComponent(context, projectile, entity->id, projectileType, from, to);
                 }

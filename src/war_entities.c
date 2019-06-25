@@ -286,6 +286,22 @@ void removeAudioComponent(WarContext* context, WarEntity* entity)
     entity->audio = (WarAudioComponent){0};
 }
 
+void addProjectileComponent(WarContext* context, WarEntity* entity, WarEntityId ownerId, WarProjectileType type, vec2 origin, vec2 target)
+{
+    entity->projectile = (WarProjectileComponent){0};
+    entity->projectile.enabled = true;
+    entity->projectile.type = type;
+    entity->projectile.ownerId = ownerId;
+    entity->projectile.origin = origin;
+    entity->projectile.target = target;
+    entity->projectile.speed = MEGA_TILE_WIDTH * 3;
+}
+
+void removeProjectileComponent(WarContext* context, WarEntity* entity)
+{
+    entity->projectile = (WarProjectileComponent){0};
+}
+
 void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType type, vec2 hot)
 {
     entity->cursor = (WarCursorComponent){0};
@@ -967,6 +983,53 @@ void renderButton(WarContext* context, WarEntity* entity)
     }
 }
 
+void renderProjectile(WarContext* context, WarEntity* entity)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarTransformComponent* transform = &entity->transform;
+    WarSpriteComponent* sprite = &entity->sprite;
+
+    vec2 position = transform->position;
+    vec2 scale = transform->scale;
+
+    if (sprite->enabled)
+    {
+        WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+        
+        {
+            nvgSave(gfx);
+
+            nvgTranslate(gfx, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
+            nvgTranslate(gfx, position.x, position.y);
+
+            rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
+            nvgFillRect(gfx, r, NVG_GRAY_TRANSPARENT);
+
+            nvgRestore(gfx);
+        }
+
+        {
+            nvgSave(gfx);
+
+            nvgTranslate(gfx, -halfi(frame.w),-halfi(frame.h));
+            nvgTranslate(gfx, position.x, position.y);
+
+            rect r = rectf(0, 0, frame.w, frame.h);
+            nvgFillRect(gfx, r, NVG_RED_TRANSPARENT);
+
+            nvgRestore(gfx);
+        }
+
+        nvgTranslate(gfx, -frame.dx, -frame.dy);
+        nvgTranslate(gfx, -halff(frame.w), -halff(frame.h));
+        nvgTranslate(gfx, position.x, position.y);
+        
+        updateSpriteImage(context, sprite->sprite, frame.data);
+        renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
+    }
+}
+
 void renderEntity(WarContext* context, WarEntity* entity, bool selected)
 {
     NVGcontext* gfx = context->gfx;
@@ -1034,6 +1097,12 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected)
             case WAR_ENTITY_TYPE_CURSOR:
             {
                 renderImage(context, entity);
+                break;
+            }
+
+            case WAR_ENTITY_TYPE_PROJECTILE:
+            {
+                renderProjectile(context, entity);
                 break;
             }
 
