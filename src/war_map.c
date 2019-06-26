@@ -349,9 +349,21 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
             if (startUnit.type == WAR_UNIT_FOOTMAN)
-                startUnit.type = WAR_UNIT_ARCHER;
+            {
+                startUnit.type = WAR_UNIT_CATAPULT_HUMANS;
+                createUnit(context, WAR_UNIT_ARCHER, startUnit.x + 1, startUnit.y, startUnit.player, 
+                       startUnit.resourceKind, startUnit.amount, true);
+            }
+            else if (startUnit.type == WAR_UNIT_PEASANT)
+            {
+                createUnit(context, WAR_UNIT_ARCHER, startUnit.x + 1, startUnit.y, startUnit.player, 
+                       startUnit.resourceKind, startUnit.amount, true);
+                startUnit.type = WAR_UNIT_CONJURER;
+            }
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
                        startUnit.resourceKind, startUnit.amount, true);
+
+            
         }
 
         createBuilding(context, WAR_UNIT_BARRACKS_HUMANS, 37, 18, 0, false);
@@ -1668,13 +1680,13 @@ void updateProjectile(WarContext* context, WarEntity* entity)
             case WAR_PROJECTILE_ARROW:
             {
                 vec2 position = transform->position;
-                
-                vec2 direction = vec2Subv(projectile->target, projectile->origin);
-                f32 directionLength = vec2Length(direction);
-                direction = vec2Normalize(direction);
+                vec2 target = projectile->target;
+                f32 speed = projectile->speed;
 
-                f32 speed = getScaledSpeed(context, projectile->speed);
-                vec2 step = vec2Mulf(direction, speed * context->deltaTime);
+                vec2 direction = vec2Subv(target, position);
+                f32 directionLength = vec2Length(direction);
+
+                vec2 step = vec2Mulf(vec2Normalize(direction), getScaledSpeed(context, speed) * context->deltaTime);
                 f32 stepLength = vec2Length(step);
 
                 if (directionLength < stepLength)
@@ -1682,53 +1694,301 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                     step = direction;
                 }
 
-                position = vec2Addv(position, step);
-
-                f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
-                // FIX: WRONG ANGLE HERE!!!!!
-                logInfo("angle: %f\n", angle);
-                // these are the angles at wich the frame index of the arrow
-                // sprite needs to change and also where the x-scale needs to
-                // be reversed
-                f32 controlAngles[] = { 0, 45, 90, 135, 180, 225, 270, 315, 360 };
-                s32 frameIndices[]  = { 2,  3,  4,   3,   2,   1,   0,   1,   2 };
-                s32 frameScales[]   = { 1,  1,  1,  -1,  -1,  -1,   1,   1,   1 };
-
-                s32 frameIndex = 0;
-                vec2 scale = VEC2_ONE;
-
-                // find the current frame index and scale
-                for (s32 i = 0; i < arrayLength(controlAngles); i++)
+                vec2 newPosition = vec2Addv(position, step);
+                
+                f32 distance = vec2Distance(newPosition, target);
+                if (distance >= MOVE_EPSILON)
                 {
-                    if (angle >= controlAngles[i] - halff(45) && 
-                        angle < controlAngles[i] + halff(45))
-                    {
-                        frameIndex = frameIndices[i];
-                        scale.x *= frameScales[i];
-                        break;
-                    }
-                }
+                    f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
+                
+                    // these are the angles at wich the frame index of the arrow
+                    // sprite needs to change and also where the x-scale needs to
+                    // be reversed
+                    f32 controlAngles[] = { 0, 45, 90, 135, 180, 225, 270, 315, 360 };
+                    s32 frameIndices[]  = { 2,  3,  4,   3,   2,   1,   0,   1,   2 };
+                    s32 frameScales[]   = { 1,  1,  1,  -1,  -1,  -1,   1,   1,   1 };
 
-                transform->position = position;
-                transform->scale = scale;
-                sprite->frameIndex = frameIndex;
+                    s32 frameIndex = 0;
+                    vec2 newScale = VEC2_ONE;
+
+                    // find the current frame index and scale
+                    for (s32 i = 0; i < arrayLength(controlAngles); i++)
+                    {
+                        if (angle >= controlAngles[i] - halff(45) && 
+                            angle < controlAngles[i] + halff(45))
+                        {
+                            frameIndex = frameIndices[i];
+                            newScale.x *= frameScales[i];
+                            break;
+                        }
+                    }
+
+                    transform->position = newPosition;
+                    transform->scale = newScale;
+                    sprite->frameIndex = frameIndex;
+                }
+                else
+                {
+                    removeEntityById(context, entity->id);
+                }
 
                 break;
             }
             case WAR_PROJECTILE_CATAPULT:
             {
+                vec2 position = transform->position;
+                vec2 origin = projectile->origin;
+                vec2 target = projectile->target;
+                f32 speed = projectile->speed;
+
+                f32 totalDistance = vec2Distance(origin, target);
+
+                vec2 direction = vec2Subv(target, position);
+                f32 directionLength = vec2Length(direction);
+
+                f32 travelDistance = totalDistance - directionLength;
+                f32 travelPercent = percentabi(travelDistance, totalDistance);
+
+                vec2 step = vec2Mulf(vec2Normalize(direction), getScaledSpeed(context, speed) * context->deltaTime);
+                f32 stepLength = vec2Length(step);
+
+                if (directionLength < stepLength)
+                {
+                    step = direction;
+                }
+
+                vec2 newPosition = vec2Addv(position, step);
+                
+                f32 distance = vec2Distance(newPosition, target);
+                if (distance >= MOVE_EPSILON)
+                {
+                    f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
+                
+                    // these are the angles at wich the frame index of the arrow
+                    // sprite needs to change and also where the x-scale needs to
+                    // be reversed
+                    f32 controlAngles[] = { 0, 45, 90, 135, 180, 225, 270, 315, 360 };
+                    s32 frameIndices[]  = { 2,  3,  4,   3,   2,   1,   0,   1,   2 };
+                    s32 frameScales[]   = { 1,  1,  1,  -1,  -1,  -1,   1,   1,   1 };
+
+                    s32 frameIndex = 0;
+                    vec2 newScale = VEC2_ONE;
+
+                    // find the current frame index and scale
+                    for (s32 i = 0; i < arrayLength(controlAngles); i++)
+                    {
+                        if (angle >= controlAngles[i] - halff(45) && 
+                            angle < controlAngles[i] + halff(45))
+                        {
+                            frameIndex = frameIndices[i];
+                            newScale.x *= frameScales[i];
+                            break;
+                        }
+                    }
+
+                    if (inRange(travelPercent, 20, 40) || inRange(travelPercent, 60, 80))
+                        frameIndex += 5;
+                    else if (inRange(travelPercent, 40, 60))
+                        frameIndex += 10;
+
+                    transform->position = newPosition;
+                    transform->scale = newScale;
+                    sprite->frameIndex = frameIndex;
+                }
+                else
+                {
+                    removeEntityById(context, entity->id);
+                }
+
                 break;
             }
             case WAR_PROJECTILE_FIREBALL:
             {
+                vec2 position = transform->position;
+                vec2 target = projectile->target;
+                f32 speed = projectile->speed;
+
+                vec2 direction = vec2Subv(target, position);
+                f32 directionLength = vec2Length(direction);
+
+                vec2 step = vec2Mulf(vec2Normalize(direction), getScaledSpeed(context, speed) * context->deltaTime);
+                f32 stepLength = vec2Length(step);
+
+                if (directionLength < stepLength)
+                {
+                    step = direction;
+                }
+
+                vec2 newPosition = vec2Addv(position, step);
+                
+                f32 distance = vec2Distance(newPosition, target);
+                if (distance >= MOVE_EPSILON)
+                {
+                    f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
+                
+                    // these are the angles at wich the frame index of the arrow
+                    // sprite needs to change and also where the x-scale needs to
+                    // be reversed
+                    f32 controlAngles[] = { 0, 45, 90, 135, 180, 225, 270, 315, 360 };
+                    s32 frameIndices[]  = { 2,  3,  4,   3,   2,   1,   0,   1,   2 };
+                    s32 frameScales[]   = { 1,  1,  1,  -1,  -1,  -1,   1,   1,   1 };
+
+                    s32 frameIndex = 0;
+                    vec2 newScale = VEC2_ONE;
+
+                    // find the current frame index and scale
+                    for (s32 i = 0; i < arrayLength(controlAngles); i++)
+                    {
+                        if (angle >= controlAngles[i] - halff(45) && 
+                            angle < controlAngles[i] + halff(45))
+                        {
+                            frameIndex = frameIndices[i];
+                            newScale.x *= frameScales[i];
+                            break;
+                        }
+                    }
+
+                    transform->position = newPosition;
+                    transform->scale = newScale;
+                    sprite->frameIndex = frameIndex;
+                }
+                else
+                {
+                    removeEntityById(context, entity->id);
+                }
+
                 break;
             }
             case WAR_PROJECTILE_FIREBALL_2:
             {
+                vec2 position = transform->position;
+                vec2 origin = projectile->origin;
+                vec2 target = projectile->target;
+                f32 speed = projectile->speed;
+
+                f32 totalDistance = vec2Distance(origin, target);
+
+                vec2 direction = vec2Subv(target, position);
+                f32 directionLength = vec2Length(direction);
+
+                f32 travelDistance = totalDistance - directionLength;
+                f32 travelPercent = percentabi(travelDistance, totalDistance);
+
+                vec2 step = vec2Mulf(vec2Normalize(direction), getScaledSpeed(context, speed) * context->deltaTime);
+                f32 stepLength = vec2Length(step);
+
+                if (directionLength < stepLength)
+                {
+                    step = direction;
+                }
+
+                vec2 newPosition = vec2Addv(position, step);
+                
+                f32 distance = vec2Distance(newPosition, target);
+                if (distance >= MOVE_EPSILON)
+                {
+                    f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
+                
+                    // these are the angles at wich the frame index of the arrow
+                    // sprite needs to change and also where the x-scale needs to
+                    // be reversed
+                    f32 controlAngles[] = { 0, 45, 90, 135, 180, 225, 270, 315, 360 };
+                    s32 frameIndices[]  = { 2,  3,  4,   3,   2,   1,   0,   1,   2 };
+                    s32 frameScales[]   = { 1,  1,  1,  -1,  -1,  -1,   1,   1,   1 };
+
+                    s32 frameIndex = 0;
+                    vec2 newScale = VEC2_ONE;
+
+                    // find the current frame index and scale
+                    for (s32 i = 0; i < arrayLength(controlAngles); i++)
+                    {
+                        if (angle >= controlAngles[i] - halff(45) && 
+                            angle < controlAngles[i] + halff(45))
+                        {
+                            frameIndex = frameIndices[i];
+                            newScale.x *= frameScales[i];
+                            break;
+                        }
+                    }
+
+                    if (inRange(travelPercent, 30, 70))
+                        frameIndex += 5;
+
+                    transform->position = newPosition;
+                    transform->scale = newScale;
+                    sprite->frameIndex = frameIndex;
+                }
+                else
+                {
+                    removeEntityById(context, entity->id);
+                }
+
                 break;
             }
             case WAR_PROJECTILE_WATER_ELEMENTAL:
             {
+                vec2 position = transform->position;
+                vec2 origin = projectile->origin;
+                vec2 target = projectile->target;
+                f32 speed = projectile->speed;
+
+                f32 totalDistance = vec2Distance(origin, target);
+
+                vec2 direction = vec2Subv(target, position);
+                f32 directionLength = vec2Length(direction);
+
+                f32 travelDistance = totalDistance - directionLength;
+                f32 travelPercent = percentabi(travelDistance, totalDistance);
+
+                vec2 step = vec2Mulf(vec2Normalize(direction), getScaledSpeed(context, speed) * context->deltaTime);
+                f32 stepLength = vec2Length(step);
+
+                if (directionLength < stepLength)
+                {
+                    step = direction;
+                }
+
+                vec2 newPosition = vec2Addv(position, step);
+                
+                f32 distance = vec2Distance(newPosition, target);
+                if (distance >= MOVE_EPSILON)
+                {
+                    f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
+                
+                    // these are the angles at wich the frame index of the arrow
+                    // sprite needs to change and also where the x-scale needs to
+                    // be reversed
+                    f32 controlAngles[] = { 0, 45, 90, 135, 180, 225, 270, 315, 360 };
+                    s32 frameIndices[]  = { 2,  3,  4,   3,   2,   1,   0,   1,   2 };
+                    s32 frameScales[]   = { 1,  1,  1,  -1,  -1,  -1,   1,   1,   1 };
+
+                    s32 frameIndex = 0;
+                    vec2 newScale = VEC2_ONE;
+
+                    // find the current frame index and scale
+                    for (s32 i = 0; i < arrayLength(controlAngles); i++)
+                    {
+                        if (angle >= controlAngles[i] - halff(45) && 
+                            angle < controlAngles[i] + halff(45))
+                        {
+                            frameIndex = frameIndices[i];
+                            newScale.x *= frameScales[i];
+                            break;
+                        }
+                    }
+
+                    if (inRange(travelPercent, 30, 70))
+                        frameIndex += 5;
+
+                    transform->position = newPosition;
+                    transform->scale = newScale;
+                    sprite->frameIndex = frameIndex;
+                }
+                else
+                {
+                    removeEntityById(context, entity->id);
+                }
+
                 break;
             }
             case WAR_PROJECTILE_RAIN_OF_FIRE:

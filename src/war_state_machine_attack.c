@@ -126,8 +126,8 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                         case WAR_UNIT_NECROLYTE:
                         case WAR_UNIT_MEDIVH:
                         {
-                            resourceIndex = 347;
-                            projectileType = WAR_PROJECTILE_FIREBALL;
+                            resourceIndex = 358;
+                            projectileType = WAR_PROJECTILE_FIREBALL_2;
                             break;
                         }
 
@@ -146,13 +146,13 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                         }
                     }
                     
-                    vec2 from = getUnitCenterPosition(entity, false);
-                    vec2 to = getUnitCenterPosition(targetEntity, false);
+                    vec2 origin = getUnitCenterPosition(entity, false);
+                    vec2 target = getUnitCenterPosition(targetEntity, false);
 
                     WarEntity* projectile = createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
-                    addTransformComponent(context, projectile, from);
+                    addTransformComponent(context, projectile, origin);
                     addSpriteComponentFromResource(context, projectile, imageResourceRef(resourceIndex));
-                    addProjectileComponent(context, projectile, entity->id, projectileType, from, to);
+                    addProjectileComponent(context, projectile, entity->id, projectileType, origin, target);
                 }
                 else
                 {

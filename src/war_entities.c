@@ -294,7 +294,7 @@ void addProjectileComponent(WarContext* context, WarEntity* entity, WarEntityId 
     entity->projectile.ownerId = ownerId;
     entity->projectile.origin = origin;
     entity->projectile.target = target;
-    entity->projectile.speed = MEGA_TILE_WIDTH * 3;
+    entity->projectile.speed = WAR_PROJECTILE_SPEED;
 }
 
 void removeProjectileComponent(WarContext* context, WarEntity* entity)
@@ -997,29 +997,29 @@ void renderProjectile(WarContext* context, WarEntity* entity)
     {
         WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
         
-        {
-            nvgSave(gfx);
+        // {
+        //     nvgSave(gfx);
 
-            nvgTranslate(gfx, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
-            nvgTranslate(gfx, position.x, position.y);
+        //     nvgTranslate(gfx, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
+        //     nvgTranslate(gfx, position.x, position.y);
 
-            rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-            nvgFillRect(gfx, r, NVG_GRAY_TRANSPARENT);
+        //     rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
+        //     nvgFillRect(gfx, r, NVG_GRAY_TRANSPARENT);
 
-            nvgRestore(gfx);
-        }
+        //     nvgRestore(gfx);
+        // }
 
-        {
-            nvgSave(gfx);
+        // {
+        //     nvgSave(gfx);
 
-            nvgTranslate(gfx, -halfi(frame.w),-halfi(frame.h));
-            nvgTranslate(gfx, position.x, position.y);
+        //     nvgTranslate(gfx, -halfi(frame.w),-halfi(frame.h));
+        //     nvgTranslate(gfx, position.x, position.y);
 
-            rect r = rectf(0, 0, frame.w, frame.h);
-            nvgFillRect(gfx, r, NVG_RED_TRANSPARENT);
+        //     rect r = rectf(0, 0, frame.w, frame.h);
+        //     nvgFillRect(gfx, r, NVG_RED_TRANSPARENT);
 
-            nvgRestore(gfx);
-        }
+        //     nvgRestore(gfx);
+        // }
 
         nvgTranslate(gfx, -frame.dx, -frame.dy);
         nvgTranslate(gfx, -halff(frame.w), -halff(frame.h));

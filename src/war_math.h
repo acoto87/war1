@@ -185,6 +185,11 @@ f32 vec2Determinant(vec2 v1, vec2 v2)
     return v1.x * v2.x - v1.y * v2.y;
 }
 
+s32 vec2Orientation(vec2 v1, vec2 v2)
+{
+    return v1.x * v2.y - v1.y * v2.x >= 0 ? 1 : -1;
+}
+
 f32 vec2Angle(vec2 v1, vec2 v2)
 {
     f32 v1Length = vec2Length(v1);
@@ -199,12 +204,21 @@ f32 vec2Angle(vec2 v1, vec2 v2)
 
 f32 vec2ClockwiseAngle(vec2 v1, vec2 v2)
 {
-    v1 = vec2Normalize(v1);
-    v2 = vec2Normalize(v2);
+    f32 v1Length = vec2Length(v1);
+    f32 v2Length = vec2Length(v2);
+    if (v1Length == 0 || v2Length == 0)
+        return 0;
+
+    s32 orientation = vec2Orientation(v1, v2);
 
     f32 dot = vec2Dot(v1, v2);
-    f32 det = vec2Determinant(v1, v2);
-    f32 angleRad = atan2(dot, det);
+    f32 angleRad = acosf(dot / (v1Length * v2Length));
+
+    // if the two vectors are in counter-clockwise orientation
+    // take the larger angle between the two vectors
+    if (orientation < 0)
+        angleRad = 2 * PI - angleRad;
+
     return rad2Deg(angleRad);
 }
 
