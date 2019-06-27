@@ -286,12 +286,15 @@ void removeAudioComponent(WarContext* context, WarEntity* entity)
     entity->audio = (WarAudioComponent){0};
 }
 
-void addProjectileComponent(WarContext* context, WarEntity* entity, WarEntityId ownerId, WarProjectileType type, vec2 origin, vec2 target)
+void addProjectileComponent(WarContext* context, WarEntity* entity, 
+                            WarEntityId attackerId, WarEntityId victimId, 
+                            WarProjectileType type, vec2 origin, vec2 target)
 {
     entity->projectile = (WarProjectileComponent){0};
     entity->projectile.enabled = true;
     entity->projectile.type = type;
-    entity->projectile.ownerId = ownerId;
+    entity->projectile.attackerId = attackerId;
+    entity->projectile.victimId = victimId;
     entity->projectile.origin = origin;
     entity->projectile.target = target;
     entity->projectile.speed = WAR_PROJECTILE_SPEED;
@@ -1310,6 +1313,30 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
     }
 
     return true;
+}
+
+WarEntityList* getNearUnits(WarContext* context, vec2 position)
+{
+    WarMap* map = context->map;
+
+    WarEntityList* nearUnits = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+    WarEntityListInit(nearUnits, WarEntityListNonFreeOptions);
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for(s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* other = units->items[i];
+        if (other)
+        {
+            vec2 targetPosition = getUnitCenterPosition(other, true);
+            if (vec2Distance(position, targetPosition) <= NEAR_CATAPULT_RADIUS)
+            {
+                WarEntityListAdd(nearUnits, other);
+            }
+        }
+    }
+
+    return nearUnits;
 }
 
 WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)

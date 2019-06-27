@@ -1126,6 +1126,7 @@ bool isRangeUnitType(WarUnitType type)
         case WAR_UNIT_SPEARMAN:
         case WAR_UNIT_CONJURER:
         case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_CLERIC:
         case WAR_UNIT_NECROLYTE:
         case WAR_UNIT_MEDIVH:
         case WAR_UNIT_WATER_ELEMENTAL:
@@ -1224,6 +1225,19 @@ bool isCorpseUnitType(WarUnitType type)
     }
 }
 
+bool isCatapultUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_CATAPULT_ORCS:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 bool isDudeUnit(WarEntity* entity)
 {
     return isUnit(entity) && isDudeUnitType(entity->unit.type);
@@ -1272,6 +1286,11 @@ bool isMagicUnit(WarEntity* entity)
 bool isCorpseUnit(WarEntity* entity)
 {
     return isUnit(entity) && isCorpseUnitType(entity->unit.type);
+}
+
+bool isCatapultUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isCatapultUnitType(entity->unit.type);
 }
 
 WarRace getUnitRace(WarEntity* entity)

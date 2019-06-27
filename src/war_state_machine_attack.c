@@ -123,11 +123,11 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 
                         case WAR_UNIT_CONJURER:
                         case WAR_UNIT_WARLOCK:
+                        case WAR_UNIT_CLERIC:
                         case WAR_UNIT_NECROLYTE:
-                        case WAR_UNIT_MEDIVH:
                         {
-                            resourceIndex = 358;
-                            projectileType = WAR_PROJECTILE_FIREBALL_2;
+                            resourceIndex = 347;
+                            projectileType = WAR_PROJECTILE_FIREBALL;
                             break;
                         }
 
@@ -152,7 +152,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                     WarEntity* projectile = createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
                     addTransformComponent(context, projectile, origin);
                     addSpriteComponentFromResource(context, projectile, imageResourceRef(resourceIndex));
-                    addProjectileComponent(context, projectile, entity->id, projectileType, origin, target);
+                    addProjectileComponent(context, projectile, entity->id, targetEntity->id, projectileType, origin, target);
                 }
                 else
                 {

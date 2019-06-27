@@ -52,7 +52,9 @@ bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
            !isGoingToDie(entity) && 
            !isDead(targetEntity) && 
            !isGoingToDie(targetEntity) && 
-           !isCorpseUnit(targetEntity);
+           !isCorpseUnit(targetEntity) &&
+           !isCollapsing(entity) && 
+           !isGoingToCollapse(entity);
 }
 
 s32 getPlayerUnitTotalCount(WarContext* context, u8 player)
@@ -171,6 +173,10 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
         case WAR_UNIT_RAIDER:
         case WAR_UNIT_ARCHER:
         case WAR_UNIT_SPEARMAN:
+        case WAR_UNIT_WATER_ELEMENTAL:
+        case WAR_UNIT_DAEMON:
+        case WAR_UNIT_SCORPION:
+        case WAR_UNIT_SPIDER:
         {
             if (command->type != WAR_COMMAND_NONE)
             {
@@ -838,6 +844,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                     case WAR_UNIT_RAIDER:
                     case WAR_UNIT_CATAPULT_HUMANS:
                     case WAR_UNIT_CATAPULT_ORCS:
+                    case WAR_UNIT_DAEMON:
                     {
                         // check here upgrades for the sword
                         WarUpgradeType swordAxeUpgrade = isHumanPlayer(player)
@@ -889,6 +896,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                     }
 
                     case WAR_UNIT_CONJURER:
+                    case WAR_UNIT_WATER_ELEMENTAL:
                     {
                         data.frameIndex = WAR_PORTRAIT_ELEMENTAL_BLAST;
                         break;

@@ -1,18 +1,20 @@
-WarSpriteAnimation* createAnimation(char* name, WarSprite sprite, f32 frameDelay, bool loop)
+WarSpriteAnimation* createAnimation(const char* name, WarSprite sprite, f32 frameDelay, bool loop)
 {
     WarSpriteAnimation* anim = (WarSpriteAnimation*)xmalloc(sizeof(WarSpriteAnimation));
-    anim->name = name;
+    
+    anim->name = (char*)xcalloc(strlen(name) + 1, sizeof(char));
+    strcpy(anim->name, name);
+
     anim->loop = loop;
     anim->offset = VEC2_ZERO;
     anim->scale = VEC2_ONE;
     anim->frameDelay = frameDelay;
-
     anim->sprite = sprite;
+    anim->animTime = 0;
+    anim->status = WAR_ANIM_STATUS_NOT_STARTED;
 
     s32ListInit(&anim->frames, s32ListDefaultOptions);
 
-    anim->animTime = 0;
-    anim->status = WAR_ANIM_STATUS_NOT_STARTED;
     return anim;
 }
 
@@ -35,16 +37,88 @@ void addAnimationFrames(WarSpriteAnimation* anim, s32 count, s32 frameIndices[])
     }
 }
 
+void freeAnimation(WarSpriteAnimation* animation)
+{
+    logInfo("Freeing animation: %s\n", animation->name);
+
+    free(animation->name);
+
+    s32ListFree(&animation->frames);
+    
+    WarSprite* sprite = &animation->sprite;
+    for(s32 i = 0; i < sprite->framesCount; i++)
+        free(sprite->frames[i].data);
+
+    free(animation);
+}
+
+s32 findAnimationIndex(WarContext* context, WarEntity* entity, const char* name)
+{
+    WarMap* map = context->map;
+    s32 index = -1;
+
+    if (entity)
+    {
+        WarAnimationsComponent* animations = &entity->animations;
+        for(s32 i = 0; i < animations->animations.count; i++)
+        {
+            WarSpriteAnimation* anim = animations->animations.items[i];
+            if (strEquals(anim->name, name))
+            {
+                index = i;
+                break;
+            }
+        }
+    }
+    else
+    {
+        for (s32 i = 0; i < map->animations.count; i++)
+        {
+            WarSpriteAnimation* anim = map->animations.items[i];
+            if (strEquals(anim->name, name))
+            {
+                index = i;
+                break;
+            }
+        }
+    }
+    
+
+    return index;
+}
+
+void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
+{
+    WarMap* map = context->map;
+
+    logInfo("Trying to remove animation: %s\n", name);
+
+    s32 index = findAnimationIndex(context, entity, name);
+    if (index >= 0)
+    {
+        if (entity)
+        {
+            WarAnimationsComponent* animations = &entity->animations;
+            WarSpriteAnimationListRemoveAt(&animations->animations, index);
+        }
+        else
+        {
+            WarSpriteAnimationListRemoveAt(&map->animations, index);
+        }
+    }
+}
+
 void resetAnimation(WarSpriteAnimation* anim)
 {
     anim->animTime = 0;
     anim->status = WAR_ANIM_STATUS_NOT_STARTED;
 }
 
-void updateAnimation(WarContext* context, WarSpriteAnimation* anim)
+void updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation* anim)
 {
     if (anim->status == WAR_ANIM_STATUS_FINISHED)
     {
+        removeAnimation(context, entity, anim->name);
         return;
     }
 
@@ -63,44 +137,13 @@ void updateAnimation(WarContext* context, WarSpriteAnimation* anim)
     }
 }
 
-void updateEntityAnimations(WarContext* context, WarEntity* entity)
-{
-    WarAnimationsComponent* animations = &entity->animations;
-    if (animations->enabled)
-    {
-        for(s32 i = 0; i < animations->animations.count; i++)
-        {
-            WarSpriteAnimation* anim = animations->animations.items[i];
-            updateAnimation(context, anim);
-        }
-    }
-}
-
-s32 findAnimationIndex(WarContext* context, WarEntity* entity, const char* name)
-{
-    s32 index = -1;
-
-    WarAnimationsComponent* animations = &entity->animations;
-    for(s32 i = 0; i < animations->animations.count; i++)
-    {
-        WarSpriteAnimation* anim = animations->animations.items[i];
-        if (strcmp(anim->name, name) == 0)
-        {
-            index = i;
-            break;
-        }
-    }
-
-    return index;
-}
-
 WarSpriteAnimation* findAnimation(WarContext* context, WarEntity* entity, const char* name)
 {
     WarAnimationsComponent* animations = &entity->animations;
     for(s32 i = 0; i < animations->animations.count; i++)
     {
         WarSpriteAnimation* anim = animations->animations.items[i];
-        if (strcmp(anim->name, name) == 0)
+        if (strEquals(anim->name, name))
         {
             return anim;
         }
@@ -114,33 +157,9 @@ bool containsAnimation(WarContext* context, WarEntity* entity, const char* name)
     return findAnimationIndex(context, entity, name) >= 0;
 }
 
-void freeAnimation(WarSpriteAnimation* animation)
-{
-    // here it crash, this doesn't need to be freed if is assigned like animation->name = "anim"?
-    // free(animation->name);
-
-    s32ListFree(&animation->frames);
-    
-    WarSprite* sprite = &animation->sprite;
-    for(s32 i = 0; i < sprite->framesCount; i++)
-        free(sprite->frames[i].data);
-
-    free(animation);
-}
-
-void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
-{
-    s32 index = findAnimationIndex(context, entity, name);
-    if (index >= 0)
-    {
-        WarAnimationsComponent* animations = &entity->animations;
-        WarSpriteAnimationListRemoveAt(&animations->animations, index);
-    }
-}
-
 WarSpriteAnimation* createDamageAnimation(WarContext* context, WarEntity* entity, char* name, int damageLevel)
 {
-    s32 resourceIndex = damageLevel == 1 ? BUILDING_DAMAGE_1_RESOURCE : BUILDING_DAMAGE_2_RESOURCE;
+    s32 resourceIndex = damageLevel == 1 ? WAR_BUILDING_DAMAGE_1_RESOURCE : WAR_BUILDING_DAMAGE_2_RESOURCE;
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(resourceIndex);
     WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = createAnimation(name, sprite, 0.2f, true);
@@ -154,12 +173,12 @@ WarSpriteAnimation* createDamageAnimation(WarContext* context, WarEntity* entity
     return anim;
 }
 
-WarSpriteAnimation* createCollapseAnimation(WarContext* context, WarEntity* entity, char* name)
+WarSpriteAnimation* createCollapseAnimation(WarContext* context, WarEntity* entity, const char* name)
 {
     vec2 unitFrameSize = getUnitFrameSize(entity);
     vec2 unitSpriteSize = getUnitSpriteSize(entity);
 
-    WarSpriteResourceRef spriteResourceRef = imageResourceRef(BUILDING_COLLAPSE_RESOURCE);
+    WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_BUILDING_COLLAPSE_RESOURCE);
     WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
 
@@ -180,6 +199,29 @@ WarSpriteAnimation* createCollapseAnimation(WarContext* context, WarEntity* enti
         addAnimationFrame(anim, i);
     
     addAnimation(entity, anim);
+
+    return anim;
+}
+
+WarSpriteAnimation* createExplosionAnimation(WarContext* context, vec2 position)
+{
+    WarMap* map = context->map;
+
+    WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_EXPLOSION_RESOURCE);
+    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+
+    char name[30];
+    sprintf(name, "explosion_%.2f_%.2f", position.x, position.y);
+    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
+
+    f32 offsetx = position.x - halff(sprite.frameWidth);
+    f32 offsety = position.y - halff(sprite.frameHeight);
+    anim->offset = vec2f(offsetx, offsety);
+
+    for(s32 i = 0; i < 6; i++)
+        addAnimationFrame(anim, i);
+
+    WarSpriteAnimationListAdd(&map->animations, anim);
 
     return anim;
 }

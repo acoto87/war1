@@ -349,21 +349,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
             if (startUnit.type == WAR_UNIT_FOOTMAN)
-            {
-                startUnit.type = WAR_UNIT_CATAPULT_HUMANS;
-                createUnit(context, WAR_UNIT_ARCHER, startUnit.x + 1, startUnit.y, startUnit.player, 
-                       startUnit.resourceKind, startUnit.amount, true);
-            }
+                startUnit.type = WAR_UNIT_ARCHER;
             else if (startUnit.type == WAR_UNIT_PEASANT)
-            {
-                createUnit(context, WAR_UNIT_ARCHER, startUnit.x + 1, startUnit.y, startUnit.player, 
-                       startUnit.resourceKind, startUnit.amount, true);
-                startUnit.type = WAR_UNIT_CONJURER;
-            }
+                startUnit.type = WAR_UNIT_CATAPULT_HUMANS;
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
                        startUnit.resourceKind, startUnit.amount, true);
-
-            
         }
 
         createBuilding(context, WAR_UNIT_BARRACKS_HUMANS, 37, 18, 0, false);
@@ -1655,7 +1645,15 @@ void updateAnimations(WarContext* context)
         WarEntity* entity = entities->items[i];
         if (entity)
         {
-            updateEntityAnimations(context, entity);
+            WarAnimationsComponent* animations = &entity->animations;
+            if (animations->enabled)
+            {
+                for(s32 i = 0; i < animations->animations.count; i++)
+                {
+                    WarSpriteAnimation* anim = animations->animations.items[i];
+                    updateAnimation(context, entity, anim);
+                }
+            }
         }
     }
 
@@ -1663,12 +1661,14 @@ void updateAnimations(WarContext* context)
     for(s32 i = 0; i < map->animations.count; i++)
     {
         WarSpriteAnimation* anim = map->animations.items[i];
-        updateAnimation(context, anim);
+        updateAnimation(context, NULL, anim);
     }
 }
 
 void updateProjectile(WarContext* context, WarEntity* entity)
 {
+    WarMap* map = context->map;
+
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarProjectileComponent* projectile = &entity->projectile;
@@ -1729,6 +1729,19 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 }
                 else
                 {
+                    WarEntity* attacker = findEntity(context, projectile->attackerId);
+                    WarEntity* victim = findEntity(context, projectile->victimId);
+
+                    // check if the attacker and the victim exists because it could be eliminated by other unit
+                    if (attacker && victim)
+                    {
+                        // every unit has a 20 percent chance to miss (except catapults)
+                        if (chance(80))
+                        {
+                            takeDamage(context, victim, attacker->unit.minDamage, attacker->unit.rndDamage);
+                        }
+                    }
+
                     removeEntityById(context, entity->id);
                 }
 
@@ -1797,6 +1810,22 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 }
                 else
                 {
+                    WarEntity* attacker = findEntity(context, projectile->attackerId);
+
+                    WarEntityList* nearUnits = getNearUnits(context, vec2MapToTileCoordinates(target));
+                    for (s32 i = 0; i < nearUnits->count; i++)
+                    {
+                        WarEntity* victim = nearUnits->items[i];
+                        if (victim && canAttack(context, attacker, victim))
+                        {
+                            takeDamage(context, victim, attacker->unit.minDamage, attacker->unit.rndDamage);
+                        }
+                    }
+                    WarEntityListFree(nearUnits);
+
+                    createExplosionAnimation(context, target);
+                    createAudio(context, WAR_CATAPULT_FIRE_EXPLOSION, false);
+
                     removeEntityById(context, entity->id);
                 }
 
@@ -1805,11 +1834,17 @@ void updateProjectile(WarContext* context, WarEntity* entity)
             case WAR_PROJECTILE_FIREBALL:
             {
                 vec2 position = transform->position;
+                vec2 origin = projectile->origin;
                 vec2 target = projectile->target;
                 f32 speed = projectile->speed;
 
+                f32 totalDistance = vec2Distance(origin, target);
+
                 vec2 direction = vec2Subv(target, position);
                 f32 directionLength = vec2Length(direction);
+
+                f32 travelDistance = totalDistance - directionLength;
+                f32 travelPercent = percentabi(travelDistance, totalDistance);
 
                 vec2 step = vec2Mulf(vec2Normalize(direction), getScaledSpeed(context, speed) * context->deltaTime);
                 f32 stepLength = vec2Length(step);
@@ -1848,12 +1883,34 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                         }
                     }
 
+                    if (inRange(travelPercent, 20, 40))
+                        frameIndex += 5;
+                    else if (inRange(travelPercent, 40, 60))
+                        frameIndex += 10;
+                    else if (inRange(travelPercent, 60, 80))
+                        frameIndex += 15;
+                    else if (inRange(travelPercent, 80, 100))
+                        frameIndex += 20;
+
                     transform->position = newPosition;
                     transform->scale = newScale;
                     sprite->frameIndex = frameIndex;
                 }
                 else
                 {
+                    WarEntity* attacker = findEntity(context, projectile->attackerId);
+                    WarEntity* victim = findEntity(context, projectile->victimId);
+
+                    // check if the attacker and the victim exists because it could be eliminated by other unit
+                    if (attacker && victim)
+                    {
+                        // every unit has a 20 percent chance to miss (except catapults)
+                        if (chance(80))
+                        {
+                            takeDamage(context, victim, attacker->unit.minDamage, attacker->unit.rndDamage);
+                        }
+                    }
+
                     removeEntityById(context, entity->id);
                 }
 
@@ -1920,6 +1977,19 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 }
                 else
                 {
+                    WarEntity* attacker = findEntity(context, projectile->attackerId);
+                    WarEntity* victim = findEntity(context, projectile->victimId);
+
+                    // check if the attacker and the victim exists because it could be eliminated by other unit
+                    if (attacker && victim)
+                    {
+                        // every unit has a 20 percent chance to miss (except catapults)
+                        if (chance(80))
+                        {
+                            takeDamage(context, victim, attacker->unit.minDamage, attacker->unit.rndDamage);
+                        }
+                    }
+
                     removeEntityById(context, entity->id);
                 }
 
@@ -1986,6 +2056,19 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 }
                 else
                 {
+                    WarEntity* attacker = findEntity(context, projectile->attackerId);
+                    WarEntity* victim = findEntity(context, projectile->victimId);
+
+                    // check if the attacker and the victim exists because it could be eliminated by other unit
+                    if (attacker && victim)
+                    {
+                        // every unit has a 20 percent chance to miss (except catapults)
+                        if (chance(80))
+                        {
+                            takeDamage(context, victim, attacker->unit.minDamage, attacker->unit.rndDamage);
+                        }
+                    }
+
                     removeEntityById(context, entity->id);
                 }
 
