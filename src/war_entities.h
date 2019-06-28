@@ -57,6 +57,11 @@ void removeAudioComponent(WarContext* context, WarEntity* entity);
 void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType type, vec2 hot);
 void removeCursorComponent(WarContext* context, WarEntity* entity);
 
+void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileType type,
+                            WarEntityId attackerId, WarEntityId victimId, 
+                            vec2 origin, vec2 target, s32 speed);
+void removeProjectileComponent(WarContext* context, WarEntity* entity);
+
 // Roads
 WarEntity* createRoad(WarContext* context);
 void addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player);
@@ -115,6 +120,7 @@ bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h);
 bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y);
 bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y);
+WarEntityList* getNearUnits(WarContext* context, vec2 position, s32 distance);
 WarEntity* getNearEnemy(WarContext* context, WarEntity* entity);
 WarEntity* getAttackerEnemy(WarContext* context, WarEntity* entity);
 bool isBeingAttackedBy(WarEntity* entity, WarEntity* other);

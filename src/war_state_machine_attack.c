@@ -100,7 +100,6 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (isRangeUnit(entity))
                 {
-                    s32 resourceIndex;
                     WarProjectileType projectileType;
 
                     switch (entity->unit.type)
@@ -108,7 +107,6 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                         case WAR_UNIT_ARCHER:
                         case WAR_UNIT_SPEARMAN:
                         {
-                            resourceIndex = 349;
                             projectileType = WAR_PROJECTILE_ARROW;
                             break;
                         }
@@ -116,7 +114,6 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                         case WAR_UNIT_CATAPULT_HUMANS:
                         case WAR_UNIT_CATAPULT_ORCS:
                         {
-                            resourceIndex = 348;
                             projectileType = WAR_PROJECTILE_CATAPULT;
                             break;
                         }
@@ -126,14 +123,12 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                         case WAR_UNIT_CLERIC:
                         case WAR_UNIT_NECROLYTE:
                         {
-                            resourceIndex = 347;
                             projectileType = WAR_PROJECTILE_FIREBALL;
                             break;
                         }
 
                         case WAR_UNIT_WATER_ELEMENTAL:
                         {
-                            resourceIndex = 357;
                             projectileType = WAR_PROJECTILE_WATER_ELEMENTAL;
                             break;
                         }
@@ -148,11 +143,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                     
                     vec2 origin = getUnitCenterPosition(entity, false);
                     vec2 target = getUnitCenterPosition(targetEntity, false);
-
-                    WarEntity* projectile = createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
-                    addTransformComponent(context, projectile, origin);
-                    addSpriteComponentFromResource(context, projectile, imageResourceRef(resourceIndex));
-                    addProjectileComponent(context, projectile, entity->id, targetEntity->id, projectileType, origin, target);
+                    createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
                 }
                 else
                 {

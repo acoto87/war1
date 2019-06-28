@@ -94,6 +94,7 @@
 #include "war_ui.c"
 #include "war_commands.c"
 #include "war_units.c"
+#include "war_projectiles.c"
 #include "war_entities.c"
 #include "war_pathfinder.c"
 #include "war_state_machine_idle.c"

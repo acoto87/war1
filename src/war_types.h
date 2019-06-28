@@ -1555,7 +1555,7 @@ typedef struct
     WarEntityId victimId;
     vec2 origin;
     vec2 target;
-    f32 speed;
+    s32 speed;
 } WarProjectileComponent;
 
 typedef struct _WarEntity
