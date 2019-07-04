@@ -925,28 +925,31 @@ void updateTreesEdit(WarContext* context)
     {
         if(wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
-            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-            pointerPos =  vec2MapToTileCoordinates(pointerPos);
-
-            s32 x = (s32)pointerPos.x;
-            s32 y = (s32)pointerPos.y;
-
-            WarEntityId entityId = getTileEntityId(map->finder, x, y);
-            WarEntity* entity = findEntity(context, entityId);
-            if (!entity)
+            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
-                entity = map->forest;
+                vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+                pointerPos =  vec2MapToTileCoordinates(pointerPos);
 
-                plantTree(context, entity, x, y);
-                determineAllTreeTiles(context);
-            }
-            else if (entity->type == WAR_ENTITY_TYPE_FOREST)
-            {
-                WarTree* tree = getTreeAtPosition(entity, x, y);
-                if (tree)
+                s32 x = (s32)pointerPos.x;
+                s32 y = (s32)pointerPos.y;
+
+                WarEntityId entityId = getTileEntityId(map->finder, x, y);
+                WarEntity* entity = findEntity(context, entityId);
+                if (!entity)
                 {
-                    chopTree(context, entity, tree, TREE_MAX_WOOD);
+                    entity = map->forest;
+
+                    plantTree(context, entity, x, y);
                     determineAllTreeTiles(context);
+                }
+                else if (entity->type == WAR_ENTITY_TYPE_FOREST)
+                {
+                    WarTree* tree = getTreeAtPosition(entity, x, y);
+                    if (tree)
+                    {
+                        chopTree(context, entity, tree, TREE_MAX_WOOD);
+                        determineAllTreeTiles(context);
+                    }
                 }
             }
         }
@@ -968,24 +971,27 @@ void updateRoadsEdit(WarContext* context)
     {
         if(wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
-            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-            pointerPos =  vec2MapToTileCoordinates(pointerPos);
-
-            s32 x = (s32)pointerPos.x;
-            s32 y = (s32)pointerPos.y;
-
-            WarEntity* road = map->road;
-
-            WarRoadPiece* piece = getRoadPieceAtPosition(road, x, y);
-            if (!piece)
+            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
-                addRoadPiece(road, x, y, 0);
-                determineRoadTypes(context, road);
-            }
-            else
-            {
-                removeRoadPiece(road, piece);
-                determineRoadTypes(context, road);
+                vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+                pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+                s32 x = (s32)pointerPos.x;
+                s32 y = (s32)pointerPos.y;
+
+                WarEntity* road = map->road;
+
+                WarRoadPiece* piece = getRoadPieceAtPosition(road, x, y);
+                if (!piece)
+                {
+                    addRoadPiece(road, x, y, 0);
+                    determineRoadTypes(context, road);
+                }
+                else
+                {
+                    removeRoadPiece(road, piece);
+                    determineRoadTypes(context, road);
+                }
             }
         }
     }
@@ -1006,27 +1012,30 @@ void updateWallsEdit(WarContext* context)
     {
         if(wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
-            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-            pointerPos =  vec2MapToTileCoordinates(pointerPos);
-
-            s32 x = (s32)pointerPos.x;
-            s32 y = (s32)pointerPos.y;
-
-            WarEntity* wall = map->wall;
-
-            WarWallPiece* piece = getWallPieceAtPosition(wall, x, y);
-            if (!piece)
+            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
-                WarWallPiece* piece = addWallPiece(wall, x, y, 0);
-                piece->hp = WAR_WALL_MAX_HP;
-                piece->maxhp = WAR_WALL_MAX_HP;
-                
-                determineWallTypes(context, wall);
-            }
-            else
-            {
-                removeWallPiece(wall, piece);
-                determineWallTypes(context, wall);
+                vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+                pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+                s32 x = (s32)pointerPos.x;
+                s32 y = (s32)pointerPos.y;
+
+                WarEntity* wall = map->wall;
+
+                WarWallPiece* piece = getWallPieceAtPosition(wall, x, y);
+                if (!piece)
+                {
+                    WarWallPiece* piece = addWallPiece(wall, x, y, 0);
+                    piece->hp = WAR_WALL_MAX_HP;
+                    piece->maxhp = WAR_WALL_MAX_HP;
+                    
+                    determineWallTypes(context, wall);
+                }
+                else
+                {
+                    removeWallPiece(wall, piece);
+                    determineWallTypes(context, wall);
+                }
             }
         }
     }
@@ -1047,24 +1056,27 @@ void updateRuinsEdit(WarContext* context)
     {
         if(wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
-            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-            pointerPos =  vec2MapToTileCoordinates(pointerPos);
-
-            s32 x = (s32)pointerPos.x;
-            s32 y = (s32)pointerPos.y;
-
-            WarEntity* ruin = map->ruin;
-
-            WarRuinPiece* piece = getRuinPieceAtPosition(ruin, x, y);
-            if (!piece)
+            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
-                addRuinsPieces(context, ruin, x, y, 2);
-                determineRuinTypes(context, ruin);
-            }
-            else
-            {
-                removeRuinPiece(ruin, piece);
-                determineRuinTypes(context, ruin);
+                vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+                pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+                s32 x = (s32)pointerPos.x;
+                s32 y = (s32)pointerPos.y;
+
+                WarEntity* ruin = map->ruin;
+
+                WarRuinPiece* piece = getRuinPieceAtPosition(ruin, x, y);
+                if (!piece)
+                {
+                    addRuinsPieces(context, ruin, x, y, 2);
+                    determineRuinTypes(context, ruin);
+                }
+                else
+                {
+                    removeRuinPiece(ruin, piece);
+                    determineRuinTypes(context, ruin);
+                }
             }
         }
     }

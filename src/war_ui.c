@@ -527,11 +527,11 @@ void renderMinimap(WarContext* context)
     WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
-        u8 r = 211, g = 211, b = 211;
-
         WarEntity* entity = units->items[i];
-        if (entity)
+        if (displayUnitOnMinimap(entity))
         {
+            u8 r = 211, g = 211, b = 211;
+
             WarUnitComponent unit = entity->unit;
 
             if (unit.type == WAR_UNIT_TOWNHALL_HUMANS || 

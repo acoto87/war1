@@ -57,6 +57,16 @@ bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
            !isGoingToCollapse(entity);
 }
 
+bool displayUnitOnMinimap(WarEntity* entity)
+{
+    return entity && 
+        !isCorpseUnit(entity) && 
+        !isDead(entity) && 
+        !isGoingToDie(entity) && 
+        !isCollapsing(entity) && 
+        !isGoingToCollapse(entity);
+}
+
 s32 getPlayerUnitTotalCount(WarContext* context, u8 player)
 {
     WarMap* map = context->map;

@@ -178,13 +178,13 @@ const WarUnitData unitsData[] =
     { WAR_UNIT_OGRE,                297, WAR_PORTRAIT_OGRE,               1, 1, "OGRE"            },
     { WAR_UNIT_SPIDER,              298, WAR_PORTRAIT_SPIDER,             1, 1, "SPIDER"          },
     { WAR_UNIT_SLIME,               299, WAR_PORTRAIT_SLIME,              1, 1, "SLIME"           },
-    { WAR_UNIT_FIRE_ELEMENTAL,      300, WAR_PORTRAIT_FIRE_ELEMENTAL,     1, 1, "FIRE ELEMENTAL"  },
+    { WAR_UNIT_FIRE_ELEMENTAL,      300, WAR_PORTRAIT_FIRE_ELEMENTAL,     1, 1, "FIRE ELEM"       },
     { WAR_UNIT_SCORPION,            301, WAR_PORTRAIT_SCORPION,           1, 1, "SCORPION"        },
     { WAR_UNIT_BRIGAND,             302, WAR_PORTRAIT_BRIGAND,            1, 1, "BRIGAND"         },
     { WAR_UNIT_THE_DEAD,            303, WAR_PORTRAIT_DEAD,               1, 1, "THE DEAD"        },
     { WAR_UNIT_SKELETON,            304, WAR_PORTRAIT_SKELETON,           1, 1, "SKELETON"        },
     { WAR_UNIT_DAEMON,              305, WAR_PORTRAIT_DAEMON,             1, 1, "DAEMON"          },
-    { WAR_UNIT_WATER_ELEMENTAL,     306, WAR_PORTRAIT_WATER_ELEMENTAL,    1, 1, "WATER ELEMENTAL" },
+    { WAR_UNIT_WATER_ELEMENTAL,     306, WAR_PORTRAIT_WATER_ELEMENTAL,    1, 1, "WATER ELEM"      },
 
     // buildings
     { WAR_UNIT_FARM_HUMANS,         307, WAR_PORTRAIT_FARM_HUMANS,        2, 2, "FARM"            },
@@ -1567,6 +1567,8 @@ bool isCarryingResources(WarEntity* entity)
         default: return false;
     }
 }
+
+bool displayUnitOnMinimap(WarEntity* entity);
 
 s32 getPlayerDudesCount(WarContext* context, u8 player);
 s32 getPlayerBuildingsCount(WarContext* context, u8 player);

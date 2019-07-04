@@ -21,8 +21,10 @@ List of thing to do in no particular order
   * ~~Sounds of the goldmine?~~
     There is no sound for the goldmine.
   * ~~Selection rect green for friendly units, red for enemies and white for neutral.~~
+  * ~~Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.~~
+  * ~~In the minimap corpses are shown.~~
+  * ~~WATER ELEMENTAL name go outside of portrait area. Change to WATER ELEM or W. ELEMENTAL~~
   * Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.
-  * In the minimap corpses are shown.
   * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
   * When a unit is selected, say a warrior, and it cursor is over an enemy unit, it shows the magnifying glass because there is no active command. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
   * When building roads the player needs to go back and click on the build road button again to build the next one.
@@ -33,7 +35,6 @@ List of thing to do in no particular order
   * Check why the changing of the global scale renders with the previous global scale after a change (only on Linux, on Windows it doesn't happen).
   * Corpses are rendered above units.
   * Damage animations are rendered below units.
-  * Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.
   * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
   * Make a call to `sleep` instead of waiting in a cycle until the frame end. This will probably increase effiency and decrease CPU usage. I need a portable sleep function, maybe something like:
     ```c
@@ -60,13 +61,7 @@ List of thing to do in no particular order
   * ~~Test the new implementation for lists.~~
   * ~~Make some or macros or inline functions to create options for lists initializations.~~
   * ~~Map scroll with the mouse cursor at the edge.~~
-  * Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
-  * Manage components with a dictionary and not each entity having all the components.
-  * Create EntityManager to manage entities.
-  * Make a profiler system.
-  * Sort the units by `y` position to render and the units with greater `y` render on top of the ones with less `y`.
   * ~~Factorize state_machine.c in files (maybe `state_machine_update.c`, `state_machine_enter.c`, etc.).~~
-  * Draw text system (to debug and other texts).
   * ~~Walls (same system like roads).~~
   * ~~Make a better input system~~
     * ~~Map scrolling and positioning by clicking in the minimap is now all under `updateViewport` function.~~
@@ -78,11 +73,17 @@ List of thing to do in no particular order
   * ~~Make walls behavior like the trees.~~
   * ~~Make ruins behavior like the trees.~~
   * ~~Update minimap with chopped trees.~~
+  * ~~Make a `setUITextFormat` method that takes a format with arguments `printf` style.~~
+  * ~~Rename `WarUnitCommandBaseData` to something like `WarUnitCommandBaseData`.~~
+  * Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
+  * Manage components with a dictionary and not each entity having all the components.
+  * Create EntityManager to manage entities.
+  * Make a profiler system.
+  * Sort the units by `y` position to render and the units with greater `y` render on top of the ones with less `y`.
+  * Draw text system (to debug and other texts).
   * Remove global __log__ and move it to WarContext.
   * Make so that entities can have multiple sprites.
-  * ~~Make a `setUITextFormat` method that takes a format with arguments `printf` style.~~
   * Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
-  * ~~Rename `WarUnitCommandBaseData` to something like `WarUnitCommandBaseData`.~~
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
@@ -132,6 +133,13 @@ List of thing to do in no particular order
     * ~~Harvest command~~
     * ~~Repair command~~
   * Add functionality of spell commands.
+    * Summoning
+    * Cloud of poison
+    * Rain of fire
+    * Far seeing / Dark vision
+    * Invincibility / Holy armor
+    * Healing
+    * Raise dead
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~
@@ -166,8 +174,11 @@ List of thing to do in no particular order
   ```
   * Move actions system to animations, again? :| 
     The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
-  * > Projectiles (arrows, and fireballs).
-
+  * Projectiles
+    * ~~Arrows~~
+    * ~~Fireballs~~
+    * > Rain of fire
+  
 * State machine
   * ~~Idle state~~
   * ~~Move state~~
@@ -187,7 +198,10 @@ List of thing to do in no particular order
     * Do damage.
       * ~~Do damage to units.~~
       * ~~Do damage to buildings.~~
-      * Do damage with splash (catapults).
+      * Do damage with splash
+        * ~~Catapults~~
+        * Rain of fire
+        * Cloud of poison
       * Do damage with magic.
   * ~~Ground-attack state~~
     * ~~Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.~~
