@@ -14,6 +14,7 @@
 
 #define NEAR_ENEMY_RADIUS 5
 #define NEAR_CATAPULT_RADIUS 3
+#define NEAR_RAIN_OF_FIRE_RADIUS 2
 
 #define PLAYBACK_FREQ 44100
 
@@ -25,6 +26,7 @@
 // #define DEBUG_RENDER_UNIT_ANIMATIONS
 // #define DEBUG_RENDER_MAP_ANIMATIONS
 // #define DEBUG_RENDER_FONT
+// #define DEBUG_RENDER_PROJECTILES
 
 #define isButtonPressed(input, btn) (input->buttons[btn].pressed)
 #define wasButtonPressed(input, btn) (input->buttons[btn].wasPressed)

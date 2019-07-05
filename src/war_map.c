@@ -923,9 +923,9 @@ void updateTreesEdit(WarContext* context)
 
     if (map->editingTrees)
     {
-        if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+        if (wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
-            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
                 vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
                 pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -969,9 +969,9 @@ void updateRoadsEdit(WarContext* context)
 
     if (map->editingRoads)
     {
-        if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+        if (wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
-            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
                 vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
                 pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -1010,9 +1010,9 @@ void updateWallsEdit(WarContext* context)
 
     if (map->editingWalls)
     {
-        if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+        if (wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
-            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
                 vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
                 pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -1054,9 +1054,9 @@ void updateRuinsEdit(WarContext* context)
 
     if (map->editingRuins)
     {
-        if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+        if (wasButtonPressed(input, WAR_MOUSE_LEFT))
         {
-            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
                 vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
                 pointerPos =  vec2MapToTileCoordinates(pointerPos);
@@ -1078,6 +1078,36 @@ void updateRuinsEdit(WarContext* context)
                     determineRuinTypes(context, ruin);
                 }
             }
+        }
+    }
+}
+
+void updateRainOfFireEdit(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL) && 
+        wasKeyPressed(input, WAR_KEY_K))
+    {
+        map->editingRainOfFire = !map->editingRainOfFire;
+    }
+
+    if (map->editingRainOfFire)
+    {
+        if (wasKeyPressed(input, WAR_KEY_L) && map->selectedEntities.count > 0)
+        {
+            WarEntityId selectedEntityId = map->selectedEntities.items[0];
+
+            rect viewport = map->viewport;
+            f32 padding = MEGA_TILE_WIDTH * 3;
+
+            f32 offsetx = randomf(viewport.x + padding, viewport.x + viewport.width - padding);
+            f32 offsety = randomf(viewport.y + padding, viewport.y + viewport.height - padding);
+            vec2 target = vec2f(offsetx, offsety);
+            vec2 origin = vec2f(target.x, map->viewport.y);
+
+            createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, selectedEntityId, 0, origin, target);
         }
     }
 }
@@ -1729,6 +1759,7 @@ void updateMap(WarContext* context)
     updateRoadsEdit(context);
     updateWallsEdit(context);
     updateRuinsEdit(context);
+    updateRainOfFireEdit(context);
 }
 
 void renderMapPanel(WarContext *context)

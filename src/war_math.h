@@ -325,6 +325,11 @@ rect rectTranslatef(rect r, f32 x, f32 y)
     return r;
 }
 
+vec2 rectCenter(rect r)
+{
+    return vec2f(r.x + halff(r.width), r.y + halff(r.height));
+}
+
 vec2 getClosestPointOnRect(vec2 p, rect r)
 {
     f32 left = r.x;
@@ -370,5 +375,5 @@ vec2 getClosestPointOnRect(vec2 p, rect r)
 
 void rectPrint(rect r)
 {
-    printf("(%f, %f, %f, %f)\n", r.x, r.y, r.width, r.height);
+    logDebug("(%f, %f, %f, %f)\n", r.x, r.y, r.width, r.height);
 }

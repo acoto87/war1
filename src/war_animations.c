@@ -225,3 +225,26 @@ WarSpriteAnimation* createExplosionAnimation(WarContext* context, vec2 position)
 
     return anim;
 }
+
+WarSpriteAnimation* createRainOfFireExplosionAnimation(WarContext* context, vec2 position)
+{
+    WarMap* map = context->map;
+
+    WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_RAIN_OF_FIRE_EXPLOSION_RESOURCE);
+    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+
+    char name[30];
+    sprintf(name, "explosion_%.2f_%.2f", position.x, position.y);
+    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
+
+    f32 offsetx = position.x - halff(sprite.frameWidth);
+    f32 offsety = position.y - halff(sprite.frameHeight);
+    anim->offset = vec2f(offsetx, offsety);
+
+    for(s32 i = 3; i < 6; i++)
+        addAnimationFrame(anim, i);
+
+    WarSpriteAnimationListAdd(&map->animations, anim);
+
+    return anim;
+}

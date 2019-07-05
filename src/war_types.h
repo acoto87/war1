@@ -1736,6 +1736,7 @@ typedef struct
     bool editingWalls;
     bool editingRoads;
     bool editingRuins;
+    bool editingRainOfFire;
 
     WarPathFinder finder;
 

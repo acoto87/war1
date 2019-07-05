@@ -2,7 +2,7 @@ typedef struct
 {
     WarProjectileType type;
     s32 resourceIndex;
-    s32 speed;          // in tiles/seconds
+    s32 speed;          // in pixels/seconds
     s32 frameCount;     // number of frames that conform a single animation
     s32 frameStride;    // number of frames until next sprite from current animation
                         // this is due to some projectiles sprite having directional sprites
@@ -12,13 +12,13 @@ typedef struct
 
 WarProjectileData projectilesData[] = 
 {
-    // type                             resourceIndex       speed   frames  stride
-    { WAR_PROJECTILE_ARROW,             349,                8,      1,      0 },
-    { WAR_PROJECTILE_CATAPULT,          348,                4,      3,      5 },
-    { WAR_PROJECTILE_FIREBALL,          347,                8,      5,      5 },
-    { WAR_PROJECTILE_FIREBALL_2,        358,                8,      2,      5 },
-    { WAR_PROJECTILE_WATER_ELEMENTAL,   357,                8,      2,      5 },
-    { WAR_PROJECTILE_RAIN_OF_FIRE,      351,                6,      6,      1 },
+    // type                             resourceIndex       speed                   frames  stride
+    { WAR_PROJECTILE_ARROW,             349,                8 * MEGA_TILE_WIDTH,    1,      0 },
+    { WAR_PROJECTILE_CATAPULT,          348,                4 * MEGA_TILE_WIDTH,    3,      5 },
+    { WAR_PROJECTILE_FIREBALL,          347,                8 * MEGA_TILE_WIDTH,    5,      5 },
+    { WAR_PROJECTILE_FIREBALL_2,        358,                8 * MEGA_TILE_WIDTH,    2,      5 },
+    { WAR_PROJECTILE_WATER_ELEMENTAL,   357,                8 * MEGA_TILE_WIDTH,    2,      5 },
+    { WAR_PROJECTILE_RAIN_OF_FIRE,      351,                6 * MEGA_TILE_WIDTH,    3,      1 },
 };
 
 WarProjectileData getProjectileData(WarProjectileType type)
@@ -50,14 +50,14 @@ void doProjectileTargetDamage(WarContext* context, WarEntity* entity)
     }
 }
 
-void doProjectileSplashDamage(WarContext* context, WarEntity* entity)
+void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
     WarEntity* attacker = findEntity(context, projectile->attackerId);
     vec2 position = vec2MapToTileCoordinates(projectile->target);
 
-    WarEntityList* nearUnits = getNearUnits(context, position, NEAR_CATAPULT_RADIUS);
+    WarEntityList* nearUnits = getNearUnits(context, position, splashRadius);
     for (s32 i = 0; i < nearUnits->count; i++)
     {
         WarEntity* victim = nearUnits->items[i];
@@ -78,7 +78,7 @@ bool updateProjectilePosition(WarContext* context, WarEntity* entity)
     vec2 target = projectile->target;
     f32 speed = projectile->speed;
 
-    speed = getScaledSpeed(context, speed * MEGA_TILE_WIDTH);
+    speed = getScaledSpeed(context, speed);
 
     vec2 direction = vec2Subv(target, position);
     f32 directionLength = vec2Length(direction);
@@ -168,14 +168,47 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
             newFrameIndex -= data.frameStride;
         else
             newFrameIndex += data.frameStride;
-
-        if (newFrameIndex < 0)
-        {
-            printf("hello: %d\n", newFrameIndex);
-        }
     }
 
     transform->scale = newScale;
+    sprite->frameIndex = newFrameIndex;
+}
+
+void updateRainOfFireProjectileSprite(WarContext* context, WarEntity* entity)
+{
+    WarTransformComponent* transform = &entity->transform;
+    WarSpriteComponent* sprite = &entity->sprite;
+    WarProjectileComponent* projectile = &entity->projectile;
+
+    WarProjectileData data = getProjectileData(projectile->type);
+
+    vec2 position = transform->position;
+    vec2 origin = projectile->origin;
+    vec2 target = projectile->target;
+    s32 frameCount = data.frameCount;
+
+    f32 totalDistance = vec2Distance(origin, target);
+
+    vec2 direction = vec2Subv(target, position);
+    f32 directionLength = vec2Length(direction);
+
+    f32 travelDistance = totalDistance - directionLength;
+    f32 travelPercent = percentabi(travelDistance, totalDistance);
+
+    // the new frame index have to be changed for some projectiles
+    // based on the travel percent of the projectile
+    //
+    s32 newFrameIndex = 0;
+
+    s32 q = (100 / frameCount);
+    for (s32 k = 1; k < frameCount; k++)
+    {
+        if (q * k >= travelPercent)
+            break;
+
+        newFrameIndex += data.frameStride;
+    }
+
     sprite->frameIndex = newFrameIndex;
 }
 
@@ -188,7 +221,17 @@ void updateProjectile(WarContext* context, WarEntity* entity)
     {
         if (projectile->type == WAR_PROJECTILE_RAIN_OF_FIRE)
         {
-            logDebug("Rain of fire projectiles not handle yet.\n");
+            if (!updateProjectilePosition(context, entity))
+            {
+                updateRainOfFireProjectileSprite(context, entity);
+            }
+            else
+            {
+                doProjectileSplashDamage(context, entity, NEAR_RAIN_OF_FIRE_RADIUS);
+                createRainOfFireExplosionAnimation(context, projectile->target);
+                createAudio(context, WAR_CATAPULT_FIRE_EXPLOSION, false);
+                removeEntityById(context, entity->id);
+            }
         }
         else
         {
@@ -200,7 +243,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
             {
                 if (projectile->type == WAR_PROJECTILE_CATAPULT)
                 {
-                    doProjectileSplashDamage(context, entity);
+                    doProjectileSplashDamage(context, entity, NEAR_CATAPULT_RADIUS);
                     createExplosionAnimation(context, projectile->target);
                     createAudio(context, WAR_CATAPULT_FIRE_EXPLOSION, false);
                 }
@@ -208,6 +251,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 {
                     doProjectileTargetDamage(context, entity);
                 }
+
                 removeEntityById(context, entity->id);
             }
         }

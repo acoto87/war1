@@ -1000,29 +1000,43 @@ void renderProjectile(WarContext* context, WarEntity* entity)
     {
         WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
         
-        // {
-        //     nvgSave(gfx);
+#ifdef DEBUG_RENDER_PROJECTILES
+        {
+            nvgSave(gfx);
 
-        //     nvgTranslate(gfx, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
-        //     nvgTranslate(gfx, position.x, position.y);
+            nvgTranslate(gfx, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
+            nvgTranslate(gfx, position.x, position.y);
 
-        //     rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-        //     nvgFillRect(gfx, r, NVG_GRAY_TRANSPARENT);
+            rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
+            nvgFillRect(gfx, r, NVG_GRAY_TRANSPARENT);
 
-        //     nvgRestore(gfx);
-        // }
+            nvgRestore(gfx);
+        }
 
-        // {
-        //     nvgSave(gfx);
+        {
+            nvgSave(gfx);
 
-        //     nvgTranslate(gfx, -halfi(frame.w),-halfi(frame.h));
-        //     nvgTranslate(gfx, position.x, position.y);
+            nvgTranslate(gfx, -halfi(frame.w),-halfi(frame.h));
+            nvgTranslate(gfx, position.x, position.y);
 
-        //     rect r = rectf(0, 0, frame.w, frame.h);
-        //     nvgFillRect(gfx, r, NVG_RED_TRANSPARENT);
+            rect r = rectf(0, 0, frame.w, frame.h);
+            nvgFillRect(gfx, r, NVG_RED_TRANSPARENT);
 
-        //     nvgRestore(gfx);
-        // }
+            nvgRestore(gfx);
+        }
+
+        {
+            WarProjectileComponent* projectile = &entity->projectile;
+
+            nvgSave(gfx);
+
+            nvgStrokeLine(gfx, projectile->origin, projectile->target, getColorFromList(entity->id), 0.5f);
+            nvgFillRect(gfx, rectv(projectile->origin, VEC2_ONE), nvgRGB(255, 0, 255));
+            nvgFillRect(gfx, rectv(projectile->target, VEC2_ONE), nvgRGB(255, 0, 255));
+
+            nvgRestore(gfx);
+        }
+#endif
 
         nvgTranslate(gfx, -frame.dx, -frame.dy);
         nvgTranslate(gfx, -halff(frame.w), -halff(frame.h));
