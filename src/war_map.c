@@ -350,8 +350,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
             if (startUnit.type == WAR_UNIT_FOOTMAN)
                 startUnit.type = WAR_UNIT_CONJURER;
-            else if (startUnit.type == WAR_UNIT_PEASANT)
-                startUnit.type = WAR_UNIT_WATER_ELEMENTAL;
+            
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
                        startUnit.resourceKind, startUnit.amount, true);
         }
@@ -855,38 +854,46 @@ void updateSelection(WarContext* context)
                         }
                         else
                         {
-                            switch (newSelectedEntity->unit.type)
+                            s32 hpPercent = percentabi(newSelectedEntity->unit.hp, newSelectedEntity->unit.maxhp);
+                            if(hpPercent <= 33)
                             {
-                                case WAR_UNIT_CHURCH:
+                                createAudio(context, WAR_FIRE_CRACKLING, false);
+                            }
+                            else
+                            {
+                                switch (newSelectedEntity->unit.type)
                                 {
-                                    createAudio(context, WAR_HUMAN_CHURCH, false);
-                                    break;
-                                }
-                                case WAR_UNIT_TEMPLE:
-                                {
-                                    createAudio(context, WAR_ORC_TEMPLE, false);
-                                    break;
-                                }
-                                case WAR_UNIT_STABLE:
-                                {
-                                    createAudio(context, WAR_HUMAN_STABLE, false);
-                                    break;
-                                }
-                                case WAR_UNIT_KENNEL:
-                                {
-                                    createAudio(context, WAR_ORC_KENNEL, false);
-                                    break;
-                                }
-                                case WAR_UNIT_BLACKSMITH_HUMANS:
-                                case WAR_UNIT_BLACKSMITH_ORCS:
-                                {
-                                    createAudio(context, WAR_BLACKSMITH, false);
-                                    break;
-                                }
-                                default:
-                                {
-                                    createAudio(context, WAR_UI_CLICK, false);
-                                    break;
+                                    case WAR_UNIT_CHURCH:
+                                    {
+                                        createAudio(context, WAR_HUMAN_CHURCH, false);
+                                        break;
+                                    }
+                                    case WAR_UNIT_TEMPLE:
+                                    {
+                                        createAudio(context, WAR_ORC_TEMPLE, false);
+                                        break;
+                                    }
+                                    case WAR_UNIT_STABLE:
+                                    {
+                                        createAudio(context, WAR_HUMAN_STABLE, false);
+                                        break;
+                                    }
+                                    case WAR_UNIT_KENNEL:
+                                    {
+                                        createAudio(context, WAR_ORC_KENNEL, false);
+                                        break;
+                                    }
+                                    case WAR_UNIT_BLACKSMITH_HUMANS:
+                                    case WAR_UNIT_BLACKSMITH_ORCS:
+                                    {
+                                        createAudio(context, WAR_BLACKSMITH, false);
+                                        break;
+                                    }
+                                    default:
+                                    {
+                                        createAudio(context, WAR_UI_CLICK, false);
+                                        break;
+                                    }
                                 }
                             }
                         }

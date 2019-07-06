@@ -257,11 +257,11 @@ void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
     setUIRectWidth(rectLifeBar, (s32)(hpPercent * LIFE_BAR_WIDTH_PX));
 }
 
-void setMagicBar(WarEntity* rectMagicBar, WarUnitComponent* unit)
+void setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit)
 {
 #define MAGIC_BAR_WIDTH_PX 27
 
-    f32 magicPercent = percentabf01(unit->magic, unit->maxMagic);
+    f32 magicPercent = percentabf01(unit->mana, unit->maxMana);
     setUIRectWidth(rectMagicBar, (s32)(magicPercent * MAGIC_BAR_WIDTH_PX));
 }
 
@@ -367,7 +367,7 @@ void updateSelectedUnitsInfo(WarContext* context)
                 if (isMagicUnit(selectedEntity))
                 {
                     setUIImage(imgUnitInfo, 1);
-                    setMagicBar(rectMagicBar, unit);
+                    setManaBar(rectMagicBar, unit);
                 }
                 else
                 {

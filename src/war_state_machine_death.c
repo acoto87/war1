@@ -22,7 +22,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     // when this state updates there will have pass the time of the death animation, 
     // using the delay field of the states
-    if (!isCorpseUnit(entity) && !isCatapultUnit(entity))
+    if (!isCorpseUnit(entity) && !isCatapultUnit(entity) && !isSummonUnit(entity))
     {
         vec2 position = entity->transform.position;
         vec2 tile = vec2MapToTileCoordinates(position);

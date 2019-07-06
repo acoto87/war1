@@ -3,6 +3,7 @@
 #define WAR_BUILDING_COLLAPSE_RESOURCE 356
 #define WAR_EXPLOSION_RESOURCE 354
 #define WAR_RAIN_OF_FIRE_EXPLOSION_RESOURCE 351
+#define WAR_SPELL_RESOURCE 355
 
 WarResource* getOrCreateResource(WarContext* context, s32 index)
 {

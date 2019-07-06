@@ -477,7 +477,7 @@ typedef struct
     s32 range;
     s32 armor;
     s32 hp;
-    s32 magic;
+    s32 mana;
     s32 minDamage;
     s32 rndDamage;
     s32 buildTime;
@@ -524,7 +524,7 @@ typedef struct
 
 const WarUnitStats unitStats[] = 
 {
-    // unit type                range  armor   hp   magic  min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
+    // unit type                range  armor   hp   mana   min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
     { WAR_UNIT_FOOTMAN,           1,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
     { WAR_UNIT_GRUNT,             1,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
     { WAR_UNIT_PEASANT,           1,     0,     40,   -1,     0,      0,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
@@ -650,6 +650,31 @@ const WarUpgradeStats upgradeStats[] =
 typedef struct
 {
     WarUnitCommandType type;
+    s32 manaCost;
+} WarSpellStats;
+
+const WarSpellStats spellStats[] =
+{
+    // spells
+    { WAR_COMMAND_SPELL_HEALING,            10 },
+    { WAR_COMMAND_SPELL_FAR_SIGHT,          10 },
+    { WAR_COMMAND_SPELL_INVISIBILITY,       10 },
+    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       10 },
+    { WAR_COMMAND_SPELL_POISON_CLOUD,       10 },
+    { WAR_COMMAND_SPELL_RAISE_DEAD,         10 },
+    { WAR_COMMAND_SPELL_DARK_VISION,        10 },
+    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       10 },
+
+    // summons
+    { WAR_COMMAND_SUMMON_SPIDER,             51 },
+    { WAR_COMMAND_SUMMON_SCORPION,           51 },
+    { WAR_COMMAND_SUMMON_DAEMON,            250 },
+    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   250 },
+};
+
+typedef struct
+{
+    WarUnitCommandType type;
     WarClickHandler clickHandler;
     WarKeys hotKey;
     s32 highlightIndex;
@@ -697,10 +722,10 @@ const WarUnitCommandBaseData commandBaseData[] =
     { WAR_COMMAND_SPELL_RAISE_DEAD,         NULL,                   WAR_KEY_R,          0, "RAISE DEAD",                   ""                          },
 
     // summons
-    { WAR_COMMAND_SUMMON_SCORPION,          NULL,                   WAR_KEY_O,          9, "SUMMON SCORPIONS",             ""                          },
-    { WAR_COMMAND_SUMMON_SPIDER,            NULL,                   WAR_KEY_R,         12, "SUMMON SPIDERS",               ""                          },
-    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   NULL,                   WAR_KEY_W,          7, "SUMMON WATER ELEMENTAL",       ""                          },
-    { WAR_COMMAND_SUMMON_DAEMON,            NULL,                   WAR_KEY_D,          7, "SUMMON DAEMON",                ""                          },
+    { WAR_COMMAND_SUMMON_SCORPION,          summonScorpion,         WAR_KEY_O,          9, "SUMMON SCORPIONS",             ""                          },
+    { WAR_COMMAND_SUMMON_SPIDER,            summonSpider,           WAR_KEY_R,         12, "SUMMON SPIDERS",               ""                          },
+    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   summonWaterElemental,   WAR_KEY_W,          7, "SUMMON WATER ELEMENTAL",       ""                          },
+    { WAR_COMMAND_SUMMON_DAEMON,            summonDaemon,           WAR_KEY_D,          7, "SUMMON DAEMON",                ""                          },
 
     // build commands
     { WAR_COMMAND_BUILD_FARM_HUMANS,        buildFarmHumans,        WAR_KEY_F,          6, "BUILD FARM",                   ""                          },
@@ -772,6 +797,12 @@ const WarUnitCommandMapping commandMappings[] =
     { WAR_COMMAND_TRAIN_WARLOCK,            WAR_UNIT_WARLOCK            },
     { WAR_COMMAND_TRAIN_CLERIC,             WAR_UNIT_CLERIC             },
     { WAR_COMMAND_TRAIN_NECROLYTE,          WAR_UNIT_NECROLYTE          },
+
+    // summon commands
+    { WAR_COMMAND_SUMMON_SPIDER,            WAR_UNIT_SPIDER             },
+    { WAR_COMMAND_SUMMON_SCORPION,          WAR_UNIT_SCORPION           },
+    { WAR_COMMAND_SUMMON_DAEMON,            WAR_UNIT_DAEMON             },
+    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   WAR_UNIT_WATER_ELEMENTAL    },
 
     // build commands
     { WAR_COMMAND_BUILD_FARM_HUMANS,        WAR_UNIT_FARM_HUMANS        },
@@ -945,6 +976,17 @@ WarUpgradeStats getUpgradeStats(WarUpgradeType type)
 
     assert(index < length);
     return upgradeStats[index];
+}
+
+WarSpellStats getSpellStats(WarUnitCommandType type)
+{
+    s32 index = 0;
+    s32 length = arrayLength(spellStats);
+    while (index < length && spellStats[index].type != type)
+        index++;
+
+    assert(index < length);
+    return spellStats[index];
 }
 
 WarUnitCommandBaseData getCommandBaseData(WarUnitCommandType type)
@@ -1238,6 +1280,36 @@ bool isCatapultUnitType(WarUnitType type)
     }
 }
 
+bool isConjurerUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_WARLOCK:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool isSummonUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_SCORPION:
+        case WAR_UNIT_SPIDER:
+        case WAR_UNIT_WATER_ELEMENTAL:
+        case WAR_UNIT_DAEMON:
+        case WAR_UNIT_THE_DEAD:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+
 bool isDudeUnit(WarEntity* entity)
 {
     return isUnit(entity) && isDudeUnitType(entity->unit.type);
@@ -1293,6 +1365,16 @@ bool isCatapultUnit(WarEntity* entity)
     return isUnit(entity) && isCatapultUnitType(entity->unit.type);
 }
 
+bool isConjurerUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isConjurerUnitType(entity->unit.type);
+}
+
+bool isSummonUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isSummonUnitType(entity->unit.type);
+}
+
 WarRace getUnitRace(WarEntity* entity)
 {
     if (!isUnit(entity))
@@ -1309,6 +1391,7 @@ WarRace getUnitRace(WarEntity* entity)
         case WAR_UNIT_CONJURER:
         case WAR_UNIT_CLERIC:
         case WAR_UNIT_LOTHAR:
+        case WAR_UNIT_SCORPION:
         case WAR_UNIT_WATER_ELEMENTAL:
         case WAR_UNIT_HUMAN_CORPSE:
         // buildings
@@ -1333,7 +1416,8 @@ WarRace getUnitRace(WarEntity* entity)
         case WAR_UNIT_NECROLYTE:
         case WAR_UNIT_GRIZELDA:
         case WAR_UNIT_GARONA:
-        case WAR_UNIT_FIRE_ELEMENTAL:
+        case WAR_UNIT_SPIDER:
+        case WAR_UNIT_DAEMON:
         case WAR_UNIT_ORC_CORPSE:
         // buildings
         case WAR_UNIT_FARM_ORCS:

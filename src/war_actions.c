@@ -748,7 +748,7 @@ void addUnitActions(WarEntity* entity)
         case WAR_UNIT_SCORPION:
         {
             walkSpeed = 4;
-            attackSound = WAR_ACTION_STEP_SOUND_FIREBALL;
+            attackSound = WAR_ACTION_STEP_SOUND_FIST;
             WarUnitFrameNumbers frames = frameNumbers_5_5_5_5;
 
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);

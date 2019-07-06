@@ -70,3 +70,9 @@ void buildBlacksmithHumans(WarContext* context, WarEntity* entity);
 void buildBlacksmithOrcs(WarContext* context, WarEntity* entity);
 void buildWall(WarContext* context, WarEntity* entity);
 void buildRoad(WarContext* context, WarEntity* entity);
+
+// spells
+void summonSpider(WarContext* context, WarEntity* entity);
+void summonScorpion(WarContext* context, WarEntity* entity);
+void summonDaemon(WarContext* context, WarEntity* entity);
+void summonWaterElemental(WarContext* context, WarEntity* entity);

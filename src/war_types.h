@@ -1237,8 +1237,8 @@ typedef struct
     // hit points, magic and armor
     s32 maxhp;
     s32 hp;
-    s32 maxMagic;
-    s32 magic;
+    s32 maxMana;
+    s32 mana;
     s32 armor;
     s32 range;
     s32 minDamage;

@@ -390,8 +390,8 @@ WarEntity* createUnit(WarContext* context,
 
         entity->unit.maxhp = unitStats.hp;
         entity->unit.hp = unitStats.hp;
-        entity->unit.maxMagic = unitStats.magic;
-        entity->unit.magic = 100;
+        entity->unit.maxMana = unitStats.mana;
+        entity->unit.mana = 100;
         entity->unit.armor = unitStats.armor;
         entity->unit.range = unitStats.range;
         entity->unit.minDamage = unitStats.minDamage;
@@ -1238,7 +1238,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
 
         default:
         {
-            logInfo("This upgrade type %d doesn't increase any value of the units\n");
+            logInfo("This upgrade type %d doesn't increase any value of the units\n", upgrade);
             break;
         }
     }
@@ -1267,6 +1267,30 @@ void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
 {
     player->gold += gold;
     player->wood += wood;
+}
+
+bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    if (unit->mana < mana)
+    {
+        setFlashStatus(context, 1.5f, "NOT ENOUGH MANA");
+        return false;
+    }
+
+    unit->mana = max(unit->mana - mana, 0);
+    return true;
+}
+
+void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    WarUnitStats stats = getUnitStats(unit->type);
+    unit->mana = clamp(unit->mana + mana, 0, stats.mana);
 }
 
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
@@ -1442,6 +1466,11 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
                 entity->unit.type == WAR_UNIT_SPIDER)
             {
                 createAudio(context, WAR_DEAD_SPIDER_SCORPION, false);
+            }
+            else if (entity->unit.type == WAR_UNIT_CATAPULT_HUMANS ||
+                     entity->unit.type == WAR_UNIT_CATAPULT_ORCS)
+            {
+                createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
             }
             else
             {

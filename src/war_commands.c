@@ -351,6 +351,41 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
     }
 }
 
+void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
+{
+    WarMap* map = context->map;
+
+    s32 selEntitiesCount = map->selectedEntities.count;
+    for(s32 i = 0; i < selEntitiesCount; i++)
+    {
+        WarEntityId entityId = map->selectedEntities.items[i];
+        WarEntity* entity = findEntity(context, entityId);
+        assert(entity);
+
+        if (isConjurerUnit(entity))
+        {
+            WarUnitComponent* unit = &entity->unit;
+
+            WarUnitCommandMapping commandMapping = getCommandMapping(summonType);
+            WarSpellStats stats = getSpellStats(summonType);
+
+            if (decreaseUnitMana(context, entity, stats.manaCost))
+            {
+                vec2 position = getUnitCenterPosition(entity, true);
+                vec2 spawnPosition = findEmptyPosition(map->finder, position);
+
+                WarEntity* summonedUnit = createUnit(context, 
+                    commandMapping.unitOrUpgradeType, 
+                    spawnPosition.x, spawnPosition.y, 
+                    unit->player, WAR_RESOURCE_NONE, 0, true);
+
+                createAudio(context, WAR_NORMAL_SPELL, false);
+                createSpellAnimation(context, spawnPosition);
+            }
+        }
+    }
+}
+
 void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
@@ -747,6 +782,17 @@ bool executeCommand(WarContext* context)
             }
 
             return false;
+        }
+
+        case WAR_COMMAND_SUMMON_SPIDER:
+        case WAR_COMMAND_SUMMON_SCORPION:
+        case WAR_COMMAND_SUMMON_DAEMON:
+        case WAR_COMMAND_SUMMON_WATER_ELEMENTAL:
+        {
+            executeSummonCommand(context, command->type);
+
+            command->type = WAR_COMMAND_NONE;
+            return true;
         }
 
         case WAR_COMMAND_BUILD_BASIC:
@@ -1166,4 +1212,33 @@ void buildRoad(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
     
     map->command.type = WAR_COMMAND_BUILD_ROAD;
+}
+
+// spells
+void summonSpider(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SUMMON_SPIDER;
+}
+
+void summonScorpion(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SUMMON_SCORPION;
+}
+
+void summonDaemon(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SUMMON_DAEMON;
+}
+
+void summonWaterElemental(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SUMMON_WATER_ELEMENTAL;
 }

@@ -56,6 +56,9 @@ List of thing to do in no particular order
     }
     ```
   * Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR
+  * Death animation of scorpions loops.
+  * Spell animation isn't shown.
+  * Mana of magic units don't increase over time.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -174,10 +177,10 @@ List of thing to do in no particular order
   ```
   * Move actions system to animations, again? :| 
     The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
-  * Projectiles
+  * ~~Projectiles~~
     * ~~Arrows~~
     * ~~Fireballs~~
-    * > Rain of fire
+    * ~~Rain of fire~~
   
 * State machine
   * ~~Idle state~~

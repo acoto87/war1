@@ -854,6 +854,8 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                     case WAR_UNIT_RAIDER:
                     case WAR_UNIT_CATAPULT_HUMANS:
                     case WAR_UNIT_CATAPULT_ORCS:
+                    case WAR_UNIT_SCORPION:
+                    case WAR_UNIT_SPIDER:
                     case WAR_UNIT_DAEMON:
                     {
                         // check here upgrades for the sword
@@ -1065,6 +1067,18 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
 
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = upgradeData.frameIndices[upgradeLevel];
+            break;
+        }
+
+        case WAR_COMMAND_SUMMON_SPIDER:
+        case WAR_COMMAND_SUMMON_SCORPION:
+        case WAR_COMMAND_SUMMON_DAEMON:
+        case WAR_COMMAND_SUMMON_WATER_ELEMENTAL:
+        {
+            WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
+            WarUnitData unitData = getUnitData(commandMapping.unitOrUpgradeType);
+
+            data.frameIndex = unitData.portraitFrameIndex;
             break;
         }
 

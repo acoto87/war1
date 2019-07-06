@@ -250,6 +250,11 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 else
                 {
                     doProjectileTargetDamage(context, entity);
+
+                    if (projectile->type == WAR_PROJECTILE_ARROW)
+                    {
+                        createAudio(context, WAR_ARROW_SPEAR_HIT, false);
+                    }
                 }
 
                 removeEntityById(context, entity->id);
