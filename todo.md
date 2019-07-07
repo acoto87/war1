@@ -56,9 +56,10 @@ List of thing to do in no particular order
     }
     ```
   * Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR
-  * Death animation of scorpions loops.
-  * Spell animation isn't shown.
+  * ~~Death animation of scorpions loops.~~
+  * ~~Spell animation isn't shown.~~
   * Mana of magic units don't increase over time.
+  * Fix walking animation with follow behavior. Make it continuous intead of reseting piece of the path.
 
 * General
   * ~~Test the new implementation for lists.~~

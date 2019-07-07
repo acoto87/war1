@@ -24,17 +24,22 @@ void addAnimation(WarEntity* entity, WarSpriteAnimation* animation)
     WarSpriteAnimationListAdd(&animations->animations, animation);
 }
 
-void addAnimationFrame(WarSpriteAnimation* anim, s32 frameIndex)
+void addAnimationFrame(WarSpriteAnimation* animation, s32 frameIndex)
 {
-    s32ListAdd(&anim->frames, frameIndex);
+    s32ListAdd(&animation->frames, frameIndex);
 }
 
-void addAnimationFrames(WarSpriteAnimation* anim, s32 count, s32 frameIndices[])
+void addAnimationFrames(WarSpriteAnimation* animation, s32 count, s32 frameIndices[])
 {
     for(s32 i = 0; i < count; i++)
     {
-        addAnimationFrame(anim, frameIndices[i]);
+        addAnimationFrame(animation, frameIndices[i]);
     }
+}
+
+f32 getAnimationDuration(WarSpriteAnimation* animation)
+{
+    return animation->frameDelay * animation->frames.count;
 }
 
 void freeAnimation(WarSpriteAnimation* animation)
@@ -108,31 +113,31 @@ void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
     }
 }
 
-void resetAnimation(WarSpriteAnimation* anim)
+void resetAnimation(WarSpriteAnimation* animation)
 {
-    anim->animTime = 0;
-    anim->status = WAR_ANIM_STATUS_NOT_STARTED;
+    animation->animTime = 0;
+    animation->status = WAR_ANIM_STATUS_NOT_STARTED;
 }
 
-void updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation* anim)
+void updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation* animation)
 {
-    if (anim->status == WAR_ANIM_STATUS_FINISHED)
+    if (animation->status == WAR_ANIM_STATUS_FINISHED)
     {
-        removeAnimation(context, entity, anim->name);
+        removeAnimation(context, entity, animation->name);
         return;
     }
 
-    anim->status = WAR_ANIM_STATUS_RUNNING;
-    anim->animTime += getScaledSpeed(context, context->deltaTime / (anim->frameDelay * anim->frames.count));
+    animation->status = WAR_ANIM_STATUS_RUNNING;
+    animation->animTime += getScaledSpeed(context, context->deltaTime / getAnimationDuration(animation));
 
-    if (anim->animTime >= 1)
+    if (animation->animTime >= 1)
     {
-        anim->animTime = 1;
-        anim->status = WAR_ANIM_STATUS_FINISHED;
+        animation->animTime = 1;
+        animation->status = WAR_ANIM_STATUS_FINISHED;
 
-        if(anim->loop)
+        if(animation->loop)
         {
-            resetAnimation(anim);
+            resetAnimation(animation);
         }
     }
 }
@@ -258,7 +263,7 @@ WarSpriteAnimation* createSpellAnimation(WarContext* context, vec2 position)
 
     char name[30];
     sprintf(name, "spell_%.2f_%.2f", position.x, position.y);
-    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
+    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.4f, false);
 
     f32 offsetx = position.x - halff(sprite.frameWidth);
     f32 offsety = position.y - halff(sprite.frameHeight);

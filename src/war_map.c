@@ -337,7 +337,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
             for (s32 j = 0; j < MAX_UPGRADES_COUNT; j++)
             {
-                map->players[i].upgrades[j].allowed = 2; //levelInfo->levelInfo.allowedUpgrades[j][i];
+                map->players[i].upgrades[j].allowed = 2; // levelInfo->levelInfo.allowedUpgrades[j][i];
                 map->players[i].upgrades[j].level = 0;
             }
         }
@@ -487,59 +487,59 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         }
         
         // test animations
-        {
-            WarSpriteResourceRef spriteResourceRef = imageResourceRef(359);
-            WarSprite sprite2 = createSpriteFromResourceIndex(context, spriteResourceRef);
-            WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.5f, true);
-            anim2->offset = vec2i(100, 100);
+        // {
+        //     WarSpriteResourceRef spriteResourceRef = imageResourceRef(359);
+        //     WarSprite sprite2 = createSpriteFromResourceIndex(context, spriteResourceRef);
+        //     WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.5f, true);
+        //     anim2->offset = vec2i(100, 100);
 
-            const s32 baseFrameIndices2[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-            const s32 indexOff2 = 0;
+        //     const s32 baseFrameIndices2[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+        //     const s32 indexOff2 = 0;
 
-            for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
-            {
-                addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
-            }
+        //     for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
+        //     {
+        //         addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
+        //     }
 
-            WarSpriteAnimationListAdd(&map->animations, anim2);
-        }
+        //     WarSpriteAnimationListAdd(&map->animations, anim2);
+        // }
 
-        {
-            WarSpriteResourceRef spriteResourceRef = imageResourceRef(360);
-            WarSprite sprite3 = createSpriteFromResourceIndex(context, spriteResourceRef);
-            WarSpriteAnimation* anim3 = createAnimation("horsie3", sprite3, 0.5f, true);
-            anim3->offset = vec2i(200, 100);
+        // {
+        //     WarSpriteResourceRef spriteResourceRef = imageResourceRef(360);
+        //     WarSprite sprite3 = createSpriteFromResourceIndex(context, spriteResourceRef);
+        //     WarSpriteAnimation* anim3 = createAnimation("horsie3", sprite3, 0.5f, true);
+        //     anim3->offset = vec2i(200, 100);
 
-            const s32 baseFrameIndices3[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-            const s32 indexOff3 = 0;
+        //     const s32 baseFrameIndices3[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+        //     const s32 indexOff3 = 0;
 
-            for(s32 i = 0; i < arrayLength(baseFrameIndices3); i++)
-            {
-                addAnimationFrame(anim3, baseFrameIndices3[i] + indexOff3);
-            }
+        //     for(s32 i = 0; i < arrayLength(baseFrameIndices3); i++)
+        //     {
+        //         addAnimationFrame(anim3, baseFrameIndices3[i] + indexOff3);
+        //     }
 
-            WarSpriteAnimationListAdd(&map->animations, anim3);
-        }
+        //     WarSpriteAnimationListAdd(&map->animations, anim3);
+        // }
 
-        {
-            WarSpriteResourceRef spriteResourceRef = imageResourceRef(361);
-            WarSprite sprite4 = createSpriteFromResourceIndex(context, spriteResourceRef);
-            WarSpriteAnimation* anim4 = createAnimation("horsie3", sprite4, 0.5f, true);
-            anim4->offset = vec2i(300, 100);
+        // {
+        //     WarSpriteResourceRef spriteResourceRef = imageResourceRef(361);
+        //     WarSprite sprite4 = createSpriteFromResourceIndex(context, spriteResourceRef);
+        //     WarSpriteAnimation* anim4 = createAnimation("horsie3", sprite4, 0.5f, true);
+        //     anim4->offset = vec2i(300, 100);
 
-            s32 baseFrameindices4[93];
-            for (s32 i = 0; i < 93; i++)
-                baseFrameindices4[i] = i;
+        //     s32 baseFrameindices4[93];
+        //     for (s32 i = 0; i < 93; i++)
+        //         baseFrameindices4[i] = i;
 
-            const s32 indexOff4 = 0;
+        //     const s32 indexOff4 = 0;
 
-            for(s32 i = 0; i < arrayLength(baseFrameindices4); i++)
-            {
-                addAnimationFrame(anim4, baseFrameindices4[i] + indexOff4);
-            }
+        //     for(s32 i = 0; i < arrayLength(baseFrameindices4); i++)
+        //     {
+        //         addAnimationFrame(anim4, baseFrameindices4[i] + indexOff4);
+        //     }
 
-            WarSpriteAnimationListAdd(&map->animations, anim4);
-        }
+        //     WarSpriteAnimationListAdd(&map->animations, anim4);
+        // }
 
         createAudio(context, WAR_MUSIC_00, true);
     }

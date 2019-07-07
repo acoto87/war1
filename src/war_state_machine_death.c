@@ -12,6 +12,9 @@ void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
     setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
     setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
     removeEntityFromSelection(context, entity->id);
+
+    s32 deathDuration = getActionDuration(entity, WAR_ACTION_TYPE_DEATH);
+    state->delay = getScaledTime(context, __frameCountToSeconds(deathDuration));
 }
 
 void leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
@@ -33,8 +36,9 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
         WarEntity* corpse = createUnit(context, corpseType, tile.x, tile.y, 4, 
                                        WAR_RESOURCE_NONE, 0, true);
 
+        setUnitDirection(corpse, getUnitDirection(entity));
+
         WarState* deathState = createDeathState(context, corpse);
-        deathState->delay = __frameCountToSeconds(1201);
         changeNextState(context, corpse, deathState, true, true);
     }
     

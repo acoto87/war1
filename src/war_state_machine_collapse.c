@@ -1,7 +1,6 @@
 WarState* createCollapseState(WarContext* context, WarEntity* entity)
 {
     WarState* state = createState(context, entity, WAR_STATE_COLLAPSE);
-    state->delay = 17 * 0.1f;
     return state;
 }
 
@@ -17,14 +16,15 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     // disable the sprite component to just render the animation
     entity->sprite.enabled = false;
 
-    createCollapseAnimation(context, entity, "collapse");
+    WarSpriteAnimation* collapseAnim = createCollapseAnimation(context, entity, "collapse");
+    state->delay = getScaledTime(context, getAnimationDuration(collapseAnim));
 
     WarEntity* ruins = map->ruin;
     addRuinsPieces(context, ruins, position.x, position.y, unitSize.x);
     determineRuinTypes(context, ruins);
     
     setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
-    removeEntityFromSelection(context, entity->id);
+    removeEntityFromSelection(context, entity->id);    
 }
 
 void leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)

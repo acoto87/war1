@@ -394,7 +394,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -411,7 +411,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
             WarUnitAction* repairAction = buildRepairAction(framesHarvest.attackFramesCount, framesHarvest.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
             WarUnitAction* harvestAction = buildHarvestAction(framesHarvest.attackFramesCount, framesHarvest.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
 
@@ -432,7 +432,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -464,7 +464,7 @@ void addUnitActions(WarEntity* entity)
             addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 1);
 
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
 
@@ -488,7 +488,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -504,7 +504,7 @@ void addUnitActions(WarEntity* entity)
 
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             s32 attackFrames[] = {5, 20, 35, 50};
             WarUnitAction* attackAction = buildAttackAction(arrayLength(attackFrames), attackFrames, attackSpeed, attackSound, coolOffTime, directional);
@@ -523,7 +523,7 @@ void addUnitActions(WarEntity* entity)
 
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             s32 attackFrames[] = {5, 20, 35, 50, 60};
             WarUnitAction* attackAction = buildAttackAction(arrayLength(attackFrames), attackFrames, attackSpeed, attackSound, coolOffTime, directional);
@@ -541,7 +541,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -556,7 +556,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -570,7 +570,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -583,7 +583,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -615,7 +615,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -647,7 +647,7 @@ void addUnitActions(WarEntity* entity)
             addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 1);
 
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -684,7 +684,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
 
             waitTime = 3;
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -739,7 +739,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
 
             waitTime = 3;
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -771,7 +771,7 @@ void addUnitActions(WarEntity* entity)
             addActionStep(walkAction, WAR_ACTION_STEP_WAIT, 1);
 
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, 10, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -785,7 +785,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -799,7 +799,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -813,7 +813,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -826,7 +826,7 @@ void addUnitActions(WarEntity* entity)
             WarUnitAction* idleAction = buildDefaultIdleAction(waitTime, directional);
             WarUnitAction* walkAction = buildWalkAction(frames.walkFramesCount, frames.walkFrames, walkSpeed, directional);
             WarUnitAction* attackAction = buildAttackAction(frames.attackFramesCount, frames.attackFrames, attackSpeed, attackSound, coolOffTime, directional);
-            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, false, true);
+            WarUnitAction* deathAction = buildDeathAction(frames.deathFramesCount, frames.deathFrames, waitTime, directional, true);
 
             addActions(entity, 4, idleAction, walkAction, attackAction, deathAction);
             break;
@@ -927,6 +927,37 @@ s32 findActionIndex(WarEntity* entity, WarUnitActionType type)
     return -1;
 }
 
+s32 getActionDuration(WarEntity* entity, WarUnitActionType type)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    
+    if (type == WAR_ACTION_TYPE_NONE)
+    {
+        return 0;
+    }
+    
+    s32 actionIndex = findActionIndex(entity, type);
+    if (actionIndex < 0)
+    {
+        logError("Entity of type %d doesn't have a %d action\n", entity->type, type);
+        return 0;
+    }
+
+    s32 duration = 0;
+
+    WarUnitAction* action = unit->actions.items[actionIndex];
+    for (s32 i = 0; i < action->steps.count; i++)
+    {
+        WarUnitActionStep step = action->steps.items[i];
+        if (step.type == WAR_ACTION_STEP_WAIT)
+            duration += step.param;
+    }
+
+    return duration;
+}
+
 void resetAction(WarUnitAction* action)
 {
     action->stepIndex = 0;
@@ -949,7 +980,7 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
 
     if (unit->actionIndex < 0)
     {
-        logError("Entity of type %d doesn't have a %d or %d animations\n", entity->type, type);
+        logError("Entity of type %d doesn't have a %d action\n", entity->type, type);
         return;
     }
     

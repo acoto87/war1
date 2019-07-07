@@ -374,13 +374,12 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
                 vec2 position = getUnitCenterPosition(entity, true);
                 vec2 spawnPosition = findEmptyPosition(map->finder, position);
 
-                WarEntity* summonedUnit = createUnit(context, 
-                    commandMapping.unitOrUpgradeType, 
-                    spawnPosition.x, spawnPosition.y, 
-                    unit->player, WAR_RESOURCE_NONE, 0, true);
+                createUnit(context, commandMapping.unitOrUpgradeType, 
+                           spawnPosition.x, spawnPosition.y, 
+                           unit->player, WAR_RESOURCE_NONE, 0, true);
 
                 createAudio(context, WAR_NORMAL_SPELL, false);
-                createSpellAnimation(context, spawnPosition);
+                createSpellAnimation(context, vec2TileToMapCoordinates(spawnPosition, true));
             }
         }
     }

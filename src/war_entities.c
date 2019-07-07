@@ -1459,7 +1459,6 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
         else
         {
             WarState* deathState = createDeathState(context, entity);
-            deathState->delay = __frameCountToSeconds(108);
             changeNextState(context, entity, deathState, true, true);
 
             if (entity->unit.type == WAR_UNIT_SCORPION ||
