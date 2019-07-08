@@ -1,0 +1,40 @@
+File name   Scene                                   Length
+CAVE1       Approaching cave                        7.7 secs
+CAVE2       Loop before cave door                   1.7 secs
+CAVE3       Door opens, view point passes through   2.4 secs
+HFINALE     Fireworks over Stormwind Keep           8.6 secs
+HINTRO1     Approaching Stormwind Keep              7.2 secs
+HINTRO2     Loop of flags flying at Stormwind Keep  1.8 secs
+HMAP01      Intro to human map                      3.2 secs
+HMAP02      Intro to human map                      3.3 secs
+HMAP03      Intro to human map                      3.3 secs
+HMAP04      Intro to human map                      3.3 secs
+HMAP05      Intro to human map                      3.3 secs
+HMAP06      Intro to human map                      3.3 secs
+HMAP07      Intro to human map                      3.3 secs
+HMAP08      Intro to human map                      3.3 secs
+HMAP09      Intro to human map                      3.3 secs
+HMAP10      Intro to human map                      3.3 secs
+HMAP11      Intro to human map                      3.3 secs
+HMAP12      Intro to human map                      3.3 secs
+LOSE1       Approach skeleton on battle field       6.0 secs
+LOSE2       Loop of burning fires                   0.9 secs
+OFINALE     Loop of Orcs w/ spears at a fire        2.1 secs
+OINTRO1     Approaching Black Rock Spire gate       9.8 secs
+OINTRO2     Looping fires at Black Rock Spire gate  0.8 secs
+OINTRO3     Pass through Black Rock Spire gate      3.6 secs
+OMAP01      Intro to orc map                        3.2 secs
+OMAP02      Intro to orc map                        3.3 secs
+OMAP03      Intro to orc map                        3.3 secs
+OMAP04      Intro to orc map                        3.3 secs
+OMAP05      Intro to orc map                        3.3 secs
+OMAP06      Intro to orc map                        3.3 secs
+OMAP07      Intro to orc map                        3.3 secs
+OMAP08      Intro to orc map                        3.3 secs
+OMAP09      Intro to orc map                        3.3 secs
+OMAP10      Intro to orc map                        3.3 secs
+OMAP11      Intro to orc map                        3.3 secs
+OMAP12      Intro to orc map                        3.3 secs
+TITLE       Zoom in on "Warcraft" title             3.0 secs
+WIN1        Fly into throne room                    5.0 secs
+WIN2        Looping torches in throne room          0.8 secs

@@ -1436,6 +1436,46 @@ WarRace getUnitRace(WarEntity* entity)
     }
 }
 
+WarProjectileType getProjectileType(WarUnitType type)
+{
+    assert(isRangeUnitType(type));
+
+    switch (type)
+    {
+        case WAR_UNIT_ARCHER:
+        case WAR_UNIT_SPEARMAN:
+        {
+            return WAR_PROJECTILE_ARROW;
+        }
+
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_CATAPULT_ORCS:
+        {
+            return WAR_PROJECTILE_CATAPULT;
+        }
+
+        case WAR_UNIT_CONJURER:
+        case WAR_UNIT_WARLOCK:
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_NECROLYTE:
+        {
+            return WAR_PROJECTILE_FIREBALL;
+        }
+
+        case WAR_UNIT_WATER_ELEMENTAL:
+        {
+            return WAR_PROJECTILE_WATER_ELEMENTAL;
+        }
+        
+        default:
+        {
+            // unreachable
+            logWarning("Invalid unit firing a projectile: %d\n", type);
+            return WAR_PROJECTILE_ARROW;
+        }
+    }
+}
+
 bool isFriendlyUnit(WarContext* context, WarEntity* entity);
 bool isEnemyUnit(WarContext* context, WarEntity* entity);
 bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other);

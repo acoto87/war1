@@ -443,6 +443,31 @@ WarEntity* createAudioRandom(WarContext* context, WarAudioId fromId, WarAudioId 
     return createAudio(context, randomi(fromId, toId + 1), loop);
 }
 
+void playAttackSound(WarContext* context, WarUnitActionStepType soundStep)
+{
+    switch (soundStep)
+    {
+        case WAR_ACTION_STEP_SOUND_SWORD:
+            createAudioRandom(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, false);
+            break;
+        case WAR_ACTION_STEP_SOUND_FIST:
+            createAudio(context, WAR_FIST_ATTACK, false);
+            break;
+        case WAR_ACTION_STEP_SOUND_FIREBALL:
+            createAudio(context, WAR_FIREBALL, false);
+            break;
+        case WAR_ACTION_STEP_SOUND_CATAPULT:
+            createAudio(context, WAR_CATAPULT_ROCK_FIRED, false);
+            break;
+        case WAR_ACTION_STEP_SOUND_ARROW:
+            createAudio(context, WAR_ARROW_SPEAR, false);
+            break;
+        default:
+            logWarning("Trying to play sound with step: %d\n", soundStep);
+            break;
+    }
+}
+
 /**
  * Extension function of MemoryBuffer to read variable lengths integer values.
  */

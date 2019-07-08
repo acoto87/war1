@@ -230,8 +230,9 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
             }
             else if (isDudeUnit(entity))
             {
-                WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
-                changeNextState(context, entity, followState, true, true);
+                vec2 position = getUnitCenterPosition(entity, true);
+                WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position,  targetTile));
+                changeNextState(context, entity, moveState, true, true);
 
                 playSound = true;
             }

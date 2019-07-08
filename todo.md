@@ -58,8 +58,11 @@ List of thing to do in no particular order
   * Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR
   * ~~Death animation of scorpions loops.~~
   * ~~Spell animation isn't shown.~~
-  * Mana of magic units don't increase over time.
+  * ~~Mana of magic units don't increase over time.~~
   * Fix walking animation with follow behavior. Make it continuous intead of reseting piece of the path.
+  * When a unit attacks a unit that is attacking a building, the second unit should stop the attack on the building and attack the first unit.
+  * Use `positionInRange` to calculate near units? used in splash damage.
+  * When attacking a wall, if the units isn't within range, it will walk to the piece's position without considering its range of attack. That's because move state is being used in this case, instead of follow when attacking an unit.
 
 * General
   * ~~Test the new implementation for lists.~~

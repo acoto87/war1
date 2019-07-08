@@ -50,8 +50,6 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     WarUnitAction* action = unit->actions.items[unit->actionIndex];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
-        logDebug("%d\n", action->stepIndex);
-
         unit->amount += chopTree(context, forest, tree, 2);
         if (unit->amount > 0)
         {

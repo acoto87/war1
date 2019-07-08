@@ -287,14 +287,14 @@ void removeAudioComponent(WarContext* context, WarEntity* entity)
 }
 
 void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileType type,
-                            WarEntityId attackerId, WarEntityId victimId, 
+                            WarEntityId sourceEntityId, WarEntityId targetEntityId, 
                             vec2 origin, vec2 target, s32 speed)
 {
     entity->projectile = (WarProjectileComponent){0};
     entity->projectile.enabled = true;
     entity->projectile.type = type;
-    entity->projectile.attackerId = attackerId;
-    entity->projectile.victimId = victimId;
+    entity->projectile.sourceEntityId = sourceEntityId;
+    entity->projectile.targetEntityId = targetEntityId;
     entity->projectile.origin = origin;
     entity->projectile.target = target;
     entity->projectile.speed = speed;
@@ -397,6 +397,7 @@ WarEntity* createUnit(WarContext* context,
         entity->unit.minDamage = unitStats.minDamage;
         entity->unit.rndDamage = unitStats.rndDamage;
         entity->unit.decay = unitStats.decay;
+        entity->unit.manaRegenTime = 1;
     }
     else if(isBuildingUnit(entity))
     {
@@ -1289,8 +1290,7 @@ void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
-    WarUnitStats stats = getUnitStats(unit->type);
-    unit->mana = clamp(unit->mana + mana, 0, stats.mana);
+    unit->mana = clamp(unit->mana + mana, 0, unit->maxMana);
 }
 
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
@@ -1508,6 +1508,98 @@ void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece,
     s32 damage = getTotalDamage(minDamage, rndDamage, 0);
     piece->hp -= damage;
     piece->hp = max(piece->hp, 0);
+}
+
+void rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    
+    if (isMagicUnit(entity))
+    {
+        // Since the attack of magic units are considered "kind of spells"
+        // it will consume mana, at 2 per shot.
+        if (decreaseUnitMana(context, entity, 2))
+        {
+            vec2 origin = getUnitCenterPosition(entity, false);
+            vec2 target = getUnitCenterPosition(targetEntity, false);
+            WarProjectileType projectileType = getProjectileType(unit->type);
+            createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+        }
+        else
+        {
+            // stop attacking if the magic unit rans out of mana
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState, true, true);   
+        }
+    }
+    else
+    {
+        vec2 origin = getUnitCenterPosition(entity, false);
+        vec2 target = getUnitCenterPosition(targetEntity, false);
+        WarProjectileType projectileType = getProjectileType(unit->type);
+        createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+    }
+}
+
+void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+    
+    if (isMagicUnit(entity))
+    {
+        // Since the attack of magic units are considered "kind of spells"
+        // it will consume mana, at 2 per shot.
+        if (decreaseUnitMana(context, entity, 2))
+        {
+            vec2 origin = getUnitCenterPosition(entity, false);
+            vec2 target = vec2TileToMapCoordinates(vec2f(piece->tilex, piece->tiley), true);
+            WarProjectileType projectileType = getProjectileType(unit->type);
+            createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+        }
+        else
+        {
+            // stop attacking if the magic unit rans out of mana
+            WarState* idleState = createIdleState(context, entity, true);
+            changeNextState(context, entity, idleState, true, true);   
+        }
+    }
+    else
+    {
+        vec2 origin = getUnitCenterPosition(entity, false);
+        vec2 target = vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+        WarProjectileType projectileType = getProjectileType(unit->type);
+        createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+    }
+}
+
+void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+
+    // every unit has a 20 percent chance to miss (except catapults)
+    if (chance(80))
+    {
+        takeDamage(context, targetEntity, unit->minDamage, unit->rndDamage);
+    }
+}
+
+void meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+
+    // every unit has a 20 percent chance to miss (except catapults)
+    if (isCatapultUnit(entity) || chance(80))
+    {
+        takeWallDamage(context, targetEntity, piece, unit->minDamage, unit->rndDamage);
+    }
 }
 
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)

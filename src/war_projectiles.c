@@ -36,37 +36,67 @@ void doProjectileTargetDamage(WarContext* context, WarEntity* entity)
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
-    WarEntity* attacker = findEntity(context, projectile->attackerId);
-    WarEntity* victim = findEntity(context, projectile->victimId);
+    vec2 position = vec2MapToTileCoordinates(projectile->target);
+
+    WarEntity* sourceEntity = findEntity(context, projectile->sourceEntityId);
+    WarEntity* targetEntity = findEntity(context, projectile->targetEntityId);
 
     // check if the attacker and the victim exists because it could be eliminated by other unit
-    if (attacker && victim)
+    if (sourceEntity && targetEntity)
     {
-        // every unit has a 20 percent chance to miss (except catapults)
-        if (chance(80))
+        if (isWall(targetEntity))
         {
-            takeDamage(context, victim, attacker->unit.minDamage, attacker->unit.rndDamage);
+            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, position.x, position.y);
+            if (piece)
+            {
+                meleeWallAttack(context, sourceEntity, targetEntity, piece);
+            }
+        }
+        else
+        {
+            meleeAttack(context, sourceEntity, targetEntity);
         }
     }
 }
 
 void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
 {
+    WarMap* map = context->map;
+
     WarProjectileComponent* projectile = &entity->projectile;
 
-    WarEntity* attacker = findEntity(context, projectile->attackerId);
     vec2 position = vec2MapToTileCoordinates(projectile->target);
-
-    WarEntityList* nearUnits = getNearUnits(context, position, splashRadius);
-    for (s32 i = 0; i < nearUnits->count; i++)
+    WarEntity* sourceEntity = findEntity(context, projectile->sourceEntityId);
+    if (sourceEntity)
     {
-        WarEntity* victim = nearUnits->items[i];
-        if (victim && canAttack(context, attacker, victim))
+        WarEntityList* nearUnits = getNearUnits(context, position, splashRadius);
+        for (s32 i = 0; i < nearUnits->count; i++)
         {
-            takeDamage(context, victim, attacker->unit.minDamage, attacker->unit.rndDamage);
+            WarEntity* targetEntity = nearUnits->items[i];
+            if (targetEntity && canAttack(context, sourceEntity, targetEntity))
+            {
+                meleeAttack(context, sourceEntity, targetEntity);
+            }
+        }
+        WarEntityListFree(nearUnits);
+
+        WarEntityList* walls = getEntitiesOfType(map, WAR_ENTITY_TYPE_WALL);
+        for (s32 i = 0; i < walls->count; i++)
+        {
+            WarEntity* targetEntity = walls->items[i];
+
+            WarWallPieceList* pieces = &targetEntity->wall.pieces;
+            for (s32 k = 0; k < pieces->count; k++)
+            {
+                WarWallPiece* piece = &pieces->items[k];
+                vec2 piecePosition = vec2i(piece->tilex, piece->tiley);
+                if (vec2Distance(position, piecePosition) <= splashRadius)
+                {
+                    meleeWallAttack(context, sourceEntity, targetEntity, piece);
+                }
+            }
         }
     }
-    WarEntityListFree(nearUnits);
 }
 
 bool updateProjectilePosition(WarContext* context, WarEntity* entity)
@@ -252,9 +282,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                     doProjectileTargetDamage(context, entity);
 
                     if (projectile->type == WAR_PROJECTILE_ARROW)
-                    {
                         createAudio(context, WAR_ARROW_SPEAR_HIT, false);
-                    }
                 }
 
                 removeEntityById(context, entity->id);
@@ -264,7 +292,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
 }
 
 WarEntity* createProjectile(WarContext* context, WarProjectileType type, 
-                            WarEntityId attackerId, WarEntityId victimId,
+                            WarEntityId sourceEntityId, WarEntityId targetEntityId,
                             vec2 origin, vec2 target)
 {
     WarProjectileData data = getProjectileData(type);
@@ -272,7 +300,7 @@ WarEntity* createProjectile(WarContext* context, WarProjectileType type,
     WarEntity* projectile = createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
     addTransformComponent(context, projectile, origin);
     addSpriteComponentFromResource(context, projectile, imageResourceRef(data.resourceIndex));
-    addProjectileComponent(context, projectile, type, attackerId, victimId, origin, target, data.speed);
+    addProjectileComponent(context, projectile, type, sourceEntityId, targetEntityId, origin, target, data.speed);
 
     return projectile;
 }

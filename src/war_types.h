@@ -1251,6 +1251,9 @@ typedef struct
     // the current and action list for the unit
     s32 actionIndex;
     WarUnitActionList actions;
+
+    // time reminder (in seconds) until mana is regenerated
+    f32 manaRegenTime;
 } WarUnitComponent;
 
 typedef struct
@@ -1551,8 +1554,8 @@ typedef struct
 {
     bool enabled;
     WarProjectileType type;
-    WarEntityId attackerId;
-    WarEntityId victimId;
+    WarEntityId sourceEntityId;
+    WarEntityId targetEntityId;
     vec2 origin;
     vec2 target;
     s32 speed;

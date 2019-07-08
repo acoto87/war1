@@ -25,12 +25,16 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
 
-    vec2 targetTile = state->attack.targetTile;
-
     WarEntityId targetEntityId = state->attack.targetEntityId;
     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
-    // if the entity to attack doesn't exists, go idle
+    vec2 targetTile = state->attack.targetTile;
+    if (isUnit(targetEntity))
+    {
+        targetTile = unitPointOnTarget(entity, targetEntity);
+    }
+    
+    // if the entity to attack doesn't exists, go to the attacking point or go idle
     if (!targetEntity)
     {
         if(!positionInRange(entity, targetTile, stats.range))
@@ -56,12 +60,9 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    vec2 targetPosition = isUnit(targetEntity) 
-        ? unitPointOnTarget(entity, targetEntity) : targetTile;
-
     if(isWall(targetEntity) && !positionInRange(entity, targetTile, stats.range))
     {
-        WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
+        WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
         moveState->nextState = state;
         changeNextState(context, entity, moveState, false, true);
         return;
@@ -78,7 +79,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
-    setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
+    setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = unit->actions.items[unit->actionIndex];
@@ -100,86 +101,19 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (isRangeUnit(entity))
                 {
-                    WarProjectileType projectileType;
-
-                    switch (entity->unit.type)
-                    {
-                        case WAR_UNIT_ARCHER:
-                        case WAR_UNIT_SPEARMAN:
-                        {
-                            projectileType = WAR_PROJECTILE_ARROW;
-                            break;
-                        }
-
-                        case WAR_UNIT_CATAPULT_HUMANS:
-                        case WAR_UNIT_CATAPULT_ORCS:
-                        {
-                            projectileType = WAR_PROJECTILE_CATAPULT;
-                            break;
-                        }
-
-                        case WAR_UNIT_CONJURER:
-                        case WAR_UNIT_WARLOCK:
-                        case WAR_UNIT_CLERIC:
-                        case WAR_UNIT_NECROLYTE:
-                        {
-                            projectileType = WAR_PROJECTILE_FIREBALL;
-                            break;
-                        }
-
-                        case WAR_UNIT_WATER_ELEMENTAL:
-                        {
-                            projectileType = WAR_PROJECTILE_WATER_ELEMENTAL;
-                            break;
-                        }
-                        
-                        default:
-                        {
-                            // unreachable
-                            logWarning("Invalid unit firing a projectile: %d\n", entity->unit.type);
-                            break;
-                        }
-                    }
-                    
-                    vec2 origin = getUnitCenterPosition(entity, false);
-                    vec2 target = getUnitCenterPosition(targetEntity, false);
-                    createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+                    rangeAttack(context, entity, targetEntity);
                 }
                 else
                 {
-                    // every unit has a 20 percent chance to miss (except catapults)
-                    if (chance(80))
-                    {
-                        takeDamage(context, targetEntity, unit->minDamage, unit->rndDamage);
-                    }
+                    meleeAttack(context, entity, targetEntity);
                 }
 
-                switch (action->lastSoundStep)
-                {
-                    case WAR_ACTION_STEP_SOUND_SWORD:
-                        createAudioRandom(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, false);
-                        break;
-                    case WAR_ACTION_STEP_SOUND_FIST:
-                        createAudio(context, WAR_FIST_ATTACK, false);
-                        break;
-                    case WAR_ACTION_STEP_SOUND_FIREBALL:
-                        createAudio(context, WAR_FIREBALL, false);
-                        break;
-                    case WAR_ACTION_STEP_SOUND_CATAPULT:
-                        createAudio(context, WAR_CATAPULT_ROCK_FIRED, false);
-                        break;
-                    case WAR_ACTION_STEP_SOUND_ARROW:
-                        createAudio(context, WAR_ARROW_SPEAR, false);
-                        break;
-                    default:
-                        // do nothing here
-                        break;
-                }
+                playAttackSound(context, action->lastSoundStep);
             }
         }
         else if(isWall(targetEntity))
         {
-            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, state->attack.targetTile.x, state->attack.targetTile.y);
+            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
             if (piece)
             {
                 // if the piece of the wall the unit is attacking has no more hit points, go to idle.
@@ -194,38 +128,14 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                 {
                     if (isRangeUnit(entity))
                     {
-                        // TODO: fire the projectile here
+                        rangeWallAttack(context, entity, targetEntity, piece);
                     }
                     else
                     {
-                        // every unit has a 20 percent chance to miss (except catapults)
-                        if (chance(80))
-                        {
-                            takeWallDamage(context, targetEntity, piece, unit->minDamage, unit->rndDamage);
-                        }
-
-                        switch (action->lastSoundStep)
-                        {
-                            case WAR_ACTION_STEP_SOUND_SWORD:
-                                createAudioRandom(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, false);
-                                break;
-                            case WAR_ACTION_STEP_SOUND_FIST:
-                                createAudio(context, WAR_FIST_ATTACK, false);
-                                break;
-                            case WAR_ACTION_STEP_SOUND_FIREBALL:
-                                createAudio(context, WAR_FIREBALL, false);
-                                break;
-                            case WAR_ACTION_STEP_SOUND_CATAPULT:
-                                createAudio(context, WAR_CATAPULT_ROCK_FIRED, false);
-                                break;
-                            case WAR_ACTION_STEP_SOUND_ARROW:
-                                createAudio(context, WAR_ARROW_SPEAR, false);
-                                break;
-                            default:
-                                // do nothing here
-                                break;
-                        }
+                        meleeWallAttack(context, entity, targetEntity, piece);
                     }
+
+                    playAttackSound(context, action->lastSoundStep);
                 }
             }
         }

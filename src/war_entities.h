@@ -58,7 +58,7 @@ void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType ty
 void removeCursorComponent(WarContext* context, WarEntity* entity);
 
 void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileType type,
-                            WarEntityId attackerId, WarEntityId victimId, 
+                            WarEntityId sourceEntityId, WarEntityId targetEntityId, 
                             vec2 origin, vec2 target, s32 speed);
 void removeProjectileComponent(WarContext* context, WarEntity* entity);
 
@@ -128,4 +128,8 @@ WarEntity* getAttackerEnemy(WarContext* context, WarEntity* entity);
 bool isBeingAttackedBy(WarEntity* entity, WarEntity* other);
 s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor);
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage);
+void rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
+void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece);
+void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
+void meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece);
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount);

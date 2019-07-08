@@ -1338,7 +1338,7 @@ void updateCommandFromRightClick(WarContext* context)
                             executeHarvestCommand(context, targetEntity, targetTile);
                         }
                         else if (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) || 
-                                isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
+                                 isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
                         {
                             if (isEnemyUnit(context, targetEntity))
                             {
@@ -1348,6 +1348,10 @@ void updateCommandFromRightClick(WarContext* context)
                             {
                                 executeDeliverCommand(context, targetEntity);
                             }
+                        }
+                        else if (isWall(targetEntity))
+                        {
+                            executeMoveCommand(context, targetPoint);
                         }
                         else
                         {
@@ -1729,6 +1733,33 @@ void updateProjectiles(WarContext* context)
     }
 }
 
+void updateMagic(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (entity && isMagicUnit(entity))
+        {
+            WarUnitComponent* unit = &entity->unit;
+
+            // The magic units have a mana regeneration rate of roughly 1 point/sec
+            // so a magic unit will spend almost 4 minutes to fill its mana when its rans out
+            if (unit->manaRegenTime <= 0)
+            {
+                unit->mana = min(unit->mana + 1, unit->maxMana);
+                unit->manaRegenTime = 1;
+            }
+            else
+            {
+                unit->manaRegenTime -= context->deltaTime;
+            }
+        }
+    }
+}
+
 void updateMap(WarContext* context)
 {
     updateGlobalSpeed(context);
@@ -1752,6 +1783,7 @@ void updateMap(WarContext* context)
     updateActions(context);
     updateAnimations(context);
     updateProjectiles(context);
+    updateMagic(context);
 
     updateGoldText(context);
     updateWoodText(context);
