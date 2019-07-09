@@ -91,6 +91,8 @@ List of thing to do in no particular order
   * Remove global __log__ and move it to WarContext.
   * Make so that entities can have multiple sprites.
   * Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
+  * Add animation for the gold and lumber numbers when they change.
+  * Make commands/cheats system.
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~

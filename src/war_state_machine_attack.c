@@ -29,15 +29,14 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
     vec2 targetTile = state->attack.targetTile;
-    if (isUnit(targetEntity))
-    {
-        targetTile = unitPointOnTarget(entity, targetEntity);
-    }
     
     // if the entity to attack doesn't exists, go to the attacking point or go idle
     if (!targetEntity)
     {
-        if(!positionInRange(entity, targetTile, stats.range))
+        // when going to an attacking point (where there is no target unit)
+        // check if the attacking unit is in range 1, no matter if the range
+        // of the attacking unit is greater
+        if(!positionInRange(entity, targetTile, 1))
         {
             WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
@@ -49,6 +48,14 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         WarState* idleState = createIdleState(context, entity, true);
         changeNextState(context, entity, idleState, true, true);
         return;
+    }
+
+    if (isUnit(targetEntity))
+    {
+        // if the target entity is an unit the instead of using the tile where
+        // the player click, use a point on the target unit that is closer to
+        // the attacking unit
+        targetTile = unitPointOnTarget(entity, targetEntity);
     }
 
     // if the unit is not in range to attack, chase it

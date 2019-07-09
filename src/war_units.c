@@ -47,14 +47,24 @@ bool areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 
 bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
-    return isWarriorUnit(entity) && 
-           !isDead(entity) && 
-           !isGoingToDie(entity) && 
-           !isDead(targetEntity) && 
-           !isGoingToDie(targetEntity) && 
-           !isCorpseUnit(targetEntity) &&
-           !isCollapsing(entity) && 
-           !isGoingToCollapse(entity);
+    if (isWarriorUnit(entity) && !isDead(entity) && !isGoingToDie(entity))
+    {
+        if (isUnit(targetEntity))
+        {
+            if (!isDead(targetEntity) && 
+                !isGoingToDie(targetEntity) && 
+                !isCorpseUnit(targetEntity) &&
+                !isCollapsing(entity) && 
+                !isGoingToCollapse(entity))
+            {
+                return true;
+            }
+        }
+        else if (isWall(targetEntity))
+            return true;
+    }
+
+    return false;
 }
 
 bool displayUnitOnMinimap(WarEntity* entity)
