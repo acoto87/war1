@@ -65,11 +65,12 @@ void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splash
 
     WarProjectileComponent* projectile = &entity->projectile;
 
-    vec2 position = vec2MapToTileCoordinates(projectile->target);
+    vec2 targetTile = vec2MapToTileCoordinates(projectile->target);
+
     WarEntity* sourceEntity = findEntity(context, projectile->sourceEntityId);
     if (sourceEntity)
     {
-        WarEntityList* nearUnits = getNearUnits(context, position, splashRadius);
+        WarEntityList* nearUnits = getNearUnits(context, targetTile, splashRadius);
         for (s32 i = 0; i < nearUnits->count; i++)
         {
             WarEntity* targetEntity = nearUnits->items[i];
@@ -90,10 +91,49 @@ void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splash
             {
                 WarWallPiece* piece = &pieces->items[k];
                 vec2 piecePosition = vec2i(piece->tilex, piece->tiley);
-                if (vec2Distance(position, piecePosition) <= splashRadius)
+                if (vec2DistanceInTiles(targetTile, piecePosition) <= splashRadius)
                 {
                     meleeWallAttack(context, sourceEntity, targetEntity, piece);
                 }
+            }
+        }
+    }
+}
+
+void doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
+{
+    WarMap* map = context->map;
+
+    WarProjectileComponent* projectile = &entity->projectile;
+
+    vec2 targetTile = vec2MapToTileCoordinates(projectile->target);
+
+    WarEntityList* nearUnits = getNearUnits(context, targetTile, splashRadius);
+    for (s32 i = 0; i < nearUnits->count; i++)
+    {
+        WarEntity* targetEntity = nearUnits->items[i];
+        if (targetEntity && 
+            !isDead(targetEntity) && !isGoingToDie(targetEntity) && 
+            !isCollapsing(targetEntity) && !isGoingToCollapse(targetEntity))
+        {
+            takeDamage(context, targetEntity, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
+        }
+    }
+    WarEntityListFree(nearUnits);
+
+    WarEntityList* walls = getEntitiesOfType(map, WAR_ENTITY_TYPE_WALL);
+    for (s32 i = 0; i < walls->count; i++)
+    {
+        WarEntity* targetEntity = walls->items[i];
+
+        WarWallPieceList* pieces = &targetEntity->wall.pieces;
+        for (s32 k = 0; k < pieces->count; k++)
+        {
+            WarWallPiece* piece = &pieces->items[k];
+            vec2 piecePosition = vec2i(piece->tilex, piece->tiley);
+            if (vec2DistanceInTiles(targetTile, piecePosition) <= splashRadius)
+            {
+                takeWallDamage(context, targetEntity, piece, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
             }
         }
     }
@@ -257,7 +297,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
             }
             else
             {
-                doProjectileSplashDamage(context, entity, NEAR_RAIN_OF_FIRE_RADIUS);
+                doRainOfFireProjectileSplashDamage(context, entity, NEAR_RAIN_OF_FIRE_RADIUS);
                 createRainOfFireExplosionAnimation(context, projectile->target);
                 createAudio(context, WAR_CATAPULT_FIRE_EXPLOSION, false);
                 removeEntityById(context, entity->id);

@@ -318,6 +318,35 @@ void removeCursorComponent(WarContext* context, WarEntity* entity)
     entity->cursor = (WarCursorComponent){0};
 }
 
+void addRainOfFireComponent(WarContext* context, WarEntity* entity, vec2 position)
+{
+    entity->rainOfFire = (WarRainOfFireComponent){0};
+    entity->rainOfFire.enabled = true;
+    entity->rainOfFire.position = position;
+    entity->rainOfFire.radius = 2;
+    entity->rainOfFire.projectilesCount = 5;
+}
+
+void removeRainOfFireComponent(WarContext* context, WarEntity* entity)
+{
+    entity->rainOfFire = (WarRainOfFireComponent){0};
+}
+
+void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position)
+{
+    entity->poisonCloud = (WarPoisonCloudComponent){0};
+    entity->poisonCloud.enabled = true;
+    entity->poisonCloud.position = position;
+    entity->poisonCloud.radius = 2;
+    entity->poisonCloud.time = getScaledTime(context, 10);
+    entity->poisonCloud.damageTime = 0;
+}
+
+void removePoisonCloudComponent(WarContext* context, WarEntity* entity)
+{
+    entity->poisonCloud = (WarPoisonCloudComponent){0};
+}
+
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
 {
@@ -1353,7 +1382,7 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
     return true;
 }
 
-WarEntityList* getNearUnits(WarContext* context, vec2 position, s32 distance)
+WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
 {
     WarMap* map = context->map;
 
@@ -1366,8 +1395,7 @@ WarEntityList* getNearUnits(WarContext* context, vec2 position, s32 distance)
         WarEntity* other = units->items[i];
         if (other)
         {
-            vec2 targetPosition = getUnitCenterPosition(other, true);
-            if (vec2Distance(position, targetPosition) <= distance)
+            if (entityTilePositionInRange(other, tilePosition, distance))
             {
                 WarEntityListAdd(nearUnits, other);
             }
@@ -1583,7 +1611,7 @@ void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity
     WarUnitComponent* unit = &entity->unit;
 
     // every unit has a 20 percent chance to miss (except catapults)
-    if (chance(80))
+    if (isCatapultUnit(entity) || chance(80))
     {
         takeDamage(context, targetEntity, unit->minDamage, unit->rndDamage);
     }

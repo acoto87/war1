@@ -21,9 +21,9 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = getUnitSize(entity);
-    WarUnitStats stats = getUnitStats(unit->type);
-
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+
+    WarUnitStats stats = getUnitStats(unit->type);
 
     WarEntityId targetEntityId = state->attack.targetEntityId;
     WarEntity* targetEntity = findEntity(context, targetEntityId);
@@ -36,7 +36,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         // when going to an attacking point (where there is no target unit)
         // check if the attacking unit is in range 1, no matter if the range
         // of the attacking unit is greater
-        if(!positionInRange(entity, targetTile, 1))
+        if(!entityTilePositionInRange(entity, targetTile, 1))
         {
             WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
@@ -67,7 +67,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    if(isWall(targetEntity) && !positionInRange(entity, targetTile, stats.range))
+    if(isWall(targetEntity) && !entityTilePositionInRange(entity, targetTile, stats.range))
     {
         WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
         moveState->nextState = state;

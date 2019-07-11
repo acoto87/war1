@@ -763,6 +763,8 @@ typedef enum
     WAR_ENTITY_TYPE_CURSOR,
     WAR_ENTITY_TYPE_AUDIO,
     WAR_ENTITY_TYPE_PROJECTILE,
+    WAR_ENTITY_TYPE_RAIN_OF_FIRE,
+    WAR_ENTITY_TYPE_POISON_CLOUD,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -1073,6 +1075,7 @@ typedef enum
     WAR_STATE_BUILD,
     WAR_STATE_REPAIR,
     WAR_STATE_REPAIRING,
+    WAR_STATE_CAST,
     WAR_STATE_WAIT,
 
     WAR_STATE_COUNT
@@ -1192,6 +1195,13 @@ typedef struct _WarState
             WarEntityId buildingId;
             bool insideBuilding;
         } repairing;
+
+        struct
+        {
+            WarUnitCommandType spellType;
+            vec2 targetTile;
+            bool loop;
+        } cast;
     };
 } WarState;
 
@@ -1561,6 +1571,24 @@ typedef struct
     s32 speed;
 } WarProjectileComponent;
 
+typedef struct
+{
+    bool enabled;
+    vec2 position;
+    s32 radius; // in tiles
+    s32 projectilesCount; // the amount or projectiles to drop
+} WarRainOfFireComponent;
+
+typedef struct
+{
+    bool enabled;
+    vec2 position;
+    s32 radius; // in tiles
+    f32 time; // time in seconds left of the spell
+    f32 damageTime; // time in seconds left to inflict damage
+    char animName[30];
+} WarPoisonCloudComponent;
+
 typedef struct _WarEntity
 {
     bool enabled;
@@ -1582,6 +1610,8 @@ typedef struct _WarEntity
     WarAudioComponent audio;
     WarCursorComponent cursor;
     WarProjectileComponent projectile;
+    WarRainOfFireComponent rainOfFire;
+    WarPoisonCloudComponent poisonCloud;
 } WarEntity;
 
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)

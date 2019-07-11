@@ -61,8 +61,11 @@ List of thing to do in no particular order
   * ~~Mana of magic units don't increase over time.~~
   * Fix walking animation with follow behavior. Make it continuous intead of reseting piece of the path.
   * When a unit attacks a unit that is attacking a building, the second unit should stop the attack on the building and attack the first unit.
-  * Use `positionInRange` to calculate near units? used in splash damage.
+  * Use `entityTilePositionInRange` to calculate near units? used in splash damage.
   * When attacking a wall, if the units isn't within range, it will walk to the piece's position without considering its range of attack. That's because move state is being used in this case, instead of follow when attacking an unit.
+  * Fix colors of Rain of Fire portrait
+  * Fix colors of Poison Cloud
+  * Check the uses of `context->deltaTime` when the speed of the game is not `1`.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -93,6 +96,8 @@ List of thing to do in no particular order
   * Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
   * Add animation for the gold and lumber numbers when they change.
   * Make commands/cheats system.
+  * Make the blue water/green water animated.
+  * Make the move state to consider range distance to stop.
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
@@ -142,9 +147,9 @@ List of thing to do in no particular order
     * ~~Harvest command~~
     * ~~Repair command~~
   * Add functionality of spell commands.
-    * Summoning
-    * Cloud of poison
+    * ~~Summoning~~
     * Rain of fire
+    * Cloud of poison
     * Far seeing / Dark vision
     * Invincibility / Holy armor
     * Healing

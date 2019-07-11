@@ -122,7 +122,7 @@ bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h);
 bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y);
 bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y);
-WarEntityList* getNearUnits(WarContext* context, vec2 position, s32 distance);
+WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance);
 WarEntity* getNearEnemy(WarContext* context, WarEntity* entity);
 WarEntity* getAttackerEnemy(WarContext* context, WarEntity* entity);
 bool isBeingAttackedBy(WarEntity* entity, WarEntity* other);

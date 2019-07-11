@@ -27,6 +27,7 @@ WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeT
 WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime);
 WarState* createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
 WarState* createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
+WarState* createCastState(WarContext* context, WarEntity* entity, WarUnitCommandType spellType, vec2 targetTile, bool loop);
 
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
 bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* state);
@@ -52,6 +53,7 @@ WarState* getNextState(WarEntity* entity, WarStateType type);
 #define getBuildState(entity) getState(entity, WAR_STATE_BUILD)
 #define getRepairState(entity) getState(entity, WAR_STATE_REPAIR)
 #define getRepairingState(entity) getState(entity, WAR_STATE_REPAIRING)
+#define getCastState(entity) getState(entity, WAR_STATE_CAST)
 
 bool hasState(WarEntity* entity, WarStateType type);
 bool hasDirectState(WarEntity* entity, WarStateType type);
@@ -74,6 +76,7 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isBuilding(entity) hasState(entity, WAR_STATE_BUILD)
 #define isRepairing(entity) hasState(entity, WAR_STATE_REPAIR)
 #define isRepairing2(entity) hasState(entity, WAR_STATE_REPAIRING)
+#define isCasting(entity) hasState(entity, WAR_STATE_CAST)
 
 #define isGoingToIdle(entity) hasNextState(entity, WAR_STATE_IDLE)
 #define isGoingToMove(entity) hasNextState(entity, WAR_STATE_MOVE)
@@ -92,6 +95,7 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGoingToBuild(entity) hasNextState(entity, WAR_STATE_BUILD)
 #define isGoingToRepair(entity) hasNextState(entity, WAR_STATE_REPAIR)
 #define isGoingToRepair2(entity) hasNextState(entity, WAR_STATE_REPAIRING)
+#define isGoingToCast(entity) hasNextState(entity, WAR_STATE_CAST)
 
 #define setDelay(state, seconds) ((state)->delay = (seconds))
 

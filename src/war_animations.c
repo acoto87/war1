@@ -276,3 +276,24 @@ WarSpriteAnimation* createSpellAnimation(WarContext* context, vec2 position)
 
     return anim;
 }
+
+WarSpriteAnimation* createPoisonCloudAnimation(WarContext* context, vec2 position, const char* name)
+{
+    WarMap* map = context->map;
+
+    WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_POISON_CLOUD_RESOURCE);
+    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+
+    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.5f, true);
+
+    f32 offsetx = position.x - halff(sprite.frameWidth);
+    f32 offsety = position.y - halff(sprite.frameHeight);
+    anim->offset = vec2f(offsetx, offsety);
+
+    for(s32 i = 0; i < 4; i++)
+        addAnimationFrame(anim, i);
+
+    WarSpriteAnimationListAdd(&map->animations, anim);
+
+    return anim;
+}

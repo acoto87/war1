@@ -1112,7 +1112,7 @@ void updateRainOfFireEdit(WarContext* context)
             f32 offsetx = randomf(viewport.x + padding, viewport.x + viewport.width - padding);
             f32 offsety = randomf(viewport.y + padding, viewport.y + viewport.height - padding);
             vec2 target = vec2f(offsetx, offsety);
-            vec2 origin = vec2f(target.x, map->viewport.y);
+            vec2 origin = vec2f(target.x, viewport.y);
 
             createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, selectedEntityId, 0, origin, target);
         }
@@ -1552,6 +1552,8 @@ void updateCursor(WarContext* context)
             switch (command->type)
             {
                 case WAR_COMMAND_ATTACK:
+                case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
+                case WAR_COMMAND_SPELL_POISON_CLOUD:
                 {
                     changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
                     break;
@@ -1760,6 +1762,99 @@ void updateMagic(WarContext* context)
     }
 }
 
+bool updateRainOfFire(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+    WarRainOfFireComponent* rainOfFire = &entity->rainOfFire;
+
+    vec2 position = vec2TileToMapCoordinates(rainOfFire->position, true);
+    s32 radius = rainOfFire->radius * MEGA_TILE_WIDTH;
+
+    while (rainOfFire->projectilesCount--)
+    {
+        f32 offsetx = randomf(-radius, radius);
+        f32 offsety = randomf(-radius, radius);
+        vec2 target = vec2Addv(position, vec2f(offsetx, offsety));
+
+        offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
+        vec2 origin = vec2f(target.x, map->viewport.y - offsety);
+
+        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+    }
+
+    return true;
+}
+
+bool updatePoisonCloud(WarContext* context, WarEntity* entity)
+{
+    WarPoisonCloudComponent* poisonCloud = &entity->poisonCloud;
+
+    poisonCloud->time -= context->deltaTime;
+    poisonCloud->damageTime -= context->deltaTime;
+
+    if (poisonCloud->damageTime <= 0)
+    {
+        WarEntityList* nearUnits = getNearUnits(context, poisonCloud->position, poisonCloud->radius);
+        for (s32 i = 0; i < nearUnits->count; i++)
+        {
+            WarEntity* targetEntity = nearUnits->items[i];
+            if (targetEntity && 
+                !isDead(targetEntity) && !isGoingToDie(targetEntity) && 
+                !isCollapsing(targetEntity) && !isGoingToCollapse(targetEntity))
+            {
+                takeDamage(context, targetEntity, 0, POISON_CLOUD_DAMAGE);
+            }
+        }
+        WarEntityListFree(nearUnits);
+
+        poisonCloud->damageTime = getScaledTime(context, 1);
+    }
+
+    return poisonCloud->time <= 0;
+}
+
+void updateSpells(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    WarEntityIdList spellsToRemove;
+    WarEntityIdListInit(&spellsToRemove, WarEntityIdListDefaultOptions);
+
+    WarEntityList* rainOfFireSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_RAIN_OF_FIRE);
+    for (s32 i = 0; i < rainOfFireSpells->count; i++)
+    {
+        WarEntity* entity = rainOfFireSpells->items[i];
+        if (entity)
+        {
+            if (updateRainOfFire(context, entity))
+            {
+                WarEntityIdListAdd(&spellsToRemove, entity->id);
+            }
+        }
+    }
+
+    WarEntityList* poisonCloudSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_POISON_CLOUD);
+    for (s32 i = 0; i < poisonCloudSpells->count; i++)
+    {
+        WarEntity* entity = poisonCloudSpells->items[i];
+        if (entity)
+        {
+            if (updatePoisonCloud(context, entity))
+            {
+                WarEntityIdListAdd(&spellsToRemove, entity->id);
+                removeAnimation(context, NULL, entity->poisonCloud.animName);
+            }
+        }
+    }
+
+    for (s32 i = 0; i < spellsToRemove.count; i++)
+    {
+        removeEntityById(context, spellsToRemove.items[i]);
+    }
+
+    WarEntityIdListFree(&spellsToRemove);
+}
+
 void updateMap(WarContext* context)
 {
     updateGlobalSpeed(context);
@@ -1784,6 +1879,7 @@ void updateMap(WarContext* context)
     updateAnimations(context);
     updateProjectiles(context);
     updateMagic(context);
+    updateSpells(context);
 
     updateGoldText(context);
     updateWoodText(context);

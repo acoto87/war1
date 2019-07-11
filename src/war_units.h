@@ -656,14 +656,14 @@ typedef struct
 const WarSpellStats spellStats[] =
 {
     // spells
-    { WAR_COMMAND_SPELL_HEALING,            10 },
-    { WAR_COMMAND_SPELL_FAR_SIGHT,          10 },
-    { WAR_COMMAND_SPELL_INVISIBILITY,       10 },
-    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       10 },
-    { WAR_COMMAND_SPELL_POISON_CLOUD,       10 },
-    { WAR_COMMAND_SPELL_RAISE_DEAD,         10 },
-    { WAR_COMMAND_SPELL_DARK_VISION,        10 },
-    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       10 },
+    { WAR_COMMAND_SPELL_HEALING,             10 },
+    { WAR_COMMAND_SPELL_FAR_SIGHT,           10 },
+    { WAR_COMMAND_SPELL_INVISIBILITY,        10 },
+    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,        25 },
+    { WAR_COMMAND_SPELL_POISON_CLOUD,        25 },
+    { WAR_COMMAND_SPELL_RAISE_DEAD,          10 },
+    { WAR_COMMAND_SPELL_DARK_VISION,         10 },
+    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,        10 },
 
     // summons
     { WAR_COMMAND_SUMMON_SPIDER,             51 },
@@ -711,14 +711,15 @@ const WarUnitCommandBaseData commandBaseData[] =
     { WAR_COMMAND_TRAIN_WARLOCK,            trainWarlock,           WAR_KEY_T,          0, "TRAIN WARLOCK",                "TRAINING A WARLOCK"        },
     { WAR_COMMAND_TRAIN_CLERIC,             trainCleric,            WAR_KEY_T,          0, "TRAIN CLERIC",                 "TRAINING A CLERIC"         },
     { WAR_COMMAND_TRAIN_NECROLYTE,          trainNecrolyte,         WAR_KEY_T,          0, "TRAIN NECROLYTE",              "TRAINING A NECROLYTE"      },
-   // spell commands
+   
+    // spell commands
     { WAR_COMMAND_SPELL_HEALING,            NULL,                   WAR_KEY_H,          0, "HEALING",                      ""                          },
-    { WAR_COMMAND_SPELL_POISON_CLOUD,       NULL,                   WAR_KEY_P,          9, "CLOUD OF POISON",              ""                          },
+    { WAR_COMMAND_SPELL_POISON_CLOUD,       castPoisonCloud,        WAR_KEY_P,          9, "CLOUD OF POISON",              ""                          },
     { WAR_COMMAND_SPELL_FAR_SIGHT,          NULL,                   WAR_KEY_F,          0, "FAR SEEING",                   ""                          },
     { WAR_COMMAND_SPELL_DARK_VISION,        NULL,                   WAR_KEY_D,          0, "DARK VISION",                  ""                          },
     { WAR_COMMAND_SPELL_INVISIBILITY,       NULL,                   WAR_KEY_I,          0, "INVISIBILITY",                 ""                          },
     { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       NULL,                   WAR_KEY_U,          0, "UNHOLY ARMOR",                 ""                          },
-    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       NULL,                   WAR_KEY_R,          0, "RAIN OF FIRE",                 ""                          },
+    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       castRainOfFire,         WAR_KEY_R,          0, "RAIN OF FIRE",                 ""                          },
     { WAR_COMMAND_SPELL_RAISE_DEAD,         NULL,                   WAR_KEY_R,          0, "RAISE DEAD",                   ""                          },
 
     // summons
@@ -843,6 +844,10 @@ const WarUnitCommandMapping commandMappings[] =
     { WAR_COMMAND_UPGRADE_DARK_VISION,      WAR_UPGRADE_DARK_VISION     },
     { WAR_COMMAND_UPGRADE_INVISIBILITY,     WAR_UPGRADE_INVISIBILITY    },
     { WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,     WAR_UPGRADE_UNHOLY_ARMOR    },
+
+    // spells
+    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       WAR_UPGRADE_RAIN_OF_FIRE    },
+    { WAR_COMMAND_SPELL_POISON_CLOUD,       WAR_UPGRADE_POISON_CLOUD    }
 };
 
 typedef struct
@@ -1646,7 +1651,7 @@ vec2 unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
     return getClosestPointOnRect(position, unitRect);
 }
 
-s32 positionDistanceInTiles(WarEntity* entity, vec2 targetPosition)
+s32 entityTileDistance(WarEntity* entity, vec2 targetPosition)
 {
     assert(isUnit(entity));
 
@@ -1655,11 +1660,11 @@ s32 positionDistanceInTiles(WarEntity* entity, vec2 targetPosition)
     return (s32)distance;
 }
 
-bool positionInRange(WarEntity* entity, vec2 targetPosition, s32 range)
+bool entityTilePositionInRange(WarEntity* entity, vec2 targetTile, s32 range)
 {
     assert(range >= 0);
 
-    s32 distance = positionDistanceInTiles(entity, targetPosition);
+    s32 distance = entityTileDistance(entity, targetTile);
     return distance <= range;
 }
 
@@ -1668,7 +1673,7 @@ s32 unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
     assert(isUnit(entity));
 
     vec2 pointOnTarget = unitPointOnTarget(entity, targetEntity);
-    return positionDistanceInTiles(entity, pointOnTarget);
+    return entityTileDistance(entity, pointOnTarget);
 }
 
 bool unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)

@@ -386,6 +386,25 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
     }
 }
 
+void executeCastCommand(WarContext* context, WarUnitCommandType spellType, vec2 targetTile, bool loop)
+{
+    WarMap* map = context->map;
+
+    s32 selEntitiesCount = map->selectedEntities.count;
+    for(s32 i = 0; i < selEntitiesCount; i++)
+    {
+        WarEntityId entityId = map->selectedEntities.items[i];
+        WarEntity* entity = findEntity(context, entityId);
+        assert(entity);
+
+        if (isMagicUnit(entity))
+        {
+            WarState* castState = createCastState(context, entity, spellType, targetTile, loop);
+            changeNextState(context, entity, castState, true, true);
+        }
+    }
+}
+
 void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
@@ -793,6 +812,27 @@ bool executeCommand(WarContext* context)
 
             command->type = WAR_COMMAND_NONE;
             return true;
+        }
+
+        case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
+        case WAR_COMMAND_SPELL_POISON_CLOUD:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    executeCastCommand(context, WAR_COMMAND_SPELL_POISON_CLOUD, targetTile, false);
+                    // executeCastCommand(context, command->type, targetTile, command->type == WAR_COMMAND_SPELL_RAIN_OF_FIRE);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+            
+            return false;
         }
 
         case WAR_COMMAND_BUILD_BASIC:
@@ -1215,6 +1255,21 @@ void buildRoad(WarContext* context, WarEntity* entity)
 }
 
 // spells
+void castRainOfFire(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
+}
+
+void castPoisonCloud(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SPELL_POISON_CLOUD;
+}
+
+// summons
 void summonSpider(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;

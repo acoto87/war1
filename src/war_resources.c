@@ -4,6 +4,7 @@
 #define WAR_EXPLOSION_RESOURCE 354
 #define WAR_RAIN_OF_FIRE_EXPLOSION_RESOURCE 351
 #define WAR_SPELL_RESOURCE 355
+#define WAR_POISON_CLOUD_RESOURCE 350
 
 WarResource* getOrCreateResource(WarContext* context, s32 index)
 {

@@ -1092,6 +1092,16 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             break;
         }
 
+        case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
+        case WAR_COMMAND_SPELL_POISON_CLOUD:
+        {
+            WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
+            WarUpgradeData upgradeData = getUpgradeData(commandMapping.unitOrUpgradeType);
+            
+            data.frameIndex = upgradeData.frameIndices[0];
+            break;
+        }
+
         // cancel
         case WAR_COMMAND_CANCEL:
         {

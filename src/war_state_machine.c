@@ -17,6 +17,7 @@ WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
     { WAR_STATE_BUILD,      enterBuildState,      leaveBuildState,      updateBuildState,      freeBuildState      },
     { WAR_STATE_REPAIR,     enterRepairState,     leaveRepairState,     updateRepairState,     freeRepairState     },
     { WAR_STATE_REPAIRING,  enterRepairingState,  leaveRepairingState,  updateRepairingState,  freeRepairingState  },
+    { WAR_STATE_CAST,       enterCastState,       leaveCastState,       updateCastState,       freeCastState       },
     { WAR_STATE_WAIT,       enterWaitState,       leaveWaitState,       updateWaitState,       freeWaitState       },
 };
 

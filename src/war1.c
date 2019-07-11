@@ -115,6 +115,7 @@
 #include "war_state_machine_build.c"
 #include "war_state_machine_repair.c"
 #include "war_state_machine_repairing.c"
+#include "war_state_machine_cast.c"
 #include "war_state_machine.c"
 #include "war_map.c"
 #include "war_game.c"
