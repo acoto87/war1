@@ -318,26 +318,11 @@ void removeCursorComponent(WarContext* context, WarEntity* entity)
     entity->cursor = (WarCursorComponent){0};
 }
 
-void addRainOfFireComponent(WarContext* context, WarEntity* entity, vec2 position)
-{
-    entity->rainOfFire = (WarRainOfFireComponent){0};
-    entity->rainOfFire.enabled = true;
-    entity->rainOfFire.position = position;
-    entity->rainOfFire.radius = 2;
-    entity->rainOfFire.projectilesCount = 5;
-}
-
-void removeRainOfFireComponent(WarContext* context, WarEntity* entity)
-{
-    entity->rainOfFire = (WarRainOfFireComponent){0};
-}
-
 void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
     entity->poisonCloud = (WarPoisonCloudComponent){0};
     entity->poisonCloud.enabled = true;
     entity->poisonCloud.position = position;
-    entity->poisonCloud.radius = 2;
     entity->poisonCloud.time = getScaledTime(context, 10);
     entity->poisonCloud.damageTime = 0;
 }
@@ -558,6 +543,8 @@ void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
 
+    logDebug("trying to remove entity with id: %d\n", id);
+
     WarEntity* entity = findEntity(context, id);
     if (entity)
     {
@@ -578,6 +565,8 @@ void removeEntityById(WarContext* context, WarEntityId id)
 
         WarEntityIdMapRemove(&map->entitiesById, entity->id);
         WarEntityListRemove(&map->entities, entity);
+
+        logDebug("removed entity with id: %d\n", id);
     }
 }
 
@@ -1170,12 +1159,12 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
 
     assert(hasRemainingUpgrade(player, upgrade));
 
-    player->upgrades[upgrade].level++;
+    incUpgradeLevel(player, upgrade);
 
     switch (upgrade)
     {
         case WAR_UPGRADE_ARROWS:
-        // case WAR_UPGRADE_SPEARS:
+        case WAR_UPGRADE_SPEARS:
         {
             WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
@@ -1195,7 +1184,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         }
 
         case WAR_UPGRADE_SWORDS:
-        // case WAR_UPGRADE_AXES:
+        case WAR_UPGRADE_AXES:
         {
             WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
@@ -1208,12 +1197,12 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
                         entity->unit.type == WAR_UNIT_KNIGHT ||
                         entity->unit.type == WAR_UNIT_RAIDER)
                     {
-                        if (player->upgrades[upgrade].level == 1)
+                        if (getUpgradeLevel(player, upgrade) == 1)
                         {
                             entity->unit.minDamage += 1;
                             entity->unit.rndDamage += 1;
                         }
-                        else if (player->upgrades[upgrade].level == 2)
+                        else if (getUpgradeLevel(player, upgrade) == 2)
                         {
                             entity->unit.minDamage += 2;
                             entity->unit.rndDamage += 2;
@@ -1226,7 +1215,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         }
         
         case WAR_UPGRADE_HORSES:
-        // case WAR_UPGRADE_WOLVES:
+        case WAR_UPGRADE_WOLVES:
         {
             WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
@@ -1252,11 +1241,11 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
                 WarEntity* entity = units->items[i];
                 if (entity && entity->unit.player == player->index)
                 {
-                    if (player->upgrades[upgrade].level == 1)
+                    if (getUpgradeLevel(player, upgrade) == 1)
                     {
                         entity->unit.armor += 1;
                     }
-                    else if (player->upgrades[upgrade].level == 2)
+                    else if (getUpgradeLevel(player, upgrade) == 2)
                     {
                         entity->unit.armor += 2;
                     }

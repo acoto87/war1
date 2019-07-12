@@ -76,6 +76,12 @@ bool initGame(WarContext* context)
     for (int i = 0; i < arrayLength(assets); ++i)
     {
         DatabaseEntry entry = assets[i];
+
+        // REMOVE THIS: this is to NOT load all the other music that is not the
+        // first one, just to speed up startup, until I figure out how to make it faster
+        if (entry.index >= 1 && entry.index <= 44)
+            continue;
+
         loadResource(context, &entry);
     }
 

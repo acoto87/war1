@@ -49,9 +49,9 @@ void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *p
 
         for (s32 i = 128; i < 256; ++i)
         {
-            if (!(paletteData[i * 3 + 0] == 252 && 
-                  paletteData[i * 3 + 1] == 0 && 
-                  paletteData[i * 3 + 2] == 252))
+            if (!(palette2Data[i * 3 + 0] == 252 && 
+                  palette2Data[i * 3 + 1] == 0 && 
+                  palette2Data[i * 3 + 2] == 252))
             {
                 paletteData[i * 3 + 0] = palette2Data[i * 3 + 0];
                 paletteData[i * 3 + 1] = palette2Data[i * 3 + 1];

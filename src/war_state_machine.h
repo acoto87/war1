@@ -27,7 +27,7 @@ WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeT
 WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime);
 WarState* createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
 WarState* createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
-WarState* createCastState(WarContext* context, WarEntity* entity, WarUnitCommandType spellType, vec2 targetTile, bool loop);
+WarState* createCastState(WarContext* context, WarEntity* entity, vec2 targetTile);
 
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState);
 bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* state);

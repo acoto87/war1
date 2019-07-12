@@ -386,7 +386,7 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
     }
 }
 
-void executeCastCommand(WarContext* context, WarUnitCommandType spellType, vec2 targetTile, bool loop)
+void executeCastCommand(WarContext* context, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -397,10 +397,33 @@ void executeCastCommand(WarContext* context, WarUnitCommandType spellType, vec2 
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        if (isMagicUnit(entity))
+        if (isConjurerUnit(entity))
         {
-            WarState* castState = createCastState(context, entity, spellType, targetTile, loop);
+            WarState* castState = createCastState(context, entity, targetTile);
             changeNextState(context, entity, castState, true, true);
+        }
+    }
+}
+
+void executePoisonCloudCommand(WarContext* context, vec2 targetTile)
+{
+    WarMap* map = context->map;
+
+    s32 selEntitiesCount = map->selectedEntities.count;
+    for(s32 i = 0; i < selEntitiesCount; i++)
+    {
+        WarEntityId entityId = map->selectedEntities.items[i];
+        WarEntity* entity = findEntity(context, entityId);
+        assert(entity);
+
+        if (isConjurerUnit(entity))
+        {
+            WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
+            addPoisonCloudComponent(context, poisonCloud, targetTile);
+
+            vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+            sprintf(poisonCloud->poisonCloud.animName, "poison_cloud_%.2f_%.2f", targetTilePosition.x, targetTilePosition.y);
+            createPoisonCloudAnimation(context, targetTilePosition, poisonCloud->poisonCloud.animName);
         }
     }
 }
@@ -815,6 +838,24 @@ bool executeCommand(WarContext* context)
         }
 
         case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    executeCastCommand(context, targetTile);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
         case WAR_COMMAND_SPELL_POISON_CLOUD:
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
@@ -824,8 +865,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    executeCastCommand(context, WAR_COMMAND_SPELL_POISON_CLOUD, targetTile, false);
-                    // executeCastCommand(context, command->type, targetTile, command->type == WAR_COMMAND_SPELL_RAIN_OF_FIRE);
+                    executePoisonCloudCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;

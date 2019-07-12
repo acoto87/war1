@@ -63,8 +63,9 @@ List of thing to do in no particular order
   * When a unit attacks a unit that is attacking a building, the second unit should stop the attack on the building and attack the first unit.
   * Use `entityTilePositionInRange` to calculate near units? used in splash damage.
   * When attacking a wall, if the units isn't within range, it will walk to the piece's position without considering its range of attack. That's because move state is being used in this case, instead of follow when attacking an unit.
-  * Fix colors of Rain of Fire portrait
-  * Fix colors of Poison Cloud
+  * ~~Fix colors of Rain of Fire portrait~~
+  * ~~Fix colors of Poison Cloud~~
+  * ~~Fix orc maps tile displacements~~
   * Check the uses of `context->deltaTime` when the speed of the game is not `1`.
 
 * General

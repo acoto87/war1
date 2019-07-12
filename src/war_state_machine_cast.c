@@ -1,9 +1,7 @@
-WarState* createCastState(WarContext* context, WarEntity* entity, WarUnitCommandType spellType, vec2 targetTile, bool loop)
+WarState* createCastState(WarContext* context, WarEntity* entity, vec2 targetTile)
 {
     WarState* state = createState(context, entity, WAR_STATE_CAST);
-    state->cast.spellType = spellType;
     state->cast.targetTile = targetTile;
-    state->cast.loop = loop;
     return state;
 }
 
@@ -25,8 +23,6 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
 
     vec2 targetTile = state->cast.targetTile;
-    WarUnitCommandType spellType = state->cast.spellType;
-    bool loop = state->cast.loop;
     
     if(!entityTilePositionInRange(entity, targetTile, 12))
     {
@@ -48,44 +44,23 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitAction* action = unit->actions.items[unit->actionIndex];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
-        WarSpellStats stats = getSpellStats(spellType);
+        WarSpellStats stats = getSpellStats(WAR_COMMAND_SPELL_RAIN_OF_FIRE);
         if (decreaseUnitMana(context, entity, stats.manaCost))
         {
-            switch (spellType)
+            vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+            s32 radius = 2 * MEGA_TILE_WIDTH;
+
+            s32 projectilesCount = 5;
+            while (projectilesCount--)
             {
-                case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
-                {
-                    WarEntity* rainOfFire = createEntity(context, WAR_ENTITY_TYPE_RAIN_OF_FIRE, true);
-                    addRainOfFireComponent(context, rainOfFire, targetTile);
-                    break;
-                }
+                f32 offsetx = randomf(-radius, radius);
+                f32 offsety = randomf(-radius, radius);
+                vec2 target = vec2Addv(targetTilePosition, vec2f(offsetx, offsety));
 
-                case WAR_COMMAND_SPELL_POISON_CLOUD:
-                {
-                    WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
-                    addPoisonCloudComponent(context, poisonCloud, targetTile);
+                offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
+                vec2 origin = vec2f(target.x, map->viewport.y - offsety);
 
-                    vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
-                    sprintf(poisonCloud->poisonCloud.animName, "poison_cloud_%.2f_%.2f", targetTilePosition.x, targetTilePosition.y);
-                    createPoisonCloudAnimation(context, targetTilePosition, poisonCloud->poisonCloud.animName);
-                    break;
-                }
-
-                default:
-                {
-                    logWarning("Trying to cast a spell with typ: %d\n", spellType);
-                    break;
-                }
-            }
-
-            // if the spell caster doesn't stick there casting, then go idle
-            // (e.g. Warlocks cast the poison cloud and then go away, but the Conjurer
-            // sticks casting the rain of fire until it rans out of mana or a different
-            // order is given to it)
-            if (!loop)
-            {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
             }
         }
         else

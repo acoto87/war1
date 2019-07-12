@@ -570,40 +570,40 @@ shlDefineList(WarEntityIdList, WarEntityId)
 typedef enum
 {
     WAR_FEATURE_UNIT_FOOTMAN,
-    WAR_FEATURE_UNIT_GRUNT = WAR_FEATURE_UNIT_FOOTMAN,
+    WAR_FEATURE_UNIT_GRUNT,
     WAR_FEATURE_UNIT_PEASANT,
-    WAR_FEATURE_UNIT_PEON = WAR_FEATURE_UNIT_PEASANT,
+    WAR_FEATURE_UNIT_PEON,
     WAR_FEATURE_UNIT_CATAPULT,
     WAR_FEATURE_UNIT_KNIGHT,
-    WAR_FEATURE_UNIT_RAIDER = WAR_FEATURE_UNIT_KNIGHT,
+    WAR_FEATURE_UNIT_RAIDER,
     WAR_FEATURE_UNIT_ARCHER,
-    WAR_FEATURE_UNIT_SPEARMAN = WAR_FEATURE_UNIT_ARCHER,
+    WAR_FEATURE_UNIT_SPEARMAN,
     WAR_FEATURE_UNIT_CONJURER,
-    WAR_FEATURE_UNIT_WARLOCK = WAR_FEATURE_UNIT_CONJURER,
+    WAR_FEATURE_UNIT_WARLOCK,
     WAR_FEATURE_UNIT_CLERIC,
-    WAR_FEATURE_UNIT_NECROLYTE = WAR_FEATURE_UNIT_CLERIC,
+    WAR_FEATURE_UNIT_NECROLYTE,
     WAR_FEATURE_UNIT_FARM,
     WAR_FEATURE_UNIT_BARRACKS,
     WAR_FEATURE_UNIT_CHURCH,
-    WAR_FEATURE_UNIT_TEMPLE = WAR_FEATURE_UNIT_CHURCH,
+    WAR_FEATURE_UNIT_TEMPLE,
     WAR_FEATURE_UNIT_TOWER,
     WAR_FEATURE_UNIT_TOWN_HALL,
     WAR_FEATURE_UNIT_LUMBER_MILL,
     WAR_FEATURE_UNIT_STABLE,
-    WAR_FEATURE_UNIT_KENNEL = WAR_FEATURE_UNIT_STABLE,
+    WAR_FEATURE_UNIT_KENNEL,
     WAR_FEATURE_UNIT_BLACKSMITH,
     WAR_FEATURE_SPELL_HEALING,
-    WAR_FEATURE_SPELL_RAISE_DEAD = WAR_FEATURE_SPELL_HEALING,
+    WAR_FEATURE_SPELL_RAISE_DEAD,
     WAR_FEATURE_SPELL_FAR_SIGHT,
-    WAR_FEATURE_SPELL_DARK_VISION = WAR_FEATURE_SPELL_FAR_SIGHT,
+    WAR_FEATURE_SPELL_DARK_VISION,
     WAR_FEATURE_SPELL_INVISIBILITY,
-    WAR_FEATURE_SPELL_UNHOLY_ARMOR = WAR_FEATURE_SPELL_INVISIBILITY,
+    WAR_FEATURE_SPELL_UNHOLY_ARMOR,
     WAR_FEATURE_SPELL_SCORPION,
-    WAR_FEATURE_SPELL_SPIDER = WAR_FEATURE_SPELL_SCORPION,
+    WAR_FEATURE_SPELL_SPIDER,
     WAR_FEATURE_SPELL_RAIN_OF_FIRE,
-    WAR_FEATURE_SPELL_POISON_CLOUD = WAR_FEATURE_SPELL_RAIN_OF_FIRE,
+    WAR_FEATURE_SPELL_POISON_CLOUD,
     WAR_FEATURE_SPELL_WATER_ELEMENTAL,
-    WAR_FEATURE_SPELL_DAEMON = WAR_FEATURE_SPELL_WATER_ELEMENTAL,
+    WAR_FEATURE_SPELL_DAEMON,
     WAR_FEATURE_UNIT_ROAD,
     WAR_FEATURE_UNIT_WALL,
 } WarFeatureType;
@@ -611,23 +611,23 @@ typedef enum
 typedef enum
 {
     WAR_UPGRADE_ARROWS,
-    WAR_UPGRADE_SPEARS = WAR_UPGRADE_ARROWS,
+    WAR_UPGRADE_SPEARS,
     WAR_UPGRADE_SWORDS,
-    WAR_UPGRADE_AXES = WAR_UPGRADE_SWORDS,
+    WAR_UPGRADE_AXES,
     WAR_UPGRADE_HORSES,
-    WAR_UPGRADE_WOLVES = WAR_UPGRADE_HORSES,
+    WAR_UPGRADE_WOLVES,
     WAR_UPGRADE_SCORPIONS,
-    WAR_UPGRADE_SPIDERS = WAR_UPGRADE_SCORPIONS,
+    WAR_UPGRADE_SPIDERS,
     WAR_UPGRADE_RAIN_OF_FIRE,
-    WAR_UPGRADE_POISON_CLOUD = WAR_UPGRADE_RAIN_OF_FIRE,
+    WAR_UPGRADE_POISON_CLOUD,
     WAR_UPGRADE_WATER_ELEMENTAL,
-    WAR_UPGRADE_DAEMON = WAR_UPGRADE_WATER_ELEMENTAL,
+    WAR_UPGRADE_DAEMON,
     WAR_UPGRADE_HEALING,
-    WAR_UPGRADE_RAISE_DEAD = WAR_UPGRADE_HEALING,
+    WAR_UPGRADE_RAISE_DEAD,
     WAR_UPGRADE_FAR_SIGHT,
-    WAR_UPGRADE_DARK_VISION = WAR_UPGRADE_FAR_SIGHT,
+    WAR_UPGRADE_DARK_VISION,
     WAR_UPGRADE_INVISIBILITY,
-    WAR_UPGRADE_UNHOLY_ARMOR = WAR_UPGRADE_INVISIBILITY,
+    WAR_UPGRADE_UNHOLY_ARMOR,
     WAR_UPGRADE_SHIELD,
 } WarUpgradeType;
 
@@ -1198,9 +1198,7 @@ typedef struct _WarState
 
         struct
         {
-            WarUnitCommandType spellType;
             vec2 targetTile;
-            bool loop;
         } cast;
     };
 } WarState;
@@ -1575,15 +1573,6 @@ typedef struct
 {
     bool enabled;
     vec2 position;
-    s32 radius; // in tiles
-    s32 projectilesCount; // the amount or projectiles to drop
-} WarRainOfFireComponent;
-
-typedef struct
-{
-    bool enabled;
-    vec2 position;
-    s32 radius; // in tiles
     f32 time; // time in seconds left of the spell
     f32 damageTime; // time in seconds left to inflict damage
     char animName[30];
@@ -1610,7 +1599,6 @@ typedef struct _WarEntity
     WarAudioComponent audio;
     WarCursorComponent cursor;
     WarProjectileComponent projectile;
-    WarRainOfFireComponent rainOfFire;
     WarPoisonCloudComponent poisonCloud;
 } WarEntity;
 
@@ -1703,18 +1691,18 @@ typedef struct
 #define isOrcPlayer(player) ((player)->race == WAR_RACE_ORCS)
 #define isNeutralPlayer(player) ((player)->race == WAR_RACE_NEUTRAL)
 
-#define isFeatureAllowed(player, feature) \
-    ((player)->features[(feature)])
+#define isFeatureAllowed(player, feature) ((player)->features[(feature)/2])
 
+#define incUpgradeLevel(player, upgrade) ((player)->upgrades[(upgrade)/2].level++)
 #define hasAnyUpgrade(player, upgrade) \
-    ((player)->upgrades[(upgrade)].allowed > 0 && \
-     (player)->upgrades[(upgrade)].level > 0)
+    ((player)->upgrades[(upgrade)/2].allowed > 0 && \
+     (player)->upgrades[(upgrade)/2].level > 0)
 #define hasRemainingUpgrade(player, upgrade) \
-    ((player)->upgrades[(upgrade)].level < (player)->upgrades[(upgrade)].allowed)
+    ((player)->upgrades[(upgrade)/2].level < (player)->upgrades[(upgrade)/2].allowed)
 #define getUpgradeLevel(player, upgrade) \
-    ((player)->upgrades[(upgrade)].level)
+    ((player)->upgrades[(upgrade)/2].level)
 #define checkUpgradeLevel(player, upgrade) \
-    ((player)->upgrades[(upgrade)].level <= (player)->upgrades[(upgrade)].allowed)
+    ((player)->upgrades[(upgrade)/2].level <= (player)->upgrades[(upgrade)/2].allowed)
 
 typedef struct
 {

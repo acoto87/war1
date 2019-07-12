@@ -85,7 +85,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
-    map->tilesetType = MAP_TILESET_FOREST;
+    map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
     map->scrollSpeed = 200;
 
     map->leftTopPanel = recti(0, 0, 72, 72);
@@ -333,12 +333,26 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             map->players[i].wood = levelInfo->levelInfo.lumber[i];
 
             for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
-                map->players[i].features[j] = true; //levelInfo->levelInfo.allowedFeatures[j];
+            {
+                map->players[i].features[j] = levelInfo->levelInfo.allowedFeatures[j];
+
+                // REMOVE THIS: This is only for testing
+                if (levelInfoIndex == 117)
+                    map->players[i].features[j] = true;
+                else if (levelInfoIndex == 118)
+                    map->players[i].features[j] = true;
+            }
 
             for (s32 j = 0; j < MAX_UPGRADES_COUNT; j++)
             {
-                map->players[i].upgrades[j].allowed = 2; // levelInfo->levelInfo.allowedUpgrades[j][i];
+                map->players[i].upgrades[j].allowed = levelInfo->levelInfo.allowedUpgrades[j][i];
                 map->players[i].upgrades[j].level = 0;
+
+                // REMOVE THIS: This is only for testing
+                if (levelInfoIndex == 117)
+                    map->players[i].upgrades[j].allowed = 2;
+                else if (levelInfoIndex == 118)
+                    map->players[i].upgrades[j].allowed = 2;
             }
         }
     }
@@ -348,19 +362,42 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
-            if (startUnit.type == WAR_UNIT_FOOTMAN)
-                startUnit.type = WAR_UNIT_CONJURER;
+
+            // REMOVE THIS: This is only for testing
+            if (levelInfoIndex == 117)
+            {
+                if (startUnit.type == WAR_UNIT_FOOTMAN)
+                    startUnit.type = WAR_UNIT_CONJURER;
+            }
+            else if (levelInfoIndex == 118)
+            {
+                if (startUnit.type == WAR_UNIT_GRUNT)
+                    startUnit.type = WAR_UNIT_WARLOCK;
+            }
             
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
                        startUnit.resourceKind, startUnit.amount, true);
         }
 
-        createBuilding(context, WAR_UNIT_BARRACKS_HUMANS, 37, 18, 0, false);
-        createBuilding(context, WAR_UNIT_LUMBERMILL_HUMANS, 36, 22, 0, false);
-        createBuilding(context, WAR_UNIT_BLACKSMITH_HUMANS, 40, 16, 0, false);
-        createBuilding(context, WAR_UNIT_CHURCH, 45, 22, 0, false);
-        createBuilding(context, WAR_UNIT_STABLE, 45, 18, 0, false);
-        createBuilding(context, WAR_UNIT_TOWER_HUMANS, 34, 16, 0, false);
+        // REMOVE THIS: This is only for testing
+        if (levelInfoIndex == 117)
+        {
+            createBuilding(context, WAR_UNIT_BARRACKS_HUMANS, 37, 18, 0, false);
+            createBuilding(context, WAR_UNIT_LUMBERMILL_HUMANS, 36, 22, 0, false);
+            createBuilding(context, WAR_UNIT_BLACKSMITH_HUMANS, 40, 16, 0, false);
+            createBuilding(context, WAR_UNIT_CHURCH, 45, 22, 0, false);
+            createBuilding(context, WAR_UNIT_STABLE, 45, 18, 0, false);
+            createBuilding(context, WAR_UNIT_TOWER_HUMANS, 34, 16, 0, false);
+        }
+        else if (levelInfoIndex == 118)
+        {
+            createBuilding(context, WAR_UNIT_BARRACKS_ORCS, 48, 30, 0, false);
+            createBuilding(context, WAR_UNIT_LUMBERMILL_ORCS, 47, 27, 0, false);
+            createBuilding(context, WAR_UNIT_BLACKSMITH_ORCS, 58, 26, 0, false);
+            createBuilding(context, WAR_UNIT_TEMPLE, 48, 23, 0, false);
+            createBuilding(context, WAR_UNIT_KENNEL, 57, 22, 0, false);
+            createBuilding(context, WAR_UNIT_TOWER_ORCS, 51, 21, 0, false);
+        }
     }
 
     // add ui entities
@@ -1404,12 +1441,10 @@ void updateStatus(WarContext* context)
         flashStatus->enabled = false;
     }
 
-    char* statusText = NULL;
+    char statusText[50];
     s32 highlightIndex = NO_HIGHLIGHT;
     s32 goldCost = 0;
     s32 woodCost = 0;
-
-    bool freeStatusText = false;
 
     if (map->selectedEntities.count > 0)
     {
@@ -1428,7 +1463,7 @@ void updateStatus(WarContext* context)
                     WarUnitCommandMapping commandMapping = getCommandMappingFromUnitType(unitToBuild);
                     WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
 
-                    statusText = commandData.tooltip2;
+                    strcpy(statusText, commandData.tooltip2);
                     highlightIndex = NO_HIGHLIGHT;
                     goldCost = 0;
                     woodCost = 0;
@@ -1440,7 +1475,7 @@ void updateStatus(WarContext* context)
                     WarUnitCommandMapping commandMapping = getCommandMappingFromUpgradeType(upgradeToBuild);
                     WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
                     
-                    statusText = commandData.tooltip2;
+                    strcpy(statusText, commandData.tooltip2);
                     highlightIndex = NO_HIGHLIGHT;
                     goldCost = 0;
                     woodCost = 0;
@@ -1457,11 +1492,7 @@ void updateStatus(WarContext* context)
                         // wood and gold would be 200 * 0.12 = 24.
                         //
                         s32 repairCost = (s32)ceil((maxhp - hp) * 0.12f);
-
-                        statusText = (char*)xmalloc(50);
                         sprintf(statusText, "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
-                        freeStatusText = true;
-
                         highlightIndex = NO_HIGHLIGHT;
                         goldCost = 0;
                         woodCost = 0;
@@ -1474,11 +1505,11 @@ void updateStatus(WarContext* context)
                 {
                     if (selectedEntity->unit.resourceKind == WAR_RESOURCE_GOLD)
                     {
-                        statusText = "CARRYING GOLD";
+                        strcpy(statusText, "CARRYING GOLD");
                     }
                     else if (selectedEntity->unit.resourceKind == WAR_RESOURCE_WOOD)
                     {
-                        statusText = "CARRYING LUMBER";
+                        strcpy(statusText, "CARRYING LUMBER");
                     }
 
                     highlightIndex = NO_HIGHLIGHT;
@@ -1498,7 +1529,7 @@ void updateStatus(WarContext* context)
             WarButtonComponent* button = &entity->button;
             if (button->hot)
             {
-                statusText = button->tooltip;
+                strcpy(statusText, button->tooltip);
                 goldCost = button->gold;
                 woodCost = button->wood;
                 highlightIndex = button->highlightIndex;
@@ -1508,11 +1539,6 @@ void updateStatus(WarContext* context)
     }
 
     setStatus(context, highlightIndex, goldCost, woodCost, statusText);
-
-    if (freeStatusText)
-    {
-        free(statusText);
-    }
 }
 
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type)
@@ -1762,29 +1788,6 @@ void updateMagic(WarContext* context)
     }
 }
 
-bool updateRainOfFire(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-    WarRainOfFireComponent* rainOfFire = &entity->rainOfFire;
-
-    vec2 position = vec2TileToMapCoordinates(rainOfFire->position, true);
-    s32 radius = rainOfFire->radius * MEGA_TILE_WIDTH;
-
-    while (rainOfFire->projectilesCount--)
-    {
-        f32 offsetx = randomf(-radius, radius);
-        f32 offsety = randomf(-radius, radius);
-        vec2 target = vec2Addv(position, vec2f(offsetx, offsety));
-
-        offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
-        vec2 origin = vec2f(target.x, map->viewport.y - offsety);
-
-        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
-    }
-
-    return true;
-}
-
 bool updatePoisonCloud(WarContext* context, WarEntity* entity)
 {
     WarPoisonCloudComponent* poisonCloud = &entity->poisonCloud;
@@ -1794,7 +1797,7 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
 
     if (poisonCloud->damageTime <= 0)
     {
-        WarEntityList* nearUnits = getNearUnits(context, poisonCloud->position, poisonCloud->radius);
+        WarEntityList* nearUnits = getNearUnits(context, poisonCloud->position, 2);
         for (s32 i = 0; i < nearUnits->count; i++)
         {
             WarEntity* targetEntity = nearUnits->items[i];
@@ -1819,19 +1822,6 @@ void updateSpells(WarContext* context)
 
     WarEntityIdList spellsToRemove;
     WarEntityIdListInit(&spellsToRemove, WarEntityIdListDefaultOptions);
-
-    WarEntityList* rainOfFireSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_RAIN_OF_FIRE);
-    for (s32 i = 0; i < rainOfFireSpells->count; i++)
-    {
-        WarEntity* entity = rainOfFireSpells->items[i];
-        if (entity)
-        {
-            if (updateRainOfFire(context, entity))
-            {
-                WarEntityIdListAdd(&spellsToRemove, entity->id);
-            }
-        }
-    }
 
     WarEntityList* poisonCloudSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_POISON_CLOUD);
     for (s32 i = 0; i < poisonCloudSpells->count; i++)

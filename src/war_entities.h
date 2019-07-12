@@ -62,6 +62,9 @@ void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectil
                             vec2 origin, vec2 target, s32 speed);
 void removeProjectileComponent(WarContext* context, WarEntity* entity);
 
+void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position);
+void removePoisonCloudComponent(WarContext* context, WarEntity* entity);
+
 // Roads
 WarEntity* createRoad(WarContext* context);
 void addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player);
