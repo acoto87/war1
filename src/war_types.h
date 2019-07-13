@@ -633,6 +633,24 @@ typedef enum
 
 typedef enum
 {
+    WAR_SPELL_HEALING,
+    WAR_SPELL_FAR_SIGHT,
+    WAR_SPELL_INVISIBILITY,
+    WAR_SPELL_RAIN_OF_FIRE,
+    WAR_SPELL_POISON_CLOUD,
+    WAR_SPELL_RAISE_DEAD,
+    WAR_SPELL_DARK_VISION,
+    WAR_SPELL_UNHOLY_ARMOR,
+
+    // summons
+    WAR_SUMMON_SPIDER,
+    WAR_SUMMON_SCORPION,
+    WAR_SUMMON_DAEMON,
+    WAR_SUMMON_WATER_ELEMENTAL,
+} WarSpellType;
+
+typedef enum
+{
     WAR_COMMAND_NONE, // 0
 
     // unit commands
@@ -1252,6 +1270,7 @@ typedef struct
     s32 minDamage;
     s32 rndDamage;
     s32 decay;
+    bool invisible;
 
     // index of the array of speeds of the unit
     s32 speed;
@@ -1260,8 +1279,10 @@ typedef struct
     s32 actionIndex;
     WarUnitActionList actions;
 
-    // time reminder (in seconds) until mana is regenerated
+    // time remainder (in seconds) until mana is regenerated
     f32 manaRegenTime;
+    // time remainder (in seconds) until the unit invisiblity ceases
+    f32 invisibilityTime;
 } WarUnitComponent;
 
 typedef struct

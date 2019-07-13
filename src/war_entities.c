@@ -318,12 +318,12 @@ void removeCursorComponent(WarContext* context, WarEntity* entity)
     entity->cursor = (WarCursorComponent){0};
 }
 
-void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position)
+void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
 {
     entity->poisonCloud = (WarPoisonCloudComponent){0};
     entity->poisonCloud.enabled = true;
     entity->poisonCloud.position = position;
-    entity->poisonCloud.time = getScaledTime(context, 10);
+    entity->poisonCloud.time = time;
     entity->poisonCloud.damageTime = 0;
 }
 
@@ -851,6 +851,15 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
     {
         nvgSave(gfx);
 
+        if (isDudeUnit(entity))
+        {
+            WarUnitComponent* unit = &entity->unit;
+            if (unit->invisible)
+            {
+                nvgGlobalAlpha(gfx, 0.5f);
+            }
+        }
+
         WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
         updateSpriteImage(context, sprite->sprite, frame.data);
         renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
@@ -1288,6 +1297,30 @@ void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
     player->wood += wood;
 }
 
+bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+
+    unit->hp += hp;
+    unit->hp = min(unit->hp, unit->maxhp);
+
+    return true;
+}
+
+bool decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+
+    unit->hp -= hp;
+    unit->hp = max(unit->hp, 0);
+
+    return true;
+}
+
 bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 {
     assert(isUnit(entity));
@@ -1406,8 +1439,13 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
         WarEntity* other = entities->items[i];
         if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
         {
-            vec2 targetPosition = getUnitCenterPosition(other, true);
-            if (vec2Distance(position, targetPosition) <= NEAR_ENEMY_RADIUS)
+            if (isUnit(other))
+            {
+                if (other->unit.invisible)
+                    continue;
+            }
+
+            if (entityTilePositionInRange(other, position, NEAR_ENEMY_RADIUS))
             {
                 return other;
             }
@@ -1461,9 +1499,8 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
 
     // Minimal damage + [Random damage - Enemy's Armor]
     s32 damage = getTotalDamage(minDamage, rndDamage, unit->armor);
-    unit->hp -= damage;
-    unit->hp = max(unit->hp, 0);
-
+    decreaseUnitHp(context, entity, damage);
+    
     if (unit->hp == 0)
     {
         if (isBuildingUnit(entity))

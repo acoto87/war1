@@ -92,6 +92,10 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitAction* action = unit->actions.items[unit->actionIndex];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
+        // when the unit begin an attack, it is not invisible anymore
+        unit->invisible = false;
+        unit->invisibilityTime = 0;
+        
         // do damage
         if (isUnit(targetEntity))
         {

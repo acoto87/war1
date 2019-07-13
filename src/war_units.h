@@ -649,27 +649,69 @@ const WarUpgradeStats upgradeStats[] =
 
 typedef struct
 {
-    WarUnitCommandType type;
+    WarSpellType type;
+    s32 portraitFrameIndex;
+} WarSpellData;
+
+const WarSpellData spellData[] =
+{
+    // summons
+    { WAR_SUMMON_SPIDER,            WAR_PORTRAIT_SPIDER             },
+    { WAR_SUMMON_SCORPION,          WAR_PORTRAIT_SCORPION           },
+    { WAR_SUMMON_DAEMON,            WAR_PORTRAIT_DAEMON             },
+    { WAR_SUMMON_WATER_ELEMENTAL,   WAR_PORTRAIT_WATER_ELEMENTAL    },
+    
+    // spells
+    { WAR_SPELL_HEALING,            WAR_PORTRAIT_HEALING            },
+    { WAR_SPELL_FAR_SIGHT,          WAR_PORTRAIT_FAR_SIGHT          },
+    { WAR_SPELL_INVISIBILITY,       WAR_PORTRAIT_INVISIBILITY       },
+    { WAR_SPELL_RAIN_OF_FIRE,       WAR_PORTRAIT_RAIN_OF_FIRE       },
+    { WAR_SPELL_RAISE_DEAD,         WAR_PORTRAIT_RAISE_DEAD         },
+    { WAR_SPELL_DARK_VISION,        WAR_PORTRAIT_DARK_VISION        },
+    { WAR_SPELL_UNHOLY_ARMOR,       WAR_PORTRAIT_UNHOLY_ARMOR       },
+    { WAR_SPELL_POISON_CLOUD,       WAR_PORTRAIT_POISON_CLOUD       },
+};
+
+typedef struct
+{
+    WarSpellType type;
     s32 manaCost;
+    f32 time;
+    s32 range;
 } WarSpellStats;
 
 const WarSpellStats spellStats[] =
 {
-    // spells
-    { WAR_COMMAND_SPELL_HEALING,             10 },
-    { WAR_COMMAND_SPELL_FAR_SIGHT,           10 },
-    { WAR_COMMAND_SPELL_INVISIBILITY,        10 },
-    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,        25 },
-    { WAR_COMMAND_SPELL_POISON_CLOUD,        25 },
-    { WAR_COMMAND_SPELL_RAISE_DEAD,          10 },
-    { WAR_COMMAND_SPELL_DARK_VISION,         10 },
-    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,        10 },
-
     // summons
-    { WAR_COMMAND_SUMMON_SPIDER,             51 },
-    { WAR_COMMAND_SUMMON_SCORPION,           51 },
-    { WAR_COMMAND_SUMMON_DAEMON,            250 },
-    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   250 },
+    { WAR_SUMMON_SPIDER,             51,  0,  0 },
+    { WAR_SUMMON_SCORPION,           51,  0,  0 },
+    { WAR_SUMMON_DAEMON,            255,  0,  0 },
+    { WAR_SUMMON_WATER_ELEMENTAL,   250,  0,  0 },
+
+    // spells
+    { WAR_SPELL_HEALING,              6,  0,  6 },
+    { WAR_SPELL_FAR_SIGHT,           70,  0,  0 },
+    { WAR_SPELL_INVISIBILITY,       200, 50,  6 },
+    { WAR_SPELL_RAIN_OF_FIRE,        25,  0, 12 },
+    { WAR_SPELL_RAISE_DEAD,          50,  0,  6 },
+    { WAR_SPELL_DARK_VISION,         50,  0,  0 },
+    { WAR_SPELL_UNHOLY_ARMOR,        10, 13,  6 },
+    { WAR_SPELL_POISON_CLOUD,       100, 10, 12 },
+};
+
+typedef struct
+{
+    WarSpellType type;
+    s32 mappedType;
+} WarSpellMapping;
+
+const WarSpellMapping spellMappings[] = 
+{
+    // summon
+    { WAR_SUMMON_SPIDER,            WAR_UNIT_SPIDER             },
+    { WAR_SUMMON_SCORPION,          WAR_UNIT_SCORPION           },
+    { WAR_SUMMON_DAEMON,            WAR_UNIT_DAEMON             },
+    { WAR_SUMMON_WATER_ELEMENTAL,   WAR_UNIT_WATER_ELEMENTAL    },
 };
 
 typedef struct
@@ -713,14 +755,14 @@ const WarUnitCommandBaseData commandBaseData[] =
     { WAR_COMMAND_TRAIN_NECROLYTE,          trainNecrolyte,         WAR_KEY_T,          0, "TRAIN NECROLYTE",              "TRAINING A NECROLYTE"      },
    
     // spell commands
-    { WAR_COMMAND_SPELL_HEALING,            NULL,                   WAR_KEY_H,          0, "HEALING",                      ""                          },
+    { WAR_COMMAND_SPELL_HEALING,            castHeal,               WAR_KEY_H,          0, "HEALING",                      ""                          },
     { WAR_COMMAND_SPELL_POISON_CLOUD,       castPoisonCloud,        WAR_KEY_P,          9, "CLOUD OF POISON",              ""                          },
-    { WAR_COMMAND_SPELL_FAR_SIGHT,          NULL,                   WAR_KEY_F,          0, "FAR SEEING",                   ""                          },
-    { WAR_COMMAND_SPELL_DARK_VISION,        NULL,                   WAR_KEY_D,          0, "DARK VISION",                  ""                          },
-    { WAR_COMMAND_SPELL_INVISIBILITY,       NULL,                   WAR_KEY_I,          0, "INVISIBILITY",                 ""                          },
-    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       NULL,                   WAR_KEY_U,          0, "UNHOLY ARMOR",                 ""                          },
+    { WAR_COMMAND_SPELL_FAR_SIGHT,          castFarSight,           WAR_KEY_F,          0, "FAR SEEING",                   ""                          },
+    { WAR_COMMAND_SPELL_DARK_VISION,        castDarkVision,         WAR_KEY_D,          0, "DARK VISION",                  ""                          },
+    { WAR_COMMAND_SPELL_INVISIBILITY,       castInvisibility,       WAR_KEY_I,          0, "INVISIBILITY",                 ""                          },
+    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       castUnHolyArmor,        WAR_KEY_U,          0, "UNHOLY ARMOR",                 ""                          },
     { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       castRainOfFire,         WAR_KEY_R,          0, "RAIN OF FIRE",                 ""                          },
-    { WAR_COMMAND_SPELL_RAISE_DEAD,         NULL,                   WAR_KEY_R,          0, "RAISE DEAD",                   ""                          },
+    { WAR_COMMAND_SPELL_RAISE_DEAD,         castRaiseDead,          WAR_KEY_R,          0, "RAISE DEAD",                   ""                          },
 
     // summons
     { WAR_COMMAND_SUMMON_SCORPION,          summonScorpion,         WAR_KEY_O,          9, "SUMMON SCORPIONS",             ""                          },
@@ -777,10 +819,9 @@ const WarUnitCommandBaseData commandBaseData[] =
 typedef struct
 {
     WarUnitCommandType type;
-    s32 unitOrUpgradeType;
+    s32 mappedType;
 } WarUnitCommandMapping;
 
-// this is a mapping between a type of command and the unit it affects
 const WarUnitCommandMapping commandMappings[] = 
 {
     // train commands
@@ -798,12 +839,6 @@ const WarUnitCommandMapping commandMappings[] =
     { WAR_COMMAND_TRAIN_WARLOCK,            WAR_UNIT_WARLOCK            },
     { WAR_COMMAND_TRAIN_CLERIC,             WAR_UNIT_CLERIC             },
     { WAR_COMMAND_TRAIN_NECROLYTE,          WAR_UNIT_NECROLYTE          },
-
-    // summon commands
-    { WAR_COMMAND_SUMMON_SPIDER,            WAR_UNIT_SPIDER             },
-    { WAR_COMMAND_SUMMON_SCORPION,          WAR_UNIT_SCORPION           },
-    { WAR_COMMAND_SUMMON_DAEMON,            WAR_UNIT_DAEMON             },
-    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   WAR_UNIT_WATER_ELEMENTAL    },
 
     // build commands
     { WAR_COMMAND_BUILD_FARM_HUMANS,        WAR_UNIT_FARM_HUMANS        },
@@ -845,9 +880,21 @@ const WarUnitCommandMapping commandMappings[] =
     { WAR_COMMAND_UPGRADE_INVISIBILITY,     WAR_UPGRADE_INVISIBILITY    },
     { WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,     WAR_UPGRADE_UNHOLY_ARMOR    },
 
+    // summon commands
+    { WAR_COMMAND_SUMMON_SPIDER,            WAR_SUMMON_SPIDER           },
+    { WAR_COMMAND_SUMMON_SCORPION,          WAR_SUMMON_SCORPION         },
+    { WAR_COMMAND_SUMMON_DAEMON,            WAR_SUMMON_DAEMON           },
+    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   WAR_SUMMON_WATER_ELEMENTAL  },
+
     // spells
-    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       WAR_UPGRADE_RAIN_OF_FIRE    },
-    { WAR_COMMAND_SPELL_POISON_CLOUD,       WAR_UPGRADE_POISON_CLOUD    }
+    { WAR_COMMAND_SPELL_HEALING,            WAR_SPELL_HEALING           },
+    { WAR_COMMAND_SPELL_FAR_SIGHT,          WAR_SPELL_FAR_SIGHT         },
+    { WAR_COMMAND_SPELL_INVISIBILITY,       WAR_SPELL_INVISIBILITY      },
+    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       WAR_SPELL_RAIN_OF_FIRE      },
+    { WAR_COMMAND_SPELL_RAISE_DEAD,         WAR_SPELL_RAISE_DEAD        },
+    { WAR_COMMAND_SPELL_DARK_VISION,        WAR_SPELL_DARK_VISION       },
+    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       WAR_SPELL_UNHOLY_ARMOR      },
+    { WAR_COMMAND_SPELL_POISON_CLOUD,       WAR_SPELL_POISON_CLOUD      },
 };
 
 typedef struct
@@ -950,6 +997,17 @@ WarUpgradeData getUpgradeData(WarUpgradeType type)
     return upgradeData[index];
 }
 
+WarSpellData getSpellData(WarSpellType type)
+{
+    s32 index = 0;
+    s32 length = arrayLength(spellData);
+    while (index < length && spellData[index].type != type)
+        index++;
+
+    assert(index < length);
+    return spellData[index];
+}
+
 WarUnitStats getUnitStats(WarUnitType type)
 {
     s32 index = 0;
@@ -983,7 +1041,7 @@ WarUpgradeStats getUpgradeStats(WarUpgradeType type)
     return upgradeStats[index];
 }
 
-WarSpellStats getSpellStats(WarUnitCommandType type)
+WarSpellStats getSpellStats(WarSpellType type)
 {
     s32 index = 0;
     s32 length = arrayLength(spellStats);
@@ -992,6 +1050,17 @@ WarSpellStats getSpellStats(WarUnitCommandType type)
 
     assert(index < length);
     return spellStats[index];
+}
+
+WarSpellMapping getSpellMapping(WarSpellType type)
+{
+    s32 index = 0;
+    s32 length = arrayLength(spellMappings);
+    while (index < length && spellMappings[index].type != type)
+        index++;
+
+    assert(index < length);
+    return spellMappings[index];
 }
 
 WarUnitCommandBaseData getCommandBaseData(WarUnitCommandType type)
@@ -1019,8 +1088,8 @@ WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)
 WarUnitCommandMapping getCommandMappingFromUnitType(WarUnitType unitType)
 {
     s32 index = 0;
-    s32 length = min(arrayLength(commandMappings), 30);
-    while (index < length && commandMappings[index].unitOrUpgradeType != unitType)
+    s32 length = index + 30;
+    while (index < length && commandMappings[index].mappedType != unitType)
         index++;
 
     assert(index < length);
@@ -1030,8 +1099,19 @@ WarUnitCommandMapping getCommandMappingFromUnitType(WarUnitType unitType)
 WarUnitCommandMapping getCommandMappingFromUpgradeType(WarUpgradeType upgradeType)
 {
     s32 index = 30;
+    s32 length = index + 20;
+    while (index < length && commandMappings[index].mappedType != upgradeType)
+        index++;
+
+    assert(index < length);
+    return commandMappings[index];
+}
+
+WarUnitCommandMapping getCommandMappingFromSpellType(WarSpellType spellType)
+{
+    s32 index = 50;
     s32 length = arrayLength(commandMappings);
-    while (index < length && commandMappings[index].unitOrUpgradeType != upgradeType)
+    while (index < length && commandMappings[index].mappedType != spellType)
         index++;
 
     assert(index < length);
@@ -1298,6 +1378,19 @@ bool isConjurerUnitType(WarUnitType type)
     }
 }
 
+bool isClericUnitType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_CLERIC:
+        case WAR_UNIT_NECROLYTE:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 bool isSummonUnitType(WarUnitType type)
 {
     switch (type)
@@ -1373,6 +1466,11 @@ bool isCatapultUnit(WarEntity* entity)
 bool isConjurerUnit(WarEntity* entity)
 {
     return isUnit(entity) && isConjurerUnitType(entity->unit.type);
+}
+
+bool isClericUnit(WarEntity* entity)
+{
+    return isUnit(entity) && isClericUnitType(entity->unit.type);
 }
 
 bool isSummonUnit(WarEntity* entity)

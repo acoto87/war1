@@ -367,12 +367,12 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             if (levelInfoIndex == 117)
             {
                 if (startUnit.type == WAR_UNIT_FOOTMAN)
-                    startUnit.type = WAR_UNIT_CONJURER;
+                    startUnit.type = WAR_UNIT_CLERIC;
             }
             else if (levelInfoIndex == 118)
             {
                 if (startUnit.type == WAR_UNIT_GRUNT)
-                    startUnit.type = WAR_UNIT_WARLOCK;
+                    startUnit.type = WAR_UNIT_NECROLYTE;
             }
             
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
@@ -1590,6 +1590,12 @@ void updateCursor(WarContext* context)
                 case WAR_COMMAND_HARVEST:
                 case WAR_COMMAND_DELIVER:
                 case WAR_COMMAND_REPAIR:
+                case WAR_COMMAND_SPELL_HEALING:
+                case WAR_COMMAND_SPELL_FAR_SIGHT:
+                case WAR_COMMAND_SPELL_INVISIBILITY:
+                case WAR_COMMAND_SPELL_RAISE_DEAD:
+                case WAR_COMMAND_SPELL_DARK_VISION:
+                case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
                 {
                     changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                     break;
@@ -1833,6 +1839,25 @@ void updateSpells(WarContext* context)
             {
                 WarEntityIdListAdd(&spellsToRemove, entity->id);
                 removeAnimation(context, NULL, entity->poisonCloud.animName);
+            }
+        }
+    }
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (entity)
+        {
+            WarUnitComponent* unit = &entity->unit;
+            if (unit->invisible)
+            {
+                unit->invisibilityTime -= context->deltaTime;
+                if (unit->invisibilityTime <= 0)
+                {
+                    unit->invisible = false;
+                    unit->invisibilityTime = 0;
+                }
             }
         }
     }

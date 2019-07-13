@@ -4,7 +4,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
     WarInput* input = &context->input;
     WarPlayerInfo* player = &map->players[0];
 
-    bool playSound = false;
+    bool goingToMove = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
 
@@ -103,11 +103,11 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
                 // changeNextState(context, entity, patrolState, true, true);
             }
 
-            playSound = true;
+            goingToMove = true;
         }
     }
 
-    if (playSound)
+    if (goingToMove)
     {
         if (isHumanPlayer(player))
         {
@@ -127,7 +127,7 @@ void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    bool playSound = false;
+    bool goingToFollow = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for (s32 i = 0; i < selEntitiesCount; i++)
@@ -141,11 +141,11 @@ void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
             WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
             changeNextState(context, entity, followState, true, true);
 
-            playSound = true;
+            goingToFollow = true;
         }
     }
 
-    if (playSound)
+    if (goingToFollow)
     {
         if (isHumanPlayer(player))
         {
@@ -185,7 +185,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
     assert(isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
            isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST));
 
-    bool playSound = false;
+    bool goingToHarvest = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -226,7 +226,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
                     changeNextState(context, entity, gatherGoldOrWoodState, true, true);
                 }
 
-                playSound = true;
+                goingToHarvest = true;
             }
             else if (isDudeUnit(entity))
             {
@@ -234,12 +234,12 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
                 WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position,  targetTile));
                 changeNextState(context, entity, moveState, true, true);
 
-                playSound = true;
+                goingToHarvest = true;
             }
         }
     }
 
-    if (playSound)
+    if (goingToHarvest)
     {
         if (isHumanPlayer(player))
         {
@@ -257,7 +257,7 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    bool playSound = false;
+    bool goingToDeliver = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -282,19 +282,19 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
                 WarState* deliverState = createDeliverState(context, entity, townHall->id);
                 changeNextState(context, entity, deliverState, true, true);
 
-                playSound = true;
+                goingToDeliver = true;
             }
             else if (isDudeUnit(entity))
             {
                 WarState* followState = createFollowState(context, entity, townHall->id, 1);
                 changeNextState(context, entity, followState, true, true);
 
-                playSound = true;
+                goingToDeliver = true;
             }
         }
     }
 
-    if (playSound)
+    if (goingToDeliver)
     {
         if (isHumanPlayer(player))
         {
@@ -312,7 +312,7 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    bool playSound = false;
+    bool goingToRepair = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -334,12 +334,12 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
                 WarState* repairState = createRepairState(context, entity, targetEntity->id);
                 changeNextState(context, entity, repairState, true, true);
 
-                playSound = true;
+                goingToRepair = true;
             }
         }
     }
 
-    if (playSound)
+    if (goingToRepair)
     {
         if (isHumanPlayer(player))
         {
@@ -355,6 +355,8 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
 {
     WarMap* map = context->map;
+    
+    bool casted = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -368,21 +370,28 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
             WarUnitComponent* unit = &entity->unit;
 
             WarUnitCommandMapping commandMapping = getCommandMapping(summonType);
-            WarSpellStats stats = getSpellStats(summonType);
+            WarSpellMapping spellMapping = getSpellMapping(commandMapping.mappedType);
+            WarSpellStats stats = getSpellStats(commandMapping.mappedType);
 
             if (decreaseUnitMana(context, entity, stats.manaCost))
             {
                 vec2 position = getUnitCenterPosition(entity, true);
                 vec2 spawnPosition = findEmptyPosition(map->finder, position);
 
-                createUnit(context, commandMapping.unitOrUpgradeType, 
+                createUnit(context, spellMapping.mappedType, 
                            spawnPosition.x, spawnPosition.y, 
                            unit->player, WAR_RESOURCE_NONE, 0, true);
 
-                createAudio(context, WAR_NORMAL_SPELL, false);
                 createSpellAnimation(context, vec2TileToMapCoordinates(spawnPosition, true));
+
+                casted = true;
             }
         }
+    }
+
+    if (casted)
+    {
+        createAudio(context, WAR_NORMAL_SPELL, false);
     }
 }
 
@@ -409,6 +418,10 @@ void executePoisonCloudCommand(WarContext* context, vec2 targetTile)
 {
     WarMap* map = context->map;
 
+    bool casted = false;
+    WarSpellStats stats = getSpellStats(WAR_SPELL_POISON_CLOUD);
+    vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
@@ -418,12 +431,114 @@ void executePoisonCloudCommand(WarContext* context, vec2 targetTile)
 
         if (isConjurerUnit(entity))
         {
-            WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
-            addPoisonCloudComponent(context, poisonCloud, targetTile);
+            if (decreaseUnitMana(context, entity, stats.manaCost))
+            {
+                WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
+                addPoisonCloudComponent(context, poisonCloud, targetTile, getScaledTime(context, stats.time));
 
-            vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
-            sprintf(poisonCloud->poisonCloud.animName, "poison_cloud_%.2f_%.2f", targetTilePosition.x, targetTilePosition.y);
-            createPoisonCloudAnimation(context, targetTilePosition, poisonCloud->poisonCloud.animName);
+                sprintf(poisonCloud->poisonCloud.animName, "poison_cloud_%.2f_%.2f", targetTilePosition.x, targetTilePosition.y);
+                createPoisonCloudAnimation(context, targetTilePosition, poisonCloud->poisonCloud.animName);
+
+                casted = true;
+            }
+        }
+    }
+
+    if (casted)
+    {
+        createAudio(context, WAR_NORMAL_SPELL, false);
+    }
+}
+
+void executeHealingCommand(WarContext* context, WarEntity* targetEntity)
+{
+    WarMap* map = context->map;
+
+    bool casted = false;
+    WarSpellStats stats = getSpellStats(WAR_SPELL_HEALING);
+
+    if (targetEntity && isDudeUnit(targetEntity))
+    {
+        WarUnitComponent* targetUnit = &targetEntity->unit;
+
+        s32 selEntitiesCount = map->selectedEntities.count;
+        for(s32 i = 0; i < selEntitiesCount; i++)
+        {
+            WarEntityId entityId = map->selectedEntities.items[i];
+            WarEntity* entity = findEntity(context, entityId);
+            assert(entity);
+
+            if (isClericUnit(entity))
+            {
+                // the unit can't heal itself
+                if (entity->id != targetEntity->id)
+                {
+                    WarUnitComponent* unit = &entity->unit;
+
+                    // the healing spell's strength is determined by units of mana.
+                    // for every 6 units of mana, the damaged unit gets back 1 hit point. 
+                    //
+                    // take all the hp the cleric can restore according to its mana
+                    s32 hpToRestore = unit->mana / stats.manaCost;
+
+                    // take in reality how much hp needs to be restored
+                    hpToRestore = min(hpToRestore, targetUnit->maxhp - targetUnit->hp);
+
+                    // recalculate how much mana the cleric need to spend
+                    s32 manaToSpend = hpToRestore * stats.manaCost;
+                    
+                    increaseUnitHp(context, targetEntity, hpToRestore);
+                    decreaseUnitMana(context, entity, manaToSpend);
+                    
+                    casted = true;
+                }
+            }
+        }
+
+        if (casted)
+        {
+            vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+            createSpellAnimation(context, targetPosition);
+            createAudio(context, WAR_NORMAL_SPELL, false);
+        }
+    }
+}
+
+void executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity)
+{
+    WarMap* map = context->map;
+
+    bool casted = false;
+    WarSpellStats stats = getSpellStats(WAR_SPELL_INVISIBILITY);
+
+    if (targetEntity && isDudeUnit(targetEntity))
+    {
+        WarUnitComponent* targetUnit = &targetEntity->unit;
+        
+        s32 selEntitiesCount = map->selectedEntities.count;
+        for(s32 i = 0; i < selEntitiesCount; i++)
+        {
+            WarEntityId entityId = map->selectedEntities.items[i];
+            WarEntity* entity = findEntity(context, entityId);
+            assert(entity);
+
+            if (isClericUnit(entity))
+            {
+                if (decreaseUnitMana(context, entity, stats.manaCost))
+                {
+                    casted = true;
+                }
+            }
+        }
+
+        if (casted)
+        {
+            targetUnit->invisible = true;
+            targetUnit->invisibilityTime = getScaledTime(context, stats.time);
+
+            vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+            createSpellAnimation(context, targetPosition);
+            createAudio(context, WAR_NORMAL_SPELL, false);
         }
     }
 }
@@ -875,6 +990,55 @@ bool executeCommand(WarContext* context)
             return false;
         }
 
+        case WAR_COMMAND_SPELL_HEALING:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+
+                    executeHealingCommand(context, targetEntity);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        case WAR_COMMAND_SPELL_INVISIBILITY:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+
+                    executeInvisiblityCommand(context, targetEntity);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        // case WAR_COMMAND_SPELL_FAR_SIGHT:
+        // case WAR_COMMAND_SPELL_RAISE_DEAD:
+        // case WAR_COMMAND_SPELL_DARK_VISION:
+        // case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
+
         case WAR_COMMAND_BUILD_BASIC:
         case WAR_COMMAND_BUILD_ADVANCED:
         {
@@ -1307,6 +1471,48 @@ void castPoisonCloud(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_POISON_CLOUD;
+}
+
+void castHeal(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SPELL_HEALING;
+}
+
+void castFarSight(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SPELL_FAR_SIGHT;
+}
+
+void castDarkVision(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SPELL_DARK_VISION;
+}
+
+void castInvisibility(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SPELL_INVISIBILITY;
+}
+
+void castUnHolyArmor(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
+}
+
+void castRaiseDead(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->command.type = WAR_COMMAND_SPELL_RAISE_DEAD;
 }
 
 // summons

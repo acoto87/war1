@@ -74,6 +74,12 @@ void buildRoad(WarContext* context, WarEntity* entity);
 // spells
 void castRainOfFire(WarContext* context, WarEntity* entity);
 void castPoisonCloud(WarContext* context, WarEntity* entity);
+void castHeal(WarContext* context, WarEntity* entity);
+void castFarSight(WarContext* context, WarEntity* entity);
+void castDarkVision(WarContext* context, WarEntity* entity);
+void castInvisibility(WarContext* context, WarEntity* entity);
+void castUnHolyArmor(WarContext* context, WarEntity* entity);
+void castRaiseDead(WarContext* context, WarEntity* entity);
 
 // summons
 void summonSpider(WarContext* context, WarEntity* entity);

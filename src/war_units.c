@@ -996,8 +996,8 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_TRAIN_NECROLYTE:
         {
             WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
-            WarUnitData unitData = getUnitData(commandMapping.unitOrUpgradeType);
-            WarUnitStats stats = getUnitStats(commandMapping.unitOrUpgradeType);
+            WarUnitData unitData = getUnitData(commandMapping.mappedType);
+            WarUnitStats stats = getUnitStats(commandMapping.mappedType);
 
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
@@ -1023,8 +1023,8 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
             WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
-            WarUnitData unitData = getUnitData(commandMapping.unitOrUpgradeType);
-            WarBuildingStats stats = getBuildingStats(commandMapping.unitOrUpgradeType);
+            WarUnitData unitData = getUnitData(commandMapping.mappedType);
+            WarBuildingStats stats = getBuildingStats(commandMapping.mappedType);
 
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
@@ -1069,11 +1069,11 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         {
             WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
 
-            assert(hasRemainingUpgrade(player, commandMapping.unitOrUpgradeType));
+            assert(hasRemainingUpgrade(player, commandMapping.mappedType));
 
-            WarUpgradeData upgradeData = getUpgradeData(commandMapping.unitOrUpgradeType);
-            WarUpgradeStats stats = getUpgradeStats(commandMapping.unitOrUpgradeType);
-            s32 upgradeLevel = getUpgradeLevel(player, commandMapping.unitOrUpgradeType);
+            WarUpgradeData upgradeData = getUpgradeData(commandMapping.mappedType);
+            WarUpgradeStats stats = getUpgradeStats(commandMapping.mappedType);
+            s32 upgradeLevel = getUpgradeLevel(player, commandMapping.mappedType);
 
             data.gold = stats.goldCost[upgradeLevel];
             data.frameIndex = upgradeData.frameIndices[upgradeLevel];
@@ -1084,24 +1084,22 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_SUMMON_SCORPION:
         case WAR_COMMAND_SUMMON_DAEMON:
         case WAR_COMMAND_SUMMON_WATER_ELEMENTAL:
-        {
-            WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
-            WarUnitData unitData = getUnitData(commandMapping.unitOrUpgradeType);
-
-            data.frameIndex = unitData.portraitFrameIndex;
-            break;
-        }
-
+        case WAR_COMMAND_SPELL_HEALING:
+        case WAR_COMMAND_SPELL_FAR_SIGHT:
+        case WAR_COMMAND_SPELL_INVISIBILITY:
         case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
+        case WAR_COMMAND_SPELL_RAISE_DEAD:
+        case WAR_COMMAND_SPELL_DARK_VISION:
+        case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
         case WAR_COMMAND_SPELL_POISON_CLOUD:
         {
             WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
-            WarUpgradeData upgradeData = getUpgradeData(commandMapping.unitOrUpgradeType);
-            
-            data.frameIndex = upgradeData.frameIndices[0];
+            WarSpellData spellData = getSpellData(commandMapping.mappedType);
+
+            data.frameIndex = spellData.portraitFrameIndex;
             break;
         }
-
+        
         // cancel
         case WAR_COMMAND_CANCEL:
         {

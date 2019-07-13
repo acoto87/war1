@@ -44,7 +44,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitAction* action = unit->actions.items[unit->actionIndex];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
-        WarSpellStats stats = getSpellStats(WAR_COMMAND_SPELL_RAIN_OF_FIRE);
+        WarSpellStats stats = getSpellStats(WAR_SPELL_RAIN_OF_FIRE);
         if (decreaseUnitMana(context, entity, stats.manaCost))
         {
             vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);

@@ -62,7 +62,7 @@ void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectil
                             vec2 origin, vec2 target, s32 speed);
 void removeProjectileComponent(WarContext* context, WarEntity* entity);
 
-void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position);
+void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time);
 void removePoisonCloudComponent(WarContext* context, WarEntity* entity);
 
 // Roads
@@ -119,6 +119,8 @@ void renderEntity(WarContext* context, WarEntity* entity, bool selected);
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade);
 bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
 void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
+bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp);
+bool decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp);
 bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana);
 void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana);
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
