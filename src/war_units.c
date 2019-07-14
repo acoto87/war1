@@ -109,9 +109,9 @@ s32 getPlayerDudesCount(WarContext* context, u8 player)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity)
+        if (entity && isDudeUnit(entity) && !isSummonUnit(entity) && !isSkeletonUnit(entity))
         {
-            if (entity->unit.player == player && isDudeUnit(entity))
+            if (entity->unit.player == player)
             {
                 count++;
             }

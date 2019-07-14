@@ -15,8 +15,6 @@ void leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* stat
 
 void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = getUnitStats(unit->type);
 
@@ -27,11 +25,6 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     // so, this unit get nothing
     if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
     {
-        // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(entity, true);
-        vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(entity, spawnPosition, true);
-
         WarState* idleState = createIdleState(context, entity, true);
         changeNextState(context, entity, idleState, true, true);
         return;
@@ -40,7 +33,7 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     // if the goldmine is not in range, go to it
     if (!unitInRange(entity, goldmine, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, goldmine->id, stats.range);
+        WarState* followState = createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats.range);
         followState->nextState = state;
         changeNextState(context, entity, followState, false, true);
         return;

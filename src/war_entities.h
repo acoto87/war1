@@ -115,6 +115,7 @@ WarEntity* findUIEntity(WarContext* context, const char* name);
 void removeEntity(WarContext* context, WarEntity* entity);
 void removeEntityById(WarContext* context, WarEntityId id);
 void renderEntity(WarContext* context, WarEntity* entity, bool selected);
+bool isStaticEntity(WarEntity* entity);
 
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade);
 bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);

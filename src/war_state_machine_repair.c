@@ -31,7 +31,7 @@ void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
     // if the building is not in range, go to it
     if (!unitInRange(entity, building, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, building->id, stats.range);
+        WarState* followState = createFollowState(context, entity, building->id, VEC2_ZERO, stats.range);
         followState->nextState = state;
         changeNextState(context, entity, followState, false, true);
         return;

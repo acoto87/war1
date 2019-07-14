@@ -52,7 +52,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // if the tree is not in range, go to it
-    if (!entityTilePositionInRange(entity, treePosition, stats.range))
+    if (!tileInRange(entity, treePosition, stats.range))
     {
         WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition));
         moveState->nextState = state;

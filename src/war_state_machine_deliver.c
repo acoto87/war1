@@ -31,7 +31,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (!unitInRange(entity, townHall, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, townHall->id, stats.range);
+        WarState* followState = createFollowState(context, entity, townHall->id, VEC2_ZERO, stats.range);
         followState->nextState = state;
         changeNextState(context, entity, followState, false, true);
         return;

@@ -1,7 +1,8 @@
-WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, s32 distance)
+WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
 {
     WarState* state = createState(context, entity, WAR_STATE_FOLLOW);
     state->follow.targetEntityId = targetEntityId;
+    state->follow.targetTile = targetTile;
     state->follow.distance = distance;
     return state;
 }
@@ -18,22 +19,26 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
-    WarEntity* targetEntity = findEntity(context, state->follow.targetEntityId);
+    vec2 start = getUnitCenterPosition(entity, true);
+    vec2 end = state->follow.targetTile;
 
-    // if the entity to follow doesn't exists, go to idle
-    if (!targetEntity)
+    if (state->follow.targetEntityId)
     {
-        if (!changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
-        }
+        WarEntity* targetEntity = findEntity(context, state->follow.targetEntityId);
 
-        return;
+        if (isUnit(targetEntity))
+        {
+            // if the target entity is an unit the instead of using the tile where
+            // the player click, use a point on the target unit that is closer to
+            // the following unit
+            end = unitPointOnTarget(entity, targetEntity);
+        }
+        else
+        {
+            end = getUnitCenterPosition(targetEntity, true);
+        }
     }
 
-    vec2 start = getUnitCenterPosition(entity, true);
-    vec2 end = getUnitCenterPosition(targetEntity, true);
     f32 distance = vec2DistanceInTiles(start, end);
 
     // if the unit is already in distance, go to idle

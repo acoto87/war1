@@ -570,6 +570,44 @@ void removeEntityById(WarContext* context, WarEntityId id)
     }
 }
 
+bool isStaticEntity(WarEntity* entity)
+{
+    if (isUnit(entity))
+    {
+        switch (entity->unit.type)
+        {
+            case WAR_UNIT_FARM_HUMANS:
+            case WAR_UNIT_FARM_ORCS:
+            case WAR_UNIT_BARRACKS_HUMANS:
+            case WAR_UNIT_BARRACKS_ORCS:
+            case WAR_UNIT_CHURCH:
+            case WAR_UNIT_TEMPLE:
+            case WAR_UNIT_TOWER_HUMANS:
+            case WAR_UNIT_TOWER_ORCS:
+            case WAR_UNIT_TOWNHALL_HUMANS:
+            case WAR_UNIT_TOWNHALL_ORCS:
+            case WAR_UNIT_LUMBERMILL_HUMANS:
+            case WAR_UNIT_LUMBERMILL_ORCS:
+            case WAR_UNIT_STABLE:
+            case WAR_UNIT_KENNEL:
+            case WAR_UNIT_BLACKSMITH_HUMANS:
+            case WAR_UNIT_BLACKSMITH_ORCS:
+            case WAR_UNIT_STORMWIND:
+            case WAR_UNIT_BLACKROCK:
+            case WAR_UNIT_GOLDMINE:
+            case WAR_UNIT_HUMAN_CORPSE:
+            case WAR_UNIT_ORC_CORPSE:
+            case WAR_UNIT_WOUNDED:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    return false;
+}
+
 // Render entities
 void renderImage(WarContext* context, WarEntity* entity)
 {
@@ -1428,7 +1466,7 @@ WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance
         WarEntity* other = units->items[i];
         if (other)
         {
-            if (entityTilePositionInRange(other, tilePosition, distance))
+            if (tileInRange(other, tilePosition, distance))
             {
                 WarEntityListAdd(nearUnits, other);
             }
@@ -1456,7 +1494,7 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
                     continue;
             }
 
-            if (entityTilePositionInRange(other, position, NEAR_ENEMY_RADIUS))
+            if (tileInRange(other, position, NEAR_ENEMY_RADIUS))
             {
                 return other;
             }

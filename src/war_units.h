@@ -1764,7 +1764,7 @@ s32 entityTileDistance(WarEntity* entity, vec2 targetPosition)
     return (s32)distance;
 }
 
-bool entityTilePositionInRange(WarEntity* entity, vec2 targetTile, s32 range)
+bool tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
 {
     assert(range >= 0);
 

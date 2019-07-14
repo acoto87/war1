@@ -32,16 +32,11 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     
     if (stats.range)
     {
-        if(!entityTilePositionInRange(entity, targetTile, stats.range))
+        if(!tileInRange(entity, targetTile, stats.range))
         {
-            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
-            moveState->nextState = state;
-
-            // do not check for attacks here because if 
-            // the unit gets attacked it will comeback to this state
-            // and try to attack with it, instead of a regular attack
-            moveState->move.checkForAttacks = false;
-            changeNextState(context, entity, moveState, false, true);
+            WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, stats.range);
+            followState->nextState = state;
+            changeNextState(context, entity, followState, false, true);
             return;
         }
     }

@@ -11,7 +11,7 @@ WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 WarState* createIdleState(WarContext* context, WarEntity* entity, bool lookAround);
 WarState* createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
 WarState* createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
-WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, s32 distance);
+WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance);
 WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile);
 WarState* createDeathState(WarContext* context, WarEntity* entity);
 WarState* createDamagedState(WarContext* context, WarEntity* entity);

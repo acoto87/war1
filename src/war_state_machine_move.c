@@ -50,7 +50,7 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
 
     setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-    setAction(context, entity, WAR_ACTION_TYPE_WALK, true, getUnitActionScale(entity));
+    setAction(context, entity, WAR_ACTION_TYPE_WALK, false, getUnitActionScale(entity));
 }
 
 void leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
@@ -141,7 +141,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 
         setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-        setAction(context, entity, WAR_ACTION_TYPE_WALK, true, getUnitActionScale(entity));
+        setAction(context, entity, WAR_ACTION_TYPE_WALK, false, getUnitActionScale(entity));
     }
 
     vec2 position = getUnitCenterPosition(entity, false);

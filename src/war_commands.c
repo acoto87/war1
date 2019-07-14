@@ -138,7 +138,7 @@ void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
 
         if (isFriendlyUnit(context, entity))
         {
-            WarState* followState = createFollowState(context, entity, targetEntity->id, 1);
+            WarState* followState = createFollowState(context, entity, targetEntity->id, VEC2_ZERO, 1);
             changeNextState(context, entity, followState, true, true);
 
             goingToFollow = true;
@@ -286,7 +286,7 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
             }
             else if (isDudeUnit(entity))
             {
-                WarState* followState = createFollowState(context, entity, townHall->id, 1);
+                WarState* followState = createFollowState(context, entity, townHall->id, VEC2_ZERO, 1);
                 changeNextState(context, entity, followState, true, true);
 
                 goingToDeliver = true;

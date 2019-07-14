@@ -1136,7 +1136,11 @@ typedef struct _WarState
 
         struct
         {
+            // the follow state can follow an entity or a point
             s32 targetEntityId;
+            vec2 targetTile;
+
+            // the range distance (in tiles) in which the follower stops
             s32 distance;
         } follow;
 
