@@ -365,9 +365,13 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        if (isConjurerUnit(entity))
+        if (isConjurerOrWarlockUnit(entity))
         {
             WarUnitComponent* unit = &entity->unit;
+
+            // when the unit summon another unit, it is not invisible anymore
+            unit->invisible = false;
+            unit->invisibilityTime = 0;
 
             WarUnitCommandMapping commandMapping = getCommandMapping(summonType);
             WarSpellMapping spellMapping = getSpellMapping(commandMapping.mappedType);
@@ -395,7 +399,7 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
     }
 }
 
-void executeCastCommand(WarContext* context, vec2 targetTile)
+void executeRainOfFireCommand(WarContext* context, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -406,9 +410,9 @@ void executeCastCommand(WarContext* context, vec2 targetTile)
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        if (isConjurerUnit(entity))
+        if (isConjurerOrWarlockUnit(entity))
         {
-            WarState* castState = createCastState(context, entity, targetTile);
+            WarState* castState = createCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetTile);
             changeNextState(context, entity, castState, true, true);
         }
     }
@@ -418,9 +422,94 @@ void executePoisonCloudCommand(WarContext* context, vec2 targetTile)
 {
     WarMap* map = context->map;
 
-    bool casted = false;
-    WarSpellStats stats = getSpellStats(WAR_SPELL_POISON_CLOUD);
-    vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+    s32 selEntitiesCount = map->selectedEntities.count;
+    for(s32 i = 0; i < selEntitiesCount; i++)
+    {
+        WarEntityId entityId = map->selectedEntities.items[i];
+        WarEntity* entity = findEntity(context, entityId);
+        assert(entity);
+
+        if (isConjurerOrWarlockUnit(entity))
+        {
+            WarState* castState = createCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetTile);
+            changeNextState(context, entity, castState, true, true);
+        }
+    }
+}
+
+void executeHealingCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+{
+    WarMap* map = context->map;
+
+    if (targetEntity && isDudeUnit(targetEntity))
+    {
+        s32 selEntitiesCount = map->selectedEntities.count;
+        for(s32 i = 0; i < selEntitiesCount; i++)
+        {
+            WarEntityId entityId = map->selectedEntities.items[i];
+            WarEntity* entity = findEntity(context, entityId);
+            assert(entity);
+
+            if (isClericOrNecrolyteUnit(entity))
+            {
+                // the unit can't heal itself
+                if (entity->id != targetEntity->id)
+                {
+                    WarState* castState = createCastState(context, entity, WAR_SPELL_HEALING, targetEntity->id, targetTile);
+                    changeNextState(context, entity, castState, true, true);
+                }
+            }
+        }
+    }
+}
+
+void executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+{
+    WarMap* map = context->map;
+
+    if (targetEntity && isDudeUnit(targetEntity))
+    {
+        s32 selEntitiesCount = map->selectedEntities.count;
+        for(s32 i = 0; i < selEntitiesCount; i++)
+        {
+            WarEntityId entityId = map->selectedEntities.items[i];
+            WarEntity* entity = findEntity(context, entityId);
+            assert(entity);
+
+            if (isClericOrNecrolyteUnit(entity))
+            {
+                WarState* castState = createCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetTile);
+                changeNextState(context, entity, castState, true, true);
+            }
+        }
+    }
+}
+
+void executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+{
+    WarMap* map = context->map;
+
+    if (targetEntity && isDudeUnit(targetEntity))
+    {
+        s32 selEntitiesCount = map->selectedEntities.count;
+        for(s32 i = 0; i < selEntitiesCount; i++)
+        {
+            WarEntityId entityId = map->selectedEntities.items[i];
+            WarEntity* entity = findEntity(context, entityId);
+            assert(entity);
+
+            if (isClericOrNecrolyteUnit(entity))
+            {
+                WarState* castState = createCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetTile);
+                changeNextState(context, entity, castState, true, true);
+            }
+        }
+    }
+}
+
+void executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
+{
+    WarMap* map = context->map;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -429,116 +518,10 @@ void executePoisonCloudCommand(WarContext* context, vec2 targetTile)
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        if (isConjurerUnit(entity))
+        if (isClericOrNecrolyteUnit(entity))
         {
-            if (decreaseUnitMana(context, entity, stats.manaCost))
-            {
-                WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
-                addPoisonCloudComponent(context, poisonCloud, targetTile, getScaledTime(context, stats.time));
-
-                sprintf(poisonCloud->poisonCloud.animName, "poison_cloud_%.2f_%.2f", targetTilePosition.x, targetTilePosition.y);
-                createPoisonCloudAnimation(context, targetTilePosition, poisonCloud->poisonCloud.animName);
-
-                casted = true;
-            }
-        }
-    }
-
-    if (casted)
-    {
-        createAudio(context, WAR_NORMAL_SPELL, false);
-    }
-}
-
-void executeHealingCommand(WarContext* context, WarEntity* targetEntity)
-{
-    WarMap* map = context->map;
-
-    bool casted = false;
-    WarSpellStats stats = getSpellStats(WAR_SPELL_HEALING);
-
-    if (targetEntity && isDudeUnit(targetEntity))
-    {
-        WarUnitComponent* targetUnit = &targetEntity->unit;
-
-        s32 selEntitiesCount = map->selectedEntities.count;
-        for(s32 i = 0; i < selEntitiesCount; i++)
-        {
-            WarEntityId entityId = map->selectedEntities.items[i];
-            WarEntity* entity = findEntity(context, entityId);
-            assert(entity);
-
-            if (isClericUnit(entity))
-            {
-                // the unit can't heal itself
-                if (entity->id != targetEntity->id)
-                {
-                    WarUnitComponent* unit = &entity->unit;
-
-                    // the healing spell's strength is determined by units of mana.
-                    // for every 6 units of mana, the damaged unit gets back 1 hit point. 
-                    //
-                    // take all the hp the cleric can restore according to its mana
-                    s32 hpToRestore = unit->mana / stats.manaCost;
-
-                    // take in reality how much hp needs to be restored
-                    hpToRestore = min(hpToRestore, targetUnit->maxhp - targetUnit->hp);
-
-                    // recalculate how much mana the cleric need to spend
-                    s32 manaToSpend = hpToRestore * stats.manaCost;
-                    
-                    increaseUnitHp(context, targetEntity, hpToRestore);
-                    decreaseUnitMana(context, entity, manaToSpend);
-                    
-                    casted = true;
-                }
-            }
-        }
-
-        if (casted)
-        {
-            vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
-            createSpellAnimation(context, targetPosition);
-            createAudio(context, WAR_NORMAL_SPELL, false);
-        }
-    }
-}
-
-void executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity)
-{
-    WarMap* map = context->map;
-
-    bool casted = false;
-    WarSpellStats stats = getSpellStats(WAR_SPELL_INVISIBILITY);
-
-    if (targetEntity && isDudeUnit(targetEntity))
-    {
-        WarUnitComponent* targetUnit = &targetEntity->unit;
-        
-        s32 selEntitiesCount = map->selectedEntities.count;
-        for(s32 i = 0; i < selEntitiesCount; i++)
-        {
-            WarEntityId entityId = map->selectedEntities.items[i];
-            WarEntity* entity = findEntity(context, entityId);
-            assert(entity);
-
-            if (isClericUnit(entity))
-            {
-                if (decreaseUnitMana(context, entity, stats.manaCost))
-                {
-                    casted = true;
-                }
-            }
-        }
-
-        if (casted)
-        {
-            targetUnit->invisible = true;
-            targetUnit->invisibilityTime = getScaledTime(context, stats.time);
-
-            vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
-            createSpellAnimation(context, targetPosition);
-            createAudio(context, WAR_NORMAL_SPELL, false);
+            WarState* castState = createCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetTile);
+            changeNextState(context, entity, castState, true, true);
         }
     }
 }
@@ -961,7 +944,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    executeCastCommand(context, targetTile);
+                    executeRainOfFireCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1002,7 +985,7 @@ bool executeCommand(WarContext* context)
                     WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
-                    executeHealingCommand(context, targetEntity);
+                    executeHealingCommand(context, targetEntity, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1024,7 +1007,48 @@ bool executeCommand(WarContext* context)
                     WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
-                    executeInvisiblityCommand(context, targetEntity);
+                    executeInvisiblityCommand(context, targetEntity, targetTile);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+
+                    executeUnholyArmorCommand(context, targetEntity, targetTile);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        case WAR_COMMAND_SPELL_RAISE_DEAD:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    executeRaiseDeadCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1035,9 +1059,7 @@ bool executeCommand(WarContext* context)
         }
 
         // case WAR_COMMAND_SPELL_FAR_SIGHT:
-        // case WAR_COMMAND_SPELL_RAISE_DEAD:
         // case WAR_COMMAND_SPELL_DARK_VISION:
-        // case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
 
         case WAR_COMMAND_BUILD_BASIC:
         case WAR_COMMAND_BUILD_ADVANCED:

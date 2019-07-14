@@ -99,6 +99,8 @@ List of thing to do in no particular order
   * Make commands/cheats system.
   * Make the blue water/green water animated.
   * Make the move state to consider range distance to stop.
+  * Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
+  * Check behavior of invisible units when is under attack (it maybe work with workers, to stop the attack on it)
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
@@ -153,9 +155,9 @@ List of thing to do in no particular order
     * ~~Cloud of poison~~
     * Far seeing / Dark vision
     * ~~Invisibility~~
-    * Holy armor
+    * ~~UnHoly armor~~
     * ~~Healing~~
-    * Raise dead
+    * ~~Raise dead~~
   * Fog of war
 
 * Animations/actions

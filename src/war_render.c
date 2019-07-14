@@ -5,6 +5,7 @@
 #define NVG_GREEN_SELECTION nvgRGBA(0, 199, 0, 255)
 #define NVG_RED_SELECTION nvgRGBA(199, 0, 0, 255)
 #define NVG_WHITE_SELECTION nvgRGBA(199, 199, 199, 255)
+#define NVG_BLUE_INVULNERABLE nvgRGBA(0, 0, 199, 255)
 
 typedef struct
 {

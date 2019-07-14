@@ -25,15 +25,15 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     // when this state updates there will have pass the time of the death animation, 
     // using the delay field of the states
-    if (!isCorpseUnit(entity) && !isCatapultUnit(entity) && !isSummonUnit(entity))
+    if (!isCorpseUnit(entity) && !isCatapultUnit(entity) && 
+        !isSummonUnit(entity) && !isSkeletonUnit(entity))
     {
-        vec2 position = entity->transform.position;
-        vec2 tile = vec2MapToTileCoordinates(position);
+        vec2 position = getUnitCenterPosition(entity, true);
 
         WarUnitType corpseType = getUnitRace(entity) == WAR_RACE_ORCS 
             ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
 
-        WarEntity* corpse = createUnit(context, corpseType, tile.x, tile.y, 4, 
+        WarEntity* corpse = createUnit(context, corpseType, position.x, position.y, 4, 
                                        WAR_RESOURCE_NONE, 0, true);
 
         setUnitDirection(corpse, getUnitDirection(entity));

@@ -197,6 +197,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
         case WAR_UNIT_DAEMON:
         case WAR_UNIT_SCORPION:
         case WAR_UNIT_SPIDER:
+        case WAR_UNIT_SKELETON:
         {
             if (command->type != WAR_COMMAND_NONE)
             {

@@ -1850,6 +1850,7 @@ void updateSpells(WarContext* context)
         if (entity)
         {
             WarUnitComponent* unit = &entity->unit;
+            
             if (unit->invisible)
             {
                 unit->invisibilityTime -= context->deltaTime;
@@ -1857,6 +1858,16 @@ void updateSpells(WarContext* context)
                 {
                     unit->invisible = false;
                     unit->invisibilityTime = 0;
+                }
+            }
+
+            if (unit->invulnerable)
+            {
+                unit->invulnerabilityTime -= context->deltaTime;
+                if (unit->invulnerabilityTime <= 0)
+                {
+                    unit->invulnerable = false;
+                    unit->invulnerabilityTime = 0;
                 }
             }
         }

@@ -549,7 +549,8 @@ const WarUnitStats unitStats[] =
     { WAR_UNIT_FIRE_ELEMENTAL,    1,     0,    200,   -1,     0,     40,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
     { WAR_UNIT_SCORPION,          1,     0,     30,   -1,     3,      0,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
     { WAR_UNIT_BRIGAND,           1,     1,     40,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_SKELETON,          1,     1,     40,   -1,     1,      4,            -1,     -1,     -1,     45,   {  8.992f,  8.992f,  8.992f } },
+    { WAR_UNIT_THE_DEAD,          1,     2,     30,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_SKELETON,          1,     1,     40,   -1,     1,      4,            -1,     -1,     -1,     45,   { 13.984f, 13.984f, 13.984f } },
     { WAR_UNIT_DAEMON,            1,     0,    300,   -1,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
     { WAR_UNIT_WATER_ELEMENTAL,   3,     0,    250,   -1,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
 };
@@ -695,7 +696,7 @@ const WarSpellStats spellStats[] =
     { WAR_SPELL_RAIN_OF_FIRE,        25,  0, 12 },
     { WAR_SPELL_RAISE_DEAD,          50,  0,  6 },
     { WAR_SPELL_DARK_VISION,         50,  0,  0 },
-    { WAR_SPELL_UNHOLY_ARMOR,        10, 13,  6 },
+    { WAR_SPELL_UNHOLY_ARMOR,       100, 13,  6 },
     { WAR_SPELL_POISON_CLOUD,       100, 10, 12 },
 };
 
@@ -1365,7 +1366,7 @@ bool isCatapultUnitType(WarUnitType type)
     }
 }
 
-bool isConjurerUnitType(WarUnitType type)
+bool isConjurerOrWarlockUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1378,7 +1379,7 @@ bool isConjurerUnitType(WarUnitType type)
     }
 }
 
-bool isClericUnitType(WarUnitType type)
+bool isClericOrNecrolyteUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1463,19 +1464,24 @@ bool isCatapultUnit(WarEntity* entity)
     return isUnit(entity) && isCatapultUnitType(entity->unit.type);
 }
 
-bool isConjurerUnit(WarEntity* entity)
+bool isConjurerOrWarlockUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isConjurerUnitType(entity->unit.type);
+    return isUnit(entity) && isConjurerOrWarlockUnitType(entity->unit.type);
 }
 
-bool isClericUnit(WarEntity* entity)
+bool isClericOrNecrolyteUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isClericUnitType(entity->unit.type);
+    return isUnit(entity) && isClericOrNecrolyteUnitType(entity->unit.type);
 }
 
 bool isSummonUnit(WarEntity* entity)
 {
     return isUnit(entity) && isSummonUnitType(entity->unit.type);
+}
+
+bool isSkeletonUnit(WarEntity* entity)
+{
+    return isUnit(entity) && entity->unit.type == WAR_UNIT_SKELETON;
 }
 
 WarRace getUnitRace(WarEntity* entity)

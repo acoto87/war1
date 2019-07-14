@@ -633,6 +633,7 @@ typedef enum
 
 typedef enum
 {
+    // spells
     WAR_SPELL_HEALING,
     WAR_SPELL_FAR_SIGHT,
     WAR_SPELL_INVISIBILITY,
@@ -1216,6 +1217,8 @@ typedef struct _WarState
 
         struct
         {
+            WarSpellType spellType;
+            WarEntityId targetEntityId;
             vec2 targetTile;
         } cast;
     };
@@ -1271,6 +1274,7 @@ typedef struct
     s32 rndDamage;
     s32 decay;
     bool invisible;
+    bool invulnerable;
 
     // index of the array of speeds of the unit
     s32 speed;
@@ -1283,6 +1287,8 @@ typedef struct
     f32 manaRegenTime;
     // time remainder (in seconds) until the unit invisiblity ceases
     f32 invisibilityTime;
+    // time remainder (in seconds) until the unit invulnerability ceases
+    f32 invulnerabilityTime;
 } WarUnitComponent;
 
 typedef struct

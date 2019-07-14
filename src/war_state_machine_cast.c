@@ -1,6 +1,8 @@
-WarState* createCastState(WarContext* context, WarEntity* entity, vec2 targetTile)
+WarState* createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile)
 {
     WarState* state = createState(context, entity, WAR_STATE_CAST);
+    state->cast.spellType = spellType;
+    state->cast.targetEntityId = targetEntityId;
     state->cast.targetTile = targetTile;
     return state;
 }
@@ -22,19 +24,26 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 unitSize = getUnitSize(entity);
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
 
+    WarSpellType spellType = state->cast.spellType;
+    WarEntityId targetEntityId = state->cast.targetEntityId;
     vec2 targetTile = state->cast.targetTile;
-    
-    if(!entityTilePositionInRange(entity, targetTile, 12))
-    {
-        WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
-        moveState->nextState = state;
 
-        // do not check for attacks here because if 
-        // the unit gets attacked it will comeback to this state
-        // and try to attack with it, instead of a regular attack
-        moveState->move.checkForAttacks = false;
-        changeNextState(context, entity, moveState, false, true);
-        return;
+    WarSpellStats stats = getSpellStats(spellType);
+    
+    if (stats.range)
+    {
+        if(!entityTilePositionInRange(entity, targetTile, stats.range))
+        {
+            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
+            moveState->nextState = state;
+
+            // do not check for attacks here because if 
+            // the unit gets attacked it will comeback to this state
+            // and try to attack with it, instead of a regular attack
+            moveState->move.checkForAttacks = false;
+            changeNextState(context, entity, moveState, false, true);
+            return;
+        }
     }
 
     setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
@@ -44,31 +53,191 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitAction* action = unit->actions.items[unit->actionIndex];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
-        WarSpellStats stats = getSpellStats(WAR_SPELL_RAIN_OF_FIRE);
-        if (decreaseUnitMana(context, entity, stats.manaCost))
+        // when the unit cast a spell, it is not invisible anymore
+        unit->invisible = false;
+        unit->invisibilityTime = 0;
+
+        switch (spellType)
         {
-            vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
-            s32 radius = 2 * MEGA_TILE_WIDTH;
-
-            s32 projectilesCount = 5;
-            while (projectilesCount--)
+            case WAR_SPELL_HEALING:
             {
-                f32 offsetx = randomf(-radius, radius);
-                f32 offsety = randomf(-radius, radius);
-                vec2 target = vec2Addv(targetTilePosition, vec2f(offsetx, offsety));
+                WarEntity* targetEntity = findEntity(context, targetEntityId);
+                if (targetEntity && isDudeUnit(targetEntity))
+                {
+                    WarUnitComponent* targetUnit = &targetEntity->unit;
 
-                offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
-                vec2 origin = vec2f(target.x, map->viewport.y - offsety);
+                    // the healing spell's strength is determined by units of mana.
+                    // for every 6 units of mana, the damaged unit gets back 1 hit point. 
+                    //
+                    // take all the hp the cleric can restore according to its mana
+                    s32 hpToRestore = unit->mana / stats.manaCost;
 
-                createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+                    // take in reality how much hp needs to be restored
+                    hpToRestore = min(hpToRestore, targetUnit->maxhp - targetUnit->hp);
+
+                    // recalculate how much mana the cleric need to spend
+                    s32 manaToSpend = hpToRestore * stats.manaCost;
+                    
+                    increaseUnitHp(context, targetEntity, hpToRestore);
+                    decreaseUnitMana(context, entity, manaToSpend);
+
+                    vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                    createSpellAnimation(context, targetPosition);
+                    createAudio(context, WAR_NORMAL_SPELL, false);
+                }
+
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+
+                break;
+            }
+
+            case WAR_SPELL_FAR_SIGHT:        // target point
+            {
+                break;
+            }
+
+            case WAR_SPELL_INVISIBILITY:
+            {
+                WarEntity* targetEntity = findEntity(context, targetEntityId);
+                if (targetEntity && isDudeUnit(targetEntity))
+                {
+                    WarUnitComponent* targetUnit = &targetEntity->unit;
+                    
+                    if (decreaseUnitMana(context, entity, stats.manaCost))
+                    {
+                        targetUnit->invisible = true;
+                        targetUnit->invisibilityTime = getScaledTime(context, stats.time);
+
+                        vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                        createSpellAnimation(context, targetPosition);
+                        createAudio(context, WAR_NORMAL_SPELL, false);
+                    }
+                }
+                
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+
+                break;
+            }
+
+            case WAR_SPELL_RAIN_OF_FIRE:
+            {
+                if (decreaseUnitMana(context, entity, stats.manaCost))
+                {
+                    vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+                    s32 radius = 2 * MEGA_TILE_WIDTH;
+
+                    s32 projectilesCount = 5;
+                    while (projectilesCount--)
+                    {
+                        f32 offsetx = randomf(-radius, radius);
+                        f32 offsety = randomf(-radius, radius);
+                        vec2 target = vec2Addv(targetTilePosition, vec2f(offsetx, offsety));
+
+                        offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
+                        vec2 origin = vec2f(target.x, map->viewport.y - offsety);
+
+                        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+                    }
+                }
+                else
+                {
+                    WarState* idleState = createIdleState(context, entity, true);
+                    changeNextState(context, entity, idleState, true, true);
+                }
+
+                break;
+            }
+
+            case WAR_SPELL_RAISE_DEAD:
+            {
+                WarEntityList* nearUnits = getNearUnits(context, targetTile, 4);
+                for (s32 i = 0; i < nearUnits->count; i++)
+                {
+                    WarEntity* targetEntity = nearUnits->items[i];
+                    if (targetEntity && isCorpseUnit(targetEntity))
+                    {
+                        if (decreaseUnitMana(context, entity, stats.manaCost))
+                        {
+                            vec2 targetPosition = getUnitCenterPosition(targetEntity, true);
+                            createUnit(context, WAR_UNIT_SKELETON, targetPosition.x, targetPosition.y, 
+                                    unit->player, WAR_RESOURCE_NONE, 0, true);
+
+                            targetPosition = getUnitCenterPosition(targetEntity, false);
+                            createSpellAnimation(context, targetPosition);
+                            createAudio(context, WAR_NORMAL_SPELL, false);
+
+                            removeEntityById(context, targetEntity->id);
+                        }
+                    }
+                }
+                WarEntityListFree(nearUnits);
+
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+
+                break;
+            }
+
+            case WAR_SPELL_DARK_VISION:      // target point
+            {
+                break;
+            }
+
+            case WAR_SPELL_UNHOLY_ARMOR:
+            {
+                WarEntity* targetEntity = findEntity(context, targetEntityId);
+                if (targetEntity && isDudeUnit(targetEntity))
+                {
+                    WarUnitComponent* targetUnit = &targetEntity->unit;
+                    
+                    if (decreaseUnitMana(context, entity, stats.manaCost))
+                    {
+                        decreaseUnitHp(context, targetEntity, halfi(targetUnit->hp));
+
+                        targetUnit->invulnerable = true;
+                        targetUnit->invulnerabilityTime = getScaledTime(context, stats.time);
+
+                        vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                        createSpellAnimation(context, targetPosition);
+                        createAudio(context, WAR_NORMAL_SPELL, false);
+                    }
+                }
+                
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+
+                break;
+            }
+
+            case WAR_SPELL_POISON_CLOUD:
+            {
+                vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+
+                if (decreaseUnitMana(context, entity, stats.manaCost))
+                {
+                    WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
+                    addPoisonCloudComponent(context, poisonCloud, targetTile, getScaledTime(context, stats.time));
+
+                    sprintf(poisonCloud->poisonCloud.animName, "poison_cloud_%.2f_%.2f", targetTilePosition.x, targetTilePosition.y);
+                    createPoisonCloudAnimation(context, targetTilePosition, poisonCloud->poisonCloud.animName);
+                    createAudio(context, WAR_NORMAL_SPELL, false);
+                }
+
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+
+                break;
+            }
+
+            default:
+            {
+                logWarning("Trying to cast wrong spell: %d\n", spellType);
+                break;
             }
         }
-        else
-        {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
-        }
-
+        
         // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
         action->lastActionStep = WAR_ACTION_STEP_NONE;
         action->lastSoundStep =  WAR_ACTION_STEP_NONE;
