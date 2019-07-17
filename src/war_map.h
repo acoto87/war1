@@ -130,4 +130,9 @@ vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v)
 
 s32 getMapTileIndex(WarContext* context, s32 x, s32 y);
 void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile);
+
+WarMapTileState getMapTileState(WarMap* map, s32 x, s32 y);
+void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState);
+void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileState);
+
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);

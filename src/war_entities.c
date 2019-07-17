@@ -901,10 +901,7 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
             if (unit->invulnerable)
             {
                 rect unitRect = getUnitSpriteRect(entity);
-                unitRect.x += 1;
-                unitRect.y += 1;
-                unitRect.width -= 2;
-                unitRect.height -= 2;
+                unitRect = rectExpand(unitRect, -1, -1);
                 nvgStrokeRect(gfx, unitRect, NVG_BLUE_INVULNERABLE, 1);
             }
         }

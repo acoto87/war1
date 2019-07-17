@@ -75,6 +75,65 @@ void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
     updateMinimapTile(&map->minimapSprite.frames[1], levelVisual, tileset, x, y);
 }
 
+WarMapTileState getMapTileState(WarMap* map, s32 x, s32 y)
+{
+    return map->tileStates[y * MAP_TILES_WIDTH + x];
+}
+
+void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState)
+{
+    if (!inRange(startX, 0, MAP_TILES_WIDTH) || !inRange(startY, 0, MAP_TILES_HEIGHT))
+        return;
+
+    if (startX + width >= MAP_TILES_WIDTH)
+        width = MAP_TILES_WIDTH - startX;
+
+    if (startY + height >= MAP_TILES_HEIGHT)
+        height = MAP_TILES_HEIGHT - startY;
+
+    s32 endX = startX + width;
+    s32 endY = startY + height;
+
+    for(s32 y = startY; y < endY; y++)
+    {
+        for(s32 x = startX; x < endX; x++)
+        {
+            map->tileStates[y * MAP_TILES_WIDTH + x] = tileState;
+        }
+    }
+}
+
+void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileState)
+{
+    assert(isUnit(entity));
+
+    vec2 position = getUnitPosition(entity, true);
+    vec2 unitSize = getUnitSize(entity);
+    rect unitRect = rectv(position, unitSize);
+    unitRect = rectExpand(unitRect, 2, 2);
+
+    setMapTileState(map, unitRect.x, unitRect.y, unitRect.width, unitRect.height, tileState);
+}
+
+void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type)
+{
+    assert(entity->type == WAR_ENTITY_TYPE_CURSOR);
+
+    if (entity->cursor.type == type)
+    {
+        return;
+    }
+
+    WarResource* resource = getOrCreateResource(context, type);
+    assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
+
+    removeCursorComponent(context, entity);
+    addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
+
+    removeSpriteComponent(context, entity);
+    addSpriteComponentFromResource(context, entity, imageResourceRef(type));
+}
+
 void createMap(WarContext *context, s32 levelInfoIndex)
 {
     WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
@@ -1541,25 +1600,6 @@ void updateStatus(WarContext* context)
     setStatus(context, highlightIndex, goldCost, woodCost, statusText);
 }
 
-void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type)
-{
-    assert(entity->type == WAR_ENTITY_TYPE_CURSOR);
-
-    if (entity->cursor.type == type)
-    {
-        return;
-    }
-
-    WarResource* resource = getOrCreateResource(context, type);
-    assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
-
-    removeCursorComponent(context, entity);
-    addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
-
-    removeSpriteComponent(context, entity);
-    addSpriteComponentFromResource(context, entity, imageResourceRef(type));
-}
-
 void updateCursor(WarContext* context)
 {
     WarMap* map = context->map;
@@ -1948,21 +1988,26 @@ void renderMapPanel(WarContext *context)
         {
             for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                // index of the tile in the tilesheet
-                u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+                WarMapTileState tileState = getMapTileState(map, x, y);
+                if (tileState == MAP_TILE_STATE_VISIBLE || 
+                    tileState == MAP_TILE_STATE_FOG)
+                {
+                    // index of the tile in the tilesheet
+                    u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+                    
+                    // coordinates in pixels of the terrain tile
+                    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                // coordinates in pixels of the terrain tile
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+                    nvgSave(gfx);
+                    nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
-                nvgSave(gfx);
-                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                    rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
 
-                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
-
-                nvgRestore(gfx);
+                    nvgRestore(gfx);
+                }
             }
         }
 
@@ -2164,6 +2209,83 @@ void renderMapPanel(WarContext *context)
                 nvgRestore(gfx);
             }
         }
+    }
+
+    // render fog of war
+    {
+        const s32 dirC = 8;
+        const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
+        const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
+
+        NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        {
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            {
+                WarMapTileState tileState = getMapTileState(map, x, y);
+                if (tileState == MAP_TILE_STATE_VISIBLE || 
+                    tileState == MAP_TILE_STATE_FOG)
+                {
+                    s32 index = 0;
+
+                    for (s32 d = 0; d < dirC; d++)
+                    {
+                        s32 xx = x + dirX[d];
+                        s32 yy = y + dirY[d];
+                        
+                        if (inRange(x, 0, MAP_TILES_WIDTH) && 
+                            inRange(y, 0, MAP_TILES_HEIGHT))
+                        {
+                            WarMapTileState neighborState = getMapTileState(map, xx, yy);
+                            if (neighborState == MAP_TILE_STATE_VISIBLE ||
+                                neighborState == MAP_TILE_STATE_FOG)
+                            {
+                                index = index | (1 << d);
+                            }
+                        }
+                    }
+
+                    s32 tileIndex = fogTileTypeMap[index];
+                    if (tileIndex != 0)
+                    {
+                        // coordinates in pixels of the terrain tile
+                        s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                        s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                        nvgSave(gfx);
+                        nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+                        rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                        rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                        nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+
+                        nvgRestore(gfx);
+                    }
+                }
+                else
+                {
+                    s32 tileIndex = 101;
+                    if (tileIndex != 0)
+                    {
+                        // coordinates in pixels of the terrain tile
+                        s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                        s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                        nvgSave(gfx);
+                        nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+                        rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                        rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                        nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+
+                        nvgRestore(gfx);
+                    }
+                }
+            }
+        }
+
+        nvgEndImageBatch(gfx, batch);
     }
 
     nvgRestore(gfx);

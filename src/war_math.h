@@ -330,6 +330,15 @@ vec2 rectCenter(rect r)
     return vec2f(r.x + halff(r.width), r.y + halff(r.height));
 }
 
+rect rectExpand(rect r, f32 dx, f32 dy)
+{
+    r.x -= dx;
+    r.y -= dy;
+    r.width += dx * 2;
+    r.height += dy * 2;
+    return r;
+}
+
 vec2 getClosestPointOnRect(vec2 p, rect r)
 {
     f32 left = r.x;

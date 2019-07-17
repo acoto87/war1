@@ -14,6 +14,9 @@ void enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
         vec2 position = getUnitPosition(entity, true);
         setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
         setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
+
+        if (isFriendlyUnit(context, entity))
+            setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
     }
 }
 
