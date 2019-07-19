@@ -75,9 +75,9 @@ void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
     updateMinimapTile(&map->minimapSprite.frames[1], levelVisual, tileset, x, y);
 }
 
-WarMapTileState getMapTileState(WarMap* map, s32 x, s32 y)
+WarMapTile* getMapTileState(WarMap* map, s32 x, s32 y)
 {
-    return map->tileStates[y * MAP_TILES_WIDTH + x];
+    return &map->tiles[y * MAP_TILES_WIDTH + x];
 }
 
 void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState)
@@ -98,7 +98,7 @@ void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height,
     {
         for(s32 x = startX; x < endX; x++)
         {
-            map->tileStates[y * MAP_TILES_WIDTH + x] = tileState;
+            map->tiles[y * MAP_TILES_WIDTH + x].state = tileState;
         }
     }
 }
@@ -561,10 +561,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // set the initial state for the tiles
     {
-        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-        {
-            map->tileStates[i] = MAP_TILE_STATE_UNKOWN;
-        }
+        memset(map->tiles, 0, MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(WarMapTile));
     }
 
     // DEBUG
@@ -1921,6 +1918,70 @@ void updateSpells(WarContext* context)
     WarEntityIdListFree(&spellsToRemove);
 }
 
+void updateFoW(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    const s32 dirC = 8;
+    const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
+    const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
+
+    for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+    {
+        map->tiles[i].type = WAR_FOG_PIECE_NONE;
+        if (map->tiles[i].state == MAP_TILE_STATE_VISIBLE)
+            map->tiles[i].state = MAP_TILE_STATE_FOG;
+    }
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (entity && isFriendlyUnit(context, entity))
+        {
+            setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
+        }
+    }
+
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    {
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        {
+            s32 index = 0;
+
+            for (s32 d = 0; d < dirC; d++)
+            {
+                s32 xx = x + dirX[d];
+                s32 yy = y + dirY[d];
+                
+                if (inRange(x, 0, MAP_TILES_WIDTH) && 
+                    inRange(y, 0, MAP_TILES_HEIGHT))
+                {
+                    WarMapTile* neighborTile = getMapTileState(map, xx, yy);
+                    if (neighborTile->state == MAP_TILE_STATE_VISIBLE ||
+                        neighborTile->state == MAP_TILE_STATE_FOG)
+                    {
+                        index = index | (1 << d);
+                    }
+                }
+            }
+
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (index == 0xFF)
+            {
+                if (tile->state == MAP_TILE_STATE_UNKOWN)
+                {
+                    map->tiles[y * MAP_TILES_WIDTH + x].type = fogTileTypeMap[index];
+                }
+            }
+            else if (tile->state == MAP_TILE_STATE_VISIBLE)
+            {
+                map->tiles[y * MAP_TILES_WIDTH + x].type = fogTileTypeMap[index];
+            }
+        }
+    }
+}
+
 void updateMap(WarContext* context)
 {
     updateGlobalSpeed(context);
@@ -1946,6 +2007,8 @@ void updateMap(WarContext* context)
     updateProjectiles(context);
     updateMagic(context);
     updateSpells(context);
+
+    updateFoW(context);
 
     updateGoldText(context);
     updateWoodText(context);
@@ -1988,26 +2051,21 @@ void renderMapPanel(WarContext *context)
         {
             for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                WarMapTileState tileState = getMapTileState(map, x, y);
-                if (tileState == MAP_TILE_STATE_VISIBLE || 
-                    tileState == MAP_TILE_STATE_FOG)
-                {
-                    // index of the tile in the tilesheet
-                    u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
-                    
-                    // coordinates in pixels of the terrain tile
-                    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+                // index of the tile in the tilesheet
+                u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+                
+                // coordinates in pixels of the terrain tile
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                    nvgSave(gfx);
-                    nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                nvgSave(gfx);
+                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
-                    rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
 
-                    nvgRestore(gfx);
-                }
+                nvgRestore(gfx);
             }
         }
 
@@ -2213,79 +2271,66 @@ void renderMapPanel(WarContext *context)
 
     // render fog of war
     {
-        const s32 dirC = 8;
-        const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
-        const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
-
         NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
 
         for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
         {
             for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                WarMapTileState tileState = getMapTileState(map, x, y);
-                if (tileState == MAP_TILE_STATE_VISIBLE || 
-                    tileState == MAP_TILE_STATE_FOG)
-                {
-                    s32 index = 0;
+                WarMapTile* tile = getMapTileState(map, x, y);
 
-                    for (s32 d = 0; d < dirC; d++)
-                    {
-                        s32 xx = x + dirX[d];
-                        s32 yy = y + dirY[d];
-                        
-                        if (inRange(x, 0, MAP_TILES_WIDTH) && 
-                            inRange(y, 0, MAP_TILES_HEIGHT))
-                        {
-                            WarMapTileState neighborState = getMapTileState(map, xx, yy);
-                            if (neighborState == MAP_TILE_STATE_VISIBLE ||
-                                neighborState == MAP_TILE_STATE_FOG)
-                            {
-                                index = index | (1 << d);
-                            }
-                        }
-                    }
+                s32 tileIndex = (s32)tile->type;
 
-                    s32 tileIndex = fogTileTypeMap[index];
-                    if (tileIndex != 0)
-                    {
-                        // coordinates in pixels of the terrain tile
-                        s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                        s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+                // coordinates in pixels of the terrain tile
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                        nvgSave(gfx);
-                        nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                nvgSave(gfx);
+                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
-                        rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                        rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                        nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
 
-                        nvgRestore(gfx);
-                    }
-                }
-                else
-                {
-                    s32 tileIndex = 101;
-                    if (tileIndex != 0)
-                    {
-                        // coordinates in pixels of the terrain tile
-                        s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                        s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                        nvgSave(gfx);
-                        nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-
-                        rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                        rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                        nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
-
-                        nvgRestore(gfx);
-                    }
-                }
+                nvgRestore(gfx);
             }
         }
 
         nvgEndImageBatch(gfx, batch);
+
+        // nvgSave(gfx);
+        // nvgBeginPath(gfx);
+
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        {
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            {
+                WarMapTile* tile = getMapTileState(map, x, y);
+
+                if (tile->state == MAP_TILE_STATE_FOG ||
+                    tile->state == MAP_TILE_STATE_UNKOWN)
+                {
+                    nvgSave(gfx);
+                    nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+                    rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+
+                    NVGcolor color = NVG_BLACK;
+                    if (tile->state == MAP_TILE_STATE_FOG)
+                        color.a = 0.5f;
+
+                    // nvgRect(gfx, r.x, r.y, r.width, r.height);
+                    // nvgFillColor(gfx, color);
+
+                    nvgFillRect(gfx, rd, color);
+
+                    nvgRestore(gfx);
+                }
+            }
+        }
+
+        // nvgFill(gfx);
+        // nvgRestore(gfx);
     }
 
     nvgRestore(gfx);

@@ -471,20 +471,6 @@ const WarTreeTileType treeTileTypeMap[256] =
     3, 3, 6, 6, 3, 3, 6, 6, 2, 2, 5, 12, 2, 2, 13, 5, 
 };
 
-typedef enum 
-{
-    WAR_FOG_PIECE_NONE,
-    WAR_FOG_PIECE_TOP_LEFT,
-    WAR_FOG_PIECE_TOP,
-    WAR_FOG_PIECE_TOP_RIGHT,
-    WAR_FOG_PIECE_LEFT,
-    WAR_FOG_PIECE_CENTER,
-    WAR_FOG_PIECE_RIGHT,
-    WAR_FOG_PIECE_BOTTOM_LEFT,
-    WAR_FOG_PIECE_BOTTOM,
-    WAR_FOG_PIECE_BOTTOM_RIGHT
-} WarFogPieceType;
-
 // this is a map of the configurations of the neighbors of a tile to a ruin tile type.
 // each index represent one configuration of the 256 possibles and the value at that index
 // is the tile the tree should get based on that configuration.
@@ -521,7 +507,7 @@ const WarFogPieceType fogTileTypeMap[256] =
     // 224-239
     3, 3, 3, 6, 3, 3, 3, 6, 3, 3, 3, 6, 3, 3, 0, 0,
     // 240-255
-    3, 3, 3, 6, 3, 3, 3, 6, 2, 2, 2, 0, 2, 2, 0, 0,
+    3, 3, 3, 6, 3, 3, 3, 6, 2, 2, 0, 0, 2, 2, 0, 5,
 };
 
 typedef struct

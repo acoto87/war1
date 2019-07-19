@@ -960,6 +960,20 @@ shlDefineList(WarTreeList, WarTree)
 
 #define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
 
+typedef enum 
+{
+    WAR_FOG_PIECE_NONE,
+    WAR_FOG_PIECE_TOP_LEFT,
+    WAR_FOG_PIECE_TOP,
+    WAR_FOG_PIECE_TOP_RIGHT,
+    WAR_FOG_PIECE_LEFT,
+    WAR_FOG_PIECE_CENTER,
+    WAR_FOG_PIECE_RIGHT,
+    WAR_FOG_PIECE_BOTTOM_LEFT,
+    WAR_FOG_PIECE_BOTTOM,
+    WAR_FOG_PIECE_BOTTOM_RIGHT
+} WarFogPieceType;
+
 typedef enum
 {
     WAR_ACTION_STEP_NONE,
@@ -1704,6 +1718,12 @@ typedef enum
 
 typedef struct
 {
+    WarMapTileState state;
+    WarFogPieceType type;
+} WarMapTile;
+
+typedef struct
+{
     s32 allowed;
     s32 level;
 } WarUpgrade;
@@ -1769,7 +1789,7 @@ typedef struct
     WarSprite minimapSprite;
 
     WarMapTilesetType tilesetType;
-    WarMapTileState tileStates[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+    WarMapTile tiles[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
 
     WarEntityList entities;
     WarEntityMap entitiesByType;

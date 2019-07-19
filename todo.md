@@ -159,6 +159,17 @@ List of thing to do in no particular order
     * ~~Healing~~
     * ~~Raise dead~~
   * Fog of war
+    * Block selection clicks in fog region
+    * Block build in fog region
+    * Cursor changing when hover a foe unit that is in the fog
+    * Moving unit clears fog
+    * Attack at distance clears fog?
+    * Spells at distance clears fog?
+    * Holy Vision/Dark Vision spells clears fog
+    * After a number of seconds (3 maybe?) an area without friendly units remain with fog.
+    That is, buildings, roads, ruins, walls, trees are shown in the map, with a fade of fog.
+    Moving units are not shown in areas with fog.
+    
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~
