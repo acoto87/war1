@@ -144,9 +144,6 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
         setAction(context, entity, WAR_ACTION_TYPE_WALK, false, getUnitActionScale(entity));
     }
 
-    if (isFriendlyUnit(context, entity))
-        setUnitMapTileState(map, entity, MAP_TILE_STATE_FOG);
-
     vec2 position = getUnitCenterPosition(entity, false);
     vec2 target = vec2TileToMapCoordinates(nextNode, true);
 
@@ -165,17 +162,11 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 newPosition = vec2Addv(position, step);
     setUnitCenterPosition(entity, newPosition, false);
 
-    if (isFriendlyUnit(context, entity))
-        setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
-
     f32 distance = vec2Distance(newPosition, target);
     if (distance < MOVE_EPSILON)
     {
         newPosition = target;
         setUnitCenterPosition(entity, newPosition, false);
-
-        if (isFriendlyUnit(context, entity))
-            setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
 
         setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
         setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
