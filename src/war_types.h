@@ -82,6 +82,17 @@ shlDefineList(vec2List, vec2)
 
 #define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, equalsVec2, NULL}
 
+bool equalsRect(const rect r1, const rect r2)
+{
+    return r1.x == r2.x && r1.y == r2.y && 
+           r1.width == r2.width && r1.height == r2.height;
+}
+
+shlDeclareList(rectList, rect)
+shlDefineList(rectList, rect)
+
+#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, equalsRect, NULL}
+
 //
 // Forward references to other structs that need a reference to these ones.
 // See WarButtonComponent, WarState.building.
@@ -960,20 +971,6 @@ shlDefineList(WarTreeList, WarTree)
 
 #define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
 
-typedef enum 
-{
-    WAR_FOG_PIECE_NONE,
-    WAR_FOG_PIECE_TOP_LEFT,
-    WAR_FOG_PIECE_TOP,
-    WAR_FOG_PIECE_TOP_RIGHT,
-    WAR_FOG_PIECE_LEFT,
-    WAR_FOG_PIECE_CENTER,
-    WAR_FOG_PIECE_RIGHT,
-    WAR_FOG_PIECE_BOTTOM_LEFT,
-    WAR_FOG_PIECE_BOTTOM,
-    WAR_FOG_PIECE_BOTTOM_RIGHT
-} WarFogPieceType;
-
 typedef enum
 {
     WAR_ACTION_STEP_NONE,
@@ -1709,6 +1706,27 @@ typedef enum
     MAP_TILESET_DUNGEON
 } WarMapTilesetType;
 
+typedef enum 
+{
+    WAR_FOG_PIECE_NONE,
+    WAR_FOG_PIECE_TOP_LEFT,
+    WAR_FOG_PIECE_TOP,
+    WAR_FOG_PIECE_TOP_RIGHT,
+    WAR_FOG_PIECE_LEFT,
+    WAR_FOG_PIECE_CENTER,
+    WAR_FOG_PIECE_RIGHT,
+    WAR_FOG_PIECE_BOTTOM_LEFT,
+    WAR_FOG_PIECE_BOTTOM,
+    WAR_FOG_PIECE_BOTTOM_RIGHT
+} WarFogPieceType;
+
+typedef enum
+{
+    WAR_FOG_BOUNDARY_NONE,
+    WAR_FOG_BOUNDARY_UNKOWN,
+    WAR_FOG_BOUNDARY_FOG,
+} WarFogBoundaryType;
+
 typedef enum
 {
     MAP_TILE_STATE_UNKOWN,
@@ -1720,6 +1738,7 @@ typedef struct
 {
     WarMapTileState state;
     WarFogPieceType type;
+    WarFogBoundaryType boundary;
 } WarMapTile;
 
 typedef struct

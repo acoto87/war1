@@ -1,5 +1,6 @@
 #define NVG_WHITE nvgRGBA(255, 255, 255, 255)
 #define NVG_BLACK nvgRGBA(0, 0, 0, 255)
+#define NVG_FOG nvgRGBA(0, 0, 0, 128)
 #define NVG_GRAY_TRANSPARENT nvgRGBA(128, 128, 128, 128)
 #define NVG_RED_TRANSPARENT nvgRGBA(128, 0, 0, 128)
 #define NVG_GREEN_SELECTION nvgRGBA(0, 199, 0, 255)
@@ -306,11 +307,38 @@ void nvgFillRect(NVGcontext* gfx, rect r, NVGcolor color)
     nvgRestore(gfx);
 }
 
+void nvgFillRects(NVGcontext* gfx, s32 count, rect r[], NVGcolor color)
+{
+    nvgSave(gfx);
+    nvgBeginPath(gfx);
+
+    for (s32 i = 0; i < count; i++)
+        nvgRect(gfx, r[i].x, r[i].y, r[i].width, r[i].height);
+
+    nvgFillColor(gfx, color);
+    nvgFill(gfx);
+    nvgRestore(gfx);
+}
+
 void nvgStrokeRect(NVGcontext* gfx, rect r, NVGcolor color, f32 width)
 {
     nvgSave(gfx);
     nvgBeginPath(gfx);
     nvgRect(gfx, r.x, r.y, r.width, r.height);
+    nvgStrokeColor(gfx, color);
+    nvgStrokeWidth(gfx, width);
+    nvgStroke(gfx);
+    nvgRestore(gfx);
+}
+
+void nvgStrokeRects(NVGcontext* gfx, s32 count, rect r[], NVGcolor color, f32 width)
+{
+    nvgSave(gfx);
+    nvgBeginPath(gfx);
+
+    for (s32 i = 0; i < count; i++)
+        nvgRect(gfx, r[i].x, r[i].y, r[i].width, r[i].height);
+    
     nvgStrokeColor(gfx, color);
     nvgStrokeWidth(gfx, width);
     nvgStroke(gfx);

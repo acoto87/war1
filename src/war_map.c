@@ -1929,6 +1929,7 @@ void updateFoW(WarContext* context)
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
         map->tiles[i].type = WAR_FOG_PIECE_NONE;
+        map->tiles[i].boundary = WAR_FOG_BOUNDARY_NONE;
         if (map->tiles[i].state == MAP_TILE_STATE_VISIBLE)
             map->tiles[i].state = MAP_TILE_STATE_FOG;
     }
@@ -1947,36 +1948,102 @@ void updateFoW(WarContext* context)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            s32 index = 0;
-
-            for (s32 d = 0; d < dirC; d++)
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (tile->state == MAP_TILE_STATE_VISIBLE)
             {
-                s32 xx = x + dirX[d];
-                s32 yy = y + dirY[d];
-                
-                if (inRange(x, 0, MAP_TILES_WIDTH) && 
-                    inRange(y, 0, MAP_TILES_HEIGHT))
+                s32 index = 0;
+                s32 unkownCount = 0;
+                s32 fogCount = 0;
+
+                for (s32 d = 0; d < dirC; d++)
                 {
-                    WarMapTile* neighborTile = getMapTileState(map, xx, yy);
-                    if (neighborTile->state == MAP_TILE_STATE_VISIBLE ||
-                        neighborTile->state == MAP_TILE_STATE_FOG)
+                    s32 xx = x + dirX[d];
+                    s32 yy = y + dirY[d];
+                    
+                    if (inRange(xx, 0, MAP_TILES_WIDTH) && 
+                        inRange(yy, 0, MAP_TILES_HEIGHT))
                     {
-                        index = index | (1 << d);
+                        WarMapTile* neighborTile = getMapTileState(map, xx, yy);
+                        if (neighborTile->state == MAP_TILE_STATE_VISIBLE)
+                            index = index | (1 << d);
+                        else if (neighborTile->state == MAP_TILE_STATE_FOG)
+                            fogCount++;
+                        else
+                            unkownCount++;
                     }
                 }
-            }
 
-            WarMapTile* tile = getMapTileState(map, x, y);
-            if (index == 0xFF)
-            {
-                if (tile->state == MAP_TILE_STATE_UNKOWN)
+                if (index != 0xFF)
                 {
-                    map->tiles[y * MAP_TILES_WIDTH + x].type = fogTileTypeMap[index];
+                    tile->type = fogTileTypeMap[index];
+                }
+
+                if (fogCount > 0)
+                    tile->boundary = WAR_FOG_BOUNDARY_FOG;
+                else if (unkownCount > 0)
+                    tile->boundary = WAR_FOG_BOUNDARY_UNKOWN;
+            }
+            else if (tile->state == MAP_TILE_STATE_FOG)
+            {
+                s32 index = 0;
+                s32 unkownCount = 0;
+ 
+                for (s32 d = 0; d < dirC; d++)
+                {
+                    s32 xx = x + dirX[d];
+                    s32 yy = y + dirY[d];
+                    
+                    if (inRange(xx, 0, MAP_TILES_WIDTH) && 
+                        inRange(yy, 0, MAP_TILES_HEIGHT))
+                    {
+                        WarMapTile* neighborTile = getMapTileState(map, xx, yy);
+                        if (neighborTile->state == MAP_TILE_STATE_VISIBLE || 
+                            neighborTile->state == MAP_TILE_STATE_FOG)
+                        {
+                            index = index | (1 << d);
+                        }
+                        else
+                        {
+                            unkownCount++;
+                        }
+                    }
+                }
+
+                if (index != 0xFF)
+                {
+                    tile->type = fogTileTypeMap[index];
+                }
+
+                if (unkownCount > 0)
+                {
+                    tile->boundary = WAR_FOG_BOUNDARY_UNKOWN;
                 }
             }
-            else if (tile->state == MAP_TILE_STATE_VISIBLE)
+            else
             {
-                map->tiles[y * MAP_TILES_WIDTH + x].type = fogTileTypeMap[index];
+                s32 index = 0;
+
+                for (s32 d = 0; d < dirC; d++)
+                {
+                    s32 xx = x + dirX[d];
+                    s32 yy = y + dirY[d];
+                    
+                    if (inRange(xx, 0, MAP_TILES_WIDTH) && 
+                        inRange(yy, 0, MAP_TILES_HEIGHT))
+                    {
+                        WarMapTile* neighborTile = getMapTileState(map, xx, yy);
+                        if (neighborTile->state == MAP_TILE_STATE_VISIBLE ||
+                            neighborTile->state == MAP_TILE_STATE_FOG)
+                        {
+                            index = index | (1 << d);
+                        }
+                    }
+                }
+
+                if (index == 0xFF)
+                {
+                    tile->type = fogTileTypeMap[index];
+                }
             }
         }
     }
@@ -2024,6 +2091,79 @@ void updateMap(WarContext* context)
     updateWallsEdit(context);
     updateRuinsEdit(context);
     updateRainOfFireEdit(context);
+}
+
+void renderFoW(WarContext* context)
+{
+    WarMap* map = context->map;
+    NVGcontext* gfx = context->gfx;
+
+    NVGimageBatch* unkownBatch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+    NVGimageBatch* fogBatch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+
+    rectList unkownRects;
+    rectListInit(&unkownRects, rectListDefaultOptions);
+
+    rectList fogRects;
+    rectListInit(&fogRects, rectListDefaultOptions);
+
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    {
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        {
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (tile->type != WAR_FOG_PIECE_NONE)
+            {
+                s32 tileIndex = (s32)tile->type;
+
+                // coordinates in pixels of the terrain tile
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                nvgSave(gfx);
+                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+
+                if (tile->state == MAP_TILE_STATE_VISIBLE && tile->boundary == WAR_FOG_BOUNDARY_FOG)
+                {
+                    nvgRenderBatchImage(gfx, fogBatch, rs, rd, VEC2_ONE);                        
+                }
+                else if (tile->boundary == WAR_FOG_BOUNDARY_UNKOWN)
+                {
+                    nvgRenderBatchImage(gfx, unkownBatch, rs, rd, VEC2_ONE);
+                }
+
+                nvgRestore(gfx);
+            }
+
+            rect r = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+            if (tile->state == MAP_TILE_STATE_UNKOWN)
+            {
+                rectListAdd(&unkownRects, r);
+            }
+            else if (tile->state == MAP_TILE_STATE_FOG)
+            {
+                rectListAdd(&fogRects, r);
+            }
+        }
+    }
+
+    nvgSave(gfx);
+    nvgEndImageBatch(gfx, unkownBatch);
+    nvgRestore(gfx);
+
+    nvgSave(gfx);
+    nvgGlobalAlpha(gfx, 0.5f);
+    nvgEndImageBatch(gfx, fogBatch);
+    nvgRestore(gfx);
+
+    nvgFillRects(gfx, unkownRects.count, unkownRects.items, NVG_BLACK);
+    nvgFillRects(gfx, fogRects.count, fogRects.items, NVG_FOG);
+
+    rectListFree(&unkownRects);
+    rectListFree(&fogRects);
 }
 
 void renderMapPanel(WarContext *context)
@@ -2271,66 +2411,7 @@ void renderMapPanel(WarContext *context)
 
     // render fog of war
     {
-        NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-
-        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            {
-                WarMapTile* tile = getMapTileState(map, x, y);
-
-                s32 tileIndex = (s32)tile->type;
-
-                // coordinates in pixels of the terrain tile
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                nvgSave(gfx);
-                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-
-                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
-
-                nvgRestore(gfx);
-            }
-        }
-
-        nvgEndImageBatch(gfx, batch);
-
-        // nvgSave(gfx);
-        // nvgBeginPath(gfx);
-
-        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            {
-                WarMapTile* tile = getMapTileState(map, x, y);
-
-                if (tile->state == MAP_TILE_STATE_FOG ||
-                    tile->state == MAP_TILE_STATE_UNKOWN)
-                {
-                    nvgSave(gfx);
-                    nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-
-                    rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-
-                    NVGcolor color = NVG_BLACK;
-                    if (tile->state == MAP_TILE_STATE_FOG)
-                        color.a = 0.5f;
-
-                    // nvgRect(gfx, r.x, r.y, r.width, r.height);
-                    // nvgFillColor(gfx, color);
-
-                    nvgFillRect(gfx, rd, color);
-
-                    nvgRestore(gfx);
-                }
-            }
-        }
-
-        // nvgFill(gfx);
-        // nvgRestore(gfx);
+        renderFoW(context);
     }
 
     nvgRestore(gfx);
