@@ -1584,6 +1584,10 @@ WarRace getUnitRace(WarEntity* entity)
     }
 }
 
+#define isHumanUnit(entity) (getUnitRace(entity) == WAR_RACE_HUMANS)
+#define isOrcUnit(entity) (getUnitRace(entity) == WAR_RACE_ORCS)
+#define isNeutralUnit(entity) (getUnitRace(entity) == WAR_RACE_NEUTRAL)
+
 WarProjectileType getProjectileType(WarUnitType type)
 {
     assert(isRangeUnitType(type));
@@ -1841,6 +1845,7 @@ bool isCarryingResources(WarEntity* entity)
 }
 
 bool displayUnitOnMinimap(WarEntity* entity);
+u8Color getUnitColorOnMinimap(WarEntity* entity);
 
 s32 getPlayerDudesCount(WarContext* context, u8 player);
 s32 getPlayerBuildingsCount(WarContext* context, u8 player);

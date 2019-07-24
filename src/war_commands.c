@@ -204,12 +204,9 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
                     WarRace race = getUnitRace(entity);
                     WarUnitType townHallType = getTownHallOfRace(race);
                     WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
-
-                    // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
                     if (townHall)
                     {
                         WarState* deliverState = createDeliverState(context, entity, townHall->id);
-
                         deliverState->nextState = isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST)
                             ? createGatherWoodState(context, entity, targetEntity->id, targetTile)
                             : createGatherGoldState(context, entity, targetEntity->id);
@@ -624,15 +621,17 @@ bool executeCommand(WarContext* context)
                 {
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
-                    if (targetEntity)
+                    if (checkMapTiles(map, targetTile.x, targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE | MAP_TILE_STATE_FOG))
                     {
-                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
-                            targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                        WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                        WarEntity* targetEntity = findEntity(context, targetEntityId);
+                        if (targetEntity)
                         {
-                            executeHarvestCommand(context, targetEntity, targetTile);
+                            if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
+                                targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                            {
+                                executeHarvestCommand(context, targetEntity, targetTile);
+                            }
                         }
                     }
 

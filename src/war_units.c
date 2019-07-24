@@ -21,13 +21,6 @@ bool isEnemyUnit(WarContext* context, WarEntity* entity)
     return !isNeutralPlayer(otherPlayer);
 }
 
-bool isNeutralUnit(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-    WarPlayerInfo* otherPlayer = &map->players[entity->unit.player];
-    return isNeutralPlayer(otherPlayer);
-}
-
 bool areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 {
     WarMap* map = context->map;
@@ -69,12 +62,43 @@ bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 
 bool displayUnitOnMinimap(WarEntity* entity)
 {
-    return entity && 
-        !isCorpseUnit(entity) && 
-        !isDead(entity) && 
-        !isGoingToDie(entity) && 
-        !isCollapsing(entity) && 
-        !isGoingToCollapse(entity);
+    assert(isUnit(entity));
+
+    if (isCorpseUnit(entity))
+        return false;
+
+    if (isDead(entity) || isGoingToDie(entity))
+        return false;
+
+    if (isCollapsing(entity) || isGoingToCollapse(entity))
+        return false;
+
+    return true;
+}
+
+u8Color getUnitColorOnMinimap(WarEntity* entity)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+
+    u8 r = 211, g = 211, b = 211;
+
+    if (unit->type == WAR_UNIT_TOWNHALL_HUMANS || 
+        unit->type == WAR_UNIT_TOWNHALL_ORCS)
+    {
+        r = 255; g = 255; b = 0;
+    }
+    else if(unit->player == 0)
+    {
+        r = 0; g = 199; b = 0;
+    }
+    else if(unit->player < 4)
+    {
+        r = 199; g = 0; b = 0;
+    }
+
+    return u8RgbColor(r, g, b);
 }
 
 s32 getPlayerUnitTotalCount(WarContext* context, u8 player)

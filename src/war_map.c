@@ -1,80 +1,3 @@
-u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
-{
-    s32 index = y * MAP_TILES_WIDTH + x;
-    u16 tileIndex = levelVisual->levelVisual.data[index];
-
-    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-    s32 r = 0, g = 0, b = 0;
-
-    for(s32 ty = 0; ty < MEGA_TILE_HEIGHT; ty++)
-    {
-        for(s32 tx = 0; tx < MEGA_TILE_WIDTH; tx++)
-        {
-            s32 pixel = (tilePixelY + ty) * TILESET_WIDTH + (tilePixelX + tx);
-            r += tileset->tilesetData.data[pixel * 4 + 0];
-            g += tileset->tilesetData.data[pixel * 4 + 1];
-            b += tileset->tilesetData.data[pixel * 4 + 2];
-        }
-    }
-
-    r /= 256;
-    g /= 256;
-    b /= 256;
-
-    u8Color color = {0};
-    color.r = (u8)r;
-    color.g = (u8)g;
-    color.b = (u8)b;
-    color.a = 255;
-    return color;
-}
-
-void updateMinimapTile(WarSpriteFrame* minimapFrame, WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
-{
-    s32 index = y * MAP_TILES_WIDTH + x;
-    u8Color color = getMapTileAverage(levelVisual, tileset, x, y);
-    minimapFrame->data[index * 4 + 0] = color.r;
-    minimapFrame->data[index * 4 + 1] = color.g;
-    minimapFrame->data[index * 4 + 2] = color.b;
-    minimapFrame->data[index * 4 + 3] = color.a;
-}
-
-s32 getMapTileIndex(WarContext* context, s32 x, s32 y)
-{
-    WarMap* map = context->map;
-
-    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
-    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
-
-    WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-    assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-
-    WarMapTilesetType tilesetType = map->tilesetType;
-    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
-
-    return levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
-}
-
-void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
-{
-    WarMap* map = context->map;
-
-    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
-    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
-
-    WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-    assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-
-    WarResource* tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
-    assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
-
-    levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x] = tile;
-
-    updateMinimapTile(&map->minimapSprite.frames[1], levelVisual, tileset, x, y);
-}
-
 WarMapTile* getMapTileState(WarMap* map, s32 x, s32 y)
 {
     return &map->tiles[y * MAP_TILES_WIDTH + x];
@@ -113,6 +36,123 @@ void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileSta
     unitRect = rectExpand(unitRect, 2, 2);
 
     setMapTileState(map, unitRect.x, unitRect.y, unitRect.width, unitRect.height, tileState);
+}
+
+bool checkMapTiles(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 states)
+{
+    if (!inRange(startX, 0, MAP_TILES_WIDTH) || !inRange(startY, 0, MAP_TILES_HEIGHT))
+        return false;
+
+    if (startX + width >= MAP_TILES_WIDTH)
+        width = MAP_TILES_WIDTH - startX;
+
+    if (startY + height >= MAP_TILES_HEIGHT)
+        height = MAP_TILES_HEIGHT - startY;
+
+    s32 endX = startX + width;
+    s32 endY = startY + height;
+
+    for(s32 y = startY; y < endY; y++)
+    {
+        for(s32 x = startX; x < endX; x++)
+        {
+            s32 index = y * MAP_TILES_WIDTH + x;
+            if (map->tiles[index].state & states)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
+{
+    s32 index = y * MAP_TILES_WIDTH + x;
+    u16 tileIndex = levelVisual->levelVisual.data[index];
+
+    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+    s32 r = 0, g = 0, b = 0;
+
+    for(s32 ty = 0; ty < MEGA_TILE_HEIGHT; ty++)
+    {
+        for(s32 tx = 0; tx < MEGA_TILE_WIDTH; tx++)
+        {
+            s32 pixel = (tilePixelY + ty) * TILESET_WIDTH + (tilePixelX + tx);
+            r += tileset->tilesetData.data[pixel * 4 + 0];
+            g += tileset->tilesetData.data[pixel * 4 + 1];
+            b += tileset->tilesetData.data[pixel * 4 + 2];
+        }
+    }
+
+    r /= 256;
+    g /= 256;
+    b /= 256;
+
+    u8Color color = {0};
+    color.r = (u8)r;
+    color.g = (u8)g;
+    color.b = (u8)b;
+    color.a = 255;
+    return color;
+}
+
+void updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
+{
+    WarMap* map = context->map;
+    WarSpriteFrame* minimapFrame = &map->minimapSprite.frames[1];
+    
+    s32 index = y * MAP_TILES_WIDTH + x;
+    u8Color color = U8COLOR_BLACK;
+
+    WarMapTile* tile = &map->tiles[index];
+    if (tile->state == MAP_TILE_STATE_VISIBLE ||
+        tile->state == MAP_TILE_STATE_FOG)
+    {
+        color = getMapTileAverage(levelVisual, tileset, x, y);
+    }
+
+    minimapFrame->data[index * 4 + 0] = color.r;
+    minimapFrame->data[index * 4 + 1] = color.g;
+    minimapFrame->data[index * 4 + 2] = color.b;
+    minimapFrame->data[index * 4 + 3] = color.a;
+}
+
+s32 getMapTileIndex(WarContext* context, s32 x, s32 y)
+{
+    WarMap* map = context->map;
+
+    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+    WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+    assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+
+    WarMapTilesetType tilesetType = map->tilesetType;
+    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
+    return levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+}
+
+void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
+{
+    WarMap* map = context->map;
+
+    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+    WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+    assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+
+    WarResource* tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
+    assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
+
+    levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x] = tile;
+
+    updateMinimapTile(context, levelVisual, tileset, x, y);
 }
 
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type)
@@ -210,6 +250,26 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     context->map = map;
 
+    // create the black sprite
+    {
+        u8 data[MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT * 4];
+        memset(data, 0, MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT * 4);
+        for (s32 i = 0; i < MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT; i++)
+            data[4 * i + 3] = 255;
+
+        map->blackSprite = createSprite(context, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT, data);
+    }
+
+    // set the initial state for the tiles
+    {
+        for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+        {
+            map->tiles[i].state = MAP_TILE_STATE_UNKOWN;
+            map->tiles[i].type = WAR_FOG_PIECE_NONE;
+            map->tiles[i].boundary = WAR_FOG_BOUNDARY_NONE;
+        }
+    }
+
     // create the map sprite
     {
         WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
@@ -250,25 +310,26 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             minimapFrames[i].h = MINIMAP_HEIGHT;
             minimapFrames[i].off = 0;
             minimapFrames[i].data = (u8*)xcalloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
+
+            // make the frame black
+            for (s32 k = 0; k < MINIMAP_WIDTH * MINIMAP_HEIGHT; k++)
+                minimapFrames[i].data[k * 4 + 3] = 255;
         }
         
         for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
         {
             for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                s32 index = y * MAP_TILES_WIDTH + x;
                 u8Color color = getMapTileAverage(levelVisual, tileset, x, y);
-                for(s32 i = 0; i < 2; i++)
-                {
-                    minimapFrames[i].data[index * 4 + 0] = color.r;
-                    minimapFrames[i].data[index * 4 + 1] = color.g;
-                    minimapFrames[i].data[index * 4 + 2] = color.b;
-                    minimapFrames[i].data[index * 4 + 3] = color.a;
-                }
+                s32 index = y * MAP_TILES_WIDTH + x;
+                minimapFrames[1].data[index * 4 + 0] = color.r;
+                minimapFrames[1].data[index * 4 + 1] = color.g;
+                minimapFrames[1].data[index * 4 + 2] = color.b;
+                minimapFrames[1].data[index * 4 + 3] = color.a;
             }
         }
 
-        map->minimapSprite = createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, 2, minimapFrames);
+        map->minimapSprite = createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, arrayLength(minimapFrames), minimapFrames);
     }
 
     // create the forest entities
@@ -559,11 +620,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
     }
 
-    // set the initial state for the tiles
-    {
-        memset(map->tiles, 0, MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(WarMapTile));
-    }
-
     // DEBUG
     // add animations
     {
@@ -824,19 +880,38 @@ void updateSelection(WarContext* context)
                 for(s32 i = 0; i < units->count; i++)
                 {
                     WarEntity* entity = units->items[i];
-                    if (entity && entity->unit.enabled)
+                    if (entity)
                     {
-                        // don't select dead entities or corpses
-                        if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                        WarTransformComponent* transform = &entity->transform;
+                        WarUnitComponent* unit = &entity->unit;
+                        if (unit->enabled)
                         {
-                            continue;
-                        }
+                            // don't select dead units or corpses
+                            if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                            {
+                                continue;
+                            }
 
-                        rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
+                            // don't select collased buildings
+                            if (isCollapsing(entity) || isGoingToCollapse(entity))
+                            {
+                                continue;
+                            }
 
-                        if (rectIntersects(pointerRect, unitRect))
-                        {
-                            WarEntityListAdd(&newSelectedEntities, entity);
+                            s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
+                            s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
+
+                            // don't select non-visible units
+                            if (!checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
+                            {
+                                continue;
+                            }
+
+                            rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
+                            if (rectIntersects(pointerRect, unitRect))
+                            {
+                                WarEntityListAdd(&newSelectedEntities, entity);
+                            }
                         }
                     }
                 }
@@ -889,46 +964,9 @@ void updateSelection(WarContext* context)
                     if (newSelectedEntities.count == 1)
                     {
                         WarEntity* newSelectedEntity = newSelectedEntities.items[0];
-
                         if (isFriendlyUnit(context, newSelectedEntity))
                         {
-                            if (map->selectedEntities.count == 1)
-                            {
-                                WarEntityId oldSelectedEntityId = map->selectedEntities.items[0];
-                                if (oldSelectedEntityId == newSelectedEntity->id)
-                                {
-                                    if (getUnitRace(newSelectedEntity) == WAR_RACE_HUMANS)
-                                    {
-                                        createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false);
-                                    }
-                                    else
-                                    {
-                                        createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
-                                    }
-                                }
-                                else
-                                {
-                                    if (getUnitRace(newSelectedEntity) == WAR_RACE_HUMANS)
-                                    {
-                                        createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
-                                    }
-                                    else
-                                    {
-                                        createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if (getUnitRace(newSelectedEntity) == WAR_RACE_HUMANS)
-                                {
-                                    createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
-                                }
-                                else
-                                {
-                                    createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
-                                }
-                            }
+                            playDudeSelectionSound(context, newSelectedEntity);
                         }
                         else
                         {
@@ -941,55 +979,7 @@ void updateSelection(WarContext* context)
                     WarEntity* newSelectedEntity = newSelectedEntities.items[0];
                     if (isFriendlyUnit(context, newSelectedEntity))
                     {
-                        if (isBuilding(newSelectedEntity) || isGoingToBuild(newSelectedEntity))
-                        {
-                            createAudio(context, WAR_BUILDING, false);
-                        }
-                        else
-                        {
-                            s32 hpPercent = percentabi(newSelectedEntity->unit.hp, newSelectedEntity->unit.maxhp);
-                            if(hpPercent <= 33)
-                            {
-                                createAudio(context, WAR_FIRE_CRACKLING, false);
-                            }
-                            else
-                            {
-                                switch (newSelectedEntity->unit.type)
-                                {
-                                    case WAR_UNIT_CHURCH:
-                                    {
-                                        createAudio(context, WAR_HUMAN_CHURCH, false);
-                                        break;
-                                    }
-                                    case WAR_UNIT_TEMPLE:
-                                    {
-                                        createAudio(context, WAR_ORC_TEMPLE, false);
-                                        break;
-                                    }
-                                    case WAR_UNIT_STABLE:
-                                    {
-                                        createAudio(context, WAR_HUMAN_STABLE, false);
-                                        break;
-                                    }
-                                    case WAR_UNIT_KENNEL:
-                                    {
-                                        createAudio(context, WAR_ORC_KENNEL, false);
-                                        break;
-                                    }
-                                    case WAR_UNIT_BLACKSMITH_HUMANS:
-                                    case WAR_UNIT_BLACKSMITH_ORCS:
-                                    {
-                                        createAudio(context, WAR_BLACKSMITH, false);
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        createAudio(context, WAR_UI_CLICK, false);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
+                        playBuildingSelectionSound(context, newSelectedEntity);
                     }
                 }
 
@@ -1671,12 +1661,32 @@ void updateCursor(WarContext* context)
                     for(s32 i = 0; i < units->count; i++)
                     {
                         WarEntity* entity = units->items[i];
-                        if (entity && entity->unit.enabled)
+                        if (entity)
                         {
-                            // don't change the cursor for dead entities or corpses
-                            if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                            WarTransformComponent* transform = &entity->transform;
+                            WarUnitComponent* unit = &entity->unit;
+                            if (unit->enabled)
                             {
-                                continue;
+                                // don't change the cursor for dead units or corpses
+                                if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                                {
+                                    continue;
+                                }
+
+                                // don't change the cursor for collased buildings
+                                if (isCollapsing(entity) || isGoingToCollapse(entity))
+                                {
+                                    continue;
+                                }
+
+                                s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
+                                s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
+
+                                // don't change the cursor for non-visible units
+                                if (!checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
+                                {
+                                    continue;
+                                }
                             }
                             
                             rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
@@ -2093,80 +2103,7 @@ void updateMap(WarContext* context)
     updateRainOfFireEdit(context);
 }
 
-void renderFoW(WarContext* context)
-{
-    WarMap* map = context->map;
-    NVGcontext* gfx = context->gfx;
-
-    NVGimageBatch* unkownBatch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-    NVGimageBatch* fogBatch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-
-    rectList unkownRects;
-    rectListInit(&unkownRects, rectListDefaultOptions);
-
-    rectList fogRects;
-    rectListInit(&fogRects, rectListDefaultOptions);
-
-    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-    {
-        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-        {
-            WarMapTile* tile = getMapTileState(map, x, y);
-            if (tile->type != WAR_FOG_PIECE_NONE)
-            {
-                s32 tileIndex = (s32)tile->type;
-
-                // coordinates in pixels of the terrain tile
-                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
-
-                nvgSave(gfx);
-                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-
-                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-
-                if (tile->state == MAP_TILE_STATE_VISIBLE && tile->boundary == WAR_FOG_BOUNDARY_FOG)
-                {
-                    nvgRenderBatchImage(gfx, fogBatch, rs, rd, VEC2_ONE);                        
-                }
-                else if (tile->boundary == WAR_FOG_BOUNDARY_UNKOWN)
-                {
-                    nvgRenderBatchImage(gfx, unkownBatch, rs, rd, VEC2_ONE);
-                }
-
-                nvgRestore(gfx);
-            }
-
-            rect r = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            if (tile->state == MAP_TILE_STATE_UNKOWN)
-            {
-                rectListAdd(&unkownRects, r);
-            }
-            else if (tile->state == MAP_TILE_STATE_FOG)
-            {
-                rectListAdd(&fogRects, r);
-            }
-        }
-    }
-
-    nvgSave(gfx);
-    nvgEndImageBatch(gfx, unkownBatch);
-    nvgRestore(gfx);
-
-    nvgSave(gfx);
-    nvgGlobalAlpha(gfx, 0.5f);
-    nvgEndImageBatch(gfx, fogBatch);
-    nvgRestore(gfx);
-
-    nvgFillRects(gfx, unkownRects.count, unkownRects.items, NVG_BLACK);
-    nvgFillRects(gfx, fogRects.count, fogRects.items, NVG_FOG);
-
-    rectListFree(&unkownRects);
-    rectListFree(&fogRects);
-}
-
-void renderMapPanel(WarContext *context)
+void renderTerrain(WarContext* context)
 {
     WarMap *map = context->map;
 
@@ -2175,21 +2112,18 @@ void renderMapPanel(WarContext *context)
     WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    nvgSave(gfx);
+    WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+    assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-    nvgTranslate(gfx, map->mapPanel.x, map->mapPanel.y);
-    nvgTranslate(gfx, -map->viewport.x, -map->viewport.y);
-    
-    // render terrain
+    NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
-        WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-        assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-
-        NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-
-        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (tile->state == MAP_TILE_STATE_VISIBLE ||
+                tile->state == MAP_TILE_STATE_FOG)
             {
                 // index of the tile in the tilesheet
                 u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
@@ -2208,212 +2142,239 @@ void renderMapPanel(WarContext *context)
                 nvgRestore(gfx);
             }
         }
-
-        nvgEndImageBatch(gfx, batch);
     }
 
-    // render roads
-    {
-        WarEntityList* roads = getEntitiesOfType(map, WAR_ENTITY_TYPE_ROAD);
-        for(s32 i = 0; i < roads->count; i++)
-        {
-            WarEntity *entity = roads->items[i];
-            if (entity)
-            {
-                renderEntity(context, entity, false);
-            }
-        }
-    }
+    nvgEndImageBatch(gfx, batch);
+}
 
-    // render walls
-    {
-        WarEntityList* walls = getEntitiesOfType(map, WAR_ENTITY_TYPE_WALL);
-        for(s32 i = 0; i < walls->count; i++)
-        {
-            WarEntity *entity = walls->items[i];
-            if (entity)
-            {
-                renderEntity(context, entity, false);
-            }
-        }
-    }
+void renderFoW(WarContext* context)
+{
+    WarMap* map = context->map;
 
-    // render ruins
-    {
-        WarEntityList* ruins = getEntitiesOfType(map, WAR_ENTITY_TYPE_RUIN);
-        for(s32 i = 0; i < ruins->count; i++)
-        {
-            WarEntity* entity = ruins->items[i];
-            if (entity)
-            {
-                renderEntity(context, entity, false);
-            }
-        }
-    }
+    NVGcontext* gfx = context->gfx;
 
-    // render wood
-    {
-        WarEntityList* forests = getEntitiesOfType(map, WAR_ENTITY_TYPE_FOREST);
-        for(s32 i = 0; i < forests->count; i++)
-        {
-            WarEntity* entity = forests->items[i];
-            if (entity)
-            {
-                renderEntity(context, entity, false);
-            }
-        }
-    }
+    NVGimageBatch* unkownBatch = nvgBeginImageBatch(gfx, map->blackSprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+    NVGimageBatch* fogBatch = nvgBeginImageBatch(gfx, map->blackSprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+    NVGimageBatch* unkownBoundaryBatch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+    NVGimageBatch* fogBoundaryBatch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
 
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
-#ifdef DEBUG_RENDER_UNIT_PATHS
-        WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
-        for(s32 i = 0; i < units->count; i++)
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            WarEntity *entity = units->items[i];
-            if (entity)
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (tile->type != WAR_FOG_PIECE_NONE)
             {
-                WarState* moveState = getDirectState(entity, WAR_STATE_MOVE)
-                if (moveState)
+                s32 tileIndex = (s32)tile->type;
+
+                // coordinates in pixels of the terrain tile
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+
+                if (tile->state == MAP_TILE_STATE_VISIBLE && tile->boundary == WAR_FOG_BOUNDARY_FOG)
                 {
-                    vec2List positions = moveState->move.positions;
-                    for(s32 k = moveState->move.positionIndex; k < positions.count; k++)
-                    {
-                        vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
-                        pos = vec2Subv(pos, vec2i(2, 2));
-                        nvgFillRect(gfx, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
-                    }
-                    
-                    s32 index = moveState->move.pathNodeIndex;
-                    WarMapPath path = moveState->move.path;
-                    
-                    if (index >= 0)
-                    {
-                        vec2 prevPos;
-                        for(s32 k = 0; k < path.nodes.count; k++)
-                        {
-                            vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
-
-                            if (k > 0)
-                                nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
-
-                            nvgFillRect(gfx, rectv(pos, VEC2_ONE), k == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
-
-                            prevPos = pos;
-                        }
-                    }
+                    nvgRenderBatchImage(gfx, fogBoundaryBatch, rs, rd, VEC2_ONE);                        
+                }
+                else if (tile->boundary == WAR_FOG_BOUNDARY_UNKOWN)
+                {
+                    nvgRenderBatchImage(gfx, unkownBoundaryBatch, rs, rd, VEC2_ONE);
                 }
             }
-        }
-#endif
-    }
 
-    {
-#ifdef DEBUG_RENDER_PASSABLE_INFO
-        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+            if (tile->state == MAP_TILE_STATE_UNKOWN)
             {
-                if (isStatic(map->finder, x, y))
-                {
-                    vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                    vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 0, 0, 100));
-                }
-                else if(isDynamic(map->finder, x, y))
-                {
-                    vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                    vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                    nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 150, 100, 100));
-                }
+                rect rs = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, unkownBatch, rs, rd, VEC2_ONE);
             }
-        }
-#endif
-    }
-
-    {
-#ifdef DEBUG_RENDER_MAP_GRID
-        for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
-        {
-            vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
-            vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
-            nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
-        }
-
-        for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
-        {
-            vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
-            vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
-            nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
-        }
-#endif
-    }
-
-    // render units
-    {
-        WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
-        for(s32 i = 0; i < units->count; i++)
-        {
-            WarEntity *entity = units->items[i];
-            if (entity)
+            else if (tile->state == MAP_TILE_STATE_FOG)
             {
-                bool selected = WarEntityIdListContains(&map->selectedEntities, entity->id);
-                renderEntity(context, entity, selected);
+                rect rs = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgRenderBatchImage(gfx, fogBatch, rs, rd, VEC2_ONE);
             }
         }
     }
 
-    // render projectiles
+    nvgEndImageBatch(gfx, unkownBoundaryBatch);
+    nvgEndImageBatch(gfx, unkownBatch);
+
+    nvgSave(gfx);
+    nvgGlobalAlpha(gfx, 0.5f);
+    nvgEndImageBatch(gfx, fogBoundaryBatch);
+    nvgEndImageBatch(gfx, fogBatch);
+    nvgRestore(gfx);
+}
+
+void renderAnimations(WarContext* context)
+{
+    WarMap *map = context->map;
+
+    NVGcontext* gfx = context->gfx;
+
+    for(s32 i = 0; i < map->animations.count; i++)
     {
-        WarEntityList* projectiles = getEntitiesOfType(map, WAR_ENTITY_TYPE_PROJECTILE);
-        for (s32 i = 0; i < projectiles->count; i++)
+        WarSpriteAnimation* anim = map->animations.items[i];
+        if (anim->status == WAR_ANIM_STATUS_RUNNING)
         {
-            WarEntity* entity = projectiles->items[i];
-            if (entity)
-            {
-                renderEntity(context, entity, false);
-            }
-        }
-    }
+            s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
+            animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
 
-    // render animations
-    {
-        for(s32 i = 0; i < map->animations.count; i++)
-        {
-            WarSpriteAnimation* anim = map->animations.items[i];
-            if (anim->status == WAR_ANIM_STATUS_RUNNING)
-            {
-                s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
-                animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+            s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
+            assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
 
-                s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-                assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
+            nvgSave(gfx);
 
-                nvgSave(gfx);
-
-                nvgTranslate(gfx, anim->offset.x, anim->offset.y);
-                nvgScale(gfx, anim->scale.x, anim->scale.y);
+            nvgTranslate(gfx, anim->offset.x, anim->offset.y);
+            nvgScale(gfx, anim->scale.x, anim->scale.y);
 
 #ifdef DEBUG_RENDER_MAP_ANIMATIONS
-                // size of the original sprite
-                vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+            // size of the original sprite
+            vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
 
-                nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
+            nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
 #endif
 
-                WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
-                updateSpriteImage(context, anim->sprite, frame.data);
-                renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
+            WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
+            updateSpriteImage(context, anim->sprite, frame.data);
+            renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
-                nvgRestore(gfx);
+            nvgRestore(gfx);
+        }
+    }
+}
+
+void renderUnitPaths(WarContext* context)
+{
+    WarMap *map = context->map;
+
+    NVGcontext* gfx = context->gfx;
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for(s32 i = 0; i < units->count; i++)
+    {
+        WarEntity *entity = units->items[i];
+        if (entity)
+        {
+            WarState* moveState = getDirectState(entity, WAR_STATE_MOVE);
+            if (moveState)
+            {
+                vec2List positions = moveState->move.positions;
+                for(s32 k = moveState->move.positionIndex; k < positions.count; k++)
+                {
+                    vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
+                    pos = vec2Subv(pos, vec2i(2, 2));
+                    nvgFillRect(gfx, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
+                }
+                
+                s32 index = moveState->move.pathNodeIndex;
+                WarMapPath path = moveState->move.path;
+                
+                if (index >= 0)
+                {
+                    vec2 prevPos;
+                    for(s32 k = 0; k < path.nodes.count; k++)
+                    {
+                        vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
+
+                        if (k > 0)
+                            nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
+
+                        nvgFillRect(gfx, rectv(pos, VEC2_ONE), k == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
+
+                        prevPos = pos;
+                    }
+                }
             }
         }
     }
+}
 
-    // render fog of war
+void renderPassableInfo(WarContext* context)
+{
+    WarMap *map = context->map;
+
+    NVGcontext* gfx = context->gfx;
+
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
-        renderFoW(context);
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        {
+            if (isStatic(map->finder, x, y))
+            {
+                vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 0, 0, 100));
+            }
+            else if(isDynamic(map->finder, x, y))
+            {
+                vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 150, 100, 100));
+            }
+        }
+    }
+}
+
+void renderMapGrid(WarContext* context)
+{
+    WarMap *map = context->map;
+
+    NVGcontext* gfx = context->gfx;
+
+    for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
+    {
+        vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
+        vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
+        nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
     }
 
+    for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
+    {
+        vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
+        vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
+        nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
+    }
+}
+
+void renderMapPanel(WarContext *context)
+{
+    WarMap *map = context->map;
+
+    NVGcontext* gfx = context->gfx;
+
+    nvgSave(gfx);
+
+    nvgTranslate(gfx, map->mapPanel.x, map->mapPanel.y);
+    nvgTranslate(gfx, -map->viewport.x, -map->viewport.y);
+    
+    renderTerrain(context);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_ROAD);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_RUIN);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
+    
+#ifdef DEBUG_RENDER_UNIT_PATHS
+    renderUnitPaths(context);
+#endif
+
+#ifdef DEBUG_RENDER_PASSABLE_INFO
+    renderPassableInfo(context);
+#endif
+
+#ifdef DEBUG_RENDER_MAP_GRID
+    renderMapGrid(context);
+#endif
+
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    renderUnitSelection(context);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);    
+    renderAnimations(context);
+    renderFoW(context);
+    
     nvgRestore(gfx);
 }
 

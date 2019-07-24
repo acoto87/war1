@@ -114,7 +114,9 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
 WarEntity* findUIEntity(WarContext* context, const char* name);
 void removeEntity(WarContext* context, WarEntity* entity);
 void removeEntityById(WarContext* context, WarEntityId id);
-void renderEntity(WarContext* context, WarEntity* entity, bool selected);
+void renderEntity(WarContext* context, WarEntity* entity);
+void renderEntitiesOfType(WarContext* context, WarEntityType type);
+void renderUnitSelection(WarContext* context);
 bool isStaticEntity(WarEntity* entity);
 
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade);

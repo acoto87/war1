@@ -499,7 +499,7 @@ void renderUIEntities(WarContext* context)
         {
             if (!strEquals(entity->ui.name, "cursor"))
             {
-                renderEntity(context, entity, false);
+                renderEntity(context, entity);
             }
         }
     }
@@ -510,56 +510,68 @@ void renderCursor(WarContext* context)
     WarEntity* entity = findUIEntity(context, "cursor");
     if (entity)
     {
-        renderEntity(context, entity, false);
+        renderEntity(context, entity);
     }
 }
 
 void renderMinimap(WarContext* context)
 {
     WarMap* map = context->map;
+
     NVGcontext* gfx = context->gfx;
+
+    WarSpriteFrame* frame0 = &map->minimapSprite.frames[0];
+    WarSpriteFrame* frame1 = &map->minimapSprite.frames[1];
 
     nvgSave(gfx);
 
     // copy the minimap base to the first frame which is the one that will be rendered
-    memcpy(map->minimapSprite.frames[0].data, map->minimapSprite.frames[1].data, MINIMAP_WIDTH * MINIMAP_HEIGHT * 4);
+    // copy only the visible tiles/pixels
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    {
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        {
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (tile->state == MAP_TILE_STATE_VISIBLE ||
+                tile->state == MAP_TILE_STATE_FOG)
+            {
+                s32 index = y * MAP_TILES_WIDTH + x;
+                frame0->data[index * 4 + 0] = frame1->data[index * 4 + 0];
+                frame0->data[index * 4 + 1] = frame1->data[index * 4 + 1];
+                frame0->data[index * 4 + 2] = frame1->data[index * 4 + 2];
+                frame0->data[index * 4 + 3] = frame1->data[index * 4 + 3];
+            }
+        }
+    }
 
     WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (displayUnitOnMinimap(entity))
+        if (entity)
         {
-            u8 r = 211, g = 211, b = 211;
+            WarUnitComponent* unit = &entity->unit;
+            WarTransformComponent* transform = &entity->transform;
 
-            WarUnitComponent unit = entity->unit;
+            if (displayUnitOnMinimap(entity))
+            {
+                s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
+                s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
 
-            if (unit.type == WAR_UNIT_TOWNHALL_HUMANS || 
-                unit.type == WAR_UNIT_TOWNHALL_ORCS)
-            {
-                r = 255; g = 255; b = 0;
-            }
-            else if(unit.player == 0)
-            {
-                r = 0; g = 199; b = 0;
-            }
-            else if(unit.player < 4)
-            {
-                r = 199; g = 0; b = 0;
-            }
-
-            WarTransformComponent transform = entity->transform;
-            s32 tileX = (s32)(transform.position.x/MEGA_TILE_WIDTH);
-            s32 tileY = (s32)(transform.position.y/MEGA_TILE_HEIGHT);
-
-            for(s32 y = 0; y < unit.sizey; y++)
-            {
-                for(s32 x = 0; x < unit.sizex; x++)
+                if (checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
                 {
-                    s32 pixel = (tileY + y) * MINIMAP_WIDTH + (tileX + x);
-                    map->minimapSprite.frames[0].data[pixel * 4 + 0] = r;
-                    map->minimapSprite.frames[0].data[pixel * 4 + 1] = g;
-                    map->minimapSprite.frames[0].data[pixel * 4 + 2] = b;
+                    u8Color color = getUnitColorOnMinimap(entity);
+
+                    for(s32 y = 0; y < unit->sizey; y++)
+                    {
+                        for(s32 x = 0; x < unit->sizex; x++)
+                        {
+                            s32 pixel = (tileY + y) * MINIMAP_WIDTH + (tileX + x);
+                            frame0->data[pixel * 4 + 0] = color.r;
+                            frame0->data[pixel * 4 + 1] = color.g;
+                            frame0->data[pixel * 4 + 2] = color.b;
+                        }
+                    }
                 }
             }
         }

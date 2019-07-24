@@ -128,11 +128,14 @@ vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v)
     return v;
 }
 
+u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y);
+void updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResource* tileset, s32 x, s32 y);
 s32 getMapTileIndex(WarContext* context, s32 x, s32 y);
 void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile);
 
 WarMapTile* getMapTileState(WarMap* map, s32 x, s32 y);
-// void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState);
-// void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileState);
+void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState);
+void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileState);
+bool checkMapTiles(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 states);
 
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);

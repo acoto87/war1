@@ -1620,6 +1620,8 @@ typedef struct
     char animName[30];
 } WarPoisonCloudComponent;
 
+typedef void (*WarRenderFunc)(struct _WarContext* context, struct _WarEntity* entity);
+
 typedef struct _WarEntity
 {
     bool enabled;
@@ -1729,9 +1731,9 @@ typedef enum
 
 typedef enum
 {
-    MAP_TILE_STATE_UNKOWN,
-    MAP_TILE_STATE_FOG,
-    MAP_TILE_STATE_VISIBLE
+    MAP_TILE_STATE_UNKOWN = 1,
+    MAP_TILE_STATE_FOG = 2,
+    MAP_TILE_STATE_VISIBLE = 4
 } WarMapTileState;
 
 typedef struct
@@ -1806,6 +1808,7 @@ typedef struct
 
     WarSprite sprite;
     WarSprite minimapSprite;
+    WarSprite blackSprite;
 
     WarMapTilesetType tilesetType;
     WarMapTile tiles[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];

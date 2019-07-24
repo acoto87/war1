@@ -67,6 +67,8 @@ List of thing to do in no particular order
   * ~~Fix colors of Poison Cloud~~
   * ~~Fix orc maps tile displacements~~
   * Check the uses of `context->deltaTime` when the speed of the game is not `1`.
+  * When a unit is selected before dispear in the fog, the unit remains selected. The unit should be removed from the selection.
+  * Deliver command (when click on button) is not working when unit have wood.
 
 * General
   * ~~Test the new implementation for lists.~~

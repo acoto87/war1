@@ -12,7 +12,7 @@ WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
     sprite.frames[0].w = width;
     sprite.frames[0].h = height;
     sprite.frames[0].off = 0;
-    sprite.frames[0].data = (u8*)malloc(width * height * 4);
+    sprite.frames[0].data = (u8*)xmalloc(width * height * 4);
 
     if (data)
         memcpy(sprite.frames[0].data, data, width * height * 4);

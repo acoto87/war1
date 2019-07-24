@@ -835,22 +835,33 @@ void renderForest(WarContext* context, WarEntity* entity)
     }
 }
 
-void renderUnit(WarContext* context, WarEntity* entity, bool selected)
+void renderUnit(WarContext* context, WarEntity* entity)
 {
+    WarMap* map = context->map;
+
     NVGcontext* gfx = context->gfx;
 
+    WarUnitComponent* unit = &entity->unit;
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarAnimationsComponent* animations = &entity->animations;
+
+    // position of the unit in the map
+    vec2 position = transform->position;    
+
+    s32 tileX = (s32)(position.x / MEGA_TILE_WIDTH);
+    s32 tileY = (s32)(position.y / MEGA_TILE_HEIGHT);
+
+    if (!checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
+    {
+        return;
+    }
 
     // size of the original sprite
     vec2 frameSize = getUnitFrameSize(entity);
 
     // size of the unit
     vec2 unitSize = getUnitSpriteSize(entity);
-
-    // position of the unit in the map
-    vec2 position = transform->position;
 
     // scale of the unit: this is modified by animations when the animation indicates that it
     // should flip horizontally or vertically or both
@@ -867,8 +878,6 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
 #endif
 
 #ifdef DEBUG_RENDER_UNIT_STATS
-    WarUnitComponent* unit = &entity->unit;
-
     rect spriteRect = getUnitSpriteRect(entity);
 
     char debugText[50];
@@ -911,17 +920,6 @@ void renderUnit(WarContext* context, WarEntity* entity, bool selected)
         renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
 
         nvgRestore(gfx);
-
-        if (selected)
-        {
-            rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
-            NVGcolor color = NVG_WHITE_SELECTION;
-            if (isFriendlyUnit(context, entity))
-                color = NVG_GREEN_SELECTION;
-            else if (isEnemyUnit(context, entity))
-                color = NVG_RED_SELECTION;
-            nvgStrokeRect(gfx, selr, color, 1.0f);
-        }
     }
 
     if (animations->enabled)
@@ -1121,90 +1119,102 @@ void renderProjectile(WarContext* context, WarEntity* entity)
     }
 }
 
-void renderEntity(WarContext* context, WarEntity* entity, bool selected)
+void renderEntity(WarContext* context, WarEntity* entity)
 {
+    static WarRenderFunc renderFuncs[WAR_ENTITY_TYPE_COUNT] =
+    {
+        NULL,               // WAR_ENTITY_TYPE_NONE
+        renderImage,        // WAR_ENTITY_TYPE_IMAGE
+        renderUnit,         // WAR_ENTITY_TYPE_UNIT
+        renderRoad,         // WAR_ENTITY_TYPE_ROAD
+        renderWall,         // WAR_ENTITY_TYPE_WALL
+        renderRuin,         // WAR_ENTITY_TYPE_RUIN
+        renderForest,       // WAR_ENTITY_TYPE_FOREST
+        renderText,         // WAR_ENTITY_TYPE_TEXT
+        renderRect,         // WAR_ENTITY_TYPE_RECT
+        renderButton,       // WAR_ENTITY_TYPE_BUTTON
+        renderImage,        // WAR_ENTITY_TYPE_CURSOR
+        NULL,               // WAR_ENTITY_TYPE_AUDIO
+        renderProjectile,   // WAR_ENTITY_TYPE_PROJECTILE
+        NULL,               // WAR_ENTITY_TYPE_RAIN_OF_FIRE
+        NULL,               // WAR_ENTITY_TYPE_POISON_CLOUD
+    };
+
     NVGcontext* gfx = context->gfx;
 
     if (entity->id && entity->enabled)
     {
-        nvgSave(gfx);
-
-        switch (entity->type)
+        WarRenderFunc renderFunc = renderFuncs[(s32)entity->type];
+        if (!renderFunc)
         {
-            case WAR_ENTITY_TYPE_IMAGE:
-            {
-                renderImage(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_UNIT:
-            {
-                renderUnit(context, entity, selected);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_ROAD:
-            {
-                renderRoad(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_WALL:
-            {
-                renderWall(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_RUIN:
-            {
-                renderRuin(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_FOREST:
-            {
-                renderForest(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_TEXT:
-            {
-                renderText(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_RECT:
-            {
-                renderRect(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_BUTTON:
-            {
-                renderButton(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_CURSOR:
-            {
-                renderImage(context, entity);
-                break;
-            }
-
-            case WAR_ENTITY_TYPE_PROJECTILE:
-            {
-                renderProjectile(context, entity);
-                break;
-            }
-
-            default:
-            {
-                logError("Entity of type %d can't be rendered.\n", entity->type);
-                break;
-            }
+            logError("Entity of type %d can't be render. renderFunc = NULL\n", entity->type);
+            return;
         }
 
+        nvgSave(gfx);
+        renderFunc(context, entity);
         nvgRestore(gfx);
+    }
+}
+
+void renderEntitiesOfType(WarContext* context, WarEntityType type)
+{
+    WarMap* map = context->map;
+
+    WarEntityList* entities = getEntitiesOfType(map, type);
+    for(s32 i = 0; i < entities->count; i++)
+    {
+        WarEntity* entity = entities->items[i];
+        if (entity)
+        {
+            renderEntity(context, entity);
+        }
+    }
+}
+
+void renderUnitSelection(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    NVGcontext* gfx = context->gfx;
+
+    WarEntityIdList* selectedEntities = &map->selectedEntities;
+    for (s32 i = 0; i < selectedEntities->count; i++)
+    {
+        WarEntityId entityId = selectedEntities->items[i];
+        WarEntity* entity = findEntity(context, entityId);
+        if (entity)
+        {
+            WarTransformComponent* transform = &entity->transform;
+            WarSpriteComponent* sprite = &entity->sprite;
+
+            if (sprite->enabled)
+            {
+                // size of the original sprite
+                vec2 frameSize = getUnitFrameSize(entity);
+
+                // size of the unit
+                vec2 unitSize = getUnitSpriteSize(entity);
+
+                // position of the unit in the map
+                vec2 position = transform->position;
+
+                nvgSave(gfx);
+                nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
+                nvgTranslate(gfx, halff(unitSize.x), halff(unitSize.y));
+                nvgTranslate(gfx, position.x, position.y);
+
+                rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
+                NVGcolor color = NVG_WHITE_SELECTION;
+                if (isFriendlyUnit(context, entity))
+                    color = NVG_GREEN_SELECTION;
+                else if (isEnemyUnit(context, entity))
+                    color = NVG_RED_SELECTION;
+                nvgStrokeRect(gfx, selr, color, 1.0f);
+
+                nvgRestore(gfx);
+            }
+        }
     }
 }
 

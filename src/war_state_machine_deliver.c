@@ -21,7 +21,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
     WarEntity* townHall = findEntity(context, state->deliver.townHallId);
 
-    // if the goldmine doesn't exists (it could ran out of gold, or other units attacking it), go idle
+    // if the town hall doesn't exists (or other units attacking it), go idle
     if (!townHall)
     {
         WarState* idleState = createIdleState(context, entity, true);
@@ -31,7 +31,9 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (!unitInRange(entity, townHall, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, townHall->id, VEC2_ZERO, stats.range);
+        vec2 targetTile = unitPointOnTarget(entity, townHall);
+
+        WarState* followState = createFollowState(context, entity, townHall->id, targetTile, stats.range);
         followState->nextState = state;
         changeNextState(context, entity, followState, false, true);
         return;
@@ -57,7 +59,6 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    // TODO: deliver goods here to the player!!
     if (unit->resourceKind == WAR_RESOURCE_GOLD)
     {
         increasePlayerResources(context, &map->players[0], unit->amount, 0);

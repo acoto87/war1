@@ -468,6 +468,94 @@ void playAttackSound(WarContext* context, WarUnitActionStepType soundStep)
     }
 }
 
+void playDudeSelectionSound(WarContext* context, WarEntity* entity)
+{
+    assert(isDudeUnit(entity));
+
+    WarMap* map = context->map;
+
+    if (map->selectedEntities.count == 1)
+    {
+        WarEntityId selectedEntityId = map->selectedEntities.items[0];
+        if (selectedEntityId == entity->id)
+        {
+            if (isHumanUnit(entity))
+                createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false);
+            else
+                createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
+        }
+        else
+        {
+            if (isHumanUnit(entity))
+                createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
+            else
+                createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
+        }
+    }
+    else
+    {
+        if (isHumanUnit(entity))
+            createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
+        else
+            createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
+    }
+}
+
+void playBuildingSelectionSound(WarContext* context, WarEntity* entity)
+{
+    assert(isBuildingUnit(entity));
+
+    if (isBuilding(entity) || isGoingToBuild(entity))
+    {
+        createAudio(context, WAR_BUILDING, false);
+    }
+    else
+    {
+        s32 hpPercent = percentabi(entity->unit.hp, entity->unit.maxhp);
+        if(hpPercent <= 33)
+        {
+            createAudio(context, WAR_FIRE_CRACKLING, false);
+        }
+        else
+        {
+            switch (entity->unit.type)
+            {
+                case WAR_UNIT_CHURCH:
+                {
+                    createAudio(context, WAR_HUMAN_CHURCH, false);
+                    break;
+                }
+                case WAR_UNIT_TEMPLE:
+                {
+                    createAudio(context, WAR_ORC_TEMPLE, false);
+                    break;
+                }
+                case WAR_UNIT_STABLE:
+                {
+                    createAudio(context, WAR_HUMAN_STABLE, false);
+                    break;
+                }
+                case WAR_UNIT_KENNEL:
+                {
+                    createAudio(context, WAR_ORC_KENNEL, false);
+                    break;
+                }
+                case WAR_UNIT_BLACKSMITH_HUMANS:
+                case WAR_UNIT_BLACKSMITH_ORCS:
+                {
+                    createAudio(context, WAR_BLACKSMITH, false);
+                    break;
+                }
+                default:
+                {
+                    createAudio(context, WAR_UI_CLICK, false);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 /**
  * Extension function of MemoryBuffer to read variable lengths integer values.
  */
