@@ -621,7 +621,8 @@ bool executeCommand(WarContext* context)
                 {
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-                    if (checkMapTiles(map, targetTile.x, targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE | MAP_TILE_STATE_FOG))
+                    if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
+                        isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                     {
                         WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
                         WarEntity* targetEntity = findEntity(context, targetEntityId);
@@ -659,12 +660,15 @@ bool executeCommand(WarContext* context)
                 {
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
-                    if (targetEntity && isBuildingUnit(targetEntity))
+                    if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
+                        isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        executeRepairCommand(context, targetEntity);
+                        WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                        WarEntity* targetEntity = findEntity(context, targetEntityId);
+                        if (targetEntity && isBuildingUnit(targetEntity))
+                        {
+                            executeRepairCommand(context, targetEntity);
+                        }
                     }
 
                     command->type = WAR_COMMAND_NONE;
@@ -686,8 +690,10 @@ bool executeCommand(WarContext* context)
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
-
-                    executeAttackCommand(context, targetEntity, targetTile);
+                    if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE | MAP_TILE_STATE_FOG))
+                    {
+                        executeAttackCommand(context, targetEntity, targetTile);
+                    }
 
                     command->type = WAR_COMMAND_NONE;
                     return true;

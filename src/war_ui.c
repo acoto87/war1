@@ -607,20 +607,13 @@ void renderMapUI(WarContext* context)
 
     nvgSave(gfx);
 
-    // render selection rect
     renderSelectionRect(context);
-
-    // render command
     renderCommand(context);
-
-    // render ui entities
     renderUIEntities(context);
 
-    // render minimap
     renderMinimap(context);
     renderMinimapViewport(context);
 
-    // render the cursor at the end
     renderCursor(context);
 
     // DEBUG:

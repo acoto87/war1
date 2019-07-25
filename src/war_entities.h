@@ -132,8 +132,10 @@ bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s
 bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y);
 WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance);
 WarEntity* getNearEnemy(WarContext* context, WarEntity* entity);
-WarEntity* getAttackerEnemy(WarContext* context, WarEntity* entity);
 bool isBeingAttackedBy(WarEntity* entity, WarEntity* other);
+bool isBeingAttacked(WarContext* context, WarEntity* entity);
+WarEntity* getAttacker(WarContext* context, WarEntity* entity);
+WarEntity* getAttackTarget(WarContext* context, WarEntity* entity);
 s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor);
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage);
 void rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);

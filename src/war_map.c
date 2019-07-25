@@ -67,6 +67,16 @@ bool checkMapTiles(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s
     return false;
 }
 
+bool checkUnitTiles(WarMap* map, WarEntity* entity, s32 states)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+
+    vec2 position = getUnitPosition(entity, true);
+    return checkMapTiles(map, position.x, position.y, unit->sizex, unit->sizey, states);
+}
+
 u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
 {
     s32 index = y * MAP_TILES_WIDTH + x;
@@ -1948,9 +1958,44 @@ void updateFoW(WarContext* context)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity && isFriendlyUnit(context, entity))
+        if (entity)
         {
-            setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
+            if (isFriendlyUnit(context, entity))
+            {
+                setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
+
+                // revel the attack target of the unit
+                WarEntity* targetEntity = getAttackTarget(context, entity);
+                if (targetEntity)
+                {
+                    if (isUnit(targetEntity))
+                    {
+                        setUnitMapTileState(map, targetEntity, MAP_TILE_STATE_VISIBLE);
+                    }
+                    else if (isWall(targetEntity))
+                    {
+                        WarState* attackState = getAttackState(entity);
+                        vec2 targetTile = attackState->attack.targetTile;
+                        WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
+                        if (piece)
+                        {
+                            setMapTileState(map, targetTile.x, targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                        }
+                    }
+                }
+
+                // reveal the attacker
+                WarEntity* attacker = getAttacker(context, entity);
+                if (attacker)
+                {
+                    // if the attacker is the same the unit is attacking to
+                    // don't change tile state because already happened above
+                    if (!targetEntity || attacker->id != targetEntity->id)
+                    {
+                        setUnitMapTileState(map, attacker, MAP_TILE_STATE_VISIBLE);
+                    }
+                }
+            }
         }
     }
 

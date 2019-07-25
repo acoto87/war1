@@ -1426,9 +1426,14 @@ bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
     {
         for (s32 dx = 0; dx < w; dx++)
         {
-            if (!isEmpty(map->finder, x + dx, y + dy))
+            s32 xx = x + dx;
+            s32 yy = y + dy;
+            if (inRange(xx, 0, MAP_TILES_WIDTH) && inRange(yy, 0, MAP_TILES_HEIGHT))
             {
-                return false;
+                if (!isEmpty(map->finder, xx, yy) || isTileUnkown(map, xx, yy))
+                {
+                    return false;
+                }
             }
         }
     }
@@ -1511,26 +1516,6 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
     return NULL;
 }
 
-WarEntity* getAttackerEnemy(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-
-    WarEntityList* entities = getEntities(map);
-    for(s32 i = 0; i < entities->count; i++)
-    {
-        WarEntity* other = entities->items[i];
-        if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
-        {
-            if (isBeingAttackedBy(entity, other))
-            {
-                return other;
-            }
-        }
-    }
-
-    return NULL;
-}
-
 bool isBeingAttackedBy(WarEntity* entity, WarEntity* other)
 {
     if (!isFollowing(other) && !isMoving(other))
@@ -1540,6 +1525,55 @@ bool isBeingAttackedBy(WarEntity* entity, WarEntity* other)
     }
 
     return false;    
+}
+
+bool isBeingAttacked(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for(s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* other = units->items[i];
+        if (isBeingAttackedBy(entity, other))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+WarEntity* getAttacker(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for(s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* other = units->items[i];
+        if (other && isBeingAttackedBy(entity, other))
+        {
+            return other;
+        }
+    }
+
+    return NULL;
+}
+
+WarEntity* getAttackTarget(WarContext* context, WarEntity* entity)
+{
+    if (!isFollowing(entity) && !isMoving(entity))
+    {
+        WarState* attackState = getAttackState(entity);
+        if (attackState)
+        {
+            WarEntityId targetEntityId = attackState->attack.targetEntityId;
+            return findEntity(context, targetEntityId);
+        }
+    }
+    
+    return NULL;
 }
 
 s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)

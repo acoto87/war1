@@ -266,7 +266,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_MOVE;
                 commands[1] = WAR_COMMAND_STOP;
                 commands[2] = WAR_COMMAND_REPAIR;
-                commands[3] = unit->resourceKind == WAR_RESOURCE_NONE
+                commands[3] = !isCarryingResources(entity)
                     ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
 
                 commands[4] = WAR_COMMAND_BUILD_BASIC;
@@ -308,7 +308,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_MOVE;
                 commands[1] = WAR_COMMAND_STOP;
                 commands[2] = WAR_COMMAND_REPAIR;
-                commands[3] = unit->resourceKind == WAR_RESOURCE_NONE
+                commands[3] = !isCarryingResources(entity)
                     ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
 
                 commands[4] = WAR_COMMAND_BUILD_BASIC;

@@ -90,8 +90,8 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (state->move.checkForAttacks)
     {
-        WarEntity* enemy = getAttackerEnemy(context, entity);
-        if (enemy)
+        WarEntity* enemy = getAttacker(context, entity);
+        if (enemy && areEnemies(context, entity, enemy) && canAttack(context, entity, enemy))
         {
             vec2 enemyPosition = getUnitPosition(enemy, true);
             WarState* attackState = createAttackState(context, entity, enemy->id, enemyPosition);
