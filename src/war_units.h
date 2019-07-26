@@ -732,11 +732,11 @@ const WarSpellStats spellStats[] =
 
     // spells
     { WAR_SPELL_HEALING,              6,  0,  6 },
-    { WAR_SPELL_FAR_SIGHT,           70,  0,  0 },
+    { WAR_SPELL_FAR_SIGHT,           70, 10,  0 },
     { WAR_SPELL_INVISIBILITY,       200, 50,  6 },
     { WAR_SPELL_RAIN_OF_FIRE,        25,  0, 12 },
     { WAR_SPELL_RAISE_DEAD,          50,  0,  6 },
-    { WAR_SPELL_DARK_VISION,         50,  0,  0 },
+    { WAR_SPELL_DARK_VISION,         50, 10,  0 },
     { WAR_SPELL_UNHOLY_ARMOR,       100, 13,  6 },
     { WAR_SPELL_POISON_CLOUD,       100, 10, 12 },
 };

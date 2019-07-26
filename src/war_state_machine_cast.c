@@ -87,8 +87,23 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 break;
             }
 
-            case WAR_SPELL_FAR_SIGHT:        // target point
+            case WAR_SPELL_FAR_SIGHT:
+            case WAR_SPELL_DARK_VISION:
             {
+                if (decreaseUnitMana(context, entity, stats.manaCost))
+                {
+                    vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+
+                    WarEntity* sight = createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
+                    addSightComponent(context, sight, targetTile, getScaledTime(context, stats.time));
+
+                    createSpellAnimation(context, targetTilePosition);
+                    createAudio(context, WAR_NORMAL_SPELL, false);
+                }
+
+                WarState* idleState = createIdleState(context, entity, true);
+                changeNextState(context, entity, idleState, true, true);
+
                 break;
             }
 
@@ -172,11 +187,6 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 WarState* idleState = createIdleState(context, entity, true);
                 changeNextState(context, entity, idleState, true, true);
 
-                break;
-            }
-
-            case WAR_SPELL_DARK_VISION:      // target point
-            {
                 break;
             }
 

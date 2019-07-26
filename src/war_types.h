@@ -795,6 +795,7 @@ typedef enum
     WAR_ENTITY_TYPE_PROJECTILE,
     WAR_ENTITY_TYPE_RAIN_OF_FIRE,
     WAR_ENTITY_TYPE_POISON_CLOUD,
+    WAR_ENTITY_TYPE_SIGHT,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -1620,6 +1621,13 @@ typedef struct
     char animName[30];
 } WarPoisonCloudComponent;
 
+typedef struct
+{
+    bool enabled;
+    vec2 position;
+    f32 time; // time in seconds left of the spell
+} WarSightComponent;
+
 typedef void (*WarRenderFunc)(struct _WarContext* context, struct _WarEntity* entity);
 
 typedef struct _WarEntity
@@ -1644,6 +1652,7 @@ typedef struct _WarEntity
     WarCursorComponent cursor;
     WarProjectileComponent projectile;
     WarPoisonCloudComponent poisonCloud;
+    WarSightComponent sight;
 } WarEntity;
 
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)

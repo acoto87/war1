@@ -71,6 +71,8 @@ List of thing to do in no particular order
   * ~~Deliver command (when click on button) is not working when unit have wood.~~
   * Summoned units have mana and when its mana runs out they die.
   * If an unit is attacked when idle, the unit respond the attack.
+  * Check harvest right click vs command button when clicking on a dark area that is partially covering a goldmine.
+  * Check why this appear when trying to spell the Dark Vision: "This upgrade type 15 doesn't increase any value of the units".
 
 * General
   * ~~Test the new implementation for lists.~~

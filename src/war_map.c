@@ -1895,6 +1895,13 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
     return poisonCloud->time <= 0;
 }
 
+bool updateSight(WarContext* context, WarEntity* entity)
+{
+    WarSightComponent* sight = &entity->sight;
+    sight->time -= context->deltaTime;
+    return sight->time <= 0;
+}
+
 void updateSpells(WarContext* context)
 {
     WarMap* map = context->map;
@@ -1912,6 +1919,19 @@ void updateSpells(WarContext* context)
             {
                 WarEntityIdListAdd(&spellsToRemove, entity->id);
                 removeAnimation(context, NULL, entity->poisonCloud.animName);
+            }
+        }
+    }
+
+    WarEntityList* sightSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_SIGHT);
+    for (s32 i = 0; i < sightSpells->count; i++)
+    {
+        WarEntity* entity = sightSpells->items[i];
+        if (entity)
+        {
+            if (updateSight(context, entity))
+            {
+                WarEntityIdListAdd(&spellsToRemove, entity->id);
             }
         }
     }
@@ -1965,11 +1985,7 @@ void updateFoW(WarContext* context)
     }
 
     map->fowTime = getScaledTime(context, FOG_OF_WAR_UPDATE_TIME);
-
-    const s32 dirC = 8;
-    const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
-    const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
-
+    
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
         map->tiles[i].type = WAR_FOG_PIECE_NONE;
@@ -2022,6 +2038,28 @@ void updateFoW(WarContext* context)
             }
         }
     }
+
+    WarEntityList* sightSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_SIGHT);
+    for (s32 i = 0; i < sightSpells->count; i++)
+    {
+        WarEntity* entity = sightSpells->items[i];
+        if (entity)
+        {
+            WarSightComponent* sight = &entity->sight;
+
+            rect r = rectExpand(rectv(sight->position, VEC2_ONE), 3, 3);
+            setMapTileState(map, r.x, r.y, r.width, r.height, MAP_TILE_STATE_VISIBLE);
+        }
+    }
+}
+
+void determineFoWTypes(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    const s32 dirC = 8;
+    const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
+    const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
 
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
@@ -2155,6 +2193,7 @@ void updateMap(WarContext* context)
     updateSpells(context);
 
     updateFoW(context);
+    determineFoWTypes(context);
 
     updateGoldText(context);
     updateWoodText(context);

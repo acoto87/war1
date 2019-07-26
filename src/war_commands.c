@@ -523,6 +523,26 @@ void executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
     }
 }
 
+void executeSightCommand(WarContext* context, vec2 targetTile)
+{
+    WarMap* map = context->map;
+
+    s32 selEntitiesCount = map->selectedEntities.count;
+    for(s32 i = 0; i < selEntitiesCount; i++)
+    {
+        WarEntityId entityId = map->selectedEntities.items[i];
+        WarEntity* entity = findEntity(context, entityId);
+        assert(entity);
+
+        if (isClericOrNecrolyteUnit(entity))
+        {
+            WarSpellType spellType = isHumanUnit(entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
+            WarState* castState = createCastState(context, entity, spellType, 0, targetTile);
+            changeNextState(context, entity, castState, true, true);
+        }
+    }
+}
+
 void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
@@ -1063,8 +1083,25 @@ bool executeCommand(WarContext* context)
             return false;
         }
 
-        // case WAR_COMMAND_SPELL_FAR_SIGHT:
-        // case WAR_COMMAND_SPELL_DARK_VISION:
+        case WAR_COMMAND_SPELL_FAR_SIGHT:
+        case WAR_COMMAND_SPELL_DARK_VISION:
+        {
+            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+                    executeSightCommand(context, targetTile);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
 
         case WAR_COMMAND_BUILD_BASIC:
         case WAR_COMMAND_BUILD_ADVANCED:

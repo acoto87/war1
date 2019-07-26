@@ -332,6 +332,19 @@ void removePoisonCloudComponent(WarContext* context, WarEntity* entity)
     entity->poisonCloud = (WarPoisonCloudComponent){0};
 }
 
+void addSightComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
+{
+    entity->sight = (WarSightComponent){0};
+    entity->sight.enabled = true;
+    entity->sight.position = position;
+    entity->sight.time = time;
+}
+
+void removeSightComponent(WarContext* context, WarEntity* entity)
+{
+    entity->sight = (WarSightComponent){0};
+}
+
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
 {
