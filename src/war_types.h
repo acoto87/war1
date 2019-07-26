@@ -1812,6 +1812,7 @@ typedef struct
 
     WarMapTilesetType tilesetType;
     WarMapTile tiles[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+    f32 fowTime;
 
     WarEntityList entities;
     WarEntityMap entitiesByType;

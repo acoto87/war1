@@ -514,6 +514,7 @@ typedef struct
 {
     WarUnitType type;
     s32 range;
+    s32 sight;
     s32 armor;
     s32 hp;
     s32 mana;
@@ -563,41 +564,42 @@ typedef struct
 
 const WarUnitStats unitStats[] = 
 {
-    // unit type                range  armor   hp   mana   min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
-    { WAR_UNIT_FOOTMAN,           1,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_GRUNT,             1,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_PEASANT,           1,     0,     40,   -1,     0,      0,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_PEON,              1,     0,     40,   -1,     0,      0,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_CATAPULT_HUMANS,   8,     0,    120,   -1,     0,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
-    { WAR_UNIT_CATAPULT_ORCS,     8,     0,    120,   -1,     0,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
-    { WAR_UNIT_KNIGHT,            1,     5,     90,   -1,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
-    { WAR_UNIT_RAIDER,            1,     5,     90,   -1,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
-    { WAR_UNIT_ARCHER,            5,     1,     60,   -1,     4,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_SPEARMAN,          4,     1,     60,   -1,     5,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_CONJURER,          3,     0,     40,  255,     6,      0,    __bts(900),    900,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_WARLOCK,           2,     0,     40,  255,     6,      0,    __bts(900),    900,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_CLERIC,            1,     0,     40,  255,     6,      0,    __bts(800),    700,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_NECROLYTE,         2,     0,     40,  255,     6,      0,    __bts(800),    700,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_MEDIVH,            5,     0,    110,   -1,    10,      0,            -1,     -1,     -1,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_LOTHAR,            1,     5,     50,   -1,     1,     15,            -1,     -1,     -1,     -1,   { 19.584f, 19.584f, 19.584f } },
-    { WAR_UNIT_GRIZELDA,          1,     0,     30,   -1,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_GARONA,            1,     0,     30,   -1,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_OGRE,              1,     3,     60,   -1,     1,     12,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_SPIDER,            1,     0,     30,   -1,     1,      3,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
-    { WAR_UNIT_SLIME,             1,    10,    150,   -1,     1,      0,            -1,     -1,     -1,     -1,   { 26.064f, 26.064f, 26.064f } },
-    { WAR_UNIT_FIRE_ELEMENTAL,    1,     0,    200,   -1,     0,     40,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_SCORPION,          1,     0,     30,   -1,     3,      0,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
-    { WAR_UNIT_BRIGAND,           1,     1,     40,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_THE_DEAD,          1,     2,     30,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_SKELETON,          1,     1,     40,   -1,     1,      4,            -1,     -1,     -1,     45,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_DAEMON,            1,     0,    300,   -1,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_WATER_ELEMENTAL,   3,     0,    250,   -1,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
+    // unit type                range  sight  armor   hp   mana   min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
+    { WAR_UNIT_FOOTMAN,           1,     2,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
+    { WAR_UNIT_GRUNT,             1,     2,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
+    { WAR_UNIT_PEASANT,           1,     2,     0,     40,   -1,     0,      0,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_PEON,              1,     2,     0,     40,   -1,     0,      0,    __bts(750),    400,      0,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_CATAPULT_HUMANS,   8,     5,     0,    120,   -1,     0,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
+    { WAR_UNIT_CATAPULT_ORCS,     8,     5,     0,    120,   -1,     0,    255,    __bts(1000),   900,    200,     -1,   {  8.992f,  8.992f,  8.992f } },
+    { WAR_UNIT_KNIGHT,            1,     4,     5,     90,   -1,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
+    { WAR_UNIT_RAIDER,            1,     4,     5,     90,   -1,     1,     13,    __bts(800),    850,      0,     -1,   { 19.584f, 22.064f, 26.064f } },
+    { WAR_UNIT_ARCHER,            5,     5,     1,     60,   -1,     4,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_SPEARMAN,          4,     4,     1,     60,   -1,     5,      0,    __bts(700),    450,     50,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_CONJURER,          3,     4,     0,     40,  255,     6,      0,    __bts(900),    900,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_WARLOCK,           2,     3,     0,     40,  255,     6,      0,    __bts(900),    900,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_CLERIC,            1,     3,     0,     40,  255,     6,      0,    __bts(800),    700,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_NECROLYTE,         2,     3,     0,     40,  255,     6,      0,    __bts(800),    700,      0,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_MEDIVH,            5,     5,     0,    110,   -1,    10,      0,            -1,     -1,     -1,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_LOTHAR,            1,     2,     5,     50,   -1,     1,     15,            -1,     -1,     -1,     -1,   { 19.584f, 19.584f, 19.584f } },
+    { WAR_UNIT_GRIZELDA,          1,     2,     0,     30,   -1,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_GARONA,            1,     2,     0,     30,   -1,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_OGRE,              1,     2,     3,     60,   -1,     1,     12,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_SPIDER,            1,     2,     0,     30,   -1,     1,      3,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
+    { WAR_UNIT_SLIME,             1,     2,    10,    150,   -1,     1,      0,            -1,     -1,     -1,     -1,   { 26.064f, 26.064f, 26.064f } },
+    { WAR_UNIT_FIRE_ELEMENTAL,    1,     2,     0,    200,   -1,     0,     40,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_SCORPION,          1,     2,     0,     30,   -1,     3,      0,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
+    { WAR_UNIT_BRIGAND,           1,     2,     1,     40,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 16.736f, 16.736f, 16.736f } },
+    { WAR_UNIT_THE_DEAD,          1,     2,     2,     30,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_SKELETON,          1,     2,     1,     40,   -1,     1,      4,            -1,     -1,     -1,     45,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_DAEMON,            1,     2,     0,    300,   -1,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_WATER_ELEMENTAL,   3,     4,     0,    250,   -1,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
 };
 
 typedef struct
 {
     WarUnitType type;
     s32 armor;
+    s32 sight;
     s32 hp;
     s32 buildTime;
     s32 goldCost;
@@ -606,26 +608,26 @@ typedef struct
 
 const WarBuildingStats buildingStats[] = 
 {
-    // building type                    armor     hp            build     gold    lumber
-    { WAR_UNIT_FARM_HUMANS,               0,       400,     __bts(1000),    500,    300 },
-    { WAR_UNIT_FARM_ORCS,                 0,       400,     __bts(1000),    500,    300 },
-    { WAR_UNIT_BARRACKS_HUMANS,           0,       800,     __bts(1500),    600,    500 },
-    { WAR_UNIT_BARRACKS_ORCS,             0,       800,     __bts(1500),    600,    500 },
-    { WAR_UNIT_CHURCH,                    0,       700,     __bts(2000),    800,    500 },
-    { WAR_UNIT_TEMPLE,                    0,       700,     __bts(2000),    800,    500 },
-    { WAR_UNIT_TOWER_HUMANS,              0,       900,     __bts(2000),   1400,    300 },
-    { WAR_UNIT_TOWER_ORCS,                0,       900,     __bts(2000),   1400,    300 },
-    { WAR_UNIT_TOWNHALL_HUMANS,           0,      2500,     __bts(1000),    400,    400 },
-    { WAR_UNIT_TOWNHALL_ORCS,             0,      2500,     __bts(1000),    400,    400 },
-    { WAR_UNIT_LUMBERMILL_HUMANS,         0,       600,     __bts(1500),    600,    500 },
-    { WAR_UNIT_LUMBERMILL_ORCS,           0,       600,     __bts(1500),    600,    500 },
-    { WAR_UNIT_STABLE,                    0,       500,     __bts(1500),   1000,    400 },
-    { WAR_UNIT_KENNEL,                    0,       500,     __bts(1500),   1000,    400 },
-    { WAR_UNIT_BLACKSMITH_HUMANS,         0,       800,     __bts(1500),    900,    400 },
-    { WAR_UNIT_BLACKSMITH_ORCS,           0,       800,     __bts(1500),    900,    400 },
-    { WAR_UNIT_STORMWIND,                 0,      5000,              -1,     -1,     -1 },
-    { WAR_UNIT_BLACKROCK,                 0,      5000,              -1,     -1,     -1 },
-    { WAR_UNIT_GOLDMINE,                  0,     25500,              -1,     -1,     -1 },
+    // building type                    armor    sight     hp            build     gold    lumber
+    { WAR_UNIT_FARM_HUMANS,               0,      2,       400,     __bts(1000),    500,    300 },
+    { WAR_UNIT_FARM_ORCS,                 0,      2,       400,     __bts(1000),    500,    300 },
+    { WAR_UNIT_BARRACKS_HUMANS,           0,      3,       800,     __bts(1500),    600,    500 },
+    { WAR_UNIT_BARRACKS_ORCS,             0,      3,       800,     __bts(1500),    600,    500 },
+    { WAR_UNIT_CHURCH,                    0,      3,       700,     __bts(2000),    800,    500 },
+    { WAR_UNIT_TEMPLE,                    0,      3,       700,     __bts(2000),    800,    500 },
+    { WAR_UNIT_TOWER_HUMANS,              0,      2,       900,     __bts(2000),   1400,    300 },
+    { WAR_UNIT_TOWER_ORCS,                0,      2,       900,     __bts(2000),   1400,    300 },
+    { WAR_UNIT_TOWNHALL_HUMANS,           0,      3,      2500,     __bts(1000),    400,    400 },
+    { WAR_UNIT_TOWNHALL_ORCS,             0,      3,      2500,     __bts(1000),    400,    400 },
+    { WAR_UNIT_LUMBERMILL_HUMANS,         0,      3,       600,     __bts(1500),    600,    500 },
+    { WAR_UNIT_LUMBERMILL_ORCS,           0,      3,       600,     __bts(1500),    600,    500 },
+    { WAR_UNIT_STABLE,                    0,      3,       500,     __bts(1500),   1000,    400 },
+    { WAR_UNIT_KENNEL,                    0,      3,       500,     __bts(1500),   1000,    400 },
+    { WAR_UNIT_BLACKSMITH_HUMANS,         0,      2,       800,     __bts(1500),    900,    400 },
+    { WAR_UNIT_BLACKSMITH_ORCS,           0,      2,       800,     __bts(1500),    900,    400 },
+    { WAR_UNIT_STORMWIND,                 0,      4,      5000,              -1,     -1,     -1 },
+    { WAR_UNIT_BLACKROCK,                 0,      4,      5000,              -1,     -1,     -1 },
+    { WAR_UNIT_GOLDMINE,                  0,      3,     25500,              -1,     -1,     -1 },
 };
 
 typedef struct

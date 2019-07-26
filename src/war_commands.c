@@ -690,7 +690,7 @@ bool executeCommand(WarContext* context)
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
-                    if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE | MAP_TILE_STATE_FOG))
+                    if (!targetEntity || checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
                     {
                         executeAttackCommand(context, targetEntity, targetTile);
                     }

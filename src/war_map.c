@@ -21,6 +21,10 @@ void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height,
     {
         for(s32 x = startX; x < endX; x++)
         {
+            // exclude the corners of the area to get a more "rounded" shape
+            if ((y == startY || y == endY - 1) && (x == startX || x == endX - 1))
+                continue;
+            
             map->tiles[y * MAP_TILES_WIDTH + x].state = tileState;
         }
     }
@@ -33,7 +37,17 @@ void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileSta
     vec2 position = getUnitPosition(entity, true);
     vec2 unitSize = getUnitSize(entity);
     rect unitRect = rectv(position, unitSize);
-    unitRect = rectExpand(unitRect, 2, 2);
+
+    if (isBuildingUnit(entity))
+    {
+        WarBuildingStats stats = getBuildingStats(entity->unit.type);
+        unitRect = rectExpand(unitRect, stats.sight, stats.sight);
+    }
+    else
+    {
+        WarUnitStats stats = getUnitStats(entity->unit.type);
+        unitRect = rectExpand(unitRect, stats.sight, stats.sight);
+    }
 
     setMapTileState(map, unitRect.x, unitRect.y, unitRect.width, unitRect.height, tileState);
 }
@@ -278,6 +292,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             map->tiles[i].type = WAR_FOG_PIECE_NONE;
             map->tiles[i].boundary = WAR_FOG_BOUNDARY_NONE;
         }
+
+        map->fowTime = 0;
     }
 
     // create the map sprite
@@ -1941,6 +1957,14 @@ void updateSpells(WarContext* context)
 void updateFoW(WarContext* context)
 {
     WarMap* map = context->map;
+
+    if (map->fowTime > 0)
+    {
+        map->fowTime -= context->deltaTime;
+        return;
+    }
+
+    map->fowTime = getScaledTime(context, FOG_OF_WAR_UPDATE_TIME);
 
     const s32 dirC = 8;
     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
