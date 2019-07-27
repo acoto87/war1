@@ -1299,8 +1299,8 @@ typedef struct
     s32 actionIndex;
     WarUnitActionList actions;
 
-    // time remainder (in seconds) until mana is regenerated
-    f32 manaRegenTime;
+    // time remainder (in seconds) until mana is affected
+    f32 manaTime;
     // time remainder (in seconds) until the unit invisiblity ceases
     f32 invisibilityTime;
     // time remainder (in seconds) until the unit invulnerability ceases

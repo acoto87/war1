@@ -513,12 +513,12 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             if (levelInfoIndex == 117)
             {
                 if (startUnit.type == WAR_UNIT_FOOTMAN)
-                    startUnit.type = WAR_UNIT_CLERIC;
+                    startUnit.type = WAR_UNIT_CONJURER;
             }
             else if (levelInfoIndex == 118)
             {
                 if (startUnit.type == WAR_UNIT_GRUNT)
-                    startUnit.type = WAR_UNIT_NECROLYTE;
+                    startUnit.type = WAR_UNIT_WARLOCK;
             }
             
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
@@ -543,6 +543,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             createBuilding(context, WAR_UNIT_TEMPLE, 48, 23, 0, false);
             createBuilding(context, WAR_UNIT_KENNEL, 57, 22, 0, false);
             createBuilding(context, WAR_UNIT_TOWER_ORCS, 51, 21, 0, false);
+
+            createBuilding(context, WAR_UNIT_LUMBERMILL_HUMANS, 24, 16, 1, false);
         }
     }
 
@@ -650,16 +652,16 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // add animations
     {
         // test ruins
-        {
-            WarEntity* ruins = createRuins(context);
-            addRuinsPieces(context, ruins, 11, 6, 3);
-            addRuinsPieces(context, ruins, 13, 5, 2);
-            addRuinsPieces(context, ruins, 9, 5, 3);
-            addRuinsPieces(context, ruins, 8, 8, 4);
-            determineRuinTypes(context, ruins);
+        // {
+        //     WarEntity* ruins = createRuins(context);
+        //     addRuinsPieces(context, ruins, 11, 6, 3);
+        //     addRuinsPieces(context, ruins, 13, 5, 2);
+        //     addRuinsPieces(context, ruins, 9, 5, 3);
+        //     addRuinsPieces(context, ruins, 8, 8, 4);
+        //     determineRuinTypes(context, ruins);
 
-            map->ruin = ruins;
-        }
+        //     map->ruin = ruins;
+        // }
         
         // test animations
         // {
@@ -1850,18 +1852,42 @@ void updateMagic(WarContext* context)
         WarEntity* entity = units->items[i];
         if (entity && isMagicUnit(entity))
         {
+            if (isDead(entity) || isGoingToDie(entity))
+                continue;
+
             WarUnitComponent* unit = &entity->unit;
 
-            // The magic units have a mana regeneration rate of roughly 1 point/sec
-            // so a magic unit will spend almost 4 minutes to fill its mana when its rans out
-            if (unit->manaRegenTime <= 0)
+            if (unit->manaTime <= 0)
             {
-                unit->mana = min(unit->mana + 1, unit->maxMana);
-                unit->manaRegenTime = 1;
+                if (isSummonUnit(entity))
+                {
+                    unit->mana = max(unit->mana - 1, 0);
+
+                    // when the mana runs out the summoned units will die
+                    if (unit->mana == 0)
+                    {
+                        WarState* deathState = createDeathState(context, entity);
+                        changeNextState(context, entity, deathState, true, true);
+
+                        if (entity->unit.type == WAR_UNIT_SCORPION ||
+                            entity->unit.type == WAR_UNIT_SPIDER)
+                        {
+                            createAudio(context, WAR_DEAD_SPIDER_SCORPION, false);
+                        }
+                    }
+                }
+                else
+                {
+                    // the magic units have a mana regeneration rate of roughly 1 point/sec
+                    // so a magic unit will spend almost 4 minutes to fill its mana when its rans out
+                    unit->mana = min(unit->mana + 1, unit->maxMana);
+                }
+                
+                unit->manaTime = getScaledTime(context, 1);
             }
             else
             {
-                unit->manaRegenTime -= context->deltaTime;
+                unit->manaTime -= context->deltaTime;
             }
         }
     }
@@ -2035,6 +2061,10 @@ void updateFoW(WarContext* context)
                         setUnitMapTileState(map, attacker, MAP_TILE_STATE_VISIBLE);
                     }
                 }
+            }
+            else
+            {
+                // TODO: Logic to make the snapshot of the unit?
             }
         }
     }
@@ -2429,8 +2459,6 @@ void renderPassableInfo(WarContext* context)
 
 void renderMapGrid(WarContext* context)
 {
-    WarMap *map = context->map;
-
     NVGcontext* gfx = context->gfx;
 
     for(s32 x = 1; x < MAP_TILES_WIDTH; x++)

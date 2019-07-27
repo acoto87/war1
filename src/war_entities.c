@@ -418,13 +418,13 @@ WarEntity* createUnit(WarContext* context,
         entity->unit.maxhp = unitStats.hp;
         entity->unit.hp = unitStats.hp;
         entity->unit.maxMana = unitStats.mana;
-        entity->unit.mana = 100;
+        entity->unit.mana = isSummonUnit(entity) ? unitStats.mana : 100;
         entity->unit.armor = unitStats.armor;
         entity->unit.range = unitStats.range;
         entity->unit.minDamage = unitStats.minDamage;
         entity->unit.rndDamage = unitStats.rndDamage;
         entity->unit.decay = unitStats.decay;
-        entity->unit.manaRegenTime = 1;
+        entity->unit.manaTime = 1;
     }
     else if(isBuildingUnit(entity))
     {

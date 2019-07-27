@@ -584,15 +584,15 @@ const WarUnitStats unitStats[] =
     { WAR_UNIT_GRIZELDA,          1,     2,     0,     30,   -1,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
     { WAR_UNIT_GARONA,            1,     2,     0,     30,   -1,    -1,     -1,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
     { WAR_UNIT_OGRE,              1,     2,     3,     60,   -1,     1,     12,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_SPIDER,            1,     2,     0,     30,   -1,     1,      3,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
+    { WAR_UNIT_SPIDER,            1,     2,     0,     30,  255,     1,      3,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
     { WAR_UNIT_SLIME,             1,     2,    10,    150,   -1,     1,      0,            -1,     -1,     -1,     -1,   { 26.064f, 26.064f, 26.064f } },
     { WAR_UNIT_FIRE_ELEMENTAL,    1,     2,     0,    200,   -1,     0,     40,            -1,     -1,     -1,     -1,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_SCORPION,          1,     2,     0,     30,   -1,     3,      0,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
+    { WAR_UNIT_SCORPION,          1,     2,     0,     30,  255,     3,      0,            -1,     -1,     -1,     45,   { 26.064f, 26.064f, 26.064f } },
     { WAR_UNIT_BRIGAND,           1,     2,     1,     40,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 16.736f, 16.736f, 16.736f } },
-    { WAR_UNIT_THE_DEAD,          1,     2,     2,     30,   -1,     1,      9,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
+    { WAR_UNIT_THE_DEAD,          1,     2,     2,     30,  255,     1,      9,            -1,     -1,     -1,     -1,   { 13.984f, 13.984f, 13.984f } },
     { WAR_UNIT_SKELETON,          1,     2,     1,     40,   -1,     1,      4,            -1,     -1,     -1,     45,   { 13.984f, 13.984f, 13.984f } },
-    { WAR_UNIT_DAEMON,            1,     2,     0,    300,   -1,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
-    { WAR_UNIT_WATER_ELEMENTAL,   3,     4,     0,    250,   -1,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_DAEMON,            1,     2,     0,    300,  255,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
+    { WAR_UNIT_WATER_ELEMENTAL,   3,     4,     0,    250,  255,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
 };
 
 typedef struct
@@ -1374,6 +1374,11 @@ bool isMagicUnitType(WarUnitType type)
         case WAR_UNIT_WARLOCK:
         case WAR_UNIT_CLERIC:
         case WAR_UNIT_NECROLYTE:
+        case WAR_UNIT_SCORPION:
+        case WAR_UNIT_SPIDER:
+        case WAR_UNIT_WATER_ELEMENTAL:
+        case WAR_UNIT_DAEMON:
+        case WAR_UNIT_THE_DEAD:
             return true;
     
         default:

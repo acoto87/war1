@@ -641,21 +641,34 @@ bool executeCommand(WarContext* context)
                 {
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-                    if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
-                        isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
+
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    if (targetEntity)
                     {
-                        WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
-                        WarEntity* targetEntity = findEntity(context, targetEntityId);
-                        if (targetEntity)
+                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                         {
-                            if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
-                                targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                            if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
+                                executeHarvestCommand(context, targetEntity, targetTile);
+                        }
+                        else if (targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                        {
+                            if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
                                 executeHarvestCommand(context, targetEntity, targetTile);
                             }
+                            else
+                            {
+                                WarTree* tree = findAccesibleTree(context, targetEntity, targetTile);
+                                if (tree)
+                                {
+                                    targetTile = vec2i(tree->tilex, tree->tiley);
+                                    executeHarvestCommand(context, targetEntity, targetTile);
+                                }
+                            }
                         }
                     }
-
+                    
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
@@ -710,8 +723,21 @@ bool executeCommand(WarContext* context)
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
-                    if (!targetEntity || checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
+                    if (targetEntity)
                     {
+                        if (isUnit(targetEntity))
+                        {
+                            // if the target entity is not visible, just attack to the point
+                            if (!checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
+                                targetEntity = NULL;
+                        }
+                        else if (isWall(targetEntity))
+                        {
+                            // if the target wall piece is not visible, just attack to the point
+                            if (!isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
+                                targetEntity = NULL;
+                        }
+
                         executeAttackCommand(context, targetEntity, targetTile);
                     }
 

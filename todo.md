@@ -69,10 +69,13 @@ List of thing to do in no particular order
   * Check the uses of `context->deltaTime` when the speed of the game is not `1`.
   * When a unit is selected before dispear in the fog, the unit remains selected. The unit should be removed from the selection.
   * ~~Deliver command (when click on button) is not working when unit have wood.~~
-  * Summoned units have mana and when its mana runs out they die.
+  * ~~Summoned units have mana and when its mana runs out they die.~~
   * If an unit is attacked when idle, the unit respond the attack.
-  * Check harvest right click vs command button when clicking on a dark area that is partially covering a goldmine.
+  * ~~Check harvest right click vs command button when clicking on a dark area that is partially covering a goldmine.~~
   * Check why this appear when trying to spell the Dark Vision: "This upgrade type 15 doesn't increase any value of the units".
+  * Summon spells summon as many units as mana allows.
+  * Assertion in determining ruin pieces hit when goldmine ran out of gold.
+  * Check death animations of scorpions and spiders.
 
 * General
   * ~~Test the new implementation for lists.~~
