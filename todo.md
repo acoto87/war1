@@ -74,8 +74,9 @@ List of thing to do in no particular order
   * ~~Check harvest right click vs command button when clicking on a dark area that is partially covering a goldmine.~~
   * Check why this appear when trying to spell the Dark Vision: "This upgrade type 15 doesn't increase any value of the units".
   * Summon spells summon as many units as mana allows.
-  * Assertion in determining ruin pieces hit when goldmine ran out of gold.
+  * ~~Assertion in determining ruin pieces hit when goldmine ran out of gold.~~
   * Check death animations of scorpions and spiders.
+  * Holy Sight doesn't mark the buildings as hasBeenSeen.
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -168,21 +169,21 @@ List of thing to do in no particular order
     * ~~Healing~~
     * ~~Raise dead~~
   * Fog of war
-    * Update fog of war once each second?
-    * Block selection clicks in fog region
-    * Block build in fog region
-    * Cursor changing when hover a foe unit that is in the fog
-    * Moving unit clears fog
-    * Attack at distance clears fog?
-    * Spells at distance clears fog?
-    * Holy Vision/Dark Vision spells clears fog
+    * ~~Update fog of war once each second? Yes.~~
+    * ~~Block selection clicks in fog region~~
+    * ~~Block build in fog region~~
+    * ~~Cursor changing when hover a foe unit that is in the fog~~
+    * ~~Moving unit clears fog~~
+    * ~~Attack at distance clears fog? Yes.~~
+    * ~~Spells at distance clears fog? Yes.~~
+    * ~~Holy Vision/Dark Vision spells clears fog~~
+    * ~~Buildings can't be built on unknown areas~~
+    * ~~Attacks on unknown areas always produce the unit to move to the attacking point, even ranges ones.~~
+    * ~~Attackers reveals themselves when attacking a player's unit.~~
+    * ~~Reveal attacked units? Yes.~~
     * After a number of seconds (3 maybe?) an area without friendly units remain with fog.
     That is, buildings, roads, ruins, walls, trees are shown in the map, with a fade of fog.
     Moving units are not shown in areas with fog.
-    * Buildings can't be built on unknown areas
-    * Attacks on unknown areas always produce the unit to move to the attacking point, even ranges ones.
-    * Attackers reveals themselves when attacking a player's unit.
-    * Reveal attacked units?
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~

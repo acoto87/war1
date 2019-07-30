@@ -562,12 +562,20 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
             if (targetEntity)
             {
                 // the unit can't attack itself
-                if (entity->id != targetEntity->id && canAttack(context, entity, targetEntity))
+                if (entity->id != targetEntity->id)
                 {
-                    WarState* attackState = createAttackState(context, entity, targetEntity->id, targetTile);
-                    changeNextState(context, entity, attackState, true, true);
+                    if (canAttack(context, entity, targetEntity))
+                    {
+                        WarState* attackState = createAttackState(context, entity, targetEntity->id, targetTile);
+                        changeNextState(context, entity, attackState, true, true);
 
-                    playSound = true;
+                        playSound = true;
+                    }
+                    else if (isWorkerUnit(entity))
+                    {
+                        WarState* followState = createFollowState(context, entity, targetEntity->id, VEC2_ZERO, 1);
+                        changeNextState(context, entity, followState, true, true);
+                    }
                 }
             }
             else
@@ -617,6 +625,15 @@ bool executeCommand(WarContext* context)
 
                     executeMoveCommand(context, targetPoint);
                     
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
+                    vec2 targetPoint = vec2TileToMapCoordinates(targetTile, true);
+                    executeMoveCommand(context, targetPoint);
+
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
@@ -740,6 +757,14 @@ bool executeCommand(WarContext* context)
 
                         executeAttackCommand(context, targetEntity, targetTile);
                     }
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
+                    executeAttackCommand(context, NULL, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1000,6 +1025,14 @@ bool executeCommand(WarContext* context)
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
+                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
+                    executeRainOfFireCommand(context, targetTile);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
             }
             
             return false;
@@ -1014,6 +1047,14 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
+                    executePoisonCloudCommand(context, targetTile);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
                     executePoisonCloudCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
@@ -1119,6 +1160,14 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
+                    executeSightCommand(context, targetTile);
+
+                    command->type = WAR_COMMAND_NONE;
+                    return true;
+                }
+                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                {
+                    vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
                     executeSightCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;

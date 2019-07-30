@@ -513,12 +513,12 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             if (levelInfoIndex == 117)
             {
                 if (startUnit.type == WAR_UNIT_FOOTMAN)
-                    startUnit.type = WAR_UNIT_CONJURER;
+                    startUnit.type = WAR_UNIT_CLERIC;
             }
             else if (levelInfoIndex == 118)
             {
                 if (startUnit.type == WAR_UNIT_GRUNT)
-                    startUnit.type = WAR_UNIT_WARLOCK;
+                    startUnit.type = WAR_UNIT_NECROLYTE;
             }
             
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
@@ -534,6 +534,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             createBuilding(context, WAR_UNIT_CHURCH, 45, 22, 0, false);
             createBuilding(context, WAR_UNIT_STABLE, 45, 18, 0, false);
             createBuilding(context, WAR_UNIT_TOWER_HUMANS, 34, 16, 0, false);
+
+            createBuilding(context, WAR_UNIT_LUMBERMILL_ORCS, 24, 16, 1, false);
         }
         else if (levelInfoIndex == 118)
         {
@@ -652,16 +654,16 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     // add animations
     {
         // test ruins
-        // {
-        //     WarEntity* ruins = createRuins(context);
+        {
+            WarEntity* ruins = createRuins(context);
         //     addRuinsPieces(context, ruins, 11, 6, 3);
         //     addRuinsPieces(context, ruins, 13, 5, 2);
         //     addRuinsPieces(context, ruins, 9, 5, 3);
         //     addRuinsPieces(context, ruins, 8, 8, 4);
         //     determineRuinTypes(context, ruins);
 
-        //     map->ruin = ruins;
-        // }
+            map->ruin = ruins;
+        }
         
         // test animations
         // {
@@ -1488,7 +1490,7 @@ void updateCommandFromRightClick(WarContext* context)
                     vec2 targetPoint = vec2TileToMapCoordinates(offset, true);
 
                     executeMoveCommand(context, targetPoint);
-                }    
+                }
             }
         }
         else
@@ -1734,6 +1736,34 @@ void updateCursor(WarContext* context)
                     {
                         changeCursorType(context, entity, WAR_CURSOR_ARROW);
                     }
+                    break;
+                }
+            }
+        }
+        else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+        {
+            WarUnitCommand* command = &map->command;
+            switch (command->type)
+            {
+                case WAR_COMMAND_ATTACK:
+                case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
+                case WAR_COMMAND_SPELL_POISON_CLOUD:
+                {
+                    changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
+                    break;
+                }
+
+                case WAR_COMMAND_MOVE:
+                case WAR_COMMAND_SPELL_FAR_SIGHT:
+                case WAR_COMMAND_SPELL_DARK_VISION:
+                {
+                    changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
+                    break;
+                }
+
+                default:
+                {
+                    changeCursorType(context, entity, WAR_CURSOR_ARROW);
                     break;
                 }
             }
@@ -2028,9 +2058,16 @@ void updateFoW(WarContext* context)
         {
             if (isFriendlyUnit(context, entity))
             {
+                if (isBuildingUnit(entity))
+                {
+                    // the friendly buildings are always seen by the player
+                    entity->unit.hasBeenSeen = true;
+                }
+
+                // mark the tiles of the unit as visible
                 setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
 
-                // revel the attack target of the unit
+                // reveal the attack target of the unit
                 WarEntity* targetEntity = getAttackTarget(context, entity);
                 if (targetEntity)
                 {
@@ -2064,7 +2101,14 @@ void updateFoW(WarContext* context)
             }
             else
             {
-                // TODO: Logic to make the snapshot of the unit?
+                if (isBuildingUnit(entity) && !entity->unit.hasBeenSeen)
+                {
+                    // mark the enemy's buildings as seen if they are currently in sight
+                    vec2 tilePosition = getUnitPosition(entity, true);
+                    vec2 unitSize = getUnitSize(entity);
+                    entity->unit.hasBeenSeen = checkMapTiles(map, tilePosition.x, tilePosition.y, 
+                                                             unitSize.x, unitSize.y, MAP_TILE_STATE_VISIBLE);
+                }
             }
         }
     }

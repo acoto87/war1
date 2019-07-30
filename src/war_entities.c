@@ -71,6 +71,9 @@ void addUnitComponent(WarContext* context,
     entity->unit.minDamage = 0;
     entity->unit.rndDamage = 0;
     entity->unit.decay = 0;
+    entity->unit.invisible = false;
+    entity->unit.invulnerable = false;
+    entity->unit.hasBeenSeen = false;
     entity->unit.actionIndex = 0;
 
     WarUnitActionListInit(&entity->unit.actions, WarUnitActionListDefaultOptions);
@@ -469,7 +472,7 @@ WarEntity* createBuilding(WarContext* context,
     assert(isBuildingUnitType(type));
 
     WarEntity* entity = createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, true);
-
+    
     if (isGoingToBuild)
     {
         WarBuildingStats stats = getBuildingStats(type);
@@ -862,13 +865,9 @@ void renderUnit(WarContext* context, WarEntity* entity)
     // position of the unit in the map
     vec2 position = transform->position;    
 
-    s32 tileX = (s32)(position.x / MEGA_TILE_WIDTH);
-    s32 tileY = (s32)(position.y / MEGA_TILE_HEIGHT);
-
-    if (!checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
-    {
-        return;
-    }
+    // scale of the unit: this is modified by animations when the animation indicates that it
+    // should flip horizontally or vertically or both
+    vec2 scale = transform->scale;
 
     // size of the original sprite
     vec2 frameSize = getUnitFrameSize(entity);
@@ -876,9 +875,9 @@ void renderUnit(WarContext* context, WarEntity* entity)
     // size of the unit
     vec2 unitSize = getUnitSpriteSize(entity);
 
-    // scale of the unit: this is modified by animations when the animation indicates that it
-    // should flip horizontally or vertically or both
-    vec2 scale = transform->scale;
+    vec2 tilePosition = getUnitPosition(entity, true);
+    bool isVisible = checkMapTiles(map, tilePosition.x, tilePosition.y, 
+                                   unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE);
 
     nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
     nvgTranslate(gfx, halff(unitSize.x), halff(unitSize.y));
@@ -907,7 +906,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
     nvgText(gfx, spriteRect.x, spriteRect.y, debugText, NULL);
 #endif
 
-    if (sprite->enabled)
+    if (sprite->enabled && (isVisible || unit->hasBeenSeen))
     {
         nvgSave(gfx);
 
@@ -935,7 +934,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
         nvgRestore(gfx);
     }
 
-    if (animations->enabled)
+    if (animations->enabled && isVisible)
     {
         for (s32 i = 0; i < animations->animations.count; i++)
         {

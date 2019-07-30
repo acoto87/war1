@@ -1291,6 +1291,7 @@ typedef struct
     s32 decay;
     bool invisible;
     bool invulnerable;
+    bool hasBeenSeen;
 
     // index of the array of speeds of the unit
     s32 speed;
