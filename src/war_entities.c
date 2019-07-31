@@ -476,7 +476,8 @@ WarEntity* createBuilding(WarContext* context,
     if (isGoingToBuild)
     {
         WarBuildingStats stats = getBuildingStats(type);
-        WarState* buildState = createBuildState(context, entity, stats.buildTime);
+        f32 buildTime = getScaledTime(context, stats.buildTime);
+        WarState* buildState = createBuildState(context, entity, buildTime);
         changeNextState(context, entity, buildState, true, true);
     }
 
@@ -1414,11 +1415,12 @@ void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
 {
-    s32 dudesCount = getPlayerDudesCount(context, player->index);
+    s32 dudesCount = getTotalNumberOfDudes(context, player->index);
 
-    WarUnitType farmType = player->race == WAR_RACE_HUMANS 
+    WarUnitType farmType = isHumanPlayer(player)
         ? WAR_UNIT_FARM_HUMANS : WAR_UNIT_FARM_ORCS;
-    s32 farmCount = getPlayerUnitCount(context, player->index, farmType);
+
+    s32 farmCount = getNumberOfBuildingsOfType(context, player->index, farmType, true);
     s32 foodCount = farmCount * 4 + 1;
 
     if (dudesCount + 1 > foodCount)

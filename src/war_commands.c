@@ -667,8 +667,10 @@ bool executeCommand(WarContext* context)
                         {
                             if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
                                 executeHarvestCommand(context, targetEntity, targetTile);
+                            else
+                                executeMoveCommand(context, targetPoint);
                         }
-                        else if (targetEntity->type == WAR_ENTITY_TYPE_FOREST)
+                        else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
                             if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
@@ -681,6 +683,10 @@ bool executeCommand(WarContext* context)
                                 {
                                     targetTile = vec2i(tree->tilex, tree->tiley);
                                     executeHarvestCommand(context, targetEntity, targetTile);
+                                }
+                                else
+                                {
+                                    executeMoveCommand(context, targetPoint);
                                 }
                             }
                         }

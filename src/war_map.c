@@ -208,6 +208,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
+    map->objectivesTime = 1;
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
     map->scrollSpeed = 200;
 
@@ -483,10 +484,10 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 map->players[i].features[j] = levelInfo->levelInfo.allowedFeatures[j];
 
                 // REMOVE THIS: This is only for testing
-                if (levelInfoIndex == 117)
-                    map->players[i].features[j] = true;
-                else if (levelInfoIndex == 118)
-                    map->players[i].features[j] = true;
+                // if (levelInfoIndex == 117)
+                //     map->players[i].features[j] = true;
+                // else if (levelInfoIndex == 118)
+                //     map->players[i].features[j] = true;
             }
 
             for (s32 j = 0; j < MAX_UPGRADES_COUNT; j++)
@@ -495,10 +496,10 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                 map->players[i].upgrades[j].level = 0;
 
                 // REMOVE THIS: This is only for testing
-                if (levelInfoIndex == 117)
-                    map->players[i].upgrades[j].allowed = 2;
-                else if (levelInfoIndex == 118)
-                    map->players[i].upgrades[j].allowed = 2;
+                // if (levelInfoIndex == 117)
+                //     map->players[i].upgrades[j].allowed = 2;
+                // else if (levelInfoIndex == 118)
+                //     map->players[i].upgrades[j].allowed = 2;
             }
         }
     }
@@ -510,44 +511,44 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
 
             // REMOVE THIS: This is only for testing
-            if (levelInfoIndex == 117)
-            {
-                if (startUnit.type == WAR_UNIT_FOOTMAN)
-                    startUnit.type = WAR_UNIT_CLERIC;
-            }
-            else if (levelInfoIndex == 118)
-            {
-                if (startUnit.type == WAR_UNIT_GRUNT)
-                    startUnit.type = WAR_UNIT_NECROLYTE;
-            }
+            // if (levelInfoIndex == 117)
+            // {
+            //     if (startUnit.type == WAR_UNIT_FOOTMAN)
+            //         startUnit.type = WAR_UNIT_CLERIC;
+            // }
+            // else if (levelInfoIndex == 118)
+            // {
+            //     if (startUnit.type == WAR_UNIT_GRUNT)
+            //         startUnit.type = WAR_UNIT_NECROLYTE;
+            // }
             
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player, 
                        startUnit.resourceKind, startUnit.amount, true);
         }
 
         // REMOVE THIS: This is only for testing
-        if (levelInfoIndex == 117)
-        {
-            createBuilding(context, WAR_UNIT_BARRACKS_HUMANS, 37, 18, 0, false);
-            createBuilding(context, WAR_UNIT_LUMBERMILL_HUMANS, 36, 22, 0, false);
-            createBuilding(context, WAR_UNIT_BLACKSMITH_HUMANS, 40, 16, 0, false);
-            createBuilding(context, WAR_UNIT_CHURCH, 45, 22, 0, false);
-            createBuilding(context, WAR_UNIT_STABLE, 45, 18, 0, false);
-            createBuilding(context, WAR_UNIT_TOWER_HUMANS, 34, 16, 0, false);
+        // if (levelInfoIndex == 117)
+        // {
+        //     createBuilding(context, WAR_UNIT_BARRACKS_HUMANS, 37, 18, 0, false);
+        //     createBuilding(context, WAR_UNIT_LUMBERMILL_HUMANS, 36, 22, 0, false);
+        //     createBuilding(context, WAR_UNIT_BLACKSMITH_HUMANS, 40, 16, 0, false);
+        //     createBuilding(context, WAR_UNIT_CHURCH, 45, 22, 0, false);
+        //     createBuilding(context, WAR_UNIT_STABLE, 45, 18, 0, false);
+        //     createBuilding(context, WAR_UNIT_TOWER_HUMANS, 34, 16, 0, false);
 
-            createBuilding(context, WAR_UNIT_LUMBERMILL_ORCS, 24, 16, 1, false);
-        }
-        else if (levelInfoIndex == 118)
-        {
-            createBuilding(context, WAR_UNIT_BARRACKS_ORCS, 48, 30, 0, false);
-            createBuilding(context, WAR_UNIT_LUMBERMILL_ORCS, 47, 27, 0, false);
-            createBuilding(context, WAR_UNIT_BLACKSMITH_ORCS, 58, 26, 0, false);
-            createBuilding(context, WAR_UNIT_TEMPLE, 48, 23, 0, false);
-            createBuilding(context, WAR_UNIT_KENNEL, 57, 22, 0, false);
-            createBuilding(context, WAR_UNIT_TOWER_ORCS, 51, 21, 0, false);
+        //     createBuilding(context, WAR_UNIT_LUMBERMILL_ORCS, 24, 16, 1, false);
+        // }
+        // else if (levelInfoIndex == 118)
+        // {
+        //     createBuilding(context, WAR_UNIT_BARRACKS_ORCS, 48, 30, 0, false);
+        //     createBuilding(context, WAR_UNIT_LUMBERMILL_ORCS, 47, 27, 0, false);
+        //     createBuilding(context, WAR_UNIT_BLACKSMITH_ORCS, 58, 26, 0, false);
+        //     createBuilding(context, WAR_UNIT_TEMPLE, 48, 23, 0, false);
+        //     createBuilding(context, WAR_UNIT_KENNEL, 57, 22, 0, false);
+        //     createBuilding(context, WAR_UNIT_TOWER_ORCS, 51, 21, 0, false);
 
-            createBuilding(context, WAR_UNIT_LUMBERMILL_HUMANS, 24, 16, 1, false);
-        }
+        //     createBuilding(context, WAR_UNIT_LUMBERMILL_HUMANS, 24, 16, 1, false);
+        // }
     }
 
     // add ui entities
@@ -1274,8 +1275,8 @@ void updateCommands(WarContext* context)
     {
         if (!entity->unit.building)
         {
-            s32 farmsCount = getPlayerUnitCount(context, 0, entity->unit.type);
-            s32 dudesCount = getPlayerDudesCount(context, 0);
+            s32 farmsCount = getNumberOfBuildingsOfType(context, 0, entity->unit.type, true);
+            s32 dudesCount = getTotalNumberOfDudes(context, 0);
 
             setUIText(commandTexts[0], NO_HIGHLIGHT, "FOOD USAGE:");
             setUITextFormat(commandTexts[1], NO_HIGHLIGHT, "GROWN %d", farmsCount * 4 + 1);
@@ -1445,25 +1446,56 @@ void updateCommandFromRightClick(WarContext* context)
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
-                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
-                            isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
+                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                         {
-                            executeHarvestCommand(context, targetEntity, targetTile);
+                            if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
+                                executeHarvestCommand(context, targetEntity, targetTile);
+                            else
+                                executeMoveCommand(context, targetPoint);
+                        }
+                        else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
+                        {
+                            if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
+                            {
+                                executeHarvestCommand(context, targetEntity, targetTile);
+                            }
+                            else
+                            {
+                                WarTree* tree = findAccesibleTree(context, targetEntity, targetTile);
+                                if (tree)
+                                {
+                                    targetTile = vec2i(tree->tilex, tree->tiley);
+                                    executeHarvestCommand(context, targetEntity, targetTile);
+                                }
+                                else
+                                {
+                                    executeMoveCommand(context, targetPoint);
+                                }
+                            }
                         }
                         else if (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) || 
                                  isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
                         {
-                            if (isEnemyUnit(context, targetEntity))
+                            if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
                             {
-                                executeAttackCommand(context, targetEntity, targetTile);
+                                if (isEnemyUnit(context, targetEntity))
+                                {
+                                    executeAttackCommand(context, targetEntity, targetTile);
+                                }
+                                else
+                                {
+                                    executeDeliverCommand(context, targetEntity);
+                                }
                             }
                             else
                             {
-                                executeDeliverCommand(context, targetEntity);
+                                executeMoveCommand(context, targetPoint);
                             }
                         }
                         else if (isWall(targetEntity))
                         {
+                            // it doesn't matter if the wall piece is visible or not,
+                            // the unit will walk to it
                             executeMoveCommand(context, targetPoint);
                         }
                         else
@@ -2034,13 +2066,13 @@ void updateFoW(WarContext* context)
 {
     WarMap* map = context->map;
 
-    if (map->fowTime > 0)
-    {
-        map->fowTime -= context->deltaTime;
-        return;
-    }
+    // if (map->fowTime > 0)
+    // {
+    //     map->fowTime -= context->deltaTime;
+    //     return;
+    // }
 
-    map->fowTime = getScaledTime(context, FOG_OF_WAR_UPDATE_TIME);
+    // map->fowTime = getScaledTime(context, FOG_OF_WAR_UPDATE_TIME);
     
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
@@ -2050,7 +2082,23 @@ void updateFoW(WarContext* context)
             map->tiles[i].state = MAP_TILE_STATE_FOG;
     }
 
+    // the Holy Sight and Dark Vision spells are the first entities that change FoW
+    WarEntityList* sightSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_SIGHT);
+    for (s32 i = 0; i < sightSpells->count; i++)
+    {
+        WarEntity* entity = sightSpells->items[i];
+        if (entity)
+        {
+            WarSightComponent* sight = &entity->sight;
+
+            rect r = rectExpand(rectv(sight->position, VEC2_ONE), 3, 3);
+            setMapTileState(map, r.x, r.y, r.width, r.height, MAP_TILE_STATE_VISIBLE);
+        }
+    }
+
     WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+
+    // do the update of the FoW for friendly units first
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -2099,7 +2147,16 @@ void updateFoW(WarContext* context)
                     }
                 }
             }
-            else
+        }
+    }
+
+    // and then do the update of the FoW for enemies and neutrals units
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (entity)
+        {
+            if (!isFriendlyUnit(context, entity))
             {
                 if (isBuildingUnit(entity) && !entity->unit.hasBeenSeen)
                 {
@@ -2110,19 +2167,6 @@ void updateFoW(WarContext* context)
                                                              unitSize.x, unitSize.y, MAP_TILE_STATE_VISIBLE);
                 }
             }
-        }
-    }
-
-    WarEntityList* sightSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_SIGHT);
-    for (s32 i = 0; i < sightSpells->count; i++)
-    {
-        WarEntity* entity = sightSpells->items[i];
-        if (entity)
-        {
-            WarSightComponent* sight = &entity->sight;
-
-            rect r = rectExpand(rectv(sight->position, VEC2_ONE), 3, 3);
-            setMapTileState(map, r.x, r.y, r.width, r.height, MAP_TILE_STATE_VISIBLE);
         }
     }
 }
@@ -2240,6 +2284,27 @@ void determineFoWTypes(WarContext* context)
     }
 }
 
+bool checkObjectives(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    map->objectivesTime -= context->deltaTime;
+
+    if (map->objectivesTime <= 0)
+    {
+        WarCampaignMapData data = getCampaignData((WarCampaignMapType)map->levelInfoIndex);
+        if (data.checkObjectivesFunc)
+        {
+            if (data.checkObjectivesFunc(context))
+                return true;
+        }
+
+        map->objectivesTime = 1;
+    }
+
+    return false;
+}
+
 void updateMap(WarContext* context)
 {
     updateGlobalSpeed(context);
@@ -2283,6 +2348,11 @@ void updateMap(WarContext* context)
     updateWallsEdit(context);
     updateRuinsEdit(context);
     updateRainOfFireEdit(context);
+
+    if (checkObjectives(context))
+    {
+        logInfo("WIN!!!\n");
+    }
 }
 
 void renderTerrain(WarContext* context)

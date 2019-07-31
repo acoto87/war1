@@ -181,9 +181,9 @@ List of thing to do in no particular order
     * ~~Attacks on unknown areas always produce the unit to move to the attacking point, even ranges ones.~~
     * ~~Attackers reveals themselves when attacking a player's unit.~~
     * ~~Reveal attacked units? Yes.~~
-    * After a number of seconds (3 maybe?) an area without friendly units remain with fog.
-    That is, buildings, roads, ruins, walls, trees are shown in the map, with a fade of fog.
-    Moving units are not shown in areas with fog.
+    * ~~After a number of seconds (3 maybe?) an area without friendly units remain with fog.~~
+    * ~~That is, buildings, roads, ruins, walls, trees are shown in the map, with a fade of fog.~~
+    * ~~Moving units are not shown in areas with fog.~~
 
 * Animations/actions
   * ~~Add animations data for each unit type.~~

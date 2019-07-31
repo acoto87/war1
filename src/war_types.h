@@ -1769,6 +1769,8 @@ typedef struct
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
 } WarPlayerInfo;
 
+typedef bool (*WarCheckObjectivesFunc)(struct _WarContext* context);
+
 #define isHumanPlayer(player) ((player)->race == WAR_RACE_HUMANS)
 #define isOrcPlayer(player) ((player)->race == WAR_RACE_ORCS)
 #define isNeutralPlayer(player) ((player)->race == WAR_RACE_NEUTRAL)
@@ -1797,6 +1799,7 @@ typedef struct
 typedef struct
 {
     s32 levelInfoIndex;
+    f32 objectivesTime;
 
     // scroll
     s32 scrollSpeed;

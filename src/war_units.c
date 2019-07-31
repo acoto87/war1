@@ -101,7 +101,7 @@ u8Color getUnitColorOnMinimap(WarEntity* entity)
     return u8RgbColor(r, g, b);
 }
 
-s32 getPlayerUnitTotalCount(WarContext* context, u8 player)
+s32 getTotalNumberOfUnits(WarContext* context, u8 player)
 {
     WarMap* map = context->map;
 
@@ -123,7 +123,7 @@ s32 getPlayerUnitTotalCount(WarContext* context, u8 player)
     return count;
 }
 
-s32 getPlayerDudesCount(WarContext* context, u8 player)
+s32 getTotalNumberOfDudes(WarContext* context, u8 player)
 {
     WarMap* map = context->map;
 
@@ -145,7 +145,7 @@ s32 getPlayerDudesCount(WarContext* context, u8 player)
     return count;
 }
 
-s32 getPlayerBuildingsCount(WarContext* context, u8 player)
+s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt)
 {
     WarMap* map = context->map;
 
@@ -159,6 +159,9 @@ s32 getPlayerBuildingsCount(WarContext* context, u8 player)
         {
             if (entity->unit.player == player && isBuildingUnit(entity))
             {
+                if (alreadyBuilt && (isBuilding(entity) || isGoingToBuild(entity)))
+                    continue;
+
                 count++;
             }
         }
@@ -167,7 +170,35 @@ s32 getPlayerBuildingsCount(WarContext* context, u8 player)
     return count;
 }
 
-s32 getPlayerUnitCount(WarContext* context, u8 player, WarUnitType unitType)
+s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitType, bool alreadyBuilt)
+{
+    assert(isBuildingUnitType(unitType));
+
+    WarMap* map = context->map;
+
+    s32 count = 0;
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (entity)
+        {
+            if (entity->unit.player == player && 
+                entity->unit.type == unitType)
+            {
+                if (alreadyBuilt && (isBuilding(entity) || isGoingToBuild(entity)))
+                    continue;
+
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
+s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
 {
     WarMap* map = context->map;
 
@@ -253,7 +284,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                     commands[1] = WAR_COMMAND_BUILD_CHURCH;
                     commands[2] = WAR_COMMAND_BUILD_STABLE;
 
-                    if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
+                    if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
                     {
                         commands[3] = WAR_COMMAND_BUILD_TOWER_HUMANS;
                     }
@@ -271,7 +302,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
 
                 commands[4] = WAR_COMMAND_BUILD_BASIC;
 
-                if (playerHasUnit(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
+                if (playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
                 {
                     commands[5] = WAR_COMMAND_BUILD_ADVANCED;
                 }
@@ -295,7 +326,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                     commands[1] = WAR_COMMAND_BUILD_TEMPLE;
                     commands[2] = WAR_COMMAND_BUILD_KENNEL;
                     
-                    if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
+                    if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
                     {
                         commands[3] = WAR_COMMAND_BUILD_TOWER_ORCS;
                     }
@@ -313,7 +344,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
 
                 commands[4] = WAR_COMMAND_BUILD_BASIC;
 
-                if (playerHasUnit(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
+                if (playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
                 {
                     commands[5] = WAR_COMMAND_BUILD_ADVANCED;
                 }
@@ -481,18 +512,18 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_FOOTMAN;
 
                 // only if there is a lumber mill
-                if (playerHasUnit(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
+                if (playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
                 {
                     commands[1] = WAR_COMMAND_TRAIN_ARCHER;
                 }
 
                 // only if there is a blacksmith
-                if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
+                if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
                 {
                     commands[2] = WAR_COMMAND_TRAIN_CATAPULT_HUMANS;
 
                     // only if there is a stable
-                    if (playerHasUnit(context, player->index, WAR_UNIT_STABLE))
+                    if (playerHasBuilding(context, player->index, WAR_UNIT_STABLE))
                     {
                         commands[3] = WAR_COMMAND_TRAIN_KNIGHT;
                     }
@@ -512,18 +543,18 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_GRUNT;
 
                 // only if there is a lumber mill
-                if (playerHasUnit(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
+                if (playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
                 {
                     commands[1] = WAR_COMMAND_TRAIN_SPEARMAN;
                 }
 
                 // only if there is a blacksmith
-                if (playerHasUnit(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
+                if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
                 {
                     commands[2] = WAR_COMMAND_TRAIN_CATAPULT_ORCS;
 
                     // only if there is a kennel
-                    if (playerHasUnit(context, player->index, WAR_UNIT_KENNEL))
+                    if (playerHasBuilding(context, player->index, WAR_UNIT_KENNEL))
                     {
                         commands[3] = WAR_COMMAND_TRAIN_RAIDER;
                     }

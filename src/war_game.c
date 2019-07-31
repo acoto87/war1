@@ -86,7 +86,7 @@ bool initGame(WarContext* context)
     }
 
     //createEmptyScene(context);
-    createMap(context, 117);
+    createMap(context, WAR_CAMPAIGN_HUMANS_01);
     
     context->time = (f32)glfwGetTime();
     return true;

@@ -1854,15 +1854,14 @@ bool isCarryingResources(WarEntity* entity)
 bool displayUnitOnMinimap(WarEntity* entity);
 u8Color getUnitColorOnMinimap(WarEntity* entity);
 
-s32 getPlayerDudesCount(WarContext* context, u8 player);
-s32 getPlayerBuildingsCount(WarContext* context, u8 player);
-s32 getPlayerUnitCount(WarContext* context, u8 player, WarUnitType unitType);
-s32 getPlayerUnitTotalCount(WarContext* context, u8 player);
+s32 getTotalNumberOfDudes(WarContext* context, u8 player);
+s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt);
+s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitType, bool alreadyBuilt);
+s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType);
+s32 getTotalNumberOfUnits(WarContext* context, u8 player);
 
-bool playerHasUnit(WarContext* context, s32 player, WarUnitType unitType)
-{
-    return getPlayerUnitCount(context, player, unitType) > 0;
-}
+#define playerHasUnit(context, player, unitType) (getNumberOfUnitsOfType(context, player, unitType) > 0)
+#define playerHasBuilding(context, player, unitType) (getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
 
 void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
 void getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
