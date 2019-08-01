@@ -8,7 +8,7 @@ void clearUIText(WarEntity* uiText)
     }
 }
 
-void setUIText(WarEntity* uiText, s32 highlightIndex, char* text)
+void setUIText(WarEntity* uiText, s32 highlightIndex, const char* text)
 {
     clearUIText(uiText);
 
@@ -21,7 +21,7 @@ void setUIText(WarEntity* uiText, s32 highlightIndex, char* text)
     }
 }
 
-void setUITextFormatv(WarEntity* uiText, s32 highlightIndex, char* format, va_list args)
+void setUITextFormatv(WarEntity* uiText, s32 highlightIndex, const char* format, va_list args)
 {
     if (!format)
     {
@@ -34,7 +34,7 @@ void setUITextFormatv(WarEntity* uiText, s32 highlightIndex, char* format, va_li
     setUIText(uiText, highlightIndex, buffer);
 }
 
-void setUITextFormat(WarEntity* uiText, s32 highlightIndex, char* format, ...)
+void setUITextFormat(WarEntity* uiText, s32 highlightIndex, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -70,12 +70,12 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, char* text)
     }
 }
 
-WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, vec2 position)
+WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 fontSize, const char* text, vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addTextComponent(context, entity, fontIndex, NULL);
+    addTextComponent(context, entity, fontIndex, fontSize, text);
 
     return entity;
 }
@@ -117,7 +117,8 @@ WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, v
 WarEntity* createUITextButton(WarContext* context, 
                               char* name,
                               s32 fontIndex,
-                              char* text,
+                              f32 fontSize,
+                              const char* text,
                               WarSpriteResourceRef backgroundNormalRef,
                               WarSpriteResourceRef backgroundPressedRef,
                               WarSpriteResourceRef foregroundRef,
@@ -126,7 +127,7 @@ WarEntity* createUITextButton(WarContext* context,
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
-    addTextComponent(context, entity, fontIndex, text);
+    addTextComponent(context, entity, fontIndex, fontSize, text);
     addSpriteComponentFromResource(context, entity, foregroundRef);
     addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
 
@@ -149,6 +150,15 @@ WarEntity* createUIImageButton(WarContext* context,
     return entity;
 }
 
+WarEntity* createUIMinimap(WarContext* context, char* name, vec2 position)
+{
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_MINIMAP, true);
+    addTransformComponent(context, entity, position);
+    addUIComponent(context, entity, name);
+
+    return entity;
+}
+
 bool isUIEntity(WarEntity* entity)
 {
     switch (entity->type)
@@ -158,6 +168,7 @@ bool isUIEntity(WarEntity* entity)
         case WAR_ENTITY_TYPE_RECT:
         case WAR_ENTITY_TYPE_BUTTON:
         case WAR_ENTITY_TYPE_CURSOR:
+        case WAR_ENTITY_TYPE_MINIMAP:
             return true;
 
         default:
@@ -497,107 +508,9 @@ void renderUIEntities(WarContext* context)
         WarEntity *entity = entities->items[i];
         if (entity)
         {
-            if (!strEquals(entity->ui.name, "cursor"))
-            {
-                renderEntity(context, entity);
-            }
+            renderEntity(context, entity);
         }
     }
-}
-
-void renderCursor(WarContext* context)
-{
-    WarEntity* entity = findUIEntity(context, "cursor");
-    if (entity)
-    {
-        renderEntity(context, entity);
-    }
-}
-
-void renderMinimap(WarContext* context)
-{
-    WarMap* map = context->map;
-
-    NVGcontext* gfx = context->gfx;
-
-    WarSpriteFrame* frame0 = &map->minimapSprite.frames[0];
-    WarSpriteFrame* frame1 = &map->minimapSprite.frames[1];
-
-    nvgSave(gfx);
-
-    // copy the minimap base to the first frame which is the one that will be rendered
-    // copy only the visible tiles/pixels
-    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-    {
-        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-        {
-            WarMapTile* tile = getMapTileState(map, x, y);
-            if (tile->state == MAP_TILE_STATE_VISIBLE ||
-                tile->state == MAP_TILE_STATE_FOG)
-            {
-                s32 index = y * MAP_TILES_WIDTH + x;
-                frame0->data[index * 4 + 0] = frame1->data[index * 4 + 0];
-                frame0->data[index * 4 + 1] = frame1->data[index * 4 + 1];
-                frame0->data[index * 4 + 2] = frame1->data[index * 4 + 2];
-                frame0->data[index * 4 + 3] = frame1->data[index * 4 + 3];
-            }
-        }
-    }
-
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
-    for(s32 i = 0; i < units->count; i++)
-    {
-        WarEntity* entity = units->items[i];
-        if (entity)
-        {
-            WarUnitComponent* unit = &entity->unit;
-            WarTransformComponent* transform = &entity->transform;
-
-            if (displayUnitOnMinimap(entity))
-            {
-                s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
-                s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
-
-                if (checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
-                {
-                    u8Color color = getUnitColorOnMinimap(entity);
-
-                    for(s32 y = 0; y < unit->sizey; y++)
-                    {
-                        for(s32 x = 0; x < unit->sizex; x++)
-                        {
-                            s32 pixel = (tileY + y) * MINIMAP_WIDTH + (tileX + x);
-                            frame0->data[pixel * 4 + 0] = color.r;
-                            frame0->data[pixel * 4 + 1] = color.g;
-                            frame0->data[pixel * 4 + 2] = color.b;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
-
-    updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
-    renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
-
-    nvgRestore(gfx);
-}
-
-void renderMinimapViewport(WarContext* context)
-{
-    WarMap* map = context->map;
-    NVGcontext* gfx = context->gfx;
-
-    nvgSave(gfx);
-
-    nvgTranslate(gfx, map->minimapPanel.x, map->minimapPanel.y);
-    nvgTranslate(gfx, map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
-
-    nvgStrokeRect(gfx, recti(0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT), NVG_WHITE, 1.0f/context->globalScale);
-
-    nvgRestore(gfx);
 }
 
 void renderMapUI(WarContext* context)
@@ -610,11 +523,6 @@ void renderMapUI(WarContext* context)
     renderSelectionRect(context);
     renderCommand(context);
     renderUIEntities(context);
-
-    renderMinimap(context);
-    renderMinimapViewport(context);
-
-    renderCursor(context);
 
     // DEBUG:
     // Render debug info

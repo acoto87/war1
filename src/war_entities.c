@@ -183,12 +183,12 @@ void removeUIComponent(WarContext* context, WarEntity* entity)
     entity->ui = (WarUIComponent){0};
 }
 
-void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, char* text)
+void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, const char* text)
 {
     entity->text = (WarTextComponent){0};
     entity->text.enabled = true;
     entity->text.fontIndex = fontIndex;
-    entity->text.fontSize = 6.0f;
+    entity->text.fontSize = fontSize;
     entity->text.highlightIndex = NO_HIGHLIGHT;
     entity->text.fontColor = FONT_NORMAL_COLOR;
 
@@ -1062,8 +1062,22 @@ void renderButton(WarContext* context, WarEntity* entity)
         // render text
         {
             if (text->enabled)
-            {
+            {                
+                NVGfontParams params;
+                params.fontIndex = text->fontIndex;
+                params.fontSprite = context->fontSprites[text->fontIndex];
+                params.fontSize = text->fontSize;
+                params.fontColor = u8ColorToNVGcolor(text->fontColor);
+                params.fontData = fontsData[text->fontIndex];
+                params.highlightIndex = text->highlightIndex;
+                
+                vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
+                vec2 textSize = nvgMeasureSpriteText(text->text, params);
+                vec2 offset = vec2Ceil(vec2Half(vec2Subv(backgroundSize, textSize)));
 
+                nvgTranslate(gfx, offset.x, offset.y);
+
+                nvgSingleSpriteText(gfx, text->text, 0, 0, params);
             }
         }
 
@@ -1132,6 +1146,83 @@ void renderProjectile(WarContext* context, WarEntity* entity)
     }
 }
 
+void renderMinimap(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    NVGcontext* gfx = context->gfx;
+
+    vec2 position = entity->transform.position;
+
+    WarSpriteFrame* frame0 = &map->minimapSprite.frames[0];
+    WarSpriteFrame* frame1 = &map->minimapSprite.frames[1];
+
+    // copy the minimap base to the first frame which is the one that will be rendered
+    // copy only the visible tiles/pixels
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    {
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        {
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (tile->state == MAP_TILE_STATE_VISIBLE ||
+                tile->state == MAP_TILE_STATE_FOG)
+            {
+                s32 index = y * MAP_TILES_WIDTH + x;
+                frame0->data[index * 4 + 0] = frame1->data[index * 4 + 0];
+                frame0->data[index * 4 + 1] = frame1->data[index * 4 + 1];
+                frame0->data[index * 4 + 2] = frame1->data[index * 4 + 2];
+                frame0->data[index * 4 + 3] = frame1->data[index * 4 + 3];
+            }
+        }
+    }
+
+    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    for(s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (entity)
+        {
+            WarUnitComponent* unit = &entity->unit;
+            WarTransformComponent* transform = &entity->transform;
+
+            if (displayUnitOnMinimap(entity))
+            {
+                s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
+                s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
+
+                if (checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
+                {
+                    u8Color color = getUnitColorOnMinimap(entity);
+
+                    for(s32 y = 0; y < unit->sizey; y++)
+                    {
+                        for(s32 x = 0; x < unit->sizex; x++)
+                        {
+                            s32 pixel = (tileY + y) * MINIMAP_WIDTH + (tileX + x);
+                            frame0->data[pixel * 4 + 0] = color.r;
+                            frame0->data[pixel * 4 + 1] = color.g;
+                            frame0->data[pixel * 4 + 2] = color.b;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    nvgSave(gfx);
+    nvgTranslate(gfx, position.x, position.y);
+
+    // render base
+    updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
+    renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
+
+    // render viewport
+    nvgTranslate(gfx, map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
+    nvgStrokeRect(gfx, recti(0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT), NVG_WHITE, 1.0f/context->globalScale);
+
+    nvgRestore(gfx);
+}
+
 void renderEntity(WarContext* context, WarEntity* entity)
 {
     static WarRenderFunc renderFuncs[WAR_ENTITY_TYPE_COUNT] =
@@ -1151,6 +1242,8 @@ void renderEntity(WarContext* context, WarEntity* entity)
         renderProjectile,   // WAR_ENTITY_TYPE_PROJECTILE
         NULL,               // WAR_ENTITY_TYPE_RAIN_OF_FIRE
         NULL,               // WAR_ENTITY_TYPE_POISON_CLOUD
+        NULL,               // WAR_ENTITY_TYPE_SIGHT
+        renderMinimap,      // WAR_ENTITY_TYPE_MINIMAP
     };
 
     NVGcontext* gfx = context->gfx;

@@ -76,7 +76,9 @@ List of thing to do in no particular order
   * Summon spells summon as many units as mana allows.
   * ~~Assertion in determining ruin pieces hit when goldmine ran out of gold.~~
   * Check death animations of scorpions and spiders.
-  * Holy Sight doesn't mark the buildings as hasBeenSeen.
+  * ~~Holy Sight doesn't mark the buildings as hasBeenSeen.~~
+  * Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like MAP_STATE_ALWAYS_VISIBLE and MAP_STATE_TIMED_VISIBLE.
+  * Make highlights in text be a span of text instead of just one character.
 
 * General
   * ~~Test the new implementation for lists.~~

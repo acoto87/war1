@@ -219,6 +219,9 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     map->bottomPanel = recti(72, 188, 240, 12);
     map->mapPanel = recti(72, 12, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
     map->minimapPanel = recti(3, 6, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+    map->menuPanel = recti(84, 32, 152, 136);
+    map->messagePanel = recti(17, 76, 286, 48);
+    map->saveLoadPanel = recti(48, 27, 223, 146);
 
     s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
@@ -558,11 +561,25 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         vec2 topPanel = rectTopLeft(map->topPanel);
         vec2 rightPanel = rectTopLeft(map->rightPanel);
         vec2 bottomPanel = rectTopLeft(map->bottomPanel);
+        vec2 minimapPanel = rectTopLeft(map->minimapPanel);
+        vec2 menuPanel = rectTopLeft(map->menuPanel);
+        vec2 messagePanel = rectTopLeft(map->messagePanel);
+        vec2 saveLoadPanel = rectTopLeft(map->saveLoadPanel);
 
         WarSpriteResourceRef invalidRef = invalidResourceRef();
         WarSpriteResourceRef normalRef = imageResourceRef(364);
         WarSpriteResourceRef pressedRef = imageResourceRef(365);
         WarSpriteResourceRef portraitsRef = imageResourceRef(361);
+        WarSpriteResourceRef largeNormalRef = imageResourceRef(237);
+        WarSpriteResourceRef largePressedRef = imageResourceRef(238);
+        WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
+        WarSpriteResourceRef mediumPressedRef = imageResourceRef(240);
+        WarSpriteResourceRef smallNormalRef = imageResourceRef(241);
+        WarSpriteResourceRef smallPressedRef = imageResourceRef(242);
+        WarSpriteResourceRef leftArrowNormalRef = imageResourceRef(244);
+        WarSpriteResourceRef leftArrowPressedRef = imageResourceRef(245);
+        WarSpriteResourceRef rightArrowNormalRef = imageResourceRef(246);
+        WarSpriteResourceRef rightArrowPressedRef = imageResourceRef(247);
 
         // panels
         createUIImage(context, "panelLeftTop", imageResourceRef(224), leftTopPanel);
@@ -571,20 +588,23 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "panelRight", imageResourceRef(220), rightPanel);
         createUIImage(context, "panelBottom", imageResourceRef(222), bottomPanel);
 
+        // minimap
+        createUIMinimap(context, "minimap", minimapPanel);
+        
         // top panel images
         createUIImage(context, "imgGold", imageResourceRef(406), vec2Addv(topPanel, vec2i(201, 1)));
         createUIImage(context, "imgLumber", imageResourceRef(407), vec2Addv(topPanel, vec2i(102, 0)));
 
         // top panel texts
-        createUIText(context, "txtGold", 0, vec2Addv(topPanel, vec2i(135, 2)));
-        createUIText(context, "txtWood", 0, vec2Addv(topPanel, vec2i(24, 2)));
+        createUIText(context, "txtGold", 0, 6, NULL, vec2Addv(topPanel, vec2i(135, 2)));
+        createUIText(context, "txtWood", 0, 6, NULL, vec2Addv(topPanel, vec2i(24, 2)));
 
         // status text
-        createUIText(context, "txtStatus", 0, vec2Addv(bottomPanel, vec2i(2, 5)));
+        createUIText(context, "txtStatus", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(2, 5)));
         createUIImage(context, "imgStatusWood", imageResourceRef(407), vec2Addv(bottomPanel, vec2i(163, 3)));
         createUIImage(context, "imgStatusGold", imageResourceRef(406), vec2Addv(bottomPanel, vec2i(200, 5)));
-        createUIText(context, "txtStatusWood", 0, vec2Addv(bottomPanel, vec2i(179, 5)));
-        createUIText(context, "txtStatusGold", 0, vec2Addv(bottomPanel, vec2i(218, 5)));
+        createUIText(context, "txtStatusWood", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(179, 5)));
+        createUIText(context, "txtStatusGold", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(218, 5)));
 
         // selected unit(s) info
         createUIImage(context, "imgUnitInfo", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(2, 0)));
@@ -594,7 +614,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "imgUnitPortrait3", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 23)));
         createUIImage(context, "imgUnitPortrait4", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 23)));
         createUIImage(context, "imgUnitInfoLife", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(3, 16)));
-        createUIText(context, "txtUnitName", 0, vec2Addv(leftBottomPanel, vec2i(6, 26)));
+        createUIText(context, "txtUnitName", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(6, 26)));
         createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectLifeBar1", vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
         createUIRect(context, "rectLifeBar2", vec2Addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), U8COLOR_GREEN);
@@ -605,10 +625,10 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
 
         // texts in the command area
-        createUIText(context, "txtCommand0", 0, vec2Addv(leftBottomPanel, vec2i(3, 46)));
-        createUIText(context, "txtCommand1", 0, vec2Addv(leftBottomPanel, vec2i(3, 56)));
-        createUIText(context, "txtCommand2", 0, vec2Addv(leftBottomPanel, vec2i(7, 64)));
-        createUIText(context, "txtCommand3", 0, vec2Addv(leftBottomPanel, vec2i(11, 54)));
+        createUIText(context, "txtCommand0", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(3, 46)));
+        createUIText(context, "txtCommand1", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(3, 56)));
+        createUIText(context, "txtCommand2", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(7, 64)));
+        createUIText(context, "txtCommand3", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(11, 54)));
 
         // command buttons
         createUIImageButton(
@@ -645,8 +665,161 @@ void createMap(WarContext *context, s32 levelInfoIndex)
             context, "btnMenu", 
             imageResourceRef(362), imageResourceRef(363), invalidRef, 
             vec2Addv(leftBottomPanel, vec2i(3, 116)));
-
         setUITooltip(menuButton, NO_HIGHLIGHT, "MENU (F10)");
+
+        // main menu
+        createUIImage(context, "imgMenuBackground", imageResourceRef(233), menuPanel);
+
+        createUIText(context, "txtMenuHeader", 1, 10, "Warcraft", vec2Addv(menuPanel, vec2i(50, 10)));
+
+        createUITextButton(
+            context, "btnMenuSave",
+            1, 10, "Save Game",
+            mediumNormalRef,
+            mediumPressedRef,
+            invalidRef,
+            vec2Addv(menuPanel, vec2i(20, 25)));
+
+        createUITextButton(
+            context, "btnMenuLoad",
+            1, 10, "Load Game",
+            mediumNormalRef,
+            mediumPressedRef,
+            invalidRef,
+            vec2Addv(menuPanel, vec2i(20, 45)));
+
+        createUITextButton(
+            context, "btnMenuOptions",
+            1, 10, "Options",
+            mediumNormalRef,
+            mediumPressedRef,
+            invalidRef,
+            vec2Addv(menuPanel, vec2i(20, 65)));
+
+        createUITextButton(
+            context, "btnMenuRestart",
+            1, 10, "Restart scenario",
+            mediumNormalRef,
+            mediumPressedRef,
+            invalidRef,
+            vec2Addv(menuPanel, vec2i(20, 85)));
+
+        createUITextButton(
+            context, "btnMenuContinue",
+            1, 10, "Continue",
+            smallNormalRef,
+            smallPressedRef,
+            invalidRef,
+            vec2Addv(menuPanel, vec2i(20, 105)));
+
+        createUITextButton(
+            context, "btnMenuQuit",
+            1, 10, "Quit",
+            smallNormalRef,
+            smallPressedRef,
+            invalidRef,
+            vec2Addv(menuPanel, vec2i(78, 105)));
+
+        // options menu
+        // createUIText(context, "txtOptionsHeader", 1, 10, "Options", vec2Addv(menuPanel, vec2i(58, 10)));
+
+        // createUIText(context, "txtOptionsGameSpeedLabel", 1, 10, "Game Speed", vec2Addv(menuPanel, vec2i(10, 25)));
+        // createUIText(context, "txtOptionsMusicVolLabel", 1, 10, "Music Vol", vec2Addv(menuPanel, vec2i(23, 42)));
+        // createUIText(context, "txtOptionsSFXVolLabel", 1, 10, "SFX Vol", vec2Addv(menuPanel, vec2i(32, 59)));
+        // createUIText(context, "txtOptionsMouseScrollLabel", 1, 10, "Mouse Scroll", vec2Addv(menuPanel, vec2i(5, 76)));
+        // createUIText(context, "txtOptionsKeyScrollLabel", 1, 10, "Key Scroll", vec2Addv(menuPanel, vec2i(19, 93)));
+
+        // createUIText(context, "txtOptionsGameSpeedValue", 1, 10, "Fastest", vec2Addv(menuPanel, vec2i(92, 25)));
+        // createUIText(context, "txtOptionsMusicVolValue", 1, 10, "100", vec2Addv(menuPanel, vec2i(92, 42)));
+        // createUIText(context, "txtOptionsSFXVolValue", 1, 10, "82", vec2Addv(menuPanel, vec2i(92, 59)));
+        // createUIText(context, "txtOptionsMouseScrollValue", 1, 10, "Slowest", vec2Addv(menuPanel, vec2i(92, 76)));
+        // createUIText(context, "txtOptionsKeyScrollValue", 1, 10, "Slowest", vec2Addv(menuPanel, vec2i(92, 93)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsGameSpeedDec", 
+        //     leftArrowNormalRef, 
+        //     leftArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(76, 22)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsGameSpeedInc", 
+        //     rightArrowNormalRef, 
+        //     rightArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(133, 22)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsMusicVolDec", 
+        //     leftArrowNormalRef, 
+        //     leftArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(76, 39)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsMusicVolInc", 
+        //     rightArrowNormalRef, 
+        //     rightArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(133, 39)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsSFXVolDec", 
+        //     leftArrowNormalRef, 
+        //     leftArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(76, 56)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsSFXVolInc", 
+        //     rightArrowNormalRef, 
+        //     rightArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(133, 56)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsMouseScrollDec", 
+        //     leftArrowNormalRef, 
+        //     leftArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(76, 73)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsMouseScrollInc", 
+        //     rightArrowNormalRef, 
+        //     rightArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(133, 73)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsKeyScrollDec", 
+        //     leftArrowNormalRef, 
+        //     leftArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(76, 90)));
+
+        // createUIImageButton(
+        //     context, "btnOptionsKeyScrollInc", 
+        //     rightArrowNormalRef, 
+        //     rightArrowPressedRef, 
+        //     invalidRef, 
+        //     vec2Addv(menuPanel, vec2i(133, 90)));
+        
+        // createUITextButton(
+        //     context, "btnOptionsOk",
+        //     1, 10, "Ok",
+        //     smallNormalRef,
+        //     smallPressedRef,
+        //     invalidRef,
+        //     vec2Addv(menuPanel, vec2i(20, 115)));
+
+        // createUITextButton(
+        //     context, "btnOptionsCancel",
+        //     1, 10, "Cancel",
+        //     smallNormalRef,
+        //     smallPressedRef,
+        //     invalidRef,
+        //     vec2Addv(menuPanel, vec2i(78, 115)));
 
         createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
     }

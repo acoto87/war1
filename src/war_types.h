@@ -190,6 +190,15 @@ typedef struct
     rect dragRect;
 } WarInput;
 
+typedef struct
+{
+    s32 spriteWidth;
+    s32 spriteHeight;
+    s32 lineHeight;
+    s32 advance;
+    rect data[95];
+} WarFontData;
+
 //
 // Resources
 //
@@ -796,6 +805,7 @@ typedef enum
     WAR_ENTITY_TYPE_RAIN_OF_FIRE,
     WAR_ENTITY_TYPE_POISON_CLOUD,
     WAR_ENTITY_TYPE_SIGHT,
+    WAR_ENTITY_TYPE_MINIMAP,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -1818,6 +1828,9 @@ typedef struct
     rect rightPanel;
     rect mapPanel;
     rect minimapPanel;
+    rect menuPanel;
+    rect messagePanel;
+    rect saveLoadPanel;
 
     WarSprite sprite;
     WarSprite minimapSprite;

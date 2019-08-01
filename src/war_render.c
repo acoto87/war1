@@ -375,15 +375,6 @@ void nvgStrokePolyline(NVGcontext* gfx, s32 count, vec2 points[], NVGcolor color
     nvgRestore(gfx);
 }
 
-typedef struct
-{
-    s32 spriteWidth;
-    s32 spriteHeight;
-    s32 lineHeight;
-    s32 advance;
-    rect data[95];
-} WarFontData;
-
 typedef struct 
 {
     char* fontFace;

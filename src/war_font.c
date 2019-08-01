@@ -107,7 +107,7 @@ WarFontData fontsData[2] =
     },
     // font 1 for menu texts
     {
-        512, 768, 48, 8,
+        512, 768, 80, 8,
         {
             {   0,   0, 48, 80 }, // space 
             {  48,   0, 16, 80 }, // !
@@ -183,27 +183,27 @@ WarFontData fontsData[2] =
             { 112, 480, 40, 80 }, // g
             { 152, 480, 40, 80 }, // h
             { 192, 480, 16, 80 }, // i
-            { 208, 480, 16, 80 }, // j
-            { 224, 480, 40, 80 }, // k
-            { 264, 480, 16, 80 }, // l
-            { 280, 480, 64, 80 }, // m
-            { 344, 480, 40, 80 }, // n
-            { 384, 480, 40, 80 }, // o
-            { 424, 480, 40, 80 }, // p
-            { 464, 480, 48, 80 }, // q
-            {   0, 560, 40, 80 }, // r
-            {  40, 560, 40, 80 }, // s
-            {  80, 560, 32, 80 }, // t
-            { 112, 560, 40, 80 }, // u
-            { 152, 560, 48, 80 }, // v
-            { 200, 560, 64, 80 }, // w
-            { 264, 560, 48, 80 }, // x
-            { 312, 560, 40, 80 }, // y
-            { 352, 560, 48, 80 }, // z
-            { 400, 560, 32, 80 }, // {
-            { 432, 560, 16, 80 }, // |
-            { 448, 560, 32, 80 }, // }
-            {   0, 640, 56, 80 } // ~
+            { 208, 480, 24, 80 }, // j
+            { 232, 480, 40, 80 }, // k
+            { 272, 480, 16, 80 }, // l
+            { 288, 480, 64, 80 }, // m
+            { 352, 480, 40, 80 }, // n
+            { 392, 480, 40, 80 }, // o
+            { 432, 480, 40, 80 }, // p
+            {   0, 560, 48, 80 }, // q
+            {  48, 560, 40, 80 }, // r
+            {  88, 560, 40, 80 }, // s
+            { 128, 560, 32, 80 }, // t
+            { 160, 560, 40, 80 }, // u
+            { 200, 560, 48, 80 }, // v
+            { 248, 560, 64, 80 }, // w
+            { 312, 560, 48, 80 }, // x
+            { 360, 560, 40, 80 }, // y
+            { 400, 560, 48, 80 }, // z
+            {   0, 640, 32, 80 }, // {
+            {  32, 560, 16, 80 }, // |
+            {  48, 560, 32, 80 }, // }
+            {  80, 640, 56, 80 }, // ~
         }
     }
 };
@@ -231,7 +231,7 @@ WarSprite loadFontSprite(WarContext* context, const char* fontPath)
     return sprite;
 }
 
-s32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text, s32 index, s32 count, f32 x, f32 y, NVGfontParams params)
+f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text, s32 index, s32 count, f32 x, f32 y, NVGfontParams params)
 {
     if (count > 0)
     {
@@ -294,4 +294,22 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
     }
 
     nvgRestore(gfx);
+}
+
+vec2 nvgMeasureSpriteText(const char* text, NVGfontParams params)
+{
+    s32 len = strlen(text);
+    f32 scale = params.fontSize / params.fontData.lineHeight;
+
+    vec2 size = VEC2_ZERO;
+
+    for (s32 i = 0; i < len; i++)
+    {
+        rect rs = params.fontData.data[getCharIndex(text[i])];
+
+        size.x += (rs.width + params.fontData.advance) * scale;
+        size.y = max(size.y, rs.height * scale);
+    }
+
+    return size;
 }
