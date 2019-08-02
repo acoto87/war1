@@ -160,6 +160,19 @@ typedef enum _WarKeys
     WAR_KEY_9,
     WAR_KEY_0,
 
+    WAR_KEY_F1,
+    WAR_KEY_F2,
+    WAR_KEY_F3,
+    WAR_KEY_F4,
+    WAR_KEY_F5,
+    WAR_KEY_F6,
+    WAR_KEY_F7,
+    WAR_KEY_F8,
+    WAR_KEY_F9,
+    WAR_KEY_F10,
+    WAR_KEY_F11,
+    WAR_KEY_F12,
+
     WAR_KEY_COUNT
 } WarKeys;
 
@@ -1385,6 +1398,7 @@ typedef void (*WarClickHandler)(struct _WarContext* context, struct _WarEntity* 
 typedef struct
 {
     bool enabled;
+    bool interactive;
     bool hot;
     bool active;
     WarKeys hotKey;
@@ -1806,8 +1820,21 @@ typedef struct
     char text[100];
 } WarFlashStatus;
 
+typedef enum
+{
+    MAP_PLAYING,
+    MAP_MENU,
+    MAP_OPTIONS,
+    MAP_SAVE_GAME,
+    MAP_LOAD_GAME,
+    MAP_LEAVING,
+    MAP_GAME_OVER
+} WarMapStatus;
+
 typedef struct
 {
+    WarMapStatus status;
+
     s32 levelInfoIndex;
     f32 objectivesTime;
 
@@ -1838,7 +1865,6 @@ typedef struct
 
     WarMapTilesetType tilesetType;
     WarMapTile tiles[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
-    f32 fowTime;
 
     WarEntityList entities;
     WarEntityMap entitiesByType;
@@ -1860,13 +1886,10 @@ typedef struct
     bool editingRainOfFire;
 
     WarPathFinder finder;
-
+    WarUnitCommand command;
+    WarFlashStatus flashStatus;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
     WarSpriteAnimationList animations;
-
-    WarUnitCommand command;
-
-    WarFlashStatus flashStatus;
 } WarMap;
 
 typedef struct _WarContext

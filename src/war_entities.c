@@ -218,6 +218,11 @@ void addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normal
 {
     entity->button = (WarButtonComponent){0};
     entity->button.enabled = true;
+    entity->button.interactive = true;
+    entity->button.hot = false;
+    entity->button.active = false;
+    entity->button.hotKey = WAR_KEY_NONE;
+    entity->button.highlightIndex = NO_HIGHLIGHT;
     entity->button.normalSprite = normalSprite;
     entity->button.pressedSprite = pressedSprite;
     entity->button.clickHandler = NULL;
@@ -527,7 +532,6 @@ WarEntity* findUIEntity(WarContext* context, const char* name)
         WarEntity* entity = entities->items[i];
         if (entity && 
             isUIEntity(entity) && 
-            entity->ui.enabled && 
             strEquals(entity->ui.name, name))
         {
             return entity;
@@ -631,9 +635,10 @@ void renderImage(WarContext* context, WarEntity* entity)
     NVGcontext* gfx = context->gfx;
 
     WarTransformComponent transform = entity->transform;
+    WarUIComponent* ui = &entity->ui;
     WarSpriteComponent* sprite = &entity->sprite;
 
-    if (sprite->enabled && sprite->frameIndex >= 0)
+    if (ui->enabled && sprite->enabled && sprite->frameIndex >= 0)
     {
         nvgSave(gfx);
 

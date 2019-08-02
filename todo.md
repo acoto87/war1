@@ -79,6 +79,8 @@ List of thing to do in no particular order
   * ~~Holy Sight doesn't mark the buildings as hasBeenSeen.~~
   * Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like MAP_STATE_ALWAYS_VISIBLE and MAP_STATE_TIMED_VISIBLE.
   * Make highlights in text be a span of text instead of just one character.
+  * Check clipping of audios, `value = clamp(value, INT16_MIN, INT16_MAX);` this line doesn't make much sense because value is a `s16` already.
+  * Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
 
 * General
   * ~~Test the new implementation for lists.~~

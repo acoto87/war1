@@ -144,3 +144,10 @@ bool checkUnitTiles(WarMap* map, WarEntity* entity, s32 states);
 #define isTileVisible(map, x, y) ((map)->tiles[(y) * MAP_TILES_WIDTH + (x)].state == MAP_TILE_STATE_VISIBLE)
 
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+
+void handleOpenMenu(WarContext* context, WarEntity* entity);
+void handleContinue(WarContext* context, WarEntity* entity);
+void handleOpenOptions(WarContext* context, WarEntity* entity);
+void handleOptionsOk(WarContext* context, WarEntity* entity);
+void handleOptionsCancel(WarContext* context, WarEntity* entity);
+void handleGameOverContinue(WarContext* context, WarEntity* entity);

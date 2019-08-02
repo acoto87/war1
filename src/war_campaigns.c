@@ -1,4 +1,5 @@
 bool checkMap01Objectives(WarContext* context);
+bool checkMap02Objectives(WarContext* context);
 
 typedef enum
 {
@@ -38,8 +39,8 @@ const WarCampaignMapData campaignsData[] =
 {
     { WAR_CAMPAIGN_HUMANS_01,   checkMap01Objectives },
     { WAR_CAMPAIGN_ORCS_01,     checkMap01Objectives },
-    { WAR_CAMPAIGN_HUMANS_02,   NULL },
-    { WAR_CAMPAIGN_ORCS_02,     NULL },
+    { WAR_CAMPAIGN_HUMANS_02,   checkMap02Objectives },
+    { WAR_CAMPAIGN_ORCS_02,     checkMap02Objectives },
     { WAR_CAMPAIGN_HUMANS_03,   NULL },
     { WAR_CAMPAIGN_ORCS_03,     NULL },
     { WAR_CAMPAIGN_HUMANS_04,   NULL },
@@ -85,4 +86,12 @@ bool checkMap01Objectives(WarContext* context)
 
     return getNumberOfBuildingsOfType(context, player->index, farmType, true) >= 6 &&
            getNumberOfBuildingsOfType(context, player->index, barracksType, true) >= 1;
+}
+
+bool checkMap02Objectives(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarPlayerInfo* enemy = &map->players[1];
+
+    return getTotalNumberOfDudes(context, enemy->index) == 0;
 }

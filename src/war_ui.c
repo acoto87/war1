@@ -1,3 +1,20 @@
+bool isUIEntity(WarEntity* entity)
+{
+    switch (entity->type)
+    {
+        case WAR_ENTITY_TYPE_IMAGE:
+        case WAR_ENTITY_TYPE_TEXT:
+        case WAR_ENTITY_TYPE_RECT:
+        case WAR_ENTITY_TYPE_BUTTON:
+        case WAR_ENTITY_TYPE_CURSOR:
+        case WAR_ENTITY_TYPE_MINIMAP:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 void clearUIText(WarEntity* uiText)
 {
     if (uiText->text.text)
@@ -67,6 +84,67 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, char* text)
     {
         uiButton->button.highlightIndex = highlightIndex;
         strcpy(uiButton->button.tooltip, text);
+    }
+}
+
+void setUIButtonClickHandler(WarEntity* uiButton, WarClickHandler handler)
+{
+    uiButton->button.clickHandler = handler;
+}
+
+void setUIButtonStatus(WarEntity* uiButton, bool enabled)
+{
+    uiButton->button.enabled = enabled;
+}
+
+void setUIButtonStatusByName(WarContext* context, const char* name, bool enabled)
+{
+    WarEntity* entity = findUIEntity(context, name);
+    if (entity)
+    {
+        setUIButtonStatus(entity, enabled);
+    }
+}
+
+void setUIButtonInteractive(WarEntity* uiButton, bool interactive)
+{
+    uiButton->button.interactive = interactive;
+}
+
+void setUIButtonInteractiveByName(WarContext* context, const char* name, bool interactive)
+{
+    WarEntity* entity = findUIEntity(context, name);
+    if (entity)
+    {
+        setUIButtonInteractive(entity, interactive);
+    }
+}
+
+void setUIButtonHotKey(WarEntity* uiButton, WarKeys key)
+{
+    uiButton->button.hotKey = key;
+}
+
+void setUIButtonHotKeyByName(WarContext* context, const char* name, WarKeys key)
+{
+    WarEntity* entity = findUIEntity(context, name);
+    if (entity)
+    {
+        setUIButtonHotKey(entity, key);
+    }
+}
+
+void setUIEntityStatus(WarEntity* uiEntity, bool enabled)
+{
+    uiEntity->ui.enabled = enabled;
+}
+
+void setUIEntityStatusByName(WarContext* context, const char* name, bool enabled)
+{
+    WarEntity* entity = findUIEntity(context, name);
+    if (entity)
+    {
+        setUIEntityStatus(entity, enabled);
     }
 }
 
@@ -157,23 +235,6 @@ WarEntity* createUIMinimap(WarContext* context, char* name, vec2 position)
     addUIComponent(context, entity, name);
 
     return entity;
-}
-
-bool isUIEntity(WarEntity* entity)
-{
-    switch (entity->type)
-    {
-        case WAR_ENTITY_TYPE_IMAGE:
-        case WAR_ENTITY_TYPE_TEXT:
-        case WAR_ENTITY_TYPE_RECT:
-        case WAR_ENTITY_TYPE_BUTTON:
-        case WAR_ENTITY_TYPE_CURSOR:
-        case WAR_ENTITY_TYPE_MINIMAP:
-            return true;
-
-        default:
-            return false;
-    }
 }
 
 void updateGoldText(WarContext* context)
