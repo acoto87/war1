@@ -1,0 +1,1 @@
+void createMapUI(WarContext* context);

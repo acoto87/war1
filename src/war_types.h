@@ -1843,6 +1843,11 @@ typedef struct
     bool isScrolling;
     bool wasScrolling;
 
+    // this is shortcut to disable all audios in the map
+    // to avoid crashes when freeing the map and the audio thread
+    // trying to reproduce audios
+    bool audioEnabled;
+
     // viewport in map coordinates, 
     // this is the portion of the map that the player see
     rect viewport;

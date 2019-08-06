@@ -73,6 +73,8 @@
 #include "war_types.h"
 #include "war.h"
 #include "war_database.h"
+#include "war_map_menu.h"
+#include "war_map_ui.h"
 #include "war_map.h"
 #include "war_commands.h"
 #include "war_units.h"
@@ -118,6 +120,8 @@
 #include "war_state_machine_cast.c"
 #include "war_state_machine.c"
 #include "war_campaigns.c"
+#include "war_map_menu.c"
+#include "war_map_ui.c"
 #include "war_map.c"
 #include "war_game.c"
 

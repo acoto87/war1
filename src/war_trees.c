@@ -238,3 +238,17 @@ s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
 
     return amount;
 }
+
+WarEntity* createForest(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    WarTreeList trees;
+    WarTreeListInit(&trees, WarTreeListDefaultOptions);
+
+    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
+    addSpriteComponent(context, entity, map->sprite);
+    addForestComponent(context, entity, trees);
+
+    return entity;
+}

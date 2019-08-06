@@ -352,7 +352,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
     }
 
     WarMap* map = context->map;
-    if (!map)
+    if (!map || !map->audioEnabled)
     {
         return;
     }

@@ -1,3 +1,131 @@
+void addEntityToSelection(WarContext* context, WarEntityId id)
+{
+    WarMap* map = context->map;
+
+    // subtitute this with a set data structure that doesn't allow duplicates
+    if (!WarEntityIdListContains(&map->selectedEntities, id))
+        WarEntityIdListAdd(&map->selectedEntities, id);
+}
+
+void removeEntityFromSelection(WarContext* context, WarEntityId id)
+{
+    WarMap* map = context->map;
+    WarEntityIdListRemove(&map->selectedEntities, id);
+}
+
+void clearSelection(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarEntityIdListClear(&map->selectedEntities);
+}
+
+WarEntityList* getEntities(WarMap* map)
+{
+    return &map->entities;
+}
+
+WarEntityList* getEntitiesOfType(WarMap* map, WarEntityType type)
+{
+    return WarEntityMapGet(&map->entitiesByType, type);
+}
+
+WarEntityList* getUnitsOfType(WarMap* map, WarUnitType type)
+{
+    return WarUnitMapGet(&map->unitsByType, type);
+}
+
+WarEntityList* getUIEntities(WarMap* map)
+{
+    return &map->uiEntities;
+}
+
+vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+
+    rect mapPanel = map->mapPanel;
+    rect viewport = map->viewport;
+
+    v = vec2Translatef(v, -mapPanel.x, -mapPanel.y);
+    v = vec2Translatef(v, viewport.x, viewport.y);
+    return v;
+}
+
+vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+
+    rect minimapPanel = map->minimapPanel;
+    
+    v = vec2Translatef(v, -minimapPanel.x, -minimapPanel.y);
+    return v;
+}
+
+rect rectScreenToMapCoordinates(WarContext* context, rect r)
+{
+    WarMap* map = context->map;
+
+    rect mapPanel = map->mapPanel;
+    rect viewport = map->viewport;
+
+    r = rectTranslatef(r, -mapPanel.x, -mapPanel.y);
+    r = rectTranslatef(r, viewport.x, viewport.y);
+    return r;
+}
+
+vec2 vec2MapToScreenCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+
+    v = vec2Translatef(v, -map->viewport.x, -map->viewport.y);
+    v = vec2Translatef(v, map->mapPanel.x, map->mapPanel.y);
+    return v;
+}
+
+rect rectMapToScreenCoordinates(WarContext* context, rect r)
+{
+    WarMap* map = context->map;
+
+    r = rectTranslatef(r, -map->viewport.x, -map->viewport.y);
+    r = rectTranslatef(r, map->mapPanel.x, map->mapPanel.y);
+    return r;
+}
+
+vec2 vec2MapToTileCoordinates(vec2 v)
+{
+    v.x = floorf(v.x / MEGA_TILE_WIDTH);
+    v.y = floorf(v.y / MEGA_TILE_HEIGHT);
+    return v;
+}
+
+vec2 vec2TileToMapCoordinates(vec2 v, bool centeredInTile)
+{
+    v.x *= MEGA_TILE_WIDTH;
+    v.y *= MEGA_TILE_HEIGHT;
+
+    if (centeredInTile)
+    {
+        v.x += halfi(MEGA_TILE_WIDTH);
+        v.y += halfi(MEGA_TILE_HEIGHT);
+    }
+
+    return v;
+}
+
+vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v)
+{
+    WarMap* map = context->map;
+
+    rect minimapPanel = map->minimapPanel;
+    vec2 minimapPanelSize = vec2f(minimapPanel.width, minimapPanel.height);
+
+    vec2 minimapViewportSize = vec2f(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
+
+    v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
+    v = vec2Clampv(v, VEC2_ZERO, vec2Subv(minimapPanelSize, minimapViewportSize));
+    return v;
+}
+
 WarMapTile* getMapTileState(WarMap* map, s32 x, s32 y)
 {
     return &map->tiles[y * MAP_TILES_WIDTH + x];
@@ -212,6 +340,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     map->objectivesTime = 1;
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
     map->scrollSpeed = 200;
+    map->audioEnabled = true;
 
     map->leftTopPanel = recti(0, 0, 72, 72);
     map->leftBottomPanel = recti(0, 72, 72, 128);
@@ -402,26 +531,21 @@ void createMap(WarContext *context, s32 levelInfoIndex)
                     }
                 }
                 
-                WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
-                addSpriteComponent(context, entity, map->sprite);
-                addForestComponent(context, entity, trees);
+                WarEntity* forest = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
+                addSpriteComponent(context, forest, map->sprite);
+                addForestComponent(context, forest, trees);
 
                 for (s32 i = 0; i < trees.count; i++)
                 {
                     WarTree* tree = &trees.items[i];
-                    setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, entity->id);
+                    setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, forest->id);
                 }
 
-                determineTreeTiles(context, entity);
+                determineTreeTiles(context, forest);
             }
         }
 
-        WarTreeList trees;
-        WarTreeListInit(&trees, WarTreeListDefaultOptions);
-        WarEntity *forest = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
-        addSpriteComponent(context, forest, map->sprite);
-        addForestComponent(context, forest, trees);
-        map->forest = forest;
+        map->forest = createForest(context);;
     }
 
     // create the starting roads
@@ -470,6 +594,11 @@ void createMap(WarContext *context, s32 levelInfoIndex)
         changeNextState(context, wall, idleState, true, true);
 
         map->wall = wall;
+    }
+
+    // create ruins
+    {
+        map->ruin = createRuins(context);
     }
 
     // create players info
@@ -555,367 +684,16 @@ void createMap(WarContext *context, s32 levelInfoIndex)
 
     // add ui entities
     {
-        vec2 leftTopPanel = rectTopLeft(map->leftTopPanel);
-        vec2 leftBottomPanel = rectTopLeft(map->leftBottomPanel);
-        vec2 topPanel = rectTopLeft(map->topPanel);
-        vec2 rightPanel = rectTopLeft(map->rightPanel);
-        vec2 bottomPanel = rectTopLeft(map->bottomPanel);
-        vec2 minimapPanel = rectTopLeft(map->minimapPanel);
-        vec2 menuPanel = rectTopLeft(map->menuPanel);
-        vec2 messagePanel = rectTopLeft(map->messagePanel);
-        vec2 saveLoadPanel = rectTopLeft(map->saveLoadPanel);
-
-        WarSpriteResourceRef invalidRef = invalidResourceRef();
-        WarSpriteResourceRef normalRef = imageResourceRef(364);
-        WarSpriteResourceRef pressedRef = imageResourceRef(365);
-        WarSpriteResourceRef portraitsRef = imageResourceRef(361);
-        WarSpriteResourceRef largeNormalRef = imageResourceRef(237);
-        WarSpriteResourceRef largePressedRef = imageResourceRef(238);
-        WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
-        WarSpriteResourceRef mediumPressedRef = imageResourceRef(240);
-        WarSpriteResourceRef smallNormalRef = imageResourceRef(241);
-        WarSpriteResourceRef smallPressedRef = imageResourceRef(242);
-        WarSpriteResourceRef leftArrowNormalRef = imageResourceRef(244);
-        WarSpriteResourceRef leftArrowPressedRef = imageResourceRef(245);
-        WarSpriteResourceRef rightArrowNormalRef = imageResourceRef(246);
-        WarSpriteResourceRef rightArrowPressedRef = imageResourceRef(247);
-
-        // panels
-        createUIImage(context, "panelLeftTop", imageResourceRef(224), leftTopPanel);
-        createUIImage(context, "panelLeftBottom", imageResourceRef(226), leftBottomPanel);
-        createUIImage(context, "panelTop", imageResourceRef(218), topPanel);
-        createUIImage(context, "panelRight", imageResourceRef(220), rightPanel);
-        createUIImage(context, "panelBottom", imageResourceRef(222), bottomPanel);
-
-        // minimap
-        createUIMinimap(context, "minimap", minimapPanel);
-        
-        // top panel images
-        createUIImage(context, "imgGold", imageResourceRef(406), vec2Addv(topPanel, vec2i(201, 1)));
-        createUIImage(context, "imgLumber", imageResourceRef(407), vec2Addv(topPanel, vec2i(102, 0)));
-
-        // top panel texts
-        createUIText(context, "txtGold", 0, 6, NULL, vec2Addv(topPanel, vec2i(135, 2)));
-        createUIText(context, "txtWood", 0, 6, NULL, vec2Addv(topPanel, vec2i(24, 2)));
-
-        // status text
-        createUIText(context, "txtStatus", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(2, 5)));
-        createUIImage(context, "imgStatusWood", imageResourceRef(407), vec2Addv(bottomPanel, vec2i(163, 3)));
-        createUIImage(context, "imgStatusGold", imageResourceRef(406), vec2Addv(bottomPanel, vec2i(200, 5)));
-        createUIText(context, "txtStatusWood", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(179, 5)));
-        createUIText(context, "txtStatusGold", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(218, 5)));
-
-        // selected unit(s) info
-        createUIImage(context, "imgUnitInfo", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(2, 0)));
-        createUIImage(context, "imgUnitPortrait0", portraitsRef, vec2Addv(leftBottomPanel, vec2i(6, 4)));
-        createUIImage(context, "imgUnitPortrait1", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 1)));
-        createUIImage(context, "imgUnitPortrait2", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 1)));
-        createUIImage(context, "imgUnitPortrait3", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 23)));
-        createUIImage(context, "imgUnitPortrait4", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 23)));
-        createUIImage(context, "imgUnitInfoLife", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(3, 16)));
-        createUIText(context, "txtUnitName", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(6, 26)));
-        createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar1", vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar2", vec2Addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar3", vec2Addv(leftBottomPanel, vec2i(4, 39)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectLifeBar4", vec2Addv(leftBottomPanel, vec2i(38, 39)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectMagicBar", vec2Addv(leftBottomPanel, vec2i(37, 9)), vec2i(27, 3), U8COLOR_GREEN);
-        createUIRect(context, "rectPercentBar", vec2Addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), U8COLOR_GREEN);
-        createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
-
-        // texts in the command area
-        createUIText(context, "txtCommand0", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(3, 46)));
-        createUIText(context, "txtCommand1", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(3, 56)));
-        createUIText(context, "txtCommand2", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(7, 64)));
-        createUIText(context, "txtCommand3", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(11, 54)));
-
-        // command buttons
-        createUIImageButton(
-            context, "btnCommand0", 
-            normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(2, 44)));
-
-        createUIImageButton(
-            context, "btnCommand1", 
-            normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(36, 44)));
-
-        createUIImageButton(
-            context, "btnCommand2", 
-            normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(2, 67)));
-
-        createUIImageButton(
-            context, "btnCommand3", 
-            normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(36, 67)));
-
-        createUIImageButton(
-            context, "btnCommand4", 
-            normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(2, 90)));
-
-        createUIImageButton(
-            context, "btnCommand5", 
-            normalRef, pressedRef, portraitsRef, 
-            vec2Addv(leftBottomPanel, vec2i(36, 90)));
-
-        WarEntity* uiEntity;
-
-        uiEntity = createUIImageButton(
-            context, "btnMenu", 
-            imageResourceRef(362), 
-            imageResourceRef(363), 
-            invalidRef, 
-            vec2Addv(leftBottomPanel, vec2i(3, 116)));
-        setUITooltip(uiEntity, NO_HIGHLIGHT, "MENU (F10)");
-        setUIButtonClickHandler(uiEntity, handleOpenMenu);
-        setUIButtonHotKey(uiEntity, WAR_KEY_F10);
-
-        // main menu
-        uiEntity = createUIRect(
-            context, "rectMenuBackdrop", 
-            VEC2_ZERO, vec2i(context->windowWidth, context->windowHeight), 
-            u8RgbaColor(0, 0, 0, 150));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImage(context, "imgMenuBackground", imageResourceRef(233), menuPanel);
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIText(context, "txtMenuHeader", 1, 10, "Warcraft", vec2Addv(menuPanel, vec2i(50, 10)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUITextButton(
-            context, "btnMenuSave",
-            1, 10, "Save Game",
-            mediumNormalRef,
-            mediumPressedRef,
-            invalidRef,
-            vec2Addv(menuPanel, vec2i(20, 25)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUITextButton(
-            context, "btnMenuLoad",
-            1, 10, "Load Game",
-            mediumNormalRef,
-            mediumPressedRef,
-            invalidRef,
-            vec2Addv(menuPanel, vec2i(20, 45)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUITextButton(
-            context, "btnMenuOptions",
-            1, 10, "Options",
-            mediumNormalRef,
-            mediumPressedRef,
-            invalidRef,
-            vec2Addv(menuPanel, vec2i(20, 65)));
-        setUIEntityStatus(uiEntity, false);
-        setUIButtonClickHandler(uiEntity, handleOpenOptions);
-        setUIButtonHotKey(uiEntity, WAR_KEY_C);
-
-        uiEntity = createUITextButton(
-            context, "btnMenuRestart",
-            1, 10, "Restart scenario",
-            mediumNormalRef,
-            mediumPressedRef,
-            invalidRef,
-            vec2Addv(menuPanel, vec2i(20, 85)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUITextButton(
-            context, "btnMenuContinue",
-            1, 10, "Continue",
-            smallNormalRef,
-            smallPressedRef,
-            invalidRef,
-            vec2Addv(menuPanel, vec2i(20, 105)));
-        setUIEntityStatus(uiEntity, false);
-        setUIButtonClickHandler(uiEntity, handleContinue);
-        setUIButtonHotKey(uiEntity, WAR_KEY_C);
-
-        uiEntity = createUITextButton(
-            context, "btnMenuQuit",
-            1, 10, "Quit",
-            smallNormalRef,
-            smallPressedRef,
-            invalidRef,
-            vec2Addv(menuPanel, vec2i(78, 105)));
-        setUIEntityStatus(uiEntity, false);
-
-        // options menu
-        uiEntity = createUIText(context, "txtOptionsHeader", 1, 10, "Options", vec2Addv(menuPanel, vec2i(58, 10)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIText(context, "txtOptionsGameSpeedLabel", 1, 10, "Game Speed", vec2Addv(menuPanel, vec2i(10, 25)));
-        setUIEntityStatus(uiEntity, false);
-        uiEntity = createUIText(context, "txtOptionsMusicVolLabel", 1, 10, "Music Vol", vec2Addv(menuPanel, vec2i(23, 42)));
-        setUIEntityStatus(uiEntity, false);
-        uiEntity = createUIText(context, "txtOptionsSFXVolLabel", 1, 10, "SFX Vol", vec2Addv(menuPanel, vec2i(32, 59)));
-        setUIEntityStatus(uiEntity, false);
-        uiEntity = createUIText(context, "txtOptionsMouseScrollLabel", 1, 10, "Mouse Scroll", vec2Addv(menuPanel, vec2i(5, 76)));
-        setUIEntityStatus(uiEntity, false);
-        uiEntity = createUIText(context, "txtOptionsKeyScrollLabel", 1, 10, "Key Scroll", vec2Addv(menuPanel, vec2i(19, 93)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIText(context, "txtOptionsGameSpeedValue", 1, 10, "Fastest", vec2Addv(menuPanel, vec2i(92, 25)));
-        setUIEntityStatus(uiEntity, false);
-        uiEntity = createUIText(context, "txtOptionsMusicVolValue", 1, 10, "100", vec2Addv(menuPanel, vec2i(92, 42)));
-        setUIEntityStatus(uiEntity, false);
-        uiEntity = createUIText(context, "txtOptionsSFXVolValue", 1, 10, "82", vec2Addv(menuPanel, vec2i(92, 59)));
-        setUIEntityStatus(uiEntity, false);
-        uiEntity = createUIText(context, "txtOptionsMouseScrollValue", 1, 10, "Slowest", vec2Addv(menuPanel, vec2i(92, 76)));
-        setUIEntityStatus(uiEntity, false);
-        uiEntity = createUIText(context, "txtOptionsKeyScrollValue", 1, 10, "Slowest", vec2Addv(menuPanel, vec2i(92, 93)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsGameSpeedDec", 
-            leftArrowNormalRef, 
-            leftArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(76, 22)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsGameSpeedInc", 
-            rightArrowNormalRef, 
-            rightArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(133, 22)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsMusicVolDec", 
-            leftArrowNormalRef, 
-            leftArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(76, 39)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsMusicVolInc", 
-            rightArrowNormalRef, 
-            rightArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(133, 39)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsSFXVolDec", 
-            leftArrowNormalRef, 
-            leftArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(76, 56)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsSFXVolInc", 
-            rightArrowNormalRef, 
-            rightArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(133, 56)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsMouseScrollDec", 
-            leftArrowNormalRef, 
-            leftArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(76, 73)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsMouseScrollInc", 
-            rightArrowNormalRef, 
-            rightArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(133, 73)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsKeyScrollDec", 
-            leftArrowNormalRef, 
-            leftArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(76, 90)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIImageButton(
-            context, "btnOptionsKeyScrollInc", 
-            rightArrowNormalRef, 
-            rightArrowPressedRef, 
-            invalidRef, 
-            vec2Addv(menuPanel, vec2i(133, 90)));
-        setUIEntityStatus(uiEntity, false);
-        
-        uiEntity = createUITextButton(
-            context, "btnOptionsOk",
-            1, 10, "Ok",
-            smallNormalRef,
-            smallPressedRef,
-            invalidRef,
-            vec2Addv(menuPanel, vec2i(20, 115)));
-        setUIEntityStatus(uiEntity, false);
-        setUIButtonClickHandler(uiEntity, handleOptionsOk);
-        setUIButtonHotKey(uiEntity, WAR_KEY_O);
-
-        uiEntity = createUITextButton(
-            context, "btnOptionsCancel",
-            1, 10, "Cancel",
-            smallNormalRef,
-            smallPressedRef,
-            invalidRef,
-            vec2Addv(menuPanel, vec2i(78, 115)));
-        setUIEntityStatus(uiEntity, false);
-        setUIButtonClickHandler(uiEntity, handleOptionsCancel);
-        setUIButtonHotKey(uiEntity, WAR_KEY_C);
-
-        // game over message
-        uiEntity = createUIImage(context, "imgGameOverBackground", imageResourceRef(235), messagePanel);
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUIText(context, "txtGameOverText", 1, 10, "You are victorious!", vec2Addv(messagePanel, vec2i(95, 10)));
-        setUIEntityStatus(uiEntity, false);
-
-        uiEntity = createUITextButton(
-            context, "btnGameOverSave",
-            1, 10, "Save",
-            smallNormalRef,
-            smallPressedRef,
-            invalidRef,
-            vec2Addv(messagePanel, vec2i(20, 25)));
-        setUIEntityStatus(uiEntity, false);
-        setUIButtonHotKey(uiEntity, WAR_KEY_S);
-
-        uiEntity = createUITextButton(
-            context, "btnGameOverContinue",
-            1, 10, "Continue",
-            smallNormalRef,
-            smallPressedRef,
-            invalidRef,
-            vec2Addv(messagePanel, vec2i(210, 25)));
-        setUIEntityStatus(uiEntity, false);
-        setUIButtonClickHandler(uiEntity, handleGameOverContinue);
-        setUIButtonHotKey(uiEntity, WAR_KEY_C);
-
+        createMapUI(context);
+        createMenu(context);
+        createOptionsMenu(context);
+        createGameOverMenu(context);
         createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
     }
 
     // DEBUG
     // add animations
     {
-        // test ruins
-        {
-            WarEntity* ruins = createRuins(context);
-        //     addRuinsPieces(context, ruins, 11, 6, 3);
-        //     addRuinsPieces(context, ruins, 13, 5, 2);
-        //     addRuinsPieces(context, ruins, 9, 5, 3);
-        //     addRuinsPieces(context, ruins, 8, 8, 4);
-        //     determineRuinTypes(context, ruins);
-
-            map->ruin = ruins;
-        }
         
         // test animations
         // {
@@ -996,6 +774,8 @@ void freeMap(WarContext* context)
 {
     WarMap* map = context->map;
 
+    map->audioEnabled = false;
+
     freeSprite(context, map->sprite);
     freeSprite(context, map->minimapSprite);
     freeSprite(context, map->blackSprite);
@@ -1008,10 +788,11 @@ void freeMap(WarContext* context)
 
     WarEntityIdListFree(&map->selectedEntities);
 
-    freeEntity(map->forest);
-    freeEntity(map->wall);
-    freeEntity(map->road);
-    freeEntity(map->ruin);
+    // these are already free when the lists and maps are
+    // freeEntity(map->forest);
+    // freeEntity(map->wall);
+    // freeEntity(map->road);
+    // freeEntity(map->ruin);
 
     free(map->finder.data);
 
@@ -1629,9 +1410,10 @@ void updateButtons(WarContext* context)
         if (entity)
         {
             WarTransformComponent* transform = &entity->transform;
+            WarUIComponent* ui = &entity->ui;
             WarButtonComponent* button = &entity->button;
             
-            if (!button->enabled || !button->interactive)
+            if (!ui->enabled || !button->enabled || !button->interactive)
             {
                 button->hot = false;
                 button->active = false;
@@ -1826,7 +1608,7 @@ void updateStatus(WarContext* context)
         flashStatus->enabled = false;
     }
 
-    char statusText[50];
+    char statusText[50] = {0};
     s32 highlightIndex = NO_HIGHLIGHT;
     s32 goldCost = 0;
     s32 woodCost = 0;
@@ -2579,15 +2361,6 @@ bool checkObjectives(WarContext* context)
     return false;
 }
 
-void showOrHideGameOver(WarContext* context, bool status)
-{
-    setUIEntityStatusByName(context, "rectMenuBackdrop", status);
-    setUIEntityStatusByName(context, "imgGameOverBackground", status);
-    setUIEntityStatusByName(context, "txtGameOverText", status);
-    setUIEntityStatusByName(context, "btnGameOverSave", status);
-    setUIEntityStatusByName(context, "btnGameOverContinue", status);
-}
-
 void updateMapPlaying(WarContext* context)
 {
     WarMap* map = context->map;
@@ -2681,125 +2454,6 @@ void updateMap(WarContext* context)
             break;
         }
     }
-}
-
-void enableOrDisableCommandButtons(WarContext* context, bool interactive)
-{
-    setUIButtonInteractiveByName(context, "btnCommand0", interactive);
-    setUIButtonInteractiveByName(context, "btnCommand1", interactive);
-    setUIButtonInteractiveByName(context, "btnCommand2", interactive);
-    setUIButtonInteractiveByName(context, "btnCommand3", interactive);
-    setUIButtonInteractiveByName(context, "btnCommand4", interactive);
-    setUIButtonInteractiveByName(context, "btnCommand5", interactive);
-
-    setUIButtonInteractiveByName(context, "btnMenu", interactive);
-}
-
-void showOrHideMenu(WarContext* context, bool status)
-{
-    setUIEntityStatusByName(context, "rectMenuBackdrop", status);
-    setUIEntityStatusByName(context, "imgMenuBackground", status);
-    setUIEntityStatusByName(context, "txtMenuHeader", status);
-    setUIEntityStatusByName(context, "btnMenuSave", status);
-    setUIEntityStatusByName(context, "btnMenuLoad", status);
-    setUIEntityStatusByName(context, "btnMenuOptions", status);
-    setUIEntityStatusByName(context, "btnMenuRestart", status);
-    setUIEntityStatusByName(context, "btnMenuContinue", status);
-    setUIEntityStatusByName(context, "btnMenuQuit", status);
-}
-
-void showOrHideOptions(WarContext* context, bool status)
-{
-    setUIEntityStatusByName(context, "rectMenuBackdrop", status);
-    setUIEntityStatusByName(context, "imgMenuBackground", status);
-    setUIEntityStatusByName(context, "txtOptionsHeader", status);
-
-    setUIEntityStatusByName(context, "txtOptionsGameSpeedLabel", status);
-    setUIEntityStatusByName(context, "txtOptionsGameSpeedValue", status);
-    setUIEntityStatusByName(context, "btnOptionsGameSpeedDec", status);
-    setUIEntityStatusByName(context, "btnOptionsGameSpeedInc", status);
-
-    setUIEntityStatusByName(context, "txtOptionsMusicVolLabel", status);
-    setUIEntityStatusByName(context, "txtOptionsMusicVolValue", status);
-    setUIEntityStatusByName(context, "btnOptionsMusicVolDec", status);
-    setUIEntityStatusByName(context, "btnOptionsMusicVolInc", status);
-
-    setUIEntityStatusByName(context, "txtOptionsSFXVolLabel", status);
-    setUIEntityStatusByName(context, "txtOptionsSFXVolValue", status);
-    setUIEntityStatusByName(context, "btnOptionsSFXVolDec", status);
-    setUIEntityStatusByName(context, "btnOptionsSFXVolInc", status);
-
-    setUIEntityStatusByName(context, "txtOptionsMouseScrollLabel", status);
-    setUIEntityStatusByName(context, "txtOptionsMouseScrollValue", status);
-    setUIEntityStatusByName(context, "btnOptionsMouseScrollDec", status);
-    setUIEntityStatusByName(context, "btnOptionsMouseScrollInc", status);
-
-    setUIEntityStatusByName(context, "txtOptionsKeyScrollLabel", status);
-    setUIEntityStatusByName(context, "txtOptionsKeyScrollValue", status);
-    setUIEntityStatusByName(context, "btnOptionsKeyScrollDec", status);
-    setUIEntityStatusByName(context, "btnOptionsKeyScrollInc", status);
-
-    setUIEntityStatusByName(context, "btnOptionsOk", status);
-    setUIEntityStatusByName(context, "btnOptionsCancel", status);
-}
-
-void handleOpenMenu(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-
-    enableOrDisableCommandButtons(context, false);
-    showOrHideMenu(context, true);
-
-    map->status = MAP_MENU;
-}
-
-void handleContinue(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-
-    enableOrDisableCommandButtons(context, true);
-    showOrHideMenu(context, false);
-
-    map->status = MAP_PLAYING;
-}
-
-void handleOpenOptions(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-
-    showOrHideMenu(context, false);
-    showOrHideOptions(context, true);
-    
-    map->status = MAP_OPTIONS;
-}
-
-void handleOptionsOk(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-
-    // persist changes to options here
-
-    showOrHideOptions(context, false);
-    showOrHideMenu(context, true);
-
-    map->status = MAP_MENU;
-}
-
-void handleOptionsCancel(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-
-    showOrHideOptions(context, false);
-    showOrHideMenu(context, true);
-
-    map->status = MAP_MENU;
-}
-
-void handleGameOverContinue(WarContext* context, WarEntity* entity)
-{
-    freeMap(context);
-    
-    createMap(context, WAR_CAMPAIGN_HUMANS_02);
 }
 
 void renderTerrain(WarContext* context)
