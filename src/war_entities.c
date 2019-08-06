@@ -191,6 +191,28 @@ void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32
     entity->text.fontSize = fontSize;
     entity->text.highlightIndex = NO_HIGHLIGHT;
     entity->text.fontColor = FONT_NORMAL_COLOR;
+    entity->text.size = VEC2_ZERO;
+    entity->text.horizontalAlign = WAR_TEXT_ALIGN_LEFT;
+    entity->text.verticalAlign = WAR_TEXT_ALIGN_TOP;
+
+    setUIText(entity, NO_HIGHLIGHT, text);
+}
+
+void addTextComponentSized(WarContext* context, WarEntity* entity, 
+                           s32 fontIndex, f32 fontSize, 
+                           const char* text, vec2 size, 
+                           WarTextAlignment horizontalAlign, 
+                           WarTextAlignment verticalAlign)
+{
+    entity->text = (WarTextComponent){0};
+    entity->text.enabled = true;
+    entity->text.fontIndex = fontIndex;
+    entity->text.fontSize = fontSize;
+    entity->text.highlightIndex = NO_HIGHLIGHT;
+    entity->text.fontColor = FONT_NORMAL_COLOR;
+    entity->text.size = size;
+    entity->text.horizontalAlign = horizontalAlign;
+    entity->text.verticalAlign = verticalAlign;
 
     setUIText(entity, NO_HIGHLIGHT, text);
 }
@@ -996,6 +1018,62 @@ void renderText(WarContext* context, WarEntity* entity)
         params.fontData = fontsData[text->fontIndex];
         params.highlightIndex = text->highlightIndex;
         
+        if (!vec2IsZero(text->size))
+        {
+            vec2 textSize = nvgMeasureSpriteText(text->text, params);
+            vec2 offset = VEC2_ZERO;
+
+            switch (text->horizontalAlign)
+            {
+                case WAR_TEXT_ALIGN_LEFT:
+                {
+                    // nothing here, offset.x should be 0
+                    break;
+                }
+                case WAR_TEXT_ALIGN_CENTER:
+                {
+                    offset.x = ceilf(halff(text->size.x - textSize.x));
+                    break;
+                }
+                case WAR_TEXT_ALIGN_RIGHT:
+                {
+                    offset.x = ceilf(text->size.x - textSize.x);
+                    break;
+                }
+                default:
+                {
+                    logError("Invalid horizontal alignment value: %d\n", text->horizontalAlign);
+                    break;
+                }
+            }
+
+            switch (text->verticalAlign)
+            {
+                case WAR_TEXT_ALIGN_TOP:
+                {
+                    // nothing here, offset.y should be 0
+                    break;
+                }
+                case WAR_TEXT_ALIGN_MIDDLE:
+                {
+                    offset.y = ceilf(halff(text->size.y) - halff(textSize.y));
+                    break;
+                }
+                case WAR_TEXT_ALIGN_BOTTOM:
+                {
+                    offset.y = ceilf(text->size.y - textSize.y);
+                    break;
+                }
+                default:
+                {
+                    logError("Invalid vertical alignment value: %d\n", text->verticalAlign);
+                    break;
+                }
+            }
+
+            nvgTranslate(gfx, offset.x, offset.y);
+        }
+
         nvgSingleSpriteText(gfx, text->text, 0, 0, params);
 
         nvgRestore(gfx);

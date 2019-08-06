@@ -683,91 +683,14 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     }
 
     // add ui entities
-    {
-        createMapUI(context);
-        createMenu(context);
-        createOptionsMenu(context);
-        createGameOverMenu(context);
-        createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
-    }
+    createMapUI(context);
+    createMenu(context);
+    createOptionsMenu(context);
+    createGameOverMenu(context);
+    createQuitMenu(context);
+    createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
 
-    // DEBUG
-    // add animations
-    {
-        
-        // test animations
-        // {
-        //     WarSpriteResourceRef spriteResourceRef = imageResourceRef(359);
-        //     WarSprite sprite2 = createSpriteFromResourceIndex(context, spriteResourceRef);
-        //     WarSpriteAnimation* anim2 = createAnimation("horsie2", sprite2, 0.5f, true);
-        //     anim2->offset = vec2i(100, 100);
-
-        //     const s32 baseFrameIndices2[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-        //     const s32 indexOff2 = 0;
-
-        //     for(s32 i = 0; i < arrayLength(baseFrameIndices2); i++)
-        //     {
-        //         addAnimationFrame(anim2, baseFrameIndices2[i] + indexOff2);
-        //     }
-
-        //     WarSpriteAnimationListAdd(&map->animations, anim2);
-        // }
-
-        // {
-        //     WarSpriteResourceRef spriteResourceRef = imageResourceRef(360);
-        //     WarSprite sprite3 = createSpriteFromResourceIndex(context, spriteResourceRef);
-        //     WarSpriteAnimation* anim3 = createAnimation("horsie3", sprite3, 0.5f, true);
-        //     anim3->offset = vec2i(200, 100);
-
-        //     const s32 baseFrameIndices3[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-        //     const s32 indexOff3 = 0;
-
-        //     for(s32 i = 0; i < arrayLength(baseFrameIndices3); i++)
-        //     {
-        //         addAnimationFrame(anim3, baseFrameIndices3[i] + indexOff3);
-        //     }
-
-        //     WarSpriteAnimationListAdd(&map->animations, anim3);
-        // }
-
-        // {
-        //     WarSpriteResourceRef spriteResourceRef = imageResourceRef(361);
-        //     WarSprite sprite4 = createSpriteFromResourceIndex(context, spriteResourceRef);
-        //     WarSpriteAnimation* anim4 = createAnimation("horsie3", sprite4, 0.5f, true);
-        //     anim4->offset = vec2i(300, 100);
-
-        //     s32 baseFrameindices4[93];
-        //     for (s32 i = 0; i < 93; i++)
-        //         baseFrameindices4[i] = i;
-
-        //     const s32 indexOff4 = 0;
-
-        //     for(s32 i = 0; i < arrayLength(baseFrameindices4); i++)
-        //     {
-        //         addAnimationFrame(anim4, baseFrameindices4[i] + indexOff4);
-        //     }
-
-        //     WarSpriteAnimationListAdd(&map->animations, anim4);
-        // }
-
-        createAudio(context, WAR_MUSIC_00, true);
-    }
-
-    // WarEntity* txtDebug = createUIText(context, "txtDebug", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 60)));
-    // txtDebug->text.fontSize = 8;
-    // setUIText(txtDebug, NO_HIGHLIGHT, "Warcraft: Orcs & Humans");
-
-    // txtDebug = createUIText(context, "txtDebug2", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 80)));
-    // txtDebug->text.fontSize = 6;
-    // setUIText(txtDebug, NO_HIGHLIGHT, "Yes, my lord.");
-
-    // txtDebug = createUIText(context, "txtDebug3", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 100)));
-    // txtDebug->text.fontSize = 6;
-    // setUIText(txtDebug, NO_HIGHLIGHT, "What do you want?");
-
-    // txtDebug = createUIText(context, "txtDebug4", 1, vec2Addv(rectTopLeft(map->mapPanel), vec2i(30, 120)));
-    // txtDebug->text.fontSize = 6;
-    // setUIText(txtDebug, NO_HIGHLIGHT, "Stop poking me!");
+    createAudio(context, WAR_MUSIC_00, true);
 }
 
 void freeMap(WarContext* context)
@@ -2405,7 +2328,7 @@ void updateMapPlaying(WarContext* context)
 
     if (checkObjectives(context))
     {
-        showOrHideGameOver(context, true);
+        showOrHideGameOverMenu(context, true);
 
         map->status = MAP_GAME_OVER;
     }
@@ -2434,7 +2357,7 @@ void updateMap(WarContext* context)
         }
         case MAP_MENU:
         case MAP_OPTIONS:
-        case MAP_LEAVING:
+        case MAP_QUIT:
         case MAP_GAME_OVER:
         {
             updateMapMenu(context);

@@ -21,7 +21,13 @@ void createMenu(WarContext* context)
     uiEntity = createUIImage(context, "imgMenuBackground", imageResourceRef(233), menuPanel);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, "txtMenuHeader", 1, 10, "Warcraft", vec2Addv(menuPanel, vec2i(50, 10)));
+    uiEntity = createUITextSized(
+        context, "txtMenuHeader", 
+        1, 10, "Warcraft", 
+        vec2Addv(menuPanel, vec2i(0, 10)),
+        vec2f(map->menuPanel.width, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUITextButton(
@@ -50,8 +56,8 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 65)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleOpenOptions);
-    setUIButtonHotKey(uiEntity, WAR_KEY_C);
+    setUIButtonClickHandler(uiEntity, handleOptions);
+    setUIButtonHotKey(uiEntity, WAR_KEY_O);
 
     uiEntity = createUITextButton(
         context, "btnMenuRestart",
@@ -81,6 +87,8 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(78, 105)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleQuit);
+    setUIButtonHotKey(uiEntity, WAR_KEY_Q);
 }
 
 void createOptionsMenu(WarContext* context)
@@ -99,29 +107,103 @@ void createOptionsMenu(WarContext* context)
 
     WarEntity* uiEntity;
 
-    uiEntity = createUIText(context, "txtOptionsHeader", 1, 10, "Options", vec2Addv(menuPanel, vec2i(58, 10)));
+    uiEntity = createUITextSized(
+        context, "txtOptionsHeader", 
+        1, 10, "Options", 
+        vec2Addv(menuPanel, vec2i(0, 10)),
+        vec2f(map->menuPanel.width, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, "txtOptionsGameSpeedLabel", 1, 10, "Game Speed", vec2Addv(menuPanel, vec2i(10, 25)));
-    setUIEntityStatus(uiEntity, false);
-    uiEntity = createUIText(context, "txtOptionsMusicVolLabel", 1, 10, "Music Vol", vec2Addv(menuPanel, vec2i(23, 42)));
-    setUIEntityStatus(uiEntity, false);
-    uiEntity = createUIText(context, "txtOptionsSFXVolLabel", 1, 10, "SFX Vol", vec2Addv(menuPanel, vec2i(32, 59)));
-    setUIEntityStatus(uiEntity, false);
-    uiEntity = createUIText(context, "txtOptionsMouseScrollLabel", 1, 10, "Mouse Scroll", vec2Addv(menuPanel, vec2i(5, 76)));
-    setUIEntityStatus(uiEntity, false);
-    uiEntity = createUIText(context, "txtOptionsKeyScrollLabel", 1, 10, "Key Scroll", vec2Addv(menuPanel, vec2i(19, 93)));
+    uiEntity = createUITextSized(
+        context, "txtOptionsGameSpeedLabel", 
+        1, 10, "Game Speed", 
+        vec2Addv(menuPanel, vec2i(0, 25)),
+        vec2f(75, 12),
+        WAR_TEXT_ALIGN_RIGHT,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, "txtOptionsGameSpeedValue", 1, 10, "Fastest", vec2Addv(menuPanel, vec2i(92, 25)));
+    uiEntity = createUITextSized(
+        context, "txtOptionsMusicVolLabel", 
+        1, 10, "Music Vol", 
+        vec2Addv(menuPanel, vec2i(0, 42)),
+        vec2f(75, 12),
+        WAR_TEXT_ALIGN_RIGHT,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
-    uiEntity = createUIText(context, "txtOptionsMusicVolValue", 1, 10, "100", vec2Addv(menuPanel, vec2i(92, 42)));
+
+    uiEntity = createUITextSized(
+        context, "txtOptionsSFXVolLabel", 
+        1, 10, "SFX Vol", 
+        vec2Addv(menuPanel, vec2i(0, 59)),
+        vec2f(75, 12),
+        WAR_TEXT_ALIGN_RIGHT,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
-    uiEntity = createUIText(context, "txtOptionsSFXVolValue", 1, 10, "82", vec2Addv(menuPanel, vec2i(92, 59)));
+
+    uiEntity = createUITextSized(
+        context, "txtOptionsMouseScrollLabel", 
+        1, 10, "Mouse Scroll", 
+        vec2Addv(menuPanel, vec2i(0, 76)),
+        vec2f(75, 12),
+        WAR_TEXT_ALIGN_RIGHT,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
-    uiEntity = createUIText(context, "txtOptionsMouseScrollValue", 1, 10, "Slowest", vec2Addv(menuPanel, vec2i(92, 76)));
+
+    uiEntity = createUITextSized(
+        context, "txtOptionsKeyScrollLabel", 
+        1, 10, "Key Scroll", 
+        vec2Addv(menuPanel, vec2i(0, 93)),
+        vec2f(75, 12),
+        WAR_TEXT_ALIGN_RIGHT,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
-    uiEntity = createUIText(context, "txtOptionsKeyScrollValue", 1, 10, "Slowest", vec2Addv(menuPanel, vec2i(92, 93)));
+
+    uiEntity = createUITextSized(
+        context, "txtOptionsGameSpeedValue", 
+        1, 10, "Fastest", 
+        vec2Addv(menuPanel, vec2i(92, 25)),
+        vec2f(42, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUITextSized(
+        context, "txtOptionsMusicVolValue", 
+        1, 10, "100", 
+        vec2Addv(menuPanel, vec2i(92, 42)),
+        vec2f(42, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUITextSized(
+        context, "txtOptionsSFXVolValue", 
+        1, 10, "82", 
+        vec2Addv(menuPanel, vec2i(92, 59)),
+        vec2f(42, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUITextSized(
+        context, "txtOptionsMouseScrollValue", 
+        1, 10, "Slowest", 
+        vec2Addv(menuPanel, vec2i(92, 76)),
+        vec2f(42, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUITextSized(
+        context, "txtOptionsKeyScrollValue", 
+        1, 10, "Normal", 
+        vec2Addv(menuPanel, vec2i(92, 93)),
+        vec2f(42, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIImageButton(
@@ -242,7 +324,13 @@ void createGameOverMenu(WarContext* context)
     uiEntity = createUIImage(context, "imgGameOverBackground", imageResourceRef(235), messagePanel);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, "txtGameOverText", 1, 10, "You are victorious!", vec2Addv(messagePanel, vec2i(95, 10)));
+    uiEntity = createUITextSized(
+        context, "txtGameOverText", 1, 10,
+        "You are victorious!", 
+        vec2Addv(messagePanel, vec2i(0, 10)),
+        vec2f(map->messagePanel.width, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUITextButton(
@@ -264,6 +352,60 @@ void createGameOverMenu(WarContext* context)
         vec2Addv(messagePanel, vec2i(210, 25)));
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleGameOverContinue);
+    setUIButtonHotKey(uiEntity, WAR_KEY_C);
+}
+
+void createQuitMenu(WarContext* context)
+{
+    WarMap* map = context->map;
+    
+    vec2 messagePanel = rectTopLeft(map->messagePanel);
+
+    WarSpriteResourceRef invalidRef = invalidResourceRef();
+    WarSpriteResourceRef smallNormalRef = imageResourceRef(241);
+    WarSpriteResourceRef smallPressedRef = imageResourceRef(242);
+
+    WarEntity* uiEntity;
+
+    uiEntity = createUITextSized(
+        context, "txtQuitText", 1, 10,
+        "Are you sure you want to quit?", 
+        vec2Addv(messagePanel, vec2i(0, 10)),
+        vec2f(map->messagePanel.width, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUITextButton(
+        context, "btnQuitQuit",
+        1, 10, "Quit",
+        smallNormalRef,
+        smallPressedRef,
+        invalidRef,
+        vec2Addv(messagePanel, vec2i(20, 25)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleQuitQuit);
+    setUIButtonHotKey(uiEntity, WAR_KEY_Q);
+
+    uiEntity = createUITextButton(
+        context, "btnQuitMenu",
+        1, 10, "Menu",
+        smallNormalRef,
+        smallPressedRef,
+        invalidRef,
+        vec2Addv(messagePanel, vec2i(115, 25)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonHotKey(uiEntity, WAR_KEY_M);
+
+    uiEntity = createUITextButton(
+        context, "btnQuitCancel",
+        1, 10, "Cancel",
+        smallNormalRef,
+        smallPressedRef,
+        invalidRef,
+        vec2Addv(messagePanel, vec2i(210, 25)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleQuitCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
 }
 
@@ -292,7 +434,7 @@ void showOrHideMenu(WarContext* context, bool status)
     setUIEntityStatusByName(context, "btnMenuQuit", status);
 }
 
-void showOrHideOptions(WarContext* context, bool status)
+void showOrHideOptionsMenu(WarContext* context, bool status)
 {
     setUIEntityStatusByName(context, "rectMenuBackdrop", status);
     setUIEntityStatusByName(context, "imgMenuBackground", status);
@@ -327,7 +469,7 @@ void showOrHideOptions(WarContext* context, bool status)
     setUIEntityStatusByName(context, "btnOptionsCancel", status);
 }
 
-void showOrHideGameOver(WarContext* context, bool status)
+void showOrHideGameOverMenu(WarContext* context, bool status)
 {
     setUIEntityStatusByName(context, "rectMenuBackdrop", status);
     setUIEntityStatusByName(context, "imgGameOverBackground", status);
@@ -336,7 +478,18 @@ void showOrHideGameOver(WarContext* context, bool status)
     setUIEntityStatusByName(context, "btnGameOverContinue", status);
 }
 
-void handleOpenMenu(WarContext* context, WarEntity* entity)
+void showOrHideQuitMenu(WarContext* context, bool status)
+{
+    setUIEntityStatusByName(context, "rectMenuBackdrop", status);
+    setUIEntityStatusByName(context, "imgGameOverBackground", status);
+    setUIEntityStatusByName(context, "txtQuitText", status);
+    setUIEntityStatusByName(context, "btnQuitQuit", status);
+    setUIEntityStatusByName(context, "btnQuitMenu", status);
+    setUIEntityStatusByName(context, "btnQuitCancel", status);
+}
+
+// menu button handlers
+void handleMenu(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
 
@@ -356,12 +509,22 @@ void handleContinue(WarContext* context, WarEntity* entity)
     map->status = MAP_PLAYING;
 }
 
-void handleOpenOptions(WarContext* context, WarEntity* entity)
+void handleQuit(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
 
     showOrHideMenu(context, false);
-    showOrHideOptions(context, true);
+    showOrHideQuitMenu(context, true);
+
+    map->status = MAP_QUIT;
+}
+
+void handleOptions(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    showOrHideMenu(context, false);
+    showOrHideOptionsMenu(context, true);
     
     map->status = MAP_OPTIONS;
 }
@@ -372,7 +535,7 @@ void handleOptionsOk(WarContext* context, WarEntity* entity)
 
     // persist changes to options here
 
-    showOrHideOptions(context, false);
+    showOrHideOptionsMenu(context, false);
     showOrHideMenu(context, true);
 
     map->status = MAP_MENU;
@@ -382,7 +545,7 @@ void handleOptionsCancel(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
 
-    showOrHideOptions(context, false);
+    showOrHideOptionsMenu(context, false);
     showOrHideMenu(context, true);
 
     map->status = MAP_MENU;
@@ -390,7 +553,24 @@ void handleOptionsCancel(WarContext* context, WarEntity* entity)
 
 void handleGameOverContinue(WarContext* context, WarEntity* entity)
 {
+    s32 levelInfoIndex = context->map->levelInfoIndex;
+
     freeMap(context);
     
-    createMap(context, WAR_CAMPAIGN_HUMANS_02);
+    createMap(context, levelInfoIndex + 2);
+}
+
+void handleQuitQuit(WarContext* context, WarEntity* entity)
+{
+    glfwSetWindowShouldClose(context->window, true);
+}
+
+void handleQuitCancel(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    showOrHideQuitMenu(context, false);
+    showOrHideMenu(context, true);
+
+    map->status = MAP_MENU;
 }

@@ -1376,6 +1376,18 @@ typedef struct
     char* name;
 } WarUIComponent;
 
+typedef enum
+{
+    WAR_TEXT_ALIGN_LEFT,
+    WAR_TEXT_ALIGN_CENTER,
+    WAR_TEXT_ALIGN_RIGHT,
+    WAR_TEXT_ALIGN_TOP,
+    WAR_TEXT_ALIGN_MIDDLE,
+    WAR_TEXT_ALIGN_BOTTOM,
+
+    WAR_TEXT_ALIGN_COUNT
+} WarTextAlignment;
+
 typedef struct
 {
     bool enabled;
@@ -1384,6 +1396,9 @@ typedef struct
     f32 fontSize;
     u8Color fontColor;
     s32 highlightIndex;
+    vec2 size;
+    WarTextAlignment horizontalAlign;
+    WarTextAlignment verticalAlign;
 } WarTextComponent;
 
 typedef struct
@@ -1827,7 +1842,7 @@ typedef enum
     MAP_OPTIONS,
     MAP_SAVE_GAME,
     MAP_LOAD_GAME,
-    MAP_LEAVING,
+    MAP_QUIT,
     MAP_GAME_OVER
 } WarMapStatus;
 

@@ -158,6 +158,21 @@ WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 font
     return entity;
 }
 
+WarEntity* createUITextSized(WarContext* context, char* name, 
+                             s32 fontIndex, f32 fontSize, 
+                             const char* text, 
+                             vec2 position, vec2 size, 
+                             WarTextAlignment horizontalAlign, 
+                             WarTextAlignment verticalAlign)
+{
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
+    addTransformComponent(context, entity, position);
+    addUIComponent(context, entity, name);
+    addTextComponentSized(context, entity, fontIndex, fontSize, text, size, horizontalAlign, verticalAlign);
+
+    return entity;
+}
+
 WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, u8Color color)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_RECT, true);
