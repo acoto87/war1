@@ -113,9 +113,12 @@ WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position
         WarTree* tree = getTreeAtPosition(forest, position.x, position.y);
         if (tree)
         {
-            if (isPositionAccesible(map->finder, position) && 
-                isTileVisible(map, (s32)position.x, (s32)position.y) && 
-                tree->amount > 0)
+            bool isTreeAccessible = isPositionAccesible(map->finder, position);
+            bool isTreeVisibleOrFog = 
+                isTileVisible(map, (s32)position.x, (s32)position.y) ||
+                isTileFog(map, (s32)position.x, (s32)position.y);
+
+            if (isTreeAccessible && isTreeVisibleOrFog && tree->amount > 0)
             {
                 result = tree;
                 break;

@@ -665,14 +665,15 @@ bool executeCommand(WarContext* context)
                     {
                         if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                         {
-                            if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
+                            if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE | MAP_TILE_STATE_FOG))
                                 executeHarvestCommand(context, targetEntity, targetTile);
                             else
                                 executeMoveCommand(context, targetPoint);
                         }
                         else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
-                            if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
+                            if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
+                                isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
                                 executeHarvestCommand(context, targetEntity, targetTile);
                             }
