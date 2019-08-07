@@ -17,7 +17,7 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     entity->sprite.enabled = false;
 
     WarSpriteAnimation* collapseAnim = createCollapseAnimation(context, entity, "collapse");
-    state->delay = getScaledTime(context, getAnimationDuration(collapseAnim));
+    state->delay = getMapScaledTime(context, getAnimationDuration(collapseAnim));
 
     WarEntity* ruins = map->ruin;
     addRuinsPieces(context, ruins, position.x, position.y, unitSize.x);

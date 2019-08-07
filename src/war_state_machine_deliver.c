@@ -78,7 +78,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     // for this the sprite is turn off for the depositing time
     entity->sprite.enabled = false;
 
-    setDelay(state, getScaledTime(context, 1.0f));
+    setDelay(state, getMapScaledTime(context, 1.0f));
 }
 
 void freeDeliverState(WarState* state)

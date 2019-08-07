@@ -12,7 +12,7 @@ void enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
     entity->sprite.enabled = false;
 
     // set the starting time of mining
-    state->mine.miningTime = context->time + getScaledTime(context, 2.0f);
+    state->mine.miningTime = context->time + getMapScaledTime(context, 2.0f);
 }
 
 void leaveMiningState(WarContext* context, WarEntity* entity, WarState* state)

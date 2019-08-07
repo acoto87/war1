@@ -1136,7 +1136,7 @@ void updateAction(WarContext* context, WarEntity* entity)
         step = action->steps.items[action->stepIndex];
     }
 
-    action->waitCount = getScaledTime(context, __frameCountToSeconds(step.param) * action->scale);
+    action->waitCount = getMapScaledTime(context, __frameCountToSeconds(step.param) * action->scale);
 }
 
 // peasant: 40s

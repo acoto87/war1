@@ -37,3 +37,8 @@ bool checkUnitTiles(WarMap* map, WarEntity* entity, s32 states);
 #define isTileVisible(map, x, y) ((map)->tiles[(y) * MAP_TILES_WIDTH + (x)].state == MAP_TILE_STATE_VISIBLE)
 
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+
+f32 getMapScaledSpeed(WarContext* context, f32 t);
+f32 getMapScaledTime(WarContext* context, f32 t);
+
+#define getMapScrollSpeed(speedValue) ((f32)(100 + (speedValue) * 50))

@@ -1846,6 +1846,24 @@ typedef enum
     MAP_GAME_OVER
 } WarMapStatus;
 
+typedef enum
+{
+    WAR_SPEED_SLOWEST,
+    WAR_SPEED_SLOW,
+    WAR_SPEED_NORMAL,
+    WAR_SPEED_FASTER,
+    WAR_SPEED_FASTEST
+} WarMapSpeed;
+
+typedef struct
+{
+    WarMapSpeed gameSpeed;
+    s32 musicVol;
+    s32 sfxVol;
+    WarMapSpeed mouseScrollSpeed;
+    WarMapSpeed keyScrollSpeed;
+} WarMapSettings;
+
 typedef struct
 {
     WarMapStatus status;
@@ -1854,9 +1872,11 @@ typedef struct
     f32 objectivesTime;
 
     // scroll
-    s32 scrollSpeed;
     bool isScrolling;
     bool wasScrolling;
+
+    WarMapSettings settings;
+    WarMapSettings settings2;
 
     // this is shortcut to disable all audios in the map
     // to avoid crashes when freeing the map and the audio thread

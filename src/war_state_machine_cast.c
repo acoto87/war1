@@ -95,7 +95,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
 
                     WarEntity* sight = createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
-                    addSightComponent(context, sight, targetTile, getScaledTime(context, stats.time));
+                    addSightComponent(context, sight, targetTile, getMapScaledTime(context, stats.time));
 
                     createSpellAnimation(context, targetTilePosition);
                     createAudio(context, WAR_NORMAL_SPELL, false);
@@ -117,7 +117,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     if (decreaseUnitMana(context, entity, stats.manaCost))
                     {
                         targetUnit->invisible = true;
-                        targetUnit->invisibilityTime = getScaledTime(context, stats.time);
+                        targetUnit->invisibilityTime = getMapScaledTime(context, stats.time);
 
                         vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
                         createSpellAnimation(context, targetPosition);
@@ -202,7 +202,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         decreaseUnitHp(context, targetEntity, halfi(targetUnit->hp));
 
                         targetUnit->invulnerable = true;
-                        targetUnit->invulnerabilityTime = getScaledTime(context, stats.time);
+                        targetUnit->invulnerabilityTime = getMapScaledTime(context, stats.time);
 
                         vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
                         createSpellAnimation(context, targetPosition);
@@ -223,7 +223,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 if (decreaseUnitMana(context, entity, stats.manaCost))
                 {
                     WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
-                    addPoisonCloudComponent(context, poisonCloud, targetTile, getScaledTime(context, stats.time));
+                    addPoisonCloudComponent(context, poisonCloud, targetTile, getMapScaledTime(context, stats.time));
 
                     sprintf(poisonCloud->poisonCloud.animName, "poison_cloud_%.2f_%.2f", targetTilePosition.x, targetTilePosition.y);
                     createPoisonCloudAnimation(context, targetTilePosition, poisonCloud->poisonCloud.animName);

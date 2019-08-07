@@ -1,3 +1,15 @@
+void setSpeedStr(WarMapSpeed value, char buffer[])
+{
+    switch (value)
+    {
+        case WAR_SPEED_SLOWEST: strcpy(buffer, "Slowest");  break;
+        case WAR_SPEED_SLOW:    strcpy(buffer, "Slow");     break;
+        case WAR_SPEED_NORMAL:  strcpy(buffer, "Normal");   break;
+        case WAR_SPEED_FASTER:  strcpy(buffer, "Faster");   break;
+        case WAR_SPEED_FASTEST: strcpy(buffer, "Fastest");  break;
+    }
+}
+
 void createMenu(WarContext* context)
 {
     WarMap* map = context->map;
@@ -213,6 +225,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(76, 22)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleGameSpeedDec);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsGameSpeedInc", 
@@ -221,6 +234,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(133, 22)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleGameSpeedInc);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsMusicVolDec", 
@@ -229,6 +243,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(76, 39)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleMusicVolDec);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsMusicVolInc", 
@@ -237,6 +252,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(133, 39)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleMusicVolInc);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsSFXVolDec", 
@@ -245,6 +261,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(76, 56)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleSfxVolDec);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsSFXVolInc", 
@@ -253,6 +270,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(133, 56)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleSfxVolInc);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsMouseScrollDec", 
@@ -261,6 +279,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(76, 73)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleMouseScrollSpeedDec);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsMouseScrollInc", 
@@ -269,6 +288,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(133, 73)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleMouseScrollSpeedInc);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsKeyScrollDec", 
@@ -277,6 +297,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(76, 90)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleKeyScrollSpeedDec);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsKeyScrollInc", 
@@ -285,6 +306,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef, 
         vec2Addv(menuPanel, vec2i(133, 90)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleKeyScrollSpeedInc);
     
     uiEntity = createUITextButton(
         context, "btnOptionsOk",
@@ -409,6 +431,26 @@ void createQuitMenu(WarContext* context)
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
 }
 
+void setUITextSpeedValueByName(WarContext* context, const char* name, WarMapSpeed value)
+{
+    WarEntity* entity = findUIEntity(context, name);
+    if (entity)
+    {
+        char speedStr[10];
+        setSpeedStr(value, speedStr);
+        setUIText(entity, NO_HIGHLIGHT, speedStr);
+    }
+}
+
+void setUITextS32ValueByName(WarContext* context, const char* name, s32 value)
+{
+    WarEntity* entity = findUIEntity(context, name);
+    if (entity)
+    {
+        setUITextFormat(entity, NO_HIGHLIGHT, "%d", value);
+    }
+}
+
 void enableOrDisableCommandButtons(WarContext* context, bool interactive)
 {
     setUIButtonInteractiveByName(context, "btnCommand0", interactive);
@@ -436,6 +478,8 @@ void showOrHideMenu(WarContext* context, bool status)
 
 void showOrHideOptionsMenu(WarContext* context, bool status)
 {
+    WarMap* map = context->map;
+
     setUIEntityStatusByName(context, "rectMenuBackdrop", status);
     setUIEntityStatusByName(context, "imgMenuBackground", status);
     setUIEntityStatusByName(context, "txtOptionsHeader", status);
@@ -467,6 +511,17 @@ void showOrHideOptionsMenu(WarContext* context, bool status)
 
     setUIEntityStatusByName(context, "btnOptionsOk", status);
     setUIEntityStatusByName(context, "btnOptionsCancel", status);
+
+    if (status)
+    {
+        memcpy(&map->settings2, &map->settings, sizeof(WarMapSettings));
+
+        setUITextSpeedValueByName(context, "txtOptionsGameSpeedValue", map->settings2.gameSpeed);
+        setUITextS32ValueByName(context, "txtOptionsMusicVolValue", map->settings2.musicVol);
+        setUITextS32ValueByName(context, "txtOptionsSFXVolValue", map->settings2.sfxVol);
+        setUITextSpeedValueByName(context, "txtOptionsMouseScrollValue", map->settings2.mouseScrollSpeed);
+        setUITextSpeedValueByName(context, "txtOptionsKeyScrollValue", map->settings2.keyScrollSpeed);
+    }
 }
 
 void showOrHideGameOverMenu(WarContext* context, bool status)
@@ -529,11 +584,111 @@ void handleOptions(WarContext* context, WarEntity* entity)
     map->status = MAP_OPTIONS;
 }
 
+void handleGameSpeedDec(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    if (map->settings2.gameSpeed > WAR_SPEED_SLOWEST)
+    {
+        map->settings2.gameSpeed--;
+        setUITextSpeedValueByName(context, "txtOptionsGameSpeedValue", map->settings2.gameSpeed);
+    }
+}
+
+void handleGameSpeedInc(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    if (map->settings2.gameSpeed < WAR_SPEED_FASTEST)
+    {
+        map->settings2.gameSpeed++;
+        setUITextSpeedValueByName(context, "txtOptionsGameSpeedValue", map->settings2.gameSpeed);
+    }
+}
+
+void handleMusicVolDec(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->settings2.musicVol = clamp(map->settings2.musicVol - 5, 0, 100);
+    setUITextS32ValueByName(context, "txtOptionsMusicVolValue", map->settings2.musicVol);
+}
+
+void handleMusicVolInc(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->settings2.musicVol = clamp(map->settings2.musicVol + 5, 0, 100);
+    setUITextS32ValueByName(context, "txtOptionsMusicVolValue", map->settings2.musicVol);
+}
+
+void handleSfxVolDec(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->settings2.sfxVol = clamp(map->settings2.sfxVol - 5, 0, 100);
+    setUITextS32ValueByName(context, "txtOptionsSFXVolValue", map->settings2.sfxVol);
+}
+
+void handleSfxVolInc(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    map->settings2.sfxVol = clamp(map->settings2.sfxVol + 5, 0, 100);
+    setUITextS32ValueByName(context, "txtOptionsSFXVolValue", map->settings2.sfxVol);
+}
+
+void handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    if (map->settings2.mouseScrollSpeed > WAR_SPEED_SLOWEST)
+    {
+        map->settings2.mouseScrollSpeed--;
+        setUITextS32ValueByName(context, "txtOptionsMouseScrollValue", map->settings2.mouseScrollSpeed);
+    }
+}
+
+void handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    if (map->settings2.mouseScrollSpeed < WAR_SPEED_FASTEST)
+    {
+        map->settings2.mouseScrollSpeed++;
+        setUITextSpeedValueByName(context, "txtOptionsMouseScrollValue", map->settings2.mouseScrollSpeed);
+    }
+}
+
+void handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    if (map->settings2.keyScrollSpeed > WAR_SPEED_SLOWEST)
+    {
+        map->settings2.keyScrollSpeed--;
+        setUITextSpeedValueByName(context, "txtOptionsKeyScrollValue", map->settings2.keyScrollSpeed);
+    }
+}
+
+void handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    if (map->settings2.keyScrollSpeed < WAR_SPEED_FASTEST)
+    {
+        map->settings2.keyScrollSpeed++;
+        setUITextSpeedValueByName(context, "txtOptionsKeyScrollValue", map->settings2.keyScrollSpeed);
+    }
+}
+
+
 void handleOptionsOk(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
 
-    // persist changes to options here
+    // persist the changes
+    memcpy(&map->settings, &map->settings2, sizeof(WarMapSettings));
 
     showOrHideOptionsMenu(context, false);
     showOrHideMenu(context, true);

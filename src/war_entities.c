@@ -503,7 +503,7 @@ WarEntity* createBuilding(WarContext* context,
     if (isGoingToBuild)
     {
         WarBuildingStats stats = getBuildingStats(type);
-        f32 buildTime = getScaledTime(context, stats.buildTime);
+        f32 buildTime = getMapScaledTime(context, stats.buildTime);
         WarState* buildState = createBuildState(context, entity, buildTime);
         changeNextState(context, entity, buildState, true, true);
     }

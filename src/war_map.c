@@ -326,6 +326,34 @@ void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type
     addSpriteComponentFromResource(context, entity, imageResourceRef(type));
 }
 
+f32 getMapScaledSpeed(WarContext* context, f32 t)
+{
+    WarMap* map = context->map;
+
+    t = getScaledSpeed(context, t);
+
+    if (map->settings.gameSpeed < WAR_SPEED_NORMAL)
+        t *= 1.0f - (WAR_SPEED_NORMAL - map->settings.gameSpeed) * 0.25f;
+    else if (map->settings.gameSpeed > WAR_SPEED_NORMAL)
+        t *= 1.0f + (map->settings.gameSpeed - WAR_SPEED_NORMAL) * 0.5f;
+
+    return t;
+}
+
+f32 getMapScaledTime(WarContext* context, f32 t)
+{
+    WarMap* map = context->map;
+
+    t = getScaledTime(context, t);
+
+    if (map->settings.gameSpeed < WAR_SPEED_NORMAL)
+        t /= 1.0f - (WAR_SPEED_NORMAL - map->settings.gameSpeed) * 0.25f;
+    else if (map->settings.gameSpeed > WAR_SPEED_NORMAL)
+        t /= 1.0f + (map->settings.gameSpeed - WAR_SPEED_NORMAL) * 0.5f;
+
+    return t;    
+}
+
 void createMap(WarContext *context, s32 levelInfoIndex)
 {
     WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
@@ -339,8 +367,13 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     map->levelInfoIndex = levelInfoIndex;
     map->objectivesTime = 1;
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
-    map->scrollSpeed = 200;
     map->audioEnabled = true;
+
+    map->settings.gameSpeed = WAR_SPEED_NORMAL;
+    map->settings.musicVol = 80;
+    map->settings.sfxVol = 95;
+    map->settings.mouseScrollSpeed = WAR_SPEED_NORMAL;
+    map->settings.keyScrollSpeed = WAR_SPEED_NORMAL;
 
     map->leftTopPanel = recti(0, 0, 72, 72);
     map->leftBottomPanel = recti(0, 72, 72, 128);
@@ -790,6 +823,8 @@ void updateViewport(WarContext *context)
 
     vec2 dir = VEC2_ZERO;
     bool wasScrolling = map->isScrolling;
+    bool mouseScroll = false;
+    bool keyScroll = false;
 
     // if there was a click in the minimap, then update the position of the viewport
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
@@ -808,6 +843,7 @@ void updateViewport(WarContext *context)
         else if(!input->isDragging)
         {
             dir = getDirFromMousePos(context, input);
+            mouseScroll = true;
         }
     }
     // check for the arrows keys and update the position of the viewport
@@ -817,18 +853,28 @@ void updateViewport(WarContext *context)
             !isKeyPressed(input, WAR_KEY_SHIFT))
         {
             dir = getDirFromArrowKeys(context, input);
+            keyScroll = true;
         }
     }
 
-    map->viewport.x += map->scrollSpeed * dir.x * context->deltaTime;
-    map->viewport.x = clamp(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
-
-    map->viewport.y += map->scrollSpeed * dir.y * context->deltaTime;
-    map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
-
     map->isScrolling = !vec2IsZero(dir);
+    if (map->isScrolling)
+    {
+        assert(mouseScroll || keyScroll);
 
-    if (!map->isScrolling)
+        f32 scrollSpeed = 0.0f;
+        if (mouseScroll)
+            scrollSpeed = getMapScrollSpeed(map->settings.mouseScrollSpeed);
+        else if (keyScroll)
+            scrollSpeed = getMapScrollSpeed(map->settings.keyScrollSpeed);
+
+        map->viewport.x += scrollSpeed * dir.x * context->deltaTime;
+        map->viewport.x = clamp(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
+
+        map->viewport.y += scrollSpeed * dir.y * context->deltaTime;
+        map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
+    }
+    else
     {
         map->wasScrolling = wasScrolling;
     }
@@ -1932,7 +1978,7 @@ void updateMagic(WarContext* context)
                     unit->mana = min(unit->mana + 1, unit->maxMana);
                 }
                 
-                unit->manaTime = getScaledTime(context, 1);
+                unit->manaTime = getMapScaledTime(context, 1);
             }
             else
             {
@@ -1964,7 +2010,7 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
         }
         WarEntityListFree(nearUnits);
 
-        poisonCloud->damageTime = getScaledTime(context, 1);
+        poisonCloud->damageTime = getMapScaledTime(context, 1);
     }
 
     return poisonCloud->time <= 0;

@@ -128,7 +128,7 @@ void updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation*
     }
 
     animation->status = WAR_ANIM_STATUS_RUNNING;
-    animation->animTime += getScaledSpeed(context, context->deltaTime / getAnimationDuration(animation));
+    animation->animTime += getMapScaledSpeed(context, context->deltaTime / getAnimationDuration(animation));
 
     if (animation->animTime >= 1)
     {

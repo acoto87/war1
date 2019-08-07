@@ -809,7 +809,7 @@ bool executeCommand(WarContext* context)
             if (checkFarmFood(context, player) && 
                 decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
             {
-                f32 buildTime = getScaledTime(context, stats.buildTime);
+                f32 buildTime = getMapScaledTime(context, stats.buildTime);
                 WarState* trainState = createTrainState(context, selectedEntity, unitToTrain, buildTime);
                 changeNextState(context, selectedEntity, trainState, true, true);
             }
@@ -854,7 +854,7 @@ bool executeCommand(WarContext* context)
             s32 level = getUpgradeLevel(player, upgradeToBuild);
             if (decreasePlayerResources(context, player, stats.goldCost[level], 0))
             {
-                f32 buildTime = getScaledTime(context, stats.buildTime);
+                f32 buildTime = getMapScaledTime(context, stats.buildTime);
                 WarState* upgradeState = createUpgradeState(context, selectedEntity, upgradeToBuild, buildTime);
                 changeNextState(context, selectedEntity, upgradeState, true, true);
             }

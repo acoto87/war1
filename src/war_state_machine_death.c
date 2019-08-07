@@ -14,7 +14,7 @@ void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
     removeEntityFromSelection(context, entity->id);
 
     s32 deathDuration = getActionDuration(entity, WAR_ACTION_TYPE_DEATH);
-    state->delay = getScaledTime(context, __frameCountToSeconds(deathDuration));
+    state->delay = getMapScaledTime(context, __frameCountToSeconds(deathDuration));
 }
 
 void leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)

@@ -175,7 +175,7 @@ WarAudioData getAudioData(WarAudioId audioId)
     return audioData[index];
 }
 
-bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
+bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream, f32 volume)
 {
     WarAudioComponent* audio = &entity->audio;
     tsf* soundFont = context->soundFont;
@@ -220,7 +220,7 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
                 {
                     s8 key = midiMessage->key;
                     f32 velocity = midiMessage->velocity / 127.0f;
-                    tsf_channel_note_on(soundFont, channel, key, velocity * context->musicVolume);
+                    tsf_channel_note_on(soundFont, channel, key, velocity * volume);
                     break;
                 }
 
@@ -266,7 +266,7 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     return !audio->currentMessage && !audio->loop;
 }
 
-bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
+bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream, f32 volume)
 {
     WarAudioComponent* audio = &entity->audio;
 
@@ -295,7 +295,7 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
             s16 value = *waveData;
             value = value - 128;
             value = value << 8;
-            value = (s16)(value * context->soundVolume);
+            value = (s16)(value * volume);
             value += *outputStream;
             value = clamp(value, INT16_MIN, INT16_MAX);
             *outputStream = value;
@@ -311,34 +311,6 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     } while (sampleCount > 0 && audio->loop);
 
     return audio->sampleIndex >= waveLength && !audio->loop;
-}
-
-bool playAudio(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream)
-{
-    WarAudioComponent* audio = &entity->audio;
-    if (audio->enabled)
-    {
-        switch (audio->type)
-        {
-            case WAR_AUDIO_MIDI:
-            {
-                return playMidi(context, entity, sampleCount, outputStream);
-            }
-
-            case WAR_AUDIO_WAVE:
-            {
-                return playWave(context, entity, sampleCount, outputStream);
-            }
-
-            default:
-            {
-                logWarning("Unkown audio type: %d\n", audio->type);
-                break;
-            }
-        }
-    }
-
-    return false;
 }
 
 void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 sampleCount)
@@ -357,6 +329,9 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
         return;
     }
 
+    f32 musicVolume = context->musicVolume * ((f32)map->settings.musicVol / 100);
+    f32 soundVolume = context->soundVolume * ((f32)map->settings.sfxVol / 100);
+
     WarEntityIdList toRemove;
     WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
 
@@ -368,10 +343,37 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
         WarEntity* entity = audios->items[i];
         if (entity)
         {
-            if (playAudio(context, entity, sampleCount, outputStream))
+            WarAudioComponent* audio = &entity->audio;
+            if (audio->enabled)
             {
-                // if the audio finish, mark it to remove it
-                WarEntityIdListAdd(&toRemove, entity->id);
+                switch (audio->type)
+                {
+                    case WAR_AUDIO_MIDI:
+                    {
+                        if (playMidi(context, entity, sampleCount, outputStream, musicVolume))
+                        {
+                            // if the audio finish, mark it to remove it
+                            WarEntityIdListAdd(&toRemove, entity->id);
+                        }
+                        break;
+                    }
+
+                    case WAR_AUDIO_WAVE:
+                    {
+                        if (playWave(context, entity, sampleCount, outputStream, soundVolume))
+                        {
+                            // if the audio finish, mark it to remove it
+                            WarEntityIdListAdd(&toRemove, entity->id);
+                        }
+                        break;
+                    }
+
+                    default:
+                    {
+                        logWarning("Unkown audio type: %d\n", audio->type);
+                        break;
+                    }
+                }
             }
         }
     }
