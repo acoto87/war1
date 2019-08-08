@@ -44,20 +44,20 @@ void createMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, "btnMenuSave",
-        1, 10, "Save Game",
-        mediumNormalRef,
-        mediumPressedRef,
+        1, 10, "Save",
+        smallNormalRef,
+        smallPressedRef,
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 25)));
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUITextButton(
         context, "btnMenuLoad",
-        1, 10, "Load Game",
-        mediumNormalRef,
-        mediumPressedRef,
+        1, 10, "Load",
+        smallNormalRef,
+        smallPressedRef,
         invalidRef,
-        vec2Addv(menuPanel, vec2i(20, 45)));
+        vec2Addv(menuPanel, vec2i(78, 25)));
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUITextButton(
@@ -66,10 +66,21 @@ void createMenu(WarContext* context)
         mediumNormalRef,
         mediumPressedRef,
         invalidRef,
-        vec2Addv(menuPanel, vec2i(20, 65)));
+        vec2Addv(menuPanel, vec2i(20, 45)));
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleOptions);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);
+
+    uiEntity = createUITextButton(
+        context, "btnMenuObjectives",
+        1, 10, "Objectives",
+        mediumNormalRef,
+        mediumPressedRef,
+        invalidRef,
+        vec2Addv(menuPanel, vec2i(20, 65)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleObjectives);
+    setUIButtonHotKey(uiEntity, WAR_KEY_J);
 
     uiEntity = createUITextButton(
         context, "btnMenuRestart",
@@ -79,6 +90,7 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 85)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleRestart);
 
     uiEntity = createUITextButton(
         context, "btnMenuContinue",
@@ -331,6 +343,95 @@ void createOptionsMenu(WarContext* context)
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
 }
 
+void createObjectivesMenu(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+    vec2 menuPanel = rectTopLeft(map->menuPanel);
+
+    WarSpriteResourceRef invalidRef = invalidResourceRef();
+    WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
+    WarSpriteResourceRef mediumPressedRef = imageResourceRef(240);
+
+    WarEntity* uiEntity;
+
+    uiEntity = createUITextSized(
+        context, "txtObjectivesHeader", 
+        1, 10, "Objectives", 
+        vec2Addv(menuPanel, vec2i(0, 10)),
+        vec2f(map->menuPanel.width, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUIText(
+        context, "txtObjectivesText", 
+        1, 10, levelInfo->levelInfo.objectives, 
+        vec2Addv(menuPanel, vec2i(20, 26)));
+    uiEntity->text.multiline = true;
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUITextButton(
+        context, "btnObjectivesMenu",
+        1, 10, "Menu",
+        mediumNormalRef,
+        mediumPressedRef,
+        invalidRef,
+        vec2Addv(menuPanel, vec2i(20, 105)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleObjectivesMenu);
+}
+
+void createRestartMenu(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    vec2 messagePanel = rectTopLeft(map->messagePanel);
+
+    WarSpriteResourceRef invalidRef = invalidResourceRef();
+    WarSpriteResourceRef smallNormalRef = imageResourceRef(241);
+    WarSpriteResourceRef smallPressedRef = imageResourceRef(242);
+
+    WarEntity* uiEntity;
+
+    uiEntity = createUIImage(context, "imgGameOverBackground", imageResourceRef(235), messagePanel);
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUITextSized(
+        context, "txtRestartText", 1, 10,
+        "Are you sure you want to restart?", 
+        vec2Addv(messagePanel, vec2i(0, 10)),
+        vec2f(map->messagePanel.width, 12),
+        WAR_TEXT_ALIGN_CENTER,
+        WAR_TEXT_ALIGN_MIDDLE);
+    setUIEntityStatus(uiEntity, false);
+
+    uiEntity = createUITextButton(
+        context, "btnRestartRestart",
+        1, 10, "Restart",
+        smallNormalRef,
+        smallPressedRef,
+        invalidRef,
+        vec2Addv(messagePanel, vec2i(20, 25)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleRestartRestart);
+    setUIButtonHotKey(uiEntity, WAR_KEY_R);
+
+    uiEntity = createUITextButton(
+        context, "btnRestartCancel",
+        1, 10, "Cancel",
+        smallNormalRef,
+        smallPressedRef,
+        invalidRef,
+        vec2Addv(messagePanel, vec2i(210, 25)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleRestartCancel);
+    setUIButtonHotKey(uiEntity, WAR_KEY_C);
+}
+
 void createGameOverMenu(WarContext* context)
 {
     WarMap* map = context->map;
@@ -342,9 +443,6 @@ void createGameOverMenu(WarContext* context)
     WarSpriteResourceRef smallPressedRef = imageResourceRef(242);
 
     WarEntity* uiEntity;
-
-    uiEntity = createUIImage(context, "imgGameOverBackground", imageResourceRef(235), messagePanel);
-    setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUITextSized(
         context, "txtGameOverText", 1, 10,
@@ -363,6 +461,7 @@ void createGameOverMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(20, 25)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleGameOverSave);
     setUIButtonHotKey(uiEntity, WAR_KEY_S);
 
     uiEntity = createUITextButton(
@@ -471,6 +570,7 @@ void showOrHideMenu(WarContext* context, bool status)
     setUIEntityStatusByName(context, "btnMenuSave", status);
     setUIEntityStatusByName(context, "btnMenuLoad", status);
     setUIEntityStatusByName(context, "btnMenuOptions", status);
+    setUIEntityStatusByName(context, "btnMenuObjectives", status);
     setUIEntityStatusByName(context, "btnMenuRestart", status);
     setUIEntityStatusByName(context, "btnMenuContinue", status);
     setUIEntityStatusByName(context, "btnMenuQuit", status);
@@ -524,6 +624,24 @@ void showOrHideOptionsMenu(WarContext* context, bool status)
     }
 }
 
+void showOrHideObjectivesMenu(WarContext* context, bool status)
+{
+    setUIEntityStatusByName(context, "rectMenuBackdrop", status);
+    setUIEntityStatusByName(context, "imgMenuBackground", status);
+    setUIEntityStatusByName(context, "txtObjectivesHeader", status);
+    setUIEntityStatusByName(context, "txtObjectivesText", status);
+    setUIEntityStatusByName(context, "btnObjectivesMenu", status);
+}
+
+void showOrHideRestartMenu(WarContext* context, bool status)
+{
+    setUIEntityStatusByName(context, "rectMenuBackdrop", status);
+    setUIEntityStatusByName(context, "imgGameOverBackground", status);
+    setUIEntityStatusByName(context, "txtRestartText", status);
+    setUIEntityStatusByName(context, "btnRestartRestart", status);
+    setUIEntityStatusByName(context, "btnRestartCancel", status);
+}
+
 void showOrHideGameOverMenu(WarContext* context, bool status)
 {
     setUIEntityStatusByName(context, "rectMenuBackdrop", status);
@@ -554,6 +672,36 @@ void handleMenu(WarContext* context, WarEntity* entity)
     map->status = MAP_MENU;
 }
 
+void handleOptions(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    showOrHideMenu(context, false);
+    showOrHideOptionsMenu(context, true);
+    
+    map->status = MAP_OPTIONS;
+}
+
+void handleObjectives(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    showOrHideMenu(context, false);
+    showOrHideObjectivesMenu(context, true);
+
+    map->status = MAP_OBJECTIVES;
+}
+
+void handleRestart(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    showOrHideMenu(context, false);
+    showOrHideRestartMenu(context, true);
+
+    map->status = MAP_RESTART;
+}
+
 void handleContinue(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
@@ -572,16 +720,6 @@ void handleQuit(WarContext* context, WarEntity* entity)
     showOrHideQuitMenu(context, true);
 
     map->status = MAP_QUIT;
-}
-
-void handleOptions(WarContext* context, WarEntity* entity)
-{
-    WarMap* map = context->map;
-
-    showOrHideMenu(context, false);
-    showOrHideOptionsMenu(context, true);
-    
-    map->status = MAP_OPTIONS;
 }
 
 void handleGameSpeedDec(WarContext* context, WarEntity* entity)
@@ -682,7 +820,6 @@ void handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
     }
 }
 
-
 void handleOptionsOk(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
@@ -704,6 +841,40 @@ void handleOptionsCancel(WarContext* context, WarEntity* entity)
     showOrHideMenu(context, true);
 
     map->status = MAP_MENU;
+}
+
+void handleObjectivesMenu(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    showOrHideObjectivesMenu(context, false);
+    showOrHideMenu(context, true);
+
+    map->status = MAP_MENU;
+}
+
+void handleRestartRestart(WarContext* context, WarEntity* entity)
+{
+    s32 levelInfoIndex = context->map->levelInfoIndex;
+
+    freeMap(context);
+    
+    createMap(context, levelInfoIndex);
+}
+
+void handleRestartCancel(WarContext* context, WarEntity* entity)
+{
+    WarMap* map = context->map;
+
+    showOrHideRestartMenu(context, false);
+    showOrHideMenu(context, true);
+
+    map->status = MAP_MENU;
+}
+
+void handleGameOverSave(WarContext* context, WarEntity* entity)
+{
+    NOT_IMPLEMENTED();
 }
 
 void handleGameOverContinue(WarContext* context, WarEntity* entity)

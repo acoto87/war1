@@ -11,10 +11,12 @@ void showOrHideQuitMenu(WarContext* context, bool status);
 
 // menu button handlers
 void handleMenu(WarContext* context, WarEntity* entity);
+void handleOptions(WarContext* context, WarEntity* entity);
+void handleObjectives(WarContext* context, WarEntity* entity);
+void handleRestart(WarContext* context, WarEntity* entity);
 void handleContinue(WarContext* context, WarEntity* entity);
 void handleQuit(WarContext* context, WarEntity* entity);
 
-void handleOptions(WarContext* context, WarEntity* entity);
 void handleGameSpeedDec(WarContext* context, WarEntity* entity);
 void handleGameSpeedInc(WarContext* context, WarEntity* entity);
 void handleMusicVolDec(WarContext* context, WarEntity* entity);
@@ -28,6 +30,12 @@ void handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity);
 void handleOptionsOk(WarContext* context, WarEntity* entity);
 void handleOptionsCancel(WarContext* context, WarEntity* entity);
 
+void handleObjectivesMenu(WarContext* context, WarEntity* entity);
+
+void handleRestartRestart(WarContext* context, WarEntity* entity);
+void handleRestartCancel(WarContext* context, WarEntity* entity);
+
+void handleGameOverSave(WarContext* context, WarEntity* entity);
 void handleGameOverContinue(WarContext* context, WarEntity* entity);
 
 void handleQuitQuit(WarContext* context, WarEntity* entity);

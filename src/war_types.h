@@ -1399,6 +1399,7 @@ typedef struct
     vec2 size;
     WarTextAlignment horizontalAlign;
     WarTextAlignment verticalAlign;
+    bool multiline;
 } WarTextComponent;
 
 typedef struct
@@ -1842,6 +1843,8 @@ typedef enum
     MAP_OPTIONS,
     MAP_SAVE_GAME,
     MAP_LOAD_GAME,
+    MAP_OBJECTIVES,
+    MAP_RESTART,
     MAP_QUIT,
     MAP_GAME_OVER
 } WarMapStatus;

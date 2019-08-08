@@ -58,7 +58,7 @@ typedef union {
 
 #define DEFAULT_BUFFER_SIZE 1024
 
-#define NOT_IMPLEMENTED fprintf(stderr, "Not implemented at %s (%d)", __FILE__, __LINE__)
+#define NOT_IMPLEMENTED() fprintf(stderr, "Not implemented at %s (%d)", __FILE__, __LINE__)
 #define NOT_USED(expr) do { (void)(expr); } while (0)
 
 #define readu8(arr, index) (arr[index])

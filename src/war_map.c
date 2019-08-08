@@ -719,6 +719,8 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     createMapUI(context);
     createMenu(context);
     createOptionsMenu(context);
+    createObjectivesMenu(context);
+    createRestartMenu(context);
     createGameOverMenu(context);
     createQuitMenu(context);
     createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
@@ -2403,6 +2405,8 @@ void updateMap(WarContext* context)
         }
         case MAP_MENU:
         case MAP_OPTIONS:
+        case MAP_OBJECTIVES:
+        case MAP_RESTART:
         case MAP_QUIT:
         case MAP_GAME_OVER:
         {

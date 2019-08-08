@@ -296,6 +296,38 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
     nvgRestore(gfx);
 }
 
+void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
+{
+    s32 len = strlen(text);
+    s32 lineHeight = params.fontData.lineHeight;
+    f32 scale = params.fontSize / lineHeight;
+    s32 i = 0;
+    s32 j = 0;
+
+    nvgSave(gfx);
+    nvgScale(gfx, scale, scale);
+
+    while (j < len)
+    {
+        if (text[j] == '\n')
+        {
+            nvgSingleSpriteTextSpan(gfx, text, i, j - i, x, y, params);
+
+            y += lineHeight;
+            i = j + 1;
+        }
+
+        j++;
+    }
+
+    if (i < j)
+    {
+        nvgSingleSpriteTextSpan(gfx, text, i, j - i, x, y, params);
+    }
+
+    nvgRestore(gfx);
+}
+
 vec2 nvgMeasureSpriteText(const char* text, NVGfontParams params)
 {
     s32 len = strlen(text);

@@ -194,6 +194,7 @@ void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32
     entity->text.size = VEC2_ZERO;
     entity->text.horizontalAlign = WAR_TEXT_ALIGN_LEFT;
     entity->text.verticalAlign = WAR_TEXT_ALIGN_TOP;
+    entity->text.multiline = false;
 
     setUIText(entity, NO_HIGHLIGHT, text);
 }
@@ -213,6 +214,7 @@ void addTextComponentSized(WarContext* context, WarEntity* entity,
     entity->text.size = size;
     entity->text.horizontalAlign = horizontalAlign;
     entity->text.verticalAlign = verticalAlign;
+    entity->text.multiline = false;
 
     setUIText(entity, NO_HIGHLIGHT, text);
 }
@@ -1074,7 +1076,10 @@ void renderText(WarContext* context, WarEntity* entity)
             nvgTranslate(gfx, offset.x, offset.y);
         }
 
-        nvgSingleSpriteText(gfx, text->text, 0, 0, params);
+        if (entity->text.multiline)
+            nvgMultiSpriteText(gfx, text->text, 0, 0, params);
+        else
+            nvgSingleSpriteText(gfx, text->text, 0, 0, params);
 
         nvgRestore(gfx);
     }
