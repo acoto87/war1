@@ -1019,68 +1019,61 @@ void renderText(WarContext* context, WarEntity* entity)
         params.fontColor = u8ColorToNVGcolor(text->fontColor);
         params.fontData = fontsData[text->fontIndex];
         params.highlightIndex = text->highlightIndex;
+        params.width = text->size.x;
+        params.height = text->size.y;
         
-        if (!vec2IsZero(text->size))
+        switch (text->horizontalAlign)
         {
-            vec2 textSize = nvgMeasureSpriteText(text->text, params);
-            vec2 offset = VEC2_ZERO;
-
-            switch (text->horizontalAlign)
+            case WAR_TEXT_ALIGN_LEFT:
             {
-                case WAR_TEXT_ALIGN_LEFT:
-                {
-                    // nothing here, offset.x should be 0
-                    break;
-                }
-                case WAR_TEXT_ALIGN_CENTER:
-                {
-                    offset.x = ceilf(halff(text->size.x - textSize.x));
-                    break;
-                }
-                case WAR_TEXT_ALIGN_RIGHT:
-                {
-                    offset.x = ceilf(text->size.x - textSize.x);
-                    break;
-                }
-                default:
-                {
-                    logError("Invalid horizontal alignment value: %d\n", text->horizontalAlign);
-                    break;
-                }
+                params.horizontalAlign = NVG_ALIGN_LEFT;
+                break;
             }
-
-            switch (text->verticalAlign)
+            case WAR_TEXT_ALIGN_CENTER:
             {
-                case WAR_TEXT_ALIGN_TOP:
-                {
-                    // nothing here, offset.y should be 0
-                    break;
-                }
-                case WAR_TEXT_ALIGN_MIDDLE:
-                {
-                    offset.y = ceilf(halff(text->size.y) - halff(textSize.y));
-                    break;
-                }
-                case WAR_TEXT_ALIGN_BOTTOM:
-                {
-                    offset.y = ceilf(text->size.y - textSize.y);
-                    break;
-                }
-                default:
-                {
-                    logError("Invalid vertical alignment value: %d\n", text->verticalAlign);
-                    break;
-                }
+                params.horizontalAlign = NVG_ALIGN_CENTER;
+                break;
             }
-
-            nvgTranslate(gfx, offset.x, offset.y);
+            case WAR_TEXT_ALIGN_RIGHT:
+            {
+                params.horizontalAlign = NVG_ALIGN_RIGHT;
+                break;
+            }
+            default:
+            {
+                logError("Invalid horizontal alignment value: %d\n", text->horizontalAlign);
+                break;
+            }
         }
 
-        if (entity->text.multiline)
-            nvgMultiSpriteText(gfx, text->text, 0, 0, params);
-        else
-            nvgSingleSpriteText(gfx, text->text, 0, 0, params);
+        switch (text->verticalAlign)
+        {
+            case WAR_TEXT_ALIGN_TOP:
+            {
+                params.verticalAlign = NVG_ALIGN_TOP;
+                break;
+            }
+            case WAR_TEXT_ALIGN_MIDDLE:
+            {
+                params.verticalAlign = NVG_ALIGN_MIDDLE;
+                break;
+            }
+            case WAR_TEXT_ALIGN_BOTTOM:
+            {
+                params.verticalAlign = NVG_ALIGN_BOTTOM;
+                break;
+            }
+            default:
+            {
+                logError("Invalid vertical alignment value: %d\n", text->verticalAlign);
+                break;
+            }
+        }
 
+        // if (entity->text.multiline)
+            nvgMultiSpriteText(gfx, text->text, 0, 0, params);
+        // else
+            // nvgSingleSpriteText(gfx, text->text, 0, 0, params);
         nvgRestore(gfx);
     }
 }
@@ -1158,12 +1151,10 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.fontColor = u8ColorToNVGcolor(text->fontColor);
                 params.fontData = fontsData[text->fontIndex];
                 params.highlightIndex = text->highlightIndex;
-                
-                vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
-                vec2 textSize = nvgMeasureSpriteText(text->text, params);
-                vec2 offset = vec2Ceil(vec2Half(vec2Subv(backgroundSize, textSize)));
-
-                nvgTranslate(gfx, offset.x, offset.y);
+                params.horizontalAlign = NVG_ALIGN_CENTER;
+                params.verticalAlign = NVG_ALIGN_MIDDLE;
+                params.width = button->normalSprite.frameWidth;
+                params.height = button->normalSprite.frameHeight;
 
                 nvgSingleSpriteText(gfx, text->text, 0, 0, params);
             }

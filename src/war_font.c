@@ -231,6 +231,90 @@ WarSprite loadFontSprite(WarContext* context, const char* fontPath)
     return sprite;
 }
 
+void nvgSplitTextIntoLines(const char* text, const char* lines[], s32 lengths[], s32* linesCount)
+{
+    s32 len = strlen(text);
+
+    s32 s = 0;
+    s32 e = 0;
+    s32 k = 0;
+
+    while (e < len)
+    {
+        if (text[e] == '\n')
+        {
+            lines[k] = &text[s];
+            lengths[k] = e - s;
+            k++;
+
+            s = e + 1;
+        }
+
+        e++;
+    }
+
+    if (s < e)
+    {
+        lines[k] = &text[s];
+        lengths[k] = e - s;
+        k++;
+    }
+
+    *linesCount = k;
+}
+
+vec2 nvgMeasureSpriteTextSpan(const char* text, s32 index, s32 count, NVGfontParams params)
+{
+    vec2 size = VEC2_ZERO;
+
+    if (count > 0)
+    {
+        f32 scale = params.fontSize / params.fontData.lineHeight;
+
+        for (s32 i = 0; i < count; i++)
+        {
+            rect rs = params.fontData.data[getCharIndex(text[index + i])];
+
+            size.x += (rs.width + params.fontData.advance) * scale;
+            size.y = max(size.y, rs.height * scale);
+        }
+    }
+
+    return size;
+}
+
+vec2 nvgMeasureSpriteText(const char* text, NVGfontParams params)
+{
+    s32 len = strlen(text);
+    f32 scale = params.fontSize / params.fontData.lineHeight;
+
+    vec2 size = VEC2_ZERO;
+    vec2 lineSize = VEC2_ZERO;
+
+    for (s32 i = 0; i < len; i++)
+    {
+        if (text[i] == '\n')
+        {
+            size.x = max(size.x, lineSize.x);
+            size.y += lineSize.y;
+
+            lineSize = VEC2_ZERO;
+        }
+        else
+        {
+            rect rs = params.fontData.data[getCharIndex(text[i])];
+
+            lineSize.x += (rs.width + params.fontData.advance) * scale;
+            lineSize.y = max(size.y, rs.height * scale);
+        }
+    }
+
+    size.x = max(size.x, lineSize.x);
+    size.y += lineSize.y;
+
+    return size;
+}
+
 f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text, s32 index, s32 count, f32 x, f32 y, NVGfontParams params)
 {
     if (count > 0)
@@ -266,31 +350,85 @@ f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text, s32 index, s32 co
 
 void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {
-    s32 len = strlen(text);
-    f32 scale = params.fontSize / params.fontData.lineHeight;
-    s32 highlightIndex = params.highlightIndex;
-
-    NVGcolor fontColor = params.fontColor;
-    NVGcolor highlightColor = u8ColorToNVGcolor(FONT_HIGHLIGHT_COLOR);
+    s32 length = strlen(text);
 
     nvgSave(gfx);
+    nvgTranslate(gfx, x, y);
+
+    if (params.width != 0 && params.height != 0)
+    {
+        vec2 textOffset = VEC2_ZERO;
+
+        vec2 textSize = nvgMeasureSpriteText(text, params);
+
+        switch (params.horizontalAlign)
+        {
+            case NVG_ALIGN_LEFT:
+            {
+                // nothing here
+                break;
+            }
+            case NVG_ALIGN_CENTER:
+            {
+                textOffset.x = ceilf(halff(params.width - textSize.x));
+                break;
+            }
+            case NVG_ALIGN_RIGHT:
+            {
+                textOffset.x = ceilf(params.width - textSize.x);
+                break;
+            }
+            default:
+            {
+                logError("Invalid horizontal alignment value: %d\n", params.horizontalAlign);
+                break;
+            }
+        }
+
+        switch (params.verticalAlign)
+        {
+            case NVG_ALIGN_TOP:
+            {
+                // nothing here
+                break;
+            }
+            case NVG_ALIGN_MIDDLE:
+            {
+                textOffset.y = ceilf(halff(params.height) - halff(textSize.y));
+                break;
+            }
+            case NVG_ALIGN_BOTTOM:
+            {
+                textOffset.y = ceilf(params.height - textSize.y);
+                break;
+            }
+            default:
+            {
+                logError("Invalid vertical alignment value: %d\n", params.verticalAlign);
+                break;
+            }
+        }
+
+        nvgTranslate(gfx, textOffset.x, textOffset.y);
+    }
+
+    f32 scale = params.fontSize / params.fontData.lineHeight;
     nvgScale(gfx, scale, scale);
 
+    s32 highlightIndex = params.highlightIndex;
     if (highlightIndex >= 0)
     {
-        params.fontColor = fontColor;
-        x = nvgSingleSpriteTextSpan(gfx, text, 0, highlightIndex, x, y, params);
+        x = nvgSingleSpriteTextSpan(gfx, text, 0, highlightIndex, 0, 0, params);
 
-        params.fontColor = highlightColor;
-        x = nvgSingleSpriteTextSpan(gfx, text, highlightIndex, 1, x, y, params);
+        params.fontColor = u8ColorToNVGcolor(FONT_HIGHLIGHT_COLOR);
+        x = nvgSingleSpriteTextSpan(gfx, text, highlightIndex, 1, x, 0, params);
 
-        params.fontColor = fontColor;
-        x = nvgSingleSpriteTextSpan(gfx, text, highlightIndex + 1, len - highlightIndex, x, y, params);
+        params.fontColor = params.fontColor;
+        x = nvgSingleSpriteTextSpan(gfx, text, highlightIndex + 1, length - highlightIndex, x, 0, params);
     }
     else
     {
-        params.fontColor = fontColor;
-        nvgSingleSpriteTextSpan(gfx, text, 0, len, x, y, params);
+        nvgSingleSpriteTextSpan(gfx, text, 0, length, 0, 0, params);
     }
 
     nvgRestore(gfx);
@@ -298,50 +436,139 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
 
 void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {
-    s32 len = strlen(text);
-    s32 lineHeight = params.fontData.lineHeight;
-    f32 scale = params.fontSize / lineHeight;
-    s32 i = 0;
-    s32 j = 0;
+    NVGcolor fontColor = params.fontColor;
+    NVGcolor highlightColor = u8ColorToNVGcolor(FONT_HIGHLIGHT_COLOR);
+
+    f32 scale = params.fontSize / params.fontData.lineHeight;
+    s32 highlightIndex = params.highlightIndex;
+
+    // NOTE: allow only 24 lines of text for now, 
+    // later revisit this when implementing other scenes with more text.
+    const char* lines[24];
+    s32 lengths[24];
+    s32 linesCount;
+    nvgSplitTextIntoLines(text, lines, lengths, &linesCount);
+
+    vec2 textSize = nvgMeasureSpriteText(text, params);
 
     nvgSave(gfx);
-    nvgScale(gfx, scale, scale);
+    nvgTranslate(gfx, x, y);
 
-    while (j < len)
+    if (params.width != 0 && params.height != 0)
     {
-        if (text[j] == '\n')
-        {
-            nvgSingleSpriteTextSpan(gfx, text, i, j - i, x, y, params);
+        vec2 textOffset = VEC2_ZERO;
 
-            y += lineHeight;
-            i = j + 1;
+        switch (params.horizontalAlign)
+        {
+            case NVG_ALIGN_LEFT:
+            {
+                // nothing here
+                break;
+            }
+            case NVG_ALIGN_CENTER:
+            {
+                textOffset.x = ceilf(halff(params.width - textSize.x));
+                break;
+            }
+            case NVG_ALIGN_RIGHT:
+            {
+                textOffset.x = ceilf(params.width - textSize.x);
+                break;
+            }
+            default:
+            {
+                logError("Invalid horizontal alignment value: %d\n", params.horizontalAlign);
+                break;
+            }
         }
 
-        j++;
+        switch (params.verticalAlign)
+        {
+            case NVG_ALIGN_TOP:
+            {
+                // nothing here
+                break;
+            }
+            case NVG_ALIGN_MIDDLE:
+            {
+                textOffset.y = ceilf(halff(params.height) - halff(textSize.y));
+                break;
+            }
+            case NVG_ALIGN_BOTTOM:
+            {
+                textOffset.y = ceilf(params.height - textSize.y);
+                break;
+            }
+            default:
+            {
+                logError("Invalid vertical alignment value: %d\n", params.verticalAlign);
+                break;
+            }
+        }
+
+        nvgTranslate(gfx, textOffset.x, textOffset.y);
     }
 
-    if (i < j)
+    s32 charIndex = 0;
+
+    for (s32 i = 0; i < linesCount; i++)
     {
-        nvgSingleSpriteTextSpan(gfx, text, i, j - i, x, y, params);
+        vec2 lineOffset = vec2f(0, i * params.fontData.lineHeight);
+        
+        if (params.width != 0)
+        {
+            vec2 lineSize = nvgMeasureSpriteTextSpan(lines[i], 0, lengths[i], params);
+
+            switch (params.horizontalAlign)
+            {
+                case NVG_ALIGN_LEFT:
+                {
+                    // nothing here
+                    break;
+                }
+                case NVG_ALIGN_CENTER:
+                {
+                    lineOffset.x = ceilf(halff(textSize.x - lineSize.x));
+                    break;
+                }
+                case NVG_ALIGN_RIGHT:
+                {
+                    lineOffset.x = ceilf(textSize.x - lineSize.x);
+                    break;
+                }
+                default:
+                {
+                    logError("Invalid horizontal alignment value: %d\n", params.horizontalAlign);
+                    break;
+                }
+            }
+        }
+
+        nvgSave(gfx);
+        nvgScale(gfx, scale, scale);
+        nvgTranslate(gfx, lineOffset.x, lineOffset.y);
+
+        if (highlightIndex >= charIndex && highlightIndex < charIndex + lengths[i])
+        {
+            params.fontColor = fontColor;
+            x = nvgSingleSpriteTextSpan(gfx, lines[i], 0, highlightIndex, 0, 0, params);
+
+            params.fontColor = highlightColor;
+            x = nvgSingleSpriteTextSpan(gfx, lines[i], highlightIndex, 1, x, 0, params);
+
+            params.fontColor = fontColor;
+            x = nvgSingleSpriteTextSpan(gfx, lines[i], highlightIndex + 1, lengths[i] - highlightIndex, x, 0, params);
+        }
+        else
+        {
+            params.fontColor = fontColor;
+            nvgSingleSpriteTextSpan(gfx, lines[i], 0, lengths[i], 0, 0, params);
+        }
+
+        charIndex += lengths[i] + 1;
+
+        nvgRestore(gfx);
     }
 
     nvgRestore(gfx);
-}
-
-vec2 nvgMeasureSpriteText(const char* text, NVGfontParams params)
-{
-    s32 len = strlen(text);
-    f32 scale = params.fontSize / params.fontData.lineHeight;
-
-    vec2 size = VEC2_ZERO;
-
-    for (s32 i = 0; i < len; i++)
-    {
-        rect rs = params.fontData.data[getCharIndex(text[i])];
-
-        size.x += (rs.width + params.fontData.advance) * scale;
-        size.y = max(size.y, rs.height * scale);
-    }
-
-    return size;
 }

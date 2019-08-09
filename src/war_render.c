@@ -379,6 +379,10 @@ typedef struct
 {
     char* fontFace;
     s32 textAlign;
+    enum NVGalign horizontalAlign;
+    enum NVGalign verticalAlign;
+    f32 width;
+    f32 height;
     f32 blur;
 
     s32 fontIndex;

@@ -367,10 +367,13 @@ void createObjectivesMenu(WarContext* context)
         WAR_TEXT_ALIGN_MIDDLE);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(
+    uiEntity = createUITextSized(
         context, "txtObjectivesText", 
         1, 10, levelInfo->levelInfo.objectives, 
-        vec2Addv(menuPanel, vec2i(20, 26)));
+        vec2Addv(menuPanel, vec2i(20, 26)),
+        vec2f(map->menuPanel.width - 20, 60),
+        WAR_TEXT_ALIGN_LEFT,
+        WAR_TEXT_ALIGN_TOP);
     uiEntity->text.multiline = true;
     setUIEntityStatus(uiEntity, false);
 
