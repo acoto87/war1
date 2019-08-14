@@ -1384,7 +1384,6 @@ typedef enum
     WAR_TEXT_ALIGN_TOP,
     WAR_TEXT_ALIGN_MIDDLE,
     WAR_TEXT_ALIGN_BOTTOM,
-    WAR_TEXT_ALIGN_JUSTIFY,
 
     WAR_TEXT_ALIGN_COUNT
 } WarTextAlignment;
@@ -1410,6 +1409,7 @@ typedef struct
     WarTextAlignment verticalAlign;
     WarTextAlignment lineAlign;
     WarTextWrapping wrapping;
+    bool multiline;
 } WarTextComponent;
 
 typedef struct
@@ -1429,6 +1429,7 @@ typedef struct
     bool active;
     WarKeys hotKey;
     s32 highlightIndex;
+    s32 highlightCount;
     char tooltip[100];
     s32 gold;
     s32 wood;

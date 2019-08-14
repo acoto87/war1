@@ -190,7 +190,7 @@ void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32
     entity->text.fontIndex = fontIndex;
     entity->text.fontSize = fontSize;
     entity->text.fontColor = FONT_NORMAL_COLOR;
-    entity->text.highlightColor = FONT_NORMAL_COLOR;
+    entity->text.highlightColor = FONT_HIGHLIGHT_COLOR;
     entity->text.highlightIndex = NO_HIGHLIGHT;
     entity->text.highlightCount = 0;
     entity->text.boundings = VEC2_ZERO;
@@ -198,8 +198,9 @@ void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32
     entity->text.verticalAlign = WAR_TEXT_ALIGN_TOP;
     entity->text.lineAlign = WAR_TEXT_ALIGN_LEFT;
     entity->text.wrapping = WAR_TEXT_WRAP_NONE;
+    entity->text.multiline = false;
 
-    setUIText(entity, NO_HIGHLIGHT, text);
+    setUIText(entity, text);
 }
 
 void removeTextComponent(WarContext* context, WarEntity* entity)
@@ -997,66 +998,24 @@ void renderText(WarContext* context, WarEntity* entity)
         
         NVGfontParams params;
         params.fontIndex = text->fontIndex;
-        params.fontSprite = context->fontSprites[text->fontIndex];
         params.fontSize = text->fontSize;
         params.fontColor = u8ColorToNVGcolor(text->fontColor);
-        params.fontData = fontsData[text->fontIndex];
+        params.highlightColor = u8ColorToNVGcolor(text->highlightColor);
         params.highlightIndex = text->highlightIndex;
-        params.width = text->size.x;
-        params.height = text->size.y;
-        
-        switch (text->horizontalAlign)
-        {
-            case WAR_TEXT_ALIGN_LEFT:
-            {
-                params.horizontalAlign = NVG_ALIGN_LEFT;
-                break;
-            }
-            case WAR_TEXT_ALIGN_CENTER:
-            {
-                params.horizontalAlign = NVG_ALIGN_CENTER;
-                break;
-            }
-            case WAR_TEXT_ALIGN_RIGHT:
-            {
-                params.horizontalAlign = NVG_ALIGN_RIGHT;
-                break;
-            }
-            default:
-            {
-                logError("Invalid horizontal alignment value: %d\n", text->horizontalAlign);
-                break;
-            }
-        }
+        params.highlightCount = text->highlightCount;
+        params.boundings = text->boundings;
+        params.horizontalAlign = textAlignToNVGalign(text->horizontalAlign);
+        params.verticalAlign = textAlignToNVGalign(text->verticalAlign);
+        params.lineAlign = textAlignToNVGalign(text->lineAlign);
+        params.wrapping = textWrappingToNVGwrap(text->wrapping);
+        params.fontSprite = context->fontSprites[text->fontIndex];
+        params.fontData = fontsData[text->fontIndex];
 
-        switch (text->verticalAlign)
-        {
-            case WAR_TEXT_ALIGN_TOP:
-            {
-                params.verticalAlign = NVG_ALIGN_TOP;
-                break;
-            }
-            case WAR_TEXT_ALIGN_MIDDLE:
-            {
-                params.verticalAlign = NVG_ALIGN_MIDDLE;
-                break;
-            }
-            case WAR_TEXT_ALIGN_BOTTOM:
-            {
-                params.verticalAlign = NVG_ALIGN_BOTTOM;
-                break;
-            }
-            default:
-            {
-                logError("Invalid vertical alignment value: %d\n", text->verticalAlign);
-                break;
-            }
-        }
-
-        // if (entity->text.multiline)
+        if (entity->text.multiline)
             nvgMultiSpriteText(gfx, text->text, 0, 0, params);
-        // else
-            // nvgSingleSpriteText(gfx, text->text, 0, 0, params);
+        else
+            nvgSingleSpriteText(gfx, text->text, 0, 0, params);
+
         nvgRestore(gfx);
     }
 }
@@ -1129,15 +1088,18 @@ void renderButton(WarContext* context, WarEntity* entity)
             {                
                 NVGfontParams params;
                 params.fontIndex = text->fontIndex;
-                params.fontSprite = context->fontSprites[text->fontIndex];
                 params.fontSize = text->fontSize;
                 params.fontColor = u8ColorToNVGcolor(text->fontColor);
-                params.fontData = fontsData[text->fontIndex];
+                params.highlightColor = u8ColorToNVGcolor(text->highlightColor);
                 params.highlightIndex = text->highlightIndex;
-                params.horizontalAlign = NVG_ALIGN_CENTER;
-                params.verticalAlign = NVG_ALIGN_MIDDLE;
-                params.width = button->normalSprite.frameWidth;
-                params.height = button->normalSprite.frameHeight;
+                params.highlightCount = text->highlightCount;
+                params.boundings = text->boundings;
+                params.horizontalAlign = textAlignToNVGalign(text->horizontalAlign);
+                params.verticalAlign = textAlignToNVGalign(text->verticalAlign);
+                params.lineAlign = textAlignToNVGalign(text->lineAlign);
+                params.wrapping = textWrappingToNVGwrap(text->wrapping);
+                params.fontSprite = context->fontSprites[text->fontIndex];
+                params.fontData = fontsData[text->fontIndex];
 
                 nvgSingleSpriteText(gfx, text->text, 0, 0, params);
             }

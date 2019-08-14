@@ -102,7 +102,7 @@ void createMapUI(WarContext* context)
         imageResourceRef(363), 
         invalidRef, 
         vec2Addv(leftBottomPanel, vec2i(3, 116)));
-    setUITooltip(uiEntity, NO_HIGHLIGHT, "MENU (F10)");
+    setUITooltip(uiEntity, 6, 3, "MENU (F10)");
     setUIButtonClickHandler(uiEntity, handleMenu);
     setUIButtonHotKey(uiEntity, WAR_KEY_F10);
 }

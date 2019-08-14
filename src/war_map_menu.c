@@ -200,7 +200,7 @@ void createOptionsMenu(WarContext* context)
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITex(context, "txtOptionsKeyScrollValue", 
+    uiEntity = createUIText(context, "txtOptionsKeyScrollValue", 
         1, 10, "Normal", vec2Addv(menuPanel, vec2i(92, 93)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(42, 12));
@@ -345,6 +345,7 @@ void createObjectivesMenu(WarContext* context)
     uiEntity = createUIText(context, "txtObjectivesText", 
         1, 10, levelInfo->levelInfo.objectives, vec2Addv(menuPanel, vec2i(20, 26)));
     setUIEntityStatus(uiEntity, false);
+    // setUITextMultiline(uiEntity, true);
     setUITextBoundings(uiEntity, vec2f(map->menuPanel.width - 20, 60));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_TOP);
@@ -510,7 +511,8 @@ void setUITextSpeedValueByName(WarContext* context, const char* name, WarMapSpee
     {
         char speedStr[10];
         setSpeedStr(value, speedStr);
-        setUIText(entity, NO_HIGHLIGHT, speedStr);
+        setUIText(entity, speedStr);
+        setUITextHighlight(entity, NO_HIGHLIGHT, 0);
     }
 }
 
@@ -519,7 +521,8 @@ void setUITextS32ValueByName(WarContext* context, const char* name, s32 value)
     WarEntity* entity = findUIEntity(context, name);
     if (entity)
     {
-        setUITextFormat(entity, NO_HIGHLIGHT, "%d", value);
+        setUITextFormat(entity, "%d", value);
+        setUITextHighlight(entity, NO_HIGHLIGHT, 0);
     }
 }
 
@@ -756,7 +759,7 @@ void handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
     if (map->settings2.mouseScrollSpeed > WAR_SPEED_SLOWEST)
     {
         map->settings2.mouseScrollSpeed--;
-        setUITextS32ValueByName(context, "txtOptionsMouseScrollValue", map->settings2.mouseScrollSpeed);
+        setUITextSpeedValueByName(context, "txtOptionsMouseScrollValue", map->settings2.mouseScrollSpeed);
     }
 }
 

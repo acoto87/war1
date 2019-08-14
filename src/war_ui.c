@@ -1,4 +1,4 @@
-#define setUIEntityStatus(uiEntity, enabled) ((uiEntity)->ui.enabled = (enabled))
+#define setUIEntityStatus(uiEntity, value) ((uiEntity)->ui.enabled = (value))
 
 bool isUIEntity(WarEntity* entity)
 {
@@ -27,37 +27,36 @@ void clearUIText(WarEntity* uiText)
     }
 }
 
-void setUIText(WarEntity* uiText, s32 highlightIndex, const char* text)
+void setUIText(WarEntity* uiText, const char* text)
 {
     clearUIText(uiText);
 
     if (text)
     {
         uiText->text.text = (char*)xmalloc(strlen(text) + 1);
-        uiText->text.highlightIndex = highlightIndex;
         strcpy(uiText->text.text, text);
         uiText->text.enabled = true;
     }
 }
 
-void setUITextFormatv(WarEntity* uiText, s32 highlightIndex, const char* format, va_list args)
+void setUITextFormatv(WarEntity* uiText, const char* format, va_list args)
 {
     if (!format)
     {
-        setUIText(uiText, highlightIndex, NULL);
+        setUIText(uiText, NULL);
         return;
     }
 
 	char buffer[256];
     vsprintf(buffer, format, args);
-    setUIText(uiText, highlightIndex, buffer);
+    setUIText(uiText, buffer);
 }
 
-void setUITextFormat(WarEntity* uiText, s32 highlightIndex, const char* format, ...)
+void setUITextFormat(WarEntity* uiText, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    setUITextFormatv(uiText, highlightIndex, format, args);
+    setUITextFormatv(uiText, format, args);
     va_end(args);
 }
 
@@ -78,31 +77,33 @@ void clearUITooltip(WarEntity* uiButton)
     memset(uiButton->button.tooltip, 0, sizeof(uiButton->button.tooltip));
 }
 
-void setUITooltip(WarEntity* uiButton, s32 highlightIndex, char* text)
+void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, char* text)
 {
     clearUITooltip(uiButton);
 
     if (text)
     {
         uiButton->button.highlightIndex = highlightIndex;
+        uiButton->button.highlightCount = highlightCount;
         strcpy(uiButton->button.tooltip, text);
     }
 }
 
-#define setUITextBoundings(uiEntity, boundings) ((uiEntity)->text.boundings = (boundings))
-#define setUITextHorizontalAlign(uiEntity, align) ((uiEntity)->text.horizontalAlign = (align))
-#define setUITextVerticalAlign(uiEntity, align) ((uiEntity)->text.verticalAlign = (align))
-#define setUITextLineAlign(uiEntity, align) ((uiEntity)->text.lineAlign = (align))
-#define setUITextWrapping(uiEntity, wrap) ((uiEntity)->text.wrapping = (wrap))
+#define setUITextBoundings(uiEntity, value) ((uiEntity)->text.boundings = (value))
+#define setUITextHorizontalAlign(uiEntity, value) ((uiEntity)->text.horizontalAlign = (value))
+#define setUITextVerticalAlign(uiEntity, value) ((uiEntity)->text.verticalAlign = (value))
+#define setUITextLineAlign(uiEntity, value) ((uiEntity)->text.lineAlign = (value))
+#define setUITextWrapping(uiEntity, value) ((uiEntity)->text.wrapping = (value))
 #define setUITextHighlight(uiEntity, index, count) \
     ({ ((uiEntity)->text.highlightIndex = (index)); \
-       ((uiEntity)->text.highlightCount = (count)) })
+       ((uiEntity)->text.highlightCount = (count)); })
 #define setUITextHighlightColor(uiEntity, color) ((uiEntity)->text.highlightColor = (color))
+#define setUITextMultiline(uiEntity, value) ((uiEntity)->text.multiline = (value))
 
-#define setUIButtonStatus(uiButton, status) ((uiButton)->button.enabled = (enabled))
-#define setUIButtonInteractive(uiButton, interactive) ((uiButton)->button.interactive = (interactive))
-#define setUIButtonHotKey(uiButton, key) ((uiButton)->button.hotKey = (key))
-#define setUIButtonClickHandler(uiButton, handler) ((uiButton)->button.clickHandler = (handler))
+#define setUIButtonStatus(uiEntity, value) ((uiEntity)->button.enabled = (value))
+#define setUIButtonInteractive(uiEntity, value) ((uiEntity)->button.interactive = (value))
+#define setUIButtonHotKey(uiEntity, key) ((uiEntity)->button.hotKey = (key))
+#define setUIButtonClickHandler(uiEntity, handler) ((uiEntity)->button.clickHandler = (handler))
 
 void setUIButtonStatusByName(WarContext* context, const char* name, bool enabled)
 {
@@ -201,9 +202,12 @@ WarEntity* createUITextButton(WarContext* context,
     addSpriteComponentFromResource(context, entity, foregroundRef);
     addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
 
-    setUITextBoundings(uiEntity, backgroundSize);
-    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
-    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
+    WarSprite* normalSprite = &entity->button.normalSprite;
+    vec2 backgroundSize = vec2i(normalSprite->frameWidth, normalSprite->frameHeight);
+
+    setUITextBoundings(entity, backgroundSize);
+    setUITextHorizontalAlign(entity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(entity, WAR_TEXT_ALIGN_MIDDLE);
 
     return entity;
 }
@@ -241,7 +245,8 @@ void updateGoldText(WarContext* context)
     assert(txtGold);
 
     s32 gold = map->players[0].gold;
-    setUITextFormat(txtGold, NO_HIGHLIGHT, "GOLD:%*d", 6, gold);
+    setUITextFormat(txtGold, "GOLD:%*d", 6, gold);
+    setUITextHighlight(txtGold, NO_HIGHLIGHT, 0);
 }
 
 void updateWoodText(WarContext* context)
@@ -252,10 +257,11 @@ void updateWoodText(WarContext* context)
     assert(txtWood);
 
     s32 wood = map->players[0].wood;
-    setUITextFormat(txtWood, NO_HIGHLIGHT, "LUMBER:%*d", 6, wood);
+    setUITextFormat(txtWood, "LUMBER:%*d", 6, wood);
+    setUITextHighlight(txtWood, NO_HIGHLIGHT, 0);
 }
 
-void setStatus(WarContext* context, s32 highlightIndex, s32 gold, s32 wood, char* text, ...)
+void setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, char* text, ...)
 {
     WarEntity* txtStatus = findUIEntity(context, "txtStatus");
     assert(txtStatus);
@@ -274,8 +280,10 @@ void setStatus(WarContext* context, s32 highlightIndex, s32 gold, s32 wood, char
 
     va_list args;
     va_start (args, text);
-    setUITextFormatv(txtStatus, highlightIndex, text, args);
+    setUITextFormatv(txtStatus, text, args);
     va_end (args);
+
+    setUITextHighlight(txtStatus, highlightIndex, highlightCount);
 
     if (gold == 0 && wood == 0)
     {
@@ -288,8 +296,10 @@ void setStatus(WarContext* context, s32 highlightIndex, s32 gold, s32 wood, char
     {
         imgStatusWood->sprite.enabled = true;
         imgStatusGold->sprite.enabled = true;
-        setUITextFormat(txtStatusWood, NO_HIGHLIGHT, "%d", wood);
-        setUITextFormat(txtStatusGold, NO_HIGHLIGHT, "%d", gold);
+        setUITextFormat(txtStatusWood, "%d", wood);
+        setUITextHighlight(txtStatusWood, NO_HIGHLIGHT, 0);
+        setUITextFormat(txtStatusGold, "%d", gold);
+        setUITextHighlight(txtStatusGold, NO_HIGHLIGHT, 0);
     }
 }
 
@@ -393,7 +403,8 @@ void updateSelectedUnitsInfo(WarContext* context)
     setUIRectWidth(rectMagicBar, 0);
     setUIRectWidth(rectPercentBar, 0);
     setUIImage(rectPercentText, -1);
-    setUIText(txtUnitName, NO_HIGHLIGHT, NULL);
+    setUIText(txtUnitName, NULL);
+    setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
 
     // update the frame index of unit info/portraits 
     // based on the number of entities selected
@@ -457,7 +468,8 @@ void updateSelectedUnitsInfo(WarContext* context)
 
             WarUnitData unitsData = getUnitData(unit->type);
             setUIImage(imgUnitPortraits[0], unitsData.portraitFrameIndex);
-            setUIText(txtUnitName, NO_HIGHLIGHT, unitsData.name);
+            setUIText(txtUnitName, unitsData.name);
+            setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
             setLifeBar(rectLifeBars[0], unit);
         }
     }

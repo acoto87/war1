@@ -1309,9 +1309,12 @@ void updateCommands(WarContext* context)
             s32 farmsCount = getNumberOfBuildingsOfType(context, 0, entity->unit.type, true);
             s32 dudesCount = getTotalNumberOfDudes(context, 0);
 
-            setUIText(commandTexts[0], NO_HIGHLIGHT, "FOOD USAGE:");
-            setUITextFormat(commandTexts[1], NO_HIGHLIGHT, "GROWN %d", farmsCount * 4 + 1);
-            setUITextFormat(commandTexts[2], NO_HIGHLIGHT, " USED %d", dudesCount);
+            setUIText(commandTexts[0], "FOOD USAGE:");
+            setUITextHighlight(commandTexts[0], NO_HIGHLIGHT, 0);
+            setUITextFormat(commandTexts[1], "GROWN %d", farmsCount * 4 + 1);
+            setUITextHighlight(commandTexts[1], NO_HIGHLIGHT, 0);
+            setUITextFormat(commandTexts[2], " USED %d", dudesCount);
+            setUITextHighlight(commandTexts[2], NO_HIGHLIGHT, 0);
 
             return;
         }
@@ -1323,8 +1326,10 @@ void updateCommands(WarContext* context)
     {
         s32 gold = entity->unit.amount;
 
-        setUIText(commandTexts[0], NO_HIGHLIGHT, "GOLD LEFT");
-        setUITextFormat(commandTexts[3], NO_HIGHLIGHT, "%d", gold);
+        setUIText(commandTexts[0], "GOLD LEFT");
+        setUITextHighlight(commandTexts[0], NO_HIGHLIGHT, 0);
+        setUITextFormat(commandTexts[3], "%d", gold);
+        setUITextHighlight(commandTexts[3], NO_HIGHLIGHT, 0);
         return;
     }
 
@@ -1359,7 +1364,7 @@ void updateCommands(WarContext* context)
         {
             WarUnitCommandData commandData = getUnitCommandData(context, entity, commands[i]);
             setUIImage(commandButtons[i], commandData.frameIndex);
-            setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.tooltip);
+            setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.highlightCount, commandData.tooltip);
             commandButtons[i]->button.enabled = true;
             commandButtons[i]->button.gold = commandData.gold;
             commandButtons[i]->button.wood = commandData.wood;
@@ -1571,7 +1576,7 @@ void updateStatus(WarContext* context)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            setStatus(context, NO_HIGHLIGHT, 0, 0, flashStatus->text);
+            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, flashStatus->text);
             return;
         }
         
@@ -1581,6 +1586,7 @@ void updateStatus(WarContext* context)
 
     char statusText[50] = {0};
     s32 highlightIndex = NO_HIGHLIGHT;
+    s32 highlightCount = 0;
     s32 goldCost = 0;
     s32 woodCost = 0;
 
@@ -1602,9 +1608,6 @@ void updateStatus(WarContext* context)
                     WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
 
                     strcpy(statusText, commandData.tooltip2);
-                    highlightIndex = NO_HIGHLIGHT;
-                    goldCost = 0;
-                    woodCost = 0;
                 }
                 else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
                 {
@@ -1614,9 +1617,6 @@ void updateStatus(WarContext* context)
                     WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
                     
                     strcpy(statusText, commandData.tooltip2);
-                    highlightIndex = NO_HIGHLIGHT;
-                    goldCost = 0;
-                    woodCost = 0;
                 }
                 else
                 {
@@ -1631,9 +1631,6 @@ void updateStatus(WarContext* context)
                         //
                         s32 repairCost = (s32)ceil((maxhp - hp) * 0.12f);
                         sprintf(statusText, "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
-                        highlightIndex = NO_HIGHLIGHT;
-                        goldCost = 0;
-                        woodCost = 0;
                     }
                 }
             }
@@ -1649,10 +1646,6 @@ void updateStatus(WarContext* context)
                     {
                         strcpy(statusText, "CARRYING LUMBER");
                     }
-
-                    highlightIndex = NO_HIGHLIGHT;
-                    goldCost = 0;
-                    woodCost = 0;
                 }
             }
         }
@@ -1671,12 +1664,13 @@ void updateStatus(WarContext* context)
                 goldCost = button->gold;
                 woodCost = button->wood;
                 highlightIndex = button->highlightIndex;
+                highlightCount = button->highlightCount;
                 break;
             }
         }
     }
 
-    setStatus(context, highlightIndex, goldCost, woodCost, statusText);
+    setStatus(context, highlightIndex, highlightCount, goldCost, woodCost, statusText);
 }
 
 void updateCursor(WarContext* context)
