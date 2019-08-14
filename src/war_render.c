@@ -375,93 +375,98 @@ void nvgStrokePolyline(NVGcontext* gfx, s32 count, vec2 points[], NVGcolor color
     nvgRestore(gfx);
 }
 
+enum NVGwrap {
+	NVG_WRAP_NONE = 1<<0,
+	NVG_WRAP_WORD = 1<<1,
+};
+
 typedef struct 
 {
-    char* fontFace;
-    s32 textAlign;
-    enum NVGalign horizontalAlign;
-    enum NVGalign verticalAlign;
-    f32 width;
-    f32 height;
-    f32 blur;
-
     s32 fontIndex;
     f32 fontSize;
     NVGcolor fontColor;
-    WarSprite fontSprite;
+    NVGcolor highlightColor;
     s32 highlightIndex;
+    s32 highlightCount;
+    vec2 boundings;
+    enum NVGalign horizontalAlign;
+    enum NVGalign verticalAlign;
+    enum NVGalign lineAlign;
+    enum NVGwrap wrapping;
+
+    WarSprite fontSprite;
     WarFontData fontData;
 } NVGfontParams;
 
-void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
-{
-    if (params.fontSize <= 0)
-        params.fontSize = 8.0f;
+// void nvgSingleText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
+// {
+//     if (params.fontSize <= 0)
+//         params.fontSize = 8.0f;
 
-    if (!params.fontFace)
-        params.fontFace = "defaultFont";
+//     if (!params.fontFace)
+//         params.fontFace = "defaultFont";
 
-    if (params.textAlign <= 0)
-        params.textAlign = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
+//     if (params.textAlign <= 0)
+//         params.textAlign = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
 
-    if (params.blur < 0)
-        params.blur = 0;
+//     if (params.blur < 0)
+//         params.blur = 0;
 
-	nvgSave(gfx);
-    nvgFontSize(gfx, params.fontSize);
-    nvgFontFace(gfx, params.fontFace);
-    nvgFillColor(gfx, params.fontColor);
-    nvgTextAlign(gfx, params.textAlign);
-    nvgFontBlur(gfx, params.blur);
-    nvgText(gfx, x, y, text, NULL);
-    nvgRestore(gfx);
-}
+// 	nvgSave(gfx);
+//     nvgFontSize(gfx, params.fontSize);
+//     nvgFontFace(gfx, params.fontFace);
+//     nvgFillColor(gfx, params.fontColor);
+//     nvgTextAlign(gfx, params.textAlign);
+//     nvgFontBlur(gfx, params.blur);
+//     nvgText(gfx, x, y, text, NULL);
+//     nvgRestore(gfx);
+// }
 
-void nvgMultilineText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGfontParams params)
-{
-    if (params.fontSize <= 0)
-        params.fontSize = 8.0f;
+// void nvgMultilineText(NVGcontext* gfx, const char* text, f32 x, f32 y, f32 width, f32 height, NVGfontParams params)
+// {
+//     if (params.fontSize <= 0)
+//         params.fontSize = 8.0f;
 
-    if (!params.fontFace)
-        params.fontFace = "defaultFont";
+//     if (!params.fontFace)
+//         params.fontFace = "defaultFont";
 
-    if (params.textAlign <= 0)
-        params.textAlign = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
+//     if (params.textAlign <= 0)
+//         params.textAlign = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
 
-    if (params.blur < 0)
-        params.blur = 0;
+//     if (params.blur < 0)
+//         params.blur = 0;
 
-	nvgSave(gfx);
-    nvgFontSize(gfx, params.fontSize);
-    nvgFontFace(gfx, params.fontFace);
-    nvgFillColor(gfx, params.fontColor);
-    nvgTextAlign(gfx, params.textAlign);
-    nvgFontBlur(gfx, params.blur);
+// 	nvgSave(gfx);
+//     nvgFontSize(gfx, params.fontSize);
+//     nvgFontFace(gfx, params.fontFace);
+//     nvgFillColor(gfx, params.fontColor);
+//     nvgTextAlign(gfx, params.textAlign);
+//     nvgFontBlur(gfx, params.blur);
 
-    float lineh;
-    nvgTextMetrics(gfx, NULL, NULL, &lineh);
+//     float lineh;
+//     nvgTextMetrics(gfx, NULL, NULL, &lineh);
 
-    NVGtextRow rows[10];
-    const char* start = text;
-    const char* end = text + strlen(text);
-    s32 nrows;
+//     NVGtextRow rows[10];
+//     const char* start = text;
+//     const char* end = text + strlen(text);
+//     s32 nrows;
 
-    // The text break API can be used to fill a large buffer of rows,
-	// or to iterate over the text just few lines (or just one) at a time.
-	// The "next" variable of the last returned item tells where to continue.
-    while ((nrows = nvgTextBreakLines(gfx, start, end, width, rows, 10))) {
-        for (s32 i = 0; i < nrows; i++) {
-            NVGtextRow* row = &rows[i];
+//     // The text break API can be used to fill a large buffer of rows,
+// 	// or to iterate over the text just few lines (or just one) at a time.
+// 	// The "next" variable of the last returned item tells where to continue.
+//     while ((nrows = nvgTextBreakLines(gfx, start, end, width, rows, 10))) {
+//         for (s32 i = 0; i < nrows; i++) {
+//             NVGtextRow* row = &rows[i];
 
-            nvgText(gfx, x, y, row->start, row->end);
-            y += lineh;
-        }
+//             nvgText(gfx, x, y, row->start, row->end);
+//             y += lineh;
+//         }
 
-        start = rows[nrows - 1].next;
-    }
+//         start = rows[nrows - 1].next;
+//     }
 
-    nvgRestore(gfx);
-}
+//     nvgRestore(gfx);
+// }
 
 NVGcolor getColorFromList(s32 index)
 {

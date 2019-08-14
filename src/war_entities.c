@@ -189,32 +189,15 @@ void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32
     entity->text.enabled = true;
     entity->text.fontIndex = fontIndex;
     entity->text.fontSize = fontSize;
-    entity->text.highlightIndex = NO_HIGHLIGHT;
     entity->text.fontColor = FONT_NORMAL_COLOR;
-    entity->text.size = VEC2_ZERO;
+    entity->text.highlightColor = FONT_NORMAL_COLOR;
+    entity->text.highlightIndex = NO_HIGHLIGHT;
+    entity->text.highlightCount = 0;
+    entity->text.boundings = VEC2_ZERO;
     entity->text.horizontalAlign = WAR_TEXT_ALIGN_LEFT;
     entity->text.verticalAlign = WAR_TEXT_ALIGN_TOP;
-    entity->text.multiline = false;
-
-    setUIText(entity, NO_HIGHLIGHT, text);
-}
-
-void addTextComponentSized(WarContext* context, WarEntity* entity, 
-                           s32 fontIndex, f32 fontSize, 
-                           const char* text, vec2 size, 
-                           WarTextAlignment horizontalAlign, 
-                           WarTextAlignment verticalAlign)
-{
-    entity->text = (WarTextComponent){0};
-    entity->text.enabled = true;
-    entity->text.fontIndex = fontIndex;
-    entity->text.fontSize = fontSize;
-    entity->text.highlightIndex = NO_HIGHLIGHT;
-    entity->text.fontColor = FONT_NORMAL_COLOR;
-    entity->text.size = size;
-    entity->text.horizontalAlign = horizontalAlign;
-    entity->text.verticalAlign = verticalAlign;
-    entity->text.multiline = false;
+    entity->text.lineAlign = WAR_TEXT_ALIGN_LEFT;
+    entity->text.wrapping = WAR_TEXT_WRAP_NONE;
 
     setUIText(entity, NO_HIGHLIGHT, text);
 }

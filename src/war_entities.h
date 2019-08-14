@@ -39,11 +39,6 @@ void addUIComponent(WarContext* context, WarEntity* entity, char* name);
 void removeUIComponent(WarContext* context, WarEntity* entity);
 
 void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, const char* text);
-void addTextComponentSized(WarContext* context, WarEntity* entity, 
-                           s32 fontIndex, f32 fontSize, 
-                           const char* text, vec2 size, 
-                           WarTextAlignment horizontalAlign, 
-                           WarTextAlignment verticalAlign);
 void removeTextComponent(WarContext* context, WarEntity* entity);
 
 void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color);

@@ -33,14 +33,13 @@ void createMenu(WarContext* context)
     uiEntity = createUIImage(context, "imgMenuBackground", imageResourceRef(233), menuPanel);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUITextSized(
-        context, "txtMenuHeader", 
-        1, 10, "Warcraft", 
-        vec2Addv(menuPanel, vec2i(0, 10)),
-        vec2f(map->menuPanel.width, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(
+        context, "txtMenuHeader", 1, 10, "Warcraft", 
+        vec2Addv(menuPanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUITextButton(
         context, "btnMenuSave",
@@ -131,104 +130,82 @@ void createOptionsMenu(WarContext* context)
 
     WarEntity* uiEntity;
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsHeader", 
-        1, 10, "Options", 
-        vec2Addv(menuPanel, vec2i(0, 10)),
-        vec2f(map->menuPanel.width, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsHeader", 
+        1, 10, "Options", vec2Addv(menuPanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsGameSpeedLabel", 
-        1, 10, "Game Speed", 
-        vec2Addv(menuPanel, vec2i(0, 25)),
-        vec2f(75, 12),
-        WAR_TEXT_ALIGN_RIGHT,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsGameSpeedLabel", 
+        1, 10, "Game Speed", vec2Addv(menuPanel, vec2i(0, 25)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(75, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsMusicVolLabel", 
-        1, 10, "Music Vol", 
-        vec2Addv(menuPanel, vec2i(0, 42)),
-        vec2f(75, 12),
-        WAR_TEXT_ALIGN_RIGHT,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsMusicVolLabel", 
+        1, 10, "Music Vol", vec2Addv(menuPanel, vec2i(0, 42)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(75, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsSFXVolLabel", 
-        1, 10, "SFX Vol", 
-        vec2Addv(menuPanel, vec2i(0, 59)),
-        vec2f(75, 12),
-        WAR_TEXT_ALIGN_RIGHT,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsSFXVolLabel", 
+        1, 10, "SFX Vol", vec2Addv(menuPanel, vec2i(0, 59)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(75, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsMouseScrollLabel", 
-        1, 10, "Mouse Scroll", 
-        vec2Addv(menuPanel, vec2i(0, 76)),
-        vec2f(75, 12),
-        WAR_TEXT_ALIGN_RIGHT,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsMouseScrollLabel", 
+        1, 10, "Mouse Scroll", vec2Addv(menuPanel, vec2i(0, 76)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(75, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsKeyScrollLabel", 
-        1, 10, "Key Scroll", 
-        vec2Addv(menuPanel, vec2i(0, 93)),
-        vec2f(75, 12),
-        WAR_TEXT_ALIGN_RIGHT,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsKeyScrollLabel", 
+        1, 10, "Key Scroll", vec2Addv(menuPanel, vec2i(0, 93)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(75, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsGameSpeedValue", 
-        1, 10, "Fastest", 
-        vec2Addv(menuPanel, vec2i(92, 25)),
-        vec2f(42, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsGameSpeedValue", 
+        1, 10, "Fastest", vec2Addv(menuPanel, vec2i(92, 25)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(42, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsMusicVolValue", 
-        1, 10, "100", 
-        vec2Addv(menuPanel, vec2i(92, 42)),
-        vec2f(42, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsMusicVolValue", 
+        1, 10, "100", vec2Addv(menuPanel, vec2i(92, 42)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(42, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsSFXVolValue", 
-        1, 10, "82", 
-        vec2Addv(menuPanel, vec2i(92, 59)),
-        vec2f(42, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsSFXVolValue", 
+        1, 10, "82", vec2Addv(menuPanel, vec2i(92, 59)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(42, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsMouseScrollValue", 
-        1, 10, "Slowest", 
-        vec2Addv(menuPanel, vec2i(92, 76)),
-        vec2f(42, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtOptionsMouseScrollValue", 
+        1, 10, "Slowest", vec2Addv(menuPanel, vec2i(92, 76)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(42, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtOptionsKeyScrollValue", 
-        1, 10, "Normal", 
-        vec2Addv(menuPanel, vec2i(92, 93)),
-        vec2f(42, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUITex(context, "txtOptionsKeyScrollValue", 
+        1, 10, "Normal", vec2Addv(menuPanel, vec2i(92, 93)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(42, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIImageButton(
         context, "btnOptionsGameSpeedDec", 
@@ -358,24 +335,20 @@ void createObjectivesMenu(WarContext* context)
 
     WarEntity* uiEntity;
 
-    uiEntity = createUITextSized(
-        context, "txtObjectivesHeader", 
-        1, 10, "Objectives", 
-        vec2Addv(menuPanel, vec2i(0, 10)),
-        vec2f(map->menuPanel.width, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtObjectivesHeader", 
+        1, 10, "Objectives", vec2Addv(menuPanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
-    uiEntity = createUITextSized(
-        context, "txtObjectivesText", 
-        1, 10, levelInfo->levelInfo.objectives, 
-        vec2Addv(menuPanel, vec2i(20, 26)),
-        vec2f(map->menuPanel.width - 20, 60),
-        WAR_TEXT_ALIGN_LEFT,
-        WAR_TEXT_ALIGN_TOP);
-    uiEntity->text.multiline = true;
+    uiEntity = createUIText(context, "txtObjectivesText", 
+        1, 10, levelInfo->levelInfo.objectives, vec2Addv(menuPanel, vec2i(20, 26)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width - 20, 60));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_TOP);
+    setUITextLineAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
 
     uiEntity = createUITextButton(
         context, "btnObjectivesMenu",
@@ -403,14 +376,13 @@ void createRestartMenu(WarContext* context)
     uiEntity = createUIImage(context, "imgGameOverBackground", imageResourceRef(235), messagePanel);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUITextSized(
-        context, "txtRestartText", 1, 10,
-        "Are you sure you want to restart?", 
-        vec2Addv(messagePanel, vec2i(0, 10)),
-        vec2f(map->messagePanel.width, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtRestartText", 
+        1, 10, "Are you sure you want to restart?", 
+        vec2Addv(messagePanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(map->messagePanel.width, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUITextButton(
         context, "btnRestartRestart",
@@ -447,14 +419,13 @@ void createGameOverMenu(WarContext* context)
 
     WarEntity* uiEntity;
 
-    uiEntity = createUITextSized(
-        context, "txtGameOverText", 1, 10,
-        "You are victorious!", 
-        vec2Addv(messagePanel, vec2i(0, 10)),
-        vec2f(map->messagePanel.width, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtGameOverText", 
+        1, 10, "You are victorious!", 
+        vec2Addv(messagePanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(map->messagePanel.width, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUITextButton(
         context, "btnGameOverSave",
@@ -491,14 +462,13 @@ void createQuitMenu(WarContext* context)
 
     WarEntity* uiEntity;
 
-    uiEntity = createUITextSized(
-        context, "txtQuitText", 1, 10,
-        "Are you sure you want to quit?", 
-        vec2Addv(messagePanel, vec2i(0, 10)),
-        vec2f(map->messagePanel.width, 12),
-        WAR_TEXT_ALIGN_CENTER,
-        WAR_TEXT_ALIGN_MIDDLE);
+    uiEntity = createUIText(context, "txtQuitText", 
+        1, 10, "Are you sure you want to quit?", 
+        vec2Addv(messagePanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(map->messagePanel.width, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUITextButton(
         context, "btnQuitQuit",

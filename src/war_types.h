@@ -1384,9 +1384,16 @@ typedef enum
     WAR_TEXT_ALIGN_TOP,
     WAR_TEXT_ALIGN_MIDDLE,
     WAR_TEXT_ALIGN_BOTTOM,
+    WAR_TEXT_ALIGN_JUSTIFY,
 
     WAR_TEXT_ALIGN_COUNT
 } WarTextAlignment;
+
+typedef enum
+{
+    WAR_TEXT_WRAP_NONE,
+    WAR_TEXT_WRAP_WORD
+} WarTextWrapping;
 
 typedef struct
 {
@@ -1395,11 +1402,14 @@ typedef struct
     s32 fontIndex;
     f32 fontSize;
     u8Color fontColor;
+    u8Color highlightColor;
     s32 highlightIndex;
-    vec2 size;
+    s32 highlightCount;
+    vec2 boundings;
     WarTextAlignment horizontalAlign;
     WarTextAlignment verticalAlign;
-    bool multiline;
+    WarTextAlignment lineAlign;
+    WarTextWrapping wrapping;
 } WarTextComponent;
 
 typedef struct

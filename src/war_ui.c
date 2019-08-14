@@ -1,3 +1,5 @@
+#define setUIEntityStatus(uiEntity, enabled) ((uiEntity)->ui.enabled = (enabled))
+
 bool isUIEntity(WarEntity* entity)
 {
     switch (entity->type)
@@ -87,15 +89,20 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, char* text)
     }
 }
 
-void setUIButtonClickHandler(WarEntity* uiButton, WarClickHandler handler)
-{
-    uiButton->button.clickHandler = handler;
-}
+#define setUITextBoundings(uiEntity, boundings) ((uiEntity)->text.boundings = (boundings))
+#define setUITextHorizontalAlign(uiEntity, align) ((uiEntity)->text.horizontalAlign = (align))
+#define setUITextVerticalAlign(uiEntity, align) ((uiEntity)->text.verticalAlign = (align))
+#define setUITextLineAlign(uiEntity, align) ((uiEntity)->text.lineAlign = (align))
+#define setUITextWrapping(uiEntity, wrap) ((uiEntity)->text.wrapping = (wrap))
+#define setUITextHighlight(uiEntity, index, count) \
+    ({ ((uiEntity)->text.highlightIndex = (index)); \
+       ((uiEntity)->text.highlightCount = (count)) })
+#define setUITextHighlightColor(uiEntity, color) ((uiEntity)->text.highlightColor = (color))
 
-void setUIButtonStatus(WarEntity* uiButton, bool enabled)
-{
-    uiButton->button.enabled = enabled;
-}
+#define setUIButtonStatus(uiButton, status) ((uiButton)->button.enabled = (enabled))
+#define setUIButtonInteractive(uiButton, interactive) ((uiButton)->button.interactive = (interactive))
+#define setUIButtonHotKey(uiButton, key) ((uiButton)->button.hotKey = (key))
+#define setUIButtonClickHandler(uiButton, handler) ((uiButton)->button.clickHandler = (handler))
 
 void setUIButtonStatusByName(WarContext* context, const char* name, bool enabled)
 {
@@ -104,11 +111,6 @@ void setUIButtonStatusByName(WarContext* context, const char* name, bool enabled
     {
         setUIButtonStatus(entity, enabled);
     }
-}
-
-void setUIButtonInteractive(WarEntity* uiButton, bool interactive)
-{
-    uiButton->button.interactive = interactive;
 }
 
 void setUIButtonInteractiveByName(WarContext* context, const char* name, bool interactive)
@@ -120,11 +122,6 @@ void setUIButtonInteractiveByName(WarContext* context, const char* name, bool in
     }
 }
 
-void setUIButtonHotKey(WarEntity* uiButton, WarKeys key)
-{
-    uiButton->button.hotKey = key;
-}
-
 void setUIButtonHotKeyByName(WarContext* context, const char* name, WarKeys key)
 {
     WarEntity* entity = findUIEntity(context, name);
@@ -132,11 +129,6 @@ void setUIButtonHotKeyByName(WarContext* context, const char* name, WarKeys key)
     {
         setUIButtonHotKey(entity, key);
     }
-}
-
-void setUIEntityStatus(WarEntity* uiEntity, bool enabled)
-{
-    uiEntity->ui.enabled = enabled;
 }
 
 void setUIEntityStatusByName(WarContext* context, const char* name, bool enabled)
@@ -154,21 +146,6 @@ WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 font
     addTransformComponent(context, entity, position);
     addUIComponent(context, entity, name);
     addTextComponent(context, entity, fontIndex, fontSize, text);
-
-    return entity;
-}
-
-WarEntity* createUITextSized(WarContext* context, char* name, 
-                             s32 fontIndex, f32 fontSize, 
-                             const char* text, 
-                             vec2 position, vec2 size, 
-                             WarTextAlignment horizontalAlign, 
-                             WarTextAlignment verticalAlign)
-{
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addTextComponentSized(context, entity, fontIndex, fontSize, text, size, horizontalAlign, verticalAlign);
 
     return entity;
 }
@@ -223,6 +200,10 @@ WarEntity* createUITextButton(WarContext* context,
     addTextComponent(context, entity, fontIndex, fontSize, text);
     addSpriteComponentFromResource(context, entity, foregroundRef);
     addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
+
+    setUITextBoundings(uiEntity, backgroundSize);
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     return entity;
 }
