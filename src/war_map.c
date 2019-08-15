@@ -2308,6 +2308,7 @@ void determineFoWTypes(WarContext* context)
 bool checkObjectives(WarContext* context)
 {
     WarMap* map = context->map;
+    WarInput* input = &context->input;
 
     map->objectivesTime -= context->deltaTime;
 
@@ -2378,6 +2379,55 @@ void updateMapPlaying(WarContext* context)
 
 void updateMapMenu(WarContext* context)
 {
+    WarInput* input = &context->input;
+    
+    if (wasKeyPressed(input, WAR_KEY_H))
+    {
+        WarEntity* uiEntity = findUIEntity(context, "txtObjectivesText");
+        if (uiEntity)
+        {
+            WarTextAlignment hAlign = uiEntity->text.horizontalAlign;
+            hAlign++;
+            if (hAlign > WAR_TEXT_ALIGN_RIGHT)
+                hAlign = WAR_TEXT_ALIGN_LEFT;
+            setUITextHorizontalAlign(uiEntity, hAlign);
+        }
+    }
+    else if (wasKeyPressed(input, WAR_KEY_V))
+    {
+        WarEntity* uiEntity = findUIEntity(context, "txtObjectivesText");
+        if (uiEntity)
+        {
+            WarTextAlignment vAlign = uiEntity->text.verticalAlign;
+            vAlign++;
+            if (vAlign > WAR_TEXT_ALIGN_BOTTOM)
+                vAlign = WAR_TEXT_ALIGN_TOP;
+            setUITextVerticalAlign(uiEntity, vAlign);
+        }
+    }
+    else if (wasKeyPressed(input, WAR_KEY_L))
+    {
+        WarEntity* uiEntity = findUIEntity(context, "txtObjectivesText");
+        if (uiEntity)
+        {
+            WarTextAlignment lAlign = uiEntity->text.lineAlign;
+            lAlign++;
+            if (lAlign > WAR_TEXT_ALIGN_RIGHT)
+                lAlign = WAR_TEXT_ALIGN_LEFT;
+            setUITextLineAlign(uiEntity, lAlign);
+        }
+    }
+    else if (wasKeyPressed(input, WAR_KEY_W))
+    {
+        WarEntity* uiEntity = findUIEntity(context, "txtObjectivesText");
+        if (uiEntity)
+        {
+            WarTextWrapping wrap = uiEntity->text.wrapping == WAR_TEXT_WRAP_NONE 
+                ? WAR_TEXT_WRAP_WORD : WAR_TEXT_WRAP_NONE;
+            setUITextWrapping(uiEntity, wrap);
+        }
+    }
+
     updateButtons(context);
     updateCursor(context);
 }

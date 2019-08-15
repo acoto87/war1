@@ -265,7 +265,7 @@ WarSprite loadFontSprite(WarContext* context, const char* fontPath)
 
 vec2 getAlignmentOffset(enum NVGalign horizontalAlign, enum NVGalign verticalAlign, vec2 boundings, vec2 textSize)
 {
-    vec2 offset;
+    vec2 offset = VEC2_ZERO;
 
     switch (horizontalAlign)
     {
@@ -318,92 +318,138 @@ vec2 getAlignmentOffset(enum NVGalign horizontalAlign, enum NVGalign verticalAli
     return offset;
 }
 
+f32 getLineAlignmentOffset(enum NVGalign lineAlign, f32 width, f32 lineWidth)
+{
+    f32 offset = 0;
+
+    switch (lineAlign)
+    {
+        case NVG_ALIGN_LEFT:
+        {
+            // nothing here
+            break;
+        }
+        case NVG_ALIGN_CENTER:
+        {
+            offset = ceilf(halff(width - lineWidth));
+            break;
+        }
+        case NVG_ALIGN_RIGHT:
+        {
+            offset = ceilf(width - lineWidth);
+            break;
+        }
+        default:
+        {
+            logError("Invalid horizontal alignment value: %d\n", lineAlign);
+            break;
+        }
+    }
+
+    return offset;
+}
+
 typedef struct
 {
-    s32 length;
     const char* start;
+    const char* end;
+    f32 width;
 } NVGTextSpan;
 
-s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f32 width, WarFontData fontData, bool wrap)
+s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f32 width, NVGfontParams params)
 {
-    s32 k = 0;
+    f32 scale = params.fontSize / params.fontData.lineHeight;
+    bool wrap = params.wrapping == NVG_WRAP_WORD;
     f32 x = 0;
 
+    s32 k = 0;
+
     const char* s = text;
-    const char* c = text;
-    while (*c && k < maxLines)
+    const char* e = text;
+    while (*e && k < maxLines)
     {
-        if (*c == '\n')
+        if (*e == '\n')
         {
             lines[k].start = s;
-            lines[k].length = (s32)(c - s);
+            lines[k].end = e;
+            lines[k].width = x;
             k++;
 
-            s = c + 1;
+            s = e;
             x = 0;
         }
         else
         {
-            rect rs = fontData.data[getCharIndex(*c)];
+            rect rs = params.fontData.data[getCharIndex(*e)];
 
-            f32 dx = rs.width + fontData.advance;
-            if (x + dx >= width && wrap)
+            f32 dx = (rs.width + params.fontData.advance) * scale;
+            if (x + dx > width && wrap)
             {
                 lines[k].start = s;
-                lines[k].length = (s32)(c - s);
+                lines[k].end = e;
+                lines[k].width = x;
                 k++;
 
-                s = c + 1;
+                s = e;
                 x = 0;
             }
 
             x += dx;
         }
 
-        c++;
+        e++;
     }
 
-    if (s < c && k < maxLines)
+    if (s < e && k < maxLines)
     {
         lines[k].start = s;
-        lines[k].length = (s32)(c - s);
+        lines[k].end = e;
+        lines[k].width = x;
         k++;
     }
 
     return k;
 }
 
-vec2 nvgMeasureSpriteTextSpan(const char* text, s32 index, s32 count, NVGfontParams params)
+vec2 nvgMeasureSingleSpriteText(const char* text, NVGfontParams params)
 {
+    f32 scale = params.fontSize / params.fontData.lineHeight;
+
     vec2 size = VEC2_ZERO;
 
-    if (count > 0)
+    const char* e = text;
+    while (*e)
     {
-        f32 scale = params.fontSize / params.fontData.lineHeight;
-
-        for (s32 i = 0; i < count; i++)
+        if (*e != '\n')
         {
-            rect rs = params.fontData.data[getCharIndex(text[index + i])];
+            rect rs = params.fontData.data[getCharIndex(*e)];
 
             size.x += (rs.width + params.fontData.advance) * scale;
             size.y = max(size.y, rs.height * scale);
         }
+        else
+        {
+            size.x += params.fontData.advance * scale;
+        }
+
+        e++;
     }
 
     return size;
 }
 
-vec2 nvgMeasureSpriteText(const char* text, NVGfontParams params)
+vec2 nvgMeasureMultiSpriteText(const char* text, f32 width, NVGfontParams params)
 {
-    s32 len = strlen(text);
     f32 scale = params.fontSize / params.fontData.lineHeight;
+    bool wrap = params.wrapping == NVG_WRAP_WORD;
 
     vec2 size = VEC2_ZERO;
     vec2 lineSize = VEC2_ZERO;
 
-    for (s32 i = 0; i < len; i++)
+    const char* e = text;
+    while (*e)
     {
-        if (text[i] == '\n')
+        if (*e == '\n')
         {
             size.x = max(size.x, lineSize.x);
             size.y += lineSize.y;
@@ -412,11 +458,22 @@ vec2 nvgMeasureSpriteText(const char* text, NVGfontParams params)
         }
         else
         {
-            rect rs = params.fontData.data[getCharIndex(text[i])];
+            rect rs = params.fontData.data[getCharIndex(*e)];
 
-            lineSize.x += (rs.width + params.fontData.advance) * scale;
-            lineSize.y = max(size.y, rs.height * scale);
+            f32 dx = (rs.width + params.fontData.advance) * scale;
+            if (lineSize.x + dx >= width && wrap)
+            {
+                size.x = max(size.x, lineSize.x);
+                size.y += lineSize.y;
+
+                lineSize = VEC2_ZERO;
+            }
+
+            lineSize.x += dx;
+            lineSize.y = max(lineSize.y, rs.height * scale);
         }
+
+        e++;
     }
 
     size.x = max(size.x, lineSize.x);
@@ -478,7 +535,7 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
 
     if (!vec2IsZero(params.boundings))
     {
-        vec2 textSize = nvgMeasureSpriteText(text, params);
+        vec2 textSize = nvgMeasureSingleSpriteText(text, params);
         vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
         nvgTranslate(gfx, textOffset.x, textOffset.y);
     }
@@ -528,138 +585,47 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
 
 void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {
-    // NVGcolor fontColor = params.fontColor;
-    // NVGcolor highlightColor = u8ColorToNVGcolor(FONT_HIGHLIGHT_COLOR);
+    NVGcolor fontColor = params.fontColor;
+    NVGcolor highlightColor = u8ColorToNVGcolor(FONT_HIGHLIGHT_COLOR);
+    s32 highlightIndex = params.highlightIndex;
+    s32 highlightCount = params.highlightCount;
 
-    // f32 scale = params.fontSize / params.fontData.lineHeight;
-    // s32 highlightIndex = params.highlightIndex;
+    f32 scale = params.fontSize / params.fontData.lineHeight;
 
-    // NVGTextSpan lines[48];
-    // s32 linesCount = nvgSplitTextIntoLines(text, 48, lines, params.boundings.x, params.fontData, params.wrapping == NVG_WRAP_WORD);
+    NVGTextSpan lines[48];
+    s32 linesCount = nvgSplitTextIntoLines(text, 48, lines, params.boundings.x, params);
 
+    nvgSave(gfx);
+    nvgTranslate(gfx, x, y);
 
-    // nvgSave(gfx);
-    // nvgTranslate(gfx, x, y);
+    nvgStrokeRect(gfx, rectv(VEC2_ZERO, params.boundings), NVG_GREEN_SELECTION, 1);
 
-    // vec2 textSize = nvgMeasureSpriteText(text, params);
-    // vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
-    // nvgTranslate(gfx, textOffset.x, textOffset.y);
+    vec2 textSize = nvgMeasureMultiSpriteText(text, params.boundings.x, params);
+    vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
+    nvgTranslate(gfx, textOffset.x, textOffset.y);
 
-    // if (params.width != 0 && params.height != 0)
-    // {
-    //     vec2 textOffset = VEC2_ZERO;
+    nvgStrokeRect(gfx, rectv(VEC2_ZERO, textSize), NVG_RED_SELECTION, 1);
 
-    //     switch (params.horizontalAlign)
-    //     {
-    //         case NVG_ALIGN_LEFT:
-    //         {
-    //             // nothing here
-    //             break;
-    //         }
-    //         case NVG_ALIGN_CENTER:
-    //         {
-    //             textOffset.x = ceilf(halff(params.width - textSize.x));
-    //             break;
-    //         }
-    //         case NVG_ALIGN_RIGHT:
-    //         {
-    //             textOffset.x = ceilf(params.width - textSize.x);
-    //             break;
-    //         }
-    //         default:
-    //         {
-    //             logError("Invalid horizontal alignment value: %d\n", params.horizontalAlign);
-    //             break;
-    //         }
-    //     }
+    s32 index = 0;
 
-    //     switch (params.verticalAlign)
-    //     {
-    //         case NVG_ALIGN_TOP:
-    //         {
-    //             // nothing here
-    //             break;
-    //         }
-    //         case NVG_ALIGN_MIDDLE:
-    //         {
-    //             textOffset.y = ceilf(halff(params.height) - halff(textSize.y));
-    //             break;
-    //         }
-    //         case NVG_ALIGN_BOTTOM:
-    //         {
-    //             textOffset.y = ceilf(params.height - textSize.y);
-    //             break;
-    //         }
-    //         default:
-    //         {
-    //             logError("Invalid vertical alignment value: %d\n", params.verticalAlign);
-    //             break;
-    //         }
-    //     }
+    for (s32 i = 0; i < linesCount; i++)
+    {
+        f32 lineOffset = getLineAlignmentOffset(params.lineAlign, textSize.x, lines[i].width);
 
-    //     nvgTranslate(gfx, textOffset.x, textOffset.y);
-    // }
+        nvgSave(gfx);
+        nvgTranslate(gfx, lineOffset, 0);
+        nvgScale(gfx, scale, scale);
+        nvgTranslate(gfx, 0, i * params.fontData.lineHeight);
 
-    // s32 charIndex = 0;
+        nvgSingleSpriteTextSpan(gfx, lines[i].start, 
+                                0, (s32)(lines[i].end - lines[i].start), 
+                                0, 0, 
+                                params.fontColor, 
+                                params.fontSprite, 
+                                params.fontData);
 
-    // for (s32 i = 0; i < linesCount; i++)
-    // {
-    //     vec2 lineOffset = vec2f(0, i * params.fontData.lineHeight);
-        
-    //     if (params.width != 0)
-    //     {
-    //         vec2 lineSize = nvgMeasureSpriteTextSpan(lines[i], 0, lengths[i], params);
+        nvgRestore(gfx);
+    }
 
-    //         switch (params.horizontalAlign)
-    //         {
-    //             case NVG_ALIGN_LEFT:
-    //             {
-    //                 // nothing here
-    //                 break;
-    //             }
-    //             case NVG_ALIGN_CENTER:
-    //             {
-    //                 lineOffset.x = ceilf(halff(textSize.x - lineSize.x));
-    //                 break;
-    //             }
-    //             case NVG_ALIGN_RIGHT:
-    //             {
-    //                 lineOffset.x = ceilf(textSize.x - lineSize.x);
-    //                 break;
-    //             }
-    //             default:
-    //             {
-    //                 logError("Invalid horizontal alignment value: %d\n", params.horizontalAlign);
-    //                 break;
-    //             }
-    //         }
-    //     }
-
-    //     nvgSave(gfx);
-    //     nvgScale(gfx, scale, scale);
-    //     nvgTranslate(gfx, lineOffset.x, lineOffset.y);
-
-    //     if (highlightIndex >= charIndex && highlightIndex < charIndex + lengths[i])
-    //     {
-    //         params.fontColor = fontColor;
-    //         x = nvgSingleSpriteTextSpan(gfx, lines[i], 0, highlightIndex, 0, 0, params);
-
-    //         params.fontColor = highlightColor;
-    //         x = nvgSingleSpriteTextSpan(gfx, lines[i], highlightIndex, 1, x, 0, params);
-
-    //         params.fontColor = fontColor;
-    //         x = nvgSingleSpriteTextSpan(gfx, lines[i], highlightIndex + 1, lengths[i] - highlightIndex, x, 0, params);
-    //     }
-    //     else
-    //     {
-    //         params.fontColor = fontColor;
-    //         nvgSingleSpriteTextSpan(gfx, lines[i], 0, lengths[i], 0, 0, params);
-    //     }
-
-    //     charIndex += lengths[i] + 1;
-
-    //     nvgRestore(gfx);
-    // }
-
-    // nvgRestore(gfx);
+    nvgRestore(gfx);
 }

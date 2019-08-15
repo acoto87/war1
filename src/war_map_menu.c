@@ -343,13 +343,14 @@ void createObjectivesMenu(WarContext* context)
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, "txtObjectivesText", 
-        1, 10, levelInfo->levelInfo.objectives, vec2Addv(menuPanel, vec2i(20, 26)));
+        1, 10, levelInfo->levelInfo.objectives, vec2Addv(menuPanel, vec2i(10, 26)));
     setUIEntityStatus(uiEntity, false);
-    // setUITextMultiline(uiEntity, true);
-    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width - 20, 60));
+    setUITextMultiline(uiEntity, true);
+    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width - 20, 80));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_TOP);
     setUITextLineAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
+    setUITextWrapping(uiEntity, WAR_TEXT_WRAP_WORD);
 
     uiEntity = createUITextButton(
         context, "btnObjectivesMenu",
