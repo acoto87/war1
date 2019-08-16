@@ -49,6 +49,8 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 25)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonHotKey(uiEntity, WAR_KEY_S);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnMenuLoad",
@@ -58,6 +60,8 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(78, 25)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonHotKey(uiEntity, WAR_KEY_L);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnMenuOptions",
@@ -69,6 +73,7 @@ void createMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleOptions);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnMenuObjectives",
@@ -80,6 +85,7 @@ void createMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleObjectives);
     setUIButtonHotKey(uiEntity, WAR_KEY_J);
+    setUITextHighlight(uiEntity, 2, 1);
 
     uiEntity = createUITextButton(
         context, "btnMenuRestart",
@@ -90,6 +96,8 @@ void createMenu(WarContext* context)
         vec2Addv(menuPanel, vec2i(20, 85)));
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleRestart);
+    setUIButtonHotKey(uiEntity, WAR_KEY_R);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnMenuContinue",
@@ -101,6 +109,7 @@ void createMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleContinue);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnMenuQuit",
@@ -112,6 +121,7 @@ void createMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleQuit);
     setUIButtonHotKey(uiEntity, WAR_KEY_Q);
+    setUITextHighlight(uiEntity, 0, 1);
 }
 
 void createOptionsMenu(WarContext* context)
@@ -307,6 +317,7 @@ void createOptionsMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleOptionsOk);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnOptionsCancel",
@@ -318,6 +329,7 @@ void createOptionsMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleOptionsCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
+    setUITextHighlight(uiEntity, 0, 1);
 }
 
 void createObjectivesMenu(WarContext* context)
@@ -326,6 +338,8 @@ void createObjectivesMenu(WarContext* context)
 
     WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
+
+    WarCampaignMapData campaignData = getCampaignData((WarCampaignMapType)map->levelInfoIndex);
 
     vec2 menuPanel = rectTopLeft(map->menuPanel);
 
@@ -343,15 +357,15 @@ void createObjectivesMenu(WarContext* context)
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, "txtObjectivesText", 
-        1, 10, levelInfo->levelInfo.objectives, vec2Addv(menuPanel, vec2i(10, 26)));
+        1, 10, campaignData.objectives, vec2Addv(menuPanel, vec2i(10, 26)));
     setUIEntityStatus(uiEntity, false);
     setUITextMultiline(uiEntity, true);
-    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width - 20, 80));
+    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width - 20, 75));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_TOP);
     setUITextLineAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
     setUITextWrapping(uiEntity, WAR_TEXT_WRAP_WORD);
-
+    
     uiEntity = createUITextButton(
         context, "btnObjectivesMenu",
         1, 10, "Menu",
@@ -361,6 +375,8 @@ void createObjectivesMenu(WarContext* context)
         vec2Addv(menuPanel, vec2i(20, 105)));
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleObjectivesMenu);
+    setUIButtonHotKey(uiEntity, WAR_KEY_M);
+    setUITextHighlight(uiEntity, 0, 1);
 }
 
 void createRestartMenu(WarContext* context)
@@ -396,6 +412,7 @@ void createRestartMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleRestartRestart);
     setUIButtonHotKey(uiEntity, WAR_KEY_R);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnRestartCancel",
@@ -407,6 +424,7 @@ void createRestartMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleRestartCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
+    setUITextHighlight(uiEntity, 0, 1);
 }
 
 void createGameOverMenu(WarContext* context)
@@ -439,6 +457,7 @@ void createGameOverMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleGameOverSave);
     setUIButtonHotKey(uiEntity, WAR_KEY_S);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnGameOverContinue",
@@ -450,6 +469,7 @@ void createGameOverMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleGameOverContinue);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
+    setUITextHighlight(uiEntity, 0, 1);
 }
 
 void createQuitMenu(WarContext* context)
@@ -482,6 +502,7 @@ void createQuitMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleQuitQuit);
     setUIButtonHotKey(uiEntity, WAR_KEY_Q);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnQuitMenu",
@@ -492,6 +513,7 @@ void createQuitMenu(WarContext* context)
         vec2Addv(messagePanel, vec2i(115, 25)));
     setUIEntityStatus(uiEntity, false);
     setUIButtonHotKey(uiEntity, WAR_KEY_M);
+    setUITextHighlight(uiEntity, 0, 1);
 
     uiEntity = createUITextButton(
         context, "btnQuitCancel",
@@ -503,6 +525,7 @@ void createQuitMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleQuitCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
+    setUITextHighlight(uiEntity, 0, 1);
 }
 
 void setUITextSpeedValueByName(WarContext* context, const char* name, WarMapSpeed value)

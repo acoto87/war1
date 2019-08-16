@@ -33,34 +33,35 @@ typedef struct
 {
     WarCampaignMapType type;
     WarCheckObjectivesFunc checkObjectivesFunc;
+    const char* objectives;
 } WarCampaignMapData;
 
 const WarCampaignMapData campaignsData[] =
 {
-    { WAR_CAMPAIGN_HUMANS_01,   checkMap01Objectives },
-    { WAR_CAMPAIGN_ORCS_01,     checkMap01Objectives },
-    { WAR_CAMPAIGN_HUMANS_02,   checkMap02Objectives },
-    { WAR_CAMPAIGN_ORCS_02,     checkMap02Objectives },
-    { WAR_CAMPAIGN_HUMANS_03,   NULL },
-    { WAR_CAMPAIGN_ORCS_03,     NULL },
-    { WAR_CAMPAIGN_HUMANS_04,   NULL },
-    { WAR_CAMPAIGN_ORCS_04,     NULL },
-    { WAR_CAMPAIGN_HUMANS_05,   NULL },
-    { WAR_CAMPAIGN_ORCS_05,     NULL },
-    { WAR_CAMPAIGN_HUMANS_06,   NULL },
-    { WAR_CAMPAIGN_ORCS_06,     NULL },
-    { WAR_CAMPAIGN_HUMANS_07,   NULL },
-    { WAR_CAMPAIGN_ORCS_07,     NULL },
-    { WAR_CAMPAIGN_HUMANS_08,   NULL },
-    { WAR_CAMPAIGN_ORCS_08,     NULL },
-    { WAR_CAMPAIGN_HUMANS_09,   NULL },
-    { WAR_CAMPAIGN_ORCS_09,     NULL },
-    { WAR_CAMPAIGN_HUMANS_10,   NULL },
-    { WAR_CAMPAIGN_ORCS_10,     NULL },
-    { WAR_CAMPAIGN_HUMANS_11,   NULL },
-    { WAR_CAMPAIGN_ORCS_11,     NULL },
-    { WAR_CAMPAIGN_HUMANS_12,   NULL },
-    { WAR_CAMPAIGN_ORCS_12,     NULL },
+    { WAR_CAMPAIGN_HUMANS_01,   checkMap01Objectives,   "Build:\n  6 farms\n  1 barracks" },
+    { WAR_CAMPAIGN_ORCS_01,     checkMap01Objectives,   "Build:\n  6 farms\n  1 barracks" },
+    { WAR_CAMPAIGN_HUMANS_02,   checkMap02Objectives,   "Defend town and\ndestroy orcs" },
+    { WAR_CAMPAIGN_ORCS_02,     checkMap02Objectives,   "Crush all opposition" },
+    { WAR_CAMPAIGN_HUMANS_03,   NULL,                   "Destroy outpost" },
+    { WAR_CAMPAIGN_ORCS_03,     NULL,                   "Demolish Grand Hamlet" },
+    { WAR_CAMPAIGN_HUMANS_04,   NULL,                   "Find lothar,\nheal him and bring\nthem out" },
+    { WAR_CAMPAIGN_ORCS_04,     NULL,                   "Kill griselda and\nher minions" },
+    { WAR_CAMPAIGN_HUMANS_05,   NULL,                   "Destroy orcs" },
+    { WAR_CAMPAIGN_ORCS_05,     NULL,                   "Save the outpost\nSlay all humans" },
+    { WAR_CAMPAIGN_HUMANS_06,   NULL,                   "Save the abbey and\ndestroy the traitors" },
+    { WAR_CAMPAIGN_ORCS_06,     NULL,                   "Raze sunnyglade\nSave tower" },
+    { WAR_CAMPAIGN_HUMANS_07,   NULL,                   "Rescue peasants\nDemolish orcs" },
+    { WAR_CAMPAIGN_ORCS_07,     NULL,                   "Kill Blackhand's troops" },
+    { WAR_CAMPAIGN_HUMANS_08,   NULL,                   "Slay Medivh and\nall minions" },
+    { WAR_CAMPAIGN_ORCS_08,     NULL,                   "Save garona\nDestroy the abbey" },
+    { WAR_CAMPAIGN_HUMANS_09,   NULL,                   "Destroy all traces\nof the orcs" },
+    { WAR_CAMPAIGN_ORCS_09,     NULL,                   "Crush the two human\noutposts" },
+    { WAR_CAMPAIGN_HUMANS_10,   NULL,                   "Destroy temple raze town\nKill orcs" },
+    { WAR_CAMPAIGN_ORCS_10,     NULL,                   "Destroy the human camp" },
+    { WAR_CAMPAIGN_HUMANS_11,   NULL,                   "Destroy rockard\nDestroy stonard" },
+    { WAR_CAMPAIGN_ORCS_11,     NULL,                   "Raze moonbrook\nRaze goldshire" },
+    { WAR_CAMPAIGN_HUMANS_12,   NULL,                   "Destroy Black Rock Spire\nand all orcs!" },
+    { WAR_CAMPAIGN_ORCS_12,     NULL,                   "Destroy Stormwind Keep\nand all humans!" },
 };
 
 WarCampaignMapData getCampaignData(WarCampaignMapType type)

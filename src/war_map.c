@@ -2308,7 +2308,6 @@ void determineFoWTypes(WarContext* context)
 bool checkObjectives(WarContext* context)
 {
     WarMap* map = context->map;
-    WarInput* input = &context->input;
 
     map->objectivesTime -= context->deltaTime;
 

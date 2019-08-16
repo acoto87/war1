@@ -1091,7 +1091,7 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.fontSize = text->fontSize;
                 params.fontColor = u8ColorToNVGcolor(text->fontColor);
                 params.highlightColor = u8ColorToNVGcolor(text->highlightColor);
-                params.highlightIndex = text->highlightIndex;
+                params.highlightIndex = button->hot ? -2 : text->highlightIndex;
                 params.highlightCount = text->highlightCount;
                 params.boundings = text->boundings;
                 params.horizontalAlign = textAlignToNVGalign(text->horizontalAlign);
