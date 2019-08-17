@@ -337,7 +337,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
 
     s16* outputStream = (s16*)output;
 
-    WarEntityList* audios = getEntitiesOfType(map, WAR_ENTITY_TYPE_AUDIO);
+    WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
     for (s32 i = 0; i < audios->count; i++)
     {
         WarEntity* entity = audios->items[i];

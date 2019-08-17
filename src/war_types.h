@@ -1391,7 +1391,7 @@ typedef enum
 typedef enum
 {
     WAR_TEXT_WRAP_NONE,
-    WAR_TEXT_WRAP_WORD
+    WAR_TEXT_WRAP_CHAR
 } WarTextWrapping;
 
 typedef struct
@@ -1880,6 +1880,15 @@ typedef struct
 
 typedef struct
 {
+    WarEntityList entities;
+    WarEntityMap entitiesByType;
+    WarUnitMap unitsByType;
+    WarEntityIdMap entitiesById;
+    WarEntityList uiEntities;
+} WarEntityManager;
+
+typedef struct
+{
     WarMapStatus status;
 
     s32 levelInfoIndex;
@@ -1920,12 +1929,7 @@ typedef struct
     WarMapTilesetType tilesetType;
     WarMapTile tiles[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
 
-    WarEntityList entities;
-    WarEntityMap entitiesByType;
-    WarUnitMap unitsByType;
-    WarEntityIdMap entitiesById;
-    WarEntityList uiEntities;
-    
+    WarEntityManager entityManager;
     WarEntityIdList selectedEntities;
 
     WarEntity* forest;
@@ -1945,6 +1949,17 @@ typedef struct
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
     WarSpriteAnimationList animations;
 } WarMap;
+
+typedef enum
+{
+    WAR_SCENE_MENU,
+    WAR_SCENE_MAP
+} WarSceneType;
+
+typedef struct
+{
+    WarEntityManager entityManager;
+} WarScene;
 
 typedef struct _WarContext
 {
@@ -1983,5 +1998,7 @@ typedef struct _WarContext
 
     WarInput input;
 
+    WarSceneType sceneType;
+    WarScene* scene;
     WarMap* map;
 } WarContext;

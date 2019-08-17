@@ -109,7 +109,7 @@ WarFontData fontsData[2] =
     {
         512, 768, 80, 8,
         {
-            {   0,   0, 48, 80 }, // space 
+            {   0,   0, 30, 80 }, // space 
             {  48,   0, 16, 80 }, // !
             {  64,   0, 32, 80 }, // "
             {  96,   0, 48, 80 }, // #
@@ -237,7 +237,7 @@ enum NVGwrap textWrappingToNVGwrap(WarTextWrapping wrap)
     switch (wrap)
     {
         case WAR_TEXT_WRAP_NONE: return NVG_WRAP_NONE;
-        case WAR_TEXT_WRAP_WORD: return NVG_WRAP_WORD;
+        case WAR_TEXT_WRAP_CHAR: return NVG_WRAP_WORD;
         default:
         {
             logError("Invalid wrapping value: %d. Defaulting to %d\n", wrap, NVG_WRAP_NONE);

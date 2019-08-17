@@ -19,26 +19,6 @@ void clearSelection(WarContext* context)
     WarEntityIdListClear(&map->selectedEntities);
 }
 
-WarEntityList* getEntities(WarMap* map)
-{
-    return &map->entities;
-}
-
-WarEntityList* getEntitiesOfType(WarMap* map, WarEntityType type)
-{
-    return WarEntityMapGet(&map->entitiesByType, type);
-}
-
-WarEntityList* getUnitsOfType(WarMap* map, WarUnitType type)
-{
-    return WarUnitMapGet(&map->unitsByType, type);
-}
-
-WarEntityList* getUIEntities(WarMap* map)
-{
-    return &map->uiEntities;
-}
-
 vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
@@ -307,25 +287,6 @@ void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
     updateMinimapTile(context, levelVisual, tileset, x, y);
 }
 
-void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type)
-{
-    assert(entity->type == WAR_ENTITY_TYPE_CURSOR);
-
-    if (entity->cursor.type == type)
-    {
-        return;
-    }
-
-    WarResource* resource = getOrCreateResource(context, type);
-    assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
-
-    removeCursorComponent(context, entity);
-    addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
-
-    removeSpriteComponent(context, entity);
-    addSpriteComponentFromResource(context, entity, imageResourceRef(type));
-}
-
 f32 getMapScaledSpeed(WarContext* context, f32 t)
 {
     WarMap* map = context->map;
@@ -390,51 +351,9 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
-    // initialize entities list
-    WarEntityListInit(&map->entities, WarEntityListDefaultOptions);
+    initEntityManager(&map->entityManager);
 
-    // initialize entity by type map
-    WarEntityMapOptions entitiesByTypeOptions = (WarEntityMapOptions){0};
-    entitiesByTypeOptions.defaultValue = NULL;
-    entitiesByTypeOptions.hashFn = hashEntityType;
-    entitiesByTypeOptions.equalsFn = equalsEntityType;
-    entitiesByTypeOptions.freeFn = freeEntityList;
-    WarEntityMapInit(&map->entitiesByType, entitiesByTypeOptions);
-    for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
-    {
-        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
-        WarEntityListInit(list, WarEntityListNonFreeOptions);
-        WarEntityMapSet(&map->entitiesByType, type, list);
-    }
-
-    // initialize unit by type map
-    WarUnitMapOptions unitsByTypeOptions = (WarUnitMapOptions){0};
-    unitsByTypeOptions.defaultValue = NULL;
-    unitsByTypeOptions.hashFn = hashUnitType;
-    unitsByTypeOptions.equalsFn = equalsUnitType;
-    unitsByTypeOptions.freeFn = freeEntityList;
-    WarUnitMapInit(&map->unitsByType, unitsByTypeOptions);
-    for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
-    {
-        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
-        WarEntityListInit(list, WarEntityListNonFreeOptions);
-        WarUnitMapSet(&map->unitsByType, type, list);
-    }
-
-    // initialize the entities by id map
-    WarEntityIdMapOptions entitiesByIdOptions = (WarEntityIdMapOptions){0};
-    entitiesByIdOptions.defaultValue = NULL;
-    entitiesByIdOptions.hashFn = hashEntityId;
-    entitiesByIdOptions.equalsFn = equalsEntityId;
-    WarEntityIdMapInit(&map->entitiesById, entitiesByIdOptions);
-
-    // initialize ui entities list
-    WarEntityListInit(&map->uiEntities, WarEntityListNonFreeOptions);
-
-    // initialize selected entities list
     WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
-
-    // initialize map animations lists
     WarSpriteAnimationListInit(&map->animations, WarSpriteAnimationListDefaultOptions);
 
     map->finder = initPathFinder(PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
@@ -738,11 +657,12 @@ void freeMap(WarContext* context)
     freeSprite(context, map->minimapSprite);
     freeSprite(context, map->blackSprite);
 
-    WarEntityListFree(&map->entities);
-    WarEntityMapFree(&map->entitiesByType);
-    WarUnitMapFree(&map->unitsByType);
-    WarEntityIdMapFree(&map->entitiesById);
-    WarEntityListFree(&map->uiEntities);
+    WarEntityManager* manager = &map->entityManager;
+    WarEntityListFree(&manager->entities);
+    WarEntityMapFree(&manager->entitiesByType);
+    WarUnitMapFree(&manager->unitsByType);
+    WarEntityIdMapFree(&manager->entitiesById);
+    WarEntityListFree(&manager->uiEntities);
 
     WarEntityIdListFree(&map->selectedEntities);
 
@@ -757,63 +677,6 @@ void freeMap(WarContext* context)
     WarSpriteAnimationListFree(&map->animations);
 
     context->map = NULL;
-}
-
-void updateGlobalSpeed(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    if (isKeyPressed(input, WAR_KEY_CTRL) && !isKeyPressed(input, WAR_KEY_SHIFT))
-    {
-        if (wasKeyPressed(input, WAR_KEY_1))
-            setGlobalSpeed(context, 1.0f);
-        else if (wasKeyPressed(input, WAR_KEY_2))
-            setGlobalSpeed(context, 2.0f);
-        else if (wasKeyPressed(input, WAR_KEY_3))
-            setGlobalSpeed(context, 3.0f);
-        else if (wasKeyPressed(input, WAR_KEY_4))
-            setGlobalSpeed(context, 4.0f);
-    }
-}
-
-void updateGlobalScale(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    if (isKeyPressed(input, WAR_KEY_CTRL) && isKeyPressed(input, WAR_KEY_SHIFT))
-    {
-        if (wasKeyPressed(input, WAR_KEY_1))
-            setGlobalScale(context, 1.0f);
-        else if (wasKeyPressed(input, WAR_KEY_2))
-            setGlobalScale(context, 2.0f);
-        else if (wasKeyPressed(input, WAR_KEY_3))
-            setGlobalScale(context, 3.0f);
-        else if (wasKeyPressed(input, WAR_KEY_4))
-            setGlobalScale(context, 4.0f);
-    }
-}
-
-void updateVolume(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    if (isKeyPressed(input, WAR_KEY_CTRL))
-    {
-        if (isKeyPressed(input, WAR_KEY_SHIFT))
-        {
-            if (wasKeyPressed(input, WAR_KEY_UP))
-                changeMusicVolume(context, 0.1f);
-            else if (wasKeyPressed(input, WAR_KEY_DOWN))
-                changeMusicVolume(context, -0.1f);
-        }
-        else
-        {
-            if (wasKeyPressed(input, WAR_KEY_UP))
-                changeSoundVolume(context, 0.1f);
-            else if (wasKeyPressed(input, WAR_KEY_DOWN))
-                changeSoundVolume(context, -0.1f);
-        }
-    }
 }
 
 void updateViewport(WarContext *context)
@@ -938,7 +801,7 @@ void updateSelection(WarContext* context)
                 rect pointerRect = rectScreenToMapCoordinates(context, input->dragRect);
 
                 // select the entities inside the dragging rect
-                WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+                WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
                 for(s32 i = 0; i < units->count; i++)
                 {
                     WarEntity* entity = units->items[i];
@@ -1374,90 +1237,6 @@ void updateCommands(WarContext* context)
     }
 }
 
-void updateButtons(WarContext* context)
-{
-    WarMap* map = context->map;
-    WarInput* input = &context->input;
-
-    WarEntityList* buttons = getEntitiesOfType(map, WAR_ENTITY_TYPE_BUTTON);
-    for(s32 i = 0; i < buttons->count; i++)
-    {
-        WarEntity* entity = buttons->items[i];
-        if (entity)
-        {
-            WarTransformComponent* transform = &entity->transform;
-            WarUIComponent* ui = &entity->ui;
-            WarButtonComponent* button = &entity->button;
-            
-            if (!ui->enabled || !button->enabled || !button->interactive)
-            {
-                button->hot = false;
-                button->active = false;
-                continue;
-            }
-
-            if (wasKeyPressed(input, button->hotKey))
-            {
-                if (button->clickHandler)
-                {
-                    button->hot = false;
-                    button->active = false;
-
-                    button->clickHandler(context, entity);
-
-                    // in this case break to not allow pressing multiple keys
-                    // and executing all of the command for those keys
-                    break;
-                }
-            }
-
-            vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
-            rect buttonRect = rectv(transform->position, backgroundSize);
-            bool pointerInside = rectContainsf(buttonRect, input->pos.x, input->pos.y);
-
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-            {
-                button->hot = pointerInside;
-
-                if (button->hot)
-                {
-                    if (button->clickHandler)
-                        button->clickHandler(context, entity);
-
-                    createAudio(context, WAR_UI_CLICK, false);
-                }
-
-                button->active = false;
-            }
-            else if (isButtonPressed(input, WAR_MOUSE_LEFT))
-            {
-                if (button->hot)
-                {
-                    button->active = true;
-                }
-            }
-            else if (pointerInside)
-            {
-                for(s32 j = 0; j < buttons->count; j++)
-                {
-                    WarEntity* otherButton = buttons->items[i];
-                    if (otherButton)
-                    {
-                        otherButton->button.hot = false;
-                        otherButton->button.active = false;
-                    }
-                }
-
-                button->hot = true;
-            }
-            else
-            {
-                button->hot = false;
-            }
-        }
-    }
-}
-
 void updateCommandFromRightClick(WarContext* context)
 {
     WarMap* map = context->map;
@@ -1651,7 +1430,7 @@ void updateStatus(WarContext* context)
         }
     }
 
-    WarEntityList* buttons = getEntitiesOfType(map, WAR_ENTITY_TYPE_BUTTON);
+    WarEntityList* buttons = getEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
     for(s32 i = 0; i < buttons->count; i++)
     {
         WarEntity* entity = buttons->items[i];
@@ -1673,7 +1452,7 @@ void updateStatus(WarContext* context)
     setStatus(context, highlightIndex, highlightCount, goldCost, woodCost, statusText);
 }
 
-void updateCursor(WarContext* context)
+void updateMapCursor(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -1751,7 +1530,7 @@ void updateCursor(WarContext* context)
 
                     vec2 pointerRect = vec2ScreenToMapCoordinates(context, input->pos);
 
-                    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+                    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
                     for(s32 i = 0; i < units->count; i++)
                     {
                         WarEntity* entity = units->items[i];
@@ -1859,9 +1638,7 @@ void updateCursor(WarContext* context)
 
 void updateStateMachines(WarContext* context)
 {
-    WarMap* map = context->map;
-
-    WarEntityList* entities = getEntities(map);
+    WarEntityList* entities = getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* entity = entities->items[i];
@@ -1874,9 +1651,7 @@ void updateStateMachines(WarContext* context)
 
 void updateActions(WarContext* context)
 {
-    WarMap* map = context->map;
-
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -1892,7 +1667,7 @@ void updateAnimations(WarContext* context)
     WarMap* map = context->map;
 
     // update all animations of entities
-    WarEntityList* entities = getEntities(map);
+    WarEntityList* entities = getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* entity = entities->items[i];
@@ -1920,9 +1695,7 @@ void updateAnimations(WarContext* context)
 
 void updateProjectiles(WarContext* context)
 {
-    WarMap* map = context->map;
-
-    WarEntityList* projectiles = getEntitiesOfType(map, WAR_ENTITY_TYPE_PROJECTILE);
+    WarEntityList* projectiles = getEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
     for (s32 i = 0; i < projectiles->count; i++)
     {
         WarEntity* entity = projectiles->items[i];
@@ -1935,9 +1708,7 @@ void updateProjectiles(WarContext* context)
 
 void updateMagic(WarContext* context)
 {
-    WarMap* map = context->map;
-
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -2021,12 +1792,10 @@ bool updateSight(WarContext* context, WarEntity* entity)
 
 void updateSpells(WarContext* context)
 {
-    WarMap* map = context->map;
-
     WarEntityIdList spellsToRemove;
     WarEntityIdListInit(&spellsToRemove, WarEntityIdListDefaultOptions);
 
-    WarEntityList* poisonCloudSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_POISON_CLOUD);
+    WarEntityList* poisonCloudSpells = getEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
     for (s32 i = 0; i < poisonCloudSpells->count; i++)
     {
         WarEntity* entity = poisonCloudSpells->items[i];
@@ -2040,7 +1809,7 @@ void updateSpells(WarContext* context)
         }
     }
 
-    WarEntityList* sightSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_SIGHT);
+    WarEntityList* sightSpells = getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
     for (s32 i = 0; i < sightSpells->count; i++)
     {
         WarEntity* entity = sightSpells->items[i];
@@ -2053,7 +1822,7 @@ void updateSpells(WarContext* context)
         }
     }
 
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -2104,7 +1873,7 @@ void updateFoW(WarContext* context)
     }
 
     // the Holy Sight and Dark Vision spells are the first entities that change FoW
-    WarEntityList* sightSpells = getEntitiesOfType(map, WAR_ENTITY_TYPE_SIGHT);
+    WarEntityList* sightSpells = getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
     for (s32 i = 0; i < sightSpells->count; i++)
     {
         WarEntity* entity = sightSpells->items[i];
@@ -2117,7 +1886,7 @@ void updateFoW(WarContext* context)
         }
     }
 
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
 
     // do the update of the FoW for friendly units first
     for (s32 i = 0; i < units->count; i++)
@@ -2326,148 +2095,64 @@ bool checkObjectives(WarContext* context)
     return false;
 }
 
-void updateMapPlaying(WarContext* context)
-{
-    WarMap* map = context->map;
-
-    updateViewport(context);
-    updateDragRect(context);
-
-    if (!executeCommand(context))
-    {
-        // only update the selection if the current command doesn't get
-        // executed or there is no command at all.
-        // the reason is because some commands are executed by the left click
-        // as well as the selection, and if a command get executed the current 
-        // selection shouldn't be lost
-        updateSelection(context);
-    }
-
-    updateStateMachines(context);
-    updateActions(context);
-    updateAnimations(context);
-    updateProjectiles(context);
-    updateMagic(context);
-    updateSpells(context);
-
-    updateFoW(context);
-    determineFoWTypes(context);
-
-    updateGoldText(context);
-    updateWoodText(context);
-    updateSelectedUnitsInfo(context);
-    updateCommands(context);
-    updateButtons(context);
-    updateCommandFromRightClick(context);
-    updateStatus(context);
-    updateCursor(context);
-
-    updateTreesEdit(context);
-    updateRoadsEdit(context);
-    updateWallsEdit(context);
-    updateRuinsEdit(context);
-    updateRainOfFireEdit(context);
-
-    if (checkObjectives(context))
-    {
-        showOrHideGameOverMenu(context, true);
-
-        map->status = MAP_GAME_OVER;
-    }
-}
-
-void updateMapMenu(WarContext* context)
-{
-    WarInput* input = &context->input;
-    
-    if (wasKeyPressed(input, WAR_KEY_H))
-    {
-        WarEntity* uiEntity = findUIEntity(context, "txtObjectivesText");
-        if (uiEntity)
-        {
-            WarTextAlignment hAlign = uiEntity->text.horizontalAlign;
-            hAlign++;
-            if (hAlign > WAR_TEXT_ALIGN_RIGHT)
-                hAlign = WAR_TEXT_ALIGN_LEFT;
-            setUITextHorizontalAlign(uiEntity, hAlign);
-        }
-    }
-    else if (wasKeyPressed(input, WAR_KEY_V))
-    {
-        WarEntity* uiEntity = findUIEntity(context, "txtObjectivesText");
-        if (uiEntity)
-        {
-            WarTextAlignment vAlign = uiEntity->text.verticalAlign;
-            vAlign++;
-            if (vAlign > WAR_TEXT_ALIGN_BOTTOM)
-                vAlign = WAR_TEXT_ALIGN_TOP;
-            setUITextVerticalAlign(uiEntity, vAlign);
-        }
-    }
-    else if (wasKeyPressed(input, WAR_KEY_L))
-    {
-        WarEntity* uiEntity = findUIEntity(context, "txtObjectivesText");
-        if (uiEntity)
-        {
-            WarTextAlignment lAlign = uiEntity->text.lineAlign;
-            lAlign++;
-            if (lAlign > WAR_TEXT_ALIGN_RIGHT)
-                lAlign = WAR_TEXT_ALIGN_LEFT;
-            setUITextLineAlign(uiEntity, lAlign);
-        }
-    }
-    else if (wasKeyPressed(input, WAR_KEY_W))
-    {
-        WarEntity* uiEntity = findUIEntity(context, "txtObjectivesText");
-        if (uiEntity)
-        {
-            WarTextWrapping wrap = uiEntity->text.wrapping == WAR_TEXT_WRAP_NONE 
-                ? WAR_TEXT_WRAP_WORD : WAR_TEXT_WRAP_NONE;
-            setUITextWrapping(uiEntity, wrap);
-        }
-    }
-
-    updateButtons(context);
-    updateCursor(context);
-}
-
 void updateMap(WarContext* context)
 {
     WarMap* map = context->map;
 
-    updateGlobalSpeed(context);
-    updateGlobalScale(context);
-    updateVolume(context);
-
-    switch (map->status)
+    if (context->sceneType == WAR_SCENE_MAP)
     {
-        case MAP_PLAYING:
+        updateViewport(context);
+        updateDragRect(context);
+
+        if (!executeCommand(context))
         {
-            updateMapPlaying(context);
-            break;
+            // only update the selection if the current command doesn't get
+            // executed or there is no command at all.
+            // the reason is because some commands are executed by the left click
+            // as well as the selection, and if a command get executed the current 
+            // selection shouldn't be lost
+            updateSelection(context);
         }
-        case MAP_MENU:
-        case MAP_OPTIONS:
-        case MAP_OBJECTIVES:
-        case MAP_RESTART:
-        case MAP_QUIT:
-        case MAP_GAME_OVER:
+
+        updateStateMachines(context);
+        updateActions(context);
+        updateAnimations(context);
+        updateProjectiles(context);
+        updateMagic(context);
+        updateSpells(context);
+
+        updateFoW(context);
+        determineFoWTypes(context);
+
+        updateGoldText(context);
+        updateWoodText(context);
+        updateSelectedUnitsInfo(context);
+        updateCommands(context);
+    }
+
+    updateUIButtons(context);
+
+    if (context->sceneType == WAR_SCENE_MAP)
+    {
+        updateCommandFromRightClick(context);
+        updateStatus(context);
+    }
+    
+    updateMapCursor(context);
+
+    if (context->sceneType == WAR_SCENE_MAP)
+    {
+        updateTreesEdit(context);
+        updateRoadsEdit(context);
+        updateWallsEdit(context);
+        updateRuinsEdit(context);
+        updateRainOfFireEdit(context);
+
+        if (checkObjectives(context))
         {
-            updateMapMenu(context);
-            break;
-        }
-        case MAP_SAVE_GAME:
-        {
-            break;
-        }
-        case MAP_LOAD_GAME:
-        {
-            break;
-        }
-        default:
-        {
-            logError("Unkown map status: %d\n", map->status);
-            break;
+            showOrHideGameOverMenu(context, true);
+
+            map->status = MAP_GAME_OVER;
         }
     }
 }
@@ -2618,11 +2303,9 @@ void renderAnimations(WarContext* context)
 
 void renderUnitPaths(WarContext* context)
 {
-    WarMap *map = context->map;
-
     NVGcontext* gfx = context->gfx;
 
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity *entity = units->items[i];

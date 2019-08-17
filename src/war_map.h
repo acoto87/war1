@@ -7,11 +7,6 @@ void addEntityToSelection(WarContext* context, WarEntityId id);
 void removeEntityFromSelection(WarContext* context, WarEntityId id);
 void clearSelection(WarContext* context);
 
-WarEntityList* getEntities(WarMap* map);
-WarEntityList* getEntitiesOfType(WarMap* map, WarEntityType type);
-WarEntityList* getUnitsOfType(WarMap* map, WarUnitType type);
-WarEntityList* getUIEntities(WarMap* map);
-
 vec2 vec2ScreenToMapCoordinates(WarContext* context, vec2 v);
 vec2 vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v);
 rect rectScreenToMapCoordinates(WarContext* context, rect r);

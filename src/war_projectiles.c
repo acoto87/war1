@@ -61,8 +61,6 @@ void doProjectileTargetDamage(WarContext* context, WarEntity* entity)
 
 void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
 {
-    WarMap* map = context->map;
-
     WarProjectileComponent* projectile = &entity->projectile;
 
     vec2 targetTile = vec2MapToTileCoordinates(projectile->target);
@@ -81,7 +79,7 @@ void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splash
         }
         WarEntityListFree(nearUnits);
 
-        WarEntityList* walls = getEntitiesOfType(map, WAR_ENTITY_TYPE_WALL);
+        WarEntityList* walls = getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
         for (s32 i = 0; i < walls->count; i++)
         {
             WarEntity* targetEntity = walls->items[i];
@@ -102,8 +100,6 @@ void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splash
 
 void doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
 {
-    WarMap* map = context->map;
-
     WarProjectileComponent* projectile = &entity->projectile;
 
     vec2 targetTile = vec2MapToTileCoordinates(projectile->target);
@@ -121,7 +117,7 @@ void doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, 
     }
     WarEntityListFree(nearUnits);
 
-    WarEntityList* walls = getEntitiesOfType(map, WAR_ENTITY_TYPE_WALL);
+    WarEntityList* walls = getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
     for (s32 i = 0; i < walls->count; i++)
     {
         WarEntity* targetEntity = walls->items[i];

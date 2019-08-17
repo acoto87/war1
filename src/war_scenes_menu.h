@@ -1,0 +1,1 @@
+void createSceneMenu(WarContext* context);

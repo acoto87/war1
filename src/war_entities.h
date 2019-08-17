@@ -122,6 +122,13 @@ void renderEntitiesOfType(WarContext* context, WarEntityType type);
 void renderUnitSelection(WarContext* context);
 bool isStaticEntity(WarEntity* entity);
 
+void initEntityManager(WarEntityManager* manager);
+WarEntityManager* getEntityManager(WarContext* context);
+WarEntityList* getEntities(WarContext* context);
+WarEntityList* getEntitiesOfType(WarContext* context, WarEntityType type);
+WarEntityList* getUnitsOfType(WarContext* context, WarUnitType type);
+WarEntityList* getUIEntities(WarContext* context);
+
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade);
 bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
 void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);

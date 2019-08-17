@@ -362,9 +362,9 @@ void removeSightComponent(WarContext* context, WarEntity* entity)
 }
 
 // Entities
-WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
+WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene)
 {
-    WarMap* map = context->map;
+    WarEntityManager* manager = getEntityManager(context);
 
     WarEntity* entity = (WarEntity *)xcalloc(1, sizeof(WarEntity));
     entity->id = ++context->staticEntityId;
@@ -381,17 +381,17 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap)
     entity->stateMachine = (WarStateMachineComponent){0};
     entity->animations = (WarAnimationsComponent){0};
 
-    if (addToMap)
+    if (addToScene)
     {
-        WarEntityListAdd(&map->entities, entity);
-        WarEntityIdMapSet(&map->entitiesById, entity->id, entity);
+        WarEntityListAdd(&manager->entities, entity);
+        WarEntityIdMapSet(&manager->entitiesById, entity->id, entity);
 
-        WarEntityList* entitiesOfType = getEntitiesOfType(map, type);
+        WarEntityList* entitiesOfType = getEntitiesOfType(context, type);
         WarEntityListAdd(entitiesOfType, entity);
 
         if (isUIEntity(entity))
         {
-            WarEntityListAdd(&map->uiEntities, entity);
+            WarEntityListAdd(&manager->uiEntities, entity);
         }
     }
 
@@ -456,7 +456,8 @@ WarEntity* createUnit(WarContext* context,
 
     if (addToMap)
     {
-        WarEntityList* list = WarUnitMapGet(&map->unitsByType, type);
+        WarEntityManager* manager = &map->entityManager;
+        WarEntityList* list = WarUnitMapGet(&manager->unitsByType, type);
         WarEntityListAdd(list, entity);
     }
 
@@ -499,18 +500,19 @@ WarEntity* createBuilding(WarContext* context,
 
 WarEntity* findEntity(WarContext* context, WarEntityId id)
 {
-    WarMap* map = context->map;
-    return WarEntityIdMapGet(&map->entitiesById, id);
+    WarEntityManager* manager = getEntityManager(context);
+    return WarEntityIdMapGet(&manager->entitiesById, id);
 }
 
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
 {
     WarMap* map = context->map;
+    WarEntityManager* manager = &map->entityManager;
 
     WarEntity* result = NULL;
     f32 minDst = INT32_MAX;
 
-    WarEntityList* units = WarEntityMapGet(&map->entitiesByType, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = WarEntityMapGet(&manager->entitiesByType, WAR_ENTITY_TYPE_UNIT);
     assert(units);
     
     for (s32 i = 0; i < units->count; i++)
@@ -532,9 +534,7 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
 
 WarEntity* findUIEntity(WarContext* context, const char* name)
 {
-    WarMap* map = context->map;
-
-    WarEntityList* entities = getUIEntities(map);
+    WarEntityList* entities = getUIEntities(context);
     for (s32 i = 0; i < entities->count; i++)
     {
         WarEntity* entity = entities->items[i];
@@ -570,7 +570,7 @@ void removeEntity(WarContext* context, WarEntity* entity)
 
 void removeEntityById(WarContext* context, WarEntityId id)
 {
-    WarMap* map = context->map;
+    WarEntityManager* manager = getEntityManager(context);
 
     logDebug("trying to remove entity with id: %d\n", id);
 
@@ -581,19 +581,19 @@ void removeEntityById(WarContext* context, WarEntityId id)
 
         if (isUIEntity(entity))
         {
-            WarEntityListRemove(&map->uiEntities, entity);
+            WarEntityListRemove(&manager->uiEntities, entity);
         }
         else if (isUnit(entity))
         {
-            WarEntityList* unitTypeList = WarUnitMapGet(&map->unitsByType, entity->unit.type);
+            WarEntityList* unitTypeList = WarUnitMapGet(&manager->unitsByType, entity->unit.type);
             WarEntityListRemove(unitTypeList, entity);
         }
 
-        WarEntityList* entityTypeList = WarEntityMapGet(&map->entitiesByType, entity->type);
+        WarEntityList* entityTypeList = WarEntityMapGet(&manager->entitiesByType, entity->type);
         WarEntityListRemove(entityTypeList, entity);
 
-        WarEntityIdMapRemove(&map->entitiesById, entity->id);
-        WarEntityListRemove(&map->entities, entity);
+        WarEntityIdMapRemove(&manager->entitiesById, entity->id);
+        WarEntityListRemove(&manager->entities, entity);
 
         logDebug("removed entity with id: %d\n", id);
     }
@@ -635,6 +635,88 @@ bool isStaticEntity(WarEntity* entity)
     }
 
     return false;
+}
+
+void initEntityManager(WarEntityManager* manager)
+{
+    // initialize entities list
+    WarEntityListInit(&manager->entities, WarEntityListDefaultOptions);
+
+    // initialize entity by type map
+    WarEntityMapOptions entitiesByTypeOptions = (WarEntityMapOptions){0};
+    entitiesByTypeOptions.defaultValue = NULL;
+    entitiesByTypeOptions.hashFn = hashEntityType;
+    entitiesByTypeOptions.equalsFn = equalsEntityType;
+    entitiesByTypeOptions.freeFn = freeEntityList;
+    WarEntityMapInit(&manager->entitiesByType, entitiesByTypeOptions);
+    for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
+    {
+        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+        WarEntityListInit(list, WarEntityListNonFreeOptions);
+        WarEntityMapSet(&manager->entitiesByType, type, list);
+    }
+
+    // initialize unit by type map
+    WarUnitMapOptions unitsByTypeOptions = (WarUnitMapOptions){0};
+    unitsByTypeOptions.defaultValue = NULL;
+    unitsByTypeOptions.hashFn = hashUnitType;
+    unitsByTypeOptions.equalsFn = equalsUnitType;
+    unitsByTypeOptions.freeFn = freeEntityList;
+    WarUnitMapInit(&manager->unitsByType, unitsByTypeOptions);
+    for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
+    {
+        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+        WarEntityListInit(list, WarEntityListNonFreeOptions);
+        WarUnitMapSet(&manager->unitsByType, type, list);
+    }
+
+    // initialize the entities by id map
+    WarEntityIdMapOptions entitiesByIdOptions = (WarEntityIdMapOptions){0};
+    entitiesByIdOptions.defaultValue = NULL;
+    entitiesByIdOptions.hashFn = hashEntityId;
+    entitiesByIdOptions.equalsFn = equalsEntityId;
+    WarEntityIdMapInit(&manager->entitiesById, entitiesByIdOptions);
+
+    // initialize ui entities list
+    WarEntityListInit(&manager->uiEntities, WarEntityListNonFreeOptions);
+}
+
+WarEntityManager* getEntityManager(WarContext* context)
+{
+    if (context->sceneType == WAR_SCENE_MAP)
+    {
+        assert(context->map);
+        return &context->map->entityManager;
+    }
+    else
+    {
+        assert(context->scene);
+        return &context->scene->entityManager;
+    }
+}
+
+WarEntityList* getEntities(WarContext* context)
+{
+    WarEntityManager* manager = getEntityManager(context);
+    return &manager->entities;
+}
+
+WarEntityList* getEntitiesOfType(WarContext* context, WarEntityType type)
+{
+    WarEntityManager* manager = getEntityManager(context);
+    return WarEntityMapGet(&manager->entitiesByType, type);
+}
+
+WarEntityList* getUnitsOfType(WarContext* context, WarUnitType type)
+{
+    WarEntityManager* manager = getEntityManager(context);
+    return WarUnitMapGet(&manager->unitsByType, type);
+}
+
+WarEntityList* getUIEntities(WarContext* context)
+{
+    WarEntityManager* manager = getEntityManager(context);
+    return &manager->uiEntities;
 }
 
 // Render entities
@@ -1200,7 +1282,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
         }
     }
 
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -1289,9 +1371,7 @@ void renderEntity(WarContext* context, WarEntity* entity)
 
 void renderEntitiesOfType(WarContext* context, WarEntityType type)
 {
-    WarMap* map = context->map;
-
-    WarEntityList* entities = getEntitiesOfType(map, type);
+    WarEntityList* entities = getEntitiesOfType(context, type);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* entity = entities->items[i];
@@ -1350,8 +1430,6 @@ void renderUnitSelection(WarContext* context)
 
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade)
 {
-    WarMap* map = context->map;
-
     assert(hasRemainingUpgrade(player, upgrade));
 
     incUpgradeLevel(player, upgrade);
@@ -1361,7 +1439,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_ARROWS:
         case WAR_UPGRADE_SPEARS:
         {
-            WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+            WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
@@ -1381,7 +1459,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_SWORDS:
         case WAR_UPGRADE_AXES:
         {
-            WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+            WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
@@ -1412,7 +1490,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_HORSES:
         case WAR_UPGRADE_WOLVES:
         {
-            WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+            WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
@@ -1430,7 +1508,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         
         case WAR_UPGRADE_SHIELD:
         {
-            WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+            WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
@@ -1598,12 +1676,10 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 
 WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
 {
-    WarMap* map = context->map;
-
     WarEntityList* nearUnits = (WarEntityList*)xmalloc(sizeof(WarEntityList));
     WarEntityListInit(nearUnits, WarEntityListNonFreeOptions);
 
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
@@ -1621,11 +1697,9 @@ WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance
 
 WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
 {
-    WarMap* map = context->map;
-
     vec2 position = getUnitCenterPosition(entity, true);
 
-    WarEntityList* entities = getEntities(map);
+    WarEntityList* entities = getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* other = entities->items[i];
@@ -1660,9 +1734,8 @@ bool isBeingAttackedBy(WarEntity* entity, WarEntity* other)
 
 bool isBeingAttacked(WarContext* context, WarEntity* entity)
 {
-    WarMap* map = context->map;
 
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
@@ -1677,9 +1750,7 @@ bool isBeingAttacked(WarContext* context, WarEntity* entity)
 
 WarEntity* getAttacker(WarContext* context, WarEntity* entity)
 {
-    WarMap* map = context->map;
-
-    WarEntityList* units = getEntitiesOfType(map, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];

@@ -81,6 +81,9 @@
 #include "war_entities.h"
 #include "war_pathfinder.h"
 #include "war_state_machine.h"
+#include "war_scenes.h"
+#include "war_scenes_menu.h"
+#include "war_ui.h"
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_actions.c"
@@ -93,7 +96,6 @@
 #include "war_walls.c"
 #include "war_ruins.c"
 #include "war_trees.c"
-#include "war_ui.c"
 #include "war_commands.c"
 #include "war_units.c"
 #include "war_projectiles.c"
@@ -123,6 +125,9 @@
 #include "war_map_menu.c"
 #include "war_map_ui.c"
 #include "war_map.c"
+#include "war_scenes.c"
+#include "war_scenes_menu.c"
+#include "war_ui.c"
 #include "war_game.c"
 
 void glfwErrorCallback(int error, const char* description)

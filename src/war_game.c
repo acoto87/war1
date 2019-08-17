@@ -85,8 +85,12 @@ bool initGame(WarContext* context)
         loadResource(context, &entry);
     }
 
-    //createEmptyScene(context);
-    createMap(context, WAR_CAMPAIGN_HUMANS_02);
+    context->sceneType = WAR_SCENE_MENU;
+    context->scene = createScene(context);
+    createSceneMenu(context);
+
+    // context->sceneType = WAR_SCENE_MAP;
+    // createMap(context, WAR_CAMPAIGN_HUMANS_02);
     
     context->time = (f32)glfwGetTime();
     return true;
@@ -259,10 +263,71 @@ void inputGame(WarContext *context)
     setInputKey(context, WAR_KEY_F12, glfwGetKey(context->window, GLFW_KEY_F12) == GLFW_PRESS);
 }
 
+void updateGlobalSpeed(WarContext* context)
+{
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL) && !isKeyPressed(input, WAR_KEY_SHIFT))
+    {
+        if (wasKeyPressed(input, WAR_KEY_1))
+            setGlobalSpeed(context, 1.0f);
+        else if (wasKeyPressed(input, WAR_KEY_2))
+            setGlobalSpeed(context, 2.0f);
+        else if (wasKeyPressed(input, WAR_KEY_3))
+            setGlobalSpeed(context, 3.0f);
+        else if (wasKeyPressed(input, WAR_KEY_4))
+            setGlobalSpeed(context, 4.0f);
+    }
+}
+
+void updateGlobalScale(WarContext* context)
+{
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL) && isKeyPressed(input, WAR_KEY_SHIFT))
+    {
+        if (wasKeyPressed(input, WAR_KEY_1))
+            setGlobalScale(context, 1.0f);
+        else if (wasKeyPressed(input, WAR_KEY_2))
+            setGlobalScale(context, 2.0f);
+        else if (wasKeyPressed(input, WAR_KEY_3))
+            setGlobalScale(context, 3.0f);
+        else if (wasKeyPressed(input, WAR_KEY_4))
+            setGlobalScale(context, 4.0f);
+    }
+}
+
+void updateGlobalVolume(WarContext* context)
+{
+    WarInput* input = &context->input;
+
+    if (isKeyPressed(input, WAR_KEY_CTRL))
+    {
+        if (isKeyPressed(input, WAR_KEY_SHIFT))
+        {
+            if (wasKeyPressed(input, WAR_KEY_UP))
+                changeMusicVolume(context, 0.1f);
+            else if (wasKeyPressed(input, WAR_KEY_DOWN))
+                changeMusicVolume(context, -0.1f);
+        }
+        else
+        {
+            if (wasKeyPressed(input, WAR_KEY_UP))
+                changeSoundVolume(context, 0.1f);
+            else if (wasKeyPressed(input, WAR_KEY_DOWN))
+                changeSoundVolume(context, -0.1f);
+        }
+    }
+}
+
 void updateGame(WarContext* context)
 {
     WarInput* input = &context->input;
-    
+
+    updateGlobalSpeed(context);
+    updateGlobalScale(context);
+    updateGlobalVolume(context);
+
     if (isKeyPressed(input, WAR_KEY_CTRL) && 
         wasKeyPressed(input, WAR_KEY_P))
     {
@@ -271,7 +336,10 @@ void updateGame(WarContext* context)
 
     if (!context->paused)
     {
-        updateMap(context);
+        if (context->sceneType == WAR_SCENE_MAP)
+            updateMap(context);
+        else
+            updateScene(context);
     }
 }
 
@@ -302,7 +370,12 @@ void renderGame(WarContext *context)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     nvgBeginFrame(gfx, windowWidth, windowHeight, devicePixelRatio);
-    renderMap(context);
+
+    if (context->sceneType == WAR_SCENE_MAP)
+        renderMap(context);
+    else
+        renderScene(context);
+
     nvgEndFrame(gfx);
 
     // nvgluBindFramebuffer(NULL);

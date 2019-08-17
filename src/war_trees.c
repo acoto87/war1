@@ -83,9 +83,7 @@ void determineTreeTiles(WarContext* context, WarEntity* forest)
 
 void determineAllTreeTiles(WarContext* context)
 {
-    WarMap* map = context->map;
-    
-    WarEntityList* forests = getEntitiesOfType(map, WAR_ENTITY_TYPE_FOREST);
+    WarEntityList* forests = getEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
     for (s32 i = 0; i < forests->count; i++)
     {
         WarEntity* entity = forests->items[i];

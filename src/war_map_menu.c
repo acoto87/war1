@@ -364,7 +364,7 @@ void createObjectivesMenu(WarContext* context)
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_TOP);
     setUITextLineAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
-    setUITextWrapping(uiEntity, WAR_TEXT_WRAP_WORD);
+    setUITextWrapping(uiEntity, WAR_TEXT_WRAP_CHAR);
     
     uiEntity = createUITextButton(
         context, "btnObjectivesMenu",
