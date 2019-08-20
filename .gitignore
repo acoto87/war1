@@ -9,3 +9,4 @@ output_195.png
 tags
 callgrind*
 assets/*.WAR
+.vscode-ctags

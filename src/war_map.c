@@ -315,20 +315,32 @@ f32 getMapScaledTime(WarContext* context, f32 t)
     return t;    
 }
 
-void createMap(WarContext *context, s32 levelInfoIndex)
+WarMap* createMap(WarContext *context)
 {
+    WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
+
+    initEntityManager(&map->entityManager);
+
+    WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
+    WarSpriteAnimationListInit(&map->animations, WarSpriteAnimationListDefaultOptions);
+
+    return map;
+}
+
+void initMap(WarContext* context, s32 levelInfoIndex)
+{
+    WarMap* map = context->map;
+
     WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
     WarResource* levelPassable = getOrCreateResource(context, levelInfo->levelInfo.passableIndex);
     assert(levelPassable && levelPassable->type == WAR_RESOURCE_TYPE_LEVEL_PASSABLE);
 
-    WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
     map->status = MAP_PLAYING;
     map->levelInfoIndex = levelInfoIndex;
     map->objectivesTime = 1;
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
-    map->audioEnabled = true;
 
     map->settings.gameSpeed = WAR_SPEED_NORMAL;
     map->settings.musicVol = 80;
@@ -350,11 +362,6 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
-
-    initEntityManager(&map->entityManager);
-
-    WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
-    WarSpriteAnimationListInit(&map->animations, WarSpriteAnimationListDefaultOptions);
 
     map->finder = initPathFinder(PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
 
@@ -644,6 +651,7 @@ void createMap(WarContext *context, s32 levelInfoIndex)
     createQuitMenu(context);
     createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
 
+    context->audioEnabled = true;
     createAudio(context, WAR_MUSIC_00, true);
 }
 
@@ -651,7 +659,7 @@ void freeMap(WarContext* context)
 {
     WarMap* map = context->map;
 
-    map->audioEnabled = false;
+    context->audioEnabled = false;
 
     freeSprite(context, map->sprite);
     freeSprite(context, map->minimapSprite);

@@ -60,6 +60,7 @@
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
 #include "shl/map.h"
+#include "shl/set.h"
 #define SHL_MEMORY_BUFFER_IMPLEMENTATION
 #include "shl/memory_buffer.h"
 #define SHL_WAVE_WRITER_IMPLEMENTATION

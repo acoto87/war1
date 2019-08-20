@@ -512,6 +512,7 @@ void createQuitMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(115, 25)));
     setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleQuitMenu);
     setUIButtonHotKey(uiEntity, WAR_KEY_M);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -859,7 +860,8 @@ void handleRestartRestart(WarContext* context, WarEntity* entity)
 
     freeMap(context);
     
-    createMap(context, levelInfoIndex);
+    context->map = createMap(context);
+    initMap(context, levelInfoIndex);
 }
 
 void handleRestartCancel(WarContext* context, WarEntity* entity)
@@ -883,12 +885,20 @@ void handleGameOverContinue(WarContext* context, WarEntity* entity)
 
     freeMap(context);
     
-    createMap(context, levelInfoIndex + 2);
+    context->map = createMap(context);
+    initMap(context, levelInfoIndex + 2);
 }
 
 void handleQuitQuit(WarContext* context, WarEntity* entity)
 {
     glfwSetWindowShouldClose(context->window, true);
+}
+
+void handleQuitMenu(WarContext* context, WarEntity* entity)
+{
+    context->sceneType = WAR_SCENE_MENU;
+    context->scene = createScene(context);
+    initSceneMenu(context);
 }
 
 void handleQuitCancel(WarContext* context, WarEntity* entity)

@@ -600,6 +600,11 @@ shlDefineList(WarEntityIdList, WarEntityId)
 
 #define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL}
 
+shlDeclareSet(WarEntityIdSet, WarEntityId)
+shlDefineSet(WarEntityIdSet, WarEntityId)
+
+#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, hashEntityId, equalsEntityId, NULL}
+
 typedef enum
 {
     WAR_FEATURE_UNIT_FOOTMAN,
@@ -1880,6 +1885,8 @@ typedef struct
 
 typedef struct
 {
+    s32 staticEntityId;
+
     WarEntityList entities;
     WarEntityMap entitiesByType;
     WarUnitMap unitsByType;
@@ -1900,11 +1907,6 @@ typedef struct
 
     WarMapSettings settings;
     WarMapSettings settings2;
-
-    // this is shortcut to disable all audios in the map
-    // to avoid crashes when freeing the map and the audio thread
-    // trying to reproduce audios
-    bool audioEnabled;
 
     // viewport in map coordinates, 
     // this is the portion of the map that the player see
@@ -1986,8 +1988,6 @@ typedef struct _WarContext
     WarResource* resources[MAX_RESOURCES_COUNT];
     WarSprite fontSprites[2];
 
-    s32 staticEntityId;
-
     NVGcontext* gfx;
     // NVGLUframebuffer* fb;
 
@@ -1995,6 +1995,10 @@ typedef struct _WarContext
     tsf* soundFont;
     f32 musicVolume;
     f32 soundVolume;
+    // this is shortcut to disable all audios in the map
+    // to avoid crashes when freeing the map and the audio thread
+    // trying to reproduce audios
+    bool audioEnabled;
 
     WarInput input;
 

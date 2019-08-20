@@ -1,12 +1,20 @@
-void createSceneMenu(WarContext* context)
+void initSceneMenu(WarContext* context)
 {
-    WarScene* scene = context->scene;
+    initMainMenu(context);
+    initSinglePlayerMenu(context);
+    initLoadMenu(context);
 
+    createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
+
+    context->audioEnabled = true;
+    createAudio(context, WAR_MUSIC_00, true);
+}
+
+void initMainMenu(WarContext* context)
+{
     WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
     WarSpriteResourceRef mediumPressedRef = imageResourceRef(240);
-    WarSpriteResourceRef smallNormalRef = imageResourceRef(241);
-    WarSpriteResourceRef smallPressedRef = imageResourceRef(242);
 
     WarEntity* uiEntity;
 
@@ -19,6 +27,7 @@ void createSceneMenu(WarContext* context)
         mediumPressedRef,
         invalidRef,
         vec2i(104, 85));
+    setUIButtonClickHandler(uiEntity, handleMenuSinglePlayer);
     setUIButtonHotKey(uiEntity, WAR_KEY_S);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -49,10 +58,110 @@ void createSceneMenu(WarContext* context)
         mediumPressedRef,
         invalidRef,
         vec2i(104, 165));
+    setUIButtonClickHandler(uiEntity, handleMenuQuit);
     setUIButtonHotKey(uiEntity, WAR_KEY_Q);
     setUITextHighlight(uiEntity, 0, 1);
+}
 
-    createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
+void initSinglePlayerMenu(WarContext* context)
+{
+    WarSpriteResourceRef invalidRef = invalidResourceRef();
+    WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
+    WarSpriteResourceRef mediumPressedRef = imageResourceRef(240);
+    WarSpriteResourceRef smallNormalRef = imageResourceRef(241);
+    WarSpriteResourceRef smallPressedRef = imageResourceRef(242);
 
-    return scene;
+    WarEntity* uiEntity;
+
+    uiEntity = createUITextButton(
+        context, "btnSinglePlayerOrc",
+        1, 10, "Orc campaign",
+        mediumNormalRef,
+        mediumPressedRef,
+        invalidRef,
+        vec2i(104, 85));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleSinglePlayerOrc);
+    setUIButtonHotKey(uiEntity, WAR_KEY_O);
+    setUITextHighlight(uiEntity, 0, 1);
+
+    uiEntity = createUITextButton(
+        context, "btnSinglePlayerHuman",
+        1, 10, "Human campaign",
+        mediumNormalRef,
+        mediumPressedRef,
+        invalidRef,
+        vec2i(104, 105));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleSinglePlayerHuman);
+    setUIButtonHotKey(uiEntity, WAR_KEY_H);
+    setUITextHighlight(uiEntity, 0, 1);
+
+    uiEntity = createUITextButton(
+        context, "btnSinglePlayerCancel",
+        1, 10, "Cancel",
+        smallNormalRef,
+        smallPressedRef,
+        invalidRef,
+        vec2i(133, 165));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleSinglePlayerCancel);
+    setUIButtonHotKey(uiEntity, WAR_KEY_C);
+    setUITextHighlight(uiEntity, 0, 1);
+}
+
+void initLoadMenu(WarContext* context)
+{
+
+}
+
+void showOrHideMainMenu(WarContext* context, bool status)
+{
+    setUIEntityStatusByName(context, "btnMenuSinglePlayer", status);
+    setUIEntityStatusByName(context, "btnMenuLoad", status);
+    setUIEntityStatusByName(context, "btnMenuReplayIntro", status);
+    setUIEntityStatusByName(context, "btnMenuQuit", status);
+}
+
+void showOrHideSinglePlayer(WarContext* context, bool status)
+{
+    setUIEntityStatusByName(context, "btnSinglePlayerOrc", status);
+    setUIEntityStatusByName(context, "btnSinglePlayerHuman", status);
+    setUIEntityStatusByName(context, "btnSinglePlayerCancel", status);
+}
+
+// menu button handlers
+void handleMenuSinglePlayer(WarContext* context, WarEntity* entity)
+{
+    showOrHideMainMenu(context, false);
+    showOrHideSinglePlayer(context, true);
+}
+
+void handleMenuQuit(WarContext* context, WarEntity* entity)
+{
+    glfwSetWindowShouldClose(context->window, true);
+}
+
+void handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
+{
+    freeScene(context);
+
+    context->sceneType = WAR_SCENE_MAP;
+    context->map = createMap(context);
+    initMap(context, WAR_CAMPAIGN_ORCS_01);
+}
+
+void handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
+{
+    freeScene(context);
+
+    context->sceneType = WAR_SCENE_MAP;
+    context->map = createMap(context);
+    initMap(context, WAR_CAMPAIGN_HUMANS_01);
+}
+
+void handleSinglePlayerCancel(WarContext* context, WarEntity* entity)
+{
+    showOrHideSinglePlayer(context, false);
+    showOrHideMainMenu(context, true);
 }

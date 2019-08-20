@@ -367,7 +367,7 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene
     WarEntityManager* manager = getEntityManager(context);
 
     WarEntity* entity = (WarEntity *)xcalloc(1, sizeof(WarEntity));
-    entity->id = ++context->staticEntityId;
+    entity->id = ++manager->staticEntityId;
     entity->type = type;
     entity->enabled = true;
 
@@ -639,6 +639,8 @@ bool isStaticEntity(WarEntity* entity)
 
 void initEntityManager(WarEntityManager* manager)
 {
+    manager->staticEntityId = 0;
+
     // initialize entities list
     WarEntityListInit(&manager->entities, WarEntityListDefaultOptions);
 

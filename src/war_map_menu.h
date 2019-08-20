@@ -39,4 +39,5 @@ void handleGameOverSave(WarContext* context, WarEntity* entity);
 void handleGameOverContinue(WarContext* context, WarEntity* entity);
 
 void handleQuitQuit(WarContext* context, WarEntity* entity);
+void handleQuitMenu(WarContext* context, WarEntity* entity);
 void handleQuitCancel(WarContext* context, WarEntity* entity);

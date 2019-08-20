@@ -87,11 +87,8 @@ bool initGame(WarContext* context)
 
     context->sceneType = WAR_SCENE_MENU;
     context->scene = createScene(context);
-    createSceneMenu(context);
+    initSceneMenu(context);
 
-    // context->sceneType = WAR_SCENE_MAP;
-    // createMap(context, WAR_CAMPAIGN_HUMANS_02);
-    
     context->time = (f32)glfwGetTime();
     return true;
 }

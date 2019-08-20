@@ -1,6 +1,7 @@
 #pragma once
 
-void createMap(WarContext *context, s32 levelInfoIndex);
+WarMap* createMap(WarContext *context);
+void initMap(WarContext *context, s32 levelInfoIndex);
 void freeMap(WarContext* context);
 
 void addEntityToSelection(WarContext* context, WarEntityId id);

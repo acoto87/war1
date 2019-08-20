@@ -244,10 +244,34 @@ void updateUIButtons(WarContext* context)
     WarInput* input = &context->input;
 
     WarEntityList* buttons = getEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
+
+    // store the buttons to update in this frame first
+    // because the action of some buttons is to show other buttons
+    // in their same location, and if the newly shown button is
+    // after in the list, then it will update in this same frame
+    // which it shouldn't happen
+    WarEntityIdSet buttonsToUpdate;
+    WarEntityIdSetInit(&buttonsToUpdate, WarEntityIdSetDefaultOptions);
+
     for(s32 i = 0; i < buttons->count; i++)
     {
         WarEntity* entity = buttons->items[i];
         if (entity)
+        {
+            WarUIComponent* ui = &entity->ui;
+            WarButtonComponent* button = &entity->button;
+            
+            if (ui->enabled && button->enabled && button->interactive)
+            {
+                WarEntityIdSetAdd(&buttonsToUpdate, entity->id);
+            }
+        }
+    }
+
+    for(s32 i = 0; i < buttons->count; i++)
+    {
+        WarEntity* entity = buttons->items[i];
+        if (entity && WarEntityIdSetContains(&buttonsToUpdate, entity->id))
         {
             WarTransformComponent* transform = &entity->transform;
             WarUIComponent* ui = &entity->ui;
@@ -320,6 +344,8 @@ void updateUIButtons(WarContext* context)
             }
         }
     }
+
+    WarEntityIdSetFree(&buttonsToUpdate);
 }
 
 void renderUIEntities(WarContext* context)
