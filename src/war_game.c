@@ -86,7 +86,7 @@ bool initGame(WarContext* context)
         loadResource(context, &entry);
     }
 
-    WarScene* scene = createScene(context, WAR_SCENE_MAIN_MENU);
+    WarScene* scene = createScene(context, WAR_SCENE_BLIZZARD);
     setNextScene(context, scene, 0.0f);
 
     context->time = (f32)glfwGetTime();

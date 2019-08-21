@@ -1982,7 +1982,9 @@ typedef struct
 
 typedef enum
 {
+    WAR_SCENE_BLIZZARD,
     WAR_SCENE_MAIN_MENU,
+    WAR_SCENE_BRIEFING,
 
     WAR_SCENE_COUNT
 } WarSceneType;
@@ -1991,6 +1993,22 @@ typedef struct
 {
     WarSceneType type;
     WarEntityManager entityManager;
+    WarSpriteAnimationList animations;
+
+    union
+    {
+        struct
+        {
+            f32 time;
+        } blizzard;
+
+        struct
+        {
+            f32 time;
+            WarRace race;
+            WarCampaignMapType mapType;
+        } briefing;
+    };
 } WarScene;
 
 typedef struct _WarContext

@@ -57,5 +57,7 @@ WarEntity* createUIImageButton(WarContext* context,
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
 void updateUICursor(WarContext* context);
 void updateUIButtons(WarContext* context);
+void updateUIAnimations(WarContext* context);
 
+void renderUIAnimations(WarContext* context);
 void renderUIEntities(WarContext* context);

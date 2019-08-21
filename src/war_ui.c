@@ -348,6 +348,69 @@ void updateUIButtons(WarContext* context)
     WarEntityIdSetFree(&buttonsToUpdate);
 }
 
+void updateUIAnimations(WarContext* context)
+{
+    WarSpriteAnimationList* animations = NULL;
+
+    if (context->scene)
+        animations = &context->scene->animations;
+    else if (context->map)
+        animations = &context->map->animations;
+
+    assert(animations);
+
+    for(s32 i = 0; i < animations->count; i++)
+    {
+        WarSpriteAnimation* anim = animations->items[i];
+        updateAnimation(context, NULL, anim);
+    }
+}
+
+void renderUIAnimations(WarContext* context)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarSpriteAnimationList* animations = NULL;
+
+    if (context->scene)
+        animations = &context->scene->animations;
+    else if (context->map)
+        animations = &context->map->animations;
+
+    assert(animations);
+
+    for(s32 i = 0; i < animations->count; i++)
+    {
+        WarSpriteAnimation* anim = animations->items[i];
+        if (anim->status == WAR_ANIM_STATUS_RUNNING)
+        {
+            s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
+            animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+
+            s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
+            assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
+
+            nvgSave(gfx);
+
+            nvgTranslate(gfx, anim->offset.x, anim->offset.y);
+            nvgScale(gfx, anim->scale.x, anim->scale.y);
+
+#ifdef DEBUG_RENDER_MAP_ANIMATIONS
+            // size of the original sprite
+            vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+
+            nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
+#endif
+
+            WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
+            updateSpriteImage(context, anim->sprite, frame.data);
+            renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
+
+            nvgRestore(gfx);
+        }
+    }
+}
+
 void renderUIEntities(WarContext* context)
 {
     WarEntityList* entities = getUIEntities(context);

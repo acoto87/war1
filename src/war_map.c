@@ -1674,7 +1674,7 @@ void updateActions(WarContext* context)
     }
 }
 
-void updateAnimations(WarContext* context)
+void updateEntitiesAnimations(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -1695,13 +1695,6 @@ void updateAnimations(WarContext* context)
                 }
             }
         }
-    }
-
-    // update all animations of the map
-    for(s32 i = 0; i < map->animations.count; i++)
-    {
-        WarSpriteAnimation* anim = map->animations.items[i];
-        updateAnimation(context, NULL, anim);
     }
 }
 
@@ -2126,7 +2119,8 @@ void updateMap(WarContext* context)
 
     updateStateMachines(context);
     updateActions(context);
-    updateAnimations(context);
+    updateEntitiesAnimations(context);
+    updateUIAnimations(context);
     updateProjectiles(context);
     updateMagic(context);
     updateSpells(context);
@@ -2266,44 +2260,6 @@ void renderFoW(WarContext* context)
     nvgRestore(gfx);
 }
 
-void renderAnimations(WarContext* context)
-{
-    WarMap *map = context->map;
-
-    NVGcontext* gfx = context->gfx;
-
-    for(s32 i = 0; i < map->animations.count; i++)
-    {
-        WarSpriteAnimation* anim = map->animations.items[i];
-        if (anim->status == WAR_ANIM_STATUS_RUNNING)
-        {
-            s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
-            animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
-
-            s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-            assert(spriteFrameIndex >= 0 && spriteFrameIndex < anim->sprite.framesCount);
-
-            nvgSave(gfx);
-
-            nvgTranslate(gfx, anim->offset.x, anim->offset.y);
-            nvgScale(gfx, anim->scale.x, anim->scale.y);
-
-#ifdef DEBUG_RENDER_MAP_ANIMATIONS
-            // size of the original sprite
-            vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
-
-            nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
-#endif
-
-            WarSpriteFrame frame = anim->sprite.frames[spriteFrameIndex];
-            updateSpriteImage(context, anim->sprite, frame.data);
-            renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
-
-            nvgRestore(gfx);
-        }
-    }
-}
-
 void renderUnitPaths(WarContext* context)
 {
     NVGcontext* gfx = context->gfx;
@@ -2425,7 +2381,7 @@ void renderMapPanel(WarContext *context)
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     renderUnitSelection(context);
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);    
-    renderAnimations(context);
+    renderUIAnimations(context);
     renderFoW(context);
     
     nvgRestore(gfx);

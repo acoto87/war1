@@ -147,7 +147,7 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
         {
             if (!inRange(currentState->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
             {
-                logError("Unkown state %d for entity %d", currentState->type, entity->id);
+                logError("Unkown state %d for entity %d\n", currentState->type, entity->id);
                 return;
             }
 

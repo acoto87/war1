@@ -143,14 +143,18 @@ void handleMenuQuit(WarContext* context, WarEntity* entity)
 
 void handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
 {
-    WarMap* map = createMap(context, WAR_CAMPAIGN_ORCS_01);
-    setNextMap(context, map, 1.0f);
+    WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+    scene->briefing.race = WAR_RACE_ORCS;
+    scene->briefing.mapType = WAR_CAMPAIGN_ORCS_01;
+    setNextScene(context, scene, 1.0f);
 }
 
 void handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
 {
-    WarMap* map = createMap(context, WAR_CAMPAIGN_HUMANS_01);
-    setNextMap(context, map, 1.0f);
+    WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+    scene->briefing.race = WAR_RACE_HUMANS;
+    scene->briefing.mapType = WAR_CAMPAIGN_HUMANS_01;
+    setNextScene(context, scene, 1.0f);
 }
 
 void handleSinglePlayerCancel(WarContext* context, WarEntity* entity)
