@@ -41,6 +41,9 @@
 #define getScaledSpeed(context, t) ((t) * (context)->globalSpeed)
 #define getScaledTime(context, t) ((t) / (context)->globalSpeed)
 
+void setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay);
+void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
+
 vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
 {
     vec2 dir = VEC2_ZERO;

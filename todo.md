@@ -81,6 +81,7 @@ List of thing to do in no particular order
   * Make highlights in text be a span of text instead of just one character.
   * Check clipping of audios, `value = clamp(value, INT16_MIN, INT16_MAX);` this line doesn't make much sense because value is a `s16` already.
   * Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
+  * When changing scenes, it seems that part of the music of the previous scene keeps playing.
 
 * General
   * ~~Test the new implementation for lists.~~

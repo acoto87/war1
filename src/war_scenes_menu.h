@@ -1,7 +1,8 @@
-void initSceneMenu(WarContext* context);
-void initMainMenu(WarContext* context);
-void initSinglePlayerMenu(WarContext* context);
-void initLoadMenu(WarContext* context);
+void enterSceneMainMenu(WarContext* context);
+
+void createMainMenu(WarContext* context);
+void createSinglePlayerMenu(WarContext* context);
+void createLoadMenu(WarContext* context);
 
 void showOrHideMainMenu(WarContext* context, bool status);
 void showOrHideSinglePlayer(WarContext* context, bool status);

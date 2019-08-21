@@ -315,9 +315,10 @@ f32 getMapScaledTime(WarContext* context, f32 t)
     return t;    
 }
 
-WarMap* createMap(WarContext *context)
+WarMap* createMap(WarContext *context, s32 levelInfoIndex)
 {
     WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
+    map->levelInfoIndex = levelInfoIndex;
 
     initEntityManager(&map->entityManager);
 
@@ -327,9 +328,37 @@ WarMap* createMap(WarContext *context)
     return map;
 }
 
-void initMap(WarContext* context, s32 levelInfoIndex)
+void freeMap(WarContext* context, WarMap* map)
+{
+    freeSprite(context, map->sprite);
+    freeSprite(context, map->minimapSprite);
+    freeSprite(context, map->blackSprite);
+
+    WarEntityManager* manager = &map->entityManager;
+    WarEntityListFree(&manager->entities);
+    WarEntityMapFree(&manager->entitiesByType);
+    WarUnitMapFree(&manager->unitsByType);
+    WarEntityIdMapFree(&manager->entitiesById);
+    WarEntityListFree(&manager->uiEntities);
+
+    WarEntityIdListFree(&map->selectedEntities);
+
+    // these are already free when the lists and maps are
+    // freeEntity(map->forest);
+    // freeEntity(map->wall);
+    // freeEntity(map->road);
+    // freeEntity(map->ruin);
+
+    free(map->finder.data);
+
+    WarSpriteAnimationListFree(&map->animations);
+}
+
+void enterMap(WarContext* context)
 {
     WarMap* map = context->map;
+
+    s32 levelInfoIndex = map->levelInfoIndex;
 
     WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
@@ -338,7 +367,6 @@ void initMap(WarContext* context, s32 levelInfoIndex)
     assert(levelPassable && levelPassable->type == WAR_RESOURCE_TYPE_LEVEL_PASSABLE);
 
     map->status = MAP_PLAYING;
-    map->levelInfoIndex = levelInfoIndex;
     map->objectivesTime = 1;
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
 
@@ -651,40 +679,16 @@ void initMap(WarContext* context, s32 levelInfoIndex)
     createQuitMenu(context);
     createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
 
-    context->audioEnabled = true;
     createAudio(context, WAR_MUSIC_00, true);
 }
 
-void freeMap(WarContext* context)
+void leaveMap(WarContext* context)
 {
-    WarMap* map = context->map;
-
-    context->audioEnabled = false;
-
-    freeSprite(context, map->sprite);
-    freeSprite(context, map->minimapSprite);
-    freeSprite(context, map->blackSprite);
-
-    WarEntityManager* manager = &map->entityManager;
-    WarEntityListFree(&manager->entities);
-    WarEntityMapFree(&manager->entitiesByType);
-    WarUnitMapFree(&manager->unitsByType);
-    WarEntityIdMapFree(&manager->entitiesById);
-    WarEntityListFree(&manager->uiEntities);
-
-    WarEntityIdListFree(&map->selectedEntities);
-
-    // these are already free when the lists and maps are
-    // freeEntity(map->forest);
-    // freeEntity(map->wall);
-    // freeEntity(map->road);
-    // freeEntity(map->ruin);
-
-    free(map->finder.data);
-
-    WarSpriteAnimationListFree(&map->animations);
-
-    context->map = NULL;
+    if (context->map)
+    {
+        freeMap(context, context->map);
+        context->map = NULL;
+    }
 }
 
 void updateViewport(WarContext *context)
@@ -2107,61 +2111,52 @@ void updateMap(WarContext* context)
 {
     WarMap* map = context->map;
 
-    if (context->sceneType == WAR_SCENE_MAP)
+    updateViewport(context);
+    updateDragRect(context);
+
+    if (!executeCommand(context))
     {
-        updateViewport(context);
-        updateDragRect(context);
-
-        if (!executeCommand(context))
-        {
-            // only update the selection if the current command doesn't get
-            // executed or there is no command at all.
-            // the reason is because some commands are executed by the left click
-            // as well as the selection, and if a command get executed the current 
-            // selection shouldn't be lost
-            updateSelection(context);
-        }
-
-        updateStateMachines(context);
-        updateActions(context);
-        updateAnimations(context);
-        updateProjectiles(context);
-        updateMagic(context);
-        updateSpells(context);
-
-        updateFoW(context);
-        determineFoWTypes(context);
-
-        updateGoldText(context);
-        updateWoodText(context);
-        updateSelectedUnitsInfo(context);
-        updateCommands(context);
+        // only update the selection if the current command doesn't get
+        // executed or there is no command at all.
+        // the reason is because some commands are executed by the left click
+        // as well as the selection, and if a command get executed the current 
+        // selection shouldn't be lost
+        updateSelection(context);
     }
+
+    updateStateMachines(context);
+    updateActions(context);
+    updateAnimations(context);
+    updateProjectiles(context);
+    updateMagic(context);
+    updateSpells(context);
+
+    updateFoW(context);
+    determineFoWTypes(context);
+
+    updateGoldText(context);
+    updateWoodText(context);
+    updateSelectedUnitsInfo(context);
+    updateCommands(context);
 
     updateUIButtons(context);
 
-    if (context->sceneType == WAR_SCENE_MAP)
-    {
-        updateCommandFromRightClick(context);
-        updateStatus(context);
-    }
+    updateCommandFromRightClick(context);
+    updateStatus(context);
     
     updateMapCursor(context);
 
-    if (context->sceneType == WAR_SCENE_MAP)
+    updateTreesEdit(context);
+    updateRoadsEdit(context);
+    updateWallsEdit(context);
+    updateRuinsEdit(context);
+    updateRainOfFireEdit(context);
+
+    if (checkObjectives(context))
     {
-        updateTreesEdit(context);
-        updateRoadsEdit(context);
-        updateWallsEdit(context);
-        updateRuinsEdit(context);
-        updateRainOfFireEdit(context);
+        showOrHideGameOverMenu(context, true);
 
-        if (checkObjectives(context))
-        {
-            showOrHideGameOverMenu(context, true);
-
-            map->status = MAP_GAME_OVER;
-        }
+        map->status = MAP_GAME_OVER;
     }
 }
 

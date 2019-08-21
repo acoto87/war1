@@ -685,16 +685,14 @@ void initEntityManager(WarEntityManager* manager)
 
 WarEntityManager* getEntityManager(WarContext* context)
 {
-    if (context->sceneType == WAR_SCENE_MAP)
-    {
-        assert(context->map);
-        return &context->map->entityManager;
-    }
-    else
-    {
-        assert(context->scene);
+    if (context->scene)
         return &context->scene->entityManager;
-    }
+
+    if (context->map)
+        return &context->map->entityManager;
+
+    logError("There is no map or scene active.\n");
+    return NULL;
 }
 
 WarEntityList* getEntities(WarContext* context)

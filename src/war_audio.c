@@ -323,7 +323,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
         return;
     }
 
-    if (!context->audioEnabled)
+    if (!context->audioEnabled || context->transitionDelay > 0)
     {
         return;
     }
@@ -331,24 +331,10 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
     f32 musicVolume = context->musicVolume;
     f32 soundVolume = context->soundVolume;
     
-    if (context->sceneType == WAR_SCENE_MAP)
+    if (context->map)
     {
-        WarMap* map = context->map;
-        if (!map)
-        {
-            return;
-        }
-
-        musicVolume *= ((f32)map->settings.musicVol / 100);
-        soundVolume *= ((f32)map->settings.sfxVol / 100);
-    }
-    else
-    {
-        WarScene* scene = context->scene;
-        if (!scene)
-        {
-            return;
-        }
+        musicVolume *= ((f32)context->map->settings.musicVol / 100);
+        soundVolume *= ((f32)context->map->settings.sfxVol / 100);
     }
 
     WarEntityIdList toRemove;

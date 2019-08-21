@@ -858,10 +858,8 @@ void handleRestartRestart(WarContext* context, WarEntity* entity)
 {
     s32 levelInfoIndex = context->map->levelInfoIndex;
 
-    freeMap(context);
-    
-    context->map = createMap(context);
-    initMap(context, levelInfoIndex);
+    WarMap* map = createMap(context, levelInfoIndex);
+    setNextMap(context, map, 1.0f);
 }
 
 void handleRestartCancel(WarContext* context, WarEntity* entity)
@@ -883,10 +881,8 @@ void handleGameOverContinue(WarContext* context, WarEntity* entity)
 {
     s32 levelInfoIndex = context->map->levelInfoIndex;
 
-    freeMap(context);
-    
-    context->map = createMap(context);
-    initMap(context, levelInfoIndex + 2);
+    WarMap* map = createMap(context, levelInfoIndex + 2);
+    setNextMap(context, map, 1.0f);
 }
 
 void handleQuitQuit(WarContext* context, WarEntity* entity)
@@ -896,9 +892,8 @@ void handleQuitQuit(WarContext* context, WarEntity* entity)
 
 void handleQuitMenu(WarContext* context, WarEntity* entity)
 {
-    context->sceneType = WAR_SCENE_MENU;
-    context->scene = createScene(context);
-    initSceneMenu(context);
+    WarScene* scene = createScene(context, WAR_SCENE_MAIN_MENU);
+    setNextScene(context, scene, 1.0f);
 }
 
 void handleQuitCancel(WarContext* context, WarEntity* entity)

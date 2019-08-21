@@ -1,26 +1,40 @@
-WarScene* createScene(WarContext* context)
+WarScene* createScene(WarContext* context, WarSceneType type)
 {
     WarScene* scene = (WarScene*)xcalloc(1, sizeof(WarScene));
-
+    scene->type = type;
     initEntityManager(&scene->entityManager);
 
     return scene;
 }
 
-void freeScene(WarContext* context)
+void freeScene(WarScene* scene)
 {
-    WarScene* scene = context->scene;
-
-    context->audioEnabled = false;
-
     WarEntityManager* manager = &scene->entityManager;
     WarEntityListFree(&manager->entities);
     WarEntityMapFree(&manager->entitiesByType);
     WarUnitMapFree(&manager->unitsByType);
     WarEntityIdMapFree(&manager->entitiesById);
     WarEntityListFree(&manager->uiEntities);
+}
 
-    context->scene = NULL;
+void enterScene(WarContext* context)
+{
+    WarScene* scene = context->scene;
+
+    switch (scene->type)
+    {
+        case WAR_SCENE_MAIN_MENU:
+        {
+            enterSceneMainMenu(context);
+            break;
+        }
+
+        default:
+        {
+            logWarning("Can't enter scene of type: %d\n", scene->type);
+            break;
+        }
+    }
 }
 
 void updateScene(WarContext* context)
@@ -39,4 +53,13 @@ void renderScene(WarContext* context)
     renderUIEntities(context);
 
     nvgRestore(gfx);
+}
+
+void leaveScene(WarContext* context)
+{
+    if (context->scene)
+    {
+        freeScene(context->scene);
+        context->scene = NULL;
+    }
 }

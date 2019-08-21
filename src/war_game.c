@@ -13,6 +13,7 @@ bool initGame(WarContext* context)
     context->windowHeight = (s32)(context->originalWindowHeight * context->globalScale);
     strcpy(context->windowTitle, "War 1");
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, NULL, NULL);
+    context->transitionDelay = 0.0f;
 
     if (!context->window)
     {
@@ -85,9 +86,8 @@ bool initGame(WarContext* context)
         loadResource(context, &entry);
     }
 
-    context->sceneType = WAR_SCENE_MENU;
-    context->scene = createScene(context);
-    initSceneMenu(context);
+    WarScene* scene = createScene(context, WAR_SCENE_MAIN_MENU);
+    setNextScene(context, scene, 0.0f);
 
     context->time = (f32)glfwGetTime();
     return true;
@@ -154,6 +154,18 @@ void setSoundVolume(WarContext* context, f32 volume)
 void changeSoundVolume(WarContext* context, f32 deltaVolume)
 {
     setSoundVolume(context, context->soundVolume + deltaVolume);
+}
+
+void setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay)
+{
+    context->nextScene = scene;
+    context->transitionDelay = transitionDelay;
+}
+
+void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay)
+{
+    context->nextMap = map;
+    context->transitionDelay = transitionDelay;
 }
 
 void setInputButton(WarContext* context, s32 button, bool pressed)
@@ -331,12 +343,57 @@ void updateGame(WarContext* context)
         context->paused = !context->paused;
     }
 
-    if (!context->paused)
+    if (context->paused)
+        return;
+
+    if (context->nextScene)
     {
-        if (context->sceneType == WAR_SCENE_MAP)
-            updateMap(context);
-        else
-            updateScene(context);
+        context->audioEnabled = false;
+
+        if (context->scene)
+            leaveScene(context);
+        else if (context->map)
+            leaveMap(context);
+
+        context->scene = context->nextScene;
+        context->nextScene = NULL;
+
+        enterScene(context);
+    }
+    else if (context->nextMap)
+    {
+        context->audioEnabled = false;
+
+        if (context->scene)
+            leaveScene(context);
+        else if (context->map)
+            leaveMap(context);
+
+        context->map = context->nextMap;
+        context->nextMap = NULL;
+
+        enterMap(context);
+    }
+
+    if (context->transitionDelay > 0)
+    {
+        context->transitionDelay = max(context->transitionDelay - context->deltaTime, 0.0f);
+        return;
+    }
+
+    context->audioEnabled = true;
+
+    if (context->scene)
+    {
+        updateScene(context);
+    }
+    else if (context->map)
+    {
+        updateMap(context);
+    }
+    else
+    {
+        logError("There is no map or scene active.\n");
     }
 }
 
@@ -366,12 +423,22 @@ void renderGame(WarContext *context)
     glViewport(0, 0, framebufferWidth, framebufferHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+    // don't render anything if it's transitioning
+    if (context->transitionDelay > 0)
+    {
+        return;
+    }
+
     nvgBeginFrame(gfx, windowWidth, windowHeight, devicePixelRatio);
 
-    if (context->sceneType == WAR_SCENE_MAP)
-        renderMap(context);
-    else
+    if (context->scene)
+    {
         renderScene(context);
+    }
+    else if (context->map)
+    {
+        renderMap(context);
+    }
 
     nvgEndFrame(gfx);
 

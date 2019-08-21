@@ -585,6 +585,34 @@ typedef struct
     };
 } WarResource;
 
+typedef enum
+{
+    WAR_CAMPAIGN_HUMANS_01 = 117,
+    WAR_CAMPAIGN_ORCS_01,
+    WAR_CAMPAIGN_HUMANS_02,
+    WAR_CAMPAIGN_ORCS_02,
+    WAR_CAMPAIGN_HUMANS_03,
+    WAR_CAMPAIGN_ORCS_03,
+    WAR_CAMPAIGN_HUMANS_04,
+    WAR_CAMPAIGN_ORCS_04,
+    WAR_CAMPAIGN_HUMANS_05,
+    WAR_CAMPAIGN_ORCS_05,
+    WAR_CAMPAIGN_HUMANS_06,
+    WAR_CAMPAIGN_ORCS_06,
+    WAR_CAMPAIGN_HUMANS_07,
+    WAR_CAMPAIGN_ORCS_07,
+    WAR_CAMPAIGN_HUMANS_08,
+    WAR_CAMPAIGN_ORCS_08,
+    WAR_CAMPAIGN_HUMANS_09,
+    WAR_CAMPAIGN_ORCS_09,
+    WAR_CAMPAIGN_HUMANS_10,
+    WAR_CAMPAIGN_ORCS_10,
+    WAR_CAMPAIGN_HUMANS_11,
+    WAR_CAMPAIGN_ORCS_11,
+    WAR_CAMPAIGN_HUMANS_12,
+    WAR_CAMPAIGN_ORCS_12
+} WarCampaignMapType;
+
 //
 // Entities
 //
@@ -1954,12 +1982,14 @@ typedef struct
 
 typedef enum
 {
-    WAR_SCENE_MENU,
-    WAR_SCENE_MAP
+    WAR_SCENE_MAIN_MENU,
+
+    WAR_SCENE_COUNT
 } WarSceneType;
 
 typedef struct
 {
+    WarSceneType type;
     WarEntityManager entityManager;
 } WarScene;
 
@@ -2001,8 +2031,10 @@ typedef struct _WarContext
     bool audioEnabled;
 
     WarInput input;
-
-    WarSceneType sceneType;
+    
+    f32 transitionDelay;
     WarScene* scene;
+    WarScene* nextScene;
     WarMap* map;
+    WarMap* nextMap;
 } WarContext;

@@ -1,16 +1,15 @@
-void initSceneMenu(WarContext* context)
+void enterSceneMainMenu(WarContext* context)
 {
-    initMainMenu(context);
-    initSinglePlayerMenu(context);
-    initLoadMenu(context);
+    createMainMenu(context);
+    createSinglePlayerMenu(context);
+    createLoadMenu(context);
 
     createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
 
-    context->audioEnabled = true;
     createAudio(context, WAR_MUSIC_00, true);
 }
 
-void initMainMenu(WarContext* context)
+void createMainMenu(WarContext* context)
 {
     WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
@@ -63,7 +62,7 @@ void initMainMenu(WarContext* context)
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void initSinglePlayerMenu(WarContext* context)
+void createSinglePlayerMenu(WarContext* context)
 {
     WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
@@ -110,7 +109,7 @@ void initSinglePlayerMenu(WarContext* context)
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void initLoadMenu(WarContext* context)
+void createLoadMenu(WarContext* context)
 {
 
 }
@@ -144,20 +143,14 @@ void handleMenuQuit(WarContext* context, WarEntity* entity)
 
 void handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
 {
-    freeScene(context);
-
-    context->sceneType = WAR_SCENE_MAP;
-    context->map = createMap(context);
-    initMap(context, WAR_CAMPAIGN_ORCS_01);
+    WarMap* map = createMap(context, WAR_CAMPAIGN_ORCS_01);
+    setNextMap(context, map, 1.0f);
 }
 
 void handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
 {
-    freeScene(context);
-
-    context->sceneType = WAR_SCENE_MAP;
-    context->map = createMap(context);
-    initMap(context, WAR_CAMPAIGN_HUMANS_01);
+    WarMap* map = createMap(context, WAR_CAMPAIGN_HUMANS_01);
+    setNextMap(context, map, 1.0f);
 }
 
 void handleSinglePlayerCancel(WarContext* context, WarEntity* entity)
