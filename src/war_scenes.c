@@ -11,7 +11,6 @@ WarScene* createScene(WarContext* context, WarSceneType type)
     scene->type = type;
 
     initEntityManager(&scene->entityManager);
-    WarSpriteAnimationListInit(&scene->animations, WarSpriteAnimationListDefaultOptions);
 
     return scene;
 }
@@ -62,7 +61,7 @@ void updateScene(WarContext* context)
     {
         updateUIButtons(context);
         updateUICursor(context);
-        updateUIAnimations(context);
+        updateAnimations(context);
     }
 }
 
@@ -97,8 +96,12 @@ void renderScene(WarContext* context)
     nvgSave(gfx);
     nvgScale(gfx, context->globalScale, context->globalScale);
 
-    renderUIEntities(context);
-    renderUIAnimations(context);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_IMAGE);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_RECT);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_TEXT);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_CURSOR);
 
     nvgRestore(gfx);
 }

@@ -323,7 +323,6 @@ WarMap* createMap(WarContext *context, s32 levelInfoIndex)
     initEntityManager(&map->entityManager);
 
     WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
-    WarSpriteAnimationListInit(&map->animations, WarSpriteAnimationListDefaultOptions);
 
     return map;
 }
@@ -350,8 +349,6 @@ void freeMap(WarContext* context, WarMap* map)
     // freeEntity(map->ruin);
 
     free(map->finder.data);
-
-    WarSpriteAnimationListFree(&map->animations);
 }
 
 void enterMap(WarContext* context)
@@ -1674,30 +1671,6 @@ void updateActions(WarContext* context)
     }
 }
 
-void updateEntitiesAnimations(WarContext* context)
-{
-    WarMap* map = context->map;
-
-    // update all animations of entities
-    WarEntityList* entities = getEntities(context);
-    for(s32 i = 0; i < entities->count; i++)
-    {
-        WarEntity* entity = entities->items[i];
-        if (entity)
-        {
-            WarAnimationsComponent* animations = &entity->animations;
-            if (animations->enabled)
-            {
-                for(s32 i = 0; i < animations->animations.count; i++)
-                {
-                    WarSpriteAnimation* anim = animations->animations.items[i];
-                    updateAnimation(context, entity, anim);
-                }
-            }
-        }
-    }
-}
-
 void updateProjectiles(WarContext* context)
 {
     WarEntityList* projectiles = getEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
@@ -1809,7 +1782,6 @@ void updateSpells(WarContext* context)
             if (updatePoisonCloud(context, entity))
             {
                 WarEntityIdListAdd(&spellsToRemove, entity->id);
-                removeAnimation(context, NULL, entity->poisonCloud.animName);
             }
         }
     }
@@ -2119,8 +2091,7 @@ void updateMap(WarContext* context)
 
     updateStateMachines(context);
     updateActions(context);
-    updateEntitiesAnimations(context);
-    updateUIAnimations(context);
+    updateAnimations(context);
     updateProjectiles(context);
     updateMagic(context);
     updateSpells(context);
@@ -2380,8 +2351,8 @@ void renderMapPanel(WarContext *context)
 
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     renderUnitSelection(context);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);    
-    renderUIAnimations(context);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
     renderFoW(context);
     
     nvgRestore(gfx);

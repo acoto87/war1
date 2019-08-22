@@ -82,6 +82,7 @@ List of thing to do in no particular order
   * Check clipping of audios, `value = clamp(value, INT16_MIN, INT16_MAX);` this line doesn't make much sense because value is a `s16` already.
   * Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
   * When changing scenes, it seems that part of the music of the previous scene keeps playing.
+  * When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will render in the next line which causes missalignment in the left border of the text.
 
 * General
   * ~~Test the new implementation for lists.~~

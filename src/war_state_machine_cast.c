@@ -77,7 +77,11 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     decreaseUnitMana(context, entity, manaToSpend);
 
                     vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
-                    createSpellAnimation(context, targetPosition);
+
+                    WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                    addAnimationsComponent(context, animEntity);
+
+                    createSpellAnimation(context, animEntity, targetPosition);
                     createAudio(context, WAR_NORMAL_SPELL, false);
                 }
 
@@ -96,8 +100,9 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
                     WarEntity* sight = createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
                     addSightComponent(context, sight, targetTile, getMapScaledTime(context, stats.time));
+                    addAnimationsComponent(context, sight);
 
-                    createSpellAnimation(context, targetTilePosition);
+                    createSpellAnimation(context, sight, targetTilePosition);
                     createAudio(context, WAR_NORMAL_SPELL, false);
                 }
 
@@ -120,7 +125,11 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         targetUnit->invisibilityTime = getMapScaledTime(context, stats.time);
 
                         vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
-                        createSpellAnimation(context, targetPosition);
+
+                        WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                        addAnimationsComponent(context, animEntity);
+
+                        createSpellAnimation(context, animEntity, targetPosition);
                         createAudio(context, WAR_NORMAL_SPELL, false);
                     }
                 }
@@ -175,7 +184,11 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                                     unit->player, WAR_RESOURCE_NONE, 0, true);
 
                             targetPosition = getUnitCenterPosition(targetEntity, false);
-                            createSpellAnimation(context, targetPosition);
+
+                            WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                            addAnimationsComponent(context, animEntity);
+
+                            createSpellAnimation(context, animEntity, targetPosition);
                             createAudio(context, WAR_NORMAL_SPELL, false);
 
                             removeEntityById(context, targetEntity->id);
@@ -205,7 +218,11 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         targetUnit->invulnerabilityTime = getMapScaledTime(context, stats.time);
 
                         vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
-                        createSpellAnimation(context, targetPosition);
+
+                        WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                        addAnimationsComponent(context, animEntity);
+
+                        createSpellAnimation(context, animEntity, targetPosition);
                         createAudio(context, WAR_NORMAL_SPELL, false);
                     }
                 }
@@ -224,9 +241,9 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 {
                     WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
                     addPoisonCloudComponent(context, poisonCloud, targetTile, getMapScaledTime(context, stats.time));
+                    addAnimationsComponent(context, entity);
 
-                    sprintf(poisonCloud->poisonCloud.animName, "poison_cloud_%.2f_%.2f", targetTilePosition.x, targetTilePosition.y);
-                    createPoisonCloudAnimation(context, targetTilePosition, poisonCloud->poisonCloud.animName);
+                    createPoisonCloudAnimation(context, poisonCloud, targetTilePosition);
                     createAudio(context, WAR_NORMAL_SPELL, false);
                 }
 

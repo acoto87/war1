@@ -1329,6 +1329,43 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     nvgRestore(gfx);
 }
 
+void renderAnimation(WarContext* context, WarEntity* entity)
+{
+    NVGcontext* gfx = context->gfx;
+
+    WarTransformComponent* transform = &entity->transform;
+    WarAnimationsComponent* animations = &entity->animations;
+
+    vec2 position = transform->position;
+    nvgTranslate(gfx, position.x, position.y);
+
+    if (animations->enabled)
+    {
+        for (s32 i = 0; i < animations->animations.count; i++)
+        {
+            WarSpriteAnimation* anim = animations->animations.items[i];
+            if (anim->status == WAR_ANIM_STATUS_RUNNING)
+            {
+                nvgSave(gfx);
+
+                nvgTranslate(gfx, anim->offset.x, anim->offset.y);
+                nvgScale(gfx, anim->scale.x, anim->scale.y);
+
+                s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
+                animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+
+                s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
+                WarSpriteFrame frame = getSpriteFrame(context, anim->sprite, spriteFrameIndex);
+
+                updateSpriteImage(context, anim->sprite, frame.data);
+                renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
+
+                nvgRestore(gfx);
+            }
+        }
+    }
+}
+
 void renderEntity(WarContext* context, WarEntity* entity)
 {
     static WarRenderFunc renderFuncs[WAR_ENTITY_TYPE_COUNT] =
@@ -1350,6 +1387,7 @@ void renderEntity(WarContext* context, WarEntity* entity)
         NULL,               // WAR_ENTITY_TYPE_POISON_CLOUD
         NULL,               // WAR_ENTITY_TYPE_SIGHT
         renderMinimap,      // WAR_ENTITY_TYPE_MINIMAP
+        renderAnimation,    // WAR_ENTITY_TYPE_ANIMATION
     };
 
     NVGcontext* gfx = context->gfx;

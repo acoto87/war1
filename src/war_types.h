@@ -421,6 +421,7 @@ typedef struct
 {
     char* name;
     bool loop;
+    f32 loopDelay;
 
     vec2 offset;
     vec2 scale;
@@ -430,6 +431,7 @@ typedef struct
     WarSprite sprite;
 
     f32 animTime;
+    f32 loopTime;
     WarAnimationStatus status;
 } WarSpriteAnimation;
 
@@ -852,6 +854,7 @@ typedef enum
     WAR_ENTITY_TYPE_POISON_CLOUD,
     WAR_ENTITY_TYPE_SIGHT,
     WAR_ENTITY_TYPE_MINIMAP,
+    WAR_ENTITY_TYPE_ANIMATION,
 
     WAR_ENTITY_TYPE_COUNT
 } WarEntityType;
@@ -1977,7 +1980,6 @@ typedef struct
     WarUnitCommand command;
     WarFlashStatus flashStatus;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
-    WarSpriteAnimationList animations;
 } WarMap;
 
 typedef enum
@@ -1993,7 +1995,6 @@ typedef struct
 {
     WarSceneType type;
     WarEntityManager entityManager;
-    WarSpriteAnimationList animations;
 
     union
     {

@@ -383,7 +383,8 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
                            spawnPosition.x, spawnPosition.y, 
                            unit->player, WAR_RESOURCE_NONE, 0, true);
 
-                createSpellAnimation(context, vec2TileToMapCoordinates(spawnPosition, true));
+                WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                createSpellAnimation(context, animEntity, vec2TileToMapCoordinates(spawnPosition, true));
 
                 casted = true;
             }

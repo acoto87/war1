@@ -294,7 +294,11 @@ void updateProjectile(WarContext* context, WarEntity* entity)
             else
             {
                 doRainOfFireProjectileSplashDamage(context, entity, NEAR_RAIN_OF_FIRE_RADIUS);
-                createRainOfFireExplosionAnimation(context, projectile->target);
+
+                WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                addAnimationsComponent(context, animEntity);
+
+                createRainOfFireExplosionAnimation(context, animEntity, projectile->target);
                 createAudio(context, WAR_CATAPULT_FIRE_EXPLOSION, false);
                 removeEntityById(context, entity->id);
             }
@@ -310,7 +314,11 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 if (projectile->type == WAR_PROJECTILE_CATAPULT)
                 {
                     doProjectileSplashDamage(context, entity, NEAR_CATAPULT_RADIUS);
-                    createExplosionAnimation(context, projectile->target);
+
+                    WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                    addAnimationsComponent(context, animEntity);
+
+                    createExplosionAnimation(context, animEntity, projectile->target);
                     createAudio(context, WAR_CATAPULT_FIRE_EXPLOSION, false);
                 }
                 else

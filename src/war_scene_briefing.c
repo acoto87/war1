@@ -1,24 +1,115 @@
+void enterSceneBriefingHumans(WarContext* context)
+{
+    WarScene* scene = context->scene;
+    scene->briefing.time = 21.5f;
+
+    WarCampaignMapData data = getCampaignData(scene->briefing.mapType);
+
+    createUIImage(context, "imgBackground", imageResourceRef(421), VEC2_ZERO);
+
+    WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+    addAnimationsComponent(context, animEntity);
+
+    WarSpriteAnimation* anim1 = createAnimationFromResourceIndex(context, "anim1", imageResourceRef(428), 0.2f, true);
+    anim1->offset = vec2i(83, 37);
+    anim1->loopDelay = 2.0f;
+    addAnimationFramesRange(anim1, 0, 4);
+    addAnimationFramesRange(anim1, 4, 0);
+    addAnimation(animEntity, anim1);
+
+    WarSpriteAnimation* anim2 = createAnimationFromResourceIndex(context, "anim2", imageResourceRef(429), 0.2f, true);
+    anim2->offset = vec2i(207, 29);
+    anim1->loopDelay = 2.0f;
+    addAnimationFramesRange(anim2, 0, 20);
+    addAnimation(animEntity, anim2);
+
+    WarSpriteAnimation* anim3 = createAnimationFromResourceIndex(context, "anim3", imageResourceRef(430), 0.1f, true);
+    anim3->offset = vec2i(21, 17);
+    addAnimationFramesRange(anim3, 0, 20);
+    addAnimation(animEntity, anim3);
+
+    WarSpriteAnimation* anim4 = createAnimationFromResourceIndex(context, "anim4", imageResourceRef(431), 0.1f, true);
+    anim4->offset = vec2i(275, 21);
+    addAnimationFramesRange(anim4, 0, 20);
+    addAnimation(animEntity, anim4);
+
+    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 100));
+    setUITextMultiline(briefingText, true);
+    setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 80));
+    setUITextHorizontalAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
+    setUITextVerticalAlign(briefingText, WAR_TEXT_ALIGN_TOP);
+    setUITextLineAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
+    setUITextWrapping(briefingText, WAR_TEXT_WRAP_CHAR);
+
+    createAudio(context, data.briefingAudioId, true);
+}
+
+void enterSceneBriefingOrcs(WarContext* context)
+{
+    WarScene* scene = context->scene;
+    scene->briefing.time = 25.0f;
+
+    WarCampaignMapData data = getCampaignData(scene->briefing.mapType);
+
+    createUIImage(context, "imgBackground", imageResourceRef(422), VEC2_ZERO);
+
+    WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+    addAnimationsComponent(context, animEntity);
+
+    WarSpriteAnimation* anim1 = createAnimationFromResourceIndex(context, "anim1", imageResourceRef(426), 0.2f, true);
+    anim1->offset = vec2i(18, 67);
+    anim1->loopDelay = 2.0f;
+    addAnimationFramesRange(anim1, 0, 4);
+    addAnimationFramesRange(anim1, 4, 0);
+    addAnimation(animEntity, anim1);
+
+    WarSpriteAnimation* anim2 = createAnimationFromResourceIndex(context, "anim2", imageResourceRef(427), 0.2f, true);
+    anim2->offset = vec2i(202, 52);
+    anim1->loopDelay = 2.0f;
+    addAnimationFramesRange(anim2, 0, 4);
+    addAnimationFramesRange(anim2, 4, 0);
+    addAnimation(animEntity, anim2);
+
+    WarSpriteAnimation* anim3 = createAnimationFromResourceIndex(context, "anim3", imageResourceRef(425), 0.1f, true);
+    anim3->offset = vec2i(140, 66);
+    addAnimationFramesRange(anim3, 0, 30);
+    addAnimation(animEntity, anim3);
+
+    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 100));
+    setUITextMultiline(briefingText, true);
+    setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 80));
+    setUITextHorizontalAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
+    setUITextVerticalAlign(briefingText, WAR_TEXT_ALIGN_TOP);
+    setUITextLineAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
+    setUITextWrapping(briefingText, WAR_TEXT_WRAP_CHAR);
+
+    createAudio(context, data.briefingAudioId, true);
+}
+
 void enterSceneBriefing(WarContext* context)
 {
     WarScene* scene = context->scene;
-    scene->briefing.time = 20.0f;
 
-    WarSpriteResourceRef backgroundResourceRef;
+    switch (scene->briefing.race)
+    {
+        case WAR_RACE_HUMANS:
+        {
+            enterSceneBriefingHumans(context);
+            break;
+        }
 
-    if (scene->briefing.race == WAR_RACE_HUMANS)
-        backgroundResourceRef = imageResourceRef(421);
-    else if (scene->briefing.race == WAR_RACE_ORCS)
-        backgroundResourceRef = imageResourceRef(422);
-    else
-        logError("Not allowed briefing scenes for race: %d\n", scene->briefing.race);
+        case WAR_RACE_ORCS:
+        {
+            enterSceneBriefingOrcs(context);
+            break;
+        }
 
-    WarSprite s = createSpriteFromResourceIndex(context, imageResourceRef(426));
-    WarSpriteAnimation* anim1 = createAnimation("anim1", s, 0.2f, true);
-    addAnimationFrames(anim1, 5, arrayArg(s32, 0, 1, 2, 3, 4));
-    WarSpriteAnimationListAdd(&scene->animations, anim1);
-
-    createUIImage(context, "imgBackground", backgroundResourceRef, VEC2_ZERO);
-    createAudio(context, WAR_CAMPAIGNS_HUMAN_01_INTRO, true);
+        default:
+        {
+            logError("Not allowed briefing scenes for race: %d\n", scene->briefing.race);
+            break;
+        }
+    }
 }
 
 void updateSceneBriefing(WarContext* context)
@@ -33,5 +124,5 @@ void updateSceneBriefing(WarContext* context)
         setNextMap(context, map, 1.0f);
     }
 
-    updateUIAnimations(context);
+    updateAnimations(context);
 }
