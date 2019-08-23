@@ -189,6 +189,7 @@ void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32
     entity->text.enabled = true;
     entity->text.fontIndex = fontIndex;
     entity->text.fontSize = fontSize;
+    entity->text.lineHeight = 0;
     entity->text.fontColor = FONT_NORMAL_COLOR;
     entity->text.highlightColor = FONT_HIGHLIGHT_COLOR;
     entity->text.highlightIndex = NO_HIGHLIGHT;
@@ -1081,6 +1082,7 @@ void renderText(WarContext* context, WarEntity* entity)
         NVGfontParams params;
         params.fontIndex = text->fontIndex;
         params.fontSize = text->fontSize;
+        params.lineHeight = text->lineHeight;
         params.fontColor = u8ColorToNVGcolor(text->fontColor);
         params.highlightColor = u8ColorToNVGcolor(text->highlightColor);
         params.highlightIndex = text->highlightIndex;

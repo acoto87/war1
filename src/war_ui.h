@@ -18,11 +18,13 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, c
 #define setUITextVerticalAlign(uiEntity, value) ((uiEntity)->text.verticalAlign = (value))
 #define setUITextLineAlign(uiEntity, value) ((uiEntity)->text.lineAlign = (value))
 #define setUITextWrapping(uiEntity, value) ((uiEntity)->text.wrapping = (value))
+#define setUITextColor(uiEntity, value) ((uiEntity)->text.fontColor = (value))
 #define setUITextHighlight(uiEntity, index, count) \
     ({ ((uiEntity)->text.highlightIndex = (index)); \
        ((uiEntity)->text.highlightCount = (count)); })
 #define setUITextHighlightColor(uiEntity, color) ((uiEntity)->text.highlightColor = (color))
 #define setUITextMultiline(uiEntity, value) ((uiEntity)->text.multiline = (value))
+#define setUITextLineHeight(uiEntity, value) ((uiEntity)->text.lineHeight = (value))
 
 #define setUIButtonStatus(uiEntity, value) ((uiEntity)->button.enabled = (value))
 #define setUIButtonInteractive(uiEntity, value) ((uiEntity)->button.interactive = (value))
@@ -38,7 +40,7 @@ WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 font
 WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, u8Color color);
 WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef spriteResourceRef, vec2 position);
 WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, vec2 position);
-WarEntity* createUITextButton(WarContext* context, 
+WarEntity* createUITextButton(WarContext* context,
                               char* name,
                               s32 fontIndex,
                               f32 fontSize,
@@ -47,7 +49,7 @@ WarEntity* createUITextButton(WarContext* context,
                               WarSpriteResourceRef backgroundPressedRef,
                               WarSpriteResourceRef foregroundRef,
                               vec2 position);
-WarEntity* createUIImageButton(WarContext* context, 
+WarEntity* createUIImageButton(WarContext* context,
                                char* name,
                                WarSpriteResourceRef backgroundNormalRef,
                                WarSpriteResourceRef backgroundPressedRef,

@@ -384,6 +384,7 @@ typedef struct
 {
     s32 fontIndex;
     f32 fontSize;
+    f32 lineHeight;
     NVGcolor fontColor;
     NVGcolor highlightColor;
     s32 highlightIndex;

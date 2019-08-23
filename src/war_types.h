@@ -1436,6 +1436,7 @@ typedef struct
     char* text;
     s32 fontIndex;
     f32 fontSize;
+    f32 lineHeight;
     u8Color fontColor;
     u8Color highlightColor;
     s32 highlightIndex;

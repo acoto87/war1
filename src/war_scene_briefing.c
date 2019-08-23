@@ -1,9 +1,10 @@
 void enterSceneBriefingHumans(WarContext* context)
 {
     WarScene* scene = context->scene;
-    scene->briefing.time = 21.5f;
 
     WarCampaignMapData data = getCampaignData(scene->briefing.mapType);
+
+    scene->briefing.time = data.briefingDuration;
 
     createUIImage(context, "imgBackground", imageResourceRef(421), VEC2_ZERO);
 
@@ -33,23 +34,26 @@ void enterSceneBriefingHumans(WarContext* context)
     addAnimationFramesRange(anim4, 0, 20);
     addAnimation(animEntity, anim4);
 
-    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 100));
+    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 200));
+    setUITextColor(briefingText, u8RgbColor(255, 215, 138));
     setUITextMultiline(briefingText, true);
-    setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 80));
+    setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 200));
     setUITextHorizontalAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(briefingText, WAR_TEXT_ALIGN_TOP);
     setUITextLineAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
     setUITextWrapping(briefingText, WAR_TEXT_WRAP_CHAR);
+    setUITextLineHeight(briefingText, 150);
 
-    createAudio(context, data.briefingAudioId, true);
+    createAudio(context, data.briefingAudioId, false);
 }
 
 void enterSceneBriefingOrcs(WarContext* context)
 {
     WarScene* scene = context->scene;
-    scene->briefing.time = 25.0f;
 
     WarCampaignMapData data = getCampaignData(scene->briefing.mapType);
+
+    scene->briefing.time = data.briefingDuration;
 
     createUIImage(context, "imgBackground", imageResourceRef(422), VEC2_ZERO);
 
@@ -75,15 +79,17 @@ void enterSceneBriefingOrcs(WarContext* context)
     addAnimationFramesRange(anim3, 0, 30);
     addAnimation(animEntity, anim3);
 
-    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 100));
+    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 200));
+    setUITextColor(briefingText, u8RgbColor(255, 215, 138));
     setUITextMultiline(briefingText, true);
-    setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 80));
+    setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 200));
     setUITextHorizontalAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(briefingText, WAR_TEXT_ALIGN_TOP);
     setUITextLineAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
     setUITextWrapping(briefingText, WAR_TEXT_WRAP_CHAR);
+    setUITextLineHeight(briefingText, 150);
 
-    createAudio(context, data.briefingAudioId, true);
+    createAudio(context, data.briefingAudioId, false);
 }
 
 void enterSceneBriefing(WarContext* context)
@@ -122,6 +128,14 @@ void updateSceneBriefing(WarContext* context)
     {
         WarMap* map = createMap(context, scene->briefing.mapType);
         setNextMap(context, map, 1.0f);
+    }
+
+    WarEntity* txtBriefing = findUIEntity(context, "txtBriefing");
+    if (txtBriefing)
+    {
+        vec2 position = txtBriefing->transform.position;
+        position.y -= 10 * context->deltaTime;
+        txtBriefing->transform.position = position;
     }
 
     updateAnimations(context);
