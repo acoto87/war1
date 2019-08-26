@@ -84,7 +84,7 @@ shlDefineList(vec2List, vec2)
 
 bool equalsRect(const rect r1, const rect r2)
 {
-    return r1.x == r2.x && r1.y == r2.y && 
+    return r1.x == r2.x && r1.y == r2.y &&
            r1.width == r2.width && r1.height == r2.height;
 }
 
@@ -179,10 +179,10 @@ typedef enum _WarKeys
 typedef struct
 {
     // indicates if the key is pressed in the current frame
-    bool pressed; 
+    bool pressed;
 
     // indicate if the key was pressed in the previous frame
-    bool wasPressed; 
+    bool wasPressed;
 } WarKeyButtonState;
 
 typedef struct
@@ -215,7 +215,7 @@ typedef struct
 //
 // Resources
 //
-typedef struct 
+typedef struct
 {
     bool placeholder;
     bool compressed;
@@ -226,7 +226,7 @@ typedef struct
     u8 *data;
 } WarRawResource;
 
-typedef enum 
+typedef enum
 {
     WAR_FILE_TYPE_UNKOWN,
     WAR_FILE_TYPE_DEMO,
@@ -236,7 +236,7 @@ typedef enum
 typedef struct
 {
     // File Header
-    // Version          Archive ID          Number of Entries 
+    // Version          Archive ID          Number of Entries
     // PreRelease                           EF 01 00 00 (495)   little-endian
     // DOS Retail       18 00 00 00 (24)    47 02 00 00 (583)   little-endian
     // DOS Shareware    19 00 00 00 (25)    47 02 00 00 (583)   little-endian
@@ -368,7 +368,7 @@ typedef enum
     WAR_UNIT_COUNT
 } WarUnitType;
 
-typedef struct 
+typedef struct
 {
     u8 dx;
     u8 dy;
@@ -486,10 +486,10 @@ typedef struct
     } tiles[4];
 } WarTilesetTile;
 
-typedef struct 
+typedef struct
 {
     WarResourceType type;
-    
+
     union
     {
         struct
@@ -497,7 +497,7 @@ typedef struct
             u8 colors[PALETTE_LENGTH];
         } paletteData;
 
-        struct 
+        struct
         {
             u16 width;
             u16 height;
@@ -540,7 +540,7 @@ typedef struct
 
             u32 startWallsCount;
             WarLevelConstruct startWalls[MAX_CONSTRUCTS_COUNT];
-        } levelInfo;    
+        } levelInfo;
 
         struct
         {
@@ -552,7 +552,7 @@ typedef struct
             u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
         } levelPassable;
 
-        struct 
+        struct
         {
             u32 tilesCount;
             u8 data[TILESET_WIDTH * TILESET_HEIGHT * 4];
@@ -614,6 +614,13 @@ typedef enum
     WAR_CAMPAIGN_HUMANS_12,
     WAR_CAMPAIGN_ORCS_12
 } WarCampaignMapType;
+
+typedef enum
+{
+    WAR_LEVEL_RESULT_NONE,
+    WAR_LEVEL_RESULT_WIN,
+    WAR_LEVEL_RESULT_LOSE
+} WarLevelResult;
 
 //
 // Entities
@@ -744,7 +751,7 @@ typedef enum
     WAR_COMMAND_TRAIN_CONJURER,
     WAR_COMMAND_TRAIN_WARLOCK,
     WAR_COMMAND_TRAIN_CLERIC,
-    WAR_COMMAND_TRAIN_NECROLYTE, 
+    WAR_COMMAND_TRAIN_NECROLYTE,
 
     // spell commands
     WAR_COMMAND_SPELL_HEALING, // 21
@@ -816,13 +823,13 @@ typedef struct
 
     union
     {
-        struct 
+        struct
         {
             WarUnitType unitToTrain;
             WarUnitType buildingUnit;
         } train;
 
-        struct 
+        struct
         {
             WarUpgradeType upgradeToBuild;
             WarUnitType buildingUnit;
@@ -941,7 +948,7 @@ shlDefineList(WarWallPieceList, WarWallPiece)
 
 #define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, equalsWallPiece, NULL}
 
-typedef enum 
+typedef enum
 {
     WAR_RUIN_PIECE_NONE,
     WAR_RUIN_PIECE_TOP_LEFT,
@@ -972,7 +979,7 @@ typedef struct
 
 bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
 {
-    return r1.type == r2.type && 
+    return r1.type == r2.type &&
            r1.tilex == r2.tilex && r1.tiley == r2.tiley;
 }
 
@@ -981,7 +988,7 @@ shlDefineList(WarRuinPieceList, WarRuinPiece)
 
 #define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL}
 
-typedef enum 
+typedef enum
 {
     WAR_TREE_NONE,
     WAR_TREE_TOP_LEFT,
@@ -1094,7 +1101,7 @@ typedef enum
 typedef struct
 {
     WarUnitActionType type;
-    WarUnitActionStatus status;    
+    WarUnitActionStatus status;
     bool unbreakable;
     bool directional;
     bool loop;
@@ -1190,7 +1197,7 @@ typedef struct _WarState
         {
             s32 positionIndex;
             vec2List positions;
-            
+
             s32 pathNodeIndex;
             WarMapPath path;
 
@@ -1273,7 +1280,7 @@ typedef struct _WarState
 
         struct
         {
-            WarEntityId workerId; // the worker that is building the building            
+            WarEntityId workerId; // the worker that is building the building
             f32 buildTime; // how much time has passed since start building (in seconds)
             f32 totalBuildTime; // total time to build (in seconds)
             bool cancelled;
@@ -1337,7 +1344,7 @@ typedef struct
     // indicate if the unit is building something
     bool building;
     f32 buildPercent;
-  
+
     // hit points, magic and armor
     s32 maxhp;
     s32 hp;
@@ -1806,7 +1813,7 @@ typedef enum
     MAP_TILESET_DUNGEON
 } WarMapTilesetType;
 
-typedef enum 
+typedef enum
 {
     WAR_FOG_PIECE_NONE,
     WAR_FOG_PIECE_TOP_LEFT,
@@ -1857,7 +1864,7 @@ typedef struct
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
 } WarPlayerInfo;
 
-typedef bool (*WarCheckObjectivesFunc)(struct _WarContext* context);
+typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
 
 #define isHumanPlayer(player) ((player)->race == WAR_RACE_HUMANS)
 #define isOrcPlayer(player) ((player)->race == WAR_RACE_ORCS)
@@ -1883,19 +1890,6 @@ typedef struct
     f32 duration;
     char text[100];
 } WarFlashStatus;
-
-typedef enum
-{
-    MAP_PLAYING,
-    MAP_MENU,
-    MAP_OPTIONS,
-    MAP_SAVE_GAME,
-    MAP_LOAD_GAME,
-    MAP_OBJECTIVES,
-    MAP_RESTART,
-    MAP_QUIT,
-    MAP_GAME_OVER
-} WarMapStatus;
 
 typedef enum
 {
@@ -1928,7 +1922,8 @@ typedef struct
 
 typedef struct
 {
-    WarMapStatus status;
+    bool playing;
+    WarLevelResult result;
 
     s32 levelInfoIndex;
     f32 objectivesTime;
@@ -1940,10 +1935,10 @@ typedef struct
     WarMapSettings settings;
     WarMapSettings settings2;
 
-    // viewport in map coordinates, 
+    // viewport in map coordinates,
     // this is the portion of the map that the player see
     rect viewport;
-    
+
     // panels of the ui, in screen coordinates
     rect leftTopPanel;
     rect leftBottomPanel;
@@ -2051,7 +2046,7 @@ typedef struct _WarContext
     bool audioEnabled;
 
     WarInput input;
-    
+
     f32 transitionDelay;
     WarScene* scene;
     WarScene* nextScene;

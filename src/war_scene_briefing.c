@@ -120,15 +120,10 @@ void enterSceneBriefing(WarContext* context)
 
 void updateSceneBriefing(WarContext* context)
 {
+    WarInput* input = &context->input;
     WarScene* scene = context->scene;
 
     scene->briefing.time -= context->deltaTime;
-
-    if (scene->briefing.time <= 0)
-    {
-        WarMap* map = createMap(context, scene->briefing.mapType);
-        setNextMap(context, map, 1.0f);
-    }
 
     WarEntity* txtBriefing = findUIEntity(context, "txtBriefing");
     if (txtBriefing)
@@ -139,4 +134,10 @@ void updateSceneBriefing(WarContext* context)
     }
 
     updateAnimations(context);
+
+    if (scene->briefing.time <= 0 || wasButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        WarMap* map = createMap(context, scene->briefing.mapType);
+        setNextMap(context, map, 1.0f);
+    }
 }

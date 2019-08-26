@@ -1,5 +1,5 @@
-bool checkMap01Objectives(WarContext* context);
-bool checkMap02Objectives(WarContext* context);
+WarLevelResult checkMap01Objectives(WarContext* context);
+WarLevelResult checkMap02Objectives(WarContext* context);
 
 typedef struct
 {
@@ -351,7 +351,7 @@ WarCampaignMapData getCampaignData(WarCampaignMapType type)
     return campaignsData[index];
 }
 
-bool checkMap01Objectives(WarContext* context)
+WarLevelResult checkMap01Objectives(WarContext* context)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -361,14 +361,35 @@ bool checkMap01Objectives(WarContext* context)
     WarUnitType barracksType = isHumanPlayer(player)
         ? WAR_UNIT_BARRACKS_HUMANS : WAR_UNIT_BARRACKS_ORCS;
 
-    return getNumberOfBuildingsOfType(context, player->index, farmType, true) >= 6 &&
-           getNumberOfBuildingsOfType(context, player->index, barracksType, true) >= 1;
+    if (getNumberOfBuildingsOfType(context, player->index, farmType, true) >= 6 &&
+        getNumberOfBuildingsOfType(context, player->index, barracksType, true) >= 1)
+    {
+        return WAR_LEVEL_RESULT_WIN;
+    }
+
+    if (getTotalNumberOfUnits(context, player->index) == 0)
+    {
+        return WAR_LEVEL_RESULT_LOSE;
+    }
+
+    return WAR_LEVEL_RESULT_NONE;
 }
 
-bool checkMap02Objectives(WarContext* context)
+WarLevelResult checkMap02Objectives(WarContext* context)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
     WarPlayerInfo* enemy = &map->players[1];
 
-    return getTotalNumberOfDudes(context, enemy->index) == 0;
+    if (getTotalNumberOfDudes(context, enemy->index) == 0)
+    {
+        return WAR_LEVEL_RESULT_WIN;
+    }
+
+    if (getTotalNumberOfUnits(context, player->index) == 0)
+    {
+        return WAR_LEVEL_RESULT_LOSE;
+    }
+
+    return WAR_LEVEL_RESULT_NONE;
 }

@@ -83,6 +83,7 @@ List of thing to do in no particular order
   * Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
   * When changing scenes, it seems that part of the music of the previous scene keeps playing.
   * When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will render in the next line which causes missalignment in the left border of the text.
+  * ~~When a menu is showing in the map scene, the player can still select units and buildings.~~
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -117,6 +118,8 @@ List of thing to do in no particular order
   * Make the move state to consider range distance to stop.
   * Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
   * Check behavior of invisible units when is under attack (it maybe work with workers, to stop the attack on it)
+  * ~~Show corresponding WIN or LOSE messages in game over menu.~~
+  * ~~Skip briefing with click.~~
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
@@ -219,16 +222,16 @@ List of thing to do in no particular order
     "wait 1",
     "unbreakable end",
     "frame 0",
-    "wait 1" 
+    "wait 1"
   }
   ```
-  * Move actions system to animations, again? :| 
+  * Move actions system to animations, again? :|
     The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
   * ~~Projectiles~~
     * ~~Arrows~~
     * ~~Fireballs~~
     * ~~Rain of fire~~
-  
+
 * State machine
   * ~~Idle state~~
   * ~~Move state~~

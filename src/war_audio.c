@@ -208,7 +208,7 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
             switch (midiMessage->type)
             {
                 // channel program (preset) change (special handling for 10th MIDI channel with drums)
-                case TML_PROGRAM_CHANGE: 
+                case TML_PROGRAM_CHANGE:
                 {
                     s8 program = midiMessage->program;
                     tsf_channel_set_presetnumber(soundFont, channel, program, (channel == 9));
@@ -231,7 +231,7 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
                     tsf_channel_note_off(soundFont, channel, key);
                     break;
                 }
-                
+
                 // pitch wheel modification
                 case TML_PITCH_BEND:
                 {
@@ -239,7 +239,7 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
                     tsf_channel_set_pitchwheel(soundFont, channel, pitchBend);
                     break;
                 }
-                    
+
                 // MIDI controller messages
                 case TML_CONTROL_CHANGE:
                 {
@@ -306,7 +306,7 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
 
         audio->playbackTime += sampleBlock * (1000.0f / PLAYBACK_FREQ);
         audio->sampleIndex += sampleBlock;
-        
+
         sampleCount -= sampleBlock;
     } while (sampleCount > 0 && audio->loop);
 
@@ -318,7 +318,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
     NOT_USED(input);
 
     WarContext* context = (WarContext*)sfx->pUserData;
-    if (!context) 
+    if (!context)
     {
         return;
     }
@@ -330,7 +330,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
 
     f32 musicVolume = context->musicVolume;
     f32 soundVolume = context->soundVolume;
-    
+
     if (context->map)
     {
         musicVolume *= ((f32)context->map->settings.musicVol / 100);
@@ -388,7 +388,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
         WarEntityId entityId  = toRemove.items[i];
         removeEntityById(context, entityId);
     }
-    
+
     WarEntityIdListFree(&toRemove);
 }
 
@@ -597,7 +597,7 @@ bool mbWriteUIntVar(MemoryBuffer* buffer, u32 value)
         ++byteCount;
         value >>= 7;
     }
-    
+
     for(s32 i = 0; i < byteCount; ++i)
     {
         u8 byte = v & 0xFF;
@@ -635,10 +635,10 @@ static MidiToken* MidiTokenListAppend(MidiTokenList* list, s32 time, u8 type)
 }
 
 /**
- * This code is a port in C of the XMI2MID converter by Peter "Corsix" Cawley 
- * in the War1gus repository. You can find the original C++ code here: 
+ * This code is a port in C of the XMI2MID converter by Peter "Corsix" Cawley
+ * in the War1gus repository. You can find the original C++ code here:
  * https://github.com/Wargus/war1gus/blob/master/xmi2mid.cpp.
- * 
+ *
  * To understand more about these formats see:
  * http://www.shikadi.net/moddingwiki/XMI_Format
  * http://www.shikadi.net/moddingwiki/MID_Format
@@ -751,7 +751,7 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
                 token = MidiTokenListAppend(&lstTokens, tokenTime + intVar * 3, tokenType);
                 token->data = extendedType;
                 token->buffer = (u8*)"\0";
-            
+
                 break;
             }
 
