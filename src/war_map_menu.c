@@ -470,6 +470,18 @@ void createGameOverMenu(WarContext* context)
     setUIButtonClickHandler(uiEntity, handleGameOverContinue);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
     setUITextHighlight(uiEntity, 0, 1);
+
+    uiEntity = createUITextButton(
+        context, "btnGameOverOk",
+        1, 10, "Ok",
+        smallNormalRef,
+        smallPressedRef,
+        invalidRef,
+        vec2Addv(messagePanel, vec2i(95, 25)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleGameOverContinue);
+    setUIButtonHotKey(uiEntity, WAR_KEY_O);
+    setUITextHighlight(uiEntity, 0, 1);
 }
 
 void createQuitMenu(WarContext* context)
@@ -526,6 +538,63 @@ void createQuitMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleQuitCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
+    setUITextHighlight(uiEntity, 0, 1);
+}
+
+void createDemoEndMenu(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    vec2 menuPanel = rectTopLeft(map->menuPanel);
+
+    WarSpriteResourceRef invalidRef = invalidResourceRef();
+    WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
+    WarSpriteResourceRef mediumPressedRef = imageResourceRef(240);
+
+    WarEntity* uiEntity;
+
+    uiEntity = createUIText(
+        context, "txtDemoEndHeader",
+        1, 10,
+        "Thanks for playing!",
+        vec2Addv(menuPanel, vec2i(0, 10)));
+    setUIEntityStatus(uiEntity, false);
+    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width, 12));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
+
+    uiEntity = createUIText(
+        context, "txtDemoEndText",
+        1, 7,
+        "This is a non-profit project with\n"
+        "the personal goal of learning to\n"
+        "do RTS engines\n"
+        "\n"
+        "This is not an official Blizzard\n"
+        "product. Warcraft and all assets\n"
+        "you see are registered trademarks\n"
+        "of Blizzard Entertainment.\n"
+        "\n"
+        "Made by @acoto87",
+        vec2Addv(menuPanel, vec2i(8, 26)));
+    setUIEntityStatus(uiEntity, false);
+    setUITextMultiline(uiEntity, true);
+    setUITextBoundings(uiEntity, vec2f(map->menuPanel.width - 16, 75));
+    setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
+    setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_TOP);
+    setUITextLineAlign(uiEntity, WAR_TEXT_ALIGN_LEFT);
+    setUITextWrapping(uiEntity, WAR_TEXT_WRAP_CHAR);
+
+    uiEntity = createUITextButton(
+        context, "btnDemoEndMenu",
+        1, 10, "Menu",
+        mediumNormalRef,
+        mediumPressedRef,
+        invalidRef,
+        vec2Addv(menuPanel, vec2i(20, 105)));
+    setUIEntityStatus(uiEntity, false);
+    setUIButtonClickHandler(uiEntity, handleDemoEndMenu);
+    setUIButtonHotKey(uiEntity, WAR_KEY_M);
     setUITextHighlight(uiEntity, 0, 1);
 }
 
@@ -647,21 +716,45 @@ void showOrHideGameOverMenu(WarContext* context, bool status)
 {
     WarMap* map = context->map;
 
+    enableOrDisableCommandButtons(context, !status);
+
     setUIEntityStatusByName(context, "rectMenuBackdrop", status);
     setUIEntityStatusByName(context, "imgGameOverBackground", status);
     setUIEntityStatusByName(context, "txtGameOverText", status);
     setUIEntityStatusByName(context, "btnGameOverSave", status);
     setUIEntityStatusByName(context, "btnGameOverContinue", status);
+    setUIEntityStatusByName(context, "btnGameOverOk", status);
 
-    if (map->result == WAR_LEVEL_RESULT_WIN)
+    if (status)
     {
-        WarEntity* gameOverText = findUIEntity(context, "txtGameOverText");
-        setUIText(gameOverText, "You are victorious!");
-    }
-    else if (map->result == WAR_LEVEL_RESULT_LOSE)
-    {
-        WarEntity* gameOverText = findUIEntity(context, "txtGameOverText");
-        setUIText(gameOverText, "You have been defeated");
+        if (map->result == WAR_LEVEL_RESULT_WIN)
+        {
+            WarEntity* gameOverText = findUIEntity(context, "txtGameOverText");
+            setUIText(gameOverText, "You are victorious!");
+
+            WarEntity* saveBtn = findUIEntity(context, "btnGameOverSave");
+            setUIEntityStatus(saveBtn, true);
+
+            WarEntity* continueBtn = findUIEntity(context, "btnGameOverContinue");
+            setUIEntityStatus(continueBtn, true);
+
+            WarEntity* okBtn = findUIEntity(context, "btnGameOverOk");
+            setUIEntityStatus(okBtn, false);
+        }
+        else if (map->result == WAR_LEVEL_RESULT_LOSE)
+        {
+            WarEntity* gameOverText = findUIEntity(context, "txtGameOverText");
+            setUIText(gameOverText, "You failed to archieve victory...");
+
+            WarEntity* saveBtn = findUIEntity(context, "btnGameOverSave");
+            setUIEntityStatus(saveBtn, false);
+
+            WarEntity* continueBtn = findUIEntity(context, "btnGameOverContinue");
+            setUIEntityStatus(continueBtn, false);
+
+            WarEntity* okBtn = findUIEntity(context, "btnGameOverOk");
+            setUIEntityStatus(okBtn, true);
+        }
     }
 }
 
@@ -673,6 +766,17 @@ void showOrHideQuitMenu(WarContext* context, bool status)
     setUIEntityStatusByName(context, "btnQuitQuit", status);
     setUIEntityStatusByName(context, "btnQuitMenu", status);
     setUIEntityStatusByName(context, "btnQuitCancel", status);
+}
+
+void showDemoEndMenu(WarContext* context, bool status)
+{
+    enableOrDisableCommandButtons(context, !status);
+
+    setUIEntityStatusByName(context, "rectMenuBackdrop", status);
+    setUIEntityStatusByName(context, "imgMenuBackground", status);
+    setUIEntityStatusByName(context, "txtDemoEndHeader", status);
+    setUIEntityStatusByName(context, "txtDemoEndText", status);
+    setUIEntityStatusByName(context, "btnDemoEndMenu", status);
 }
 
 // menu button handlers
@@ -897,13 +1001,17 @@ void handleGameOverContinue(WarContext* context, WarEntity* entity)
 
     if (map->result == WAR_LEVEL_RESULT_WIN)
     {
-        map = createMap(context, levelInfoIndex + 2);
-        setNextMap(context, map, 1.0f);
+        WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+        scene->briefing.race = map->players[0].race;
+        scene->briefing.mapType = levelInfoIndex + 2;
+        setNextScene(context, scene, 1.0f);
     }
     else if (map->result == WAR_LEVEL_RESULT_LOSE)
     {
-        map = createMap(context, levelInfoIndex);
-        setNextMap(context, map, 1.0f);
+        WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+        scene->briefing.race = map->players[0].race;
+        scene->briefing.mapType = levelInfoIndex;
+        setNextScene(context, scene, 1.0f);
     }
     else
     {
@@ -931,4 +1039,10 @@ void handleQuitCancel(WarContext* context, WarEntity* entity)
     showOrHideMenu(context, true);
 
     map->playing = false;
+}
+
+void handleDemoEndMenu(WarContext* context, WarEntity* entity)
+{
+    WarScene* scene = createScene(context, WAR_SCENE_MAIN_MENU);
+    setNextScene(context, scene, 1.0f);
 }

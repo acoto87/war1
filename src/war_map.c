@@ -675,6 +675,7 @@ void enterMap(WarContext* context)
     createRestartMenu(context);
     createGameOverMenu(context);
     createQuitMenu(context);
+    createDemoEndMenu(context);
     createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
 
     createAudio(context, WAR_MUSIC_00, true);
@@ -2129,7 +2130,17 @@ void updateMap(WarContext* context)
     {
         map->result = result;
         map->playing = false;
-        showOrHideGameOverMenu(context, true);
+
+        if (result == WAR_LEVEL_RESULT_WIN &&
+            (map->levelInfoIndex == WAR_CAMPAIGN_HUMANS_02 ||
+             map->levelInfoIndex == WAR_CAMPAIGN_ORCS_02))
+        {
+            showDemoEndMenu(context, true);
+        }
+        else
+        {
+            showOrHideGameOverMenu(context, true);
+        }
     }
 }
 

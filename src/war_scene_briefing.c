@@ -34,7 +34,7 @@ void enterSceneBriefingHumans(WarContext* context)
     addAnimationFramesRange(anim4, 0, 20);
     addAnimation(animEntity, anim4);
 
-    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 200));
+    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 160));
     setUITextColor(briefingText, u8RgbColor(255, 215, 138));
     setUITextMultiline(briefingText, true);
     setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 200));
@@ -79,7 +79,7 @@ void enterSceneBriefingOrcs(WarContext* context)
     addAnimationFramesRange(anim3, 0, 30);
     addAnimation(animEntity, anim3);
 
-    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 200));
+    WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 160));
     setUITextColor(briefingText, u8RgbColor(255, 215, 138));
     setUITextMultiline(briefingText, true);
     setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 200));

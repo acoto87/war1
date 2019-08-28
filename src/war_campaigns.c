@@ -25,7 +25,7 @@ const WarCampaignMapData campaignsData[] =
         "no less than 6 farms. Construction of a barracks\n"
         "for defense is also advised, as our scouts have\n"
         "reported Orc patrols in the area.",
-        22.0f
+        24.0f
     },
     {
         WAR_CAMPAIGN_ORCS_01,
@@ -40,31 +40,34 @@ const WarCampaignMapData campaignsData[] =
         "Only a fool would leave his treasures unguarded,\n"
         "so you must also build a barracks for the defense\n"
         "of these farms.",
-        26.0f
+        28.0f
     },
     {
         WAR_CAMPAIGN_HUMANS_02,
         checkMap02Objectives,
         "Defend town and\ndestroy orcs",
         WAR_CAMPAIGNS_HUMAN_02_INTRO,
-        "The Orcs around Grand Hamlet are becoming increasingly\n"
-        "brazen in their attacks, and our spies inform us that\n"
-        "they are amassing a large army to march against the town.\n"
-        "The King is sending you, along with a small detachment of\n"
-        "troops, to rally the people and defend the town against\n"
-        "all opposition.",
-        22.0f
+        "The Orcs around Grand Hamlet are becoming\n"
+        "increasingly brazen in their attacks, and our\n"
+        "spies inform us that they are amassing a large\n"
+        "army to march against the town.\n"
+        "The King is sending you, along with a small\n"
+        "detachment of troops, to rally the people and\n"
+        "defend the town against all opposition.",
+        20.0f
     },
     {
         WAR_CAMPAIGN_ORCS_02,
         checkMap02Objectives,
         "Crush all opposition",
         WAR_CAMPAIGNS_ORC_02_INTRO,
-        "Like the stinging of a wasp, the attacks from the humans\n"
-        "grow more and more bothersome. You have been assigned to a\n"
-        "small outpost on the Borderlands of the Swamps of Sorrow.\n"
-        "You are to defend our lands from the incursions of these\n"
-        "ravenous dogs by crushing any opposition that you encounter.",
+        "Like the stinging of a wasp, the attacks from the\n"
+        "humans grow more and more bothersome.\n"
+        "You have been assigned to a small outpost on the\n"
+        "Borderlands of the Swamps of Sorrow.\n"
+        "You are to defend our lands from the incursions\n"
+        "of these ravenous dogs by crushing any opposition\n"
+        "that you encounter.",
         22.0f
     },
     {

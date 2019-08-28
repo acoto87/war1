@@ -8,6 +8,7 @@ void showOrHideMenu(WarContext* context, bool status);
 void showOrHideOptionsMenu(WarContext* context, bool status);
 void showOrHideGameOverMenu(WarContext* context, bool status);
 void showOrHideQuitMenu(WarContext* context, bool status);
+void showDemoEndMenu(WarContext* context, bool status);
 
 // menu button handlers
 void handleMenu(WarContext* context, WarEntity* entity);
@@ -41,3 +42,5 @@ void handleGameOverContinue(WarContext* context, WarEntity* entity);
 void handleQuitQuit(WarContext* context, WarEntity* entity);
 void handleQuitMenu(WarContext* context, WarEntity* entity);
 void handleQuitCancel(WarContext* context, WarEntity* entity);
+
+void handleDemoEndMenu(WarContext* context, WarEntity* entity);

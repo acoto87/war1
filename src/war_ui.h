@@ -1,5 +1,3 @@
-#define setUIEntityStatus(uiEntity, value) ((uiEntity)->ui.enabled = (value))
-
 bool isUIEntity(WarEntity* entity);
 
 void clearUIText(WarEntity* uiText);
@@ -12,6 +10,8 @@ void setUIRectWidth(WarEntity* uiRect, s32 width);
 
 void clearUITooltip(WarEntity* uiButton);
 void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, char* text);
+
+#define setUIEntityStatus(uiEntity, value) ((uiEntity)->ui.enabled = (value))
 
 #define setUITextBoundings(uiEntity, value) ((uiEntity)->text.boundings = (value))
 #define setUITextHorizontalAlign(uiEntity, value) ((uiEntity)->text.horizontalAlign = (value))
