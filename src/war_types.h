@@ -407,8 +407,10 @@ WarSpriteResourceRef createSpriteResourceRef(s32 resourceIndex, s32 frameIndices
 }
 
 #define invalidResourceRef() createSpriteResourceRef(-1, 0, NULL)
-#define imageResourceRef(resourceIndex) createSpriteResourceRef(resourceIndex, 0, NULL)
-#define spriteResourceRef(resourceIndex, spriteIndex) createSpriteResourceRef(resourceIndex, 1, arrayArg(s32, spriteIndex))
+#define imageResourceRef(resourceIndex) createSpriteResourceRef((resourceIndex), 0, NULL)
+#define imageResourceRefFromPlayer(player, hIdx, oIdx) imageResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx))
+#define spriteResourceRef(resourceIndex, spriteIndex) createSpriteResourceRef((resourceIndex), 1, arrayArg(s32, (spriteIndex)))
+#define spriteResourceRefFromPlayer(player, hIdx, oIdx, spriteIndex) createSpriteResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx), 1, arrayArg(s32, (spriteIndex)))
 
 typedef enum
 {

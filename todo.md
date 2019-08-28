@@ -84,6 +84,50 @@ List of thing to do in no particular order
   * When changing scenes, it seems that part of the music of the previous scene keeps playing.
   * When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will render in the next line which causes missalignment in the left border of the text.
   * ~~When a menu is showing in the map scene, the player can still select units and buildings.~~
+  * ~~Orcs UI is still the Humans.~~
+  * In the first level there shouldn't be a Lumbermill to build.
+    Revisit the FEATURES enum, it should be like this (maybe do a solution like the `getUpgradeLevel` macro):
+    ```c
+    struct _allowed_features_ AllowedFeatures[] = {
+      // Units. 0 - 6
+      {"unit-footman", "unit-grunt"},
+      {"unit-peasant", "unit-peon"},
+      {"unit-human-catapult", "unit-orc-catapult"},
+      {"unit-knight", "unit-raider"},
+      {"unit-archer", "unit-spearman"},
+      {"unit-conjurer", "unit-warlock"},
+      {"unit-cleric", "unit-necrolyte"},
+      // Constructing buildings. 7 - 14
+      {"unit-human-farm", "unit-orc-farm"},
+      {"unit-human-barracks", "unit-orc-barracks"},
+      {"unit-human-church", "unit-orc-temple"},
+      {"unit-human-tower", "unit-orc-tower"},
+      {"unit-human-town-hall", "unit-orc-town-hall"},
+      {"unit-human-lumber-mill", "unit-orc-lumber-mill"},
+      {"unit-human-stable", "unit-orc-kennel"},
+      {"unit-human-blacksmith", "unit-orc-blacksmith"},
+      // Cleric/Necrolyte spells. 15 - 17
+      {"upgrade-healing", "upgrade-raise-dead"},
+      {"upgrade-holy-vision", "upgrade-dark-vision"},
+      {"upgrade-invisibility", "upgrade-unholy-armor"},
+      // Conjurer/Warlock spells. 18 - 20
+      {"upgrade-scorpion", "upgrade-spider"},
+      {"upgrade-rain-of-fire", "upgrade-poison-cloud"},
+      {"upgrade-water-elemental", "upgrade-daemon"},
+      // Roads and walls. 21 - 22
+      {"unit-road", "unit-road"},
+      {"unit-wall", "unit-wall"}
+    };
+    int MaxAllowedFeature = 22;
+    #define SkipFeature(f) (f >= 15 && f <= 21)
+    #define IsAllowedFeature(id, feature) ((id & (1 << (int)feature)) != 0)
+
+    for (int f = 0; f <= MaxAllowedFeature; f++) {
+			if (IsAllowedFeature(allowid, f) && !SkipFeature(f)) {
+				fprintf(sms_c2, "DefineAllow(\"%s\", \"AAAAAAAAAAAAAAAA\")\n", AllowedFeatures[f].thing[race]);
+			}
+		}
+    ```
 
 * General
   * ~~Test the new implementation for lists.~~

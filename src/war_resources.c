@@ -34,11 +34,11 @@ void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *p
     {
         WarResource* palette2 = getOrCreateResource(context, palette2Index);
         u8 *palette2Data = palette2->paletteData.colors;
-        
+
         for (s32 i = 0; i < 128; ++i)
         {
-            if (paletteData[i * 3 + 0] == 252 && 
-                paletteData[i * 3 + 1] == 0 && 
+            if (paletteData[i * 3 + 0] == 252 &&
+                paletteData[i * 3 + 1] == 0 &&
                 paletteData[i * 3 + 2] == 252)
             {
                 paletteData[i * 3 + 0] = palette2Data[i * 3 + 0];
@@ -49,8 +49,8 @@ void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *p
 
         for (s32 i = 128; i < 256; ++i)
         {
-            if (!(palette2Data[i * 3 + 0] == 252 && 
-                  palette2Data[i * 3 + 1] == 0 && 
+            if (!(palette2Data[i * 3 + 0] == 252 &&
+                  palette2Data[i * 3 + 1] == 0 &&
                   palette2Data[i * 3 + 2] == 252))
             {
                 paletteData[i * 3 + 0] = palette2Data[i * 3 + 0];
@@ -64,7 +64,7 @@ void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *p
 void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
-    
+
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.length < PALETTE_LENGTH)
     {
@@ -172,7 +172,7 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
             pixels[i * 4 + 3] = 255;
         }
     }
-    
+
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_IMAGE;
     resource->imageData.width = width;
@@ -241,12 +241,12 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
                     //    frame->data[pixel + 3] = 150;
 
                     frame->data[pixel + 3] = 255;
-                    
+
                 }
             }
         }
     }
-    
+
     resource->type = WAR_RESOURCE_TYPE_SPRITE;
     resource->spriteData.framesCount = framesCount;
     resource->spriteData.frameWidth = frameWidth;
@@ -257,9 +257,9 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
-    
+
     u32 allowId = readu32(rawResource.data, 0);
-    
+
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_INFO;
     resource->levelInfo.allowId = allowId;
@@ -270,7 +270,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
     for(s32 f = 0; f < MAX_FEATURES_COUNT; f++)
     {
         // the feature is allowed if the corresponding bit is set
-        if (allowId & (1 << (s32)f))
+        if (allowId & (1 << f))
         {
             resource->levelInfo.allowedFeatures[f] = 1;
         }
@@ -291,7 +291,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
         bool allowedUpgrade = true;
         if (upgrade >= 3 && upgrade <= 8)
         {
-            // if it's a spell upgrade check the allowed features, because  spells may not be allowed. 
+            // if it's a spell upgrade check the allowed features, because  spells may not be allowed.
             // offset of spells in allowed features is 15
             // usefully, they are not in the same order in the allowid as they
             // are in the list of researched stuff, that's the (upgrade + 3) % 6 are for.
@@ -308,19 +308,19 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
             }
         }
     }
-    
+
     // 0x005C - 0x0069: 5xDWord: Lumber for each player.
     for(s32 i = 0; i < 5; i++)
     {
         resource->levelInfo.lumber[i] = readu32(rawResource.data, 0x5C + i * 4);
     }
-    
+
 	// 0x0070 - 0x0083: 5xDWord: Gold for each player.
     for(s32 i = 0; i < 5; i++)
     {
         resource->levelInfo.gold[i] = readu32(rawResource.data, 0x70 + i * 4);
     }
-    
+
     // 0xCC, 0xCE => Starting position of unit (divide by 2) (ushort)
     resource->levelInfo.startX = readu16(rawResource.data, 0xCC) / 2;
     resource->levelInfo.startY = readu16(rawResource.data, 0xCE) / 2;
@@ -346,11 +346,11 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
     if (nextLevelIndex != 0 && nextLevelIndex != 0xFFFF)
     {
         resource->levelInfo.nextLevelIndex = nextLevelIndex - 2;
-    } 
+    }
 
     // visual resource index: *0xD0 - 2
     u16 visualIndex = readu16(rawResource.data, 0xD0);
-    if (visualIndex != 0 && visualIndex != 0xFFFF) 
+    if (visualIndex != 0 && visualIndex != 0xFFFF)
     {
         resource->levelInfo.visualIndex = visualIndex - 2;
     }
@@ -385,7 +385,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
 
     // dynamic data: 0xE3
     s32 offset = 0xE3;
-    while (readu32(rawResource.data, offset) != 0xFFFFFFFF) 
+    while (readu32(rawResource.data, offset) != 0xFFFFFFFF)
     {
         offset++;
     }
@@ -532,9 +532,9 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
                 s32 ix = mx + (i % TILESET_TILES_PER_ROW) * 2;
                 s32 iy = my + (i / TILESET_TILES_PER_ROW) * 2;
 
-                for (s32 y = 0; y < 8; ++y) 
+                for (s32 y = 0; y < 8; ++y)
                 {
-                    for (s32 x = 0; x < 8; ++x) 
+                    for (s32 x = 0; x < 8; ++x)
                     {
                         s32 fy = (flipY ? flip[y] : y);
                         s32 fx = (flipX ? flip[x] : x);
@@ -561,7 +561,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
         resource->tilesetData.data[i * 4 + 2] = paletteData[data[i] * 3 + 2];
         resource->tilesetData.data[i * 4 + 3] = data[i] > 0 ? 255 : 0;
     }
-    
+
     free(data);
 
 #if __DEBUG__
@@ -699,7 +699,7 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     assert(mbSkip(&bufInput, 2));
     // skip 2's comp of version, always 4393
     assert(mbSkip(&bufInput, 2));
-    
+
     u8 type;
     assert(mbRead(&bufInput, &type));
     assert(type == 1);
@@ -762,7 +762,7 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
             pixels[i * 4 + 3] = 255;
         }
     }
-    
+
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_CURSOR;
     resource->cursor.hotx = hotx;

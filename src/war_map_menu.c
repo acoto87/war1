@@ -13,6 +13,7 @@ void setSpeedStr(WarMapSpeed value, char buffer[])
 void createMenu(WarContext* context)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
 
     vec2 menuPanel = rectTopLeft(map->menuPanel);
 
@@ -30,7 +31,7 @@ void createMenu(WarContext* context)
         u8RgbaColor(0, 0, 0, 150));
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIImage(context, "imgMenuBackground", imageResourceRef(233), menuPanel);
+    uiEntity = createUIImage(context, "imgMenuBackground", imageResourceRefFromPlayer(player, 233, 234), menuPanel);
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIText(
@@ -382,6 +383,7 @@ void createObjectivesMenu(WarContext* context)
 void createRestartMenu(WarContext* context)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
 
     vec2 messagePanel = rectTopLeft(map->messagePanel);
 
@@ -391,7 +393,7 @@ void createRestartMenu(WarContext* context)
 
     WarEntity* uiEntity;
 
-    uiEntity = createUIImage(context, "imgGameOverBackground", imageResourceRef(235), messagePanel);
+    uiEntity = createUIImage(context, "imgMessageMenuBackground", imageResourceRefFromPlayer(player, 235, 236), messagePanel);
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIText(context, "txtRestartText",
@@ -706,7 +708,7 @@ void showOrHideObjectivesMenu(WarContext* context, bool status)
 void showOrHideRestartMenu(WarContext* context, bool status)
 {
     setUIEntityStatusByName(context, "rectMenuBackdrop", status);
-    setUIEntityStatusByName(context, "imgGameOverBackground", status);
+    setUIEntityStatusByName(context, "imgMessageMenuBackground", status);
     setUIEntityStatusByName(context, "txtRestartText", status);
     setUIEntityStatusByName(context, "btnRestartRestart", status);
     setUIEntityStatusByName(context, "btnRestartCancel", status);
@@ -719,7 +721,7 @@ void showOrHideGameOverMenu(WarContext* context, bool status)
     enableOrDisableCommandButtons(context, !status);
 
     setUIEntityStatusByName(context, "rectMenuBackdrop", status);
-    setUIEntityStatusByName(context, "imgGameOverBackground", status);
+    setUIEntityStatusByName(context, "imgMessageMenuBackground", status);
     setUIEntityStatusByName(context, "txtGameOverText", status);
     setUIEntityStatusByName(context, "btnGameOverSave", status);
     setUIEntityStatusByName(context, "btnGameOverContinue", status);
@@ -761,7 +763,7 @@ void showOrHideGameOverMenu(WarContext* context, bool status)
 void showOrHideQuitMenu(WarContext* context, bool status)
 {
     setUIEntityStatusByName(context, "rectMenuBackdrop", status);
-    setUIEntityStatusByName(context, "imgGameOverBackground", status);
+    setUIEntityStatusByName(context, "imgMessageMenuBackground", status);
     setUIEntityStatusByName(context, "txtQuitText", status);
     setUIEntityStatusByName(context, "btnQuitQuit", status);
     setUIEntityStatusByName(context, "btnQuitMenu", status);

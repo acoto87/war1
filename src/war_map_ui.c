@@ -1,6 +1,7 @@
 void createMapUI(WarContext* context)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
 
     vec2 leftTopPanel = rectTopLeft(map->leftTopPanel);
     vec2 leftBottomPanel = rectTopLeft(map->leftBottomPanel);
@@ -8,22 +9,22 @@ void createMapUI(WarContext* context)
     vec2 rightPanel = rectTopLeft(map->rightPanel);
     vec2 bottomPanel = rectTopLeft(map->bottomPanel);
     vec2 minimapPanel = rectTopLeft(map->minimapPanel);
-    
+
     WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef normalRef = imageResourceRef(364);
     WarSpriteResourceRef pressedRef = imageResourceRef(365);
     WarSpriteResourceRef portraitsRef = imageResourceRef(361);
 
     // panels
-    createUIImage(context, "panelLeftTop", imageResourceRef(224), leftTopPanel);
-    createUIImage(context, "panelLeftBottom", imageResourceRef(226), leftBottomPanel);
-    createUIImage(context, "panelTop", imageResourceRef(218), topPanel);
-    createUIImage(context, "panelRight", imageResourceRef(220), rightPanel);
-    createUIImage(context, "panelBottom", imageResourceRef(222), bottomPanel);
+    createUIImage(context, "panelLeftTop", imageResourceRefFromPlayer(player, 224, 225), leftTopPanel);
+    createUIImage(context, "panelLeftBottom", imageResourceRefFromPlayer(player, 226, 227), leftBottomPanel);
+    createUIImage(context, "panelTop", imageResourceRefFromPlayer(player, 218, 219), topPanel);
+    createUIImage(context, "panelRight", imageResourceRefFromPlayer(player, 220, 221), rightPanel);
+    createUIImage(context, "panelBottom", imageResourceRefFromPlayer(player, 222, 223), bottomPanel);
 
     // minimap
     createUIMinimap(context, "minimap", minimapPanel);
-    
+
     // top panel images
     createUIImage(context, "imgGold", imageResourceRef(406), vec2Addv(topPanel, vec2i(201, 1)));
     createUIImage(context, "imgLumber", imageResourceRef(407), vec2Addv(topPanel, vec2i(102, 0)));
@@ -40,13 +41,13 @@ void createMapUI(WarContext* context)
     createUIText(context, "txtStatusGold", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(218, 5)));
 
     // selected unit(s) info
-    createUIImage(context, "imgUnitInfo", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(2, 0)));
+    createUIImage(context, "imgUnitInfo", imageResourceRefFromPlayer(player, 360, 359), vec2Addv(leftBottomPanel, vec2i(2, 0)));
     createUIImage(context, "imgUnitPortrait0", portraitsRef, vec2Addv(leftBottomPanel, vec2i(6, 4)));
     createUIImage(context, "imgUnitPortrait1", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 1)));
     createUIImage(context, "imgUnitPortrait2", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 1)));
     createUIImage(context, "imgUnitPortrait3", portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 23)));
     createUIImage(context, "imgUnitPortrait4", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 23)));
-    createUIImage(context, "imgUnitInfoLife", imageResourceRef(360), vec2Addv(leftBottomPanel, vec2i(3, 16)));
+    createUIImage(context, "imgUnitInfoLife", imageResourceRefFromPlayer(player, 360, 359), vec2Addv(leftBottomPanel, vec2i(3, 16)));
     createUIText(context, "txtUnitName", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(6, 26)));
     createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
     createUIRect(context, "rectLifeBar1", vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
@@ -65,42 +66,42 @@ void createMapUI(WarContext* context)
 
     // command buttons
     createUIImageButton(
-        context, "btnCommand0", 
-        normalRef, pressedRef, portraitsRef, 
+        context, "btnCommand0",
+        normalRef, pressedRef, portraitsRef,
         vec2Addv(leftBottomPanel, vec2i(2, 44)));
 
     createUIImageButton(
-        context, "btnCommand1", 
-        normalRef, pressedRef, portraitsRef, 
+        context, "btnCommand1",
+        normalRef, pressedRef, portraitsRef,
         vec2Addv(leftBottomPanel, vec2i(36, 44)));
 
     createUIImageButton(
-        context, "btnCommand2", 
-        normalRef, pressedRef, portraitsRef, 
+        context, "btnCommand2",
+        normalRef, pressedRef, portraitsRef,
         vec2Addv(leftBottomPanel, vec2i(2, 67)));
 
     createUIImageButton(
-        context, "btnCommand3", 
-        normalRef, pressedRef, portraitsRef, 
+        context, "btnCommand3",
+        normalRef, pressedRef, portraitsRef,
         vec2Addv(leftBottomPanel, vec2i(36, 67)));
 
     createUIImageButton(
-        context, "btnCommand4", 
-        normalRef, pressedRef, portraitsRef, 
+        context, "btnCommand4",
+        normalRef, pressedRef, portraitsRef,
         vec2Addv(leftBottomPanel, vec2i(2, 90)));
 
     createUIImageButton(
-        context, "btnCommand5", 
-        normalRef, pressedRef, portraitsRef, 
+        context, "btnCommand5",
+        normalRef, pressedRef, portraitsRef,
         vec2Addv(leftBottomPanel, vec2i(36, 90)));
 
     WarEntity* uiEntity;
 
     uiEntity = createUIImageButton(
-        context, "btnMenu", 
-        imageResourceRef(362), 
-        imageResourceRef(363), 
-        invalidRef, 
+        context, "btnMenu",
+        imageResourceRef(362),
+        imageResourceRef(363),
+        invalidRef,
         vec2Addv(leftBottomPanel, vec2i(3, 116)));
     setUITooltip(uiEntity, 6, 3, "MENU (F10)");
     setUIButtonClickHandler(uiEntity, handleMenu);
@@ -193,7 +194,7 @@ void updateSelectedUnitsInfo(WarContext* context)
     setUIText(txtUnitName, NULL);
     setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
 
-    // update the frame index of unit info/portraits 
+    // update the frame index of unit info/portraits
     // based on the number of entities selected
     //
     // TODO: the max number of selected entities shouldn't greater than 4 but
@@ -349,7 +350,7 @@ void setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUni
 #define PERCENT_BAR_WIDTH_PX 64
 
     f32 percent = unit->buildPercent;
-    
+
     setUIRectWidth(rectPercentBar, (s32)(percent * PERCENT_BAR_WIDTH_PX));
     setUIImage(rectPercentText, 0);
 }
@@ -406,7 +407,7 @@ void renderCommand(WarContext* context)
             WarUnitType buildingToBuild = command->build.buildingToBuild;
             WarUnitData data = getUnitData(buildingToBuild);
 
-            NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, data.sizex, data.sizey) 
+            NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, data.sizex, data.sizey)
                 ? NVG_GRAY_TRANSPARENT : NVG_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);

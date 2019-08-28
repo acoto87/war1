@@ -44,10 +44,10 @@ bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
     {
         if (isUnit(targetEntity))
         {
-            if (!isDead(targetEntity) && 
-                !isGoingToDie(targetEntity) && 
+            if (!isDead(targetEntity) &&
+                !isGoingToDie(targetEntity) &&
                 !isCorpseUnit(targetEntity) &&
-                !isCollapsing(entity) && 
+                !isCollapsing(entity) &&
                 !isGoingToCollapse(entity))
             {
                 return true;
@@ -84,7 +84,7 @@ u8Color getUnitColorOnMinimap(WarEntity* entity)
 
     u8 r = 211, g = 211, b = 211;
 
-    if (unit->type == WAR_UNIT_TOWNHALL_HUMANS || 
+    if (unit->type == WAR_UNIT_TOWNHALL_HUMANS ||
         unit->type == WAR_UNIT_TOWNHALL_ORCS)
     {
         r = 255; g = 255; b = 0;
@@ -176,7 +176,7 @@ s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitT
         WarEntity* entity = units->items[i];
         if (entity)
         {
-            if (entity->unit.player == player && 
+            if (entity->unit.player == player &&
                 entity->unit.type == unitType)
             {
                 if (alreadyBuilt && (isBuilding(entity) || isGoingToBuild(entity)))
@@ -200,7 +200,7 @@ s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
         WarEntity* entity = units->items[i];
         if (entity)
         {
-            if (entity->unit.player == player && 
+            if (entity->unit.player == player &&
                 entity->unit.type == unitType)
             {
                 count++;
@@ -265,7 +265,12 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 if (command->type == WAR_COMMAND_BUILD_BASIC)
                 {
                     commands[0] = WAR_COMMAND_BUILD_FARM_HUMANS;
-                    commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_HUMANS;
+
+                    if (isFeatureAllowed(player, WAR_FEATURE_UNIT_LUMBER_MILL))
+                    {
+                        commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_HUMANS;
+                    }
+
                     commands[2] = WAR_COMMAND_BUILD_BARRACKS_HUMANS;
                 }
                 else if (command->type == WAR_COMMAND_BUILD_ADVANCED)
@@ -307,7 +312,12 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 if (command->type == WAR_COMMAND_BUILD_BASIC)
                 {
                     commands[0] = WAR_COMMAND_BUILD_FARM_ORCS;
-                    commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_ORCS;
+
+                    if (isFeatureAllowed(player, WAR_FEATURE_UNIT_LUMBER_MILL))
+                    {
+                        commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_ORCS;
+                    }
+
                     commands[2] = WAR_COMMAND_BUILD_BARRACKS_ORCS;
                 }
                 else if (command->type == WAR_COMMAND_BUILD_ADVANCED)
@@ -315,7 +325,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                     commands[0] = WAR_COMMAND_BUILD_BARRACKS_ORCS;
                     commands[1] = WAR_COMMAND_BUILD_TEMPLE;
                     commands[2] = WAR_COMMAND_BUILD_KENNEL;
-                    
+
                     if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
                     {
                         commands[3] = WAR_COMMAND_BUILD_TOWER_ORCS;
@@ -339,7 +349,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                     commands[5] = WAR_COMMAND_BUILD_ADVANCED;
                 }
             }
-            
+
             break;
         }
         case WAR_UNIT_CONJURER:
@@ -355,25 +365,25 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[2] = WAR_COMMAND_ATTACK;
 
                 // only if these spells are researshed
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAIN_OF_FIRE) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAIN_OF_FIRE) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_RAIN_OF_FIRE))
                 {
                     commands[3] = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SCORPION) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SCORPION) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_SCORPIONS))
                 {
                     commands[4] = WAR_COMMAND_SUMMON_SCORPION;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_WATER_ELEMENTAL) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_WATER_ELEMENTAL) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_WATER_ELEMENTAL))
                 {
                     commands[5] = WAR_COMMAND_SUMMON_WATER_ELEMENTAL;
                 }
             }
-    
+
             break;
         }
         case WAR_UNIT_WARLOCK:
@@ -389,19 +399,19 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[2] = WAR_COMMAND_ATTACK;
 
                 // only if these spells are researshed
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_POISON_CLOUD) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_POISON_CLOUD) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_POISON_CLOUD))
                 {
                     commands[3] = WAR_COMMAND_SPELL_POISON_CLOUD;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SPIDER) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SPIDER) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_SPIDERS))
                 {
                     commands[4] = WAR_COMMAND_SUMMON_SPIDER;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DAEMON) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DAEMON) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_DAEMON))
                 {
                     commands[5] = WAR_COMMAND_SUMMON_DAEMON;
@@ -423,19 +433,19 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[2] = WAR_COMMAND_ATTACK;
 
                 // only if these spells are researshed
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_HEALING) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_HEALING) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_HEALING))
                 {
                     commands[3] = WAR_COMMAND_SPELL_HEALING;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_FAR_SIGHT) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_FAR_SIGHT) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_FAR_SIGHT))
                 {
                     commands[4] = WAR_COMMAND_SPELL_FAR_SIGHT;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_INVISIBILITY) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_INVISIBILITY) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_INVISIBILITY))
                 {
                     commands[5] = WAR_COMMAND_SPELL_INVISIBILITY;
@@ -457,19 +467,19 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[2] = WAR_COMMAND_ATTACK;
 
                 // only if these spells are researshed
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAISE_DEAD) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAISE_DEAD) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_RAISE_DEAD))
                 {
                     commands[3] = WAR_COMMAND_SPELL_RAISE_DEAD;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DARK_VISION) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DARK_VISION) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_DARK_VISION))
                 {
                     commands[4] = WAR_COMMAND_SPELL_DARK_VISION;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_UNHOLY_ARMOR) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_UNHOLY_ARMOR) &&
                     hasAnyUpgrade(player, WAR_UPGRADE_UNHOLY_ARMOR))
                 {
                     commands[5] = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
@@ -487,7 +497,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             {
                 commands[5] = WAR_COMMAND_CANCEL;
             }
-            
+
             break;
         }
 
@@ -564,19 +574,19 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_CLERIC;
 
                 // only if this upgrade is not been researched yet
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_HEALING) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_HEALING) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_HEALING))
                 {
                     commands[1] = WAR_COMMAND_UPGRADE_HEALING;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_FAR_SIGHT) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_FAR_SIGHT) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_FAR_SIGHT))
                 {
                     commands[2] = WAR_COMMAND_UPGRADE_FAR_SIGHT;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_INVISIBILITY) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_INVISIBILITY) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_INVISIBILITY))
                 {
                     commands[3] = WAR_COMMAND_UPGRADE_INVISIBILITY;
@@ -596,19 +606,19 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_NECROLYTE;
 
                 // only if this upgrade is not been researched yet
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAISE_DEAD) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAISE_DEAD) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_RAISE_DEAD))
                 {
                     commands[1] = WAR_COMMAND_UPGRADE_RAISE_DEAD;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DARK_VISION) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DARK_VISION) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_DARK_VISION))
                 {
                     commands[2] = WAR_COMMAND_UPGRADE_DARK_VISION;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_UNHOLY_ARMOR) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_UNHOLY_ARMOR) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_UNHOLY_ARMOR))
                 {
                     commands[3] = WAR_COMMAND_UPGRADE_UNHOLY_ARMOR;
@@ -628,19 +638,19 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_TRAIN_CONJURER;
 
                 // only if this upgrade is not been researched yet
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SCORPION) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SCORPION) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_SCORPIONS))
                 {
                     commands[1] = WAR_COMMAND_UPGRADE_SCORPION;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAIN_OF_FIRE) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_RAIN_OF_FIRE) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_RAIN_OF_FIRE))
                 {
                     commands[2] = WAR_COMMAND_UPGRADE_RAIN_OF_FIRE;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_WATER_ELEMENTAL) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_WATER_ELEMENTAL) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_WATER_ELEMENTAL))
                 {
                     commands[3] = WAR_COMMAND_UPGRADE_WATER_ELEMENTAL;
@@ -658,21 +668,21 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
             else
             {
                 commands[0] = WAR_COMMAND_TRAIN_WARLOCK;
-                
+
                 // only if this upgrade is not been researched yet
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SPIDER) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_SPIDER) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_SPIDERS))
                 {
                     commands[1] = WAR_COMMAND_UPGRADE_SPIDER;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_POISON_CLOUD) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_POISON_CLOUD) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_POISON_CLOUD))
                 {
                     commands[2] = WAR_COMMAND_UPGRADE_POISON_CLOUD;
                 }
 
-                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DAEMON) && 
+                if (isFeatureAllowed(player, WAR_FEATURE_SPELL_DAEMON) &&
                     hasRemainingUpgrade(player, WAR_UPGRADE_DAEMON))
                 {
                     commands[3] = WAR_COMMAND_UPGRADE_DAEMON;
@@ -737,7 +747,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                     commands[0] = WAR_COMMAND_UPGRADE_SPEARS;
                 }
             }
-            
+
             break;
         }
         case WAR_UNIT_STABLE:
@@ -754,7 +764,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                     commands[0] = WAR_COMMAND_UPGRADE_HORSES;
                 }
             }
-            
+
             break;
         }
         case WAR_UNIT_KENNEL:
@@ -847,7 +857,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         // unit commands
         case WAR_COMMAND_MOVE:
         {
-            data.frameIndex = isHumanPlayer(player) 
+            data.frameIndex = isHumanPlayer(player)
                 ? WAR_PORTRAIT_MOVE_HUMANS : WAR_PORTRAIT_MOVE_ORCS;
             break;
         }
@@ -975,7 +985,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                     {
                         data.frameIndex = WAR_PORTRAIT_HOLY_LANCE;
                         break;
-                    }                    
+                    }
 
                     case WAR_UNIT_NECROLYTE:
                     {
@@ -1023,10 +1033,10 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                     assert(false);
                 }
             }
-            
+
             break;
         }
-        
+
         case WAR_COMMAND_TRAIN_PEASANT:
         case WAR_COMMAND_TRAIN_PEON:
         case WAR_COMMAND_TRAIN_FOOTMAN:
@@ -1146,7 +1156,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
             data.frameIndex = spellData.portraitFrameIndex;
             break;
         }
-        
+
         // cancel
         case WAR_COMMAND_CANCEL:
         {
