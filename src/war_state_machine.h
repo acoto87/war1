@@ -112,6 +112,12 @@ bool isInsideBuilding(WarEntity* entity)
         return deliver->deliver.insideBuilding;
     }
 
+    if (isRepairing2(entity))
+    {
+        WarState* repairing = getRepairingState(entity);
+        return repairing->repairing.insideBuilding;
+    }
+
     return false;
 }
 

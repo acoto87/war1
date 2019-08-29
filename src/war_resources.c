@@ -291,7 +291,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
         bool allowedUpgrade = true;
         if (upgrade >= 3 && upgrade <= 8)
         {
-            // if it's a spell upgrade check the allowed features, because  spells may not be allowed.
+            // if it's a spell upgrade check the allowed features, because spells may not be allowed.
             // offset of spells in allowed features is 15
             // usefully, they are not in the same order in the allowid as they
             // are in the list of researched stuff, that's the (upgrade + 3) % 6 are for.

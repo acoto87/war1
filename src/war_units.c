@@ -266,7 +266,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 {
                     commands[0] = WAR_COMMAND_BUILD_FARM_HUMANS;
 
-                    if (isFeatureAllowed(player, WAR_FEATURE_UNIT_LUMBER_MILL))
+                    if (isFeatureAllowed(player, WAR_FEATURE_UNIT_LUMBER_MILL_HUMANS))
                     {
                         commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_HUMANS;
                     }
@@ -313,7 +313,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 {
                     commands[0] = WAR_COMMAND_BUILD_FARM_ORCS;
 
-                    if (isFeatureAllowed(player, WAR_FEATURE_UNIT_LUMBER_MILL))
+                    if (isFeatureAllowed(player, WAR_FEATURE_UNIT_LUMBER_MILL_ORCS))
                     {
                         commands[1] = WAR_COMMAND_BUILD_LUMBERMILL_ORCS;
                     }

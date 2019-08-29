@@ -25,11 +25,10 @@ const char* features[MAX_FEATURES_COUNT * 2] = {
 	"upgrade-rain-of-fire",     "upgrade-poison-cloud",
 	"upgrade-water-elemental",  "upgrade-daemon",
 	// Roads and walls. 21 - 22
-	"unit-road",                "unit-road",
-	"unit-wall",                "unit-wall"
+	"unit-road",                "unit-wall"
 };
 
-const char* upgradeNames[MAX_UPGRADES_COUNT * 2] = 
+const char* upgradeNames[MAX_UPGRADES_COUNT * 2] =
 {
     // Basic upgrades
     "upgrade-spear",        "upgrade-arrow",
@@ -153,7 +152,7 @@ typedef struct
     char name[50];
 } WarUnitData;
 
-const WarUnitData unitsData[] = 
+const WarUnitData unitsData[] =
 {
     // units
     { WAR_UNIT_FOOTMAN,             279, WAR_PORTRAIT_FOOTMAN,            1, 1, "FOOTMAN"         },
@@ -286,7 +285,7 @@ const WarRoadData roadsData[] =
 const WarRoadPieceType roadTileTypeMap[16] =
 {
     // 0-15
-    0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10, 
+    0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10,
 };
 
 typedef struct
@@ -325,7 +324,7 @@ const WarWallData wallsData[] =
 const WarWallPieceType wallTileTypeMap[16] =
 {
     // 0-15
-    0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10, 
+    0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10,
 };
 
 #define WAR_WALL_GOLD_COST 100
@@ -438,37 +437,37 @@ const WarTreeData treesData[] =
 const WarTreeTileType treeTileTypeMap[256] =
 {
     // 0-15
-    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 0, 0, 0, 0, 7, 7, 
+    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 0, 0, 0, 0, 7, 7,
     // 16-31
-    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 7, 7, 
+    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 7, 7,
     // 32-47
-    14, 14, 16, 16, 14, 14, 16, 16, 0, 0, 0, 0, 14, 14, 4, 4, 
+    14, 14, 16, 16, 14, 14, 16, 16, 0, 0, 0, 0, 14, 14, 4, 4,
     // 48-63
-    14, 14, 16, 16, 14, 14, 16, 16, 1, 1, 4, 4, 1, 1, 4, 4, 
+    14, 14, 16, 16, 14, 14, 16, 16, 1, 1, 4, 4, 1, 1, 4, 4,
     // 64-79
-    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 0, 0, 0, 0, 7, 7, 
+    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 0, 0, 0, 0, 7, 7,
     // 80-95
-    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 7, 15, 0, 0, 7, 7, 
+    0, 0, 15, 15, 0, 0, 15, 15, 0, 0, 7, 15, 0, 0, 7, 7,
     // 96-111
-    14, 14, 16, 16, 14, 14, 16, 16, 1, 0, 4, 0, 14, 1, 4, 4, 
+    14, 14, 16, 16, 14, 14, 16, 16, 1, 0, 4, 0, 14, 1, 4, 4,
     // 112-127
-    14, 14, 16, 16, 14, 14, 16, 16, 1, 1, 4, 4, 1, 1, 4, 4, 
+    14, 14, 16, 16, 14, 14, 16, 16, 1, 1, 4, 4, 1, 1, 4, 4,
     // 128-143
-    0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 0, 8, 0, 0, 8, 8, 
+    0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 0, 8, 0, 0, 8, 8,
     // 144-159
-    0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 8, 9, 0, 0, 8, 8, 
+    0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 8, 9, 0, 0, 8, 8,
     // 160-175
-    0, 14, 0, 6, 0, 3, 6, 6, 2, 0, 0, 0, 0, 14, 0, 5, 
+    0, 14, 0, 6, 0, 3, 6, 6, 2, 0, 0, 0, 0, 14, 0, 5,
     // 176-191
-    0, 14, 0, 6, 0, 14, 0, 6, 0, 1, 0, 18, 0, 14, 5, 11, 
+    0, 14, 0, 6, 0, 14, 0, 6, 0, 1, 0, 18, 0, 14, 5, 11,
     // 192-207
-    0, 0, 15, 9, 0, 0, 15, 9, 0, 0, 0, 0, 0, 0, 7, 8, 
+    0, 0, 15, 9, 0, 0, 15, 9, 0, 0, 0, 0, 0, 0, 7, 8,
     // 208-223
-    0, 0, 9, 9, 0, 0, 15, 9, 0, 0, 15, 9, 0, 0, 7, 8, 
+    0, 0, 9, 9, 0, 0, 15, 9, 0, 0, 15, 9, 0, 0, 7, 8,
     // 224-239
-    3, 3, 6, 6, 3, 3, 6, 6, 2, 2, 0, 5, 3, 2, 17, 10, 
+    3, 3, 6, 6, 3, 3, 6, 6, 2, 2, 0, 5, 3, 2, 17, 10,
     // 240-255
-    3, 3, 6, 6, 3, 3, 6, 6, 2, 2, 5, 12, 2, 2, 13, 5, 
+    3, 3, 6, 6, 3, 3, 6, 6, 2, 2, 5, 12, 2, 2, 13, 5,
 };
 
 // this is a map of the configurations of the neighbors of a tile to a ruin tile type.
@@ -562,7 +561,7 @@ typedef struct
 // build time in seconds
 #define __bts(t) ((t)*80/1000)
 
-const WarUnitStats unitStats[] = 
+const WarUnitStats unitStats[] =
 {
     // unit type                range  sight  armor   hp   mana   min D.  rnd D.       build    gold    lumber   decay    speed in pixels x seconds
     { WAR_UNIT_FOOTMAN,           1,     2,     2,     60,   -1,     1,      9,    __bts(600),    400,      0,     -1,   { 16.736f, 16.736f, 16.736f } },
@@ -606,7 +605,7 @@ typedef struct
     s32 woodCost;
 } WarBuildingStats;
 
-const WarBuildingStats buildingStats[] = 
+const WarBuildingStats buildingStats[] =
 {
     // building type                    armor    sight     hp            build     gold    lumber
     { WAR_UNIT_FARM_HUMANS,               0,      2,       400,     __bts(1000),    500,    300 },
@@ -702,7 +701,7 @@ const WarSpellData spellData[] =
     { WAR_SUMMON_SCORPION,          WAR_PORTRAIT_SCORPION           },
     { WAR_SUMMON_DAEMON,            WAR_PORTRAIT_DAEMON             },
     { WAR_SUMMON_WATER_ELEMENTAL,   WAR_PORTRAIT_WATER_ELEMENTAL    },
-    
+
     // spells
     { WAR_SPELL_HEALING,            WAR_PORTRAIT_HEALING            },
     { WAR_SPELL_FAR_SIGHT,          WAR_PORTRAIT_FAR_SIGHT          },
@@ -747,7 +746,7 @@ typedef struct
     s32 mappedType;
 } WarSpellMapping;
 
-const WarSpellMapping spellMappings[] = 
+const WarSpellMapping spellMappings[] =
 {
     // summon
     { WAR_SUMMON_SPIDER,            WAR_UNIT_SPIDER             },
@@ -767,7 +766,7 @@ typedef struct
     char tooltip2[100];
 } WarUnitCommandBaseData;
 
-const WarUnitCommandBaseData commandBaseData[] = 
+const WarUnitCommandBaseData commandBaseData[] =
 {
     { WAR_COMMAND_NONE,                     NULL,                   WAR_KEY_NONE,      -1, 1, "",                             "" },
 
@@ -796,7 +795,7 @@ const WarUnitCommandBaseData commandBaseData[] =
     { WAR_COMMAND_TRAIN_WARLOCK,            trainWarlock,           WAR_KEY_T,          0, 1, "TRAIN WARLOCK",                "TRAINING A WARLOCK"        },
     { WAR_COMMAND_TRAIN_CLERIC,             trainCleric,            WAR_KEY_T,          0, 1, "TRAIN CLERIC",                 "TRAINING A CLERIC"         },
     { WAR_COMMAND_TRAIN_NECROLYTE,          trainNecrolyte,         WAR_KEY_T,          0, 1, "TRAIN NECROLYTE",              "TRAINING A NECROLYTE"      },
-   
+
     // spell commands
     { WAR_COMMAND_SPELL_HEALING,            castHeal,               WAR_KEY_H,          0, 1, "HEALING",                      ""                          },
     { WAR_COMMAND_SPELL_POISON_CLOUD,       castPoisonCloud,        WAR_KEY_P,          9, 1, "CLOUD OF POISON",              ""                          },
@@ -865,7 +864,7 @@ typedef struct
     s32 mappedType;
 } WarUnitCommandMapping;
 
-const WarUnitCommandMapping commandMappings[] = 
+const WarUnitCommandMapping commandMappings[] =
 {
     // train commands
     { WAR_COMMAND_TRAIN_FOOTMAN,            WAR_UNIT_FOOTMAN            },
@@ -1232,8 +1231,8 @@ bool isBuildingUnitType(WarUnitType type)
         case WAR_UNIT_BLACKROCK:
         case WAR_UNIT_GOLDMINE:
             return true;
-    
-        default: 
+
+        default:
             return false;
     }
 }
@@ -1382,7 +1381,7 @@ bool isMagicUnitType(WarUnitType type)
         case WAR_UNIT_DAEMON:
         case WAR_UNIT_THE_DEAD:
             return true;
-    
+
         default:
             return false;
     }
@@ -1587,8 +1586,8 @@ WarRace getUnitRace(WarEntity* entity)
         case WAR_UNIT_BLACKSMITH_ORCS:
         case WAR_UNIT_BLACKROCK:
             return WAR_RACE_ORCS;
-    
-        default: 
+
+        default:
             return WAR_RACE_NEUTRAL;
     }
 }
@@ -1627,7 +1626,7 @@ WarProjectileType getProjectileType(WarUnitType type)
         {
             return WAR_PROJECTILE_WATER_ELEMENTAL;
         }
-        
+
         default:
         {
             // unreachable
@@ -1783,8 +1782,8 @@ f32 getUnitActionScale(WarEntity* entity)
 {
     assert(isUnit(entity));
 
-    // this is the scale of the animation, for walking 
-    // the lower the less time is the transition between the frames 
+    // this is the scale of the animation, for walking
+    // the lower the less time is the transition between the frames
     // thus the animation goes faster.
     //
     // speed 0 -> 1.0f
@@ -1803,7 +1802,7 @@ vec2 unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
     vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
     vec2 unitSize = getUnitSize(targetEntity);
     rect unitRect = rectv(targetPosition, unitSize);
-    
+
     return getClosestPointOnRect(position, unitRect);
 }
 
@@ -1844,7 +1843,7 @@ bool isCarryingResources(WarEntity* entity)
 {
     assert(entity);
     assert(isUnit(entity));
-    
+
     switch (entity->unit.resourceKind)
     {
         case WAR_RESOURCE_GOLD: return entity->unit.amount == UNIT_MAX_CARRY_WOOD;

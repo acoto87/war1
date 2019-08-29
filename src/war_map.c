@@ -834,6 +834,12 @@ void updateSelection(WarContext* context)
                                 continue;
                             }
 
+                            // don't select workers inside buildings
+                            if (isWorkerUnit(entity) && isInsideBuilding(entity))
+                            {
+                                continue;
+                            }
+
                             s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                             s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
 
@@ -869,7 +875,7 @@ void updateSelection(WarContext* context)
                 bool areDudesSelected = false;
                 bool areBuildingSelected = false;
 
-                // calculate the number of dudes and building entities in the selection
+                // calculate the number of dudes and buildings in the selection
                 for (s32 i = 0; i < newSelectedEntities.count; i++)
                 {
                     WarEntity* entity = newSelectedEntities.items[i];
@@ -917,6 +923,21 @@ void updateSelection(WarContext* context)
                     {
                         playBuildingSelectionSound(context, newSelectedEntity);
                     }
+                }
+
+                // if the new selected entity is the same one, don't clear the command, otherwise do
+                if (newSelectedEntities.count == 1 && map->selectedEntities.count == 1)
+                {
+                    WarEntity* newSelectedEntity = newSelectedEntities.items[0];
+                    WarEntityId selectedEntityId = map->selectedEntities.items[0];
+                    if (selectedEntityId != newSelectedEntity->id)
+                    {
+                        map->command.type = WAR_COMMAND_NONE;
+                    }
+                }
+                else
+                {
+                    map->command.type = WAR_COMMAND_NONE;
                 }
 
                 // clear the current selection
