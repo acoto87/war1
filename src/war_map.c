@@ -1182,7 +1182,12 @@ void updateCommands(WarContext* context)
     };
 
     for (s32 i = 0; i < arrayLength(commandButtons); i++)
+    {
         commandButtons[i]->button.enabled = false;
+        commandButtons[i]->button.hot = false;
+        commandButtons[i]->button.active = false;
+        commandButtons[i]->button.interactive = false;\
+    }
 
     for (s32 i = 0; i < arrayLength(commandTexts); i++)
         clearUIText(commandTexts[i]);
@@ -1261,6 +1266,9 @@ void updateCommands(WarContext* context)
             setUIImage(commandButtons[i], commandData.frameIndex);
             setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.highlightCount, commandData.tooltip);
             commandButtons[i]->button.enabled = true;
+            commandButtons[i]->button.hot = false;
+            commandButtons[i]->button.active = false;
+            commandButtons[i]->button.interactive = true;
             commandButtons[i]->button.gold = commandData.gold;
             commandButtons[i]->button.wood = commandData.wood;
             commandButtons[i]->button.hotKey = commandData.hotKey;
@@ -1468,15 +1476,19 @@ void updateStatus(WarContext* context)
         WarEntity* entity = buttons->items[i];
         if (entity)
         {
-            WarButtonComponent* button = &entity->button;
-            if (button->hot)
+            WarUIComponent* ui = &entity->ui;
+            if (ui->enabled)
             {
-                strcpy(statusText, button->tooltip);
-                goldCost = button->gold;
-                woodCost = button->wood;
-                highlightIndex = button->highlightIndex;
-                highlightCount = button->highlightCount;
-                break;
+                WarButtonComponent* button = &entity->button;
+                if (button->enabled && button->interactive && button->hot)
+                {
+                    strcpy(statusText, button->tooltip);
+                    goldCost = button->gold;
+                    woodCost = button->wood;
+                    highlightIndex = button->highlightIndex;
+                    highlightCount = button->highlightCount;
+                    break;
+                }
             }
         }
     }

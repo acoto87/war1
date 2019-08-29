@@ -167,7 +167,7 @@ WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, v
     return entity;
 }
 
-WarEntity* createUITextButton(WarContext* context, 
+WarEntity* createUITextButton(WarContext* context,
                               char* name,
                               s32 fontIndex,
                               f32 fontSize,
@@ -194,7 +194,7 @@ WarEntity* createUITextButton(WarContext* context,
     return entity;
 }
 
-WarEntity* createUIImageButton(WarContext* context, 
+WarEntity* createUIImageButton(WarContext* context,
                                char* name,
                                WarSpriteResourceRef backgroundNormalRef,
                                WarSpriteResourceRef backgroundPressedRef,
@@ -230,7 +230,7 @@ void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type
 void updateUICursor(WarContext* context)
 {
     WarInput* input = &context->input;
-    
+
     WarEntity* entity = findUIEntity(context, "cursor");
     if (entity)
     {
@@ -260,7 +260,10 @@ void updateUIButtons(WarContext* context)
         {
             WarUIComponent* ui = &entity->ui;
             WarButtonComponent* button = &entity->button;
-            
+
+            button->hot = false;
+            button->active = false;
+
             if (ui->enabled && button->enabled && button->interactive)
             {
                 WarEntityIdSetAdd(&buttonsToUpdate, entity->id);
@@ -274,15 +277,7 @@ void updateUIButtons(WarContext* context)
         if (entity && WarEntityIdSetContains(&buttonsToUpdate, entity->id))
         {
             WarTransformComponent* transform = &entity->transform;
-            WarUIComponent* ui = &entity->ui;
             WarButtonComponent* button = &entity->button;
-            
-            if (!ui->enabled || !button->enabled || !button->interactive)
-            {
-                button->hot = false;
-                button->active = false;
-                continue;
-            }
 
             if (wasKeyPressed(input, button->hotKey))
             {

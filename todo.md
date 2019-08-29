@@ -24,6 +24,22 @@ List of thing to do in no particular order
   * ~~Editing trees, walls, roads and ruins doesn't check that the click was inside the map panel.~~
   * ~~In the minimap corpses are shown.~~
   * ~~WATER ELEMENTAL name go outside of portrait area. Change to WATER ELEM or W. ELEMENTAL~~
+  * ~~Death animation of scorpions loops.~~
+  * ~~Spell animation isn't shown.~~
+  * ~~Mana of magic units don't increase over time.~~
+  * ~~Use `tileInRange` to calculate near units? used in splash damage.~~
+  * ~~Fix colors of Rain of Fire portrait~~
+  * ~~Fix colors of Poison Cloud~~
+  * ~~Fix orc maps tile displacements~~
+  * ~~Deliver command (when click on button) is not working when unit have wood.~~
+  * ~~Summoned units have mana and when its mana runs out they die.~~
+  * ~~Check harvest right click vs command button when clicking on a dark area that is partially covering a goldmine.~~
+  * ~~Assertion in determining ruin pieces hit when goldmine ran out of gold.~~
+  * ~~Holy Sight doesn't mark the buildings as hasBeenSeen.~~
+  * ~~When a menu is showing in the map scene, the player can still select units and buildings.~~
+  * ~~Orcs UI is still the Humans.~~
+  * ~~In the first level there shouldn't be a Lumbermill to build.~~
+  * ~~Revisit the FEATURES enum, it should be like this (maybe do a solution like the `getUpgradeLevel` macro):~~
   * Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.
   * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
   * When a unit is selected, say a warrior, and it cursor is over an enemy unit, it shows the magnifying glass because there is no active command. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
@@ -56,78 +72,25 @@ List of thing to do in no particular order
     }
     ```
   * Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR
-  * ~~Death animation of scorpions loops.~~
-  * ~~Spell animation isn't shown.~~
-  * ~~Mana of magic units don't increase over time.~~
   * Fix walking animation with follow behavior. Make it continuous intead of reseting piece of the path.
   * When a unit attacks a unit that is attacking a building, the second unit should stop the attack on the building and attack the first unit.
-  * ~~Use `tileInRange` to calculate near units? used in splash damage.~~
   * When attacking a wall, if the units isn't within range, it will walk to the piece's position without considering its range of attack. That's because move state is being used in this case, instead of follow when attacking an unit.
-  * ~~Fix colors of Rain of Fire portrait~~
-  * ~~Fix colors of Poison Cloud~~
-  * ~~Fix orc maps tile displacements~~
   * Check the uses of `context->deltaTime` when the speed of the game is not `1`.
   * When a unit is selected before dispear in the fog, the unit remains selected. The unit should be removed from the selection.
-  * ~~Deliver command (when click on button) is not working when unit have wood.~~
-  * ~~Summoned units have mana and when its mana runs out they die.~~
   * If an unit is attacked when idle, the unit respond the attack.
-  * ~~Check harvest right click vs command button when clicking on a dark area that is partially covering a goldmine.~~
   * Check why this appear when trying to spell the Dark Vision: "This upgrade type 15 doesn't increase any value of the units".
   * Summon spells summon as many units as mana allows.
-  * ~~Assertion in determining ruin pieces hit when goldmine ran out of gold.~~
   * Check death animations of scorpions and spiders.
-  * ~~Holy Sight doesn't mark the buildings as hasBeenSeen.~~
   * Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like MAP_STATE_ALWAYS_VISIBLE and MAP_STATE_TIMED_VISIBLE.
   * Make highlights in text be a span of text instead of just one character.
   * Check clipping of audios, `value = clamp(value, INT16_MIN, INT16_MAX);` this line doesn't make much sense because value is a `s16` already.
   * Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
   * When changing scenes, it seems that part of the music of the previous scene keeps playing.
   * When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will render in the next line which causes missalignment in the left border of the text.
-  * ~~When a menu is showing in the map scene, the player can still select units and buildings.~~
-  * ~~Orcs UI is still the Humans.~~
-  * In the first level there shouldn't be a Lumbermill to build.
-    Revisit the FEATURES enum, it should be like this (maybe do a solution like the `getUpgradeLevel` macro):
-    ```c
-    struct _allowed_features_ AllowedFeatures[] = {
-      // Units. 0 - 6
-      {"unit-footman", "unit-grunt"},
-      {"unit-peasant", "unit-peon"},
-      {"unit-human-catapult", "unit-orc-catapult"},
-      {"unit-knight", "unit-raider"},
-      {"unit-archer", "unit-spearman"},
-      {"unit-conjurer", "unit-warlock"},
-      {"unit-cleric", "unit-necrolyte"},
-      // Constructing buildings. 7 - 14
-      {"unit-human-farm", "unit-orc-farm"},
-      {"unit-human-barracks", "unit-orc-barracks"},
-      {"unit-human-church", "unit-orc-temple"},
-      {"unit-human-tower", "unit-orc-tower"},
-      {"unit-human-town-hall", "unit-orc-town-hall"},
-      {"unit-human-lumber-mill", "unit-orc-lumber-mill"},
-      {"unit-human-stable", "unit-orc-kennel"},
-      {"unit-human-blacksmith", "unit-orc-blacksmith"},
-      // Cleric/Necrolyte spells. 15 - 17
-      {"upgrade-healing", "upgrade-raise-dead"},
-      {"upgrade-holy-vision", "upgrade-dark-vision"},
-      {"upgrade-invisibility", "upgrade-unholy-armor"},
-      // Conjurer/Warlock spells. 18 - 20
-      {"upgrade-scorpion", "upgrade-spider"},
-      {"upgrade-rain-of-fire", "upgrade-poison-cloud"},
-      {"upgrade-water-elemental", "upgrade-daemon"},
-      // Roads and walls. 21 - 22
-      {"unit-road", "unit-road"},
-      {"unit-wall", "unit-wall"}
-    };
-    int MaxAllowedFeature = 22;
-    #define SkipFeature(f) (f >= 15 && f <= 21)
-    #define IsAllowedFeature(id, feature) ((id & (1 << (int)feature)) != 0)
-
-    for (int f = 0; f <= MaxAllowedFeature; f++) {
-			if (IsAllowedFeature(allowid, f) && !SkipFeature(f)) {
-				fprintf(sms_c2, "DefineAllow(\"%s\", \"AAAAAAAAAAAAAAAA\")\n", AllowedFeatures[f].thing[race]);
-			}
-		}
-    ```
+  * Fix clicking buttons will flick the tooltip text on and off.
+  * Sometimes you order a worker to mine, and it will enter the mine (dissapear) but it doesn't perform the mining. You can also give other orders like move, and the invisible worker will go there and do other stuff.... on the bright side, I have invisible units! :D
+  * Some lines in text appear on Windows, antialiasing maybe?
+  * Fix fucsia color in the border of the map of the orcs
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -147,6 +110,8 @@ List of thing to do in no particular order
   * ~~Update minimap with chopped trees.~~
   * ~~Make a `setUITextFormat` method that takes a format with arguments `printf` style.~~
   * ~~Rename `WarUnitCommandBaseData` to something like `WarUnitCommandBaseData`.~~
+  * ~~Show corresponding WIN or LOSE messages in game over menu.~~
+  * ~~Skip briefing with click.~~
   * Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
   * Manage components with a dictionary and not each entity having all the components.
   * Create EntityManager to manage entities.
@@ -162,8 +127,6 @@ List of thing to do in no particular order
   * Make the move state to consider range distance to stop.
   * Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
   * Check behavior of invisible units when is under attack (it maybe work with workers, to stop the attack on it)
-  * ~~Show corresponding WIN or LOSE messages in game over menu.~~
-  * ~~Skip briefing with click.~~
 
 * Gameplay
   * ~~Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.~~
