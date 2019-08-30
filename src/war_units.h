@@ -1694,6 +1694,13 @@ vec2 getUnitSpriteCenter(WarEntity* entity)
     return vec2Addv(pos, vec2Half(unitSize));
 }
 
+rect getUnitRect(WarEntity* entity)
+{
+    assert(isUnit(entity));
+
+    return rectv(entity->transform.position, getUnitSpriteSize(entity));
+}
+
 vec2 getUnitPosition(WarEntity* entity, bool inTiles)
 {
     vec2 position = entity->transform.position;

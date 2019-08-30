@@ -9,7 +9,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
     s32 selEntitiesCount = map->selectedEntities.count;
 
     // move the selected units to the target point,
-    // but keeping the bounding box that the 
+    // but keeping the bounding box that the
     // selected units make, this is an intent to keep the
     // formation of the selected units
     //
@@ -21,7 +21,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
         WarEntity* entity = findEntity(context, entityId);
         assert(entity);
 
-        rs[i] = rectv(entity->transform.position, getUnitSpriteSize(entity));
+        rs[i] = getUnitRect(entity);
     }
 
     rect bbox = rs[0];
@@ -51,7 +51,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
         assert(entity);
 
         vec2 position = vec2f(
-            rs[i].x + halff(rs[i].width), 
+            rs[i].x + halff(rs[i].width),
             rs[i].y + halff(rs[i].height));
 
         position = vec2MapToTileCoordinates(position);
@@ -59,11 +59,11 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
         rect targetRect = rectf(
             targetbbox.x + (rs[i].x - bbox.x),
             targetbbox.y + (rs[i].y - bbox.y),
-            rs[i].width, 
+            rs[i].width,
             rs[i].height);
 
         vec2 target = vec2f(
-            targetRect.x + halff(targetRect.width), 
+            targetRect.x + halff(targetRect.width),
             targetRect.y + halff(targetRect.height));
 
         target = vec2MapToTileCoordinates(target);
@@ -79,7 +79,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
                         WarState* moveState = getMoveState(entity);
                         vec2ListAdd(&moveState->move.positions, target);
                     }
-                    
+
                     WarState* patrolState = getPatrolState(entity);
                     vec2ListAdd(&patrolState->patrol.positions, target);
                 }
@@ -181,7 +181,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
-    
+
     assert(isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
            isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST));
 
@@ -352,7 +352,7 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
 {
     WarMap* map = context->map;
-    
+
     bool casted = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
@@ -379,8 +379,8 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
                 vec2 position = getUnitCenterPosition(entity, true);
                 vec2 spawnPosition = findEmptyPosition(map->finder, position);
 
-                createUnit(context, spellMapping.mappedType, 
-                           spawnPosition.x, spawnPosition.y, 
+                createUnit(context, spellMapping.mappedType,
+                           spawnPosition.x, spawnPosition.y,
                            unit->player, WAR_RESOURCE_NONE, 0, true);
 
                 WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
@@ -608,7 +608,7 @@ bool executeCommand(WarContext* context)
     WarInput* input = &context->input;
     WarPlayerInfo* player = &map->players[0];
     WarUnitCommand* command = &map->command;
-    
+
     if (command->type == WAR_COMMAND_NONE)
     {
         return false;
@@ -625,7 +625,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
 
                     executeMoveCommand(context, targetPoint);
-                    
+
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
@@ -666,15 +666,14 @@ bool executeCommand(WarContext* context)
                     {
                         if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                         {
-                            if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE | MAP_TILE_STATE_FOG))
+                            if (!isUnitUnknown(map, targetEntity))
                                 executeHarvestCommand(context, targetEntity, targetTile);
                             else
                                 executeMoveCommand(context, targetPoint);
                         }
                         else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
-                            if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
-                                isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
+                            if (!isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
                                 executeHarvestCommand(context, targetEntity, targetTile);
                             }
@@ -693,19 +692,19 @@ bool executeCommand(WarContext* context)
                             }
                         }
                     }
-                    
+
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
             }
-            
+
             return false;
         }
 
         case WAR_COMMAND_DELIVER:
         {
             executeDeliverCommand(context, NULL);
-            
+
             command->type = WAR_COMMAND_NONE;
             return true;
         }
@@ -752,8 +751,8 @@ bool executeCommand(WarContext* context)
                     {
                         if (isUnit(targetEntity))
                         {
-                            // if the target entity is not visible, just attack to the point
-                            if (!checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
+                            // if the target entity is not visible or partially visible, just attack to the point
+                            if (isUnitUnknown(map, targetEntity))
                                 targetEntity = NULL;
                         }
                         else if (isWall(targetEntity))
@@ -778,7 +777,7 @@ bool executeCommand(WarContext* context)
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -807,7 +806,7 @@ bool executeCommand(WarContext* context)
             assert(selectedEntity->unit.type == buildingUnit);
 
             WarUnitStats stats = getUnitStats(unitToTrain);
-            if (checkFarmFood(context, player) && 
+            if (checkFarmFood(context, player) &&
                 decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
             {
                 f32 buildTime = getMapScaledTime(context, stats.buildTime);
@@ -912,7 +911,7 @@ bool executeCommand(WarContext* context)
                     {
                         createAudio(context, WAR_UI_CANCEL, false);
                     }
-                    
+
                     return true;
                 }
             }
@@ -1042,7 +1041,7 @@ bool executeCommand(WarContext* context)
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -1069,7 +1068,7 @@ bool executeCommand(WarContext* context)
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -1091,7 +1090,7 @@ bool executeCommand(WarContext* context)
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -1113,7 +1112,7 @@ bool executeCommand(WarContext* context)
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -1135,7 +1134,7 @@ bool executeCommand(WarContext* context)
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -1154,7 +1153,7 @@ bool executeCommand(WarContext* context)
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -1182,7 +1181,7 @@ bool executeCommand(WarContext* context)
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -1506,7 +1505,7 @@ void buildAdvanced(WarContext* context, WarEntity* entity)
 void buildBuilding(WarContext* context, WarUnitCommandType commandType, WarUnitType buildingToBuild)
 {
     WarMap* map = context->map;
-    
+
     map->command.type = commandType;
     map->command.build.buildingToBuild = buildingToBuild;
 }
@@ -1594,14 +1593,14 @@ void buildBlacksmithOrcs(WarContext* context, WarEntity* entity)
 void buildWall(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
-    
+
     map->command.type = WAR_COMMAND_BUILD_WALL;
 }
 
 void buildRoad(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
-    
+
     map->command.type = WAR_COMMAND_BUILD_ROAD;
 }
 

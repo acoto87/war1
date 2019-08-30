@@ -160,7 +160,7 @@ void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileSta
     setMapTileState(map, unitRect.x, unitRect.y, unitRect.width, unitRect.height, tileState);
 }
 
-bool checkMapTiles(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 states)
+bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 states)
 {
     if (!inRange(startX, 0, MAP_TILES_WIDTH) || !inRange(startY, 0, MAP_TILES_HEIGHT))
         return false;
@@ -189,14 +189,53 @@ bool checkMapTiles(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s
     return false;
 }
 
-bool checkUnitTiles(WarMap* map, WarEntity* entity, s32 states)
+bool isAnyUnitTileInStates(WarMap* map, WarEntity* entity, s32 states)
 {
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
 
     vec2 position = getUnitPosition(entity, true);
-    return checkMapTiles(map, position.x, position.y, unit->sizex, unit->sizey, states);
+    return isAnyTileInStates(map, position.x, position.y, unit->sizex, unit->sizey, states);
+}
+
+bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 state)
+{
+    if (!inRange(startX, 0, MAP_TILES_WIDTH) || !inRange(startY, 0, MAP_TILES_HEIGHT))
+        return false;
+
+    if (startX + width >= MAP_TILES_WIDTH)
+        width = MAP_TILES_WIDTH - startX;
+
+    if (startY + height >= MAP_TILES_HEIGHT)
+        height = MAP_TILES_HEIGHT - startY;
+
+    s32 endX = startX + width;
+    s32 endY = startY + height;
+
+    for(s32 y = startY; y < endY; y++)
+    {
+        for(s32 x = startX; x < endX; x++)
+        {
+            s32 index = y * MAP_TILES_WIDTH + x;
+            if (map->tiles[index].state != state)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool areAllUnitTilesInState(WarMap* map, WarEntity* entity, s32 state)
+{
+    assert(isUnit(entity));
+
+    WarUnitComponent* unit = &entity->unit;
+
+    vec2 position = getUnitPosition(entity, true);
+    return areAllTilesInState(map, position.x, position.y, unit->sizex, unit->sizey, state);
 }
 
 u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
@@ -818,7 +857,6 @@ void updateSelection(WarContext* context)
                     WarEntity* entity = units->items[i];
                     if (entity)
                     {
-                        WarTransformComponent* transform = &entity->transform;
                         WarUnitComponent* unit = &entity->unit;
                         if (unit->enabled)
                         {
@@ -840,16 +878,13 @@ void updateSelection(WarContext* context)
                                 continue;
                             }
 
-                            s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
-                            s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
-
                             // don't select non-visible units
-                            if (!checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
+                            if (!isUnitPartiallyVisible(map, entity))
                             {
                                 continue;
                             }
 
-                            rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
+                            rect unitRect = getUnitRect(entity);
                             if (rectIntersects(pointerRect, unitRect))
                             {
                                 WarEntityListAdd(&newSelectedEntities, entity);
@@ -1159,7 +1194,7 @@ void updateRainOfFireEdit(WarContext* context)
     }
 }
 
-void updateCommands(WarContext* context)
+void updateCommandButons(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -1302,7 +1337,7 @@ void updateCommandFromRightClick(WarContext* context)
                     {
                         if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                         {
-                            if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
+                            if (!isUnitUnknown(map, targetEntity))
                                 executeHarvestCommand(context, targetEntity, targetTile);
                             else
                                 executeMoveCommand(context, targetPoint);
@@ -1330,7 +1365,7 @@ void updateCommandFromRightClick(WarContext* context)
                         else if (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) ||
                                  isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
                         {
-                            if (checkUnitTiles(map, targetEntity, MAP_TILE_STATE_VISIBLE))
+                            if (!isUnitUnknown(map, targetEntity))
                             {
                                 if (isEnemyUnit(context, targetEntity))
                                 {
@@ -1580,7 +1615,6 @@ void updateMapCursor(WarContext* context)
                         WarEntity* entity = units->items[i];
                         if (entity)
                         {
-                            WarTransformComponent* transform = &entity->transform;
                             WarUnitComponent* unit = &entity->unit;
                             if (unit->enabled)
                             {
@@ -1596,17 +1630,14 @@ void updateMapCursor(WarContext* context)
                                     continue;
                                 }
 
-                                s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
-                                s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
-
                                 // don't change the cursor for non-visible units
-                                if (!checkMapTiles(map, tileX, tileY, unit->sizex, unit->sizey, MAP_TILE_STATE_VISIBLE))
+                                if (!isUnitPartiallyVisible(map, entity))
                                 {
                                     continue;
                                 }
                             }
 
-                            rect unitRect = rectv(entity->transform.position, getUnitSpriteSize(entity));
+                            rect unitRect = getUnitRect(entity);
                             if (rectContainsf(unitRect, pointerRect.x, pointerRect.y))
                             {
                                 entityUnderCursor = true;
@@ -1963,10 +1994,7 @@ void updateFoW(WarContext* context)
                 if (isBuildingUnit(entity) && !entity->unit.hasBeenSeen)
                 {
                     // mark the enemy's buildings as seen if they are currently in sight
-                    vec2 tilePosition = getUnitPosition(entity, true);
-                    vec2 unitSize = getUnitSize(entity);
-                    entity->unit.hasBeenSeen = checkMapTiles(map, tilePosition.x, tilePosition.y,
-                                                             unitSize.x, unitSize.y, MAP_TILE_STATE_VISIBLE);
+                    entity->unit.hasBeenSeen = !isUnitUnknown(map, entity);
                 }
             }
         }
@@ -2143,7 +2171,7 @@ void updateMap(WarContext* context)
     updateGoldText(context);
     updateWoodText(context);
     updateSelectedUnitsInfo(context);
-    updateCommands(context);
+    updateCommandButons(context);
 
     updateUIButtons(context);
 
