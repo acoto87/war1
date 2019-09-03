@@ -40,6 +40,8 @@ List of thing to do in no particular order
   * ~~Orcs UI is still the Humans.~~
   * ~~In the first level there shouldn't be a Lumbermill to build.~~
   * ~~Revisit the FEATURES enum, it should be like this (maybe do a solution like the `getUpgradeLevel` macro):~~
+  * ~~Check clipping of audios, `value = clamp(value, INT16_MIN, INT16_MAX);` this line doesn't make much sense because value is a `s16` already.~~
+  * ~~Fix decaying music when changing scenes.~~
   * Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.
   * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
   * When a unit is selected, say a warrior, and it cursor is over an enemy unit, it shows the magnifying glass because there is no active command. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
@@ -83,7 +85,6 @@ List of thing to do in no particular order
   * Check death animations of scorpions and spiders.
   * Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like MAP_STATE_ALWAYS_VISIBLE and MAP_STATE_TIMED_VISIBLE.
   * Make highlights in text be a span of text instead of just one character.
-  * Check clipping of audios, `value = clamp(value, INT16_MIN, INT16_MAX);` this line doesn't make much sense because value is a `s16` already.
   * Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
   * When changing scenes, it seems that part of the music of the previous scene keeps playing.
   * When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will render in the next line which causes missalignment in the left border of the text.

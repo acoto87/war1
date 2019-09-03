@@ -36,7 +36,7 @@ bool initGame(WarContext* context)
 
     // init graphics
     context->gfx = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_DEBUG);
-    if (!context->gfx) 
+    if (!context->gfx)
     {
         logError("Could not init nanovg.\n");
         glfwDestroyWindow(context->window);
@@ -44,12 +44,12 @@ bool initGame(WarContext* context)
 		return false;
 	}
 
-    // context->fb = nvgluCreateFramebuffer(context->gfx, 
-    //                                      context->framebufferWidth, 
-    //                                      context->framebufferHeight, 
+    // context->fb = nvgluCreateFramebuffer(context->gfx,
+    //                                      context->framebufferWidth,
+    //                                      context->framebufferHeight,
     //                                      NVG_IMAGE_NEAREST);
 
-    // if (!context->fb) 
+    // if (!context->fb)
     // {
     //     logError("Could not create FBO.\n");
     //     glfwDestroyWindow(context->window);
@@ -63,7 +63,7 @@ bool initGame(WarContext* context)
         logError("Could not initialize audio.\n");
         return false;
     }
-    
+
     // load fonts
     nvgCreateFont(context->gfx, "defaultFont", "./Roboto-Regular.ttf");
     context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
@@ -193,11 +193,11 @@ void inputGame(WarContext *context)
     vec2 pos = vec2f((f32)floor(xpos), (f32)floor(ypos));
     pos = vec2Scalef(pos, 1/context->globalScale);
     context->input.pos = pos;
-    
+
     // mouse buttons
     setInputButton(context, WAR_MOUSE_LEFT, glfwGetMouseButton(context->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
     setInputButton(context, WAR_MOUSE_RIGHT, glfwGetMouseButton(context->window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
-    
+
     // keyboard keys
     setInputKey(context, WAR_KEY_ESC, glfwGetKey(context->window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_CTRL, glfwGetKey(context->window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
@@ -337,18 +337,20 @@ void updateGame(WarContext* context)
     updateGlobalScale(context);
     updateGlobalVolume(context);
 
-    if (isKeyPressed(input, WAR_KEY_CTRL) && 
+    if (isKeyPressed(input, WAR_KEY_CTRL) &&
         wasKeyPressed(input, WAR_KEY_P))
     {
         context->paused = !context->paused;
     }
 
     if (context->paused)
+    {
         return;
+    }
 
     if (context->nextScene)
     {
-        context->audioEnabled = false;
+        disableAudio(context);
 
         if (context->scene)
             leaveScene(context);
@@ -362,7 +364,7 @@ void updateGame(WarContext* context)
     }
     else if (context->nextMap)
     {
-        context->audioEnabled = false;
+        disableAudio(context);
 
         if (context->scene)
             leaveScene(context);
@@ -381,7 +383,7 @@ void updateGame(WarContext* context)
         return;
     }
 
-    context->audioEnabled = true;
+    enableAudio(context);
 
     if (context->scene)
     {
@@ -456,7 +458,7 @@ void renderGame(WarContext *context)
     // nvgRect(gfx, 0, 0, windowWidth, windowHeight);
     // nvgFillPaint(gfx, img);
     // nvgFill(gfx);
-    
+
     // nvgRestore(gfx);
     // nvgEndFrame(gfx);
 }
@@ -469,7 +471,7 @@ void presentGame(WarContext *context)
     f32 currentTime = glfwGetTime();
     context->deltaTime = (currentTime - context->time);
 
-    // TODO: call sleep function instead of doing this, 
+    // TODO: call sleep function instead of doing this,
     // because this will get the CPU busy all the time,
     // give it a break!
     while (context->deltaTime <= SECONDS_PER_FRAME)

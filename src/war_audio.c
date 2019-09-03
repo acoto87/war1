@@ -292,13 +292,13 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
         u32 sampleBlock = min(sampleCount, waveLength - audio->sampleIndex);
         for (s32 i = 0; i < sampleBlock; i++)
         {
-            s16 value = *waveData;
+            s32 value = *waveData;
             value = value - 128;
             value = value << 8;
-            value = (s16)(value * volume);
+            value = (s32)(value * volume);
             value += *outputStream;
             value = clamp(value, INT16_MIN, INT16_MAX);
-            *outputStream = value;
+            *outputStream = (s16)value;
 
             waveData++;
             outputStream++;
@@ -325,6 +325,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
 
     if (!context->audioEnabled || context->transitionDelay > 0)
     {
+        tsf_note_off_all(context->soundFont, TSF_TRUE);
         return;
     }
 
@@ -431,6 +432,9 @@ bool initAudio(WarContext* context)
 
     return true;
 }
+
+#define enableAudio(context) ((context)->audioEnabled = true)
+#define disableAudio(context) ((context)->audioEnabled = false)
 
 WarEntity* createAudio(WarContext* context, WarAudioId audioId, bool loop)
 {
