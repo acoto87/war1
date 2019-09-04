@@ -42,6 +42,7 @@ List of thing to do in no particular order
   * ~~Revisit the FEATURES enum, it should be like this (maybe do a solution like the `getUpgradeLevel` macro):~~
   * ~~Check clipping of audios, `value = clamp(value, INT16_MIN, INT16_MAX);` this line doesn't make much sense because value is a `s16` already.~~
   * ~~Fix decaying music when changing scenes.~~
+  * ~~Fix fucsia color in the border of the map of the orcs~~
   * Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.
   * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
   * When a unit is selected, say a warrior, and it cursor is over an enemy unit, it shows the magnifying glass because there is no active command. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
@@ -89,9 +90,8 @@ List of thing to do in no particular order
   * When changing scenes, it seems that part of the music of the previous scene keeps playing.
   * When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will render in the next line which causes missalignment in the left border of the text.
   * Fix clicking buttons will flick the tooltip text on and off.
-  * Sometimes you order a worker to mine, and it will enter the mine (dissapear) but it doesn't perform the mining. You can also give other orders like move, and the invisible worker will go there and do other stuff.... on the bright side, I have invisible units! :D
+  * Sometimes you order a worker to mine, and it will enter the mine (dissapear) but it doesn't perform the mining. You can also give other orders like move, and the invisible worker will go there and do other stuff.... on the bright side, I have invisible units! :D... But wait.. I already have invisible units with Invisibility spells..., damn! :(
   * Some lines in text appear on Windows, antialiasing maybe?
-  * Fix fucsia color in the border of the map of the orcs
 
 * General
   * ~~Test the new implementation for lists.~~
@@ -113,12 +113,12 @@ List of thing to do in no particular order
   * ~~Rename `WarUnitCommandBaseData` to something like `WarUnitCommandBaseData`.~~
   * ~~Show corresponding WIN or LOSE messages in game over menu.~~
   * ~~Skip briefing with click.~~
+  * ~~Create EntityManager to manage entities.~~
+  * ~~Draw text system (to debug and other texts).~~
   * Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
   * Manage components with a dictionary and not each entity having all the components.
-  * Create EntityManager to manage entities.
   * Make a profiler system.
   * Sort the units by `y` position to render and the units with greater `y` render on top of the ones with less `y`.
-  * Draw text system (to debug and other texts).
   * Remove global __log__ and move it to WarContext.
   * Make so that entities can have multiple sprites.
   * Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
@@ -176,16 +176,16 @@ List of thing to do in no particular order
       * ~~Attack on the ground.~~
     * ~~Harvest command~~
     * ~~Repair command~~
-  * Add functionality of spell commands.
+  * ~~Add functionality of spell commands.~~
     * ~~Summoning~~
     * ~~Rain of fire~~
     * ~~Cloud of poison~~
-    * Far seeing / Dark vision
+    * ~~Far seeing / Dark vision~~
     * ~~Invisibility~~
     * ~~UnHoly armor~~
     * ~~Healing~~
     * ~~Raise dead~~
-  * Fog of war
+  * ~~Fog of war~~
     * ~~Update fog of war once each second? Yes.~~
     * ~~Block selection clicks in fog region~~
     * ~~Block build in fog region~~
@@ -256,14 +256,14 @@ List of thing to do in no particular order
     * ~~Attack the unit next to~~
     * ~~Move to attack the unit that is far~~
     * ~~Consider ranged and melee attacks~~
-    * Do damage.
+    * ~~Do damage~~
       * ~~Do damage to units.~~
       * ~~Do damage to buildings.~~
-      * Do damage with splash
+      * ~~Do damage with splash~~
         * ~~Catapults~~
-        * Rain of fire
-        * Cloud of poison
-      * Do damage with magic.
+        * ~~Rain of fire~~
+        * ~~Cloud of poison~~
+      * ~~Do damage with magic.~~
   * ~~Ground-attack state~~
     * ~~Ground-attack is a combination of move and look around behaviors to attack anyone in range while the unit is moving to the target.~~
   * ~~Damaged state (for buildings)~~

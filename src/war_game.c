@@ -65,7 +65,6 @@ bool initGame(WarContext* context)
     }
 
     // load fonts
-    nvgCreateFont(context->gfx, "defaultFont", "./Roboto-Regular.ttf");
     context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
     context->fontSprites[1] = loadFontSprite(context, "./war1_font_2.png");
 
