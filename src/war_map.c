@@ -2412,9 +2412,9 @@ void renderMapPanel(WarContext *context)
     nvgTranslate(gfx, -map->viewport.x, -map->viewport.y);
 
     renderTerrain(context);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_RUIN);
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_ROAD);
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_RUIN);
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
 
 #ifdef DEBUG_RENDER_UNIT_PATHS

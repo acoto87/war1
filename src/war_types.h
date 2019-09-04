@@ -1734,6 +1734,7 @@ typedef struct
 } WarSightComponent;
 
 typedef void (*WarRenderFunc)(struct _WarContext* context, struct _WarEntity* entity);
+typedef s32 (*WarRenderCompareFunc)(const struct _WarEntity* e1, const struct _WarEntity* e2);
 
 typedef struct _WarEntity
 {

@@ -721,6 +721,34 @@ WarEntityList* getUIEntities(WarContext* context)
 }
 
 // Render entities
+s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
+{
+    assert(isUnit(e1));
+    assert(isUnit(e2));
+
+    bool isDead1 = isCorpseUnit((WarEntity*)e1) || isDead((WarEntity*)e1) || isGoingToDie((WarEntity*)e1);
+    bool isDead2 = isCorpseUnit((WarEntity*)e2) || isDead((WarEntity*)e2) || isGoingToDie((WarEntity*)e2);
+
+    if (isDead1 && !isDead2)
+        return -1;
+
+    if (!isDead1 && isDead2)
+        return 1;
+
+    vec2 p1 = getUnitPosition((WarEntity*)e1, false);
+    vec2 p2 = getUnitPosition((WarEntity*)e2, false);
+
+    return p1.y - p2.y;
+}
+
+s32 renderCompareProjectiles(const WarEntity* e1, const WarEntity* e2)
+{
+    vec2 p1 = e1->transform.position;
+    vec2 p2 = e2->transform.position;
+
+    return p1.y - p2.y;
+}
+
 void renderImage(WarContext* context, WarEntity* entity)
 {
     NVGcontext* gfx = context->gfx;
@@ -1406,7 +1434,45 @@ void renderEntity(WarContext* context, WarEntity* entity)
 
 void renderEntitiesOfType(WarContext* context, WarEntityType type)
 {
+    static WarRenderCompareFunc renderCompareFuncs[WAR_ENTITY_TYPE_COUNT] =
+    {
+        NULL,                       // WAR_ENTITY_TYPE_NONE,
+        NULL,                       // WAR_ENTITY_TYPE_IMAGE,
+        renderCompareUnits,         // WAR_ENTITY_TYPE_UNIT,
+        NULL,                       // WAR_ENTITY_TYPE_ROAD,
+        NULL,                       // WAR_ENTITY_TYPE_WALL,
+        NULL,                       // WAR_ENTITY_TYPE_RUIN,
+        NULL,                       // WAR_ENTITY_TYPE_FOREST,
+        NULL,                       // WAR_ENTITY_TYPE_TEXT,
+        NULL,                       // WAR_ENTITY_TYPE_RECT,
+        NULL,                       // WAR_ENTITY_TYPE_BUTTON,
+        NULL,                       // WAR_ENTITY_TYPE_CURSOR,
+        NULL,                       // WAR_ENTITY_TYPE_AUDIO,
+        renderCompareProjectiles,   // WAR_ENTITY_TYPE_PROJECTILE,
+        NULL,                       // WAR_ENTITY_TYPE_RAIN_OF_FIRE,
+        NULL,                       // WAR_ENTITY_TYPE_POISON_CLOUD,
+        NULL,                       // WAR_ENTITY_TYPE_SIGHT,
+        NULL,                       // WAR_ENTITY_TYPE_MINIMAP,
+        NULL,                       // WAR_ENTITY_TYPE_ANIMATION,
+    };
+
     WarEntityList* entities = getEntitiesOfType(context, type);
+
+    // lookup the render compare function and sort the list
+    if (inRange(type, WAR_ENTITY_TYPE_NONE, WAR_ENTITY_TYPE_COUNT))
+    {
+        WarRenderCompareFunc compareFunc = renderCompareFuncs[type];
+        if (compareFunc)
+        {
+            // the idea of sorting the entities before render is
+            // to allow render order to be the most correct as possible
+            // for instance, corpses need to render before every other unit
+            // and then render units by the `y` position on the map
+
+            WarEntityListSort(entities, compareFunc);
+        }
+    }
+
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* entity = entities->items[i];

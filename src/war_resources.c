@@ -129,9 +129,9 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
     // that is showing in the unit portraits, so change it to dark gray
     else if (index == 217)
     {
-        resource->paletteData.colors[96 * 3 + 0] = 0;
-        resource->paletteData.colors[96 * 3 + 1] = 0;
-        resource->paletteData.colors[96 * 3 + 2] = 0;
+        resource->paletteData.colors[96 * 3 + 0] = 108;
+        resource->paletteData.colors[96 * 3 + 1] = 72;
+        resource->paletteData.colors[96 * 3 + 2] = 40;
 
         resource->paletteData.colors[150 * 3 + 0] = 46;
         resource->paletteData.colors[150 * 3 + 1] = 54;
@@ -174,19 +174,6 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
             colorIndex != 0)
         {
             pixels[i * 4 + 3] = 255;
-        }
-    }
-
-    if (index == 221)
-    {
-        for (s32 y = 0; y < height; y++)
-        {
-            for (s32 x = 0; x < width; x++)
-            {
-                u32 colorIndex = readu8(rawResource.data, 4 + y * width + x);
-                printf("%u ", colorIndex);
-            }
-            printf("\n");
         }
     }
 
