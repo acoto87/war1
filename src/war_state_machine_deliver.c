@@ -55,7 +55,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
             WarState* idleState = createIdleState(context, entity, true);
             changeNextState(context, entity, idleState, true, true);
         }
-        
+
         return;
     }
 
@@ -72,11 +72,15 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     unit->amount = 0;
 
     // the unit arrive to the townhall, so now the unit go inside the building for some time to simulate the depositing
-    // then need go back to the goldmine/trees. 
+    // then need go back to the goldmine/trees.
     state->deliver.insideBuilding = true;
 
     // for this the sprite is turn off for the depositing time
     entity->sprite.enabled = false;
+
+    // remove the unit from selection to avoid the player giving it orders
+    // while inside the townhall
+    removeEntityFromSelection(context, entity->id);
 
     setDelay(state, getMapScaledTime(context, 1.0f));
 }

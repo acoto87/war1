@@ -13,6 +13,10 @@ void enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
 
     // set the starting time of mining
     state->mine.miningTime = context->time + getMapScaledTime(context, 2.0f);
+
+    // remove the unit from selection to avoid the player giving it orders
+    // while inside the mine
+    removeEntityFromSelection(context, entity->id);
 }
 
 void leaveMiningState(WarContext* context, WarEntity* entity, WarState* state)

@@ -761,9 +761,9 @@ bool executeCommand(WarContext* context)
                             if (!isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                                 targetEntity = NULL;
                         }
-
-                        executeAttackCommand(context, targetEntity, targetTile);
                     }
+
+                    executeAttackCommand(context, targetEntity, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;

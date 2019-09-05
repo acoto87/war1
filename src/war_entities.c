@@ -1000,7 +1000,8 @@ void renderUnit(WarContext* context, WarEntity* entity)
     // size of the unit
     vec2 unitSize = getUnitSpriteSize(entity);
 
-    bool isVisible = !isUnitUnknown(map, entity);
+    // the unit is visible if it's partially on the clear areas of the fog
+    bool isVisible = isUnitPartiallyVisible(map, entity);
 
     nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
     nvgTranslate(gfx, halff(unitSize.x), halff(unitSize.y));
@@ -1319,7 +1320,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
             WarUnitComponent* unit = &entity->unit;
             WarTransformComponent* transform = &entity->transform;
 
-            if (displayUnitOnMinimap(entity) && isUnitPartiallyVisible(map, entity))
+            if (displayUnitOnMinimap(entity) && !isUnitUnknown(map, entity))
             {
                 s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                 s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);

@@ -1952,18 +1952,22 @@ void updateFoW(WarContext* context)
                 WarEntity* targetEntity = getAttackTarget(context, entity);
                 if (targetEntity)
                 {
-                    if (isUnit(targetEntity))
+                    WarUnitStats stats = getUnitStats(entity->unit.type);
+                    if (unitInRange(entity, targetEntity, stats.range))
                     {
-                        setUnitMapTileState(map, targetEntity, MAP_TILE_STATE_VISIBLE);
-                    }
-                    else if (isWall(targetEntity))
-                    {
-                        WarState* attackState = getAttackState(entity);
-                        vec2 targetTile = attackState->attack.targetTile;
-                        WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
-                        if (piece)
+                        if (isUnit(targetEntity))
                         {
-                            setMapTileState(map, targetTile.x, targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                            setUnitMapTileState(map, targetEntity, MAP_TILE_STATE_VISIBLE);
+                        }
+                        else if (isWall(targetEntity))
+                        {
+                            WarState* attackState = getAttackState(entity);
+                            vec2 targetTile = attackState->attack.targetTile;
+                            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
+                            if (piece)
+                            {
+                                setMapTileState(map, targetTile.x, targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                            }
                         }
                     }
                 }
@@ -1991,10 +1995,16 @@ void updateFoW(WarContext* context)
         {
             if (!isFriendlyUnit(context, entity))
             {
-                if (isBuildingUnit(entity) && !entity->unit.hasBeenSeen)
+                if (isBuildingUnit(entity))
                 {
                     // mark the enemy's buildings as seen if they are currently in sight
-                    entity->unit.hasBeenSeen = !isUnitUnknown(map, entity);
+                    if (!entity->unit.hasBeenSeen)
+                        entity->unit.hasBeenSeen = !isUnitUnknown(map, entity);
+                }
+                else if (!isUnitPartiallyVisible(map, entity))
+                {
+                    // remove from selection enemy or neutral units that goes into fog
+                    removeEntityFromSelection(context, entity->id);
                 }
             }
         }
