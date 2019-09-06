@@ -7,6 +7,8 @@
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #endif
 
+#define _DEFAULT_SOURCE
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -15,6 +17,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <math.h>
+#include <unistd.h>
 
 #if __DEBUG__
 #include <execinfo.h>
@@ -138,7 +141,7 @@ void glfwErrorCallback(int error, const char* description)
     logError("Error: %d, %s\n", error, description);
 }
 
-int main() 
+int main()
 {
     srand(time(NULL));
 

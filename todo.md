@@ -66,7 +66,7 @@ List of thing to do in no particular order
   * Check for memory leaks in the removing animations functionality.
   * Check why the changing of the global scale renders with the previous global scale after a change (only on Linux, on Windows it doesn't happen).
   * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
-  * Make a call to `sleep` instead of waiting in a cycle until the frame end. This will probably increase effiency and decrease CPU usage. I need a portable sleep function, maybe something like:
+  * ~~Make a call to `sleep` instead of waiting in a cycle until the frame end. This will probably increase effiency and decrease CPU usage. I need a portable sleep function, maybe something like:~~
     ```c
     void msleep(s32 milliseconds) // cross-platform sleep function
     {

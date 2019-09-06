@@ -6,7 +6,7 @@
 
 #define arrayInit(type, ...) ((type[]){__VA_ARGS__})
 #define arrayArg(type, ...) arrayInit(type, __VA_ARGS__)
-#define createArray(type, count, reset) (reset ? (type *)xcalloc(count, sizeof(type)) : (type *)xmalloc(count * sizeof(type))) 
+#define createArray(type, count, reset) (reset ? (type *)xcalloc(count, sizeof(type)) : (type *)xmalloc(count * sizeof(type)))
 #define arrayLength(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define chance(p) ((rand() % 100) < p)
 #define chancef01(p) ((rand() / RAND_MAX) < p)
@@ -118,6 +118,23 @@ void* xrealloc(void *ptr, size32 size, char *file, s32 line)
 #define xmalloc(size) xmalloc(size, __FILE__, __LINE__)
 #define xcalloc(count, size) xcalloc(count, size, __FILE__, __LINE__)
 #define xrealloc(ptr, size) xrealloc(ptr, size, __FILE__, __LINE__)
+
+void msleep(s32 milliseconds) // cross-platform sleep function
+{
+#ifdef WIN32
+    // windows.h need to be include for this
+    Sleep(milliseconds);
+#elif _POSIX_C_SOURCE >= 199309L
+    // this is the posix call, _POSIX_C_SOURCE need to be defined
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#else
+    // unistd.h need to be include for this
+    usleep(milliseconds * 1000);
+#endif
+}
 
 #if __DEBUG__
 /* Obtain a backtrace and print it to stdout. */
