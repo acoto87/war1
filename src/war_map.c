@@ -1194,7 +1194,7 @@ void updateRainOfFireEdit(WarContext* context)
     }
 }
 
-void updateCommandButons(WarContext* context)
+void updateCommandButtons(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -1217,12 +1217,7 @@ void updateCommandButons(WarContext* context)
     };
 
     for (s32 i = 0; i < arrayLength(commandButtons); i++)
-    {
         commandButtons[i]->button.enabled = false;
-        commandButtons[i]->button.hot = false;
-        commandButtons[i]->button.active = false;
-        commandButtons[i]->button.interactive = false;\
-    }
 
     for (s32 i = 0; i < arrayLength(commandTexts); i++)
         clearUIText(commandTexts[i]);
@@ -1301,9 +1296,6 @@ void updateCommandButons(WarContext* context)
             setUIImage(commandButtons[i], commandData.frameIndex);
             setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.highlightCount, commandData.tooltip);
             commandButtons[i]->button.enabled = true;
-            commandButtons[i]->button.hot = false;
-            commandButtons[i]->button.active = false;
-            commandButtons[i]->button.interactive = true;
             commandButtons[i]->button.gold = commandData.gold;
             commandButtons[i]->button.wood = commandData.wood;
             commandButtons[i]->button.hotKey = commandData.hotKey;
@@ -2181,7 +2173,7 @@ void updateMap(WarContext* context)
     updateGoldText(context);
     updateWoodText(context);
     updateSelectedUnitsInfo(context);
-    updateCommandButons(context);
+    updateCommandButtons(context);
 
     updateUIButtons(context);
 

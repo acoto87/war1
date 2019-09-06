@@ -261,12 +261,14 @@ void updateUIButtons(WarContext* context)
             WarUIComponent* ui = &entity->ui;
             WarButtonComponent* button = &entity->button;
 
-            button->hot = false;
-            button->active = false;
-
             if (ui->enabled && button->enabled && button->interactive)
             {
                 WarEntityIdSetAdd(&buttonsToUpdate, entity->id);
+            }
+            else
+            {
+                button->hot = false;
+                button->active = false;
             }
         }
     }
@@ -300,24 +302,22 @@ void updateUIButtons(WarContext* context)
 
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                button->hot = pointerInside;
-
-                if (button->hot)
+                if (button->active)
                 {
-                    if (button->clickHandler)
+                    if (pointerInside && button->clickHandler)
+                    {
                         button->clickHandler(context, entity);
+                        createAudio(context, WAR_UI_CLICK, false);
+                    }
 
-                    createAudio(context, WAR_UI_CLICK, false);
+                    button->active = false;
                 }
 
-                button->active = false;
             }
             else if (isButtonPressed(input, WAR_MOUSE_LEFT))
             {
                 if (button->hot)
-                {
                     button->active = true;
-                }
             }
             else if (pointerInside)
             {
@@ -336,6 +336,7 @@ void updateUIButtons(WarContext* context)
             else
             {
                 button->hot = false;
+                button->active = false;
             }
         }
     }
