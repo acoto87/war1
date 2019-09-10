@@ -15,6 +15,9 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 //
+// 27 Feb 2019 - Modified by Alejandro Coto - @acoto87.
+//     The NVG_DISABLE_CULL_FACE will disable GL_CULL_FACE to allow negative scaling of sprites and paths.
+
 #ifndef NANOVG_GL_H
 #define NANOVG_GL_H
 

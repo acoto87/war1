@@ -40,6 +40,11 @@
    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+	3 Sept 2019 Modified by Alejandro Coto - @acoto87
+		Set a boolean parameter to the function `tsf_note_off_all` that if true,
+		internally will use the `tsf_voice_endquick` instead of `tsf_voice_end`.
+		This will allow shorter times on the release segment, ending the notes quicker.
+
 */
 
 #ifndef TSF_INCLUDE_TSF_INL
