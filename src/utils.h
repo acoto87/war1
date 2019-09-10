@@ -121,6 +121,9 @@ void* xrealloc(void *ptr, size32 size, char *file, s32 line)
 
 void msleep(s32 milliseconds) // cross-platform sleep function
 {
+    if (milliseconds <= 0)
+        return;
+
 #ifdef WIN32
     // windows.h need to be include for this
     Sleep(milliseconds);

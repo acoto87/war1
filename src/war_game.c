@@ -470,19 +470,26 @@ void presentGame(WarContext *context)
     f32 currentTime = glfwGetTime();
     context->deltaTime = (currentTime - context->time);
 
-    msleep((s32)((SECONDS_PER_FRAME - context->deltaTime) * 1000));
-
-    currentTime = (f32)glfwGetTime();
-    context->deltaTime = (currentTime - context->time);
+    // This code is good in theory, but the sleep resolution on different OSes
+    // varies, so Sleep in Windows may take a longer time than specified.
+    //
+    // On Linux I should do a do {..} while (); using the nanosleep function
+    // and check for interrutions that wake up the thread before.
+    //
+    // msleep((s32)((SECONDS_PER_FRAME - context->deltaTime) * 1000));
+    // currentTime = (f32)glfwGetTime();
+    // context->deltaTime = (currentTime - context->time);
 
     // This was the previous code that wait until the end of the frame
     // but this burn too much CPU, so it's better the alternative of
     // sleep the process and save CPU usage and battery.
-    // while (context->deltaTime <= SECONDS_PER_FRAME)
-    // {
-    //     currentTime = (f32)glfwGetTime();
-    //     context->deltaTime = (currentTime - context->time);
-    // }
+    //
+    // Going back to this code for now, until we get a consistent game loop with sleep.
+    while (context->deltaTime <= SECONDS_PER_FRAME)
+    {
+        currentTime = (f32)glfwGetTime();
+        context->deltaTime = (currentTime - context->time);
+    }
 
     context->time = currentTime;
     context->fps = (u32)(1.0f / context->deltaTime);
