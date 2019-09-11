@@ -1320,7 +1320,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
             WarUnitComponent* unit = &entity->unit;
             WarTransformComponent* transform = &entity->transform;
 
-            if (displayUnitOnMinimap(entity) && !isUnitUnknown(map, entity))
+            if (displayUnitOnMinimap(entity) && (isUnitPartiallyVisible(map, entity) || entity->unit.hasBeenSeen))
             {
                 s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                 s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);

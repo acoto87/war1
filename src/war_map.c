@@ -108,13 +108,17 @@ vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v)
 
 WarMapTile* getMapTileState(WarMap* map, s32 x, s32 y)
 {
+    assert(inRange(x, 0, MAP_TILES_WIDTH) && inRange(y, 0, MAP_TILES_HEIGHT));
     return &map->tiles[y * MAP_TILES_WIDTH + x];
 }
 
 void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState)
 {
-    if (!inRange(startX, 0, MAP_TILES_WIDTH) || !inRange(startY, 0, MAP_TILES_HEIGHT))
-        return;
+    if (startX <= 0)
+        startX = 0;
+
+    if (startY <= 0)
+        startY = 0;
 
     if (startX + width >= MAP_TILES_WIDTH)
         width = MAP_TILES_WIDTH - startX;
@@ -162,8 +166,11 @@ void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileSta
 
 bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 states)
 {
-    if (!inRange(startX, 0, MAP_TILES_WIDTH) || !inRange(startY, 0, MAP_TILES_HEIGHT))
-        return false;
+    if (startX <= 0)
+        startX = 0;
+
+    if (startY <= 0)
+        startY = 0;
 
     if (startX + width >= MAP_TILES_WIDTH)
         width = MAP_TILES_WIDTH - startX;
@@ -178,8 +185,7 @@ bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 heigh
     {
         for(s32 x = startX; x < endX; x++)
         {
-            s32 index = y * MAP_TILES_WIDTH + x;
-            if (map->tiles[index].state & states)
+            if (map->tiles[y * MAP_TILES_WIDTH + x].state & states)
             {
                 return true;
             }
@@ -201,8 +207,11 @@ bool isAnyUnitTileInStates(WarMap* map, WarEntity* entity, s32 states)
 
 bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 state)
 {
-    if (!inRange(startX, 0, MAP_TILES_WIDTH) || !inRange(startY, 0, MAP_TILES_HEIGHT))
-        return false;
+    if (startX <= 0)
+        startX = 0;
+
+    if (startY <= 0)
+        startY = 0;
 
     if (startX + width >= MAP_TILES_WIDTH)
         width = MAP_TILES_WIDTH - startX;
@@ -217,8 +226,7 @@ bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 heig
     {
         for(s32 x = startX; x < endX; x++)
         {
-            s32 index = y * MAP_TILES_WIDTH + x;
-            if (map->tiles[index].state != state)
+            if (map->tiles[y * MAP_TILES_WIDTH + x].state != state)
             {
                 return false;
             }
@@ -629,7 +637,7 @@ void enterMap(WarContext* context)
     {
         for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
         {
-            map->players[i].index = 0;
+            map->players[i].index = i;
             map->players[i].race = levelInfo->levelInfo.races[i];
             map->players[i].gold = levelInfo->levelInfo.gold[i];
             map->players[i].wood = levelInfo->levelInfo.lumber[i];
