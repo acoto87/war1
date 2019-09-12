@@ -412,6 +412,7 @@ bool initAudio(WarContext* context)
     sfxConfig = ma_device_config_init(ma_device_type_playback);
     sfxConfig.playback.format = ma_format_s16;
     sfxConfig.playback.channels = 1;
+    sfxConfig.playback.shareMode = ma_share_mode_shared;
     sfxConfig.sampleRate = PLAYBACK_FREQ;
     sfxConfig.dataCallback = audioDataCallback;
     sfxConfig.pUserData = context;

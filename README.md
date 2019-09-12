@@ -1,10 +1,29 @@
 # War1
 
-A remake of Warcraft 1 written in C
+A remake of Warcraft: Orcs & Humans written in C.
 
-This is a remake of the Warcraft: Orcs & Humans videogame created and published by Blizzard Entertainment in 1994. It pretends to be a complete implementation of the game using only the assets (*.WAR files) from the original game.
+This is a remake of the Warcraft: Orcs & Humans game created and published by Blizzard Entertainment in 1994. It pretends to be a complete implementation of the game using only the assets (*.WAR files) from the original game.
 
-Unfortunately I'm not allowed to distribute the DATA.WAR file due to copyright issues, but if you have that file from the original game you should be able to compile and run the project.
+War1 is not an official Blizzard Entertainment product. It intent to be an enhancement of the original product with modern RTS features. You will need a copy of the original Warcraft: Orcs & Humans MS-DOS (or shareware) version be able to play War1. You can get it here Warcraft: Orcs and Humans. Warcraft and all graphics you see in the game are a registered trademark of Blizzard Entertainment.
+
+Current features (this list is not complete):
+
+* Path finding and collisions detection
+* Unit movement with animations
+* Unit training
+* Building construction
+* Resources gathering by peasants and peons
+* Features specification for maps (this is specify if the player can train, build or research certain units, buildings or spells)
+* Win/lose condition checking
+* Fog of war
+* Basic behavior for enemies (it will attack your units if you get near enough, it will chase your units)
+
+Still to develop (this list is not complete):
+
+* AI (I'm planning to do a basic one first and build from that more complex ones)
+* Cinematics (I've the code for reading FLIC files just need to integrate it into the engine)
+* Typing commands for cheats and other stuff that could be activated by it in the engine
+* Save/Load
 
 ## How to build
 
@@ -30,6 +49,13 @@ Unfortunately I'm not allowed to distribute the DATA.WAR file due to copyright i
 * [stb](https://github.com/nothings/stb) Single-file public domain libraries for C/C++
 
 Here is my [TODO](https://github.com/acoto87/war1/blob/master/todo.md) list.
+
+## Other Warcraft 1 re-implementations:
+
+* [War1gus](https://wargus.github.io/war1gus.html): War1gus is a re-implementation of "Warcraft: Orcs & Humans" that allows you to play Warcraft with the Stratagus engine.
+* [OpenWar](https://phix.itch.io/openwar): OpenWar is an alternative Warcraft: Orcs & Humans game engine.
+* [Warcraft Remake](http://www.b3dgs.com/v7/page.php?lang=en&section=warcraft_remake): Warcraft Remake is a remake of the classic Blizzard game.
+* [WinWar](https://github.com/CAMongrel/WinWar): WinWar is a multiplatform (Windows, WindowsStore, OSX, Linux, iOS) port of the original DOS WarCraft: Orcs & Humans PC Game.
 
 ## Screnshots
 
