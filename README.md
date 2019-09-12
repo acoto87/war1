@@ -59,8 +59,8 @@ Here is my [TODO](https://github.com/acoto87/war1/blob/master/todo.md) list.
 
 ## Screnshots
 
-Solarized dark            |  Solarized Ocean
+Gifs                      |  Images
 ------------------------- | -------------------------
-![](https://github.com/acoto87/war1/blob/master/pics/gif1.gif) | ![](https://github.com/acoto87/war1/blob/master/pics/gif2.gif)
-![](https://github.com/acoto87/war1/blob/master/pics/gif3.gif) | ![](https://github.com/acoto87/war1/blob/master/pics/pic1.png)
-![](https://github.com/acoto87/war1/blob/master/pics/pic2.png) | ![](https://github.com/acoto87/war1/blob/master/pics/pic3.png)
+![](https://github.com/acoto87/war1/blob/master/pics/gif1.gif) | ![](https://github.com/acoto87/war1/blob/master/pics/pic1.png)
+![](https://github.com/acoto87/war1/blob/master/pics/gif2.gif) | ![](https://github.com/acoto87/war1/blob/master/pics/pic2.png)
+![](https://github.com/acoto87/war1/blob/master/pics/gif3.gif) | ![](https://github.com/acoto87/war1/blob/master/pics/pic3.png)
