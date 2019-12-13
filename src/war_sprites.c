@@ -4,7 +4,7 @@ WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
     sprite.frameWidth = width;
     sprite.frameHeight = height;
     sprite.framesCount = 1;
-    
+
     sprite.image = nvgCreateImageRGBA(context->gfx, width, height, NVG_IMAGE_NEAREST, data);
 
     sprite.frames[0].dx = 0;
@@ -16,7 +16,7 @@ WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
 
     if (data)
         memcpy(sprite.frames[0].data, data, width * height * 4);
-    
+
     return sprite;
 }
 
@@ -28,7 +28,7 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
     sprite.framesCount = frameCount;
 
     sprite.image = nvgCreateImageRGBA(context->gfx, frameWidth, frameHeight, NVG_IMAGE_NEAREST, NULL);
-    
+
     for(s32 i = 0; i < frameCount; i++)
     {
         sprite.frames[i].dx = frames[i].dx;
@@ -41,16 +41,13 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
         if (frames[i].data)
             memcpy(sprite.frames[i].data, frames[i].data, frameWidth * frameHeight * 4);
     }
-    
+
     return sprite;
 }
 
 WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s32 frameIndicesCount, s32 frameIndices[])
 {
     assert(resource);
-    assert(resource->type == WAR_RESOURCE_TYPE_IMAGE || 
-           resource->type == WAR_RESOURCE_TYPE_SPRITE || 
-           resource->type == WAR_RESOURCE_TYPE_CURSOR);
 
     WarSprite sprite;
 

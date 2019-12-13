@@ -71,7 +71,13 @@ bool initGame(WarContext* context)
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    // load DATA.WAR file
     context->warFile = loadWarFile(context, "./DATA.WAR");
+    if (!context->warFile)
+    {
+        logError("Could not load DATA.WAR file\n");
+        return false;
+    }
 
     for (int i = 0; i < arrayLength(assets); ++i)
     {
@@ -79,7 +85,7 @@ bool initGame(WarContext* context)
 
         // REMOVE THIS: this is to NOT load all the other music that is not the
         // first one, just to speed up startup, until I figure out how to make it faster
-        if (entry.index >= 1 && entry.index <= 44)
+        if (entry.index >= 3 && entry.index <= 44)
             continue;
 
         loadResource(context, &entry);

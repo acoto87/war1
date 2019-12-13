@@ -4,7 +4,7 @@
 #define MOVE_EPSILON 0.5f
 #define MOVE_WAIT_INTENTS 2
 #define MOVE_WAIT_TIME 1.0f
-            
+
 #define MAP_EDGE_SCROLL_GAP 5.0f
 
 #define TREE_MAX_WOOD 100
@@ -40,6 +40,9 @@
 
 #define getScaledSpeed(context, t) ((t) * (context)->globalSpeed)
 #define getScaledTime(context, t) ((t) / (context)->globalSpeed)
+
+#define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
+#define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)
 
 void setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay);
 void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
@@ -83,7 +86,7 @@ vec2 getDirFromMousePos(WarContext* context, WarInput* input)
 void printDirection(WarUnitDirection direction)
 {
     switch (direction)
-    {        
+    {
         case WAR_DIRECTION_NORTH:      logDebug("DIRECTION_NORTH\n");      break;
         case WAR_DIRECTION_NORTH_EAST: logDebug("DIRECTION_NORTH_EAST\n"); break;
         case WAR_DIRECTION_EAST:       logDebug("DIRECTION_EAST\n");       break;

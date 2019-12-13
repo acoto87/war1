@@ -6,7 +6,8 @@ void enterSceneMainMenu(WarContext* context)
 
     createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
 
-    createAudio(context, WAR_MUSIC_00, true);
+    if (!isDemo(context))
+        createAudio(context, WAR_MUSIC_00, true);
 }
 
 void createMainMenu(WarContext* context)

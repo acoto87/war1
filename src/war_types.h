@@ -228,7 +228,7 @@ typedef struct
 
 typedef enum
 {
-    WAR_FILE_TYPE_UNKOWN,
+    WAR_FILE_TYPE_UNKNOWN,
     WAR_FILE_TYPE_DEMO,
     WAR_FILE_TYPE_RETAIL
 } WarFileType;

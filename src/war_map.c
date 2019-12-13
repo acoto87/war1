@@ -725,7 +725,8 @@ void enterMap(WarContext* context)
     createDemoEndMenu(context);
     createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
 
-    createAudio(context, WAR_MUSIC_00, true);
+    if (!isDemo(context))
+        createAudio(context, WAR_MUSIC_00, true);
 }
 
 void leaveMap(WarContext* context)

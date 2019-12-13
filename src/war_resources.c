@@ -64,8 +64,13 @@ void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *p
 void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
-
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
+
     if (rawResource.length < PALETTE_LENGTH)
     {
         rawResource.data = (u8*)xrealloc(rawResource.data, PALETTE_LENGTH);
@@ -154,6 +159,11 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     u16 width = readu16(rawResource.data, 0);
     u16 height = readu16(rawResource.data, 2);
@@ -191,6 +201,11 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     u16 framesCount = readu16(rawResource.data, 0);
     u8 frameWidth = readu8(rawResource.data, 2);
@@ -261,6 +276,11 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     u32 allowId = readu32(rawResource.data, 0);
 
@@ -485,6 +505,11 @@ void loadLevelVisual(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_VISUAL;
@@ -498,6 +523,11 @@ void loadLevelPassable(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_PASSABLE;
@@ -513,6 +543,11 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     WarResource *tiles = getOrCreateResource(context, entry->param1);
 
@@ -585,6 +620,11 @@ void loadTiles(WarContext *context, DatabaseEntry *entry)
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TILES;
@@ -598,6 +638,11 @@ void loadText(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TEXT;
@@ -610,6 +655,11 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     u8* xmiData = rawResource.data;
     size32 xmiLength = rawResource.length;
@@ -632,6 +682,11 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     MemoryBuffer bufInput = {0};
     mbInitFromMemory(&bufInput, rawResource.data, rawResource.length);
@@ -685,6 +740,11 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     MemoryBuffer bufInput = {0};
     mbInitFromMemory(&bufInput, rawResource.data, rawResource.length);
@@ -742,6 +802,11 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
+    if (rawResource.placeholder)
+    {
+        logInfo("Placeholder resource found at: %d\n", index);
+        return;
+    }
 
     u16 hotx = readu16(rawResource.data, 0);
     u16 hoty = readu16(rawResource.data, 2);

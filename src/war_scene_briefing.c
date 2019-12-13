@@ -44,7 +44,8 @@ void enterSceneBriefingHumans(WarContext* context)
     setUITextWrapping(briefingText, WAR_TEXT_WRAP_CHAR);
     setUITextLineHeight(briefingText, 150);
 
-    createAudio(context, data.briefingAudioId, false);
+    if (!isDemo(context))
+        createAudio(context, data.briefingAudioId, false);
 }
 
 void enterSceneBriefingOrcs(WarContext* context)
@@ -74,10 +75,13 @@ void enterSceneBriefingOrcs(WarContext* context)
     addAnimationFramesRange(anim2, 4, 0);
     addAnimation(animEntity, anim2);
 
-    WarSpriteAnimation* anim3 = createAnimationFromResourceIndex(context, "anim3", imageResourceRef(425), 0.1f, true);
-    anim3->offset = vec2i(140, 66);
-    addAnimationFramesRange(anim3, 0, 30);
-    addAnimation(animEntity, anim3);
+    if (!isDemo(context))
+    {
+        WarSpriteAnimation* anim3 = createAnimationFromResourceIndex(context, "anim3", imageResourceRef(425), 0.1f, true);
+        anim3->offset = vec2i(140, 66);
+        addAnimationFramesRange(anim3, 0, 30);
+        addAnimation(animEntity, anim3);
+    }
 
     WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 160));
     setUITextColor(briefingText, u8RgbColor(255, 215, 138));
@@ -89,7 +93,8 @@ void enterSceneBriefingOrcs(WarContext* context)
     setUITextWrapping(briefingText, WAR_TEXT_WRAP_CHAR);
     setUITextLineHeight(briefingText, 150);
 
-    createAudio(context, data.briefingAudioId, false);
+    if (!isDemo(context))
+        createAudio(context, data.briefingAudioId, false);
 }
 
 void enterSceneBriefing(WarContext* context)
