@@ -77,7 +77,7 @@ Here is my [TODO](https://github.com/acoto87/war1/blob/master/todo.md) list.
 * [Warcraft Remake](http://www.b3dgs.com/v7/page.php?lang=en&section=warcraft_remake): Warcraft Remake is a remake of the classic Blizzard game.
 * [WinWar](https://github.com/CAMongrel/WinWar): WinWar is a multiplatform (Windows, WindowsStore, OSX, Linux, iOS) port of the original DOS WarCraft: Orcs & Humans PC Game.
 
-## Screnshots
+## Screenshots
 
 Gifs                      |  Images
 ------------------------- | -------------------------
