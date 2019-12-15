@@ -8,16 +8,16 @@ SET AssetsPath=..\..\assets
 
 REM Include path (relative to output folder)
 SET IncludePath=..\..\deps\include
- 
+
 REM Lib path (relative to output folder)
 SET LibPath=..\..\deps\lib\win32
 
 REM Compiler flags
-REM ProfilerFlags="-pg"
-REM OptimizeFlags="-O2"
-REM AssemblyFlags="-g -Wa,-ahl"
+REM SET ProfilerFlags="-pg"
+REM SET OptimizeFlags="-O2"
+REM SET AssemblyFlags="-g -Wa,-ahl"
 SET CommonCompilerFlags=-std=c99 -Wall -Wno-misleading-indentation -x c %ProfilerFlags% %OptimizeFlags% %AssemblyFlags% -I %IncludePath%
-SET CommonLinkerFlags=-L %LibPath% -l glfw3 -l opengl32 
+SET CommonLinkerFlags=-L %LibPath% -l glfw3 -l opengl32
 
 REM Create output path if doesn't exists
 IF NOT EXIST %OutputPath% MKDIR %OutputPath%

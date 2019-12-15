@@ -42,6 +42,23 @@ You can check videos of gameplay and features as they are built [here](https://w
 3. Install `libx11-dev` package.
 4. Run `build-gcc-linux.sh`.
 
+## How to run
+
+Since I'm not able to distribute the DATA.WAR file, which contains the original assets, there is a little process to get the game working properly (this applies if you don't own a copy of the game that you can purchase here [Warcraft: Orcs and Humans](https://www.gog.com/game/warcraft_orcs_and_humans)).
+
+If you own an original copy of the game, or just bought the game on GOG, find the file DATA.WAR and just copy and paste it into the War 1 folder, and execute war1.exe.
+
+If you don't own the original game and want to try it with the demo version, follow these instructions:
+
+1. Download the demo (the option to download a ZIP file) from here: https://archive.org/details/WarcraftOrcsHumansDemo (don't worry, is not a virus :P) and uncompress the ZIP file.
+2. Download and install DOSBox.
+3. Start DOSBox and mount the folder you uncompressed the ZIP file. That is done with the command: `mount C: /path/to/warcraft/demo`.
+4. Once mounted, go to the C drive in DOSBox (just type C: and Enter).
+5. Execute `INSTALL.EXE`.
+6. Install the game in the C:\WARCRAFT default folder (don't worry, that will NOT install it in the actual C drive of the computer).
+7. Once finished this installation process you can close DOSBox. In the folder where you uncompressed the warcraft demo, there will be a `WARCRAFT` folder, just go there and copy the file `DATA.WAR` in the `DEMODATA` folder.
+8. Paste the file into the `assets` folder inside the War 1 folder and execute `war1.exe`.
+
 ## Libraries used
 
 * [GLFW](https://www.glfw.org/): An Open Source, multi-platform library for OpenGL, OpenGL ES and Vulkan development on the desktop. It provides a simple API for creating windows, contexts and surfaces, receiving input and events.
