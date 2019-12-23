@@ -1,5 +1,5 @@
-// the fonts was created in a 64x64 (64x96 for the second font) 
-// sprite but for the actual game a 512x512 (512x768) was used, 
+// the fonts was created in a 64x64 (64x96 for the second font)
+// sprite but for the actual game a 512x512 (512x768) was used,
 // so the original dimensions of this array are actually multiplied by 8
 //
 WarFontData fontsData[2] =
@@ -8,7 +8,7 @@ WarFontData fontsData[2] =
     {
         512, 512, 48, 8,
         {
-            {   0,   0, 24, 48 }, // 
+            {   0,   0, 24, 48 }, //
             {  40,   0, 16, 48 }, // !
             {  56,   0, 32, 48 }, // "
             {  88,   0, 48, 48 }, // #
@@ -36,7 +36,7 @@ WarFontData fontsData[2] =
             { 400,  48, 40, 48 }, // 9
             { 440,  48, 32, 48 }, // :
             { 472,  48, 16, 48 }, // ;
-            {   0,  96, 32, 48 }, // < 
+            {   0,  96, 32, 48 }, // <
             {  32,  96, 32, 48 }, // =
             {  64,  96, 32, 48 }, // >
             {  96,  96, 40, 48 }, // ?
@@ -68,7 +68,7 @@ WarFontData fontsData[2] =
             { 184, 192, 48, 48 }, // Y
             { 232, 192, 48, 48 }, // Z
             { 280, 192, 24, 48 }, // [
-            { 304, 192, 48, 48 }, // backslash 
+            { 304, 192, 48, 48 }, // backslash
             { 352, 192, 24, 48 }, // ]
             { 376, 192, 32, 48 }, // ^
             { 408, 192, 40, 48 }, // _
@@ -102,14 +102,14 @@ WarFontData fontsData[2] =
             { 144, 336, 32, 48 }, // {
             { 176, 336, 16, 48 }, // |
             { 192, 336, 32, 48 }, // }
-            { 224, 336, 48, 48 } // ~
+            { 224, 336, 48, 48 }, // ~
         }
     },
     // font 1 for menu texts
     {
         512, 768, 80, 8,
         {
-            {   0,   0, 30, 80 }, // space 
+            {   0,   0, 30, 80 }, // space
             {  48,   0, 16, 80 }, // !
             {  64,   0, 32, 80 }, // "
             {  96,   0, 48, 80 }, // #
@@ -211,6 +211,9 @@ WarFontData fontsData[2] =
 #define FONT_NORMAL_COLOR u8RgbaColor(239, 255, 219, 255)
 #define FONT_HIGHLIGHT_COLOR u8RgbaColor(255, 227, 73, 255)
 #define NO_HIGHLIGHT -1
+#define ALL_HIGHLIGHT -2
+#define MAX_LINES 48
+#define TAB_WIDTH 2
 
 #define u8ColorToNVGcolor(color) nvgRGBA((color).r, (color).g, (color).b, (color).a)
 
@@ -242,6 +245,21 @@ enum NVGwrap textWrappingToNVGwrap(WarTextWrapping wrap)
         {
             logError("Invalid wrapping value: %d. Defaulting to %d\n", wrap, NVG_WRAP_NONE);
             return NVG_WRAP_NONE;
+        }
+    }
+}
+
+enum NVGtrim textTrimmingToNVGtrim(WarTextTrimming trim)
+{
+    switch (trim)
+    {
+        case WAR_TEXT_TRIM_NONE: return NVG_TRIM_NONE;
+        case WAR_TEXT_TRIM_SPACES: return NVG_TRIM_SPACES;
+        case WAR_TEXT_TRIM_ALL: return NVG_TRIM_ALL;
+        default:
+        {
+            logError("Invalid trimming value: %d. Defaulting to %d\n", trim, NVG_TRIM_NONE);
+            return NVG_TRIM_NONE;
         }
     }
 }
@@ -361,13 +379,13 @@ s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f
     f32 scale = params.fontSize / params.fontData.lineHeight;
     bool wrap = params.wrapping == NVG_WRAP_WORD;
     f32 x = 0;
-
     s32 k = 0;
 
     const char* s = text;
     const char* e = text;
     while (*e && k < maxLines)
     {
+        // a new line is generated for each \n
         if (*e == '\n')
         {
             lines[k].start = s;
@@ -378,11 +396,31 @@ s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f
             s = e + 1;
             x = 0;
         }
+        else if (*e == '\t')
+        {
+            rect rs = params.fontData.data[getCharIndex(' ')];
+            f32 dx = (TAB_WIDTH * rs.width + params.fontData.advance) * scale;
+
+            // if the current character doesn't fit in the line generate a new line
+            if (x + dx > width && wrap)
+            {
+                lines[k].start = s;
+                lines[k].end = e;
+                lines[k].width = x;
+                k++;
+
+                s = e;
+                x = 0;
+            }
+
+            x += dx;
+        }
         else
         {
             rect rs = params.fontData.data[getCharIndex(*e)];
-
             f32 dx = (rs.width + params.fontData.advance) * scale;
+
+            // if the current character doesn't fit in the line generate a new line
             if (x + dx > width && wrap)
             {
                 lines[k].start = s;
@@ -408,6 +446,48 @@ s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f
         k++;
     }
 
+    // trim start and end spaces on lines
+    if (params.trimming != NVG_TRIM_NONE)
+    {
+        rect whiteSpaceData = params.fontData.data[getCharIndex(' ')];
+        f32 whiteSpaceWidth = (whiteSpaceData.width + params.fontData.advance) * scale;
+
+        for (s32 i = 0; i < k; i++)
+        {
+            while (true)
+            {
+                if (lines[i].start[0] == ' ' && params.trimming >= NVG_TRIM_SPACES)
+                {
+                    lines[i].width -= whiteSpaceWidth;
+                    lines[i].start++;
+                }
+                else if (lines[i].start[i] == '\t' && params.trimming >= NVG_TRIM_ALL)
+                {
+                    lines[i].width -= TAB_WIDTH * whiteSpaceWidth;
+                    lines[i].start++;
+                }
+                else
+                    break;
+            }
+
+            while (true)
+            {
+                if (lines[i].end[-1] == ' ' && params.trimming >= NVG_TRIM_SPACES)
+                {
+                    lines[i].width -= whiteSpaceWidth;
+                    lines[i].end--;
+                }
+                else if (lines[i].end[-1] == '\t' && params.trimming >= NVG_TRIM_ALL)
+                {
+                    lines[i].width -= TAB_WIDTH * whiteSpaceWidth;
+                    lines[i].end--;
+                }
+                else
+                    break;
+            }
+        }
+    }
+
     return k;
 }
 
@@ -420,16 +500,22 @@ vec2 nvgMeasureSingleSpriteText(const char* text, NVGfontParams params)
     const char* e = text;
     while (*e)
     {
-        if (*e != '\n')
+        if (*e == '\n')
+        {
+            size.x += params.fontData.advance * scale;
+        }
+        else if (*e == '\t')
+        {
+            rect rs = params.fontData.data[getCharIndex(' ')];
+
+            size.x += (TAB_WIDTH * rs.width + params.fontData.advance) * scale;
+        }
+        else
         {
             rect rs = params.fontData.data[getCharIndex(*e)];
 
             size.x += (rs.width + params.fontData.advance) * scale;
             size.y = max(size.y, rs.height * scale);
-        }
-        else
-        {
-            size.x += params.fontData.advance * scale;
         }
 
         e++;
@@ -441,54 +527,29 @@ vec2 nvgMeasureSingleSpriteText(const char* text, NVGfontParams params)
 vec2 nvgMeasureMultiSpriteText(const char* text, f32 width, NVGfontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
-    bool wrap = params.wrapping == NVG_WRAP_WORD;
+    f32 lineHeight = params.lineHeight > 0 ? params.lineHeight : params.fontData.lineHeight;
+
+    NVGTextSpan lines[MAX_LINES];
+    s32 linesCount = nvgSplitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
 
     vec2 size = VEC2_ZERO;
-    vec2 lineSize = VEC2_ZERO;
 
-    const char* e = text;
-    while (*e)
+    for (s32 i = 0; i < linesCount; i++)
     {
-        if (*e == '\n')
-        {
-            size.x = max(size.x, lineSize.x);
-            size.y += lineSize.y;
-
-            lineSize = VEC2_ZERO;
-        }
-        else
-        {
-            rect rs = params.fontData.data[getCharIndex(*e)];
-
-            f32 dx = (rs.width + params.fontData.advance) * scale;
-            if (lineSize.x + dx >= width && wrap)
-            {
-                size.x = max(size.x, lineSize.x);
-                size.y += lineSize.y;
-
-                lineSize = VEC2_ZERO;
-            }
-
-            lineSize.x += dx;
-            lineSize.y = max(lineSize.y, rs.height * scale);
-        }
-
-        e++;
+        size.x = max(size.x, lines[i].width);
+        size.y += lineHeight * scale;
     }
-
-    size.x = max(size.x, lineSize.x);
-    size.y += lineSize.y;
 
     return size;
 }
 
-f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text, 
-                            s32 index, s32 count, 
-                            f32 x, f32 y, 
-                            NVGcolor fontColor, 
-                            WarSprite fontSprite, 
+f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text,
+                            s32 index, s32 count,
+                            f32 x, f32 y,
+                            NVGcolor fontColor,
+                            WarSprite fontSprite,
                             WarFontData fontData,
-                            vec2 boundings, 
+                            vec2 boundings,
                             f32 scale)
 {
     if (count > 0)
@@ -503,25 +564,35 @@ f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text,
             if (boundings.x > 0 && x * scale > boundings.x)
                 break;
 
-            if (text[index + i] != '\n')
+            const char c = text[index + i];
+
+            if (c == '\n')
             {
-                rect rs = fontData.data[getCharIndex(text[index + i])];
-                rect rd = rectf(x, y, rs.width, rs.height);
-
-                if (text[index + i] != ' ')
-                {
-#ifdef DEBUG_RENDER_FONT
-                    nvgFillRect(gfx, rd, NVG_GREEN_SELECTION);
-#endif
-                    
-                    nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
-                }
-
+                // when we are rendering a single text span, all newline characters
+                // are rendered as ' ' since a single text span is considered
+                // a one line of text, it won't go to the next line
+                rect rs = fontData.data[getCharIndex(' ')];
                 x += rs.width + fontData.advance;
+            }
+            else if (c == '\t')
+            {
+                rect rs = fontData.data[getCharIndex(' ')];
+                x += TAB_WIDTH * rs.width + fontData.advance;
             }
             else
             {
-                rect rs = fontData.data[getCharIndex(' ')];
+                rect rs = fontData.data[getCharIndex(c)];
+                rect rd = rectf(x, y, rs.width, rs.height);
+
+#ifdef DEBUG_RENDER_FONT
+                nvgFillRect(gfx, rd, NVG_GREEN_SELECTION);
+#endif
+
+                if (c != ' ')
+                {
+                    nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+                }
+
                 x += rs.width + fontData.advance;
             }
         }
@@ -529,13 +600,14 @@ f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text,
         nvgEndImageBatch(gfx, batch);
         nvgRestore(gfx);
     }
-    
+
     return x;
 }
 
 void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
+    vec2 textSize = nvgMeasureSingleSpriteText(text, params);
     s32 length = strlen(text);
 
     nvgSave(gfx);
@@ -543,55 +615,61 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
 
     if (!vec2IsZero(params.boundings))
     {
-        vec2 textSize = nvgMeasureSingleSpriteText(text, params);
         vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
         nvgTranslate(gfx, textOffset.x, textOffset.y);
     }
 
     nvgScale(gfx, scale, scale);
 
+#ifdef DEBUG_RENDER_FONT
+    rect outline = rectf(0, 0, textSize.x / scale, lineHeight);
+    nvgStrokeRect(gfx, outline, NVG_GREEN_SELECTION, 3);
+#endif
+
     if (params.highlightIndex >= 0)
     {
-        x = nvgSingleSpriteTextSpan(gfx, text, 
-                                    0, params.highlightIndex, 
-                                    0, 0, 
-                                    params.fontColor, 
-                                    params.fontSprite, 
+        x = nvgSingleSpriteTextSpan(gfx, text,
+                                    0, params.highlightIndex,
+                                    0, 0,
+                                    params.fontColor,
+                                    params.fontSprite,
                                     params.fontData,
-                                    params.boundings, 
+                                    params.boundings,
                                     scale);
 
-        x = nvgSingleSpriteTextSpan(gfx, text, 
-                                    params.highlightIndex, params.highlightCount, 
-                                    x, 0, 
-                                    params.highlightColor, 
-                                    params.fontSprite, 
+        x = nvgSingleSpriteTextSpan(gfx, text,
+                                    params.highlightIndex, params.highlightCount,
+                                    x, 0,
+                                    params.highlightColor,
+                                    params.fontSprite,
                                     params.fontData,
-                                    params.boundings, 
+                                    params.boundings,
                                     scale);
 
-        x = nvgSingleSpriteTextSpan(gfx, text, 
-                                    params.highlightIndex + params.highlightCount, 
-                                    length - params.highlightIndex - params.highlightCount, 
-                                    x, 0, 
-                                    params.fontColor, 
-                                    params.fontSprite, 
+        x = nvgSingleSpriteTextSpan(gfx, text,
+                                    params.highlightIndex + params.highlightCount,
+                                    length - params.highlightIndex - params.highlightCount,
+                                    x, 0,
+                                    params.fontColor,
+                                    params.fontSprite,
                                     params.fontData,
-                                    params.boundings, 
+                                    params.boundings,
                                     scale);
     }
     else
     {
         // No highlight, highlightIndex = -1
         // All highlight, highlightIndex = -2
-        NVGcolor fontColor = params.highlightIndex == -2 ? params.highlightColor : params.fontColor;
-        nvgSingleSpriteTextSpan(gfx, text, 
-                                0, length, 
-                                0, 0, 
-                                fontColor, 
-                                params.fontSprite, 
+        NVGcolor fontColor = params.highlightIndex == ALL_HIGHLIGHT
+            ? params.highlightColor : params.fontColor;
+
+        nvgSingleSpriteTextSpan(gfx, text,
+                                0, length,
+                                0, 0,
+                                fontColor,
+                                params.fontSprite,
                                 params.fontData,
-                                params.boundings, 
+                                params.boundings,
                                 scale);
     }
 
@@ -603,15 +681,21 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
     f32 scale = params.fontSize / params.fontData.lineHeight;
     f32 lineHeight = params.lineHeight > 0 ? params.lineHeight : params.fontData.lineHeight;
 
-    NVGTextSpan lines[48];
-    s32 linesCount = nvgSplitTextIntoLines(text, 48, lines, params.boundings.x, params);
+    NVGTextSpan lines[MAX_LINES];
+    s32 linesCount = nvgSplitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
 
     nvgSave(gfx);
     nvgTranslate(gfx, x, y);
 
     vec2 textSize = nvgMeasureMultiSpriteText(text, params.boundings.x, params);
+
     vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
     nvgTranslate(gfx, textOffset.x, textOffset.y);
+
+#ifdef DEBUG_RENDER_FONT
+    rect outline = rectf(0, 0, textSize.x, textSize.y);
+    nvgStrokeRect(gfx, outline, NVG_RED_SELECTION, 1);
+#endif
 
     s32 lineStartIndex = 0;
 
@@ -629,75 +713,82 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
         nvgScale(gfx, scale, scale);
         nvgTranslate(gfx, 0, lineOffset.y);
 
+#ifdef DEBUG_RENDER_FONT
+        rect outline = rectf(0, 0, lines[i].width / scale, lineHeight);
+        nvgStrokeRect(gfx, outline, NVG_GREEN_SELECTION, 1);
+#endif
+
         if (params.highlightIndex >= lineStartIndex && params.highlightIndex < lineStartIndex + lineLength)
         {
             s32 highlightIndex = params.highlightIndex - lineStartIndex;
             s32 highlightCount = min(params.highlightCount, lineLength - highlightIndex);
 
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start, 
-                                        0, highlightIndex, 
-                                        0, 0, 
-                                        params.fontColor, 
-                                        params.fontSprite, 
+            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+                                        0, highlightIndex,
+                                        0, 0,
+                                        params.fontColor,
+                                        params.fontSprite,
                                         params.fontData,
-                                        params.boundings, 
-                                        scale);
-            
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start, 
-                                        highlightIndex, highlightCount, 
-                                        x, 0, 
-                                        params.highlightColor, 
-                                        params.fontSprite, 
-                                        params.fontData,
-                                        params.boundings, 
+                                        params.boundings,
                                         scale);
 
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start, 
-                                        highlightIndex + highlightCount, 
-                                        lineLength - highlightIndex - highlightCount,
-                                        x, 0, 
-                                        params.fontColor, 
-                                        params.fontSprite, 
+            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+                                        highlightIndex, highlightCount,
+                                        x, 0,
+                                        params.highlightColor,
+                                        params.fontSprite,
                                         params.fontData,
-                                        params.boundings, 
+                                        params.boundings,
+                                        scale);
+
+            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+                                        highlightIndex + highlightCount,
+                                        lineLength - highlightIndex - highlightCount,
+                                        x, 0,
+                                        params.fontColor,
+                                        params.fontSprite,
+                                        params.fontData,
+                                        params.boundings,
                                         scale);
         }
-        else if (params.highlightIndex < lineStartIndex && 
+        else if (params.highlightIndex < lineStartIndex &&
                  params.highlightIndex + params.highlightCount >= lineStartIndex)
         {
             s32 highlightCount = min(params.highlightIndex + params.highlightCount - lineStartIndex, lineLength);
 
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start, 
-                                        0, highlightCount, 
-                                        0, 0, 
-                                        params.highlightColor, 
-                                        params.fontSprite, 
+            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+                                        0, highlightCount,
+                                        0, 0,
+                                        params.highlightColor,
+                                        params.fontSprite,
                                         params.fontData,
-                                        params.boundings, 
+                                        params.boundings,
                                         scale);
-            
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start, 
-                                        highlightCount, 
+
+            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+                                        highlightCount,
                                         lineLength - highlightCount,
-                                        x, 0, 
-                                        params.fontColor, 
-                                        params.fontSprite, 
+                                        x, 0,
+                                        params.fontColor,
+                                        params.fontSprite,
                                         params.fontData,
-                                        params.boundings, 
+                                        params.boundings,
                                         scale);
         }
         else
         {
             // No highlight, highlightIndex = -1
             // All highlight, highlightIndex = -2
-            NVGcolor fontColor = params.highlightIndex == -2 ? params.highlightColor : params.fontColor;
-            nvgSingleSpriteTextSpan(gfx, lines[i].start, 
-                                    0, lineLength, 
-                                    0, 0, 
-                                    fontColor, 
-                                    params.fontSprite, 
+            NVGcolor fontColor = params.highlightIndex == ALL_HIGHLIGHT
+                ? params.highlightColor : params.fontColor;
+
+            nvgSingleSpriteTextSpan(gfx, lines[i].start,
+                                    0, lineLength,
+                                    0, 0,
+                                    fontColor,
+                                    params.fontSprite,
                                     params.fontData,
-                                    params.boundings, 
+                                    params.boundings,
                                     scale);
         }
 

@@ -1119,6 +1119,7 @@ void renderText(WarContext* context, WarEntity* entity)
         params.verticalAlign = textAlignToNVGalign(text->verticalAlign);
         params.lineAlign = textAlignToNVGalign(text->lineAlign);
         params.wrapping = textWrappingToNVGwrap(text->wrapping);
+        params.trimming = textTrimmingToNVGtrim(text->trimming);
         params.fontSprite = context->fontSprites[text->fontIndex];
         params.fontData = fontsData[text->fontIndex];
 
@@ -1202,7 +1203,7 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.fontSize = text->fontSize;
                 params.fontColor = u8ColorToNVGcolor(text->fontColor);
                 params.highlightColor = u8ColorToNVGcolor(text->highlightColor);
-                params.highlightIndex = button->hot ? -2 : text->highlightIndex;
+                params.highlightIndex = button->hot ? ALL_HIGHLIGHT : text->highlightIndex;
                 params.highlightCount = text->highlightCount;
                 params.boundings = text->boundings;
                 params.horizontalAlign = textAlignToNVGalign(text->horizontalAlign);

@@ -25,6 +25,7 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, c
 #define setUITextHighlightColor(uiEntity, color) ((uiEntity)->text.highlightColor = (color))
 #define setUITextMultiline(uiEntity, value) ((uiEntity)->text.multiline = (value))
 #define setUITextLineHeight(uiEntity, value) ((uiEntity)->text.lineHeight = (value))
+#define setUITextTrimming(uiEntity, value) ((uiEntity)->text.trimming = (value))
 
 #define setUIButtonStatus(uiEntity, value) ((uiEntity)->button.enabled = (value))
 #define setUIButtonInteractive(uiEntity, value) ((uiEntity)->button.interactive = (value))

@@ -57,15 +57,6 @@ List of thing to do in no particular order
   * ~~Attack on units on fog, the minimap and the unit goes out of fog for a frame.~~
   * ~~When selected and enemy that goes into fog, the unit keeps selected.~~
   * ~~Fix clicking buttons will flick the tooltip text on and off.~~
-  * Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.
-  * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
-  * When a unit is selected, say a warrior, and it cursor is over an enemy unit, it shows the magnifying glass because there is no active command. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
-  * When building roads the player needs to go back and click on the build road button again to build the next one.
-  * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
-  * Changing global speed doesn't change ongoing trainings.
-  * Check for memory leaks in the removing animations functionality.
-  * Check why the changing of the global scale renders with the previous global scale after a change (only on Linux, on Windows it doesn't happen).
-  * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
   * ~~Make a call to `sleep` instead of waiting in a cycle until the frame end. This will probably increase effiency and decrease CPU usage. I need a portable sleep function, maybe something like:~~
     ```c
     void msleep(s32 milliseconds) // cross-platform sleep function
@@ -85,18 +76,28 @@ List of thing to do in no particular order
       #endif
     }
     ```
-  * Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR
+  * ~~Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR~~
+  Recovered from https://www.gog.com/game/warcraft_orcs_and_humans.
+  * ~~When a unit is selected before dispear in the fog, the unit remains selected. The unit should be removed from the selection.~~
+  * ~~When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will be rendered in the next line which causes missalignment in the left border of the text.~~
+  * Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.
+  * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right the OS cursor shows up when the user move the game cursor outside the window. That's no good.
+  * When a unit is selected, say a warrior, and the cursor is over an enemy unit, it shows the magnifying glass because there is no active command. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
+  * When building roads the player needs to go back and click on the build road button again to build the next one.
+  * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
+  * Changing global speed doesn't change ongoing trainings.
+  * Check for memory leaks in the removing animations functionality.
+  * Check why the changing of the global scale renders with the previous global scale after a change (only on Linux, on Windows it doesn't happen).
+  * Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
   * When a unit attacks a unit that is attacking a building, the second unit should stop the attack on the building and attack the first unit.
   * When attacking a wall, if the units isn't within range, it will walk to the piece's position without considering its range of attack. That's because move state is being used in this case, instead of follow when attacking an unit.
   * Check the uses of `context->deltaTime` when the speed of the game is not `1`.
-  * When a unit is selected before dispear in the fog, the unit remains selected. The unit should be removed from the selection.
   * If an unit is attacked when idle, the unit respond the attack.
   * Check why this appear when trying to spell the Dark Vision: "This upgrade type 15 doesn't increase any value of the units".
   * Summon spells summon as many units as mana allows.
   * Check death animations of scorpions and spiders.
   * Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like MAP_STATE_ALWAYS_VISIBLE and MAP_STATE_TIMED_VISIBLE.
   * Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
-  * When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will render in the next line which causes missalignment in the left border of the text.
   * Sometimes you order a worker to mine, and it will enter the mine (dissapear) but it doesn't perform the mining. You can also give other orders like move, and the invisible worker will go there and do other stuff.... on the bright side, I have invisible units! :D... But wait.. I already have invisible units with Invisibility spells..., damn! :(
   * Some lines in text appear on Windows and between sprites, antialiasing maybe on the OpenGL ES driver in Windows?
   * If a unit is selected and the player give several orders in a row quickly, the audio gets saturated. Maybe I can restrict how much audios are generated by units, maybe keep track of the last time the unit spoke or a sound is emitted from a unit, to not do it again in short periods of time.

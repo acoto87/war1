@@ -1446,6 +1446,13 @@ typedef enum
     WAR_TEXT_WRAP_CHAR
 } WarTextWrapping;
 
+typedef enum
+{
+    WAR_TEXT_TRIM_NONE,
+    WAR_TEXT_TRIM_SPACES,
+    WAR_TEXT_TRIM_ALL
+} WarTextTrimming;
+
 typedef struct
 {
     bool enabled;
@@ -1462,6 +1469,7 @@ typedef struct
     WarTextAlignment verticalAlign;
     WarTextAlignment lineAlign;
     WarTextWrapping wrapping;
+    WarTextTrimming trimming;
     bool multiline;
 } WarTextComponent;
 

@@ -380,6 +380,12 @@ enum NVGwrap {
 	NVG_WRAP_WORD = 1<<1,
 };
 
+enum NVGtrim {
+    NVG_TRIM_NONE = 1<<0,
+    NVG_TRIM_SPACES = 1<<1,
+    NVG_TRIM_ALL = 1<<2
+};
+
 typedef struct
 {
     s32 fontIndex;
@@ -394,6 +400,7 @@ typedef struct
     enum NVGalign verticalAlign;
     enum NVGalign lineAlign;
     enum NVGwrap wrapping;
+    enum NVGtrim trimming;
 
     WarSprite fontSprite;
     WarFontData fontData;

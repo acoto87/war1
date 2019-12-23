@@ -16,7 +16,7 @@ const WarCampaignMapData campaignsData[] =
     {
         WAR_CAMPAIGN_HUMANS_01,
         checkMap01Objectives,
-        "Build:\n  6 farms\n  1 barracks",
+        "Build:\n\t6 farms\n\t1 barracks",
         WAR_CAMPAIGNS_HUMAN_01_INTRO,
         "As a test of your abilities, the King has appointed\n"
         "you as Regent over a small parcel of land. Since\n"
