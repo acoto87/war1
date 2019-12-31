@@ -10,7 +10,7 @@ typedef struct
                         // mirrored from others
 } WarProjectileData;
 
-WarProjectileData projectilesData[] = 
+WarProjectileData projectilesData[] =
 {
     // type                             resourceIndex       speed                   frames  stride
     { WAR_PROJECTILE_ARROW,             349,                8 * MEGA_TILE_WIDTH,    1,      0 },
@@ -108,8 +108,8 @@ void doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, 
     for (s32 i = 0; i < nearUnits->count; i++)
     {
         WarEntity* targetEntity = nearUnits->items[i];
-        if (targetEntity && 
-            !isDead(targetEntity) && !isGoingToDie(targetEntity) && 
+        if (targetEntity &&
+            !isDead(targetEntity) && !isGoingToDie(targetEntity) &&
             !isCollapsing(targetEntity) && !isGoingToCollapse(targetEntity))
         {
             takeDamage(context, targetEntity, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
@@ -186,7 +186,7 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
     f32 travelPercent = percentabi(travelDistance, totalDistance);
 
     f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
-    
+
     // these are the angles at wich the frame index of the arrow
     // sprite needs to change and also where the x-scale needs to
     // be reversed
@@ -200,7 +200,7 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
     // find the current frame index and scale
     for (s32 i = 0; i < arrayLength(controlAngles); i++)
     {
-        if (angle >= controlAngles[i] - halff(45) && 
+        if (angle >= controlAngles[i] - halff(45) &&
             angle < controlAngles[i] + halff(45))
         {
             newFrameIndex = frameIndices[i];
@@ -217,7 +217,7 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
 
     // some projectiles have sequences like: 0 1 0 or 0 1 2 1 0
     // but the FIREBALL and RAIN_OF_FIRE projectiles have linear frame sequences
-    if (projectile->type != WAR_PROJECTILE_FIREBALL || 
+    if (projectile->type != WAR_PROJECTILE_FIREBALL ||
         projectile->type != WAR_PROJECTILE_RAIN_OF_FIRE)
     {
         frameCount = frameCount * 2 - 1;
@@ -299,7 +299,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 addAnimationsComponent(context, animEntity);
 
                 createRainOfFireExplosionAnimation(context, animEntity, projectile->target);
-                createAudio(context, WAR_CATAPULT_FIRE_EXPLOSION, false);
+                createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
                 removeEntityById(context, entity->id);
             }
         }
@@ -319,14 +319,14 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                     addAnimationsComponent(context, animEntity);
 
                     createExplosionAnimation(context, animEntity, projectile->target);
-                    createAudio(context, WAR_CATAPULT_FIRE_EXPLOSION, false);
+                    createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
                 }
                 else
                 {
                     doProjectileTargetDamage(context, entity);
 
                     if (projectile->type == WAR_PROJECTILE_ARROW)
-                        createAudio(context, WAR_ARROW_SPEAR_HIT, false);
+                        createAudioWithPosition(context, WAR_ARROW_SPEAR_HIT, projectile->target, false);
                 }
 
                 removeEntityById(context, entity->id);
@@ -335,7 +335,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
     }
 }
 
-WarEntity* createProjectile(WarContext* context, WarProjectileType type, 
+WarEntity* createProjectile(WarContext* context, WarProjectileType type,
                             WarEntityId sourceEntityId, WarEntityId targetEntityId,
                             vec2 origin, vec2 target)
 {

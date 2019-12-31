@@ -1910,24 +1910,25 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
         }
         else
         {
+            vec2 position = getUnitCenterPosition(entity, false);
+
             WarState* deathState = createDeathState(context, entity);
             changeNextState(context, entity, deathState, true, true);
 
             if (entity->unit.type == WAR_UNIT_SCORPION ||
                 entity->unit.type == WAR_UNIT_SPIDER)
             {
-                createAudio(context, WAR_DEAD_SPIDER_SCORPION, false);
+                createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
             }
             else if (entity->unit.type == WAR_UNIT_CATAPULT_HUMANS ||
                      entity->unit.type == WAR_UNIT_CATAPULT_ORCS)
             {
-                createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
+                createAudioRandomWithPosition(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, position, false);
             }
             else
             {
-                WarAudioId audioId = getUnitRace(entity) == WAR_RACE_HUMANS
-                    ? WAR_HUMAN_DEAD : WAR_ORC_DEAD;
-                createAudio(context, audioId, false);
+                WarAudioId audioId = isHumanUnit(entity)? WAR_HUMAN_DEAD : WAR_ORC_DEAD;
+                createAudioWithPosition(context, audioId, position, false);
             }
         }
     }

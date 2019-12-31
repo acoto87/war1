@@ -524,7 +524,7 @@ DatabaseEntry assets[] =
     { 581, DB_ENTRY_TYPE_WAVE,              "human_victory_2",                              0, 0, 0 },
     { 582, DB_ENTRY_TYPE_WAVE,              "human_victory_3",                              0, 0, 0 },
 
-    // NOTE: this are resources included in the demo version
+    // NOTE: these are resources included in the demo version
     // not sure what are they, a little investigation is required
     //
     { 141, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },

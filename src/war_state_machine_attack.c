@@ -29,7 +29,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
     vec2 targetTile = state->attack.targetTile;
-    
+
     // if the entity to attack doesn't exists, go to the attacking point or go idle
     if (!targetEntity)
     {
@@ -75,7 +75,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    // if the unit is attacking a worker that is currently gathering and inside of the goldmine or the townhall, 
+    // if the unit is attacking a worker that is currently gathering and inside of the goldmine or the townhall,
     // stop the attacking for a moment until the unit come out again
     if (isInsideBuilding(targetEntity))
     {
@@ -95,14 +95,14 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         // when the unit begin an attack, it is not invisible anymore
         unit->invisible = false;
         unit->invisibilityTime = 0;
-        
+
         // do damage
         if (isUnit(targetEntity))
         {
             // if the target entity is dead or is collapsing (in case of buildings), go to idle
             // do this check before apply damage in case of multiple units attacking.
             // one of them could cause the unit to die, so the other should stop doing further damage.
-            if (isDead(targetEntity) || isGoingToDie(targetEntity) || 
+            if (isDead(targetEntity) || isGoingToDie(targetEntity) ||
                 isCollapsing(targetEntity) || isGoingToCollapse(targetEntity))
             {
                 WarState* idleState = createIdleState(context, entity, true);
@@ -119,7 +119,8 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                     meleeAttack(context, entity, targetEntity);
                 }
 
-                playAttackSound(context, action->lastSoundStep);
+                vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                playAttackSound(context, targetPosition, action->lastSoundStep);
             }
         }
         else if(isWall(targetEntity))
@@ -135,7 +136,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                     WarState* idleState = createIdleState(context, entity, true);
                     changeNextState(context, entity, idleState, true, true);
                 }
-                else 
+                else
                 {
                     if (isRangeUnit(entity))
                     {
@@ -146,7 +147,8 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                         meleeWallAttack(context, entity, targetEntity, piece);
                     }
 
-                    playAttackSound(context, action->lastSoundStep);
+                    vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
+                    playAttackSound(context, targetPosition, action->lastSoundStep);
                 }
             }
         }

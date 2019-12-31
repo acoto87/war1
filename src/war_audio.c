@@ -332,10 +332,11 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
     f32 musicVolume = context->musicVolume;
     f32 soundVolume = context->soundVolume;
 
-    if (context->map)
+    WarMap* map = context->map;
+    if (map)
     {
-        musicVolume *= ((f32)context->map->settings.musicVol / 100);
-        soundVolume *= ((f32)context->map->settings.sfxVol / 100);
+        musicVolume *= ((f32)map->settings.musicVol / 100);
+        soundVolume *= ((f32)map->settings.sfxVol / 100);
     }
 
     WarEntityIdList toRemove;
@@ -361,16 +362,47 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
                             // if the audio finish, mark it to remove it
                             WarEntityIdListAdd(&toRemove, entity->id);
                         }
+
                         break;
                     }
 
                     case WAR_AUDIO_WAVE:
                     {
-                        if (playWave(context, entity, sampleCount, outputStream, soundVolume))
+                        f32 volume = soundVolume;
+
+                        WarTransformComponent* transform = &entity->transform;
+                        if (transform->enabled)
+                        {
+                            // positional audios only makes sense on maps?
+                            assert(map);
+
+                            // it's a positional audio, so check if the audio is inside the viewport
+                            vec2 position = transform->position;
+
+                            rect viewport = map->viewport;
+                            if (!rectContainsf(viewport, position.x, position.y))
+                            {
+                                vec2 viewportCenter = rectCenter(viewport);
+                                f32 distance = vec2Distance(position, viewportCenter);
+
+                                // approximately the distances from the center of the viewport
+                                // begin at 120 pixels, I'm going to set an audible range of 120-200
+                                // when the audios gets out of viewport
+                                // distance             vol
+                                // < 120            ->  1
+                                // > 120 && < 200   ->  interpolate range 120-200 to range 0.75-0
+                                // >= 200           ->  0
+                                volume = 0.75 * (1 - ((distance - 120) / 80));
+                                volume = max(volume, 0);
+                            }
+                        }
+
+                        if (playWave(context, entity, sampleCount, outputStream, volume))
                         {
                             // if the audio finish, mark it to remove it
                             WarEntityIdListAdd(&toRemove, entity->id);
                         }
+
                         break;
                     }
 
@@ -450,37 +482,51 @@ WarEntity* createAudio(WarContext* context, WarAudioId audioId, bool loop)
     return entity;
 }
 
+WarEntity* createAudioWithPosition(WarContext* context, WarAudioId audioId, vec2 position, bool loop)
+{
+    WarAudioData data = getAudioData(audioId);
+
+    s32 resourceIndex = (s32)audioId;
+    WarAudioType type = data.type;
+
+    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
+    addAudioComponent(context, entity, type, resourceIndex, loop);
+    addTransformComponent(context, entity, position);
+
+    return entity;
+}
+
 WarEntity* createAudioRandom(WarContext* context, WarAudioId fromId, WarAudioId toId, bool loop)
 {
     return createAudio(context, randomi(fromId, toId + 1), loop);
 }
 
-void playAttackSound(WarContext* context, WarUnitActionStepType soundStep)
+WarEntity* createAudioRandomWithPosition(WarContext* context, WarAudioId fromId, WarAudioId toId, vec2 position, bool loop)
+{
+    return createAudioWithPosition(context, randomi(fromId, toId + 1), position, loop);
+}
+
+WarEntity* playAttackSound(WarContext* context, vec2 position, WarUnitActionStepType soundStep)
 {
     switch (soundStep)
     {
         case WAR_ACTION_STEP_SOUND_SWORD:
-            createAudioRandom(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, false);
-            break;
+            return createAudioRandomWithPosition(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, position, false);
         case WAR_ACTION_STEP_SOUND_FIST:
-            createAudio(context, WAR_FIST_ATTACK, false);
-            break;
+            return createAudioWithPosition(context, WAR_FIST_ATTACK, position, false);
         case WAR_ACTION_STEP_SOUND_FIREBALL:
-            createAudio(context, WAR_FIREBALL, false);
-            break;
+            return createAudioWithPosition(context, WAR_FIREBALL, position, false);
         case WAR_ACTION_STEP_SOUND_CATAPULT:
-            createAudio(context, WAR_CATAPULT_ROCK_FIRED, false);
-            break;
+            return createAudioWithPosition(context, WAR_CATAPULT_ROCK_FIRED, position, false);
         case WAR_ACTION_STEP_SOUND_ARROW:
-            createAudio(context, WAR_ARROW_SPEAR, false);
-            break;
+            return createAudioWithPosition(context, WAR_ARROW_SPEAR, position, false);
         default:
             logWarning("Trying to play sound with step: %d\n", soundStep);
-            break;
+            return NULL;
     }
 }
 
-void playDudeSelectionSound(WarContext* context, WarEntity* entity)
+WarEntity* playDudeSelectionSound(WarContext* context, WarEntity* entity)
 {
     assert(isDudeUnit(entity));
 
@@ -491,81 +537,51 @@ void playDudeSelectionSound(WarContext* context, WarEntity* entity)
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
         if (selectedEntityId == entity->id)
         {
-            if (isHumanUnit(entity))
-                createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false);
-            else
-                createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
-        }
-        else
-        {
-            if (isHumanUnit(entity))
-                createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
-            else
-                createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
+            return isHumanUnit(entity)
+                ? createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false)
+                : createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
         }
     }
-    else
-    {
-        if (isHumanUnit(entity))
-            createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false);
-        else
-            createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
-    }
+
+    return isHumanUnit(entity)
+        ? createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false)
+        : createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
 }
 
-void playBuildingSelectionSound(WarContext* context, WarEntity* entity)
+WarEntity* playBuildingSelectionSound(WarContext* context, WarEntity* entity)
 {
     assert(isBuildingUnit(entity));
 
     if (isBuilding(entity) || isGoingToBuild(entity))
+        return createAudio(context, WAR_BUILDING, false);
+
+    s32 hpPercent = percentabi(entity->unit.hp, entity->unit.maxhp);
+    if(hpPercent <= 33)
+        return createAudio(context, WAR_FIRE_CRACKLING, false);
+
+    switch (entity->unit.type)
     {
-        createAudio(context, WAR_BUILDING, false);
+        case WAR_UNIT_CHURCH:
+            return createAudio(context, WAR_HUMAN_CHURCH, false);
+        case WAR_UNIT_TEMPLE:
+            return createAudio(context, WAR_ORC_TEMPLE, false);
+        case WAR_UNIT_STABLE:
+            return createAudio(context, WAR_HUMAN_STABLE, false);
+        case WAR_UNIT_KENNEL:
+            return createAudio(context, WAR_ORC_KENNEL, false);
+        case WAR_UNIT_BLACKSMITH_HUMANS:
+        case WAR_UNIT_BLACKSMITH_ORCS:
+            return createAudio(context, WAR_BLACKSMITH, false);
+        default:
+            return createAudio(context, WAR_UI_CLICK, false);
     }
-    else
-    {
-        s32 hpPercent = percentabi(entity->unit.hp, entity->unit.maxhp);
-        if(hpPercent <= 33)
-        {
-            createAudio(context, WAR_FIRE_CRACKLING, false);
-        }
-        else
-        {
-            switch (entity->unit.type)
-            {
-                case WAR_UNIT_CHURCH:
-                {
-                    createAudio(context, WAR_HUMAN_CHURCH, false);
-                    break;
-                }
-                case WAR_UNIT_TEMPLE:
-                {
-                    createAudio(context, WAR_ORC_TEMPLE, false);
-                    break;
-                }
-                case WAR_UNIT_STABLE:
-                {
-                    createAudio(context, WAR_HUMAN_STABLE, false);
-                    break;
-                }
-                case WAR_UNIT_KENNEL:
-                {
-                    createAudio(context, WAR_ORC_KENNEL, false);
-                    break;
-                }
-                case WAR_UNIT_BLACKSMITH_HUMANS:
-                case WAR_UNIT_BLACKSMITH_ORCS:
-                {
-                    createAudio(context, WAR_BLACKSMITH, false);
-                    break;
-                }
-                default:
-                {
-                    createAudio(context, WAR_UI_CLICK, false);
-                    break;
-                }
-            }
-        }
-    }
+}
+
+WarEntity* playAcknowledgementSound(WarContext* context, WarPlayerInfo* player)
+{
+    return isHumanPlayer(player)
+        ? createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false)
+        : createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
 }
 
 /**

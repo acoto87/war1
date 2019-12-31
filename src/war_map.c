@@ -1773,13 +1773,15 @@ void updateMagic(WarContext* context)
                     // when the mana runs out the summoned units will die
                     if (unit->mana == 0)
                     {
+                        vec2 position = getUnitCenterPosition(entity, false);
+
                         WarState* deathState = createDeathState(context, entity);
                         changeNextState(context, entity, deathState, true, true);
 
                         if (entity->unit.type == WAR_UNIT_SCORPION ||
                             entity->unit.type == WAR_UNIT_SPIDER)
                         {
-                            createAudio(context, WAR_DEAD_SPIDER_SCORPION, false);
+                            createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
                         }
                     }
                 }
@@ -1954,16 +1956,21 @@ void updateFoW(WarContext* context)
                 if (targetEntity)
                 {
                     WarUnitStats stats = getUnitStats(entity->unit.type);
-                    if (unitInRange(entity, targetEntity, stats.range))
+
+                    if (isUnit(targetEntity))
                     {
-                        if (isUnit(targetEntity))
+                        if (unitInRange(entity, targetEntity, stats.range))
                         {
                             setUnitMapTileState(map, targetEntity, MAP_TILE_STATE_VISIBLE);
                         }
-                        else if (isWall(targetEntity))
+                    }
+                    else if (isWall(targetEntity))
+                    {
+                        WarState* attackState = getAttackState(entity);
+                        vec2 targetTile = attackState->attack.targetTile;
+
+                        if (tileInRange(entity, targetTile, stats.range))
                         {
-                            WarState* attackState = getAttackState(entity);
-                            vec2 targetTile = attackState->attack.targetTile;
                             WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
                             if (piece)
                             {

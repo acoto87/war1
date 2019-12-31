@@ -1833,6 +1833,7 @@ bool tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
 s32 unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
 {
     assert(isUnit(entity));
+    assert(isUnit(targetEntity));
 
     vec2 pointOnTarget = unitPointOnTarget(entity, targetEntity);
     return entityTileDistance(entity, pointOnTarget);
@@ -1840,6 +1841,8 @@ s32 unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
 
 bool unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
 {
+    assert(isUnit(entity));
+    assert(isUnit(targetEntity));
     assert(range >= 0);
 
     s32 distance = unitDistanceInTiles(entity, targetEntity);

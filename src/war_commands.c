@@ -109,14 +109,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
 
     if (goingToMove)
     {
-        if (isHumanPlayer(player))
-        {
-            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-        }
-        else
-        {
-            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-        }
+        playAcknowledgementSound(context, player);
     }
 
     free(rs);
@@ -147,14 +140,7 @@ void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
 
     if (goingToFollow)
     {
-        if (isHumanPlayer(player))
-        {
-            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-        }
-        else
-        {
-            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-        }
+        playAcknowledgementSound(context, player);
     }
 }
 
@@ -238,14 +224,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
 
     if (goingToHarvest)
     {
-        if (isHumanPlayer(player))
-        {
-            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-        }
-        else
-        {
-            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-        }
+        playAcknowledgementSound(context, player);
     }
 }
 
@@ -293,14 +272,7 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
 
     if (goingToDeliver)
     {
-        if (isHumanPlayer(player))
-        {
-            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-        }
-        else
-        {
-            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-        }
+        playAcknowledgementSound(context, player);
     }
 }
 
@@ -338,14 +310,7 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 
     if (goingToRepair)
     {
-        if (isHumanPlayer(player))
-        {
-            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-        }
-        else
-        {
-            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-        }
+        playAcknowledgementSound(context, player);
     }
 }
 
@@ -591,14 +556,7 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
 
     if (playSound)
     {
-        if (isHumanPlayer(player))
-        {
-            createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false);
-        }
-        else
-        {
-            createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
-        }
+        playAcknowledgementSound(context, player);
     }
 }
 
@@ -947,7 +905,10 @@ bool executeCommand(WarContext* context)
 
                             determineWallTypes(context, wall);
 
-                            command->type = WAR_COMMAND_NONE;
+                            // don't reset the current command if the player is building
+                            // roads or walls, to allow rapid construction of those structures
+                            //
+                            // command->type = WAR_COMMAND_NONE;
 
                             createAudio(context, WAR_BUILD_ROAD, false);
                         }
@@ -990,7 +951,10 @@ bool executeCommand(WarContext* context)
 
                             determineRoadTypes(context, road);
 
-                            command->type = WAR_COMMAND_NONE;
+                            // don't reset the current command if the player is building
+                            // roads or walls, to allow rapid construction of those structures
+                            //
+                            // command->type = WAR_COMMAND_NONE;
 
                             createAudio(context, WAR_BUILD_ROAD, false);
                         }

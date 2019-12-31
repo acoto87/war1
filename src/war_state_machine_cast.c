@@ -29,7 +29,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 targetTile = state->cast.targetTile;
 
     WarSpellStats stats = getSpellStats(spellType);
-    
+
     if (stats.range)
     {
         if(!tileInRange(entity, targetTile, stats.range))
@@ -62,7 +62,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     WarUnitComponent* targetUnit = &targetEntity->unit;
 
                     // the healing spell's strength is determined by units of mana.
-                    // for every 6 units of mana, the damaged unit gets back 1 hit point. 
+                    // for every 6 units of mana, the damaged unit gets back 1 hit point.
                     //
                     // take all the hp the cleric can restore according to its mana
                     s32 hpToRestore = unit->mana / stats.manaCost;
@@ -72,7 +72,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
                     // recalculate how much mana the cleric need to spend
                     s32 manaToSpend = hpToRestore * stats.manaCost;
-                    
+
                     increaseUnitHp(context, targetEntity, hpToRestore);
                     decreaseUnitMana(context, entity, manaToSpend);
 
@@ -82,7 +82,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     addAnimationsComponent(context, animEntity);
 
                     createSpellAnimation(context, animEntity, targetPosition);
-                    createAudio(context, WAR_NORMAL_SPELL, false);
+                    createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
                 WarState* idleState = createIdleState(context, entity, true);
@@ -96,14 +96,14 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
 
                     WarEntity* sight = createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
                     addSightComponent(context, sight, targetTile, getMapScaledTime(context, stats.time));
                     addAnimationsComponent(context, sight);
 
-                    createSpellAnimation(context, sight, targetTilePosition);
-                    createAudio(context, WAR_NORMAL_SPELL, false);
+                    createSpellAnimation(context, sight, targetPosition);
+                    createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
                 WarState* idleState = createIdleState(context, entity, true);
@@ -118,7 +118,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 if (targetEntity && isDudeUnit(targetEntity))
                 {
                     WarUnitComponent* targetUnit = &targetEntity->unit;
-                    
+
                     if (decreaseUnitMana(context, entity, stats.manaCost))
                     {
                         targetUnit->invisible = true;
@@ -130,10 +130,10 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         addAnimationsComponent(context, animEntity);
 
                         createSpellAnimation(context, animEntity, targetPosition);
-                        createAudio(context, WAR_NORMAL_SPELL, false);
+                        createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                     }
                 }
-                
+
                 WarState* idleState = createIdleState(context, entity, true);
                 changeNextState(context, entity, idleState, true, true);
 
@@ -180,7 +180,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         if (decreaseUnitMana(context, entity, stats.manaCost))
                         {
                             vec2 targetPosition = getUnitCenterPosition(targetEntity, true);
-                            createUnit(context, WAR_UNIT_SKELETON, targetPosition.x, targetPosition.y, 
+                            createUnit(context, WAR_UNIT_SKELETON, targetPosition.x, targetPosition.y,
                                     unit->player, WAR_RESOURCE_NONE, 0, true);
 
                             targetPosition = getUnitCenterPosition(targetEntity, false);
@@ -189,7 +189,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                             addAnimationsComponent(context, animEntity);
 
                             createSpellAnimation(context, animEntity, targetPosition);
-                            createAudio(context, WAR_NORMAL_SPELL, false);
+                            createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
 
                             removeEntityById(context, targetEntity->id);
                         }
@@ -209,7 +209,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 if (targetEntity && isDudeUnit(targetEntity))
                 {
                     WarUnitComponent* targetUnit = &targetEntity->unit;
-                    
+
                     if (decreaseUnitMana(context, entity, stats.manaCost))
                     {
                         decreaseUnitHp(context, targetEntity, halfi(targetUnit->hp));
@@ -223,10 +223,10 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         addAnimationsComponent(context, animEntity);
 
                         createSpellAnimation(context, animEntity, targetPosition);
-                        createAudio(context, WAR_NORMAL_SPELL, false);
+                        createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                     }
                 }
-                
+
                 WarState* idleState = createIdleState(context, entity, true);
                 changeNextState(context, entity, idleState, true, true);
 
@@ -235,7 +235,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
             case WAR_SPELL_POISON_CLOUD:
             {
-                vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+                vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
 
                 if (decreaseUnitMana(context, entity, stats.manaCost))
                 {
@@ -243,8 +243,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     addPoisonCloudComponent(context, poisonCloud, targetTile, getMapScaledTime(context, stats.time));
                     addAnimationsComponent(context, entity);
 
-                    createPoisonCloudAnimation(context, poisonCloud, targetTilePosition);
-                    createAudio(context, WAR_NORMAL_SPELL, false);
+                    createPoisonCloudAnimation(context, poisonCloud, targetPosition);
+                    createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
                 WarState* idleState = createIdleState(context, entity, true);
@@ -259,7 +259,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 break;
             }
         }
-        
+
         // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
         action->lastActionStep = WAR_ACTION_STEP_NONE;
         action->lastSoundStep =  WAR_ACTION_STEP_NONE;
