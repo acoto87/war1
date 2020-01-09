@@ -93,6 +93,11 @@ shlDefineList(rectList, rect)
 
 #define rectListDefaultOptions (rectListOptions){RECT_EMPTY, equalsRect, NULL}
 
+shlDeclareMap(SSMap, const char*, char*)
+shlDefineMap(SSMap, const char*, char*)
+
+#define SSMapDefaultOptions (SSMapOptions){NULL, strHashFNV32, strEquals, NULL}
+
 //
 // Forward references to other structs that need a reference to these ones.
 // See WarButtonComponent, WarState.building.

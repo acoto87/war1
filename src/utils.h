@@ -14,7 +14,28 @@
 #define randomf(a, b) ((a) + ((f32)rand() / RAND_MAX) * ((b) - (a)))
 #define inRange(x, a, b) ((x) >= (a) && (x) < (b))
 #define debugVar(x) printf("variable "#x" = %d\n", x)
-#define strEquals(str1, str2) (strcmp((str1), (str2)) == 0)
+
+bool strEquals(const char* str1, const char* str2)
+{
+    return strcmp(str1, str2) == 0;
+}
+
+uint32_t strHashFNV32(const char* data)
+{
+#define FNV_PRIME_32 0x01000193
+#define FNV_OFFSET_32 0x811c9dc5
+
+    uint32_t hash = FNV_OFFSET_32;
+    while(*data != 0)
+        hash = (*data++ ^ hash) * FNV_PRIME_32;
+
+    return hash;
+}
+
+void strFree(char* str)
+{
+    free((void*)str);
+}
 
 typedef int8_t s8;
 typedef int16_t s16;

@@ -17,7 +17,7 @@ REM SET ProfilerFlags="-pg"
 REM SET OptimizeFlags="-O2"
 REM SET AssemblyFlags="-g -Wa,-ahl"
 SET CommonCompilerFlags=-std=c99 -Wall -Wno-misleading-indentation -x c %ProfilerFlags% %OptimizeFlags% %AssemblyFlags% -I %IncludePath%
-SET CommonLinkerFlags=-L %LibPath% -l glfw3 -l opengl32
+SET CommonLinkerFlags=-L %LibPath% -l glfw3 -l opengl32 -l ws2_32
 
 REM Create output path if doesn't exists
 IF NOT EXIST %OutputPath% MKDIR %OutputPath%
@@ -27,7 +27,7 @@ REM Empty the build folder
 DEL /Q *
 
 REM Compile the project
-gcc %CommonCompilerFlags% %CommonLinkerFlags% ..\..\src\war1.c ..\..\deps\include\glad\glad.c -o war1.exe
+gcc %CommonCompilerFlags% ..\..\src\war1.c ..\..\deps\include\glad\glad.c -o war1.exe %CommonLinkerFlags%
 if %ERRORLEVEL% == 0 (
     REM Copy assets
 	COPY %AssetsPath%\* .\

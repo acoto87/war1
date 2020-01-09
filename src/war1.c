@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <stdarg.h>
 #include <time.h>
 #include <math.h>
@@ -76,6 +77,7 @@
 #include "glutils.h"
 #include "war_types.h"
 #include "war.h"
+#include "war_net.h"
 #include "war_database.h"
 #include "war_map_menu.h"
 #include "war_map_ui.h"
@@ -90,6 +92,7 @@
 #include "war_ui.h"
 #include "war_file.c"
 #include "war_audio.c"
+#include "war_net.c"
 #include "war_actions.c"
 #include "war_render.c"
 #include "war_resources.c"
@@ -146,6 +149,19 @@ int main()
     srand(time(NULL));
 
     initLog(LOG_SEVERITY_DEBUG);
+
+    int x =  strtol("ff3a\r\ndfsdf", NULL, 16);
+    printf("%d\n", x);
+
+    const char* url = "http://ia801608.us.archive.org/view_archive.php?archive=/11/items/WarcraftOrcsHumansDemo/WCRFT.ZIP&file=DEMODATA%2FDATA.WAR";
+    if (downloadFileFromUrl(url, "DATA.WAR"))
+    {
+        printf("Download successful!\n");
+    }
+    else
+    {
+        printf("Download failed!\n");
+    }
 
     glfwSetErrorCallback(glfwErrorCallback);
 
