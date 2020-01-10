@@ -71,11 +71,35 @@ bool initGame(WarContext* context)
     glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    // load DATA.WAR file
-    context->warFile = loadWarFile(context, "./DATA.WAR");
+    // check if the DATA.WAR file exists
+    bool dataFileExists = access(DATAWAR_FILE_PATH, F_OK) == 0;
+    if (dataFileExists)
+    {
+        // load DATA.WAR file
+        if (!loadDataFile(context))
+        {
+            logError("Could not load DATA.WAR file\n");
+            return false;
+        }
+
+        WarScene* scene = createScene(context, WAR_SCENE_BLIZZARD);
+        setNextScene(context, scene, 0.0f);
+    }
+    else
+    {
+        WarScene* scene = createScene(context, WAR_SCENE_DOWNLOAD);
+        setNextScene(context, scene, 0.0f);
+    }
+
+    context->time = (f32)glfwGetTime();
+    return true;
+}
+
+bool loadDataFile(WarContext* context)
+{
+    context->warFile = loadWarFile(context, DATAWAR_FILE_PATH);
     if (!context->warFile)
     {
-        logError("Could not load DATA.WAR file\n");
         return false;
     }
 
@@ -91,10 +115,6 @@ bool initGame(WarContext* context)
         loadResource(context, &entry);
     }
 
-    WarScene* scene = createScene(context, WAR_SCENE_BLIZZARD);
-    setNextScene(context, scene, 0.0f);
-
-    context->time = (f32)glfwGetTime();
     return true;
 }
 
@@ -209,6 +229,7 @@ void inputGame(WarContext *context)
                                        glfwGetKey(context->window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_SHIFT, glfwGetKey(context->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
                                         glfwGetKey(context->window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
+    setInputKey(context, WAR_KEY_ENTER, glfwGetKey(context->window, GLFW_KEY_ENTER) == GLFW_PRESS);
 
     setInputKey(context, WAR_KEY_LEFT, glfwGetKey(context->window, GLFW_KEY_LEFT) == GLFW_PRESS);
     setInputKey(context, WAR_KEY_RIGHT, glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_PRESS);

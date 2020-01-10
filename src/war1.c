@@ -132,6 +132,7 @@
 #include "war_map_menu.c"
 #include "war_map_ui.c"
 #include "war_map.c"
+#include "war_scene_download.c"
 #include "war_scene_blizzard.c"
 #include "war_scene_menu.c"
 #include "war_scene_briefing.c"
@@ -149,19 +150,6 @@ int main()
     srand(time(NULL));
 
     initLog(LOG_SEVERITY_DEBUG);
-
-    int x =  strtol("ff3a\r\ndfsdf", NULL, 16);
-    printf("%d\n", x);
-
-    const char* url = "http://ia801608.us.archive.org/view_archive.php?archive=/11/items/WarcraftOrcsHumansDemo/WCRFT.ZIP&file=DEMODATA%2FDATA.WAR";
-    if (downloadFileFromUrl(url, "DATA.WAR"))
-    {
-        printf("Download successful!\n");
-    }
-    else
-    {
-        printf("Download failed!\n");
-    }
 
     glfwSetErrorCallback(glfwErrorCallback);
 

@@ -121,6 +121,7 @@ typedef enum _WarKeys
     WAR_KEY_ESC,
     WAR_KEY_CTRL,
     WAR_KEY_SHIFT,
+    WAR_KEY_ENTER,
 
     WAR_KEY_LEFT,
     WAR_KEY_RIGHT,
@@ -2003,12 +2004,23 @@ typedef struct
 
 typedef enum
 {
+    WAR_SCENE_DOWNLOAD,
     WAR_SCENE_BLIZZARD,
     WAR_SCENE_MAIN_MENU,
     WAR_SCENE_BRIEFING,
 
     WAR_SCENE_COUNT
 } WarSceneType;
+
+typedef enum
+{
+    WAR_SCENE_DOWNLOAD_DOWNLOAD,
+    WAR_SCENE_DOWNLOAD_CONFIRM,
+    WAR_SCENE_DOWNLOAD_DOWNLOADING,
+    WAR_SCENE_DOWNLOAD_DOWNLOADED,
+    WAR_SCENE_DOWNLOAD_FILE_LOADED,
+    WAR_SCENE_DOWNLOAD_FAILED,
+} WarSceneDownloadState;
 
 typedef struct
 {
@@ -2017,6 +2029,11 @@ typedef struct
 
     union
     {
+        struct
+        {
+            WarSceneDownloadState status;
+        } download;
+
         struct
         {
             f32 time;

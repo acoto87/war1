@@ -1,5 +1,6 @@
-WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] = 
+WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 {
+    { WAR_SCENE_DOWNLOAD,   enterSceneDownload, NULL, updateSceneDownload },
     { WAR_SCENE_BLIZZARD,   enterSceneBlizzard, NULL, updateSceneBlizzard },
     { WAR_SCENE_MAIN_MENU,  enterSceneMainMenu, NULL, NULL },
     { WAR_SCENE_BRIEFING,   enterSceneBriefing, NULL, updateSceneBriefing }
@@ -29,7 +30,7 @@ void enterScene(WarContext* context)
 {
     WarScene* scene = context->scene;
 
-    if (!inRange(scene->type, WAR_SCENE_BLIZZARD, WAR_SCENE_COUNT))
+    if (!inRange(scene->type, WAR_SCENE_DOWNLOAD, WAR_SCENE_COUNT))
     {
         logError("Unkown scene type: %d\n", scene->type);
         return;
@@ -46,7 +47,7 @@ void updateScene(WarContext* context)
 {
     WarScene* scene = context->scene;
 
-    if (!inRange(scene->type, WAR_SCENE_BLIZZARD, WAR_SCENE_COUNT))
+    if (!inRange(scene->type, WAR_SCENE_DOWNLOAD, WAR_SCENE_COUNT))
     {
         logError("Unkown scene type: %d\n", scene->type);
         return;
@@ -71,7 +72,7 @@ void leaveScene(WarContext* context)
     if (!scene)
         return;
 
-    if (!inRange(scene->type, WAR_SCENE_BLIZZARD, WAR_SCENE_COUNT))
+    if (!inRange(scene->type, WAR_SCENE_DOWNLOAD, WAR_SCENE_COUNT))
     {
         logError("Unkown scene type: %d\n", scene->type);
         return;

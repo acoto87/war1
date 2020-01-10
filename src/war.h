@@ -33,6 +33,9 @@
 // #define DEBUG_RENDER_FONT
 // #define DEBUG_RENDER_PROJECTILES
 
+#define DATAWAR_FILE_PATH "./DATA.WAR"
+#define ONLINE_DEMO_DATAWAR_FILE_URL "http://ia801608.us.archive.org/view_archive.php?archive=/11/items/WarcraftOrcsHumansDemo/WCRFT.ZIP&file=DEMODATA%2FDATA.WAR"
+
 #define isButtonPressed(input, btn) (input->buttons[btn].pressed)
 #define wasButtonPressed(input, btn) (input->buttons[btn].wasPressed)
 #define isKeyPressed(input, key) (input->keys[key].pressed)
@@ -46,6 +49,8 @@
 
 void setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay);
 void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
+
+bool loadDataFile(WarContext* context);
 
 vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
 {
