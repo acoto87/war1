@@ -339,14 +339,17 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
             WarSpellMapping spellMapping = getSpellMapping(commandMapping.mappedType);
             WarSpellStats stats = getSpellStats(commandMapping.mappedType);
 
-            if (decreaseUnitMana(context, entity, stats.manaCost))
+            while (decreaseUnitMana(context, entity, stats.manaCost))
             {
                 vec2 position = getUnitCenterPosition(entity, true);
                 vec2 spawnPosition = findEmptyPosition(map->finder, position);
 
-                createUnit(context, spellMapping.mappedType,
-                           spawnPosition.x, spawnPosition.y,
-                           unit->player, WAR_RESOURCE_NONE, 0, true);
+                WarEntity* summonedUnit = createUnit(context, spellMapping.mappedType,
+                                                     spawnPosition.x, spawnPosition.y,
+                                                     unit->player, WAR_RESOURCE_NONE, 0, true);
+
+                vec2 unitSize = getUnitSize(summonedUnit);
+                setStaticEntity(map->finder, spawnPosition.x, spawnPosition.y, unitSize.x, unitSize.y, summonedUnit->id);
 
                 WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                 createSpellAnimation(context, animEntity, vec2TileToMapCoordinates(spawnPosition, true));
