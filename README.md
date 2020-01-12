@@ -48,16 +48,11 @@ Since I'm not able to distribute the DATA.WAR file, which contains the original 
 
 If you own an original copy of the game, or just bought the game on GOG, find the file DATA.WAR and just copy and paste it into the War 1 folder, and execute war1.exe.
 
-If you don't own the original game and want to try it with the demo version, follow these instructions:
+Or just start the game and there is an option within the game to download the file.
 
-1. Download the demo (the option to download a ZIP file) from here: https://archive.org/details/WarcraftOrcsHumansDemo (don't worry, is not a virus :P) and uncompress the ZIP file.
-2. Download and install DOSBox.
-3. Start DOSBox and mount the folder you uncompressed the ZIP file. That is done with the command: `mount C: /path/to/warcraft/demo`.
-4. Once mounted, go to the C drive in DOSBox (just type C: and Enter).
-5. Execute `INSTALL.EXE`.
-6. Install the game in the C:\WARCRAFT default folder (don't worry, that will NOT install it in the actual C drive of the computer).
-7. Once finished this installation process you can close DOSBox. In the folder where you uncompressed the warcraft demo, there will be a `WARCRAFT` folder, just go there and copy the file `DATA.WAR` in the `DEMODATA` folder.
-8. Paste the file into the `assets` folder inside the War 1 folder and execute `war1.exe`.
+If you don't own the original game and want to try it with the demo version, just download the demo version of [DATA.WAR](https://archive.org/download/WarcraftOrcsHumansDemo/WCRFT.ZIP/DEMODATA%2FDATA.WAR). Or just start the game and there is an option within the game to download the file.
+
+If you want to check were that file comes from, it's from here: https://archive.org/details/WarcraftOrcsHumansDemo. If you click SEE ALL in the DOWNLOADS section you will see a WCRFT.ZIP (View Contents) entry, just click on View Contents and there is a line with the DATA.WAR file of the demo version.
 
 ## Libraries used
 
