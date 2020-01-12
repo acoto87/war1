@@ -83,6 +83,9 @@ List of thing to do in no particular order
   * ~~When building roads the player needs to go back and click on the build road button again to build the next one.~~
   * ~~When attacking a wall, if the units isn't within range, it will walk to the piece's position without considering its range of attack. That's because move state is being used in this case, instead of follow when attacking an unit.~~
   * ~~Sounds should be dependent if the source is inside the viewport bounds. For example, the swords sounds shouldn't interrupt other sounds if the battle is far away from the viewport bounds.~~
+  * ~~Check why this appear when trying to spell the Dark Vision: "This upgrade type 15 doesn't increase any value of the units (Not reproducible)".~~
+  * ~~Summon spells summon as many units as mana allows.~~
+  * ~~Check death animations of scorpions and spiders.~~
   * Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right now the OS cursor shows up when the user move the game cursor outside the window. That's no good.
   * When a unit is selected, say a warrior, and the cursor is over an enemy unit, it shows the magnifying glass because there is no active command and is expecting to select the foe unit when maybe it would be better to show a possible command like attack. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
   * When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
@@ -93,9 +96,6 @@ List of thing to do in no particular order
   * When a unit attacks a unit that is attacking a building, the second unit should stop the attack on the building and attack the first unit.
   * Check the uses of `context->deltaTime` when the speed of the game is not `1`.
   * If an unit is attacked when idle, the unit respond the attack.
-  * Check why this appear when trying to spell the Dark Vision: "This upgrade type 15 doesn't increase any value of the units".
-  * Summon spells summon as many units as mana allows.
-  * Check death animations of scorpions and spiders.
   * Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like MAP_STATE_ALWAYS_VISIBLE and MAP_STATE_TIMED_VISIBLE.
   * Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
   * Sometimes you order a worker to mine, and it will enter the mine (dissapear) but it doesn't perform the mining. You can also give other orders like move, and the invisible worker will go there and do other stuff.... on the bright side, I have invisible units! :D... But wait.. I already have invisible units with Invisibility spells..., damn! :(
@@ -138,7 +138,7 @@ List of thing to do in no particular order
   * Make the move state to consider range distance to stop.
   * Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
   * Check behavior of invisible units when is under attack (it maybe work with workers, to stop the attack on it)
-  * > Make screen to download demo DATA.WAR file if it doesn't exists (the app should download it and install it itself).
+  * ~~Make screen to download demo DATA.WAR file if it doesn't exists (the app should download it and install it itself).~~
   Download it from here: https://archive.org/download/WarcraftOrcsHumansDemo/WCRFT.ZIP/DEMODATA%2FDATA.WAR
   To get there go to https://archive.org/details/WarcraftOrcsHumansDemo, then SHOW ALL in DOWNLOAD OPTIONS -> WCRFT.ZIP (View Contents)
   * Zoom feature
