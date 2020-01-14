@@ -1,29 +1,43 @@
-u32 connectToHost(const char* host)
+bool initNetwork()
 {
-    s32 status;
-
 #if _WIN32
     WSADATA wsaData;
-    status = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    s32 status = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (status != 0)
     {
-        logError("Couldn't initialize Websock\n");
-        logError("Last error: %d\n", WSAGetLastError());
+        logError("Couldn't initialize Websock. Errno: %d\n", status);
 
-        return 0;
+        return false;
     }
 #endif
 
+    return true;
+}
+
+bool cleanNetwork()
+{
+#if _WIN32
+    s32 status = WSACleanup();
+    if (status == SOCKET_ERROR)
+    {
+        logError("Couldn't cleanup Websock. Errno: %d\n", WSAGetLastError());
+
+        return false;
+    }
+#endif
+
+    return true;
+}
+
+u32 connectToHost(const char* host)
+{
     struct hostent* hostEntry = gethostbyname(host);
     if(!hostEntry)
     {
-        logError("Couldn't retrieve host address from name %s\n", host);
 #if _WIN32
-        logError("Last error: %d\n", WSAGetLastError());
-#endif
-
-#if _WIN32
-        WSACleanup();
+        logError("Couldn't create socket to host %s. Errno: %d\n", host, WSAGetLastError());
+#else
+        logError("Couldn't create socket to host %s. Errno: %d\n", host, h_errno);
 #endif
 
         return 0;
@@ -32,13 +46,10 @@ u32 connectToHost(const char* host)
     u32 sck = socket(AF_INET, SOCK_STREAM, 0);
     if(sck == INVALID_SOCKET)
     {
-        logError("Couldn't create socket to host %s\n", host);
 #if _WIN32
-        logError("Last error: %d\n", WSAGetLastError());
-#endif
-
-#if _WIN32
-        WSACleanup();
+        logError("Couldn't create socket to host %s. Last error: %d\n", host, WSAGetLastError());
+#else
+        logError("Couldn't create socket to host %s. Last error: %d\n", host, errno);
 #endif
 
         return 0;
@@ -49,13 +60,16 @@ u32 connectToHost(const char* host)
     hostInfo.sin_addr = *((struct in_addr*)*hostEntry->h_addr_list);
     hostInfo.sin_port = htons(80);
 
-    status = connect(sck, (struct sockaddr*)&hostInfo, sizeof(struct sockaddr));
-    if(sck == SOCKET_ERROR || status != 0)
+    s32 status = connect(sck, (struct sockaddr*)&hostInfo, sizeof(struct sockaddr));
+    if(status == SOCKET_ERROR)
     {
-        logError("Couldn't connect socket to host %s\n", host);
 #if _WIN32
-        logError("Last error: %d\n", WSAGetLastError());
+        logError("Couldn't connect socket to host %s. Last error: %d\n", host, WSAGetLastError());
+#else
+        logError("Couldn't connect socket to host %s. Last error: %d\n", host, errno);
 #endif
+
+        close(sck);
 
         return 0;
     }
@@ -79,9 +93,10 @@ bool requestResource(u32 sck, const char* resource, const char* host)
     s32 status = send(sck, message, strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
-        logError("Couldn't send request with message: %s\n", message);
 #if _WIN32
-        logError("Last error: %d\n", WSAGetLastError());
+        logError("Couldn't send request with message: %s. Errno: %d\n", message, WSAGetLastError());
+#else
+        logError("Couldn't send request with message: %s. Errno: %d\n", message, errno);
 #endif
 
         return false;
@@ -92,9 +107,10 @@ bool requestResource(u32 sck, const char* resource, const char* host)
     status = send(sck, message, strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
-        logError("Couldn't send request with message: %s\n", message);
 #if _WIN32
-        logError("Last error: %d\n", WSAGetLastError());
+        logError("Couldn't send request with message: %s. Errno: %d\n", message, WSAGetLastError());
+#else
+        logError("Couldn't send request with message: %s. Errno: %d\n", message, errno);
 #endif
 
         return false;
@@ -103,7 +119,7 @@ bool requestResource(u32 sck, const char* resource, const char* host)
     return true;
 }
 
-size32 parseHeadersFromResponse(const char* response, s32 responseLength, SSMap* headers)
+s32 parseHeadersFromResponse(const char* response, s32 responseLength, SSMap* headers)
 {
     // Example of headers in a HTTP response
     //
@@ -155,14 +171,14 @@ size32 parseHeadersFromResponse(const char* response, s32 responseLength, SSMap*
         lineLength = strcspn(line, "\r\n");
     }
 
-    size32 advance = (size32)(line - response) + 2;
+    s32 advance = (s32)(line - response) + 2;
     return advance;
 }
 
-size32 readResponse(u32 sck, char responseBuffer[], size32 responseBufferLength)
+s32 readResponse(u32 sck, char responseBuffer[], s32 responseBufferLength)
 {
     char* responsePtr = responseBuffer;
-    size32 responseLength = 0;
+    s32 responseLength = 0;
     s32 readFromSocket;
 
     do
@@ -174,6 +190,12 @@ size32 readResponse(u32 sck, char responseBuffer[], size32 responseBufferLength)
         readFromSocket = recv(sck, responsePtr, sizeToRead, 0);
         if (readFromSocket == SOCKET_ERROR)
         {
+#if _WIN32
+        logError("Couldn't receive the response from socket %d. Errno: %d\n", sck, WSAGetLastError());
+#else
+        logError("Couldn't receive the response from socket %d. Errno: %d\n", sck, errno);
+#endif
+
             responseLength = -1;
             break;
         }
@@ -209,10 +231,19 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     const char* host = strtok(cut, "/");
     const char* resource = url + shift + strlen(host);
 
+    if (!initNetwork())
+    {
+        logError("Couldn't initialize the network.\n");
+
+        return false;
+    }
+
     u32 sck = connectToHost(host);
     if (!sck)
     {
-        logError("Couldn't download file from url %s\n", url);
+        logError("Couldn't connect to host: %s\n", host);
+
+        cleanNetwork();
 
         return false;
     }
@@ -222,32 +253,22 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         logError("Couldn't download file from url %s\n", url);
 
         close(sck);
-
-#if _WIN32
-        WSACleanup();
-#endif
+        cleanNetwork();
 
         return false;
     }
 
     char* response = (char*)xcalloc(RESPONSE_MAX_SIZE, sizeof(char));
-    size32 responseLength = readResponse(sck, response, RESPONSE_MAX_SIZE);
-
     char* responsePtr = response;
+
+    s32 responseLength = readResponse(sck, response, RESPONSE_MAX_SIZE);
 
     if (responseLength < 0)
     {
-        logError("There was an error trying to receive the response from %s\n", url);
-#if _WIN32
-        logError("Last error: %d\n", WSAGetLastError());
-#endif
+        logError("Couldn't receive response.\n");
 
         close(sck);
-
-#if _WIN32
-        WSACleanup();
-#endif
-
+        cleanNetwork();
         free(response);
 
         return false;
@@ -256,14 +277,10 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     FILE* fd = fopen(filePath, "wb");
     if (!fd)
     {
-        logError("There was an error trying to create a new file at: %s\n", filePath);
+        logError("Couldn't create a new file at: %s\n", filePath);
 
         close(sck);
-
-#if _WIN32
-        WSACleanup();
-#endif
-
+        cleanNetwork();
         free(response);
 
         return false;
@@ -274,14 +291,9 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         logError("The response was empty from %s\n", url);
 
         close(sck);
-
-#if _WIN32
-        WSACleanup();
-#endif
-
-        fclose(fd);
-
+        cleanNetwork();
         free(response);
+        fclose(fd);
 
         return true;
     }
@@ -295,7 +307,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     SSMap headers;
     SSMapInit(&headers, options);
 
-    size32 readFromResponse = parseHeadersFromResponse(response, responseLength, &headers);
+    s32 readFromResponse = parseHeadersFromResponse(response, responseLength, &headers);
 
     responsePtr += readFromResponse;
     responseLength -= readFromResponse;
@@ -308,14 +320,9 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         SSMapFree(&headers);
 
         close(sck);
-
-#if _WIN32
-        WSACleanup();
-#endif
-
-        fclose(fd);
-
+        cleanNetwork();
         free(response);
+        fclose(fd);
 
         return false;
     }
@@ -328,14 +335,9 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         SSMapFree(&headers);
 
         close(sck);
-
-#if _WIN32
-        WSACleanup();
-#endif
-
-        fclose(fd);
-
+        cleanNetwork();
         free(response);
+        fclose(fd);
 
         return false;
     }
@@ -348,14 +350,9 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         SSMapFree(&headers);
 
         close(sck);
-
-#if _WIN32
-        WSACleanup();
-#endif
-
-        fclose(fd);
-
+        cleanNetwork();
         free(response);
+        fclose(fd);
 
         return false;
     }
@@ -393,14 +390,9 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     SSMapFree(&headers);
 
     close(sck);
-
-#if _WIN32
-    WSACleanup();
-#endif
-
-    fclose(fd);
-
+    cleanNetwork();
     free(response);
+    fclose(fd);
 
     return true;
 }

@@ -19,6 +19,7 @@
 #include <time.h>
 #include <math.h>
 #include <unistd.h>
+#include <errno.h>
 
 #if __DEBUG__
 #include <execinfo.h>
