@@ -5,6 +5,10 @@
 #include <ws2tcpip.h>
 #else
 #include <sys/socket.h>
+#include <netdb.h>
+
+#define INVALID_SOCKET -1
+#define SOCKET_ERROR -1
 #endif
 
 #define RESPONSE_READ_SIZE 2048

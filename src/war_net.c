@@ -1,8 +1,10 @@
 u32 connectToHost(const char* host)
 {
+    s32 status;
+
 #if _WIN32
     WSADATA wsaData;
-    s32 status = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    status = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (status != 0)
     {
         logError("Couldn't initialize Websock\n");
@@ -27,7 +29,7 @@ u32 connectToHost(const char* host)
         return 0;
     }
 
-    u32 sck = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    u32 sck = socket(AF_INET, SOCK_STREAM, 0);
     if(sck == INVALID_SOCKET)
     {
         logError("Couldn't create socket to host %s\n", host);
@@ -219,7 +221,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     {
         logError("Couldn't download file from url %s\n", url);
 
-        closesocket(sck);
+        close(sck);
 
 #if _WIN32
         WSACleanup();
@@ -240,7 +242,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         logError("Last error: %d\n", WSAGetLastError());
 #endif
 
-        closesocket(sck);
+        close(sck);
 
 #if _WIN32
         WSACleanup();
@@ -256,7 +258,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     {
         logError("There was an error trying to create a new file at: %s\n", filePath);
 
-        closesocket(sck);
+        close(sck);
 
 #if _WIN32
         WSACleanup();
@@ -271,7 +273,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     {
         logError("The response was empty from %s\n", url);
 
-        closesocket(sck);
+        close(sck);
 
 #if _WIN32
         WSACleanup();
@@ -305,7 +307,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
         SSMapFree(&headers);
 
-        closesocket(sck);
+        close(sck);
 
 #if _WIN32
         WSACleanup();
@@ -325,7 +327,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
         SSMapFree(&headers);
 
-        closesocket(sck);
+        close(sck);
 
 #if _WIN32
         WSACleanup();
@@ -345,7 +347,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
         SSMapFree(&headers);
 
-        closesocket(sck);
+        close(sck);
 
 #if _WIN32
         WSACleanup();
@@ -390,7 +392,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     SSMapFree(&headers);
 
-    closesocket(sck);
+    close(sck);
 
 #if _WIN32
     WSACleanup();
