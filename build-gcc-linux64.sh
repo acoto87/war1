@@ -17,7 +17,7 @@ LibPath="../../deps/lib/linux64"
 # OptimizeFlags="-O2"
 # AssemblyFlags="-g -Wa,-ahl"
 # DebugFlags="-g -D __DEBUG__"
-# Allow the war1 binary to run via clicking in file browser="-no-pie"
+# Allow the war1 binary to run via clicking in file browser="-no-pie" https://bugzilla.gnome.org/show_bug.cgi?id=737849
 CommonCompilerFlags="-std=c99 -Wall -x c $ProfilerFlags $OptimizeFlags $AssemblyFlags $DebugFlags -I $IncludePath"
 CommonLinkerFlags="-L $LibPath -lglfw -lpthread -lm -ldl -no-pie"
 
