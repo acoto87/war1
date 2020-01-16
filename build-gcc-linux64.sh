@@ -17,8 +17,9 @@ LibPath="../../deps/lib/linux64"
 # OptimizeFlags="-O2"
 # AssemblyFlags="-g -Wa,-ahl"
 # DebugFlags="-g -D __DEBUG__"
+# Allow the war1 binary to run via clicking in file browser="-no-pie"
 CommonCompilerFlags="-std=c99 -Wall -x c $ProfilerFlags $OptimizeFlags $AssemblyFlags $DebugFlags -I $IncludePath"
-CommonLinkerFlags="-L $LibPath -lglfw -lpthread -lm -ldl -lXcursor -g"
+CommonLinkerFlags="-L $LibPath -lglfw -lpthread -lm -ldl -no-pie"
 
 
 # Create output path if doesn't exists
@@ -41,5 +42,3 @@ echo "Generating ctags - Start";
 ctags --tag-relative=yes --extras=f --language-force=C --recurse=yes
 echo "Generating ctags - Done";
 fi
-
-#pkg-config --libs glfw3` -lm -lGL -ldl -lGLU -g
