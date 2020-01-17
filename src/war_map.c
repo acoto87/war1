@@ -1551,8 +1551,10 @@ void updateMapCursor(WarContext* context)
         if (input->isDragging)
         {
             changeCursorType(context, entity, WAR_CURSOR_GREEN_CROSSHAIR);
+            return;
         }
-        else if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+
+        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             WarUnitCommand* command = &map->command;
             switch (command->type)
@@ -1609,154 +1611,43 @@ void updateMapCursor(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    WarEntity* entityUnderCursor = NULL;
-
-                    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-                    for(s32 i = 0; i < units->count; i++)
-                    {
-                        WarEntity* entity = units->items[i];
-                        if (entity)
-                        {
-                            WarUnitComponent* unit = &entity->unit;
-                            if (unit->enabled)
-                            {
-                                // don't change the cursor for dead units or corpses
-                                if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
-                                {
-                                    continue;
-                                }
-
-                                // don't change the cursor for collased buildings
-                                if (isCollapsing(entity) || isGoingToCollapse(entity))
-                                {
-                                    continue;
-                                }
-
-                                // don't change the cursor for non-visible units
-                                if (!isUnitPartiallyVisible(map, entity))
-                                {
-                                    continue;
-                                }
-                            }
-
-                            rect unitRect = getUnitRect(entity);
-                            if (rectContainsf(unitRect, targetPoint.x, targetPoint.y))
-                            {
-                                entityUnderCursor = entity;
-                                break;
-                            }
-                        }
-                    }
-
-                    // if there is no unit under the cursor, check the forests
+                    WarEntity* entityUnderCursor = findEntityUnderCursor(context, true, true);
                     if (!entityUnderCursor)
                     {
-                        WarEntityList* forests = getEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
-                        for (s32 i = 0; i < forests->count; i++)
-                        {
-                            WarEntity* forest = forests->items[i];
-                            if (forest)
-                            {
-                                WarTreeList* trees = &forest->forest.trees;
-                                for (s32 k = 0; k < trees->count; k++)
-                                {
-                                    WarTree tree = trees->items[k];
-                                    if (tree.tilex == (s32)targetTile.x &&
-                                        tree.tiley == (s32)targetTile.y)
-                                    {
-                                        if (tree.type != WAR_TREE_NONE &&
-                                            tree.type != WAR_TREE_CHOPPED)
-                                        {
-                                            entityUnderCursor = forest;
-                                        }
-
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (entityUnderCursor)
-                            {
-                                break;
-                            }
-                        }
+                        changeCursorType(context, entity, WAR_CURSOR_ARROW);
+                        break;
                     }
 
-                    // if there is no unit under the cursor, check the walls
-                    if (!entityUnderCursor)
+                    WarEntityIdList* selectedEntities = &map->selectedEntities;
+                    if (selectedEntities->count > 0)
                     {
-                        WarEntityList* walls = getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
-                        for (s32 i = 0; i < walls->count; i++)
+                        WarEntity* selectedEntity = findEntity(context, selectedEntities->items[0]);
+                        if (selectedEntity && isDudeUnit(selectedEntity))
                         {
-                            WarEntity* wall = walls->items[i];
-                            if (wall)
+                            if (isUnitOfType(entityUnderCursor, WAR_UNIT_GOLDMINE) &&
+                                !isUnitUnknown(map, entityUnderCursor) &&
+                                isWorkerUnit(selectedEntity))
                             {
-                                WarWallPieceList* pieces = &wall->wall.pieces;
-                                for (s32 k = 0; k < pieces->count; k++)
-                                {
-                                    WarWallPiece piece = pieces->items[k];
-                                    if (piece.tilex == (s32)targetTile.x &&
-                                        piece.tiley == (s32)targetTile.y)
-                                    {
-                                        if (piece.hp > 0)
-                                        {
-                                            entityUnderCursor = wall;
-                                        }
-
-                                        break;
-                                    }
-                                }
+                                changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                             }
-
-                            if (entityUnderCursor)
+                            else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) &&
+                                     !isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
+                                     isWorkerUnit(selectedEntity))
                             {
-                                break;
+                                changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                             }
-                        }
-                    }
-
-                    if (entityUnderCursor)
-                    {
-                        WarEntityIdList* selectedEntities = &map->selectedEntities;
-                        if (selectedEntities->count > 0)
-                        {
-                            WarEntity* selectedEntity = findEntity(context, selectedEntities->items[0]);
-                            if (selectedEntity && isDudeUnit(selectedEntity))
+                            else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL) &&
+                                     !isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
+                                     isWarriorUnit(selectedEntity) &&
+                                     canAttack(context, selectedEntity, entityUnderCursor))
                             {
-                                if (isUnitOfType(entityUnderCursor, WAR_UNIT_GOLDMINE) &&
-                                    !isUnitUnknown(map, entityUnderCursor) &&
-                                    isWorkerUnit(selectedEntity))
-                                {
-                                    changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
-                                }
-                                else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) &&
-                                         !isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
-                                         isWorkerUnit(selectedEntity))
-                                {
-                                    changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
-                                }
-                                else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL) &&
-                                         !isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
-                                         isWarriorUnit(selectedEntity) &&
-                                         canAttack(context, selectedEntity, entityUnderCursor))
-                                {
-                                    changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
-                                }
-                                else if (!isFriendlyUnit(context, entityUnderCursor) &&
-                                         isWarriorUnit(selectedEntity) &&
-                                         canAttack(context, selectedEntity, entityUnderCursor))
-                                {
-                                    changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
-                                }
-                                else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
-                                         isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
-                                {
-                                    changeCursorType(context, entity, WAR_CURSOR_ARROW);
-                                }
-                                else
-                                {
-                                    changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
-                                }
+                                changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
+                            }
+                            else if (!isFriendlyUnit(context, entityUnderCursor) &&
+                                     isWarriorUnit(selectedEntity) &&
+                                     canAttack(context, selectedEntity, entityUnderCursor))
+                            {
+                                changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
                             }
                             else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
                                      isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
@@ -1768,14 +1659,24 @@ void updateMapCursor(WarContext* context)
                                 changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
                             }
                         }
+                        else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
+                                 isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
+                        {
+                            changeCursorType(context, entity, WAR_CURSOR_ARROW);
+                        }
                         else
                         {
                             changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
                         }
                     }
-                    else
+                    else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
+                             isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
                     {
                         changeCursorType(context, entity, WAR_CURSOR_ARROW);
+                    }
+                    else
+                    {
+                        changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
                     }
 
                     break;

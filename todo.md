@@ -84,7 +84,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Summon spells summon as many units as mana allows.
 * [x] Check death animations of scorpions and spiders.
 * [ ] Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right now the OS cursor shows up when the user move the game cursor outside the window. That's no good.
-* [ ] When a unit is selected, say a warrior, and the cursor is over an enemy unit, it shows the magnifying glass because there is no active command and is expecting to select the foe unit when maybe it would be better to show a possible command like attack. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
+* [x] When a unit is selected, say a warrior, and the cursor is over an enemy unit, it shows the magnifying glass because there is no active command and is expecting to select the foe unit when maybe it would be better to show a possible command like attack. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
 * [ ] When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
 * [ ] Changing global speed doesn't change ongoing trainings.
 * [ ] Check for memory leaks in the removing animations functionality.

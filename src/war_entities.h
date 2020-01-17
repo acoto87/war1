@@ -7,13 +7,13 @@ void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite
 void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef);
 void removeSpriteComponent(WarContext* context, WarEntity* entity);
 
-void addUnitComponent(WarContext* context, 
-                      WarEntity* entity, 
-                      WarUnitType type, 
-                      s32 x, 
-                      s32 y, 
-                      u8 player, 
-                      WarResourceKind resourceKind, 
+void addUnitComponent(WarContext* context,
+                      WarEntity* entity,
+                      WarUnitType type,
+                      s32 x,
+                      s32 y,
+                      u8 player,
+                      WarResourceKind resourceKind,
                       u32 amount);
 void removeUnitComponent(WarContext* context, WarEntity* entity);
 
@@ -45,8 +45,8 @@ void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color
 void removeRectComponent(WarContext* context, WarEntity* entity);
 
 void addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normalSprite, WarSprite pressedSprite);
-void addButtonComponentFromResource(WarContext* context, 
-                                    WarEntity* entity, 
+void addButtonComponentFromResource(WarContext* context,
+                                    WarEntity* entity,
                                     WarSpriteResourceRef normalRef,
                                     WarSpriteResourceRef pressedRef);
 void removeButtonComponent(WarContext* context, WarEntity* entity);
@@ -58,7 +58,7 @@ void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType ty
 void removeCursorComponent(WarContext* context, WarEntity* entity);
 
 void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileType type,
-                            WarEntityId sourceEntityId, WarEntityId targetEntityId, 
+                            WarEntityId sourceEntityId, WarEntityId targetEntityId,
                             vec2 origin, vec2 target, s32 speed);
 void removeProjectileComponent(WarContext* context, WarEntity* entity);
 
@@ -106,8 +106,8 @@ s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount);
 
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToMap);
-WarEntity* createUnit(WarContext* context, WarUnitType type, 
-                      s32 x, s32 y, u8 player, 
+WarEntity* createUnit(WarContext* context, WarUnitType type,
+                      s32 x, s32 y, u8 player,
                       WarResourceKind resourceKind, u32 amount,
                       bool addToMap);
 WarEntity* createDude(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToTrain);
@@ -115,6 +115,7 @@ WarEntity* createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
 WarEntity* findUIEntity(WarContext* context, const char* name);
+WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool includeWalls);
 void removeEntity(WarContext* context, WarEntity* entity);
 void removeEntityById(WarContext* context, WarEntityId id);
 void renderEntity(WarContext* context, WarEntity* entity);

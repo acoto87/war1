@@ -550,6 +550,124 @@ WarEntity* findUIEntity(WarContext* context, const char* name)
     return NULL;
 }
 
+WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool includeWalls)
+{
+    WarInput* input = &context->input;
+
+    WarMap* map = context->map;
+    assert(map);
+
+    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+
+    WarEntity* entityUnderCursor = NULL;
+
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    for(s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (entity)
+        {
+            WarUnitComponent* unit = &entity->unit;
+            if (unit->enabled)
+            {
+                // don't change the cursor for dead units or corpses
+                if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                {
+                    continue;
+                }
+
+                // don't change the cursor for collased buildings
+                if (isCollapsing(entity) || isGoingToCollapse(entity))
+                {
+                    continue;
+                }
+
+                // don't change the cursor for non-visible units
+                if (!isUnitPartiallyVisible(map, entity))
+                {
+                    continue;
+                }
+            }
+
+            rect unitRect = getUnitRect(entity);
+            if (rectContainsf(unitRect, targetPoint.x, targetPoint.y))
+            {
+                entityUnderCursor = entity;
+                break;
+            }
+        }
+    }
+
+    if (includeTrees && !entityUnderCursor)
+    {
+        WarEntityList* forests = getEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
+        for (s32 i = 0; i < forests->count; i++)
+        {
+            WarEntity* forest = forests->items[i];
+            if (forest)
+            {
+                WarTreeList* trees = &forest->forest.trees;
+                for (s32 k = 0; k < trees->count; k++)
+                {
+                    WarTree tree = trees->items[k];
+                    if (tree.tilex == (s32)targetTile.x &&
+                        tree.tiley == (s32)targetTile.y)
+                    {
+                        if (tree.type != WAR_TREE_NONE &&
+                            tree.type != WAR_TREE_CHOPPED)
+                        {
+                            entityUnderCursor = forest;
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            if (entityUnderCursor)
+            {
+                break;
+            }
+        }
+    }
+
+    // if there is no unit under the cursor, check the walls
+    if (includeWalls && !entityUnderCursor)
+    {
+        WarEntityList* walls = getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
+        for (s32 i = 0; i < walls->count; i++)
+        {
+            WarEntity* wall = walls->items[i];
+            if (wall)
+            {
+                WarWallPieceList* pieces = &wall->wall.pieces;
+                for (s32 k = 0; k < pieces->count; k++)
+                {
+                    WarWallPiece piece = pieces->items[k];
+                    if (piece.tilex == (s32)targetTile.x &&
+                        piece.tiley == (s32)targetTile.y)
+                    {
+                        if (piece.hp > 0)
+                        {
+                            entityUnderCursor = wall;
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            if (entityUnderCursor)
+            {
+                break;
+            }
+        }
+    }
+
+    return entityUnderCursor;
+}
+
 void removeEntity(WarContext* context, WarEntity* entity)
 {
     removeTransformComponent(context, entity);
