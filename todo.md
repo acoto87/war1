@@ -150,13 +150,13 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [x] Add complete % bar only when there is something building.
     * [x] Add command images based on selected(s) unit types.
     * [x] Add upgrades info to player info.
-* Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
+* [ ] Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
 * [x] Manage the gold in the mines and explode it when the gold is over.
 * [x] Add ruins to collapsed buildings.
-* Add explosion animation to living npc units when clicking to many times.
+* [ ] Add explosion animation to living npc units when clicking to many times.
 * [x] Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over.
 * [x] Fix the selection of units to select only dude units or one building.
-* Make Ctrl+click select all units of the same type on the screen.
+* [ ] Make Ctrl+click select all units of the same type on the screen.
 * [x] Making health system for units.
 * [x] Change the behavior of chopping trees when multiple units are chopping the same tree. With each hack of the axe the tree should loose wood, until it ran out of it. Each unit go back to the townhall when has max amount of wood or there is no more trees to chop.
 * [x] If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better, and make the necessary changes.
