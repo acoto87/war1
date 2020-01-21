@@ -1422,10 +1422,109 @@ void updateCommandFromRightClick(WarContext* context)
     }
 }
 
+void insertChar(char* text, s32 position, char c)
+{
+    s32 length = strlen(text);
+
+    for (s32 i = length; i >= position; i--)
+        text[i + 1] = text[i];
+
+    text[position] = c;
+}
+
+void removeChar(char* text, s32 position)
+{
+    s32 length = strlen(text);
+
+    for (s32 i = position - 1; i < length; i++)
+        text[i] = text[i + 1];
+}
+
 void updateStatus(WarContext* context)
 {
     WarMap* map = context->map;
+    WarInput* input = &context->input;
+    WarCheatStatus* cheatStatus = &map->cheatStatus;
     WarFlashStatus* flashStatus = &map->flashStatus;
+
+    if (cheatStatus->enabled)
+    {
+        if (wasKeyPressed(input, WAR_KEY_ESC) ||
+            wasKeyPressed(input, WAR_KEY_ENTER))
+        {
+            if (wasKeyPressed(input, WAR_KEY_ENTER))
+            {
+                // apply cheat
+            }
+
+            memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
+            cheatStatus->position = 0;
+            cheatStatus->enabled = false;
+
+            return;
+        }
+
+        if (wasKeyPressed(input, WAR_KEY_TAB))
+        {
+            insertChar(cheatStatus->text, cheatStatus->position, ' ');
+            cheatStatus->position++;
+            insertChar(cheatStatus->text, cheatStatus->position, ' ');
+            cheatStatus->position++;
+            insertChar(cheatStatus->text, cheatStatus->position, ' ');
+            cheatStatus->position++;
+            insertChar(cheatStatus->text, cheatStatus->position, ' ');
+            cheatStatus->position++;
+        }
+        else if (wasKeyPressed(input, WAR_KEY_BACKSPACE))
+        {
+            if (cheatStatus->position > 0)
+            {
+                removeChar(cheatStatus->text, cheatStatus->position - 1);
+                cheatStatus->position--;
+            }
+        }
+        else if (wasKeyPressed(input, WAR_KEY_DELETE))
+        {
+            s32 length = strlen(cheatStatus->text);
+            if (cheatStatus->position < length)
+            {
+                removeChar(cheatStatus->text, cheatStatus->position);
+            }
+        }
+        else if (wasKeyPressed(input, WAR_KEY_RIGHT))
+        {
+            s32 length = strlen(cheatStatus->text);
+            if (cheatStatus->position < length)
+            {
+                cheatStatus->position++;
+            }
+        }
+        else if (wasKeyPressed(input, WAR_KEY_LEFT))
+        {
+            if (cheatStatus->position > 0)
+            {
+                cheatStatus->position--;
+            }
+        }
+        else if (wasKeyPressed(input, WAR_KEY_HOME))
+        {
+            cheatStatus->position = 0;
+        }
+        else if (wasKeyPressed(input, WAR_KEY_END))
+        {
+            s32 length = strlen(cheatStatus->text);
+            cheatStatus->position = length;
+        }
+
+        setStatus(context, NO_HIGHLIGHT, 0, 0, 0, cheatStatus->text);
+        return;
+    }
+    else if (wasKeyPressed(input, WAR_KEY_ENTER))
+    {
+        memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
+        cheatStatus->position = 0;
+        cheatStatus->enabled = true;
+    }
 
     if (flashStatus->enabled)
     {

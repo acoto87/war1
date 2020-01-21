@@ -118,15 +118,28 @@ typedef enum _WarKeys
 {
     WAR_KEY_NONE,
 
-    WAR_KEY_ESC,
-    WAR_KEY_CTRL,
-    WAR_KEY_SHIFT,
-    WAR_KEY_ENTER,
+    WAR_KEY_SPACE,
+    WAR_KEY_APOSTROPHE,
+    WAR_KEY_ASTERISK,
+    WAR_KEY_PLUS,
+    WAR_KEY_COMMA,
+    WAR_KEY_MINUS,
+    WAR_KEY_PERIOD,
+    WAR_KEY_SLASH,
 
-    WAR_KEY_LEFT,
-    WAR_KEY_RIGHT,
-    WAR_KEY_DOWN,
-    WAR_KEY_UP,
+    WAR_KEY_0,
+    WAR_KEY_1,
+    WAR_KEY_2,
+    WAR_KEY_3,
+    WAR_KEY_4,
+    WAR_KEY_5,
+    WAR_KEY_6,
+    WAR_KEY_7,
+    WAR_KEY_8,
+    WAR_KEY_9,
+
+    WAR_KEY_SEMICOLON,
+    WAR_KEY_EQUAL,
 
     WAR_KEY_A,
     WAR_KEY_B,
@@ -155,16 +168,27 @@ typedef enum _WarKeys
     WAR_KEY_Y,
     WAR_KEY_Z,
 
-    WAR_KEY_1,
-    WAR_KEY_2,
-    WAR_KEY_3,
-    WAR_KEY_4,
-    WAR_KEY_5,
-    WAR_KEY_6,
-    WAR_KEY_7,
-    WAR_KEY_8,
-    WAR_KEY_9,
-    WAR_KEY_0,
+    WAR_KEY_LEFT_BRACKET,
+    WAR_KEY_BACKSLASH,
+    WAR_KEY_RIGHT_BRACKET,
+    WAR_KEY_GRAVE_ACCENT,
+
+    WAR_KEY_ESC,
+    WAR_KEY_ENTER,
+    WAR_KEY_TAB,
+    WAR_KEY_BACKSPACE,
+    WAR_KEY_INSERT,
+    WAR_KEY_DELETE,
+
+    WAR_KEY_RIGHT,
+    WAR_KEY_LEFT,
+    WAR_KEY_DOWN,
+    WAR_KEY_UP,
+
+    WAR_KEY_PAGE_UP,
+    WAR_KEY_PAGE_DOWN,
+    WAR_KEY_HOME,
+    WAR_KEY_END,
 
     WAR_KEY_F1,
     WAR_KEY_F2,
@@ -178,6 +202,10 @@ typedef enum _WarKeys
     WAR_KEY_F10,
     WAR_KEY_F11,
     WAR_KEY_F12,
+
+    WAR_KEY_SHIFT,
+    WAR_KEY_CTRL,
+    WAR_KEY_ALT,
 
     WAR_KEY_COUNT
 } WarKeys;
@@ -1915,6 +1943,13 @@ typedef struct
     char text[100];
 } WarFlashStatus;
 
+typedef struct
+{
+    bool enabled;
+    s32 position;
+    char text[100];
+} WarCheatStatus;
+
 typedef enum
 {
     WAR_SPEED_SLOWEST,
@@ -1999,6 +2034,7 @@ typedef struct
     WarPathFinder finder;
     WarUnitCommand command;
     WarFlashStatus flashStatus;
+    WarCheatStatus cheatStatus;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
 } WarMap;
 

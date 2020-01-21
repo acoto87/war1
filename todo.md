@@ -132,10 +132,22 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
 * [ ] Add animation for the gold and lumber numbers when they change.
 * [ ] Make commands/cheats system.
+    * [ ] Pot of Gold: Gives 10000 gold and 5000 lumber to the player
+    * [ ] Eye of newt: All spells are now be able to be casted
+    * [ ] Iron forge: Research all upgrades
+    * [ ] Ides of March: Brings player to final campaign sequence
+    * [ ] Corwin of Amber: Enables cheats
+    * [ ] There can be only one: Your units stop taking damage and deal 255 Damage
+    * [ ] Crushing defeat: Instant loss
+    * [ ] Sally Shears: Disables fog of war
+    * [ ] Human#: Skip to human level (enter 1-12 for #)
+    * [ ] Orc#: Skip to orc level (enter 1-12 for #)
+    * [ ] Hurry up guys: Speeds up building/unit production
+    * [ ] Yours truly: Win current mission
 * [ ] Make the blue water/green water animated.
 * [ ] Make the move state to consider range distance to stop.
 * [ ] Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
-* [ ] Check behavior of invisible units when is under attack (it maybe work with workers, to stop the attack on it)
+* [ ] Check behavior of invisible units when are under attack (it maybe work with workers, to stop the attack on it)
 * [ ] Zoom feature
 
 ## Gameplay

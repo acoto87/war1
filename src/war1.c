@@ -130,6 +130,7 @@
 #include "war_state_machine_cast.c"
 #include "war_state_machine.c"
 #include "war_campaigns.c"
+#include "war_cheats.c"
 #include "war_map_menu.c"
 #include "war_map_ui.c"
 #include "war_map.c"
@@ -166,6 +167,9 @@ int main()
         logError("Can't initialize the game!\n");
         return -1;
     }
+
+    glfwSetWindowUserPointer(context.window, &context);
+    glfwSetCharCallback(context.window, inputCharCallback);
 
     while (!glfwWindowShouldClose(context.window))
     {
