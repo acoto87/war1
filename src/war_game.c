@@ -335,8 +335,6 @@ void inputGame(WarContext *context)
 
 void inputCharCallback(GLFWwindow* window, u32 codepoint)
 {
-    logInfo("key pressed: %d, %c\n", codepoint, (char)codepoint);
-
     WarContext* context = glfwGetWindowUserPointer(window);
     assert(context);
 
@@ -346,8 +344,12 @@ void inputCharCallback(GLFWwindow* window, u32 codepoint)
     WarCheatStatus* cheatStatus = &map->cheatStatus;
     if (cheatStatus->enabled)
     {
-        insertChar(cheatStatus->text, cheatStatus->position, (char)codepoint);
-        cheatStatus->position++;
+        s32 length = strlen(cheatStatus->text);
+        if (length < STATUS_TEXT_MAX_LENGTH)
+        {
+            strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+            cheatStatus->position++;
+        }
     }
 }
 

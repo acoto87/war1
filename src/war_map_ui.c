@@ -39,6 +39,7 @@ void createMapUI(WarContext* context)
     createUIImage(context, "imgStatusGold", imageResourceRef(406), vec2Addv(bottomPanel, vec2i(200, 5)));
     createUIText(context, "txtStatusWood", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(179, 5)));
     createUIText(context, "txtStatusGold", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(218, 5)));
+    createUIRect(context, "txtStatusCursor", vec2Addv(bottomPanel, vec2i(2, 4)), vec2i(1, 7), U8COLOR_WHITE);
 
     // selected unit(s) info
     createUIImage(context, "imgUnitInfo", imageResourceRefFromPlayer(player, 360, 359), vec2Addv(leftBottomPanel, vec2i(2, 0)));

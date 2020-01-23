@@ -491,14 +491,14 @@ s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f
     return k;
 }
 
-vec2 nvgMeasureSingleSpriteText(const char* text, NVGfontParams params)
+vec2 nvgMeasureSingleSpriteText(const char* text, s32 length, NVGfontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
 
     vec2 size = VEC2_ZERO;
 
     const char* e = text;
-    while (*e)
+    while (length != 0 && *e)
     {
         if (*e == '\n')
         {
@@ -518,6 +518,7 @@ vec2 nvgMeasureSingleSpriteText(const char* text, NVGfontParams params)
             size.y = max(size.y, rs.height * scale);
         }
 
+        length--;
         e++;
     }
 
@@ -607,7 +608,7 @@ f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text,
 void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
-    vec2 textSize = nvgMeasureSingleSpriteText(text, params);
+    vec2 textSize = nvgMeasureSingleSpriteText(text, -1, params);
     s32 length = strlen(text);
 
     nvgSave(gfx);

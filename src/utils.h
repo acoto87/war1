@@ -1,42 +1,5 @@
 #pragma once
 
-#define getBitFlag(v, f) ((v) & (1 << (f)) ? 1 : 0)
-#define setBitFlag(v, f) (*(v) = (*(v) | (1 << (f))))
-#define clearBitFlag(v, f) (*(v) = *(v) ^ (*(v) & (1 << (f))))
-
-#define arrayInit(type, ...) ((type[]){__VA_ARGS__})
-#define arrayArg(type, ...) arrayInit(type, __VA_ARGS__)
-#define createArray(type, count, reset) (reset ? (type *)xcalloc(count, sizeof(type)) : (type *)xmalloc(count * sizeof(type)))
-#define arrayLength(arr) (sizeof(arr) / sizeof((arr)[0]))
-#define chance(p) ((rand() % 100) < p)
-#define chancef01(p) ((rand() / RAND_MAX) < p)
-#define randomi(a, b) ((a) + (rand() % ((b) - (a))))
-#define randomf(a, b) ((a) + ((f32)rand() / RAND_MAX) * ((b) - (a)))
-#define inRange(x, a, b) ((x) >= (a) && (x) < (b))
-#define debugVar(x) printf("variable "#x" = %d\n", x)
-
-bool strEquals(const char* str1, const char* str2)
-{
-    return strcmp(str1, str2) == 0;
-}
-
-uint32_t strHashFNV32(const char* data)
-{
-#define FNV_PRIME_32 0x01000193
-#define FNV_OFFSET_32 0x811c9dc5
-
-    uint32_t hash = FNV_OFFSET_32;
-    while(*data != 0)
-        hash = (*data++ ^ hash) * FNV_PRIME_32;
-
-    return hash;
-}
-
-void strFree(char* str)
-{
-    free((void*)str);
-}
-
 typedef int8_t s8;
 typedef int16_t s16;
 typedef int32_t s32;
@@ -82,11 +45,61 @@ typedef union {
 #define NOT_IMPLEMENTED() fprintf(stderr, "Not implemented at %s (%d)", __FILE__, __LINE__)
 #define NOT_USED(expr) do { (void)(expr); } while (0)
 
+#define getBitFlag(v, f) ((v) & (1 << (f)) ? 1 : 0)
+#define setBitFlag(v, f) (*(v) = (*(v) | (1 << (f))))
+#define clearBitFlag(v, f) (*(v) = *(v) ^ (*(v) & (1 << (f))))
+
+#define arrayInit(type, ...) ((type[]){__VA_ARGS__})
+#define arrayArg(type, ...) arrayInit(type, __VA_ARGS__)
+#define createArray(type, count, reset) (reset ? (type *)xcalloc(count, sizeof(type)) : (type *)xmalloc(count * sizeof(type)))
+#define arrayLength(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define chance(p) ((rand() % 100) < p)
+#define chancef01(p) ((rand() / RAND_MAX) < p)
+#define randomi(a, b) ((a) + (rand() % ((b) - (a))))
+#define randomf(a, b) ((a) + ((f32)rand() / RAND_MAX) * ((b) - (a)))
+#define inRange(x, a, b) ((x) >= (a) && (x) < (b))
+#define debugVar(x) printf("variable "#x" = %d\n", x)
+
 #define readu8(arr, index) (arr[index])
 #define reads16(arr, index) (*(s16*)((arr) + (index)))
 #define readu16(arr, index) (*(u16*)((arr) + (index)))
 #define reads32(arr, index) (*(s32*)((arr) + (index)))
 #define readu32(arr, index) (*(u32*)((arr) + (index)))
+
+bool strEquals(const char* str1, const char* str2)
+{
+    return strcmp(str1, str2) == 0;
+}
+
+uint32_t strHashFNV32(const char* data)
+{
+#define FNV_PRIME_32 0x01000193
+#define FNV_OFFSET_32 0x811c9dc5
+
+    uint32_t hash = FNV_OFFSET_32;
+    while(*data != 0)
+        hash = (*data++ ^ hash) * FNV_PRIME_32;
+
+    return hash;
+}
+
+void strFree(char* str)
+{
+    free((void*)str);
+}
+
+void strInsertAt(char* text, s32 index, char c)
+{
+    s32 length = strlen(text) + 1; // count the \0
+    memmove(text + index + 1, text + index, length - index);
+    text[index] = c;
+}
+
+void strRemoveAt(char* text, s32 index)
+{
+    s32 length = strlen(text) + 1; // count the \0
+    memmove(text + index, text + index + 1, length - index - 1);
+}
 
 void* xmalloc(size32 size, char *file, s32 line)
 {
