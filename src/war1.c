@@ -80,6 +80,7 @@
 #include "war.h"
 #include "war_net.h"
 #include "war_database.h"
+#include "war_cheats.h"
 #include "war_map_menu.h"
 #include "war_map_ui.h"
 #include "war_map.h"

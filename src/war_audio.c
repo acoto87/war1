@@ -418,7 +418,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
 
     for (s32 i = 0; i < toRemove.count; i++)
     {
-        WarEntityId entityId  = toRemove.items[i];
+        WarEntityId entityId = toRemove.items[i];
         removeEntityById(context, entityId);
     }
 

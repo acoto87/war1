@@ -71,6 +71,13 @@ bool strEquals(const char* str1, const char* str2)
     return strcmp(str1, str2) == 0;
 }
 
+bool strCaseEquals(const char* str1, const char* str2, bool ignoreCase)
+{
+    return ignoreCase
+        ? strcasecmp(str1, str2) == 0
+        : strcmp(str1, str2) == 0;
+}
+
 uint32_t strHashFNV32(const char* data)
 {
 #define FNV_PRIME_32 0x01000193
@@ -99,6 +106,28 @@ void strRemoveAt(char* text, s32 index)
 {
     s32 length = strlen(text) + 1; // count the \0
     memmove(text + index, text + index + 1, length - index - 1);
+}
+
+bool strStartsWith(const char* str1, const char* str2)
+{
+    return strncmp(str1, str2, strlen(str2)) == 0;
+}
+
+bool strCaseStartsWith(const char* str1, const char* str2, bool ignoreCase)
+{
+    return ignoreCase
+        ? strncasecmp(str1, str2, sizeof(str2)) == 0
+        : strncmp(str1, str2, strlen(str2)) == 0;
+}
+
+s32 strParseS32(const char* str)
+{
+    return strtol(str, NULL, 0);
+}
+
+s64 strParseS64(const char* str)
+{
+    return strtoll(str, NULL, 0);
 }
 
 void* xmalloc(size32 size, char *file, s32 line)

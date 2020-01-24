@@ -1453,7 +1453,7 @@ void updateStatus(WarContext* context)
         {
             if (wasKeyPressed(input, WAR_KEY_ENTER))
             {
-                // apply cheat
+                applyCheat(context, cheatStatus->text);
             }
 
             memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
