@@ -116,7 +116,7 @@ bool strStartsWith(const char* str1, const char* str2)
 bool strCaseStartsWith(const char* str1, const char* str2, bool ignoreCase)
 {
     return ignoreCase
-        ? strncasecmp(str1, str2, sizeof(str2)) == 0
+        ? strncasecmp(str1, str2, strlen(str2)) == 0
         : strncmp(str1, str2, strlen(str2)) == 0;
 }
 
@@ -125,9 +125,23 @@ s32 strParseS32(const char* str)
     return strtol(str, NULL, 0);
 }
 
+bool strTryParseS32(const char* str, s32* value)
+{
+    char* following;
+    *value = strtol(str, &following, 0);
+    return following > str;
+}
+
 s64 strParseS64(const char* str)
 {
     return strtoll(str, NULL, 0);
+}
+
+bool strTryParseS64(const char* str, s64* value)
+{
+    char* following;
+    *value = strtoll(str, &following, 0);
+    return following > str;
 }
 
 void* xmalloc(size32 size, char *file, s32 line)

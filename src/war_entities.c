@@ -294,11 +294,13 @@ void removeAudioComponent(WarContext* context, WarEntity* entity)
 {
     if (entity->audio.firstMessage)
     {
+        // this will deallocate the whole list of message
+        // because even though it looks like a linked list, it's an array
         tml_free(entity->audio.firstMessage);
-
-        entity->audio.firstMessage = NULL;
-        entity->audio.currentMessage = NULL;
     }
+
+    entity->audio.firstMessage = NULL;
+    entity->audio.currentMessage = NULL;
 
     entity->audio = (WarAudioComponent){0};
 }
@@ -1653,7 +1655,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
 {
     assert(hasRemainingUpgrade(player, upgrade));
 
-    incUpgradeLevel(player, upgrade);
+    incrementUpgradeLevel(player, upgrade);
 
     switch (upgrade)
     {

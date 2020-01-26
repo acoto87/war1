@@ -411,6 +411,7 @@ void enterMap(WarContext* context)
     assert(levelPassable && levelPassable->type == WAR_RESOURCE_TYPE_LEVEL_PASSABLE);
 
     map->playing = true;
+    map->cheatsEnabled = true;
     map->result = WAR_LEVEL_RESULT_NONE;
     map->objectivesTime = 1;
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;

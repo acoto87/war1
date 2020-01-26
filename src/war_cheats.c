@@ -1,30 +1,28 @@
 const WarCheatDescriptor cheatDescriptors[] =
 {
     // custom cheats
-    { WAR_CHEAT_MUSIC,          "Music",                    false,  applyMusicCheat     },
-    { WAR_CHEAT_MUSIC_VOL,      "Music vol",                false,  applyMusicVolCheat  },
-    { WAR_CHEAT_SOUND_VOL,      "Mound vol",                false,  applySoundVolCheat  },
+    { WAR_CHEAT_MUSIC_VOL,      "Music vol",                true,  applyMusicVolCheat  },
+    { WAR_CHEAT_SOUND_VOL,      "Sound vol",                true,  applySoundVolCheat  },
+    { WAR_CHEAT_MUSIC,          "Music",                    true,  applyMusicCheat     },
 
     // original cheats
-    { WAR_CHEAT_GOLD,           "Pot of gold",              true,   applyGoldCheat      },
-    { WAR_CHEAT_SPELLS,         "Eye of newt",              true,   applySpellsCheat    },
-    { WAR_CHEAT_UPGRADES,       "Iron forge",               true,   applyUpgradesCheat  },
-    { WAR_CHEAT_END,            "Ides of march",            true,   applyEndCheat       },
-    { WAR_CHEAT_ENABLE,         "Corwin of Amber",          true,   applyEnableCheat    },
-    { WAR_CHEAT_GOD_MODE,       "There can be only one",    true,   applyGodModeCheat   },
-    { WAR_CHEAT_LOSS,           "Crushing defeat",          true,   applyLossCheat      },
-    { WAR_CHEAT_FOG,            "Sally Shears",             true,   applyFogOfWarCheat  },
-    { WAR_CHEAT_SKIP_HUMAN,     "Human",                    false,  applySkipHumanCheat },
-    { WAR_CHEAT_SKIP_ORC,       "Orc",                      false,  applySkipOrcCheat   },
-    { WAR_CHEAT_SPEED,          "Hurry up guys",            true,   applySpeedCheat     },
+    { WAR_CHEAT_GOLD,           "Pot of gold",              false, applyGoldCheat      },
+    { WAR_CHEAT_SPELLS,         "Eye of newt",              false, applySpellsCheat    },
+    { WAR_CHEAT_UPGRADES,       "Iron forge",               false, applyUpgradesCheat  },
+    { WAR_CHEAT_END,            "Ides of march",            false, applyEndCheat       },
+    { WAR_CHEAT_ENABLE,         "Corwin of Amber",          false, applyEnableCheat    },
+    { WAR_CHEAT_GOD_MODE,       "There can be only one",    false, applyGodModeCheat   },
+    { WAR_CHEAT_LOSS,           "Crushing defeat",          false, applyLossCheat      },
+    { WAR_CHEAT_FOG,            "Sally Shears",             false, applyFogOfWarCheat  },
+    { WAR_CHEAT_SKIP_HUMAN,     "Human",                    true,  applySkipHumanCheat },
+    { WAR_CHEAT_SKIP_ORC,       "Orc",                      true,  applySkipOrcCheat   },
+    { WAR_CHEAT_SPEED,          "Hurry up guys",            false, applySpeedCheat     },
 };
 
 void applyCheat(WarContext* context, const char* text)
 {
     for (s32 i = 0; i < arrayLength(cheatDescriptors); i++)
     {
-        s32 argument = 0;
-
         WarCheatDescriptor desc = cheatDescriptors[i];
         if (!desc.argument)
         {
@@ -38,8 +36,10 @@ void applyCheat(WarContext* context, const char* text)
         {
             if (strCaseStartsWith(text, desc.text, true))
             {
-                int argument = strParseS32(text + strlen(desc.text));
-                desc.cheatFunc(context, argument);
+                int argument;
+                if (strTryParseS32(text + strlen(desc.text), &argument))
+                    desc.cheatFunc(context, argument);
+
                 return;
             }
         }
@@ -53,6 +53,9 @@ void applyMusicCheat(WarContext* context, s32 argument)
 {
     WarMap* map = context->map;
     assert(map);
+
+    if (!map->cheatsEnabled)
+        return;
 
     // argument is expected in the range 1-45, so convert it to the range 0-44
     argument--;
@@ -102,8 +105,26 @@ void applyMusicVolCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
-    f32 volume = clamp((f32)argument / 100, 0, 1);
-    setMusicVolume(context, volume);
+    if (!map->cheatsEnabled)
+        return;
+
+    argument = clamp(argument, 0, 100);
+
+    // round the argument to a value multiple of 5
+    switch (argument % 5)
+    {
+        case 1: { argument -= 1; break; }
+        case 2: { argument -= 2; break; }
+        case 3: { argument += 2; break; }
+        case 4: { argument += 1; break; }
+        default:
+        {
+            // do nothing, it's already a multiple of 5
+            break;
+        }
+    }
+
+    map->settings.musicVol = argument;
 }
 
 void applySoundVolCheat(WarContext* context, s32 argument)
@@ -111,8 +132,26 @@ void applySoundVolCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
-    f32 volume = clamp((f32)argument / 100, 0, 1);
-    setSoundVolume(context, volume);
+    if (!map->cheatsEnabled)
+        return;
+
+    argument = clamp(argument, 0, 100);
+
+    // round the argument to a value multiple of 5
+    switch (argument % 5)
+    {
+        case 1: { argument -= 1; break; }
+        case 2: { argument -= 2; break; }
+        case 3: { argument += 2; break; }
+        case 4: { argument += 1; break; }
+        default:
+        {
+            // do nothing, it's already a multiple of 5
+            break;
+        }
+    }
+
+    map->settings.sfxVol = argument;
 }
 
 void applyGoldCheat(WarContext* context, s32 argument)
@@ -120,7 +159,10 @@ void applyGoldCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
-    increasePlayerResources(context, &map->players[0], 10000, 5000);
+    if (!map->cheatsEnabled)
+        return;
+
+    increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
 }
 
 void applySpellsCheat(WarContext* context, s32 argument)
@@ -128,7 +170,55 @@ void applySpellsCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
-    NOT_IMPLEMENTED();
+    if (!map->cheatsEnabled)
+        return;
+
+    WarPlayerInfo* player = &map->players[0];
+
+    WarFeatureType features[] =
+    {
+        WAR_FEATURE_SPELL_HEALING,
+        WAR_FEATURE_SPELL_RAISE_DEAD,
+        WAR_FEATURE_SPELL_FAR_SIGHT,
+        WAR_FEATURE_SPELL_DARK_VISION,
+        WAR_FEATURE_SPELL_INVISIBILITY,
+        WAR_FEATURE_SPELL_UNHOLY_ARMOR,
+        WAR_FEATURE_SPELL_SCORPION,
+        WAR_FEATURE_SPELL_SPIDER,
+        WAR_FEATURE_SPELL_RAIN_OF_FIRE,
+        WAR_FEATURE_SPELL_POISON_CLOUD,
+        WAR_FEATURE_SPELL_WATER_ELEMENTAL,
+        WAR_FEATURE_SPELL_DAEMON,
+    };
+
+    for (s32 i = 0; i < arrayLength(features); i++)
+    {
+        setFeatureAllowed(player, features[i], true);
+    }
+
+    WarUpgradeType spells[] =
+    {
+        WAR_UPGRADE_SCORPIONS,
+        WAR_UPGRADE_SPIDERS,
+        WAR_UPGRADE_RAIN_OF_FIRE,
+        WAR_UPGRADE_POISON_CLOUD,
+        WAR_UPGRADE_WATER_ELEMENTAL,
+        WAR_UPGRADE_DAEMON,
+        WAR_UPGRADE_HEALING,
+        WAR_UPGRADE_RAISE_DEAD,
+        WAR_UPGRADE_FAR_SIGHT,
+        WAR_UPGRADE_DARK_VISION,
+        WAR_UPGRADE_INVISIBILITY,
+        WAR_UPGRADE_UNHOLY_ARMOR
+    };
+
+    for (s32 i = 0; i < arrayLength(spells); i++)
+    {
+        while (hasRemainingUpgrade(player, spells[i]))
+        {
+            increaseUpgradeLevel(context, player, spells[i]);
+        }
+    }
 }
 
 void applyUpgradesCheat(WarContext* context, s32 argument)
@@ -136,13 +226,38 @@ void applyUpgradesCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
-    NOT_IMPLEMENTED();
+    if (!map->cheatsEnabled)
+        return;
+
+    WarPlayerInfo* player = &map->players[0];
+
+    WarUpgradeType upgrades[] =
+    {
+        WAR_UPGRADE_ARROWS,
+        WAR_UPGRADE_SPEARS,
+        WAR_UPGRADE_SWORDS,
+        WAR_UPGRADE_AXES,
+        WAR_UPGRADE_HORSES,
+        WAR_UPGRADE_WOLVES,
+        WAR_UPGRADE_SHIELD
+    };
+
+    for (s32 i = 0; i < arrayLength(upgrades); i++)
+    {
+        while (hasRemainingUpgrade(player, upgrades[i]))
+        {
+            increaseUpgradeLevel(context, player, upgrades[i]);
+        }
+    }
 }
 
 void applyEndCheat(WarContext* context, s32 argument)
 {
     WarMap* map = context->map;
     assert(map);
+
+    if (!map->cheatsEnabled)
+        return;
 
     NOT_IMPLEMENTED();
 }
@@ -152,13 +267,16 @@ void applyEnableCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
-    NOT_IMPLEMENTED();
+    map->cheatsEnabled = !map->cheatsEnabled;
 }
 
 void applyGodModeCheat(WarContext* context, s32 argument)
 {
     WarMap* map = context->map;
     assert(map);
+
+    if (!map->cheatsEnabled)
+        return;
 
     NOT_IMPLEMENTED();
 }
@@ -168,6 +286,9 @@ void applyLossCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
+    if (!map->cheatsEnabled)
+        return;
+
     NOT_IMPLEMENTED();
 }
 
@@ -175,6 +296,9 @@ void applyFogOfWarCheat(WarContext* context, s32 argument)
 {
     WarMap* map = context->map;
     assert(map);
+
+    if (!map->cheatsEnabled)
+        return;
 
     NOT_IMPLEMENTED();
 }
@@ -184,6 +308,9 @@ void applySkipHumanCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
+    if (!map->cheatsEnabled)
+        return;
+
     NOT_IMPLEMENTED();
 }
 
@@ -192,6 +319,9 @@ void applySkipOrcCheat(WarContext* context, s32 argument)
     WarMap* map = context->map;
     assert(map);
 
+    if (!map->cheatsEnabled)
+        return;
+
     NOT_IMPLEMENTED();
 }
 
@@ -199,6 +329,9 @@ void applySpeedCheat(WarContext* context, s32 argument)
 {
     WarMap* map = context->map;
     assert(map);
+
+    if (!map->cheatsEnabled)
+        return;
 
     NOT_IMPLEMENTED();
 }

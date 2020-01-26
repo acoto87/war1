@@ -1923,8 +1923,9 @@ typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
 #define isNeutralPlayer(player) ((player)->race == WAR_RACE_NEUTRAL)
 
 #define isFeatureAllowed(player, feature) ((player)->features[(feature)/2])
+#define setFeatureAllowed(player, feature, allowed) ((player)->features[(feature/2)] = (allowed))
 
-#define incUpgradeLevel(player, upgrade) ((player)->upgrades[(upgrade)/2].level++)
+#define incrementUpgradeLevel(player, upgrade) ((player)->upgrades[(upgrade)/2].level++)
 #define hasAnyUpgrade(player, upgrade) \
     ((player)->upgrades[(upgrade)/2].allowed > 0 && \
      (player)->upgrades[(upgrade)/2].level > 0)
@@ -2030,6 +2031,8 @@ typedef struct
     bool editingRoads;
     bool editingRuins;
     bool editingRainOfFire;
+
+    bool cheatsEnabled;
 
     WarPathFinder finder;
     WarUnitCommand command;

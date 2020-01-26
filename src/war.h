@@ -47,6 +47,18 @@
 #define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
 #define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)
 
+void setGlobalScale(WarContext* context, f32 scale);
+void changeGlobalScale(WarContext* context, f32 deltaScale);
+
+void setGlobalSpeed(WarContext* context, f32 speed);
+void changeGlobalSpeed(WarContext* context, f32 deltaSpeed);
+
+void setMusicVolume(WarContext* context, f32 volume);
+void changeMusicVolume(WarContext* context, f32 deltaVolume);
+
+void setSoundVolume(WarContext* context, f32 volume);
+void changeSoundVolume(WarContext* context, f32 deltaVolume);
+
 void setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay);
 void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
 
