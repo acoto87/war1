@@ -4,6 +4,7 @@ const WarCheatDescriptor cheatDescriptors[] =
     { WAR_CHEAT_MUSIC_VOL,      "Music vol",                true,  applyMusicVolCheat  },
     { WAR_CHEAT_SOUND_VOL,      "Sound vol",                true,  applySoundVolCheat  },
     { WAR_CHEAT_MUSIC,          "Music",                    true,  applyMusicCheat     },
+    { WAR_CHEAT_SOUND,          "Sound",                    true,  applySoundCheat     },
 
     // original cheats
     { WAR_CHEAT_GOLD,           "Pot of gold",              false, applyGoldCheat      },
@@ -28,7 +29,7 @@ void applyCheat(WarContext* context, const char* text)
         {
             if (strCaseEquals(text, desc.text, true))
             {
-                desc.cheatFunc(context, 0);
+                desc.cheatFunc(context, NULL);
                 return;
             }
         }
@@ -36,10 +37,13 @@ void applyCheat(WarContext* context, const char* text)
         {
             if (strCaseStartsWith(text, desc.text, true))
             {
-                int argument;
-                if (strTryParseS32(text + strlen(desc.text), &argument))
-                    desc.cheatFunc(context, argument);
+                // skip the command text and the whitespace characters
+                s32 skip = strlen(desc.text);
+                while (text[skip] == ' ' || text[skip] == '\t')
+                    skip++;
 
+                const char* argument = text + skip;
+                desc.cheatFunc(context, argument);
                 return;
             }
         }
@@ -49,7 +53,7 @@ void applyCheat(WarContext* context, const char* text)
     logInfo("Unknown cheat: %s\n", text);
 }
 
-void applyMusicCheat(WarContext* context, s32 argument)
+void applyMusicCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -57,50 +61,112 @@ void applyMusicCheat(WarContext* context, s32 argument)
     if (!map->cheatsEnabled)
         return;
 
-    // argument is expected in the range 1-45, so convert it to the range 0-44
-    argument--;
-
-    if (argument >= WAR_MUSIC_00 && argument <= WAR_MUSIC_44)
+    if (strCaseEquals(argument, "on", true))
     {
-        if (!isDemo(context))
+        map->settings.musicEnabled = true;
+    }
+    else if (strCaseEquals(argument, "off", true))
+    {
+        map->settings.musicEnabled = false;
+    }
+    else if (!isDemo(context))
+    {
+        s32 musicId;
+        if (strTryParseS32(argument, &musicId))
         {
-            // before changing the music, remove the current one
-            // almost all the time there should only one active
-            // but I really don't if that will hold true in the future
-            //
-            // for now remove all the active music (audios of type WAR_AUDIO_MIDI)
-            // and the create the new one
-            WarEntityIdList toRemove;
-            WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
+            // argument is expected in the range 1-45, so convert it to the range 0-44
+            musicId--;
 
-            WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
-            for (s32 i = 0; i < audios->count; i++)
+            if (musicId >= WAR_MUSIC_00 && musicId <= WAR_MUSIC_44)
             {
-                WarEntity* entity = audios->items[i];
-                if (entity)
+                // before changing the music, remove the current one
+                // almost all the time there should only one active
+                // but I really don't if that will hold true in the future
+                //
+                // for now remove all the active music (audios of type WAR_AUDIO_MIDI)
+                // and the create the new one
+                WarEntityIdList toRemove;
+                WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
+
+                WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
+                for (s32 i = 0; i < audios->count; i++)
                 {
-                    WarAudioComponent* audio = &entity->audio;
-                    if (audio->type == WAR_AUDIO_MIDI)
+                    WarEntity* entity = audios->items[i];
+                    if (entity)
                     {
-                        WarEntityIdListAdd(&toRemove, entity->id);
+                        WarAudioComponent* audio = &entity->audio;
+                        if (audio->type == WAR_AUDIO_MIDI)
+                        {
+                            WarEntityIdListAdd(&toRemove, entity->id);
+                        }
                     }
                 }
-            }
 
-            for (s32 i = 0; i < toRemove.count; i++)
+                for (s32 i = 0; i < toRemove.count; i++)
+                {
+                    WarEntityId entityId = toRemove.items[i];
+                    removeEntityById(context, entityId);
+                }
+
+                WarEntityIdListFree(&toRemove);
+
+                createAudio(context, musicId, true);
+            }
+        }
+    }
+}
+
+void applySoundCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    if (!map->cheatsEnabled)
+        return;
+
+    if (strCaseEquals(argument, "on", true))
+    {
+        map->settings.sfxEnabled = true;
+    }
+    else if (strCaseEquals(argument, "off", true))
+    {
+        map->settings.sfxEnabled = false;
+    }
+}
+
+void applyMusicVolCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    if (!map->cheatsEnabled)
+        return;
+
+    s32 musicVol;
+    if (strTryParseS32(argument, &musicVol))
+    {
+        musicVol = clamp(musicVol, 0, 100);
+
+        // round the argument to a value multiple of 5
+        switch (musicVol % 5)
+        {
+            case 1: { musicVol -= 1; break; }
+            case 2: { musicVol -= 2; break; }
+            case 3: { musicVol += 2; break; }
+            case 4: { musicVol += 1; break; }
+            default:
             {
-                WarEntityId entityId = toRemove.items[i];
-                removeEntityById(context, entityId);
+                // do nothing, it's already a multiple of 5
+                break;
             }
-
-            WarEntityIdListFree(&toRemove);
-
-            createAudio(context, argument, true);
         }
+
+        map->settings.musicEnabled = true;
+        map->settings.musicVol = musicVol;
     }
 }
 
-void applyMusicVolCheat(WarContext* context, s32 argument)
+void applySoundVolCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -108,53 +174,31 @@ void applyMusicVolCheat(WarContext* context, s32 argument)
     if (!map->cheatsEnabled)
         return;
 
-    argument = clamp(argument, 0, 100);
-
-    // round the argument to a value multiple of 5
-    switch (argument % 5)
+    s32 sfxVol;
+    if (strTryParseS32(argument, &sfxVol))
     {
-        case 1: { argument -= 1; break; }
-        case 2: { argument -= 2; break; }
-        case 3: { argument += 2; break; }
-        case 4: { argument += 1; break; }
-        default:
-        {
-            // do nothing, it's already a multiple of 5
-            break;
-        }
-    }
+        sfxVol = clamp(sfxVol, 0, 100);
 
-    map->settings.musicVol = argument;
+        // round the argument to a value multiple of 5
+        switch (sfxVol % 5)
+        {
+            case 1: { sfxVol -= 1; break; }
+            case 2: { sfxVol -= 2; break; }
+            case 3: { sfxVol += 2; break; }
+            case 4: { sfxVol += 1; break; }
+            default:
+            {
+                // do nothing, it's already a multiple of 5
+                break;
+            }
+        }
+
+        map->settings.sfxEnabled = true;
+        map->settings.sfxVol = sfxVol;
+    }
 }
 
-void applySoundVolCheat(WarContext* context, s32 argument)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
-        return;
-
-    argument = clamp(argument, 0, 100);
-
-    // round the argument to a value multiple of 5
-    switch (argument % 5)
-    {
-        case 1: { argument -= 1; break; }
-        case 2: { argument -= 2; break; }
-        case 3: { argument += 2; break; }
-        case 4: { argument += 1; break; }
-        default:
-        {
-            // do nothing, it's already a multiple of 5
-            break;
-        }
-    }
-
-    map->settings.sfxVol = argument;
-}
-
-void applyGoldCheat(WarContext* context, s32 argument)
+void applyGoldCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -165,7 +209,7 @@ void applyGoldCheat(WarContext* context, s32 argument)
     increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
 }
 
-void applySpellsCheat(WarContext* context, s32 argument)
+void applySpellsCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -221,7 +265,7 @@ void applySpellsCheat(WarContext* context, s32 argument)
     }
 }
 
-void applyUpgradesCheat(WarContext* context, s32 argument)
+void applyUpgradesCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -251,7 +295,7 @@ void applyUpgradesCheat(WarContext* context, s32 argument)
     }
 }
 
-void applyEndCheat(WarContext* context, s32 argument)
+void applyEndCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -262,7 +306,7 @@ void applyEndCheat(WarContext* context, s32 argument)
     NOT_IMPLEMENTED();
 }
 
-void applyEnableCheat(WarContext* context, s32 argument)
+void applyEnableCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -270,7 +314,7 @@ void applyEnableCheat(WarContext* context, s32 argument)
     map->cheatsEnabled = !map->cheatsEnabled;
 }
 
-void applyGodModeCheat(WarContext* context, s32 argument)
+void applyGodModeCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -281,7 +325,7 @@ void applyGodModeCheat(WarContext* context, s32 argument)
     NOT_IMPLEMENTED();
 }
 
-void applyLossCheat(WarContext* context, s32 argument)
+void applyLossCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -292,7 +336,7 @@ void applyLossCheat(WarContext* context, s32 argument)
     NOT_IMPLEMENTED();
 }
 
-void applyFogOfWarCheat(WarContext* context, s32 argument)
+void applyFogOfWarCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -303,7 +347,7 @@ void applyFogOfWarCheat(WarContext* context, s32 argument)
     NOT_IMPLEMENTED();
 }
 
-void applySkipHumanCheat(WarContext* context, s32 argument)
+void applySkipHumanCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -314,7 +358,7 @@ void applySkipHumanCheat(WarContext* context, s32 argument)
     NOT_IMPLEMENTED();
 }
 
-void applySkipOrcCheat(WarContext* context, s32 argument)
+void applySkipOrcCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);
@@ -325,7 +369,7 @@ void applySkipOrcCheat(WarContext* context, s32 argument)
     NOT_IMPLEMENTED();
 }
 
-void applySpeedCheat(WarContext* context, s32 argument)
+void applySpeedCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     assert(map);

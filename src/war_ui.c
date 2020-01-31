@@ -239,7 +239,7 @@ void updateUICursor(WarContext* context)
     }
 }
 
-void updateUIButtons(WarContext* context)
+void updateUIButtons(WarContext* context, bool hotKeysEnabled)
 {
     WarInput* input = &context->input;
 
@@ -281,7 +281,7 @@ void updateUIButtons(WarContext* context)
             WarTransformComponent* transform = &entity->transform;
             WarButtonComponent* button = &entity->button;
 
-            if (wasKeyPressed(input, button->hotKey))
+            if (hotKeysEnabled && wasKeyPressed(input, button->hotKey))
             {
                 if (button->clickHandler)
                 {

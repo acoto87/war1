@@ -417,7 +417,9 @@ void enterMap(WarContext* context)
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
 
     map->settings.gameSpeed = WAR_SPEED_NORMAL;
+    map->settings.musicEnabled = true;
     map->settings.musicVol = 80;
+    map->settings.sfxEnabled = true;
     map->settings.sfxVol = 95;
     map->settings.mouseScrollSpeed = WAR_SPEED_NORMAL;
     map->settings.keyScrollSpeed = WAR_SPEED_NORMAL;
@@ -1441,14 +1443,6 @@ void updateStatus(WarContext* context)
 
     if (cheatStatus->enabled)
     {
-        setUIEntityStatus(statusCursor, true);
-
-        NVGfontParams params;
-        params.fontSize = statusTextUI->text.fontSize;
-        params.fontData = fontsData[statusTextUI->text.fontIndex];
-        vec2 textSize = nvgMeasureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
-        statusCursor->transform.position.x = map->bottomPanel.x + textSize.x;
-
         if (wasKeyPressed(input, WAR_KEY_ESC) ||
             wasKeyPressed(input, WAR_KEY_ENTER))
         {
@@ -1514,7 +1508,22 @@ void updateStatus(WarContext* context)
             cheatStatus->position = length;
         }
 
-        setStatus(context, NO_HIGHLIGHT, 0, 0, 0, cheatStatus->text);
+        char statusText[100];
+        memset(statusText, 0, sizeof(statusText));
+        strcpy(statusText, "MSG: ");
+        strcpy(statusText + strlen("MSG: "), cheatStatus->text);
+        setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
+
+        NVGfontParams params;
+        params.fontSize = statusTextUI->text.fontSize;
+        params.fontData = fontsData[statusTextUI->text.fontIndex];
+
+        vec2 prefixSize = nvgMeasureSingleSpriteText("MSG: ", strlen("MSG: "), params);
+        vec2 textSize = nvgMeasureSingleSpriteText(statusText, cheatStatus->position, params);
+        statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
+
+        setUIEntityStatus(statusCursor, true);
+
         return;
     }
     else
@@ -2287,7 +2296,7 @@ void updateMap(WarContext* context)
 
     if (!map->playing)
     {
-        updateUIButtons(context);
+        updateUIButtons(context, true);
         updateMapCursor(context);
         return;
     }
@@ -2317,7 +2326,7 @@ void updateMap(WarContext* context)
     updateSelectedUnitsInfo(context);
     updateCommandButtons(context);
 
-    updateUIButtons(context);
+    updateUIButtons(context, !map->cheatStatus.enabled);
 
     updateCommandFromRightClick(context);
     updateStatus(context);

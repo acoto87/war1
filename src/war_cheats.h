@@ -5,7 +5,7 @@
 #define CHEAT_GOLD_INCREASE 10000
 #define CHEAT_WOOD_INCREASE 5000
 
-typedef void (*WarCheatFunc)(WarContext* context, int argument);
+typedef void (*WarCheatFunc)(WarContext* context, const char* argument);
 
 typedef enum
 {
@@ -13,6 +13,8 @@ typedef enum
 
     // custom cheats
     WAR_CHEAT_MUSIC,        // Music #: Set volume music (enter 1-45 for #)
+                            // Music {on|off}: Enable or disable music
+    WAR_CHEAT_SOUND,        // Sound {on|off}: Enable or disable sounds
     WAR_CHEAT_MUSIC_VOL,    // Music volume #: Set volume of music (enter 0-100 for #)
     WAR_CHEAT_SOUND_VOL,    // Sound volume #: Set volume of sounds (enter 0-100 for #)
 
@@ -42,17 +44,18 @@ typedef struct
 
 void applyCheat(WarContext* context, const char* text);
 
-void applyMusicCheat(WarContext* context, s32 argument);
-void applyMusicVolCheat(WarContext* context, s32 argument);
-void applySoundVolCheat(WarContext* context, s32 argument);
-void applyGoldCheat(WarContext* context, s32 argument);
-void applySpellsCheat(WarContext* context, s32 argument);
-void applyUpgradesCheat(WarContext* context, s32 argument);
-void applyEndCheat(WarContext* context, s32 argument);
-void applyEnableCheat(WarContext* context, s32 argument);
-void applyGodModeCheat(WarContext* context, s32 argument);
-void applyLossCheat(WarContext* context, s32 argument);
-void applyFogOfWarCheat(WarContext* context, s32 argument);
-void applySkipHumanCheat(WarContext* context, s32 argument);
-void applySkipOrcCheat(WarContext* context, s32 argument);
-void applySpeedCheat(WarContext* context, s32 argument);
+void applyMusicCheat(WarContext* context, const char* argument);
+void applySoundCheat(WarContext* context, const char* argument);
+void applyMusicVolCheat(WarContext* context, const char* argument);
+void applySoundVolCheat(WarContext* context, const char* argument);
+void applyGoldCheat(WarContext* context, const char* argument);
+void applySpellsCheat(WarContext* context, const char* argument);
+void applyUpgradesCheat(WarContext* context, const char* argument);
+void applyEndCheat(WarContext* context, const char* argument);
+void applyEnableCheat(WarContext* context, const char* argument);
+void applyGodModeCheat(WarContext* context, const char* argument);
+void applyLossCheat(WarContext* context, const char* argument);
+void applyFogOfWarCheat(WarContext* context, const char* argument);
+void applySkipHumanCheat(WarContext* context, const char* argument);
+void applySkipOrcCheat(WarContext* context, const char* argument);
+void applySpeedCheat(WarContext* context, const char* argument);

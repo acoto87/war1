@@ -1,4 +1,4 @@
-#define STATUS_TEXT_MAX_LENGTH 32
+#define STATUS_TEXT_MAX_LENGTH 28
 
 void createMapUI(WarContext* context);
 

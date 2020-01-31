@@ -1963,7 +1963,9 @@ typedef enum
 typedef struct
 {
     WarMapSpeed gameSpeed;
+    bool musicEnabled;
     s32 musicVol;
+    bool sfxEnabled;
     s32 sfxVol;
     WarMapSpeed mouseScrollSpeed;
     WarMapSpeed keyScrollSpeed;

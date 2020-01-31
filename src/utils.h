@@ -95,17 +95,17 @@ void strFree(char* str)
     free((void*)str);
 }
 
-void strInsertAt(char* text, s32 index, char c)
+void strInsertAt(char* str, s32 index, char c)
 {
-    s32 length = strlen(text) + 1; // count the \0
-    memmove(text + index + 1, text + index, length - index);
-    text[index] = c;
+    s32 length = strlen(str) + 1; // count the \0
+    memmove(str + index + 1, str + index, length - index);
+    str[index] = c;
 }
 
-void strRemoveAt(char* text, s32 index)
+void strRemoveAt(char* str, s32 index)
 {
-    s32 length = strlen(text) + 1; // count the \0
-    memmove(text + index, text + index + 1, length - index - 1);
+    s32 length = strlen(str) + 1; // count the \0
+    memmove(str + index, str + index + 1, length - index - 1);
 }
 
 bool strStartsWith(const char* str1, const char* str2)

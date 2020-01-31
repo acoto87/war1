@@ -60,7 +60,7 @@ void updateScene(WarContext* context)
     }
     else
     {
-        updateUIButtons(context);
+        updateUIButtons(context, true);
         updateUICursor(context);
         updateAnimations(context);
     }
