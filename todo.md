@@ -132,9 +132,9 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
 * [ ] Add animation for the gold and lumber numbers when they change.
 * [ ] Make commands/cheats system.
-    * [ ] Pot of Gold: Gives 10000 gold and 5000 lumber to the player
-    * [ ] Eye of newt: All spells are now be able to be casted
-    * [ ] Iron forge: Research all upgrades
+    * [x] Pot of Gold: Gives 10000 gold and 5000 lumber to the player
+    * [x] Eye of newt: All spells are now be able to be casted
+    * [x] Iron forge: Research all upgrades
     * [ ] Ides of March: Brings player to final campaign sequence
     * [ ] Corwin of Amber: Enables cheats
     * [ ] There can be only one: Your units stop taking damage and deal 255 Damage
@@ -144,6 +144,11 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [ ] Orc#: Skip to orc level (enter 1-12 for #)
     * [ ] Hurry up guys: Speeds up building/unit production
     * [ ] Yours truly: Win current mission
+    * [x] Music #: Set volume music (enter 1-45 for #)
+    * [x] Music {on|off}: Enable or disable music
+    * [x] Sound {on|off}: Enable or disable sounds
+    * [x] Music volume #: Set volume of music (enter 0-100 for #)
+    * [x] Sound volume #: Set volume of sounds (enter 0-100 for #)
 * [ ] Make the blue water/green water animated.
 * [ ] Make the move state to consider range distance to stop.
 * [ ] Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
