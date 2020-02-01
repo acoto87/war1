@@ -339,7 +339,7 @@ void inputCharCallback(GLFWwindow* window, u32 codepoint)
     if (cheatStatus->enabled)
     {
         s32 length = strlen(cheatStatus->text);
-        if (length < STATUS_TEXT_MAX_LENGTH)
+        if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
         {
             strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
             cheatStatus->position++;

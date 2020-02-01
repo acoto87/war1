@@ -1936,6 +1936,9 @@ typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
 #define checkUpgradeLevel(player, upgrade) \
     ((player)->upgrades[(upgrade)/2].level <= (player)->upgrades[(upgrade)/2].allowed)
 
+#define STATUS_TEXT_MAX_LENGTH 40
+#define CHEAT_TEXT_MAX_LENGTH 32
+
 typedef struct
 {
     bool enabled;
@@ -1948,7 +1951,7 @@ typedef struct
 {
     bool enabled;
     s32 position;
-    char text[100];
+    char text[CHEAT_TEXT_MAX_LENGTH];
 } WarCheatStatus;
 
 typedef enum

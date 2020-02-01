@@ -1508,7 +1508,7 @@ void updateStatus(WarContext* context)
             cheatStatus->position = length;
         }
 
-        char statusText[100];
+        char statusText[STATUS_TEXT_MAX_LENGTH];
         memset(statusText, 0, sizeof(statusText));
         strcpy(statusText, "MSG: ");
         strcpy(statusText + strlen("MSG: "), cheatStatus->text);
@@ -1519,7 +1519,7 @@ void updateStatus(WarContext* context)
         params.fontData = fontsData[statusTextUI->text.fontIndex];
 
         vec2 prefixSize = nvgMeasureSingleSpriteText("MSG: ", strlen("MSG: "), params);
-        vec2 textSize = nvgMeasureSingleSpriteText(statusText, cheatStatus->position, params);
+        vec2 textSize = nvgMeasureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
         statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
 
         setUIEntityStatus(statusCursor, true);

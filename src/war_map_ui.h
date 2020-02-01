@@ -1,5 +1,3 @@
-#define STATUS_TEXT_MAX_LENGTH 28
-
 void createMapUI(WarContext* context);
 
 WarEntity* createUIMinimap(WarContext* context, char* name, vec2 position);

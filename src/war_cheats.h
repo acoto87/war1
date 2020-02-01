@@ -1,7 +1,5 @@
 #pragma once
 
-#define CHEAT_TEXT_MAX_LENGTH 32
-
 #define CHEAT_GOLD_INCREASE 10000
 #define CHEAT_WOOD_INCREASE 5000
 
