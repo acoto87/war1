@@ -258,6 +258,8 @@ void applySpellsCheat(WarContext* context, const char* argument)
 
     for (s32 i = 0; i < arrayLength(spells); i++)
     {
+        WarUpgradeData upgradeData = getUpgradeData(spells[i]);
+        setUpgradeAllowed(player, spells[i], upgradeData.maxLevelAllowed);
         while (hasRemainingUpgrade(player, spells[i]))
         {
             increaseUpgradeLevel(context, player, spells[i]);
@@ -281,13 +283,13 @@ void applyUpgradesCheat(WarContext* context, const char* argument)
         WAR_UPGRADE_SPEARS,
         WAR_UPGRADE_SWORDS,
         WAR_UPGRADE_AXES,
-        WAR_UPGRADE_HORSES,
-        WAR_UPGRADE_WOLVES,
         WAR_UPGRADE_SHIELD
     };
 
     for (s32 i = 0; i < arrayLength(upgrades); i++)
     {
+        WarUpgradeData upgradeData = getUpgradeData(upgrades[i]);
+        setUpgradeAllowed(player, upgrades[i], upgradeData.maxLevelAllowed);
         while (hasRemainingUpgrade(player, upgrades[i]))
         {
             increaseUpgradeLevel(context, player, upgrades[i]);

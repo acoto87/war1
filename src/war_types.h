@@ -1935,6 +1935,8 @@ typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
     ((player)->upgrades[(upgrade)/2].level)
 #define checkUpgradeLevel(player, upgrade) \
     ((player)->upgrades[(upgrade)/2].level <= (player)->upgrades[(upgrade)/2].allowed)
+#define setUpgradeAllowed(player, upgrade, value) \
+    ((player)->upgrades[(upgrade)/2].allowed = (value))
 
 #define STATUS_TEXT_MAX_LENGTH 40
 #define CHEAT_TEXT_MAX_LENGTH 32
