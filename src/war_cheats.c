@@ -324,7 +324,8 @@ void applyGodModeCheat(WarContext* context, const char* argument)
     if (!map->cheatsEnabled)
         return;
 
-    NOT_IMPLEMENTED();
+    WarPlayerInfo* player = &map->players[0];
+    player->godMode = !player->godMode;
 }
 
 void applyLossCheat(WarContext* context, const char* argument)
@@ -335,7 +336,7 @@ void applyLossCheat(WarContext* context, const char* argument)
     if (!map->cheatsEnabled)
         return;
 
-    NOT_IMPLEMENTED();
+    map->result = WAR_LEVEL_RESULT_LOSE;
 }
 
 void applyFogOfWarCheat(WarContext* context, const char* argument)

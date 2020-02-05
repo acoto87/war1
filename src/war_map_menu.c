@@ -480,7 +480,7 @@ void createGameOverMenu(WarContext* context)
         smallNormalRef,
         smallPressedRef,
         invalidRef,
-        vec2Addv(messagePanel, vec2i(95, 25)));
+        vec2Addv(messagePanel, vec2i(116, 25)));
     setUIEntityStatus(uiEntity, false);
     setUIButtonClickHandler(uiEntity, handleGameOverContinue);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);

@@ -335,6 +335,8 @@ const WarWallPieceType wallTileTypeMap[16] =
 #define WAR_ROAD_GOLD_COST 50
 #define WAR_ROAD_WOOD_COST 0
 
+#define GOD_MODE_MIN_DAMAGE 255
+
 typedef struct
 {
     WarRuinPieceType type;

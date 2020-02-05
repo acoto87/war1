@@ -2008,11 +2008,16 @@ s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)
 
 void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
 {
+    WarMap* map = context->map;
+
     assert(isUnit(entity));
 
-    WarUnitComponent *unit = &entity->unit;
-
+    WarUnitComponent* unit = &entity->unit;
     if (unit->invulnerable)
+        return;
+
+    WarPlayerInfo* player = &map->players[unit->player];
+    if (player->godMode)
         return;
 
     // Minimal damage + [Random damage - Enemy's Armor]
@@ -2151,6 +2156,8 @@ void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
 
 void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
+    WarMap* map = context->map;
+
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
@@ -2158,12 +2165,23 @@ void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity
     // every unit has a 20 percent chance to miss (except catapults)
     if (isCatapultUnit(entity) || chance(80))
     {
-        takeDamage(context, targetEntity, unit->minDamage, unit->rndDamage);
+        s32 minDamage = unit->minDamage;
+        s32 rndDamage = unit->rndDamage;
+
+        WarPlayerInfo* player = &map->players[unit->player];
+        if (player->godMode)
+        {
+            minDamage = GOD_MODE_MIN_DAMAGE;
+        }
+
+        takeDamage(context, targetEntity, minDamage, rndDamage);
     }
 }
 
 void meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece)
 {
+    WarMap* map = context->map;
+
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
@@ -2171,7 +2189,16 @@ void meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
     // every unit has a 20 percent chance to miss (except catapults)
     if (isCatapultUnit(entity) || chance(80))
     {
-        takeWallDamage(context, targetEntity, piece, unit->minDamage, unit->rndDamage);
+        s32 minDamage = unit->minDamage;
+        s32 rndDamage = unit->rndDamage;
+
+        WarPlayerInfo* player = &map->players[unit->player];
+        if (player->godMode)
+        {
+            minDamage = GOD_MODE_MIN_DAMAGE;
+        }
+
+        takeWallDamage(context, targetEntity, piece, minDamage, rndDamage);
     }
 }
 

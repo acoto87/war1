@@ -1912,6 +1912,7 @@ typedef struct
     WarRace race;
     s32 gold;
     s32 wood;
+    bool godMode;
     bool features[MAX_FEATURES_COUNT];
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
 } WarPlayerInfo;

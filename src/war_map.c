@@ -640,32 +640,35 @@ void enterMap(WarContext* context)
     {
         for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
         {
-            map->players[i].index = i;
-            map->players[i].race = levelInfo->levelInfo.races[i];
-            map->players[i].gold = levelInfo->levelInfo.gold[i];
-            map->players[i].wood = levelInfo->levelInfo.lumber[i];
+            WarPlayerInfo* player = &map->players[i];
+
+            player->index = i;
+            player->race = levelInfo->levelInfo.races[i];
+            player->gold = levelInfo->levelInfo.gold[i];
+            player->wood = levelInfo->levelInfo.lumber[i];
+            player->godMode = false;
 
             for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
             {
-                map->players[i].features[j] = levelInfo->levelInfo.allowedFeatures[j];
+                player->features[j] = levelInfo->levelInfo.allowedFeatures[j];
 
                 // REMOVE THIS: This is only for testing
                 // if (levelInfoIndex == 117)
-                //     map->players[i].features[j] = true;
+                //     player->features[j] = true;
                 // else if (levelInfoIndex == 118)
-                //     map->players[i].features[j] = true;
+                //     player->features[j] = true;
             }
 
             for (s32 j = 0; j < MAX_UPGRADES_COUNT; j++)
             {
-                map->players[i].upgrades[j].allowed = levelInfo->levelInfo.allowedUpgrades[j][i];
-                map->players[i].upgrades[j].level = 0;
+                player->upgrades[j].allowed = levelInfo->levelInfo.allowedUpgrades[j][i];
+                player->upgrades[j].level = 0;
 
                 // REMOVE THIS: This is only for testing
                 // if (levelInfoIndex == 117)
-                //     map->players[i].upgrades[j].allowed = 2;
+                //     player->upgrades[j].allowed = 2;
                 // else if (levelInfoIndex == 118)
-                //     map->players[i].upgrades[j].allowed = 2;
+                //     player->upgrades[j].allowed = 2;
             }
         }
     }
@@ -677,16 +680,16 @@ void enterMap(WarContext* context)
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
 
             // REMOVE THIS: This is only for testing
-            // if (levelInfoIndex == 117)
-            // {
-            //     if (startUnit.type == WAR_UNIT_FOOTMAN)
-            //         startUnit.type = WAR_UNIT_CLERIC;
-            // }
-            // else if (levelInfoIndex == 118)
-            // {
-            //     if (startUnit.type == WAR_UNIT_GRUNT)
-            //         startUnit.type = WAR_UNIT_NECROLYTE;
-            // }
+            if (levelInfoIndex == 117)
+            {
+                if (startUnit.type == WAR_UNIT_FOOTMAN)
+                    startUnit.type = WAR_UNIT_CLERIC;
+            }
+            else if (levelInfoIndex == 118)
+            {
+                if (startUnit.type == WAR_UNIT_GRUNT)
+                    startUnit.type = WAR_UNIT_NECROLYTE;
+            }
 
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player,
                        startUnit.resourceKind, startUnit.amount, true);
@@ -2339,13 +2342,16 @@ void updateMap(WarContext* context)
     updateRuinsEdit(context);
     updateRainOfFireEdit(context);
 
-    WarLevelResult result = checkObjectives(context);
-    if (result != WAR_LEVEL_RESULT_NONE)
+    if (map->result == WAR_LEVEL_RESULT_NONE)
     {
-        map->result = result;
+        map->result = checkObjectives(context);
+    }
+
+    if (map->result != WAR_LEVEL_RESULT_NONE)
+    {
         map->playing = false;
 
-        if (result == WAR_LEVEL_RESULT_WIN &&
+        if (map->result == WAR_LEVEL_RESULT_WIN &&
             (map->levelInfoIndex == WAR_CAMPAIGN_HUMANS_02 ||
              map->levelInfoIndex == WAR_CAMPAIGN_ORCS_02))
         {
