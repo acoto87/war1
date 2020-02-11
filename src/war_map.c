@@ -137,7 +137,8 @@ void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height,
             if ((y == startY || y == endY - 1) && (x == startX || x == endX - 1))
                 continue;
 
-            map->tiles[y * MAP_TILES_WIDTH + x].state = tileState;
+            WarMapTile* tile = getMapTileState(map, x, y);
+            tile->state = tileState;
         }
     }
 }
@@ -146,26 +147,54 @@ void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileSta
 {
     assert(isUnit(entity));
 
+    s32 sight = getUnitSightRange(entity);
+
     vec2 position = getUnitPosition(entity, true);
     vec2 unitSize = getUnitSize(entity);
     rect unitRect = rectv(position, unitSize);
-
-    if (isBuildingUnit(entity))
-    {
-        WarBuildingStats stats = getBuildingStats(entity->unit.type);
-        unitRect = rectExpand(unitRect, stats.sight, stats.sight);
-    }
-    else
-    {
-        WarUnitStats stats = getUnitStats(entity->unit.type);
-        unitRect = rectExpand(unitRect, stats.sight, stats.sight);
-    }
+    unitRect = rectExpand(unitRect, sight, sight);
 
     setMapTileState(map, unitRect.x, unitRect.y, unitRect.width, unitRect.height, tileState);
 }
 
-bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 states)
+bool isTileInState(WarMap* map, s32 x, s32 y, WarMapTileState state)
 {
+    if (!map->fowEnabled)
+    {
+        switch (state)
+        {
+            case MAP_TILE_STATE_UNKOWN: return false;
+            case MAP_TILE_STATE_FOG: return false;
+            case MAP_TILE_STATE_VISIBLE: return true;
+            default:
+            {
+                logError("Unkown state: %d. Defaulting to true.", state);
+                return true;
+            }
+        }
+    }
+
+    WarMapTile* tile = getMapTileState(map, x, y);
+    return tile->state == state;
+}
+
+bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state)
+{
+    if (!map->fowEnabled)
+    {
+        switch (state)
+        {
+            case MAP_TILE_STATE_UNKOWN: return false;
+            case MAP_TILE_STATE_FOG: return false;
+            case MAP_TILE_STATE_VISIBLE: return true;
+            default:
+            {
+                logError("Unkown state: %d. Defaulting to true.", state);
+                return true;
+            }
+        }
+    }
+
     if (startX <= 0)
         startX = 0;
 
@@ -185,7 +214,8 @@ bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 heigh
     {
         for(s32 x = startX; x < endX; x++)
         {
-            if (map->tiles[y * MAP_TILES_WIDTH + x].state & states)
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (tile->state == state)
             {
                 return true;
             }
@@ -195,18 +225,33 @@ bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 heigh
     return false;
 }
 
-bool isAnyUnitTileInStates(WarMap* map, WarEntity* entity, s32 states)
+bool isAnyUnitTileInStates(WarMap* map, WarEntity* entity, WarMapTileState state)
 {
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
 
     vec2 position = getUnitPosition(entity, true);
-    return isAnyTileInStates(map, position.x, position.y, unit->sizex, unit->sizey, states);
+    return isAnyTileInStates(map, position.x, position.y, unit->sizex, unit->sizey, state);
 }
 
-bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, s32 state)
+bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state)
 {
+    if (!map->fowEnabled)
+    {
+        switch (state)
+        {
+            case MAP_TILE_STATE_UNKOWN: return false;
+            case MAP_TILE_STATE_FOG: return false;
+            case MAP_TILE_STATE_VISIBLE: return true;
+            default:
+            {
+                logError("Unkown state: %d. Defaulting to true.", state);
+                return true;
+            }
+        }
+    }
+
     if (startX <= 0)
         startX = 0;
 
@@ -226,7 +271,8 @@ bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 heig
     {
         for(s32 x = startX; x < endX; x++)
         {
-            if (map->tiles[y * MAP_TILES_WIDTH + x].state != state)
+            WarMapTile* tile = getMapTileState(map, x, y);
+            if (tile->state != state)
             {
                 return false;
             }
@@ -236,7 +282,7 @@ bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 heig
     return true;
 }
 
-bool areAllUnitTilesInState(WarMap* map, WarEntity* entity, s32 state)
+bool areAllUnitTilesInState(WarMap* map, WarEntity* entity, WarMapTileState state)
 {
     assert(isUnit(entity));
 
@@ -284,11 +330,13 @@ void updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResourc
     WarMap* map = context->map;
     WarSpriteFrame* minimapFrame = &map->minimapSprite.frames[1];
 
-    s32 index = y * MAP_TILES_WIDTH + x;
     u8Color color = U8COLOR_BLACK;
 
+    s32 index = y * MAP_TILES_WIDTH + x;
     WarMapTile* tile = &map->tiles[index];
-    if (tile->state == MAP_TILE_STATE_VISIBLE ||
+
+    if (!map->fowEnabled ||
+        tile->state == MAP_TILE_STATE_VISIBLE ||
         tile->state == MAP_TILE_STATE_FOG)
     {
         color = getMapTileAverage(levelVisual, tileset, x, y);
@@ -412,6 +460,7 @@ void enterMap(WarContext* context)
 
     map->playing = true;
     map->cheatsEnabled = true;
+    map->fowEnabled = true;
     map->result = WAR_LEVEL_RESULT_NONE;
     map->objectivesTime = 1;
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
@@ -457,9 +506,11 @@ void enterMap(WarContext* context)
     {
         for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         {
-            map->tiles[i].state = MAP_TILE_STATE_UNKOWN;
-            map->tiles[i].type = WAR_FOG_PIECE_NONE;
-            map->tiles[i].boundary = WAR_FOG_BOUNDARY_NONE;
+            WarMapTile* tile = &map->tiles[i];
+
+            tile->state = MAP_TILE_STATE_UNKOWN;
+            tile->type = WAR_FOG_PIECE_NONE;
+            tile->boundary = WAR_FOG_BOUNDARY_NONE;
         }
     }
 
@@ -2050,10 +2101,12 @@ void updateFoW(WarContext* context)
 
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
-        map->tiles[i].type = WAR_FOG_PIECE_NONE;
-        map->tiles[i].boundary = WAR_FOG_BOUNDARY_NONE;
-        if (map->tiles[i].state == MAP_TILE_STATE_VISIBLE)
-            map->tiles[i].state = MAP_TILE_STATE_FOG;
+        WarMapTile* tile = &map->tiles[i];
+
+        tile->type = WAR_FOG_PIECE_NONE;
+        tile->boundary = WAR_FOG_BOUNDARY_NONE;
+        if (tile->state == MAP_TILE_STATE_VISIBLE)
+            tile->state = MAP_TILE_STATE_FOG;
     }
 
     // the Holy Sight and Dark Vision spells are the first entities that change FoW
@@ -2080,10 +2133,12 @@ void updateFoW(WarContext* context)
         {
             if (isFriendlyUnit(context, entity))
             {
+                WarUnitComponent* unit = &entity->unit;
+
                 if (isBuildingUnit(entity))
                 {
                     // the friendly buildings are always seen by the player
-                    entity->unit.hasBeenSeen = true;
+                    unit->hasBeenSeen = true;
                 }
 
                 // mark the tiles of the unit as visible
@@ -2093,7 +2148,7 @@ void updateFoW(WarContext* context)
                 WarEntity* targetEntity = getAttackTarget(context, entity);
                 if (targetEntity)
                 {
-                    WarUnitStats stats = getUnitStats(entity->unit.type);
+                    WarUnitStats stats = getUnitStats(unit->type);
 
                     if (isUnit(targetEntity))
                     {
@@ -2129,6 +2184,21 @@ void updateFoW(WarContext* context)
                         setUnitMapTileState(map, attacker, MAP_TILE_STATE_VISIBLE);
                     }
                 }
+
+                // check near non-friendly building units to mark it as seen
+                //
+                // TODO: Fix here when turn of FoW and turn on again the goldmines shows in the minimap
+                //
+                WarEntityList* nearUnits = getNearUnits(context, getUnitCenterPosition(entity, true), getUnitSightRange(entity));
+                for (s32 i = 0; i < nearUnits->count; i++)
+                {
+                    WarEntity* targetEntity = nearUnits->items[i];
+                    if (targetEntity && !isFriendlyUnit(context, targetEntity) && isBuildingUnit(targetEntity))
+                    {
+                        targetEntity->unit.hasBeenSeen = true;
+                    }
+                }
+                WarEntityListFree(nearUnits);
             }
         }
     }
@@ -2160,6 +2230,9 @@ void updateFoW(WarContext* context)
 void determineFoWTypes(WarContext* context)
 {
     WarMap* map = context->map;
+
+    if (!map->fowEnabled)
+        return;
 
     const s32 dirC = 8;
     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
@@ -2383,7 +2456,8 @@ void renderTerrain(WarContext* context)
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
             WarMapTile* tile = getMapTileState(map, x, y);
-            if (tile->state == MAP_TILE_STATE_VISIBLE ||
+            if (!map->fowEnabled ||
+                tile->state == MAP_TILE_STATE_VISIBLE ||
                 tile->state == MAP_TILE_STATE_FOG)
             {
                 // index of the tile in the tilesheet
@@ -2412,6 +2486,9 @@ void renderFoW(WarContext* context)
 {
     WarMap* map = context->map;
 
+    if (!map->fowEnabled)
+        return;
+
     NVGcontext* gfx = context->gfx;
 
     NVGimageBatch* unkownBatch = nvgBeginImageBatch(gfx, map->blackSprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
@@ -2430,7 +2507,7 @@ void renderFoW(WarContext* context)
 
                 // coordinates in pixels of the terrain tile
                 s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
-                s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+                s32 tilePixelY = (tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT;
 
                 rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);

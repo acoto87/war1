@@ -347,7 +347,7 @@ void applyFogOfWarCheat(WarContext* context, const char* argument)
     if (!map->cheatsEnabled)
         return;
 
-    NOT_IMPLEMENTED();
+    map->fowEnabled = !map->fowEnabled;
 }
 
 void applySkipHumanCheat(WarContext* context, const char* argument)

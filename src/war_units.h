@@ -1865,6 +1865,26 @@ bool isCarryingResources(WarEntity* entity)
     }
 }
 
+s32 getUnitSightRange(WarEntity* entity)
+{
+    assert(isUnit(entity));
+
+    s32 sight = 0;
+
+    if (isBuildingUnit(entity))
+    {
+        WarBuildingStats stats = getBuildingStats(entity->unit.type);
+        sight = stats.sight;
+    }
+    else
+    {
+        WarUnitStats stats = getUnitStats(entity->unit.type);
+        sight = stats.sight;
+    }
+
+    return sight;
+}
+
 bool displayUnitOnMinimap(WarEntity* entity);
 u8Color getUnitColorOnMinimap(WarEntity* entity);
 

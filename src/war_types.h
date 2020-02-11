@@ -2041,6 +2041,7 @@ typedef struct
     bool editingRainOfFire;
 
     bool cheatsEnabled;
+    bool fowEnabled;
 
     WarPathFinder finder;
     WarUnitCommand command;

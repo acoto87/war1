@@ -1419,15 +1419,24 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            WarMapTile* tile = getMapTileState(map, x, y);
-            if (tile->state == MAP_TILE_STATE_VISIBLE ||
+            s32 index = y * MAP_TILES_WIDTH + x;
+            WarMapTile* tile = &map->tiles[index];
+
+            if (!map->fowEnabled ||
+                tile->state == MAP_TILE_STATE_VISIBLE ||
                 tile->state == MAP_TILE_STATE_FOG)
             {
-                s32 index = y * MAP_TILES_WIDTH + x;
                 frame0->data[index * 4 + 0] = frame1->data[index * 4 + 0];
                 frame0->data[index * 4 + 1] = frame1->data[index * 4 + 1];
                 frame0->data[index * 4 + 2] = frame1->data[index * 4 + 2];
                 frame0->data[index * 4 + 3] = frame1->data[index * 4 + 3];
+            }
+            else
+            {
+                frame0->data[index * 4 + 0] = 0;
+                frame0->data[index * 4 + 1] = 0;
+                frame0->data[index * 4 + 2] = 0;
+                frame0->data[index * 4 + 3] = 255;
             }
         }
     }
