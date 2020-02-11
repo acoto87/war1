@@ -140,7 +140,10 @@ void updateSceneBriefing(WarContext* context)
 
     updateAnimations(context);
 
-    if (scene->briefing.time <= 0 || wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (scene->briefing.time <= 0 ||
+        wasButtonPressed(input, WAR_MOUSE_LEFT) ||
+        wasKeyPressed(input, WAR_KEY_ENTER) ||
+        wasKeyPressed(input, WAR_KEY_SPACE))
     {
         WarMap* map = createMap(context, scene->briefing.mapType);
         setNextMap(context, map, 1.0f);
