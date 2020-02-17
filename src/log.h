@@ -15,11 +15,14 @@ typedef struct
 } Log;
 
 Log __log__;
+pthread_mutex_t __logMutex__;
 
 void initLog(LogSeverity severity)
 {
     __log__ = (Log){0};
     __log__.severity = severity;
+
+    pthread_mutex_init(&__logMutex__, NULL);
 }
 
 static int32_t __getFileNameIndex(const char* file)
@@ -32,40 +35,46 @@ static int32_t __getFileNameIndex(const char* file)
         if (file[i] == '/' || file[i] == '\\')
             index = i;
     }
-    
+
     return index;
 }
 
 void __logInternal(LogSeverity severity, const char* file, const int32_t line, const char* message, ...)
 {
-    if (severity <= __log__.severity)
+    if (severity > __log__.severity)
     {
-        time_t t = time(NULL);
-        struct tm* timeInfo = localtime(&t);
-
-        char tstr[80];
-        strftime(tstr, 80, "%X", timeInfo);
-
-        char* severityStr;
-        
-        switch (severity)
-        {
-            case LOG_SEVERITY_CRITICAL:     severityStr = "CRITICAL";   break;
-            case LOG_SEVERITY_ERROR:        severityStr = "ERROR";      break;
-            case LOG_SEVERITY_WARNING:      severityStr = "WARNING";    break;
-            case LOG_SEVERITY_INFO:         severityStr = "INFO";       break;
-            case LOG_SEVERITY_DEBUG:        severityStr = "DEBUG";      break;
-            default:                        severityStr = "UNKOWN";     break;
-        }
-
-        int32_t fileNameIndex = __getFileNameIndex(file);
-        fprintf(stdout, "[%s][%s][%s:(%d)]: ", severityStr, tstr, file + fileNameIndex + 1, line);
-
-        va_list args;
-        va_start(args, message);
-        vprintf(message, args);
-        va_end(args);
+        return;
     }
+
+    pthread_mutex_lock(&__logMutex__);
+
+    time_t t = time(NULL);
+    struct tm* timeInfo = localtime(&t);
+
+    char tstr[80];
+    strftime(tstr, 80, "%X", timeInfo);
+
+    char* severityStr;
+
+    switch (severity)
+    {
+        case LOG_SEVERITY_CRITICAL:     severityStr = "CRITICAL";   break;
+        case LOG_SEVERITY_ERROR:        severityStr = "ERROR";      break;
+        case LOG_SEVERITY_WARNING:      severityStr = "WARNING";    break;
+        case LOG_SEVERITY_INFO:         severityStr = "INFO";       break;
+        case LOG_SEVERITY_DEBUG:        severityStr = "DEBUG";      break;
+        default:                        severityStr = "UNKOWN";     break;
+    }
+
+    int32_t fileNameIndex = __getFileNameIndex(file);
+    fprintf(stdout, "[%s][%s][%s:(%d)]: ", severityStr, tstr, file + fileNameIndex + 1, line);
+
+    va_list args;
+    va_start(args, message);
+    vprintf(message, args);
+    va_end(args);
+
+    pthread_mutex_unlock(&__logMutex__);
 }
 
 #define log(severity, message, ...) __logInternal(severity, __FILE__, __LINE__, message, ##__VA_ARGS__)

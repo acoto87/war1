@@ -71,6 +71,7 @@
 #define SHL_WAVE_WRITER_IMPLEMENTATION
 #include "shl/wave_writer.h"
 
+#include "mutex.h"
 #include "log.h"
 #include "utils.h"
 #include "war_math.h"

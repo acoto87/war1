@@ -1787,7 +1787,9 @@ void updateMapCursor(WarContext* context)
                     if (selectedEntities->count > 0)
                     {
                         WarEntity* selectedEntity = findEntity(context, selectedEntities->items[0]);
-                        if (selectedEntity && isDudeUnit(selectedEntity))
+                        if (selectedEntity &&
+                            isFriendlyUnit(context, selectedEntity) &&
+                            isDudeUnit(selectedEntity))
                         {
                             if (isUnitOfType(entityUnderCursor, WAR_UNIT_GOLDMINE) &&
                                 !isUnitUnknown(map, entityUnderCursor) &&
@@ -2134,6 +2136,8 @@ void updateFoW(WarContext* context)
             if (isFriendlyUnit(context, entity))
             {
                 WarUnitComponent* unit = &entity->unit;
+                vec2 position = getUnitCenterPosition(entity, true);
+                s32 sightRange = getUnitSightRange(entity);
 
                 if (isBuildingUnit(entity))
                 {
@@ -2186,13 +2190,10 @@ void updateFoW(WarContext* context)
                 }
 
                 // check near non-friendly building units to mark it as seen
-                //
-                // TODO: Fix here when turn of FoW and turn on again the goldmines shows in the minimap
-                //
-                WarEntityList* nearUnits = getNearUnits(context, getUnitCenterPosition(entity, true), getUnitSightRange(entity));
-                for (s32 i = 0; i < nearUnits->count; i++)
+                WarEntityList* nearUnits = getNearUnits(context, position, sightRange);
+                for (s32 k = 0; k < nearUnits->count; k++)
                 {
-                    WarEntity* targetEntity = nearUnits->items[i];
+                    WarEntity* targetEntity = nearUnits->items[k];
                     if (targetEntity && !isFriendlyUnit(context, targetEntity) && isBuildingUnit(targetEntity))
                     {
                         targetEntity->unit.hasBeenSeen = true;
@@ -2211,13 +2212,7 @@ void updateFoW(WarContext* context)
         {
             if (!isFriendlyUnit(context, entity))
             {
-                if (isBuildingUnit(entity))
-                {
-                    // mark the enemy's buildings as seen if they are currently in sight
-                    if (!entity->unit.hasBeenSeen)
-                        entity->unit.hasBeenSeen = !isUnitUnknown(map, entity);
-                }
-                else if (!isUnitPartiallyVisible(map, entity))
+                if (!isUnitPartiallyVisible(map, entity))
                 {
                     // remove from selection enemy or neutral units that goes into fog
                     removeEntityFromSelection(context, entity->id);
