@@ -493,8 +493,7 @@ WarEntity* createBuilding(WarContext* context,
     if (isGoingToBuild)
     {
         WarBuildingStats stats = getBuildingStats(type);
-        f32 buildTime = getMapScaledTime(context, stats.buildTime);
-        WarState* buildState = createBuildState(context, entity, buildTime);
+        WarState* buildState = createBuildState(context, entity, stats.buildTime);
         changeNextState(context, entity, buildState, true, true);
     }
 
@@ -1544,7 +1543,7 @@ void renderEntity(WarContext* context, WarEntity* entity)
         NULL,               // WAR_ENTITY_TYPE_AUDIO
         renderProjectile,   // WAR_ENTITY_TYPE_PROJECTILE
         NULL,               // WAR_ENTITY_TYPE_RAIN_OF_FIRE
-        NULL,               // WAR_ENTITY_TYPE_POISON_CLOUD
+        renderAnimation,    // WAR_ENTITY_TYPE_POISON_CLOUD
         NULL,               // WAR_ENTITY_TYPE_SIGHT
         renderMinimap,      // WAR_ENTITY_TYPE_MINIMAP
         renderAnimation,    // WAR_ENTITY_TYPE_ANIMATION

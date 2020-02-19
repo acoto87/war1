@@ -46,11 +46,19 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
             WarState* idleState = createIdleState(context, entity, false);
             changeNextState(context, entity, idleState, true, true);
         }
-        
+
         return;
     }
 
-    state->upgrade.buildTime += context->deltaTime;
+    f32 buildSpeed = getMapScaledSpeed(context, context->deltaTime);
+
+    // if hurry up cheat is enabled, speed up the build time by 5000%
+    if (map->hurryUp)
+    {
+        buildSpeed *= CHEAT_SPEED_UP_FACTOR;
+    }
+
+    state->upgrade.buildTime += buildSpeed;
 
     // if the building is finished...
     if (state->upgrade.buildTime >= state->upgrade.totalBuildTime)
@@ -69,7 +77,7 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 
         return;
     }
-        
+
     unit->buildPercent = percentabf01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
 }
 

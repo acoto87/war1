@@ -414,5 +414,5 @@ void applySpeedCheat(WarContext* context, const char* argument)
     if (!map->cheatsEnabled)
         return;
 
-    NOT_IMPLEMENTED();
+    map->hurryUp = !map->hurryUp;
 }

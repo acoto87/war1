@@ -10,7 +10,7 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     vec2 unitSize = getUnitSize(entity);
-    
+
     if (state->move.positions.count <= 1)
     {
         if (!changeStateNextState(context, entity, state))
@@ -128,7 +128,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
                     WarState* idleState = createIdleState(context, entity, true);
                     changeNextState(context, entity, idleState, true, true);
                 }
-                
+
                 return;
             }
 
@@ -235,10 +235,10 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 
             state->move.waitCount++;
 
-            WarState* waitState = createWaitState(context, entity, getMapScaledTime(context,  MOVE_WAIT_TIME));
+            WarState* waitState = createWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME));
             waitState->nextState = state;
             changeNextState(context, entity, waitState, false, true);
-            
+
             return;
         }
 

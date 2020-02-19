@@ -49,7 +49,15 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    state->train.buildTime += context->deltaTime;
+    f32 trainSpeed = getMapScaledSpeed(context, context->deltaTime);
+
+    // if hurry up cheat is enabled, speed up the train time by 5000%
+    if (map->hurryUp)
+    {
+        trainSpeed *= CHEAT_SPEED_UP_FACTOR;
+    }
+
+    state->train.buildTime += trainSpeed;
 
     // if the building is finished...
     if (state->train.buildTime >= state->train.totalBuildTime)

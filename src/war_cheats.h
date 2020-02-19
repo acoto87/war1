@@ -2,6 +2,7 @@
 
 #define CHEAT_GOLD_INCREASE 10000
 #define CHEAT_WOOD_INCREASE 5000
+#define CHEAT_SPEED_UP_FACTOR 100.0f
 
 typedef void (*WarCheatFunc)(WarContext* context, const char* argument);
 

@@ -1058,7 +1058,7 @@ void updateAction(WarContext* context, WarEntity* entity)
     WarUnitActionStep step = action->steps.items[action->stepIndex];
     if (step.type == WAR_ACTION_STEP_WAIT)
     {
-        action->waitCount -= context->deltaTime;
+        action->waitCount -= getMapScaledSpeed(context, context->deltaTime);
         if (action->waitCount > 0)
         {
             return;
@@ -1172,7 +1172,7 @@ void updateAction(WarContext* context, WarEntity* entity)
         step = action->steps.items[action->stepIndex];
     }
 
-    action->waitCount = getMapScaledTime(context, __frameCountToSeconds(step.param) * action->scale);
+    action->waitCount = __frameCountToSeconds(step.param) * action->scale;
 }
 
 // peasant: 40s

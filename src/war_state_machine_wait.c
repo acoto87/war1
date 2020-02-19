@@ -24,7 +24,7 @@ void leaveWaitState(WarContext* context, WarEntity* entity, WarState* state)
 
 void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    state->wait.waitTime -= context->deltaTime;
+    state->wait.waitTime -= getMapScaledSpeed(context, context->deltaTime);
 
     if (state->wait.waitTime < 0)
     {

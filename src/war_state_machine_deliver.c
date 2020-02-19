@@ -82,6 +82,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     // while inside the townhall
     removeEntityFromSelection(context, entity->id);
 
+    // simulate the time inside the townhall
     setDelay(state, getMapScaledTime(context, 1.0f));
 }
 

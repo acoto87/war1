@@ -142,8 +142,8 @@ bool updateProjectilePosition(WarContext* context, WarEntity* entity)
 
     vec2 position = transform->position;
     vec2 target = projectile->target;
-    f32 speed = projectile->speed;
 
+    f32 speed = projectile->speed;
     speed = getMapScaledSpeed(context, speed);
 
     vec2 direction = vec2Subv(target, position);

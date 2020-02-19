@@ -79,7 +79,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     // stop the attacking for a moment until the unit come out again
     if (isInsideBuilding(targetEntity))
     {
-        WarState* waitState = createWaitState(context, entity, getMapScaledTime(context, 1.0f));
+        WarState* waitState = createWaitState(context, entity, 1.0f);
         waitState->nextState = state;
         changeNextState(context, entity, waitState, false, true);
         return;

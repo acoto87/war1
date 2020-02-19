@@ -11,11 +11,10 @@ void enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
     // disable the sprite to simulate the mining process
     entity->sprite.enabled = false;
 
-    // set the starting time of mining
-    state->mine.miningTime = context->time + getMapScaledTime(context, 2.0f);
+    // set the mining time
+    state->mine.miningTime = 2.0f;
 
-    // remove the unit from selection to avoid the player giving it orders
-    // while inside the mine
+    // remove the unit from selection to avoid the player giving it orders while inside the mine
     removeEntityFromSelection(context, entity->id);
 }
 
@@ -46,7 +45,9 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    if (context->time >= state->mine.miningTime)
+    state->mine.miningTime -= getMapScaledSpeed(context, context->deltaTime);
+
+    if (state->mine.miningTime < 0)
     {
         unit->amount += mine(context, goldmine, UNIT_MAX_CARRY_GOLD);
         if (unit->amount > 0)

@@ -731,16 +731,16 @@ void enterMap(WarContext* context)
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
 
             // REMOVE THIS: This is only for testing
-            if (levelInfoIndex == 117)
-            {
-                if (startUnit.type == WAR_UNIT_FOOTMAN)
-                    startUnit.type = WAR_UNIT_CLERIC;
-            }
-            else if (levelInfoIndex == 118)
-            {
-                if (startUnit.type == WAR_UNIT_GRUNT)
-                    startUnit.type = WAR_UNIT_NECROLYTE;
-            }
+            // if (levelInfoIndex == 117)
+            // {
+            //     if (startUnit.type == WAR_UNIT_FOOTMAN)
+            //         startUnit.type = WAR_UNIT_CONJURER;
+            // }
+            // else if (levelInfoIndex == 118)
+            // {
+            //     if (startUnit.type == WAR_UNIT_GRUNT)
+            //         startUnit.type = WAR_UNIT_WARLOCK;
+            // }
 
             createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player,
                        startUnit.resourceKind, startUnit.amount, true);
@@ -1983,11 +1983,11 @@ void updateMagic(WarContext* context)
                     unit->mana = min(unit->mana + 1, unit->maxMana);
                 }
 
-                unit->manaTime = getMapScaledTime(context, 1);
+                unit->manaTime = 1.0f;
             }
             else
             {
-                unit->manaTime -= context->deltaTime;
+                unit->manaTime -= getMapScaledSpeed(context, context->deltaTime);
             }
         }
     }
@@ -1997,8 +1997,8 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
 {
     WarPoisonCloudComponent* poisonCloud = &entity->poisonCloud;
 
-    poisonCloud->time -= context->deltaTime;
-    poisonCloud->damageTime -= context->deltaTime;
+    poisonCloud->time -= getMapScaledSpeed(context, context->deltaTime);
+    poisonCloud->damageTime -= getMapScaledSpeed(context, context->deltaTime);
 
     if (poisonCloud->damageTime <= 0)
     {
@@ -2015,7 +2015,7 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
         }
         WarEntityListFree(nearUnits);
 
-        poisonCloud->damageTime = getMapScaledTime(context, 1);
+        poisonCloud->damageTime = 1.0f;
     }
 
     return poisonCloud->time <= 0;
@@ -2024,7 +2024,7 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
 bool updateSight(WarContext* context, WarEntity* entity)
 {
     WarSightComponent* sight = &entity->sight;
-    sight->time -= context->deltaTime;
+    sight->time -= getMapScaledSpeed(context, context->deltaTime);
     return sight->time <= 0;
 }
 
@@ -2069,7 +2069,7 @@ void updateSpells(WarContext* context)
 
             if (unit->invisible)
             {
-                unit->invisibilityTime -= context->deltaTime;
+                unit->invisibilityTime -= getMapScaledSpeed(context, context->deltaTime);
                 if (unit->invisibilityTime <= 0)
                 {
                     unit->invisible = false;
@@ -2079,7 +2079,7 @@ void updateSpells(WarContext* context)
 
             if (unit->invulnerable)
             {
-                unit->invulnerabilityTime -= context->deltaTime;
+                unit->invulnerabilityTime -= getMapScaledSpeed(context, context->deltaTime);
                 if (unit->invulnerabilityTime <= 0)
                 {
                     unit->invulnerable = false;
@@ -2663,6 +2663,7 @@ void renderMapPanel(WarContext *context)
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     renderUnitSelection(context);
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
+    renderEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
     renderFoW(context);
 
