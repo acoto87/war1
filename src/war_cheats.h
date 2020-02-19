@@ -23,6 +23,7 @@ typedef enum
     WAR_CHEAT_END,          // Ides of March: Brings player to final campaign sequence
     WAR_CHEAT_ENABLE,       // Corwin of Amber: Enables cheats
     WAR_CHEAT_GOD_MODE,     // There can be only one: Your units stop taking damage and deal 255 Damage
+    WAR_CHEAT_WIN,          // Yours truly: Win current mission
     WAR_CHEAT_LOSS,         // Crushing defeat: Instant loss
     WAR_CHEAT_FOG,          // Sally Shears: Disables fog of war
     WAR_CHEAT_SKIP_HUMAN,   // Human #: Skip to human level (enter 1-12 for #)
@@ -52,6 +53,7 @@ void applyUpgradesCheat(WarContext* context, const char* argument);
 void applyEndCheat(WarContext* context, const char* argument);
 void applyEnableCheat(WarContext* context, const char* argument);
 void applyGodModeCheat(WarContext* context, const char* argument);
+void applyWinCheat(WarContext* context, const char* argument);
 void applyLossCheat(WarContext* context, const char* argument);
 void applyFogOfWarCheat(WarContext* context, const char* argument);
 void applySkipHumanCheat(WarContext* context, const char* argument);

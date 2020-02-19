@@ -102,7 +102,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] When Sally Shears cheat is enabled and the disabled the goldmines are shown in the minimap, even though no units was near them.
 * [x] When selected an enemy unit, the cursor change to red or yello crosshair when hover another unit.
 * [x] Solve problem of corrupt text in stdout due to the audio thread and main thread printing stuff at the same time. Added code for mutex that intent to be cross-platform.
-* [ ] Solve problem of removing entities from different threads since audio thread and main thread remove entities that can result in corrupted lists since SHL libraries aren't thread-safe.
+* [x] Solve problem of removing entities from different threads. Audio thread and main thread remove entities that can result in corrupted lists since SHL libraries aren't thread-safe.
 
 ## General
 * [x] Test the new implementation for lists.
@@ -139,15 +139,15 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [x] Pot of Gold: Gives 10000 gold and 5000 lumber to the player
     * [x] Eye of newt: All spells are now be able to be casted
     * [x] Iron forge: Research all upgrades
-    * [ ] Ides of March: Brings player to final campaign sequence
+    * [x] Ides of March: Brings player to final campaign sequence
     * [x] Corwin of Amber: Enables cheats
     * [x] There can be only one: Your units stop taking damage and deal 255 Damage
     * [x] Crushing defeat: Instant loss
-    * [ ] Sally Shears: Disables fog of war
-    * [ ] Human#: Skip to human level (enter 1-12 for #)
-    * [ ] Orc#: Skip to orc level (enter 1-12 for #)
+    * [x] Sally Shears: Disables fog of war
+    * [x] Human#: Skip to human level (enter 1-12 for #)
+    * [x] Orc#: Skip to orc level (enter 1-12 for #)
     * [ ] Hurry up guys: Speeds up building/unit production
-    * [ ] Yours truly: Win current mission
+    * [x] Yours truly: Win current mission
     * [x] Music #: Set volume music (enter 1-45 for #)
     * [x] Music {on|off}: Enable or disable music
     * [x] Sound {on|off}: Enable or disable sounds

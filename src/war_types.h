@@ -2133,6 +2133,12 @@ typedef struct _WarContext
     // trying to reproduce audios
     bool audioEnabled;
 
+    // this is a mutex used to make the deletion of the entities thread-safe
+    // since the audio thread will delete audio entities, that could lead
+    // to inconsistent states in the internal lists when the game try to also
+    // delete other entities.
+    pthread_mutex_t __mutex;
+
     WarInput input;
 
     f32 transitionDelay;

@@ -13,6 +13,7 @@ const WarCheatDescriptor cheatDescriptors[] =
     { WAR_CHEAT_END,            "Ides of march",            false, applyEndCheat       },
     { WAR_CHEAT_ENABLE,         "Corwin of Amber",          false, applyEnableCheat    },
     { WAR_CHEAT_GOD_MODE,       "There can be only one",    false, applyGodModeCheat   },
+    { WAR_CHEAT_WIN,            "Yours truly",              false, applyWinCheat       },
     { WAR_CHEAT_LOSS,           "Crushing defeat",          false, applyLossCheat      },
     { WAR_CHEAT_FOG,            "Sally Shears",             false, applyFogOfWarCheat  },
     { WAR_CHEAT_SKIP_HUMAN,     "Human",                    true,  applySkipHumanCheat },
@@ -305,7 +306,7 @@ void applyEndCheat(WarContext* context, const char* argument)
     if (!map->cheatsEnabled)
         return;
 
-    NOT_IMPLEMENTED();
+    showDemoEndMenu(context, true);
 }
 
 void applyEnableCheat(WarContext* context, const char* argument)
@@ -326,6 +327,17 @@ void applyGodModeCheat(WarContext* context, const char* argument)
 
     WarPlayerInfo* player = &map->players[0];
     player->godMode = !player->godMode;
+}
+
+void applyWinCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    if (!map->cheatsEnabled)
+        return;
+
+    map->result = WAR_LEVEL_RESULT_WIN;
 }
 
 void applyLossCheat(WarContext* context, const char* argument)
@@ -358,7 +370,18 @@ void applySkipHumanCheat(WarContext* context, const char* argument)
     if (!map->cheatsEnabled)
         return;
 
-    NOT_IMPLEMENTED();
+    s32 level;
+    if (strTryParseS32(argument, &level))
+    {
+        // TODO: remove this check when more levels are allowed
+        if (level <= 0 || level > 2)
+            return;
+
+        WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+        scene->briefing.race = WAR_RACE_HUMANS;
+        scene->briefing.mapType = WAR_CAMPAIGN_HUMANS_01 + 2 * (level - 1);
+        setNextScene(context, scene, 1.0f);
+    }
 }
 
 void applySkipOrcCheat(WarContext* context, const char* argument)
@@ -369,7 +392,18 @@ void applySkipOrcCheat(WarContext* context, const char* argument)
     if (!map->cheatsEnabled)
         return;
 
-    NOT_IMPLEMENTED();
+    s32 level;
+    if (strTryParseS32(argument, &level))
+    {
+        // TODO: remove this check when more levels are allowed
+        if (level <= 0 || level > 2)
+            return;
+
+        WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+        scene->briefing.race = WAR_RACE_ORCS;
+        scene->briefing.mapType = WAR_CAMPAIGN_ORCS_01 + 2 * (level - 1);
+        setNextScene(context, scene, 1.0f);
+    }
 }
 
 void applySpeedCheat(WarContext* context, const char* argument)

@@ -15,6 +15,8 @@ bool initGame(WarContext* context)
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, NULL, NULL);
     context->transitionDelay = 0.0f;
 
+    pthread_mutex_init(&context->__mutex, NULL);
+
     if (!context->window)
     {
         logError("GLFW window could not be created!\n");

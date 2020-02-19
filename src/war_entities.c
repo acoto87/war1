@@ -698,6 +698,8 @@ void removeEntityById(WarContext* context, WarEntityId id)
     WarEntity* entity = findEntity(context, id);
     if (entity)
     {
+        pthread_mutex_lock(&context->__mutex);
+
         removeEntity(context, entity);
 
         if (isUIEntity(entity))
@@ -715,6 +717,8 @@ void removeEntityById(WarContext* context, WarEntityId id)
 
         WarEntityIdMapRemove(&manager->entitiesById, entity->id);
         WarEntityListRemove(&manager->entities, entity);
+
+        pthread_mutex_unlock(&context->__mutex);
 
         logDebug("removed entity with id: %d\n", id);
     }
