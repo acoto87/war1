@@ -96,9 +96,7 @@ void createMapUI(WarContext* context)
         normalRef, pressedRef, portraitsRef,
         vec2Addv(leftBottomPanel, vec2i(36, 90)));
 
-    WarEntity* uiEntity;
-
-    uiEntity = createUIImageButton(
+    WarEntity* uiEntity = createUIImageButton(
         context, "btnMenu",
         imageResourceRef(362),
         imageResourceRef(363),

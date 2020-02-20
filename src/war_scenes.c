@@ -60,7 +60,8 @@ void updateScene(WarContext* context)
     }
     else
     {
-        updateUIButtons(context, true);
+        updateCheatsPanel(context);
+        updateUIButtons(context, !scene->cheatStatus.enabled);
         updateUICursor(context);
         updateAnimations(context);
     }
@@ -97,12 +98,15 @@ void renderScene(WarContext* context)
     nvgSave(gfx);
     nvgScale(gfx, context->globalScale, context->globalScale);
 
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_IMAGE);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_RECT);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_TEXT);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_CURSOR);
+    WarEntityList* uiEntities = getEntities(context);
+    for (s32 i = 0; i < uiEntities->count; i++)
+    {
+        WarEntity* entity = uiEntities->items[i];
+        if (entity && (isUIEntity(entity) || entity->type == WAR_ENTITY_TYPE_ANIMATION))
+        {
+            renderEntity(context, entity);
+        }
+    }
 
     nvgRestore(gfx);
 }

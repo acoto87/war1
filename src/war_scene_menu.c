@@ -3,6 +3,7 @@ void enterSceneMainMenu(WarContext* context)
     createMainMenu(context);
     createSinglePlayerMenu(context);
     createLoadMenu(context);
+    createCheatsPanel(context);
 
     createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
 
@@ -112,7 +113,6 @@ void createSinglePlayerMenu(WarContext* context)
 
 void createLoadMenu(WarContext* context)
 {
-
 }
 
 void showOrHideMainMenu(WarContext* context, bool status)

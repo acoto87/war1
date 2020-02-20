@@ -1,24 +1,26 @@
 const WarCheatDescriptor cheatDescriptors[] =
 {
-    // custom cheats
-    { WAR_CHEAT_MUSIC_VOL,      "Music vol",                true,  applyMusicVolCheat  },
-    { WAR_CHEAT_SOUND_VOL,      "Sound vol",                true,  applySoundVolCheat  },
-    { WAR_CHEAT_MUSIC,          "Music",                    true,  applyMusicCheat     },
-    { WAR_CHEAT_SOUND,          "Sound",                    true,  applySoundCheat     },
-
     // original cheats
-    { WAR_CHEAT_GOLD,           "Pot of gold",              false, applyGoldCheat      },
-    { WAR_CHEAT_SPELLS,         "Eye of newt",              false, applySpellsCheat    },
-    { WAR_CHEAT_UPGRADES,       "Iron forge",               false, applyUpgradesCheat  },
-    { WAR_CHEAT_END,            "Ides of march",            false, applyEndCheat       },
-    { WAR_CHEAT_ENABLE,         "Corwin of Amber",          false, applyEnableCheat    },
-    { WAR_CHEAT_GOD_MODE,       "There can be only one",    false, applyGodModeCheat   },
-    { WAR_CHEAT_WIN,            "Yours truly",              false, applyWinCheat       },
-    { WAR_CHEAT_LOSS,           "Crushing defeat",          false, applyLossCheat      },
-    { WAR_CHEAT_FOG,            "Sally Shears",             false, applyFogOfWarCheat  },
-    { WAR_CHEAT_SKIP_HUMAN,     "Human",                    true,  applySkipHumanCheat },
-    { WAR_CHEAT_SKIP_ORC,       "Orc",                      true,  applySkipOrcCheat   },
-    { WAR_CHEAT_SPEED,          "Hurry up guys",            false, applySpeedCheat     },
+    { WAR_CHEAT_GOLD,           "Pot of gold",              false,  applyGoldCheat          },
+    { WAR_CHEAT_SPELLS,         "Eye of newt",              false,  applySpellsCheat        },
+    { WAR_CHEAT_UPGRADES,       "Iron forge",               false,  applyUpgradesCheat      },
+    { WAR_CHEAT_END,            "Ides of march",            false,  applyEndCheat           },
+    { WAR_CHEAT_ENABLE,         "Corwin of Amber",          false,  applyEnableCheat        },
+    { WAR_CHEAT_GOD_MODE,       "There can be only one",    false,  applyGodModeCheat       },
+    { WAR_CHEAT_WIN,            "Yours truly",              false,  applyWinCheat           },
+    { WAR_CHEAT_LOSS,           "Crushing defeat",          false,  applyLossCheat          },
+    { WAR_CHEAT_FOG,            "Sally Shears",             false,  applyFogOfWarCheat      },
+    { WAR_CHEAT_SKIP_HUMAN,     "Human",                    true,   applySkipHumanCheat     },
+    { WAR_CHEAT_SKIP_ORC,       "Orc",                      true,   applySkipOrcCheat       },
+    { WAR_CHEAT_SPEED,          "Hurry up guys",            false,  applySpeedCheat         },
+
+    // custom cheats
+    { WAR_CHEAT_MUSIC_VOL,      "Music vol",                true,   applyMusicVolCheat      },
+    { WAR_CHEAT_SOUND_VOL,      "Sound vol",                true,   applySoundVolCheat      },
+    { WAR_CHEAT_MUSIC,          "Music",                    true,   applyMusicCheat         },
+    { WAR_CHEAT_SOUND,          "Sound",                    true,   applySoundCheat         },
+    { WAR_CHEAT_GLOBAL_SCALE,   "Scale",                    true,   applyGlobalScaleCheat   },
+    { WAR_CHEAT_GLOBAL_SPEED,   "Speed",                    true,   applyGlobalSpeedCheat   },
 };
 
 void applyCheat(WarContext* context, const char* text)
@@ -54,157 +56,10 @@ void applyCheat(WarContext* context, const char* text)
     logInfo("Unknown cheat: %s\n", text);
 }
 
-void applyMusicCheat(WarContext* context, const char* argument)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
-        return;
-
-    if (strCaseEquals(argument, "on", true))
-    {
-        map->settings.musicEnabled = true;
-    }
-    else if (strCaseEquals(argument, "off", true))
-    {
-        map->settings.musicEnabled = false;
-    }
-    else if (!isDemo(context))
-    {
-        s32 musicId;
-        if (strTryParseS32(argument, &musicId))
-        {
-            // argument is expected in the range 1-45, so convert it to the range 0-44
-            musicId--;
-
-            if (musicId >= WAR_MUSIC_00 && musicId <= WAR_MUSIC_44)
-            {
-                // before changing the music, remove the current one
-                // almost all the time there should only one active
-                // but I really don't if that will hold true in the future
-                //
-                // for now remove all the active music (audios of type WAR_AUDIO_MIDI)
-                // and the create the new one
-                WarEntityIdList toRemove;
-                WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
-
-                WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
-                for (s32 i = 0; i < audios->count; i++)
-                {
-                    WarEntity* entity = audios->items[i];
-                    if (entity)
-                    {
-                        WarAudioComponent* audio = &entity->audio;
-                        if (audio->type == WAR_AUDIO_MIDI)
-                        {
-                            WarEntityIdListAdd(&toRemove, entity->id);
-                        }
-                    }
-                }
-
-                for (s32 i = 0; i < toRemove.count; i++)
-                {
-                    WarEntityId entityId = toRemove.items[i];
-                    removeEntityById(context, entityId);
-                }
-
-                WarEntityIdListFree(&toRemove);
-
-                createAudio(context, musicId, true);
-            }
-        }
-    }
-}
-
-void applySoundCheat(WarContext* context, const char* argument)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
-        return;
-
-    if (strCaseEquals(argument, "on", true))
-    {
-        map->settings.sfxEnabled = true;
-    }
-    else if (strCaseEquals(argument, "off", true))
-    {
-        map->settings.sfxEnabled = false;
-    }
-}
-
-void applyMusicVolCheat(WarContext* context, const char* argument)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
-        return;
-
-    s32 musicVol;
-    if (strTryParseS32(argument, &musicVol))
-    {
-        musicVol = clamp(musicVol, 0, 100);
-
-        // round the argument to a value multiple of 5
-        switch (musicVol % 5)
-        {
-            case 1: { musicVol -= 1; break; }
-            case 2: { musicVol -= 2; break; }
-            case 3: { musicVol += 2; break; }
-            case 4: { musicVol += 1; break; }
-            default:
-            {
-                // do nothing, it's already a multiple of 5
-                break;
-            }
-        }
-
-        map->settings.musicEnabled = true;
-        map->settings.musicVol = musicVol;
-    }
-}
-
-void applySoundVolCheat(WarContext* context, const char* argument)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
-        return;
-
-    s32 sfxVol;
-    if (strTryParseS32(argument, &sfxVol))
-    {
-        sfxVol = clamp(sfxVol, 0, 100);
-
-        // round the argument to a value multiple of 5
-        switch (sfxVol % 5)
-        {
-            case 1: { sfxVol -= 1; break; }
-            case 2: { sfxVol -= 2; break; }
-            case 3: { sfxVol += 2; break; }
-            case 4: { sfxVol += 1; break; }
-            default:
-            {
-                // do nothing, it's already a multiple of 5
-                break;
-            }
-        }
-
-        map->settings.sfxEnabled = true;
-        map->settings.sfxVol = sfxVol;
-    }
-}
-
 void applyGoldCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
@@ -213,9 +68,7 @@ void applyGoldCheat(WarContext* context, const char* argument)
 void applySpellsCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     WarPlayerInfo* player = &map->players[0];
@@ -271,9 +124,7 @@ void applySpellsCheat(WarContext* context, const char* argument)
 void applyUpgradesCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     WarPlayerInfo* player = &map->players[0];
@@ -301,9 +152,7 @@ void applyUpgradesCheat(WarContext* context, const char* argument)
 void applyEndCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     showDemoEndMenu(context, true);
@@ -312,7 +161,8 @@ void applyEndCheat(WarContext* context, const char* argument)
 void applyEnableCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
+    if (!map)
+        return;
 
     map->cheatsEnabled = !map->cheatsEnabled;
 }
@@ -320,9 +170,7 @@ void applyEnableCheat(WarContext* context, const char* argument)
 void applyGodModeCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     WarPlayerInfo* player = &map->players[0];
@@ -332,9 +180,7 @@ void applyGodModeCheat(WarContext* context, const char* argument)
 void applyWinCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     map->result = WAR_LEVEL_RESULT_WIN;
@@ -343,9 +189,7 @@ void applyWinCheat(WarContext* context, const char* argument)
 void applyLossCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     map->result = WAR_LEVEL_RESULT_LOSE;
@@ -354,9 +198,7 @@ void applyLossCheat(WarContext* context, const char* argument)
 void applyFogOfWarCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     map->fowEnabled = !map->fowEnabled;
@@ -365,9 +207,7 @@ void applyFogOfWarCheat(WarContext* context, const char* argument)
 void applySkipHumanCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     s32 level;
@@ -387,9 +227,7 @@ void applySkipHumanCheat(WarContext* context, const char* argument)
 void applySkipOrcCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     s32 level;
@@ -409,10 +247,211 @@ void applySkipOrcCheat(WarContext* context, const char* argument)
 void applySpeedCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
-    assert(map);
-
-    if (!map->cheatsEnabled)
+    if (!map || !map->cheatsEnabled)
         return;
 
     map->hurryUp = !map->hurryUp;
+}
+
+void applyMusicCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    WarScene* scene = context->scene;
+
+    if (!map && !scene)
+        return;
+
+    if (map)
+    {
+        if (!map->cheatsEnabled)
+            return;
+
+        if (strCaseEquals(argument, "on", true))
+        {
+            map->settings.musicEnabled = true;
+        }
+        else if (strCaseEquals(argument, "off", true))
+        {
+            map->settings.musicEnabled = false;
+        }
+    }
+    else if (scene)
+    {
+        if (strCaseEquals(argument, "on", true))
+        {
+            enableAudio(context);
+        }
+        else if (strCaseEquals(argument, "off", true))
+        {
+            disableAudio(context);
+        }
+    }
+
+    if (!isDemo(context))
+    {
+        s32 musicId;
+        if (strTryParseS32(argument, &musicId))
+        {
+            // argument is expected in the range 1-45, so convert it to the range 0-44
+            musicId--;
+
+            if (musicId >= WAR_MUSIC_00 && musicId <= WAR_MUSIC_44)
+            {
+                // before changing the music, remove the current one
+                // almost all the time there should only one active
+                // but I really don't if that will hold true in the future
+                //
+                // for now remove all the active music (audios of type WAR_AUDIO_MIDI)
+                // and the create the new one
+                WarEntityIdList toRemove;
+                WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
+
+                WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
+                for (s32 i = 0; i < audios->count; i++)
+                {
+                    WarEntity* entity = audios->items[i];
+                    if (entity)
+                    {
+                        WarAudioComponent* audio = &entity->audio;
+                        if (audio->type == WAR_AUDIO_MIDI)
+                        {
+                            WarEntityIdListAdd(&toRemove, entity->id);
+                        }
+                    }
+                }
+
+                for (s32 i = 0; i < toRemove.count; i++)
+                {
+                    WarEntityId entityId = toRemove.items[i];
+                    removeEntityById(context, entityId);
+                }
+
+                WarEntityIdListFree(&toRemove);
+
+                createAudio(context, musicId, true);
+            }
+        }
+    }
+}
+
+void applySoundCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    if (!map || !map->cheatsEnabled)
+        return;
+
+    if (strCaseEquals(argument, "on", true))
+    {
+        map->settings.sfxEnabled = true;
+    }
+    else if (strCaseEquals(argument, "off", true))
+    {
+        map->settings.sfxEnabled = false;
+    }
+}
+
+void applyMusicVolCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    WarScene* scene = context->scene;
+
+    if (!map && !scene)
+        return;
+
+    s32 musicVol;
+    if (strTryParseS32(argument, &musicVol))
+    {
+        musicVol = clamp(musicVol, 0, 100);
+
+        // round the argument to a value multiple of 5
+        switch (musicVol % 5)
+        {
+            case 1: { musicVol -= 1; break; }
+            case 2: { musicVol -= 2; break; }
+            case 3: { musicVol += 2; break; }
+            case 4: { musicVol += 1; break; }
+            default:
+            {
+                // do nothing, it's already a multiple of 5
+                break;
+            }
+        }
+
+        if (map)
+        {
+            if (!map->cheatsEnabled)
+                return;
+
+            map->settings.musicEnabled = true;
+            map->settings.musicVol = musicVol;
+        }
+        else if (scene)
+        {
+            enableAudio(context);
+            setMusicVolume(context, (f32)musicVol / 100);
+        }
+    }
+}
+
+void applySoundVolCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    WarScene* scene = context->scene;
+
+    if (!map && !scene)
+        return;
+
+    s32 sfxVol;
+    if (strTryParseS32(argument, &sfxVol))
+    {
+        sfxVol = clamp(sfxVol, 0, 100);
+
+        // round the argument to a value multiple of 5
+        switch (sfxVol % 5)
+        {
+            case 1: { sfxVol -= 1; break; }
+            case 2: { sfxVol -= 2; break; }
+            case 3: { sfxVol += 2; break; }
+            case 4: { sfxVol += 1; break; }
+            default:
+            {
+                // do nothing, it's already a multiple of 5
+                break;
+            }
+        }
+
+        if (map)
+        {
+            if (!map->cheatsEnabled)
+                return;
+
+            map->settings.sfxEnabled = true;
+            map->settings.sfxVol = sfxVol;
+        }
+        else if (scene)
+        {
+            enableAudio(context);
+            setSoundVolume(context, (f32)sfxVol / 100);
+        }
+    }
+}
+
+void applyGlobalScaleCheat(WarContext* context, const char* argument)
+{
+    s32 scale;
+    if (strTryParseS32(argument, &scale))
+    {
+        scale = clamp(scale, 1, 5);
+        setGlobalScale(context, scale);
+    }
+}
+
+void applyGlobalSpeedCheat(WarContext* context, const char* argument)
+{
+    s32 speed;
+    if (strTryParseS32(argument, &speed))
+    {
+        speed = clamp(speed, 1, 5);
+        setGlobalSpeed(context, speed);
+    }
 }

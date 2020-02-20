@@ -1942,12 +1942,42 @@ typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
 #define STATUS_TEXT_MAX_LENGTH 40
 #define CHEAT_TEXT_MAX_LENGTH 32
 
+typedef enum
+{
+    WAR_CHEAT_NONE,
+
+    // original cheats
+    WAR_CHEAT_GOLD,         // Pot of Gold: Gives 10000 gold and 5000 lumber to the player
+    WAR_CHEAT_SPELLS,       // Eye of newt: All spells are now be able to be casted
+    WAR_CHEAT_UPGRADES,     // Iron forge: Research all upgrades
+    WAR_CHEAT_END,          // Ides of March: Brings player to final campaign sequence
+    WAR_CHEAT_ENABLE,       // Corwin of Amber: Enables cheats
+    WAR_CHEAT_GOD_MODE,     // There can be only one: Your units stop taking damage and deal 255 Damage
+    WAR_CHEAT_WIN,          // Yours truly: Win current mission
+    WAR_CHEAT_LOSS,         // Crushing defeat: Instant loss
+    WAR_CHEAT_FOG,          // Sally Shears: Disables fog of war
+    WAR_CHEAT_SKIP_HUMAN,   // Human #: Skip to human level (enter 1-12 for #)
+    WAR_CHEAT_SKIP_ORC,     // Orc #: Skip to orc level (enter 1-12 for #)
+    WAR_CHEAT_SPEED,        // Hurry up guys: Speeds up building/unit production,
+
+    // custom cheats
+    WAR_CHEAT_MUSIC,        // Music #: Set volume music (enter 1-45 for #)
+                            // Music {on|off}: Enable or disable music
+    WAR_CHEAT_SOUND,        // Sound {on|off}: Enable or disable sounds
+    WAR_CHEAT_MUSIC_VOL,    // Music volume #: Set volume of music (enter 0-100 for #)
+    WAR_CHEAT_SOUND_VOL,    // Sound volume #: Set volume of sounds (enter 0-100 for #)
+    WAR_CHEAT_GLOBAL_SCALE, // Scale #: Set global scale (enter 1-5 for #)
+    WAR_CHEAT_GLOBAL_SPEED, // Speed #: Set global speed (enter 1-5 for #)
+
+    WAR_CHEAT_COUNT
+} WarCheat;
+
 typedef struct
 {
     bool enabled;
     f32 startTime;
     f32 duration;
-    char text[100];
+    char text[STATUS_TEXT_MAX_LENGTH];
 } WarFlashStatus;
 
 typedef struct
@@ -2075,6 +2105,8 @@ typedef struct
 {
     WarSceneType type;
     WarEntityManager entityManager;
+
+    WarCheatStatus cheatStatus;
 
     union
     {

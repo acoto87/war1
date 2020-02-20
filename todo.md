@@ -136,27 +136,32 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
 * [ ] Add animation for the gold and lumber numbers when they change.
 * [ ] Make commands/cheats system.
-    * [x] Pot of Gold: Gives 10000 gold and 5000 lumber to the player
-    * [x] Eye of newt: All spells are now be able to be casted
-    * [x] Iron forge: Research all upgrades
-    * [x] Ides of March: Brings player to final campaign sequence
-    * [x] Corwin of Amber: Enables cheats
-    * [x] There can be only one: Your units stop taking damage and deal 255 Damage
-    * [x] Crushing defeat: Instant loss
-    * [x] Sally Shears: Disables fog of war
-    * [x] Human#: Skip to human level (enter 1-12 for #)
-    * [x] Orc#: Skip to orc level (enter 1-12 for #)
-    * [x] Hurry up guys: Speeds up building/unit production
-    * [x] Yours truly: Win current mission
-    * [x] Music #: Set volume music (enter 1-45 for #)
-    * [x] Music {on|off}: Enable or disable music
-    * [x] Sound {on|off}: Enable or disable sounds
-    * [x] Music volume #: Set volume of music (enter 0-100 for #)
-    * [x] Sound volume #: Set volume of sounds (enter 0-100 for #)
-    * [ ] Change edition of trees to cheat
-    * [ ] Change edition of ruins to cheat
-    * [ ] Change edition of walls to cheat
-    * [ ] Change edition of rain of fire to cheat
+    * [x] Original cheats
+        * [x] Pot of Gold: Gives 10000 gold and 5000 lumber to the player
+        * [x] Eye of newt: All spells are now be able to be casted
+        * [x] Iron forge: Research all upgrades
+        * [x] Ides of March: Brings player to final campaign sequence
+        * [x] Corwin of Amber: Enables cheats
+        * [x] There can be only one: Your units stop taking damage and deal 255 Damage
+        * [x] Crushing defeat: Instant loss
+        * [x] Sally Shears: Disables fog of war
+        * [x] Human#: Skip to human level (enter 1-12 for #)
+        * [x] Orc#: Skip to orc level (enter 1-12 for #)
+        * [x] Hurry up guys: Speeds up building/unit production
+        * [x] Yours truly: Win current mission
+    * [ ] Custom cheats
+        * [x] Make global cheat command even in non-map scenes
+        * [x] Music #: Set volume music (enter 1-45 for #)
+        * [x] Music {on|off}: Enable or disable music
+        * [x] Sound {on|off}: Enable or disable sounds
+        * [x] Music volume #: Set volume of music (enter 0-100 for #)
+        * [x] Sound volume #: Set volume of sounds (enter 0-100 for #)
+        * [x] Scale #: Set global scale (enter 1-5 for #)
+        * [x] Speed #: Set global speed (enter 1-5 for #)
+        * [ ] Change edition of trees to cheat
+        * [ ] Change edition of ruins to cheat
+        * [ ] Change edition of walls to cheat
+        * [ ] Change edition of rain of fire to cheat
 * [ ] Make the blue water/green water animated.
 * [ ] Make the move state to consider range distance to stop.
 * [ ] Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.

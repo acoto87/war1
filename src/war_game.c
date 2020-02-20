@@ -334,85 +334,44 @@ void inputCharCallback(GLFWwindow* window, u32 codepoint)
     WarContext* context = glfwGetWindowUserPointer(window);
     assert(context);
 
+    WarScene* scene = context->scene;
+    if (scene)
+    {
+        WarCheatStatus* cheatStatus = &scene->cheatStatus;
+        if (cheatStatus->enabled)
+        {
+            s32 length = strlen(cheatStatus->text);
+            if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
+            {
+                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+                cheatStatus->position++;
+            }
+        }
+
+        return;
+    }
+
     WarMap* map = context->map;
-    if (!map) return;
-
-    WarCheatStatus* cheatStatus = &map->cheatStatus;
-    if (cheatStatus->enabled)
+    if (map)
     {
-        s32 length = strlen(cheatStatus->text);
-        if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
+        WarCheatStatus* cheatStatus = &map->cheatStatus;
+        if (cheatStatus->enabled)
         {
-            strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
-            cheatStatus->position++;
+            s32 length = strlen(cheatStatus->text);
+            if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
+            {
+                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+                cheatStatus->position++;
+            }
         }
-    }
-}
 
-void updateGlobalSpeed(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    if (isKeyPressed(input, WAR_KEY_CTRL) && !isKeyPressed(input, WAR_KEY_SHIFT))
-    {
-        if (wasKeyPressed(input, WAR_KEY_1))
-            setGlobalSpeed(context, 1.0f);
-        else if (wasKeyPressed(input, WAR_KEY_2))
-            setGlobalSpeed(context, 2.0f);
-        else if (wasKeyPressed(input, WAR_KEY_3))
-            setGlobalSpeed(context, 3.0f);
-        else if (wasKeyPressed(input, WAR_KEY_4))
-            setGlobalSpeed(context, 4.0f);
-    }
-}
-
-void updateGlobalScale(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    if (isKeyPressed(input, WAR_KEY_CTRL) && isKeyPressed(input, WAR_KEY_SHIFT))
-    {
-        if (wasKeyPressed(input, WAR_KEY_1))
-            setGlobalScale(context, 1.0f);
-        else if (wasKeyPressed(input, WAR_KEY_2))
-            setGlobalScale(context, 2.0f);
-        else if (wasKeyPressed(input, WAR_KEY_3))
-            setGlobalScale(context, 3.0f);
-        else if (wasKeyPressed(input, WAR_KEY_4))
-            setGlobalScale(context, 4.0f);
-    }
-}
-
-void updateGlobalVolume(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    if (isKeyPressed(input, WAR_KEY_CTRL))
-    {
-        if (isKeyPressed(input, WAR_KEY_SHIFT))
-        {
-            if (wasKeyPressed(input, WAR_KEY_UP))
-                changeMusicVolume(context, 0.1f);
-            else if (wasKeyPressed(input, WAR_KEY_DOWN))
-                changeMusicVolume(context, -0.1f);
-        }
-        else
-        {
-            if (wasKeyPressed(input, WAR_KEY_UP))
-                changeSoundVolume(context, 0.1f);
-            else if (wasKeyPressed(input, WAR_KEY_DOWN))
-                changeSoundVolume(context, -0.1f);
-        }
+        return;
     }
 }
 
 void updateGame(WarContext* context)
 {
     WarInput* input = &context->input;
-
-    updateGlobalSpeed(context);
-    updateGlobalScale(context);
-    updateGlobalVolume(context);
 
     if (isKeyPressed(input, WAR_KEY_CTRL) &&
         wasKeyPressed(input, WAR_KEY_P))
