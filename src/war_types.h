@@ -1968,10 +1968,8 @@ typedef enum
     WAR_CHEAT_SOUND_VOL,    // Sound volume #: Set volume of sounds (enter 0-100 for #)
     WAR_CHEAT_GLOBAL_SCALE, // Scale #: Set global scale (enter 1-5 for #)
     WAR_CHEAT_GLOBAL_SPEED, // Speed #: Set global speed (enter 1-5 for #)
-    WAR_CHEAT_EDIT_TREES,   // Edit trees: Make trees editable
-    WAR_CHEAT_EDIT_ROADS,   // Edit roads: Make roads editable
-    WAR_CHEAT_EDIT_RUINS,   // Edit ruins: Make ruins editable
-    WAR_CHEAT_EDIT_WALLS,   // Edit walls: Make walls editable
+    WAR_CHEAT_EDIT,         // Edit #: Make things editable (enter trees, walls, ruins, roads for #)
+    WAR_CHEAT_ADD_UNIT,     // Add unit #: Add unit to the map (enter unit name for #)
     WAR_CHEAT_RAIN_OF_FIRE, // Rain of fire: Player can throw rain of fire projectiles
 
     WAR_CHEAT_COUNT
@@ -2074,6 +2072,8 @@ typedef struct
     bool editingRoads;
     bool editingRuins;
     bool editingRainOfFire;
+    bool addingUnit;
+    WarUnitType addingUnitType;
 
     bool cheatsEnabled;
     bool hurryUp;

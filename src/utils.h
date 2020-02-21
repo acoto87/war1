@@ -120,6 +120,17 @@ bool strCaseStartsWith(const char* str1, const char* str2, bool ignoreCase)
         : strncmp(str1, str2, strlen(str2)) == 0;
 }
 
+const char* strSkipUntil(const char* str1, const char* str2)
+{
+    char* str = (char*)str1;
+    while (strchr(str2, *str))
+    {
+        str++;
+    }
+
+    return str;
+}
+
 s32 strParseS32(const char* str)
 {
     return strtol(str, NULL, 0);

@@ -21,10 +21,8 @@ const WarCheatDescriptor cheatDescriptors[] =
     { WAR_CHEAT_SOUND,          "Sound",                    true,   applySoundCheat         },
     { WAR_CHEAT_GLOBAL_SCALE,   "Scale",                    true,   applyGlobalScaleCheat   },
     { WAR_CHEAT_GLOBAL_SPEED,   "Speed",                    true,   applyGlobalSpeedCheat   },
-    { WAR_CHEAT_EDIT_TREES,     "Edit trees",               false,  applyEditTreesCheat     },
-    { WAR_CHEAT_EDIT_ROADS,     "Edit roads",               false,  applyEditRoadsCheat     },
-    { WAR_CHEAT_EDIT_RUINS,     "Edit ruins",               false,  applyEditRuinsCheat     },
-    { WAR_CHEAT_EDIT_WALLS,     "Edit walls",               false,  applyEditWallsCheat     },
+    { WAR_CHEAT_EDIT,           "Edit",                     true,   applyEditCheat          },
+    { WAR_CHEAT_ADD_UNIT,       "Add unit",                 true,   applyAddUnitCheat       },
     { WAR_CHEAT_RAIN_OF_FIRE,   "Rain of fire",             false,  applyRainOfFireCheat    },
 };
 
@@ -461,66 +459,48 @@ void applyGlobalSpeedCheat(WarContext* context, const char* argument)
     }
 }
 
-void applyEditTreesCheat(WarContext* context, const char* argument)
+void applyEditCheat(WarContext* context, const char* argument)
 {
     WarMap* map = context->map;
     if (!map || !map->cheatsEnabled)
         return;
 
-    map->editingTrees = !map->editingTrees;
-    if (map->editingTrees)
+    map->editingTrees = false;
+    map->editingWalls = false;
+    map->editingRoads = false;
+    map->editingRuins = false;
+    map->editingRainOfFire = false;
+
+    if (strCaseEquals(argument, "trees", true))
     {
+        map->editingTrees = !map->editingTrees;
         map->editingWalls = false;
         map->editingRoads = false;
         map->editingRuins = false;
         map->editingRainOfFire = false;
     }
-}
-
-void applyEditRoadsCheat(WarContext* context, const char* argument)
-{
-    WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
-        return;
-
-    map->editingRoads = !map->editingRoads;
-    if (map->editingRoads)
+    if (strCaseEquals(argument, "walls", true))
     {
         map->editingTrees = false;
-        map->editingWalls = false;
+        map->editingWalls = !map->editingWalls;
+        map->editingRoads = false;
         map->editingRuins = false;
         map->editingRainOfFire = false;
     }
-}
-
-void applyEditRuinsCheat(WarContext* context, const char* argument)
-{
-    WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
-        return;
-
-    map->editingRuins = !map->editingRuins;
-    if (map->editingRuins)
+    if (strCaseEquals(argument, "roads", true))
+    {
+        map->editingTrees = false;
+        map->editingWalls = false;
+        map->editingRoads = !map->editingRoads;
+        map->editingRuins = false;
+        map->editingRainOfFire = false;
+    }
+    if (strCaseEquals(argument, "ruins", true))
     {
         map->editingTrees = false;
         map->editingWalls = false;
         map->editingRoads = false;
-        map->editingRainOfFire = false;
-    }
-}
-
-void applyEditWallsCheat(WarContext* context, const char* argument)
-{
-    WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
-        return;
-
-    map->editingWalls = !map->editingWalls;
-    if (map->editingWalls)
-    {
-        map->editingTrees = false;
-        map->editingRoads = false;
-        map->editingRuins = false;
+        map->editingRuins = !map->editingRuins;
         map->editingRainOfFire = false;
     }
 }
@@ -531,12 +511,154 @@ void applyRainOfFireCheat(WarContext* context, const char* argument)
     if (!map || !map->cheatsEnabled)
         return;
 
+    map->editingTrees = false;
+    map->editingWalls = false;
+    map->editingRoads = false;
+    map->editingRuins = false;
     map->editingRainOfFire = !map->editingRainOfFire;
-    if (map->editingRainOfFire)
+}
+
+void applyAddUnitCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    if (!map || !map->cheatsEnabled)
+        return;
+
+    map->editingTrees = false;
+    map->editingWalls = false;
+    map->editingRoads = false;
+    map->editingRuins = false;
+    map->editingRainOfFire = false;
+
+    map->addingUnit = false;;
+
+    if (strCaseStartsWith(argument, "OFF", true))
     {
-        map->editingTrees = false;
-        map->editingWalls = false;
-        map->editingRoads = false;
-        map->editingRuins = false;
+        return;
+    }
+
+    if (strCaseStartsWith(argument, "CATAPULT", true))
+    {
+        const char* part2 = strSkipUntil(argument + strlen("CATAPULT"), " ");
+        if (strCaseStartsWith(part2, "HUMANS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_CATAPULT_HUMANS;
+        }
+        else if (strCaseStartsWith(part2, "ORCS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_CATAPULT_ORCS;
+        }
+    }
+    else if (strCaseStartsWith(argument, "FARM", true))
+    {
+        const char* part2 = strSkipUntil(argument + strlen("FARM"), " ");
+        if (strCaseStartsWith(part2, "HUMANS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_FARM_HUMANS;
+        }
+        else if (strCaseStartsWith(part2, "ORCS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_FARM_ORCS;
+        }
+    }
+    else if (strCaseStartsWith(argument, "BARRACkS", true))
+    {
+        const char* part2 = strSkipUntil(argument + strlen("BARRACkS"), " ");
+        if (strCaseStartsWith(part2, "HUMANS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_BARRACKS_HUMANS;
+        }
+        else if (strCaseStartsWith(part2, "ORCS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_BARRACKS_ORCS;
+        }
+    }
+    else if (strCaseStartsWith(argument, "TOWER", true))
+    {
+        const char* part2 = strSkipUntil(argument + strlen("TOWER"), " ");
+        if (strCaseStartsWith(part2, "HUMANS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_TOWER_HUMANS;
+        }
+        else if (strCaseStartsWith(part2, "ORCS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_TOWER_ORCS;
+        }
+    }
+    else if (strCaseStartsWith(argument, "TOWN HALL", true))
+    {
+        const char* part2 = strSkipUntil(argument + strlen("TOWN HALL"), " ");
+        if (strCaseStartsWith(part2, "HUMANS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_TOWNHALL_HUMANS;
+        }
+        else if (strCaseStartsWith(part2, "ORCS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_TOWNHALL_ORCS;
+        }
+    }
+    else if (strCaseStartsWith(argument, "MILL", true))
+    {
+        const char* part2 = strSkipUntil(argument + strlen("MILL"), " ");
+        if (strCaseStartsWith(part2, "HUMANS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_LUMBERMILL_HUMANS;
+        }
+        else if (strCaseStartsWith(part2, "ORCS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_LUMBERMILL_ORCS;
+        }
+    }
+    else if (strCaseStartsWith(argument, "BLACKSMITH", true))
+    {
+        const char* part2 = strSkipUntil(argument + strlen("BLACKSMITH"), " ");
+        if (strCaseStartsWith(part2, "HUMANS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_BLACKSMITH_HUMANS;
+        }
+        else if (strCaseStartsWith(part2, "ORCS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_BLACKSMITH_ORCS;
+        }
+    }
+    else if (strCaseStartsWith(argument, "CORPSE", true))
+    {
+        const char* part2 = strSkipUntil(argument + strlen("CORPSE"), " ");
+        if (strCaseStartsWith(part2, "HUMANS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_HUMAN_CORPSE;
+        }
+        else if (strCaseStartsWith(part2, "ORCS", true))
+        {
+            map->addingUnit = true;
+            map->addingUnitType = WAR_UNIT_ORC_CORPSE;
+        }
+    }
+    else
+    {
+        for (s32 i = 0; i < arrayLength(unitsData); i++)
+        {
+            if (strCaseEquals(argument, unitsData[i].name, true))
+            {
+                map->addingUnit = true;
+                map->addingUnitType = unitsData[i].type;
+                break;
+            }
+        }
     }
 }

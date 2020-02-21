@@ -1534,12 +1534,9 @@ bool isSkeletonUnit(WarEntity* entity)
     return isUnit(entity) && entity->unit.type == WAR_UNIT_SKELETON;
 }
 
-WarRace getUnitRace(WarEntity* entity)
+WarRace getUnitTypeRace(WarUnitType type)
 {
-    if (!isUnit(entity))
-        return WAR_RACE_NEUTRAL;
-
-    switch (entity->unit.type)
+    switch (type)
     {
         // units
         case WAR_UNIT_FOOTMAN:
@@ -1593,6 +1590,14 @@ WarRace getUnitRace(WarEntity* entity)
         default:
             return WAR_RACE_NEUTRAL;
     }
+}
+
+WarRace getUnitRace(WarEntity* entity)
+{
+    if (!isUnit(entity))
+        return WAR_RACE_NEUTRAL;
+
+    return getUnitTypeRace(entity->unit.type);
 }
 
 #define isHumanUnit(entity) (getUnitRace(entity) == WAR_RACE_HUMANS)

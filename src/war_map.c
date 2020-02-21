@@ -1219,12 +1219,51 @@ void updateRainOfFireEdit(WarContext* context)
 
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        rect viewport = map->viewport;
+        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        {
+            rect viewport = map->viewport;
 
-        vec2 target = vec2ScreenToMapCoordinates(context, input->pos);
-        vec2 origin = vec2f(target.x, viewport.y);
+            vec2 target = vec2ScreenToMapCoordinates(context, input->pos);
+            vec2 origin = vec2f(target.x, viewport.y);
 
-        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+            createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+        }
+
+    }
+}
+
+void updateAddUnit(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if (!map->addingUnit)
+        return;
+
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+    {
+        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        {
+            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+            pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+            s32 x = (s32)pointerPos.x;
+            s32 y = (s32)pointerPos.y;
+
+            WarEntityId entityId = getTileEntityId(map->finder, x, y);
+            if (!entityId)
+            {
+                WarRace addingUnitRace = getUnitTypeRace(map->addingUnitType);
+                for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
+                {
+                    if (map->players[i].race == addingUnitRace)
+                    {
+                        createUnit(context, map->addingUnitType, x, y, map->players[i].index, WAR_RESOURCE_NONE, 0, true);
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -2374,6 +2413,7 @@ void updateMap(WarContext* context)
     updateWallsEdit(context);
     updateRuinsEdit(context);
     updateRainOfFireEdit(context);
+    updateAddUnit(context);
 
     if (map->result == WAR_LEVEL_RESULT_NONE)
     {
