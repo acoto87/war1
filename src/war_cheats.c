@@ -21,6 +21,11 @@ const WarCheatDescriptor cheatDescriptors[] =
     { WAR_CHEAT_SOUND,          "Sound",                    true,   applySoundCheat         },
     { WAR_CHEAT_GLOBAL_SCALE,   "Scale",                    true,   applyGlobalScaleCheat   },
     { WAR_CHEAT_GLOBAL_SPEED,   "Speed",                    true,   applyGlobalSpeedCheat   },
+    { WAR_CHEAT_EDIT_TREES,     "Edit trees",               false,  applyEditTreesCheat     },
+    { WAR_CHEAT_EDIT_ROADS,     "Edit roads",               false,  applyEditRoadsCheat     },
+    { WAR_CHEAT_EDIT_RUINS,     "Edit ruins",               false,  applyEditRuinsCheat     },
+    { WAR_CHEAT_EDIT_WALLS,     "Edit walls",               false,  applyEditWallsCheat     },
+    { WAR_CHEAT_RAIN_OF_FIRE,   "Rain of fire",             false,  applyRainOfFireCheat    },
 };
 
 void applyCheat(WarContext* context, const char* text)
@@ -453,5 +458,85 @@ void applyGlobalSpeedCheat(WarContext* context, const char* argument)
     {
         speed = clamp(speed, 1, 5);
         setGlobalSpeed(context, speed);
+    }
+}
+
+void applyEditTreesCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    if (!map || !map->cheatsEnabled)
+        return;
+
+    map->editingTrees = !map->editingTrees;
+    if (map->editingTrees)
+    {
+        map->editingWalls = false;
+        map->editingRoads = false;
+        map->editingRuins = false;
+        map->editingRainOfFire = false;
+    }
+}
+
+void applyEditRoadsCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    if (!map || !map->cheatsEnabled)
+        return;
+
+    map->editingRoads = !map->editingRoads;
+    if (map->editingRoads)
+    {
+        map->editingTrees = false;
+        map->editingWalls = false;
+        map->editingRuins = false;
+        map->editingRainOfFire = false;
+    }
+}
+
+void applyEditRuinsCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    if (!map || !map->cheatsEnabled)
+        return;
+
+    map->editingRuins = !map->editingRuins;
+    if (map->editingRuins)
+    {
+        map->editingTrees = false;
+        map->editingWalls = false;
+        map->editingRoads = false;
+        map->editingRainOfFire = false;
+    }
+}
+
+void applyEditWallsCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    if (!map || !map->cheatsEnabled)
+        return;
+
+    map->editingWalls = !map->editingWalls;
+    if (map->editingWalls)
+    {
+        map->editingTrees = false;
+        map->editingRoads = false;
+        map->editingRuins = false;
+        map->editingRainOfFire = false;
+    }
+}
+
+void applyRainOfFireCheat(WarContext* context, const char* argument)
+{
+    WarMap* map = context->map;
+    if (!map || !map->cheatsEnabled)
+        return;
+
+    map->editingRainOfFire = !map->editingRainOfFire;
+    if (map->editingRainOfFire)
+    {
+        map->editingTrees = false;
+        map->editingWalls = false;
+        map->editingRoads = false;
+        map->editingRuins = false;
     }
 }

@@ -1066,41 +1066,35 @@ void updateTreesEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (isKeyPressed(input, WAR_KEY_CTRL) &&
-        wasKeyPressed(input, WAR_KEY_T))
-    {
-        map->editingTrees = !map->editingTrees;
-    }
+    if (!map->editingTrees)
+        return;
 
-    if (map->editingTrees)
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
-            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+            pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+            s32 x = (s32)pointerPos.x;
+            s32 y = (s32)pointerPos.y;
+
+            WarEntityId entityId = getTileEntityId(map->finder, x, y);
+            WarEntity* entity = findEntity(context, entityId);
+            if (!entity)
             {
-                vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-                pointerPos =  vec2MapToTileCoordinates(pointerPos);
+                entity = map->forest;
 
-                s32 x = (s32)pointerPos.x;
-                s32 y = (s32)pointerPos.y;
-
-                WarEntityId entityId = getTileEntityId(map->finder, x, y);
-                WarEntity* entity = findEntity(context, entityId);
-                if (!entity)
+                plantTree(context, entity, x, y);
+                determineAllTreeTiles(context);
+            }
+            else if (entity->type == WAR_ENTITY_TYPE_FOREST)
+            {
+                WarTree* tree = getTreeAtPosition(entity, x, y);
+                if (tree)
                 {
-                    entity = map->forest;
-
-                    plantTree(context, entity, x, y);
+                    chopTree(context, entity, tree, TREE_MAX_WOOD);
                     determineAllTreeTiles(context);
-                }
-                else if (entity->type == WAR_ENTITY_TYPE_FOREST)
-                {
-                    WarTree* tree = getTreeAtPosition(entity, x, y);
-                    if (tree)
-                    {
-                        chopTree(context, entity, tree, TREE_MAX_WOOD);
-                        determineAllTreeTiles(context);
-                    }
                 }
             }
         }
@@ -1112,37 +1106,31 @@ void updateRoadsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (isKeyPressed(input, WAR_KEY_CTRL) &&
-        wasKeyPressed(input, WAR_KEY_R))
-    {
-        map->editingRoads = !map->editingRoads;
-    }
+    if (!map->editingRoads)
+        return;
 
-    if (map->editingRoads)
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
-            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+            pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+            s32 x = (s32)pointerPos.x;
+            s32 y = (s32)pointerPos.y;
+
+            WarEntity* road = map->road;
+
+            WarRoadPiece* piece = getRoadPieceAtPosition(road, x, y);
+            if (!piece)
             {
-                vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-                pointerPos =  vec2MapToTileCoordinates(pointerPos);
-
-                s32 x = (s32)pointerPos.x;
-                s32 y = (s32)pointerPos.y;
-
-                WarEntity* road = map->road;
-
-                WarRoadPiece* piece = getRoadPieceAtPosition(road, x, y);
-                if (!piece)
-                {
-                    addRoadPiece(road, x, y, 0);
-                    determineRoadTypes(context, road);
-                }
-                else
-                {
-                    removeRoadPiece(road, piece);
-                    determineRoadTypes(context, road);
-                }
+                addRoadPiece(road, x, y, 0);
+                determineRoadTypes(context, road);
+            }
+            else
+            {
+                removeRoadPiece(road, piece);
+                determineRoadTypes(context, road);
             }
         }
     }
@@ -1153,40 +1141,34 @@ void updateWallsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (isKeyPressed(input, WAR_KEY_CTRL) &&
-        wasKeyPressed(input, WAR_KEY_W))
-    {
-        map->editingWalls = !map->editingWalls;
-    }
+    if (!map->editingWalls)
+        return;
 
-    if (map->editingWalls)
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
-            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+            pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+            s32 x = (s32)pointerPos.x;
+            s32 y = (s32)pointerPos.y;
+
+            WarEntity* wall = map->wall;
+
+            WarWallPiece* piece = getWallPieceAtPosition(wall, x, y);
+            if (!piece)
             {
-                vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-                pointerPos =  vec2MapToTileCoordinates(pointerPos);
+                WarWallPiece* piece = addWallPiece(wall, x, y, 0);
+                piece->hp = WAR_WALL_MAX_HP;
+                piece->maxhp = WAR_WALL_MAX_HP;
 
-                s32 x = (s32)pointerPos.x;
-                s32 y = (s32)pointerPos.y;
-
-                WarEntity* wall = map->wall;
-
-                WarWallPiece* piece = getWallPieceAtPosition(wall, x, y);
-                if (!piece)
-                {
-                    WarWallPiece* piece = addWallPiece(wall, x, y, 0);
-                    piece->hp = WAR_WALL_MAX_HP;
-                    piece->maxhp = WAR_WALL_MAX_HP;
-
-                    determineWallTypes(context, wall);
-                }
-                else
-                {
-                    removeWallPiece(wall, piece);
-                    determineWallTypes(context, wall);
-                }
+                determineWallTypes(context, wall);
+            }
+            else
+            {
+                removeWallPiece(wall, piece);
+                determineWallTypes(context, wall);
             }
         }
     }
@@ -1197,37 +1179,31 @@ void updateRuinsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (isKeyPressed(input, WAR_KEY_CTRL) &&
-        wasKeyPressed(input, WAR_KEY_U))
-    {
-        map->editingRuins = !map->editingRuins;
-    }
+    if (!map->editingRuins)
+        return;
 
-    if (map->editingRuins)
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
-            if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
+            pointerPos =  vec2MapToTileCoordinates(pointerPos);
+
+            s32 x = (s32)pointerPos.x;
+            s32 y = (s32)pointerPos.y;
+
+            WarEntity* ruin = map->ruin;
+
+            WarRuinPiece* piece = getRuinPieceAtPosition(ruin, x, y);
+            if (!piece)
             {
-                vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-                pointerPos =  vec2MapToTileCoordinates(pointerPos);
-
-                s32 x = (s32)pointerPos.x;
-                s32 y = (s32)pointerPos.y;
-
-                WarEntity* ruin = map->ruin;
-
-                WarRuinPiece* piece = getRuinPieceAtPosition(ruin, x, y);
-                if (!piece)
-                {
-                    addRuinsPieces(context, ruin, x, y, 2);
-                    determineRuinTypes(context, ruin);
-                }
-                else
-                {
-                    removeRuinPiece(ruin, piece);
-                    determineRuinTypes(context, ruin);
-                }
+                addRuinsPieces(context, ruin, x, y, 2);
+                determineRuinTypes(context, ruin);
+            }
+            else
+            {
+                removeRuinPiece(ruin, piece);
+                determineRuinTypes(context, ruin);
             }
         }
     }
@@ -1238,28 +1214,22 @@ void updateRainOfFireEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (isKeyPressed(input, WAR_KEY_CTRL) &&
-        wasKeyPressed(input, WAR_KEY_K))
+    if (!map->editingRainOfFire)
+        return;
+
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT) && map->selectedEntities.count > 0)
     {
-        map->editingRainOfFire = !map->editingRainOfFire;
-    }
+        WarEntityId selectedEntityId = map->selectedEntities.items[0];
 
-    if (map->editingRainOfFire)
-    {
-        if (wasKeyPressed(input, WAR_KEY_L) && map->selectedEntities.count > 0)
-        {
-            WarEntityId selectedEntityId = map->selectedEntities.items[0];
+        rect viewport = map->viewport;
+        f32 padding = MEGA_TILE_WIDTH * 3;
 
-            rect viewport = map->viewport;
-            f32 padding = MEGA_TILE_WIDTH * 3;
+        f32 offsetx = randomf(viewport.x + padding, viewport.x + viewport.width - padding);
+        f32 offsety = randomf(viewport.y + padding, viewport.y + viewport.height - padding);
+        vec2 target = vec2f(offsetx, offsety);
+        vec2 origin = vec2f(target.x, viewport.y);
 
-            f32 offsetx = randomf(viewport.x + padding, viewport.x + viewport.width - padding);
-            f32 offsety = randomf(viewport.y + padding, viewport.y + viewport.height - padding);
-            vec2 target = vec2f(offsetx, offsety);
-            vec2 origin = vec2f(target.x, viewport.y);
-
-            createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, selectedEntityId, 0, origin, target);
-        }
+        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, selectedEntityId, 0, origin, target);
     }
 }
 

@@ -37,3 +37,8 @@ void applyMusicVolCheat(WarContext* context, const char* argument);
 void applySoundVolCheat(WarContext* context, const char* argument);
 void applyGlobalScaleCheat(WarContext* context, const char* argument);
 void applyGlobalSpeedCheat(WarContext* context, const char* argument);
+void applyEditTreesCheat(WarContext* context, const char* argument);
+void applyEditRoadsCheat(WarContext* context, const char* argument);
+void applyEditRuinsCheat(WarContext* context, const char* argument);
+void applyEditWallsCheat(WarContext* context, const char* argument);
+void applyRainOfFireCheat(WarContext* context, const char* argument);
