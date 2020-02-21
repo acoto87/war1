@@ -1217,19 +1217,14 @@ void updateRainOfFireEdit(WarContext* context)
     if (!map->editingRainOfFire)
         return;
 
-    if (wasButtonPressed(input, WAR_MOUSE_LEFT) && map->selectedEntities.count > 0)
+    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        WarEntityId selectedEntityId = map->selectedEntities.items[0];
-
         rect viewport = map->viewport;
-        f32 padding = MEGA_TILE_WIDTH * 3;
 
-        f32 offsetx = randomf(viewport.x + padding, viewport.x + viewport.width - padding);
-        f32 offsety = randomf(viewport.y + padding, viewport.y + viewport.height - padding);
-        vec2 target = vec2f(offsetx, offsety);
+        vec2 target = vec2ScreenToMapCoordinates(context, input->pos);
         vec2 origin = vec2f(target.x, viewport.y);
 
-        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, selectedEntityId, 0, origin, target);
+        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
     }
 }
 
