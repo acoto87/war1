@@ -329,19 +329,16 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
         return;
     }
 
-    f32 musicVolume = context->musicVolume;
-    f32 soundVolume = context->soundVolume;
+    f32 musicVolume = context->musicEnabled ? context->musicVolume : 0;
+    f32 soundVolume = context->soundEnabled ? context->soundVolume : 0;
 
     WarMap* map = context->map;
     if (map)
     {
-        f32 musicVolumeFactor = map->settings.musicEnabled
-            ? ((f32)map->settings.musicVol / 100) : 0;
-
-        f32 sfxVolumeFactor = map->settings.sfxEnabled
-            ? ((f32)map->settings.sfxVol / 100) : 0;
-
+        f32 musicVolumeFactor = ((f32)map->settings.musicVol / 100);
         musicVolume *= musicVolumeFactor;
+
+        f32 sfxVolumeFactor = ((f32)map->settings.sfxVol / 100);
         soundVolume *= sfxVolumeFactor;
     }
 
@@ -363,7 +360,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
                 {
                     case WAR_AUDIO_MIDI:
                     {
-                        if (playMidi(context, entity, sampleCount, outputStream, musicVolume))
+                        if (musicVolume > 0 && playMidi(context, entity, sampleCount, outputStream, musicVolume))
                         {
                             // if the audio finish, mark it to remove it
                             WarEntityIdListAdd(&toRemove, entity->id);
@@ -379,7 +376,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
                         WarTransformComponent* transform = &entity->transform;
                         if (transform->enabled)
                         {
-                            // positional audios only makes sense on maps?
+                            // does positional audios only makes sense on maps?
                             assert(map);
 
                             // it's a positional audio, so check if the audio is inside the viewport
@@ -455,25 +452,61 @@ bool initAudio(WarContext* context)
     sfxConfig.dataCallback = audioDataCallback;
     sfxConfig.pUserData = context;
 
-    if (ma_device_init(NULL, &sfxConfig, &context->sfx) != MA_SUCCESS) {
+    if (ma_device_init(NULL, &sfxConfig, &context->sfx) != MA_SUCCESS)
+    {
         logError("Failed to open playback device.\n");
         return false;
     }
 
-    if (ma_device_start(&context->sfx) != MA_SUCCESS) {
+    if (ma_device_start(&context->sfx) != MA_SUCCESS)
+    {
         logError("Failed to start playback device.\n");
         ma_device_uninit(&context->sfx);
         return false;
     }
 
+    context->musicEnabled = true;
+    context->soundEnabled = true;
     context->musicVolume = 1.0f;
     context->soundVolume = 1.0f;
 
     return true;
 }
 
-#define enableAudio(context) ((context)->audioEnabled = true)
-#define disableAudio(context) ((context)->audioEnabled = false)
+void removeAudiosOfType(WarContext* context, WarAudioType type)
+{
+    WarEntityIdList toRemove;
+    WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
+
+    WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
+    for (s32 i = 0; i < audios->count; i++)
+    {
+        WarEntity* entity = audios->items[i];
+        if (entity)
+        {
+            WarAudioComponent* audio = &entity->audio;
+            if (audio->type == type)
+            {
+                WarEntityIdListAdd(&toRemove, entity->id);
+            }
+        }
+    }
+
+    for (s32 i = 0; i < toRemove.count; i++)
+    {
+        WarEntityId entityId = toRemove.items[i];
+        removeEntityById(context, entityId);
+    }
+
+    WarEntityIdListFree(&toRemove);
+
+    if (type == WAR_AUDIO_MIDI)
+    {
+        // at this point the audio callback shouldn't be playing any midi audio
+        // so turn of notes off
+        tsf_note_off_all(context->soundFont, TSF_TRUE);
+    }
+}
 
 WarEntity* createAudio(WarContext* context, WarAudioId audioId, bool loop)
 {

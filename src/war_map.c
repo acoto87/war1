@@ -466,9 +466,7 @@ void enterMap(WarContext* context)
     map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
 
     map->settings.gameSpeed = WAR_SPEED_NORMAL;
-    map->settings.musicEnabled = true;
     map->settings.musicVol = 80;
-    map->settings.sfxEnabled = true;
     map->settings.sfxVol = 95;
     map->settings.mouseScrollSpeed = WAR_SPEED_NORMAL;
     map->settings.keyScrollSpeed = WAR_SPEED_NORMAL;

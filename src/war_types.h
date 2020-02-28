@@ -2002,9 +2002,7 @@ typedef enum
 typedef struct
 {
     WarMapSpeed gameSpeed;
-    bool musicEnabled;
     s32 musicVol;
-    bool sfxEnabled;
     s32 sfxVol;
     WarMapSpeed mouseScrollSpeed;
     WarMapSpeed keyScrollSpeed;
@@ -2164,12 +2162,14 @@ typedef struct _WarContext
 
     ma_device sfx;
     tsf* soundFont;
-    f32 musicVolume;
-    f32 soundVolume;
     // this is shortcut to disable all audios in the map
     // to avoid crashes when freeing the map and the audio thread
     // trying to reproduce audios
     bool audioEnabled;
+    bool musicEnabled;
+    bool soundEnabled;
+    f32 musicVolume;
+    f32 soundVolume;
 
     // this is a mutex used to make the deletion of the entities thread-safe
     // since the audio thread will delete audio entities, that could lead

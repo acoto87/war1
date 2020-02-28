@@ -258,36 +258,13 @@ void applySpeedCheat(WarContext* context, const char* argument)
 
 void applyMusicCheat(WarContext* context, const char* argument)
 {
-    WarMap* map = context->map;
-    WarScene* scene = context->scene;
-
-    if (!map && !scene)
-        return;
-
-    if (map)
+    if (strCaseEquals(argument, "on", true))
     {
-        if (!map->cheatsEnabled)
-            return;
-
-        if (strCaseEquals(argument, "on", true))
-        {
-            map->settings.musicEnabled = true;
-        }
-        else if (strCaseEquals(argument, "off", true))
-        {
-            map->settings.musicEnabled = false;
-        }
+        context->musicEnabled = true;
     }
-    else if (scene)
+    else if (strCaseEquals(argument, "off", true))
     {
-        if (strCaseEquals(argument, "on", true))
-        {
-            enableAudio(context);
-        }
-        else if (strCaseEquals(argument, "off", true))
-        {
-            disableAudio(context);
-        }
+        context->musicEnabled = false;
     }
 
     if (!isDemo(context))
@@ -306,30 +283,7 @@ void applyMusicCheat(WarContext* context, const char* argument)
                 //
                 // for now remove all the active music (audios of type WAR_AUDIO_MIDI)
                 // and the create the new one
-                WarEntityIdList toRemove;
-                WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
-
-                WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
-                for (s32 i = 0; i < audios->count; i++)
-                {
-                    WarEntity* entity = audios->items[i];
-                    if (entity)
-                    {
-                        WarAudioComponent* audio = &entity->audio;
-                        if (audio->type == WAR_AUDIO_MIDI)
-                        {
-                            WarEntityIdListAdd(&toRemove, entity->id);
-                        }
-                    }
-                }
-
-                for (s32 i = 0; i < toRemove.count; i++)
-                {
-                    WarEntityId entityId = toRemove.items[i];
-                    removeEntityById(context, entityId);
-                }
-
-                WarEntityIdListFree(&toRemove);
+                removeAudiosOfType(context, WAR_AUDIO_MIDI);
 
                 createAudio(context, musicId, true);
             }
@@ -339,17 +293,13 @@ void applyMusicCheat(WarContext* context, const char* argument)
 
 void applySoundCheat(WarContext* context, const char* argument)
 {
-    WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
-        return;
-
     if (strCaseEquals(argument, "on", true))
     {
-        map->settings.sfxEnabled = true;
+        context->soundEnabled = true;
     }
     else if (strCaseEquals(argument, "off", true))
     {
-        map->settings.sfxEnabled = false;
+        context->soundEnabled = false;
     }
 }
 
@@ -380,17 +330,18 @@ void applyMusicVolCheat(WarContext* context, const char* argument)
             }
         }
 
+        context->audioEnabled = true;
+        context->musicEnabled = true;
+
         if (map)
         {
             if (!map->cheatsEnabled)
                 return;
 
-            map->settings.musicEnabled = true;
             map->settings.musicVol = musicVol;
         }
         else if (scene)
         {
-            enableAudio(context);
             setMusicVolume(context, (f32)musicVol / 100);
         }
     }
@@ -423,17 +374,18 @@ void applySoundVolCheat(WarContext* context, const char* argument)
             }
         }
 
+        context->audioEnabled = true;
+        context->soundEnabled = true;
+
         if (map)
         {
             if (!map->cheatsEnabled)
                 return;
 
-            map->settings.sfxEnabled = true;
             map->settings.sfxVol = sfxVol;
         }
         else if (scene)
         {
-            enableAudio(context);
             setSoundVolume(context, (f32)sfxVol / 100);
         }
     }

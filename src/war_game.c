@@ -386,7 +386,7 @@ void updateGame(WarContext* context)
 
     if (context->nextScene)
     {
-        disableAudio(context);
+        context->audioEnabled = false;
 
         if (context->scene)
             leaveScene(context);
@@ -397,10 +397,12 @@ void updateGame(WarContext* context)
         context->nextScene = NULL;
 
         enterScene(context);
+
+        context->audioEnabled = true;
     }
     else if (context->nextMap)
     {
-        disableAudio(context);
+        context->audioEnabled = false;
 
         if (context->scene)
             leaveScene(context);
@@ -411,6 +413,8 @@ void updateGame(WarContext* context)
         context->nextMap = NULL;
 
         enterMap(context);
+
+        context->audioEnabled = true;
     }
 
     if (context->transitionDelay > 0)
@@ -418,8 +422,6 @@ void updateGame(WarContext* context)
         context->transitionDelay = max(context->transitionDelay - context->deltaTime, 0.0f);
         return;
     }
-
-    enableAudio(context);
 
     if (context->scene)
     {

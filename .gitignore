@@ -10,3 +10,4 @@ tags
 callgrind*
 assets/*.WAR
 .vscode-ctags
+.markdownlint.json

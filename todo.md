@@ -3,6 +3,7 @@
 List of thing to do in no particular order
 
 ## Bugs
+
 * [x] Corpses can be selected, it shouldn't be.
 * [x] Black pixels in little tree and gold icons.
 * [x] Black pixels in the "% COMPLETE" text.
@@ -56,6 +57,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] When selected and enemy that goes into fog, the unit keeps selected.
 * [x] Fix clicking buttons will flick the tooltip text on and off.
 * [x] Make a call to `sleep` instead of waiting in a cycle until the frame end. This will probably increase effiency and decrease CPU usage. I need a portable sleep function, maybe something like:
+
     ```c
     void msleep(s32 milliseconds) // cross-platform sleep function
     {
@@ -74,7 +76,8 @@ This was the result of deleting the entity and the engine trying to free the spr
       #endif
     }
     ```
-* [x] Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR. Recovered from https://www.gog.com/game/warcraft_orcs_and_humans.
+
+* [x] Search for files: HMAP01-12.war, LOSE1.WAR, OMAP01-12.WAR, WIN1.WAR. Recovered from <https://www.gog.com/game/warcraft_orcs_and_humans.>
 * [x] When a unit is selected before dispear in the fog, the unit remains selected. The unit should be removed from the selection.
 * [x] When rendering multiline texts, if the last character of a line doesn't fit and it's a space, then the space will be rendered in the next line which causes missalignment in the left border of the text.
 * [x] When building roads the player needs to go back and click on the build road button again to build the next one.
@@ -83,29 +86,32 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Check why this appear when trying to spell the Dark Vision: "This upgrade type 15 doesn't increase any value of the units (Not reproducible)".
 * [x] Summon spells summon as many units as mana allows.
 * [x] Check death animations of scorpions and spiders.
-* [ ] Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right now the OS cursor shows up when the user move the game cursor outside the window. That's no good.
 * [x] When a unit is selected, say a warrior, and the cursor is over an enemy unit, it shows the magnifying glass because there is no active command and is expecting to select the foe unit when maybe it would be better to show a possible command like attack. The same occurs when a worker is selected and the mouse is over a goldmine. Maybe make a check about possible commands, and show the corresponding cursor, for these cases.
 * [x] When Sally Shears cheat is enabled and the disabled the goldmines are shown in the minimap, even though no units was near them.
 * [x] When selected an enemy unit, the cursor change to red or yello crosshair when hover another unit.
 * [x] Solve problem of corrupt text in stdout due to the audio thread and main thread printing stuff at the same time. Added code for mutex that intent to be cross-platform.
 * [x] Solve problem of removing entities from different threads. Audio thread and main thread remove entities that can result in corrupted lists since SHL libraries aren't thread-safe.
 * [x] Check the uses of `context->deltaTime` when the speed of the game is not `1`.
+* [x] Changing global speed doesn't change ongoing trainings.
+* [x] When changing music with the Music cheat, a long fade out of the song is played while the new one starts.
+* [ ] Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right now the OS cursor shows up when the user move the game cursor outside the window. That's no good.
 * [ ] When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
-* [ ] Changing global speed doesn't change ongoing trainings.
 * [ ] Check for memory leaks in the removing animations functionality.
 * [ ] Check why the changing of the global scale renders with the previous global scale after a change (only on Linux, on Windows it doesn't happen).
 * [ ] Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
 * [ ] When a unit attacks a unit that is attacking a building, the second unit should stop the attack on the building and attack the first unit.
 * [ ] If an unit is attacked when idle, the unit respond the attack.
-* [ ] Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like MAP_STATE_ALWAYS_VISIBLE and MAP_STATE_TIMED_VISIBLE.
+* [ ] Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like `MAP_STATE_ALWAYS_VISIBLE` and `MAP_STATE_TIMED_VISIBLE`.
 * [ ] Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
 * [ ] Sometimes you order a worker to mine, and it will enter the mine (dissapear) but it doesn't perform the mining. You can also give other orders like move, and the invisible worker will go there and do other stuff.... on the bright side, I have invisible units! :D... But wait.. I already have invisible units with Invisibility spells..., damn! :(
 * [ ] Some lines in text appear on Windows and between sprites, antialiasing maybe on the OpenGL ES driver in Windows?
 * [ ] If a unit is selected and the player give several orders in a row quickly, the audio gets saturated. Maybe I can restrict how much audios are generated by units, maybe keep track of the last time the unit spoke or a sound is emitted from a unit, to not do it again in short periods of time.
-* [ ] Check this: https://tcrf.net/Warcraft:_Orcs_%26_Humans, https://tcrf.net/Proto:Warcraft:_Orcs_%26_Humans
+* [ ] Check this: <https://tcrf.net/Warcraft:_Orcs_%26_Humans>, <https://tcrf.net/Proto:Warcraft:_Orcs_%26_Humans>
 * [ ] When catapults are close enough to buildings and attack them, may destroy themselves because of the splash damage.
+* [ ] When editing walls, if trap an enemy unit and order a friendly unit to attack it removing in the process a piece of the wall, the friendly unit can't get to the enemy unit. Probably because I'm not updating the pathfinder information when deleting pieces of walls.
 
 ## General
+
 * [x] Test the new implementation for lists.
 * [x] Make some or macros or inline functions to create options for lists initializations.
 * [x] Map scroll with the mouse cursor at the edge.
@@ -128,15 +134,8 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Create EntityManager to manage entities.
 * [x] Draw text system (to debug and other texts).
 * [x] Sort the units by `y` position to render and the units with greater `y` render on top of the ones with less `y`.
-* [x] Make screen to download demo DATA.WAR file if it doesn't exists (the app should download it and install it itself). Download it from here: https://archive.org/download/WarcraftOrcsHumansDemo/WCRFT.ZIP/DEMODATA%2FDATA.WAR. To get there go to https://archive.org/details/WarcraftOrcsHumansDemo, then SHOW ALL in DOWNLOAD OPTIONS -> WCRFT.ZIP (View Contents).
-* [ ] Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
-* [ ] Manage components with a dictionary and not each entity having all the components.
-* [ ] Make a profiler system.
-* [ ] Remove global __log__ and move it to WarContext.
-* [ ] Make so that entities can have multiple sprites.
-* [ ] Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
-* [ ] Add animation for the gold and lumber numbers when they change.
-* [ ] Make commands/cheats system.
+* [x] Make screen to download demo DATA.WAR file if it doesn't exists (the app should download it and install it itself). Download it from here: <https://archive.org/download/WarcraftOrcsHumansDemo/WCRFT.ZIP/DEMODATA%2FDATA.WAR>. To get there go to <https://archive.org/details/WarcraftOrcsHumansDemo>, then SHOW ALL in DOWNLOAD OPTIONS -> WCRFT.ZIP (View Contents).
+* [x] Make commands/cheats system.
     * [x] Original cheats
         * [x] Pot of Gold: Gives 10000 gold and 5000 lumber to the player
         * [x] Eye of newt: All spells are now be able to be casted
@@ -150,7 +149,7 @@ This was the result of deleting the entity and the engine trying to free the spr
         * [x] Orc#: Skip to orc level (enter 1-12 for #)
         * [x] Hurry up guys: Speeds up building/unit production
         * [x] Yours truly: Win current mission
-    * [ ] Custom cheats
+    * [x] Custom cheats
         * [x] Make global cheat command even in non-map scenes
         * [x] Music #: Set volume music (enter 1-45 for #)
         * [x] Music {on|off}: Enable or disable music
@@ -165,13 +164,22 @@ This was the result of deleting the entity and the engine trying to free the spr
         * [x] Change edition of roads to cheat
         * [x] Change edition of rain of fire to cheat
         * [x] Add unit cheat
+* [ ] Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
+* [ ] Manage components with a dictionary and not each entity having all the components.
+* [ ] Make a profiler system.
+* [ ] Remove global __log__ and move it to WarContext. How could I access the `__log__` inside `WarContext` in the `glfwErrorCallback` callback?
+* [ ] Make so that entities can have multiple sprites.
+* [ ] Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
+* [ ] Add animation for the gold and lumber numbers when they change.
 * [ ] Make the blue water/green water animated.
 * [ ] Make the move state to consider range distance to stop.
 * [ ] Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
 * [ ] Check behavior of invisible units when are under attack (it maybe work with workers, to stop the attack on it)
 * [ ] Zoom feature
+* [ ] Make sounds and music volume settings globally. That will allow to set volumes through cheats in any scene or map and mantain the setting through changing scenes.
 
 ## Gameplay
+
 * [x] Add functionalities about players and player infos, gold and wood amount, upgrades, unit count, race, etc.
     * [x] Fix black areas in human unit portraits images.
     * [x] Add selected units back images.
@@ -183,13 +191,10 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [x] Add complete % bar only when there is something building.
     * [x] Add command images based on selected(s) unit types.
     * [x] Add upgrades info to player info.
-* [ ] Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
 * [x] Manage the gold in the mines and explode it when the gold is over.
 * [x] Add ruins to collapsed buildings.
-* [ ] Add explosion animation to living npc units when clicking to many times.
 * [x] Create and entity for each tile that represent wood in order to keep track of the amount of wood in each area and been able to replace with the appropiated sprite when the wood in that tile is over.
 * [x] Fix the selection of units to select only dude units or one building.
-* [ ] Make Ctrl+click select all units of the same type on the screen.
 * [x] Making health system for units.
 * [x] Change the behavior of chopping trees when multiple units are chopping the same tree. With each hack of the axe the tree should loose wood, until it ran out of it. Each unit go back to the townhall when has max amount of wood or there is no more trees to chop.
 * [x] If each tree island is considered a forest, then the workers naturally will chop the entire forest/island and stop there, but the editing trees functionality doesn't work for multiple forests/island. If there is a single forest in the map, then the unit will chop all the wood in the map, which is not desired. Figure out which way is better, and make the necessary changes.
@@ -243,8 +248,12 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [x] After a number of seconds (3 maybe?) an area without friendly units remain with fog.
     * [x] That is, buildings, roads, ruins, walls, trees are shown in the map, with a fade of fog.
     * [x] Moving units are not shown in areas with fog.
+* [ ] Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
+* [ ] Add explosion animation to living npc units when clicking to many times.
+* [ ] Make Ctrl+click select all units of the same type on the screen.
 
 ## Animations/actions
+
 * [x] Add animations data for each unit type.
 * [x] Add actions for the peasant and peon when carrying gold or wood.
 * [x] Add actions for the buildings.
@@ -252,6 +261,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Add animation system, again.
 * [x] Switch animations without reseting the new animation to the start. This will allow have one animation for each orientation of then switch to the correct one depending of the orientation but conserving the state.
 * [x] Change the concept of animations by a sequence of frames, to a more complex but powerful system of actions. Each unit can have several actions, which can have steps and the steps of the actions describe what the unit does. For example, this is the `Attack` action of the footman:
+
     ```c
     Attack={
     "unbreakable begin",
@@ -275,13 +285,15 @@ This was the result of deleting the entity and the engine trying to free the spr
     "wait 1"
     }
     ```
-* [ ] Move actions system to animations, again? :| The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
+
 * [x] Projectiles
     * [x] Arrows
     * [x] Fireballs
     * [x] Rain of fire
+* [ ] Move actions system to animations, again? :| The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
 
 ## State machine
+
 * [x] Idle state
 * [x] Move state
     * [x] When the last position of a path is occupied and the unit waits is period but then continue to the last position when isn't clear.
@@ -293,7 +305,7 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [x] Patrol with multiple waypoints.
 * [x] Follow state
     * [x] Follow other units.
-* [ ] Attack state
+* [x] Attack state
     * [x] Attack the unit next to
     * [x] Move to attack the unit that is far
     * [x] Consider ranged and melee attacks
@@ -321,6 +333,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Remove the interval for state, each state machine updates every frame. I'm going to worry about performance issues that this may cause later.
 
 ## Pathfinding
+
 * [x] Add path finding algorithm to move the entities.
     * [x] For now BFS is implemented.
     * [x] Implement A* algorithm for pathfinding.
@@ -331,21 +344,22 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Optimize the path finding when the destination is unreachable (e.g. when the unit is moving to another unit's position)
 * [x] When right click in the minimap, the selected unit should go there.
 * [ ] Give greater cost to diagonal movements than to straight movements. Check these links for a heuristic function that considers diagonal cost:
-  http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-  http://theory.stanford.edu/~amitp/GameProgramming/Variations.html#bidirectional-search
+  <http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html>
+  <http://theory.stanford.edu/~amitp/GameProgramming/Variations.html#bidirectional-search>
 * [ ] Remove BFS implementation.
 * [ ] Check again the path finding stuff, because now the units will go for side edges of buildings when a corner is closest.
 * [ ] Workers don't collide well while harvesting wood or gold when near the townhall.
 
 ## UI system
+
 * [x] Buttons
 * [x] Text
 * [x] Images
-* [ ] Dialogues
-* [ ] Cut scenes
-* [ ] Minimap
-    * [ ] The minimap has to consider: base layer, chopped wood layer, entities layer. The base layer doesn't change once the map is created, so each frame only add the tiles about chopped wood and entities (position and types).
 * [x] Make font of original warcraft.
     * [x] Make a bunch of screenshots and draw the font in pixel art.
     * [x] Make the system to draw text from a sprite of characters.
     * [x] Make font of menus.
+* [ ] Dialogues
+* [ ] Cut scenes
+* [ ] Minimap
+    * [ ] The minimap has to consider: base layer, chopped wood layer, entities layer. The base layer doesn't change once the map is created, so each frame only add the tiles about chopped wood and entities (position and types).
