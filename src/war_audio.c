@@ -332,16 +332,6 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
     f32 musicVolume = context->musicEnabled ? context->musicVolume : 0;
     f32 soundVolume = context->soundEnabled ? context->soundVolume : 0;
 
-    WarMap* map = context->map;
-    if (map)
-    {
-        f32 musicVolumeFactor = ((f32)map->settings.musicVol / 100);
-        musicVolume *= musicVolumeFactor;
-
-        f32 sfxVolumeFactor = ((f32)map->settings.sfxVol / 100);
-        soundVolume *= sfxVolumeFactor;
-    }
-
     WarEntityIdList toRemove;
     WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
 
@@ -377,6 +367,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
                         if (transform->enabled)
                         {
                             // does positional audios only makes sense on maps?
+                            WarMap* map = context->map;
                             assert(map);
 
                             // it's a positional audio, so check if the audio is inside the viewport

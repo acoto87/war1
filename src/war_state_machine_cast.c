@@ -181,7 +181,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         {
                             vec2 targetPosition = getUnitCenterPosition(targetEntity, true);
                             createUnit(context, WAR_UNIT_SKELETON, targetPosition.x, targetPosition.y,
-                                    unit->player, WAR_RESOURCE_NONE, 0, true);
+                                       unit->player, WAR_RESOURCE_NONE, 0, true);
 
                             targetPosition = getUnitCenterPosition(targetEntity, false);
 

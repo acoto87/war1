@@ -14,6 +14,7 @@ bool initGame(WarContext* context)
     strcpy(context->windowTitle, "War 1");
     context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, NULL, NULL);
     context->transitionDelay = 0.0f;
+    context->cheatsEnabled = true;
 
     pthread_mutex_init(&context->__mutex, NULL);
 

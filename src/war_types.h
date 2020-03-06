@@ -2073,7 +2073,6 @@ typedef struct
     bool addingUnit;
     WarUnitType addingUnitType;
 
-    bool cheatsEnabled;
     bool hurryUp;
     bool fowEnabled;
 
@@ -2170,6 +2169,8 @@ typedef struct _WarContext
     bool soundEnabled;
     f32 musicVolume;
     f32 soundVolume;
+
+    bool cheatsEnabled;
 
     // this is a mutex used to make the deletion of the entities thread-safe
     // since the audio thread will delete audio entities, that could lead

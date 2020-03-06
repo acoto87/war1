@@ -61,8 +61,11 @@ void applyCheat(WarContext* context, const char* text)
 
 void applyGoldCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
@@ -70,8 +73,11 @@ void applyGoldCheat(WarContext* context, const char* argument)
 
 void applySpellsCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     WarPlayerInfo* player = &map->players[0];
@@ -126,8 +132,11 @@ void applySpellsCheat(WarContext* context, const char* argument)
 
 void applyUpgradesCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     WarPlayerInfo* player = &map->players[0];
@@ -154,8 +163,11 @@ void applyUpgradesCheat(WarContext* context, const char* argument)
 
 void applyEndCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     showDemoEndMenu(context, true);
@@ -163,17 +175,16 @@ void applyEndCheat(WarContext* context, const char* argument)
 
 void applyEnableCheat(WarContext* context, const char* argument)
 {
-    WarMap* map = context->map;
-    if (!map)
-        return;
-
-    map->cheatsEnabled = !map->cheatsEnabled;
+    context->cheatsEnabled = !context->cheatsEnabled;
 }
 
 void applyGodModeCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     WarPlayerInfo* player = &map->players[0];
@@ -182,8 +193,11 @@ void applyGodModeCheat(WarContext* context, const char* argument)
 
 void applyWinCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     map->result = WAR_LEVEL_RESULT_WIN;
@@ -191,8 +205,11 @@ void applyWinCheat(WarContext* context, const char* argument)
 
 void applyLossCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     map->result = WAR_LEVEL_RESULT_LOSE;
@@ -200,8 +217,11 @@ void applyLossCheat(WarContext* context, const char* argument)
 
 void applyFogOfWarCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     map->fowEnabled = !map->fowEnabled;
@@ -209,8 +229,11 @@ void applyFogOfWarCheat(WarContext* context, const char* argument)
 
 void applySkipHumanCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     s32 level;
@@ -229,8 +252,11 @@ void applySkipHumanCheat(WarContext* context, const char* argument)
 
 void applySkipOrcCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     s32 level;
@@ -249,8 +275,11 @@ void applySkipOrcCheat(WarContext* context, const char* argument)
 
 void applySpeedCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     map->hurryUp = !map->hurryUp;
@@ -258,6 +287,9 @@ void applySpeedCheat(WarContext* context, const char* argument)
 
 void applyMusicCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     if (strCaseEquals(argument, "on", true))
     {
         context->musicEnabled = true;
@@ -293,6 +325,9 @@ void applyMusicCheat(WarContext* context, const char* argument)
 
 void applySoundCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     if (strCaseEquals(argument, "on", true))
     {
         context->soundEnabled = true;
@@ -305,10 +340,7 @@ void applySoundCheat(WarContext* context, const char* argument)
 
 void applyMusicVolCheat(WarContext* context, const char* argument)
 {
-    WarMap* map = context->map;
-    WarScene* scene = context->scene;
-
-    if (!map && !scene)
+    if (!context->cheatsEnabled)
         return;
 
     s32 musicVol;
@@ -333,26 +365,13 @@ void applyMusicVolCheat(WarContext* context, const char* argument)
         context->audioEnabled = true;
         context->musicEnabled = true;
 
-        if (map)
-        {
-            if (!map->cheatsEnabled)
-                return;
-
-            map->settings.musicVol = musicVol;
-        }
-        else if (scene)
-        {
-            setMusicVolume(context, (f32)musicVol / 100);
-        }
+        setMusicVolume(context, (f32)musicVol / 100);
     }
 }
 
 void applySoundVolCheat(WarContext* context, const char* argument)
 {
-    WarMap* map = context->map;
-    WarScene* scene = context->scene;
-
-    if (!map && !scene)
+    if (!context->cheatsEnabled)
         return;
 
     s32 sfxVol;
@@ -377,22 +396,15 @@ void applySoundVolCheat(WarContext* context, const char* argument)
         context->audioEnabled = true;
         context->soundEnabled = true;
 
-        if (map)
-        {
-            if (!map->cheatsEnabled)
-                return;
-
-            map->settings.sfxVol = sfxVol;
-        }
-        else if (scene)
-        {
-            setSoundVolume(context, (f32)sfxVol / 100);
-        }
+        setSoundVolume(context, (f32)sfxVol / 100);
     }
 }
 
 void applyGlobalScaleCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     s32 scale;
     if (strTryParseS32(argument, &scale))
     {
@@ -403,6 +415,9 @@ void applyGlobalScaleCheat(WarContext* context, const char* argument)
 
 void applyGlobalSpeedCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     s32 speed;
     if (strTryParseS32(argument, &speed))
     {
@@ -413,8 +428,11 @@ void applyGlobalSpeedCheat(WarContext* context, const char* argument)
 
 void applyEditCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     map->editingTrees = false;
@@ -422,45 +440,25 @@ void applyEditCheat(WarContext* context, const char* argument)
     map->editingRoads = false;
     map->editingRuins = false;
     map->editingRainOfFire = false;
+    map->addingUnit = false;
 
     if (strCaseEquals(argument, "trees", true))
-    {
         map->editingTrees = !map->editingTrees;
-        map->editingWalls = false;
-        map->editingRoads = false;
-        map->editingRuins = false;
-        map->editingRainOfFire = false;
-    }
     if (strCaseEquals(argument, "walls", true))
-    {
-        map->editingTrees = false;
         map->editingWalls = !map->editingWalls;
-        map->editingRoads = false;
-        map->editingRuins = false;
-        map->editingRainOfFire = false;
-    }
     if (strCaseEquals(argument, "roads", true))
-    {
-        map->editingTrees = false;
-        map->editingWalls = false;
         map->editingRoads = !map->editingRoads;
-        map->editingRuins = false;
-        map->editingRainOfFire = false;
-    }
     if (strCaseEquals(argument, "ruins", true))
-    {
-        map->editingTrees = false;
-        map->editingWalls = false;
-        map->editingRoads = false;
         map->editingRuins = !map->editingRuins;
-        map->editingRainOfFire = false;
-    }
 }
 
 void applyRainOfFireCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     map->editingTrees = false;
@@ -468,12 +466,16 @@ void applyRainOfFireCheat(WarContext* context, const char* argument)
     map->editingRoads = false;
     map->editingRuins = false;
     map->editingRainOfFire = !map->editingRainOfFire;
+    map->addingUnit = false;
 }
 
 void applyAddUnitCheat(WarContext* context, const char* argument)
 {
+    if (!context->cheatsEnabled)
+        return;
+
     WarMap* map = context->map;
-    if (!map || !map->cheatsEnabled)
+    if (!map)
         return;
 
     map->editingTrees = false;
@@ -482,7 +484,7 @@ void applyAddUnitCheat(WarContext* context, const char* argument)
     map->editingRuins = false;
     map->editingRainOfFire = false;
 
-    map->addingUnit = false;;
+    map->addingUnit = false;
 
     if (strCaseStartsWith(argument, "OFF", true))
     {
