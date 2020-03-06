@@ -336,37 +336,20 @@ void inputCharCallback(GLFWwindow* window, u32 codepoint)
     assert(context);
 
     WarScene* scene = context->scene;
-    if (scene)
-    {
-        WarCheatStatus* cheatStatus = &scene->cheatStatus;
-        if (cheatStatus->enabled)
-        {
-            s32 length = strlen(cheatStatus->text);
-            if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
-            {
-                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
-                cheatStatus->position++;
-            }
-        }
-
-        return;
-    }
-
     WarMap* map = context->map;
-    if (map)
-    {
-        WarCheatStatus* cheatStatus = &map->cheatStatus;
-        if (cheatStatus->enabled)
-        {
-            s32 length = strlen(cheatStatus->text);
-            if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
-            {
-                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
-                cheatStatus->position++;
-            }
-        }
+    assert(scene || map);
 
-        return;
+    WarCheatStatus* cheatStatus = scene
+        ? &scene->cheatStatus : &map->cheatStatus;
+
+    if (cheatStatus->enabled && cheatStatus->visible)
+    {
+        s32 length = strlen(cheatStatus->text);
+        if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
+        {
+            strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+            cheatStatus->position++;
+        }
     }
 }
 

@@ -1941,6 +1941,7 @@ typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
 
 #define STATUS_TEXT_MAX_LENGTH 40
 #define CHEAT_TEXT_MAX_LENGTH 32
+#define CHEAT_FEEDBACK_TEXT_MAX_LENGTH 50
 
 typedef enum
 {
@@ -1986,8 +1987,12 @@ typedef struct
 typedef struct
 {
     bool enabled;
+    bool visible;
     s32 position;
     char text[CHEAT_TEXT_MAX_LENGTH];
+    bool feedback;
+    f32 feedbackTime;
+    char feedbackText[CHEAT_FEEDBACK_TEXT_MAX_LENGTH];
 } WarCheatStatus;
 
 typedef enum

@@ -829,7 +829,7 @@ void updateViewport(WarContext *context)
         // don't scroll with arrow keys if the cheat status is active
         if (!isKeyPressed(input, WAR_KEY_CTRL) &&
             !isKeyPressed(input, WAR_KEY_SHIFT) &&
-            !map->cheatStatus.enabled)
+            !cheatsEnabledAndVisible(map))
         {
             dir = getDirFromArrowKeys(context, input);
             keyScroll = true;
@@ -1496,100 +1496,117 @@ void updateStatus(WarContext* context)
     WarEntity* statusTextUI = findUIEntity(context, "txtStatus");
     assert(statusTextUI);
 
+    WarEntity* cheatFeedbackText = findUIEntity(context, "txtCheatFeedbackText");
+    assert(cheatFeedbackText);
+
     if (cheatStatus->enabled)
     {
-        if (wasKeyPressed(input, WAR_KEY_ESC) ||
-            wasKeyPressed(input, WAR_KEY_ENTER))
+        if (cheatStatus->feedback)
         {
-            if (wasKeyPressed(input, WAR_KEY_ENTER))
+            setUIEntityStatus(cheatFeedbackText, true);
+            setUIText(cheatFeedbackText, cheatStatus->feedbackText);
+
+            cheatStatus->feedbackTime -= context->deltaTime;
+            if (cheatStatus->feedbackTime <= 0)
             {
-                applyCheat(context, cheatStatus->text);
+                cheatStatus->feedbackTime = 0;
+                cheatStatus->feedback = false;
+            }
+        }
+        else
+        {
+            setUIEntityStatus(cheatFeedbackText, false);
+        }
+
+        if (cheatStatus->visible)
+        {
+            if (wasKeyPressed(input, WAR_KEY_ESC) ||
+                wasKeyPressed(input, WAR_KEY_ENTER))
+            {
+                if (wasKeyPressed(input, WAR_KEY_ENTER))
+                {
+                    applyCheat(context, cheatStatus->text);
+                }
+
+                setCheatsPanelVisible(context, false);
+                return;
             }
 
-            memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
-            cheatStatus->position = 0;
-            cheatStatus->enabled = false;
+            if (wasKeyPressed(input, WAR_KEY_TAB))
+            {
+                s32 length = strlen(cheatStatus->text);
+                if (TAB_WIDTH <= STATUS_TEXT_MAX_LENGTH - length)
+                {
+                    strInsertAt(cheatStatus->text, cheatStatus->position, '\t');
+                    cheatStatus->position++;
+                }
+            }
+            else if (wasKeyPressed(input, WAR_KEY_BACKSPACE))
+            {
+                if (cheatStatus->position > 0)
+                {
+                    strRemoveAt(cheatStatus->text, cheatStatus->position - 1);
+                    cheatStatus->position--;
+                }
+            }
+            else if (wasKeyPressed(input, WAR_KEY_DELETE))
+            {
+                s32 length = strlen(cheatStatus->text);
+                if (cheatStatus->position < length)
+                {
+                    strRemoveAt(cheatStatus->text, cheatStatus->position);
+                }
+            }
+            else if (wasKeyPressed(input, WAR_KEY_RIGHT))
+            {
+                s32 length = strlen(cheatStatus->text);
+                if (cheatStatus->position < length)
+                {
+                    cheatStatus->position++;
+                }
+            }
+            else if (wasKeyPressed(input, WAR_KEY_LEFT))
+            {
+                if (cheatStatus->position > 0)
+                {
+                    cheatStatus->position--;
+                }
+            }
+            else if (wasKeyPressed(input, WAR_KEY_HOME))
+            {
+                cheatStatus->position = 0;
+            }
+            else if (wasKeyPressed(input, WAR_KEY_END))
+            {
+                s32 length = strlen(cheatStatus->text);
+                cheatStatus->position = length;
+            }
 
+            char statusText[STATUS_TEXT_MAX_LENGTH];
+            memset(statusText, 0, sizeof(statusText));
+            strcpy(statusText, "MSG: ");
+            strcpy(statusText + strlen("MSG: "), cheatStatus->text);
+            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
+
+            NVGfontParams params;
+            params.fontSize = statusTextUI->text.fontSize;
+            params.fontData = fontsData[statusTextUI->text.fontIndex];
+
+            vec2 prefixSize = nvgMeasureSingleSpriteText("MSG: ", strlen("MSG: "), params);
+            vec2 textSize = nvgMeasureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
+            statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
+
+            setUIEntityStatus(statusCursor, true);
             return;
         }
-
-        if (wasKeyPressed(input, WAR_KEY_TAB))
+        else
         {
-            s32 length = strlen(cheatStatus->text);
-            if (TAB_WIDTH <= STATUS_TEXT_MAX_LENGTH - length)
+            setUIEntityStatus(statusCursor, false);
+
+            if (wasKeyPressed(input, WAR_KEY_ENTER))
             {
-                strInsertAt(cheatStatus->text, cheatStatus->position, '\t');
-                cheatStatus->position++;
+                setCheatsPanelVisible(context, true);
             }
-        }
-        else if (wasKeyPressed(input, WAR_KEY_BACKSPACE))
-        {
-            if (cheatStatus->position > 0)
-            {
-                strRemoveAt(cheatStatus->text, cheatStatus->position - 1);
-                cheatStatus->position--;
-            }
-        }
-        else if (wasKeyPressed(input, WAR_KEY_DELETE))
-        {
-            s32 length = strlen(cheatStatus->text);
-            if (cheatStatus->position < length)
-            {
-                strRemoveAt(cheatStatus->text, cheatStatus->position);
-            }
-        }
-        else if (wasKeyPressed(input, WAR_KEY_RIGHT))
-        {
-            s32 length = strlen(cheatStatus->text);
-            if (cheatStatus->position < length)
-            {
-                cheatStatus->position++;
-            }
-        }
-        else if (wasKeyPressed(input, WAR_KEY_LEFT))
-        {
-            if (cheatStatus->position > 0)
-            {
-                cheatStatus->position--;
-            }
-        }
-        else if (wasKeyPressed(input, WAR_KEY_HOME))
-        {
-            cheatStatus->position = 0;
-        }
-        else if (wasKeyPressed(input, WAR_KEY_END))
-        {
-            s32 length = strlen(cheatStatus->text);
-            cheatStatus->position = length;
-        }
-
-        char statusText[STATUS_TEXT_MAX_LENGTH];
-        memset(statusText, 0, sizeof(statusText));
-        strcpy(statusText, "MSG: ");
-        strcpy(statusText + strlen("MSG: "), cheatStatus->text);
-        setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
-
-        NVGfontParams params;
-        params.fontSize = statusTextUI->text.fontSize;
-        params.fontData = fontsData[statusTextUI->text.fontIndex];
-
-        vec2 prefixSize = nvgMeasureSingleSpriteText("MSG: ", strlen("MSG: "), params);
-        vec2 textSize = nvgMeasureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
-        statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
-
-        setUIEntityStatus(statusCursor, true);
-
-        return;
-    }
-    else
-    {
-        setUIEntityStatus(statusCursor, false);
-
-        if (wasKeyPressed(input, WAR_KEY_ENTER))
-        {
-            memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
-            cheatStatus->position = 0;
-            cheatStatus->enabled = true;
         }
     }
 
@@ -2398,7 +2415,7 @@ void updateMap(WarContext* context)
     updateSelectedUnitsInfo(context);
     updateCommandButtons(context);
 
-    updateUIButtons(context, !map->cheatStatus.enabled);
+    updateUIButtons(context, !cheatsEnabledAndVisible(map));
 
     updateCommandFromRightClick(context);
     updateStatus(context);

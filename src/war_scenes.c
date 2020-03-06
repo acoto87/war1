@@ -61,7 +61,7 @@ void updateScene(WarContext* context)
     else
     {
         updateCheatsPanel(context);
-        updateUIButtons(context, !scene->cheatStatus.enabled);
+        updateUIButtons(context, !cheatsEnabledAndVisible(scene));
         updateUICursor(context);
         updateAnimations(context);
     }

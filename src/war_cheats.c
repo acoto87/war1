@@ -69,6 +69,7 @@ void applyGoldCheat(WarContext* context, const char* argument)
         return;
 
     increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
+    setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
 void applySpellsCheat(WarContext* context, const char* argument)
@@ -128,6 +129,8 @@ void applySpellsCheat(WarContext* context, const char* argument)
             increaseUpgradeLevel(context, player, spells[i]);
         }
     }
+
+    setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
 void applyUpgradesCheat(WarContext* context, const char* argument)
@@ -159,6 +162,8 @@ void applyUpgradesCheat(WarContext* context, const char* argument)
             increaseUpgradeLevel(context, player, upgrades[i]);
         }
     }
+
+    setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
 void applyEndCheat(WarContext* context, const char* argument)
@@ -175,7 +180,16 @@ void applyEndCheat(WarContext* context, const char* argument)
 
 void applyEnableCheat(WarContext* context, const char* argument)
 {
-    context->cheatsEnabled = !context->cheatsEnabled;
+    if (!context->cheatsEnabled)
+    {
+        context->cheatsEnabled = true;
+        setCheatsFeedback(context, "cheats enabled");
+    }
+    else
+    {
+        context->cheatsEnabled = false;
+        setCheatsFeedback(context, "cheats disabled");
+    }
 }
 
 void applyGodModeCheat(WarContext* context, const char* argument)
@@ -189,6 +203,8 @@ void applyGodModeCheat(WarContext* context, const char* argument)
 
     WarPlayerInfo* player = &map->players[0];
     player->godMode = !player->godMode;
+
+    setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
 void applyWinCheat(WarContext* context, const char* argument)
@@ -201,6 +217,8 @@ void applyWinCheat(WarContext* context, const char* argument)
         return;
 
     map->result = WAR_LEVEL_RESULT_WIN;
+
+    setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
 void applyLossCheat(WarContext* context, const char* argument)
@@ -213,6 +231,8 @@ void applyLossCheat(WarContext* context, const char* argument)
         return;
 
     map->result = WAR_LEVEL_RESULT_LOSE;
+
+    setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
 void applyFogOfWarCheat(WarContext* context, const char* argument)
@@ -225,6 +245,8 @@ void applyFogOfWarCheat(WarContext* context, const char* argument)
         return;
 
     map->fowEnabled = !map->fowEnabled;
+
+    setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
 void applySkipHumanCheat(WarContext* context, const char* argument)
@@ -283,6 +305,8 @@ void applySpeedCheat(WarContext* context, const char* argument)
         return;
 
     map->hurryUp = !map->hurryUp;
+
+    setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
 void applyMusicCheat(WarContext* context, const char* argument)
@@ -293,13 +317,14 @@ void applyMusicCheat(WarContext* context, const char* argument)
     if (strCaseEquals(argument, "on", true))
     {
         context->musicEnabled = true;
+        setCheatsFeedback(context, "Music on");
     }
     else if (strCaseEquals(argument, "off", true))
     {
         context->musicEnabled = false;
+        setCheatsFeedback(context, "Music off");
     }
-
-    if (!isDemo(context))
+    else if (!isDemo(context))
     {
         s32 musicId;
         if (strTryParseS32(argument, &musicId))
@@ -316,8 +341,8 @@ void applyMusicCheat(WarContext* context, const char* argument)
                 // for now remove all the active music (audios of type WAR_AUDIO_MIDI)
                 // and the create the new one
                 removeAudiosOfType(context, WAR_AUDIO_MIDI);
-
                 createAudio(context, musicId, true);
+                setCheatsFeedbackFormat(context, "Music %d set", musicId + 1);
             }
         }
     }
@@ -331,10 +356,12 @@ void applySoundCheat(WarContext* context, const char* argument)
     if (strCaseEquals(argument, "on", true))
     {
         context->soundEnabled = true;
+        setCheatsFeedback(context, "Sounds on");
     }
     else if (strCaseEquals(argument, "off", true))
     {
         context->soundEnabled = false;
+        setCheatsFeedback(context, "Sounds off");
     }
 }
 
@@ -366,6 +393,7 @@ void applyMusicVolCheat(WarContext* context, const char* argument)
         context->musicEnabled = true;
 
         setMusicVolume(context, (f32)musicVol / 100);
+        setCheatsFeedbackFormat(context, "Music volume set to %d", musicVol);
     }
 }
 
@@ -397,6 +425,7 @@ void applySoundVolCheat(WarContext* context, const char* argument)
         context->soundEnabled = true;
 
         setSoundVolume(context, (f32)sfxVol / 100);
+        setCheatsFeedbackFormat(context, "Sounds volume set to %d", sfxVol);
     }
 }
 
@@ -410,6 +439,7 @@ void applyGlobalScaleCheat(WarContext* context, const char* argument)
     {
         scale = clamp(scale, 1, 5);
         setGlobalScale(context, scale);
+        setCheatsFeedbackFormat(context, "Global scale set to %d", scale);
     }
 }
 
@@ -423,6 +453,7 @@ void applyGlobalSpeedCheat(WarContext* context, const char* argument)
     {
         speed = clamp(speed, 1, 5);
         setGlobalSpeed(context, speed);
+        setCheatsFeedbackFormat(context, "Global speed set to %d", speed);
     }
 }
 
@@ -442,14 +473,32 @@ void applyEditCheat(WarContext* context, const char* argument)
     map->editingRainOfFire = false;
     map->addingUnit = false;
 
+    if (strCaseEquals(argument, "off", true))
+    {
+        setCheatsFeedback(context, "Edit off");
+        return;
+    }
+
     if (strCaseEquals(argument, "trees", true))
-        map->editingTrees = !map->editingTrees;
-    if (strCaseEquals(argument, "walls", true))
-        map->editingWalls = !map->editingWalls;
-    if (strCaseEquals(argument, "roads", true))
-        map->editingRoads = !map->editingRoads;
-    if (strCaseEquals(argument, "ruins", true))
-        map->editingRuins = !map->editingRuins;
+    {
+        map->editingTrees = true;
+        setCheatsFeedback(context, "Edit trees on");
+    }
+    else if (strCaseEquals(argument, "walls", true))
+    {
+        map->editingWalls = true;
+        setCheatsFeedback(context, "Edit walls on");
+    }
+    else if (strCaseEquals(argument, "roads", true))
+    {
+        map->editingRoads = true;
+        setCheatsFeedback(context, "Edit roads on");
+    }
+    else if (strCaseEquals(argument, "ruins", true))
+    {
+        map->editingRuins = true;
+        setCheatsFeedback(context, "Edit ruins on");
+    }
 }
 
 void applyRainOfFireCheat(WarContext* context, const char* argument)
@@ -467,6 +516,11 @@ void applyRainOfFireCheat(WarContext* context, const char* argument)
     map->editingRuins = false;
     map->editingRainOfFire = !map->editingRainOfFire;
     map->addingUnit = false;
+
+    if (map->editingRainOfFire)
+        setCheatsFeedback(context, "Rain of fire on");
+    else
+        setCheatsFeedback(context, "Rain of fire off");
 }
 
 void applyAddUnitCheat(WarContext* context, const char* argument)
@@ -486,8 +540,9 @@ void applyAddUnitCheat(WarContext* context, const char* argument)
 
     map->addingUnit = false;
 
-    if (strCaseStartsWith(argument, "OFF", true))
+    if (strCaseStartsWith(argument, "off", true))
     {
+        setCheatsFeedback(context, "Add unit off");
         return;
     }
 
@@ -614,5 +669,10 @@ void applyAddUnitCheat(WarContext* context, const char* argument)
                 break;
             }
         }
+    }
+
+    if (map->addingUnit)
+    {
+        setCheatsFeedbackFormat(context, "Add unit %s", argument);
     }
 }
