@@ -16,7 +16,7 @@ REM Compiler flags
 REM SET ProfilerFlags="-pg"
 REM SET OptimizeFlags="-O2"
 REM SET AssemblyFlags="-g -Wa,-ahl"
-SET CommonCompilerFlags=-std=c99 -Wall -Wno-misleading-indentation -x c %ProfilerFlags% %OptimizeFlags% %AssemblyFlags% -I %IncludePath%
+SET CommonCompilerFlags=-std=c99 -Wall -Wno-misleading-indentation -x c -static-libgcc %ProfilerFlags% %OptimizeFlags% %AssemblyFlags% -I %IncludePath%
 SET CommonLinkerFlags=-L %LibPath% -l glfw3 -l opengl32 -l ws2_32
 
 REM Create output path if doesn't exists

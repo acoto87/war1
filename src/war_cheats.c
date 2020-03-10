@@ -175,6 +175,8 @@ void applyEndCheat(WarContext* context, const char* argument)
     if (!map)
         return;
 
+    map->playing = false;
+
     showDemoEndMenu(context, true);
 }
 

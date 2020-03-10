@@ -2438,9 +2438,10 @@ void updateMap(WarContext* context)
     {
         map->playing = false;
 
-        if (map->result == WAR_LEVEL_RESULT_WIN &&
-            (map->levelInfoIndex == WAR_CAMPAIGN_HUMANS_02 ||
-             map->levelInfoIndex == WAR_CAMPAIGN_ORCS_02))
+        bool isLastLevel = map->levelInfoIndex == WAR_CAMPAIGN_HUMANS_02 ||
+                           map->levelInfoIndex == WAR_CAMPAIGN_ORCS_02;
+
+        if (map->result == WAR_LEVEL_RESULT_WIN && isLastLevel)
         {
             showDemoEndMenu(context, true);
         }
