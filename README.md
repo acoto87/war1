@@ -18,12 +18,12 @@ Current features (this list is not complete):
 * Fog of war
 * Basic behavior for enemies (it will attack your units if you get near enough, it will chase your units)
 * Spells
+* Typing commands for cheats and other stuff that could be activated by it in the engine
 
 Still to develop (this list is not complete):
 
 * AI (I'm planning to do a basic one first and build from that more complex ones)
 * Cinematics (I've the code for reading FLIC files just need to integrate it into the engine)
-* Typing commands for cheats and other stuff that could be activated by it in the engine
 * Save/Load
 
 You can check videos of gameplay and features as they are built [here](https://www.youtube.com/playlist?list=PLgN8fwyHpZaY42SjuwAQ4MPJ1rD9w1Kym).
@@ -33,11 +33,13 @@ You can check videos of gameplay and features as they are built [here](https://w
 1. Clone the repository `git clone https://github.com/acoto87/war1`
 
 ### Windows
+
 2. Download and install [MinGW](http://www.mingw.org/) (or [MinGW-w64](http://mingw-w64.org) for 64 bits builds).
 3. Get the DATA.WAR file and place it in the `assets` folder.
 4. Run `build-gcc-win32.bat` (or `build-gcc-win64.bat` for 64 bits builds).
 
 ### Raspberry PI
+
 2. Install `gcc` (usually comes with the `build-essential` package).
 3. Install `libx11-dev` package.
 4. Run `build-gcc-linux.sh`.
