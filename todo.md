@@ -254,6 +254,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Add explosion animation to living npc units when clicking to many times.
 * [ ] Make Ctrl+click select all units of the same type on the screen.
 * [ ] Make custom games (this is for be able to develop the AI in a custom game and not in a campaign map)
+* [ ] Make feature to select a point where automatically the trained unit will go.
 
 ## Animations/actions
 
