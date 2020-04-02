@@ -623,7 +623,7 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
     nvgScale(gfx, scale, scale);
 
 #ifdef DEBUG_RENDER_FONT
-    rect outline = rectf(0, 0, textSize.x / scale, lineHeight);
+    rect outline = rectf(0, 0, textSize.x / scale, 1.5f);
     nvgStrokeRect(gfx, outline, NVG_GREEN_SELECTION, 3);
 #endif
 

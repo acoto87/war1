@@ -2129,6 +2129,12 @@ typedef struct
 
         struct
         {
+            WarRace yourRace;
+            WarRace enemyRace;
+        } menu;
+
+        struct
+        {
             f32 time;
             WarRace race;
             WarCampaignMapType mapType;
