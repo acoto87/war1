@@ -47,6 +47,8 @@ bool areAllUnitTilesInState(WarMap* map, WarEntity* entity, WarMapTileState stat
 
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
 
+WarCampaignMapType getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex);
+
 f32 getMapScaledSpeed(WarContext* context, f32 t);
 f32 getMapScaledTime(WarContext* context, f32 t);
 

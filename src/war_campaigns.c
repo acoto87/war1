@@ -1,5 +1,6 @@
 WarLevelResult checkMap01Objectives(WarContext* context);
 WarLevelResult checkMap02Objectives(WarContext* context);
+WarLevelResult checkCustomMapObjectives(WarContext* context);
 
 typedef struct
 {
@@ -341,6 +342,14 @@ const WarCampaignMapData campaignsData[] =
         "red of King Llane's blood.  With his fall, all of Azeroth will be yours!",
         22.0f
     },
+    {
+        WAR_CAMPAIGN_CUSTOM,
+        checkCustomMapObjectives,
+        "Destroy enemy",
+        0,
+        NULL,
+        0.0f
+    }
 };
 
 WarCampaignMapData getCampaignData(WarCampaignMapType type)
@@ -385,6 +394,25 @@ WarLevelResult checkMap02Objectives(WarContext* context)
     WarPlayerInfo* enemy = &map->players[1];
 
     if (getTotalNumberOfDudes(context, enemy->index) == 0)
+    {
+        return WAR_LEVEL_RESULT_WIN;
+    }
+
+    if (getTotalNumberOfUnits(context, player->index) == 0)
+    {
+        return WAR_LEVEL_RESULT_LOSE;
+    }
+
+    return WAR_LEVEL_RESULT_NONE;
+}
+
+WarLevelResult checkCustomMapObjectives(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+    WarPlayerInfo* enemy = &map->players[1];
+
+    if (getTotalNumberOfUnits(context, enemy->index) == 0)
     {
         return WAR_LEVEL_RESULT_WIN;
     }

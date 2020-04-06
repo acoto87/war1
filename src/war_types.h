@@ -553,6 +553,7 @@ typedef struct
             u32 allowId;
             bool allowedHumanUnits;
             bool allowedOrcsUnits;
+            bool customMap;
             u8 allowedFeatures[MAX_FEATURES_COUNT];
             u8 allowedUpgrades[MAX_UPGRADES_COUNT][MAX_PLAYERS_COUNT];
             u16 startX;
@@ -648,7 +649,8 @@ typedef enum
     WAR_CAMPAIGN_HUMANS_11,
     WAR_CAMPAIGN_ORCS_11,
     WAR_CAMPAIGN_HUMANS_12,
-    WAR_CAMPAIGN_ORCS_12
+    WAR_CAMPAIGN_ORCS_12,
+    WAR_CAMPAIGN_CUSTOM
 } WarCampaignMapType;
 
 typedef enum
@@ -2027,6 +2029,7 @@ typedef struct
 typedef struct
 {
     bool playing;
+    bool custom;
     WarLevelResult result;
 
     s32 levelInfoIndex;

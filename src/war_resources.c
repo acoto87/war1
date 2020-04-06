@@ -289,6 +289,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
     resource->levelInfo.allowId = allowId;
     resource->levelInfo.allowedHumanUnits = 1;
     resource->levelInfo.allowedOrcsUnits = 1;
+    resource->levelInfo.customMap = entry->param1;
 
     memset(resource->levelInfo.allowedFeatures, 0, MAX_FEATURES_COUNT);
     for(s32 f = 0; f < MAX_FEATURES_COUNT; f++)

@@ -459,6 +459,7 @@ void enterMap(WarContext* context)
     assert(levelPassable && levelPassable->type == WAR_RESOURCE_TYPE_LEVEL_PASSABLE);
 
     map->playing = true;
+    map->custom = levelInfo->levelInfo.customMap;
     map->fowEnabled = true;
     map->result = WAR_LEVEL_RESULT_NONE;
     map->objectivesTime = 1;
@@ -721,7 +722,7 @@ void enterMap(WarContext* context)
 
     // create the starting entities
     {
-        for(s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
+        for (s32 i = 0; i < levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
 
@@ -2356,6 +2357,13 @@ void determineFoWTypes(WarContext* context)
     }
 }
 
+WarCampaignMapType getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex)
+{
+    return levelInfoIndex >= WAR_CAMPAIGN_HUMANS_01 && levelInfoIndex <= WAR_CAMPAIGN_ORCS_12
+        ? (WarCampaignMapType)levelInfoIndex
+        : WAR_CAMPAIGN_CUSTOM;
+}
+
 WarLevelResult checkObjectives(WarContext* context)
 {
     WarMap* map = context->map;
@@ -2364,7 +2372,7 @@ WarLevelResult checkObjectives(WarContext* context)
 
     if (map->objectivesTime <= 0)
     {
-        WarCampaignMapData data = getCampaignData((WarCampaignMapType)map->levelInfoIndex);
+        WarCampaignMapData data = getCampaignData(getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
         if (data.checkObjectivesFunc)
         {
             return data.checkObjectivesFunc(context);
