@@ -1604,6 +1604,8 @@ WarRace getUnitRace(WarEntity* entity)
 #define isOrcUnit(entity) (getUnitRace(entity) == WAR_RACE_ORCS)
 #define isNeutralUnit(entity) (getUnitRace(entity) == WAR_RACE_NEUTRAL)
 
+WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race);
+
 WarProjectileType getProjectileType(WarUnitType type)
 {
     assert(isRangeUnitType(type));

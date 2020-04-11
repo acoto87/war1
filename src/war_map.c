@@ -410,7 +410,7 @@ f32 getMapScaledTime(WarContext* context, f32 t)
     return t;
 }
 
-WarMap* createMap(WarContext *context, s32 levelInfoIndex)
+WarMap* createMap(WarContext* context, s32 levelInfoIndex)
 {
     WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
@@ -418,6 +418,55 @@ WarMap* createMap(WarContext *context, s32 levelInfoIndex)
     initEntityManager(&map->entityManager);
 
     WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
+
+    return map;
+}
+
+WarMap* createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yourRace, WarRace enemyRace)
+{
+    WarMap* map = createMap(context, levelInfoIndex);
+
+    WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
+    assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO && levelInfo->levelInfo.customMap);
+
+    levelInfo->levelInfo.startEntitiesCount = 0;
+    memset(levelInfo->levelInfo.startEntities, 0, sizeof(levelInfo->levelInfo.startEntities));
+
+    levelInfo->levelInfo.races[0] = yourRace;
+    levelInfo->levelInfo.races[1] = enemyRace;
+
+    for (s32 i = 0; i < levelInfo->customMapInfo.startGoldminesCount; i++)
+    {
+        WarLevelUnit* startGoldmine = &levelInfo->customMapInfo.startGoldmines[i];
+
+        WarLevelUnit* startUnit = &levelInfo->levelInfo.startEntities[levelInfo->levelInfo.startEntitiesCount];
+        startUnit->x = startGoldmine->x;
+        startUnit->y = startGoldmine->y;
+        startUnit->type = startGoldmine->type;
+        startUnit->player = startGoldmine->player;
+        startUnit->resourceKind = WAR_RESOURCE_GOLD;
+        startUnit->amount = randomi(20000, 30000);
+
+        levelInfo->levelInfo.startEntitiesCount++;
+    }
+
+    s32 configurationIndex = randomi(0, MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT);
+    WarCustomMapConfiguration* configuration = &levelInfo->customMapInfo.startConfigurations[configurationIndex];
+
+    for (s32 i = 0; i < configuration->startEntitiesCount; i++)
+    {
+        WarLevelUnit* startConf = &configuration->startEntities[i];
+
+        WarLevelUnit* startUnit = &levelInfo->levelInfo.startEntities[levelInfo->levelInfo.startEntitiesCount];
+        startUnit->x = startConf->x;
+        startUnit->y = startConf->y;
+        startUnit->player = startConf->player;
+        startUnit->type = startUnit->player == 0
+            ? getUnitTypeForRace(startConf->type, yourRace)
+            : getUnitTypeForRace(startConf->type, enemyRace);
+
+        levelInfo->levelInfo.startEntitiesCount++;
+    }
 
     return map;
 }
@@ -460,10 +509,10 @@ void enterMap(WarContext* context)
 
     map->playing = true;
     map->custom = levelInfo->levelInfo.customMap;
+    map->tilesetType = levelInfo->levelInfo.tilesetType;
     map->fowEnabled = true;
     map->result = WAR_LEVEL_RESULT_NONE;
     map->objectivesTime = 1;
-    map->tilesetType = levelInfoIndex & 1 ? MAP_TILESET_FOREST : MAP_TILESET_SWAMP;
 
     map->settings.gameSpeed = WAR_SPEED_NORMAL;
     map->settings.mouseScrollSpeed = WAR_SPEED_NORMAL;
@@ -485,8 +534,6 @@ void enterMap(WarContext* context)
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
     map->finder = initPathFinder(PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
-
-    context->map = map;
 
     // create the black sprite
     {

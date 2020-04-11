@@ -154,29 +154,56 @@ DatabaseEntry assets[] =
 
     // Levels
     { 117, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_01",                                    0, 0, 0 }, // demo
-    { 118, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_01",                                      0, 0, 0 }, // demo
+    { 118, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_01",                                      1, 0, 0 }, // demo
     { 119, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_02",                                    0, 0, 0 }, // demo
-    { 120, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_02",                                      0, 0, 0 }, // demo
-    { 121, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_03",                                    0, 0, 0 }, // demo
+    { 120, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_02",                                      1, 0, 0 }, // demo
+    { 121, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_03",                                    1, 0, 0 }, // demo
     { 122, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_03",                                      0, 0, 0 }, // demo
-    { 123, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_04",                                    0, 0, 0 },
-    { 124, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_04",                                      0, 0, 0 },
+    { 123, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_04",                                    2, 0, 0 },
+    { 124, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_04",                                      2, 0, 0 },
     { 125, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_05",                                    0, 0, 0 },
-    { 126, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_05",                                      0, 0, 0 },
+    { 126, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_05",                                      1, 0, 0 },
     { 127, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_06",                                    0, 0, 0 },
     { 128, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_06",                                      0, 0, 0 },
     { 129, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_07",                                    0, 0, 0 },
-    { 130, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_07",                                      0, 0, 0 },
-    { 131, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_08",                                    0, 0, 0 },
-    { 132, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_08",                                      0, 0, 0 },
-    { 133, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_09",                                    0, 0, 0 },
-    { 134, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_09",                                      0, 0, 0 },
-    { 135, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_10",                                    0, 0, 0 },
+    { 130, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_07",                                      1, 0, 0 },
+    { 131, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_08",                                    2, 0, 0 },
+    { 132, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_08",                                      2, 0, 0 },
+    { 133, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_09",                                    1, 0, 0 },
+    { 134, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_09",                                      1, 0, 0 },
+    { 135, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_10",                                    1, 0, 0 },
     { 136, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_10",                                      0, 0, 0 },
-    { 137, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_11",                                    0, 0, 0 },
+    { 137, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_11",                                    1, 0, 0 },
     { 138, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_11",                                      0, 0, 0 },
-    { 139, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_12",                                    0, 0, 0 },
+    { 139, DB_ENTRY_TYPE_LEVEL_INFO,        "humans_12",                                    1, 0, 0 },
     { 140, DB_ENTRY_TYPE_LEVEL_INFO,        "orcs_12",                                      0, 0, 0 },
+
+    // Custom
+    { 141, DB_ENTRY_TYPE_UNKNOWN,           "battle_test_map_1",                            1, 0, 0 }, // test map, just several footmans and archers against grunts and spearmans, player control humans
+    { 142, DB_ENTRY_TYPE_UNKNOWN,           "battle_test_map_2",                            1, 0, 0 }, // test map, several footmans and archers attacking an orc camp with few grunts and spearmans, player controls humans
+    { 143, DB_ENTRY_TYPE_UNKNOWN,           "battle_test_map_3",                            1, 0, 0 }, // test map, several footmans and archers attacking an orc camp with few grunts and spearmans, player controls orcs
+    { 144, DB_ENTRY_TYPE_UNKNOWN,           "battle_test_map_4",                            1, 0, 0 }, // test map, several grunts and spearmans attacking a human camp with few footmans and archers, player controls orcs
+    { 147, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_1",                                     0, 1, 0 },
+    { 148, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_2",                                     0, 1, 0 },
+    { 149, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_3",                                     0, 1, 0 },
+    { 150, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_4",                                     0, 1, 0 },
+    { 151, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_5",                                     0, 1, 0 },
+    { 152, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_6",                                     0, 1, 0 },
+    { 153, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_7",                                     0, 1, 0 },
+    { 154, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_6",                                      1, 1, 0 },
+    { 155, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_7",                                      1, 1, 0 },
+    { 156, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_1",                                      1, 1, 0 },
+    { 157, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_2",                                      1, 1, 0 },
+    { 158, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_3",                                      1, 1, 0 },
+    { 159, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_4",                                      1, 1, 0 },
+    { 160, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_5",                                      1, 1, 0 },
+    { 161, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_1",                                    2, 1, 0 },
+    { 162, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_2",                                    2, 1, 0 },
+    { 163, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_3",                                    2, 1, 0 },
+    { 164, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_4",                                    2, 1, 0 },
+    { 165, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_5",                                    2, 1, 0 },
+    { 166, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_6",                                    2, 1, 0 },
+    { 167, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_7",                                    2, 1, 0 },
 
     // Palettes
     { 191, DB_ENTRY_TYPE_PALETTE,           "forest",                                       0, 0, 0 }, // demo
@@ -527,16 +554,28 @@ DatabaseEntry assets[] =
     // NOTE: these are resources included in the demo version
     // not sure what are they, a little investigation is required
     //
-    { 141, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 142, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 143, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 144, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 147, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 154, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 161, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
     { 168, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 169, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 170, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 171, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 172, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 173, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 174, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
     { 175, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 176, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 177, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 178, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 179, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 180, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 181, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
     { 182, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 183, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 184, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 185, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 186, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 187, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+    { 188, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
+
     { 198, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
     { 199, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
     { 200, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },

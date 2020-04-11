@@ -211,6 +211,68 @@ s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
     return count;
 }
 
+WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race)
+{
+    if (race == WAR_RACE_HUMANS)
+    {
+        switch (type)
+        {
+            case WAR_UNIT_GRUNT: return WAR_UNIT_FOOTMAN;
+            case WAR_UNIT_PEON: return WAR_UNIT_PEASANT;
+            case WAR_UNIT_CATAPULT_ORCS: return WAR_UNIT_CATAPULT_HUMANS;
+            case WAR_UNIT_RAIDER: return WAR_UNIT_KNIGHT;
+            case WAR_UNIT_SPEARMAN: return WAR_UNIT_ARCHER;
+            case WAR_UNIT_WARLOCK: return WAR_UNIT_CONJURER;
+            case WAR_UNIT_NECROLYTE: return WAR_UNIT_CLERIC;
+            case WAR_UNIT_FARM_ORCS: return WAR_UNIT_FARM_HUMANS;
+            case WAR_UNIT_BARRACKS_ORCS: return WAR_UNIT_BARRACKS_HUMANS;
+            case WAR_UNIT_TEMPLE: return WAR_UNIT_CHURCH;
+            case WAR_UNIT_TOWER_ORCS: return WAR_UNIT_TOWER_HUMANS;
+            case WAR_UNIT_TOWNHALL_ORCS: return WAR_UNIT_TOWNHALL_HUMANS;
+            case WAR_UNIT_LUMBERMILL_ORCS: return WAR_UNIT_LUMBERMILL_HUMANS;
+            case WAR_UNIT_KENNEL: return WAR_UNIT_STABLE;
+            case WAR_UNIT_BLACKSMITH_ORCS: return WAR_UNIT_BLACKSMITH_HUMANS;
+            case WAR_UNIT_ORC_CORPSE: return WAR_UNIT_HUMAN_CORPSE;
+            default:
+            {
+                logInfo("Trying to get type %d for race %d, returning %d\n", type, race, type);
+                return type;
+            }
+        }
+    }
+
+    if (race == WAR_RACE_ORCS)
+    {
+        switch (type)
+        {
+            case WAR_UNIT_FOOTMAN: return WAR_UNIT_GRUNT;
+            case WAR_UNIT_PEASANT: return WAR_UNIT_PEON;
+            case WAR_UNIT_CATAPULT_HUMANS: return WAR_UNIT_CATAPULT_ORCS;
+            case WAR_UNIT_KNIGHT: return WAR_UNIT_RAIDER;
+            case WAR_UNIT_ARCHER: return WAR_UNIT_SPEARMAN;
+            case WAR_UNIT_CONJURER: return WAR_UNIT_WARLOCK;
+            case WAR_UNIT_CLERIC: return WAR_UNIT_NECROLYTE;
+            case WAR_UNIT_FARM_HUMANS: return WAR_UNIT_FARM_ORCS;
+            case WAR_UNIT_BARRACKS_HUMANS: return WAR_UNIT_BARRACKS_ORCS;
+            case WAR_UNIT_CHURCH: return WAR_UNIT_TEMPLE;
+            case WAR_UNIT_TOWER_HUMANS: return WAR_UNIT_TOWER_ORCS;
+            case WAR_UNIT_TOWNHALL_HUMANS: return WAR_UNIT_TOWNHALL_ORCS;
+            case WAR_UNIT_LUMBERMILL_HUMANS: return WAR_UNIT_LUMBERMILL_ORCS;
+            case WAR_UNIT_STABLE: return WAR_UNIT_KENNEL;
+            case WAR_UNIT_BLACKSMITH_HUMANS: return WAR_UNIT_BLACKSMITH_ORCS;
+            case WAR_UNIT_HUMAN_CORPSE: return WAR_UNIT_ORC_CORPSE;
+            default:
+            {
+                logInfo("Trying to get type %d for race %d, returning %d\n", type, race, type);
+                return type;
+            }
+        }
+    }
+
+    logInfo("Trying to get type %d for race %d, returning %d\n", type, race, type);
+    return type;
+}
+
 void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[])
 {
     assert(entity);

@@ -389,4 +389,8 @@ void handleEnemyRaceRight(WarContext* context, WarEntity* entity)
 
 void handleCustomGameOk(WarContext* context, WarEntity* entity)
 {
+    WarScene* scene = context->scene;
+
+    WarMap* map = createCustomMap(context, 147, scene->menu.yourRace, scene->menu.enemyRace);
+    setNextMap(context, map, 1.0f);
 }

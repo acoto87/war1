@@ -5,6 +5,9 @@
 #define MAX_ENTITIES_COUNT 100
 #define MAX_SPRITE_FRAME_COUNT 100
 #define MAX_CONSTRUCTS_COUNT 100
+#define MAX_CUSTOM_MAP_GOLDMINES_COUNT 10
+#define MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT 10
+#define MAX_CUSTOM_MAP_ENTITIES_COUNT 100
 
 // all palettes have 768 colors
 #define PALETTE_LENGTH 768
@@ -524,6 +527,12 @@ typedef struct
 
 typedef struct
 {
+    u32 startEntitiesCount;
+    WarLevelUnit startEntities[MAX_CUSTOM_MAP_ENTITIES_COUNT];
+} WarCustomMapConfiguration;
+
+typedef struct
+{
     WarResourceType type;
 
     union
@@ -564,6 +573,7 @@ typedef struct
             u16 paletteIndex;
             u16 tilesIndex;
             u16 tilesetIndex;
+            u16 tilesetType;
             u32 lumber[MAX_PLAYERS_COUNT];
             u32 gold[MAX_PLAYERS_COUNT];
             WarRace races[MAX_PLAYERS_COUNT];
@@ -578,6 +588,15 @@ typedef struct
             u32 startWallsCount;
             WarLevelConstruct startWalls[MAX_CONSTRUCTS_COUNT];
         } levelInfo;
+
+        struct
+        {
+            u32 startGoldminesCount;
+            WarLevelUnit startGoldmines[MAX_CUSTOM_MAP_GOLDMINES_COUNT];
+
+            u32 startConfigurationsCount;
+            WarCustomMapConfiguration startConfigurations[MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT];
+        } customMapInfo;
 
         struct
         {
