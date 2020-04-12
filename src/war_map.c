@@ -435,9 +435,9 @@ WarMap* createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yourRac
     levelInfo->levelInfo.races[0] = yourRace;
     levelInfo->levelInfo.races[1] = enemyRace;
 
-    for (s32 i = 0; i < levelInfo->customMapInfo.startGoldminesCount; i++)
+    for (s32 i = 0; i < levelInfo->levelInfo.startGoldminesCount; i++)
     {
-        WarLevelUnit* startGoldmine = &levelInfo->customMapInfo.startGoldmines[i];
+        WarLevelUnit* startGoldmine = &levelInfo->levelInfo.startGoldmines[i];
 
         WarLevelUnit* startUnit = &levelInfo->levelInfo.startEntities[levelInfo->levelInfo.startEntitiesCount];
         startUnit->x = startGoldmine->x;
@@ -450,8 +450,8 @@ WarMap* createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yourRac
         levelInfo->levelInfo.startEntitiesCount++;
     }
 
-    s32 configurationIndex = randomi(0, MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT);
-    WarCustomMapConfiguration* configuration = &levelInfo->customMapInfo.startConfigurations[configurationIndex];
+    s32 configurationIndex = randomi(0, levelInfo->levelInfo.startConfigurationsCount);
+    WarCustomMapConfiguration* configuration = &levelInfo->levelInfo.startConfigurations[configurationIndex];
 
     for (s32 i = 0; i < configuration->startEntitiesCount; i++)
     {

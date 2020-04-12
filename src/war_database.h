@@ -205,6 +205,28 @@ DatabaseEntry assets[] =
     { 166, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_6",                                    2, 1, 0 },
     { 167, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_7",                                    2, 1, 0 },
 
+    { 168, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_1_big_enemy",                           0, 1, 0 },
+    { 169, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_2_big_enemy",                           0, 1, 0 },
+    { 170, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_3_big_enemy",                           0, 1, 0 },
+    { 171, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_4_big_enemy",                           0, 1, 0 },
+    { 172, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_5_big_enemy",                           0, 1, 0 },
+    { 173, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_6_big_enemy",                           0, 1, 0 },
+    { 174, DB_ENTRY_TYPE_LEVEL_INFO,        "forest_7_big_enemy",                           0, 1, 0 },
+    { 175, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_6_big_enemy",                            1, 1, 0 },
+    { 176, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_7_big_enemy",                            1, 1, 0 },
+    { 177, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_1_big_enemy",                            1, 1, 0 },
+    { 178, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_2_big_enemy",                            1, 1, 0 },
+    { 179, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_3_big_enemy",                            1, 1, 0 },
+    { 180, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_4_big_enemy",                            1, 1, 0 },
+    { 181, DB_ENTRY_TYPE_LEVEL_INFO,        "swamp_5_big_enemy",                            1, 1, 0 },
+    { 182, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_1_big_enemy",                          2, 1, 0 },
+    { 183, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_2_big_enemy",                          2, 1, 0 },
+    { 184, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_3_big_enemy",                          2, 1, 0 },
+    { 185, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_4_big_enemy",                          2, 1, 0 },
+    { 186, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_5_big_enemy",                          2, 1, 0 },
+    { 187, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_6_big_enemy",                          2, 1, 0 },
+    { 188, DB_ENTRY_TYPE_LEVEL_INFO,        "dungeon_7_big_enemy",                          2, 1, 0 },
+
     // Palettes
     { 191, DB_ENTRY_TYPE_PALETTE,           "forest",                                       0, 0, 0 }, // demo
     { 194, DB_ENTRY_TYPE_PALETTE,           "swamp",                                        0, 0, 0 }, // demo
@@ -554,27 +576,6 @@ DatabaseEntry assets[] =
     // NOTE: these are resources included in the demo version
     // not sure what are they, a little investigation is required
     //
-    { 168, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 169, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 170, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 171, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 172, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 173, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 174, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 175, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 176, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 177, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 178, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 179, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 180, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 181, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 182, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 183, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 184, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 185, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 186, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 187, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
-    { 188, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
 
     { 198, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },
     { 199, DB_ENTRY_TYPE_UNKNOWN,           "",                                             0, 0, 0 },

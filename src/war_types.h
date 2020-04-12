@@ -587,16 +587,13 @@ typedef struct
 
             u32 startWallsCount;
             WarLevelConstruct startWalls[MAX_CONSTRUCTS_COUNT];
-        } levelInfo;
 
-        struct
-        {
             u32 startGoldminesCount;
             WarLevelUnit startGoldmines[MAX_CUSTOM_MAP_GOLDMINES_COUNT];
 
             u32 startConfigurationsCount;
             WarCustomMapConfiguration startConfigurations[MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT];
-        } customMapInfo;
+        } levelInfo;
 
         struct
         {
@@ -2153,6 +2150,7 @@ typedef struct
         {
             WarRace yourRace;
             WarRace enemyRace;
+            s32 customMap;
         } menu;
 
         struct

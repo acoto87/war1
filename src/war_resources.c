@@ -231,7 +231,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
 
     for (s32 i = 0; i < framesCount; ++i)
     {
-        WarSpriteFrame *frame = &resource->spriteData.frames[i];
+        WarSpriteFrame* frame = &resource->spriteData.frames[i];
 
         u32 off = frame->off;
         for (s32 y = frame->dy; y < (frame->dy + frame->h); ++y)
@@ -272,7 +272,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     resource->spriteData.frameHeight = frameHeight;
 }
 
-void loadStartingEntities(WarResource* resource, WarRawResource* rawResource, s32 offset)
+s32 loadStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startEntitiesCount = 0;
 
@@ -284,7 +284,7 @@ void loadStartingEntities(WarResource* resource, WarRawResource* rawResource, s3
             break;
         }
 
-        WarLevelUnit *startEntity = &resource->levelInfo.startEntities[resource->levelInfo.startEntitiesCount];
+        WarLevelUnit* startEntity = &resource->levelInfo.startEntities[resource->levelInfo.startEntitiesCount];
         startEntity->x = readu8(rawResource->data, offset + 0) / 2;
         startEntity->y = readu8(rawResource->data, offset + 1) / 2;
         startEntity->type = readu8(rawResource->data, offset + 2);
@@ -301,9 +301,11 @@ void loadStartingEntities(WarResource* resource, WarRawResource* rawResource, s3
 
         resource->levelInfo.startEntitiesCount++;
     }
+
+    return offset;
 }
 
-void loadStartingRoads(WarResource* resource, WarRawResource* rawResource, s32 offset)
+s32 loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startRoadsCount = 0;
 
@@ -315,7 +317,7 @@ void loadStartingRoads(WarResource* resource, WarRawResource* rawResource, s32 o
             break;
         }
 
-        WarLevelConstruct *construct = &resource->levelInfo.startRoads[resource->levelInfo.startRoadsCount];
+        WarLevelConstruct* construct = &resource->levelInfo.startRoads[resource->levelInfo.startRoadsCount];
         construct->type = WAR_CONSTRUCT_ROAD;
         construct->x1 = readu8(rawResource->data, offset + 0) / 2;
         construct->y1 = readu8(rawResource->data, offset + 1) / 2;
@@ -327,9 +329,11 @@ void loadStartingRoads(WarResource* resource, WarRawResource* rawResource, s32 o
 
         resource->levelInfo.startRoadsCount++;
     }
+
+    return offset;
 }
 
-void loadStartingWalls(WarResource* resource, WarRawResource* rawResource, s32 offset)
+s32 loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startWallsCount = 0;
 
@@ -341,7 +345,7 @@ void loadStartingWalls(WarResource* resource, WarRawResource* rawResource, s32 o
             break;
         }
 
-        WarLevelConstruct *construct = &resource->levelInfo.startWalls[resource->levelInfo.startWallsCount];
+        WarLevelConstruct* construct = &resource->levelInfo.startWalls[resource->levelInfo.startWallsCount];
         construct->type = WAR_CONSTRUCT_WALL;
         construct->x1 = readu8(rawResource->data, offset + 0) / 2;
         construct->y1 = readu8(rawResource->data, offset + 1) / 2;
@@ -353,11 +357,13 @@ void loadStartingWalls(WarResource* resource, WarRawResource* rawResource, s32 o
 
         resource->levelInfo.startWallsCount++;
     }
+
+    return offset;
 }
 
-void loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource, s32 offset)
+s32 loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
-    s32 startGoldminesCount = 0;
+    resource->levelInfo.startGoldminesCount = 0;
 
     while (offset < rawResource->length)
     {
@@ -367,7 +373,7 @@ void loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource
             break;
         }
 
-        WarLevelUnit *startGoldmine = &resource->customMapInfo.startGoldmines[startGoldminesCount];
+        WarLevelUnit* startGoldmine = &resource->levelInfo.startGoldmines[resource->levelInfo.startGoldminesCount];
         startGoldmine->x = readu8(rawResource->data, offset + 0) / 2;
         startGoldmine->y = readu8(rawResource->data, offset + 1) / 2;
         startGoldmine->type = WAR_UNIT_GOLDMINE;;
@@ -375,16 +381,14 @@ void loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource
 
         offset += 4;
 
-        startGoldminesCount++;
+        resource->levelInfo.startGoldminesCount++;
     }
 
-    resource->customMapInfo.startGoldminesCount = startGoldminesCount;
+    return offset;
 }
 
-s32 loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset, u32 configurationIndex, u8 player)
+s32 loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset, WarCustomMapConfiguration* configuration, u8 player)
 {
-    WarCustomMapConfiguration* configuration = &resource->customMapInfo.startConfigurations[configurationIndex];
-
     while (offset < rawResource->length)
     {
         u16 val = readu16(rawResource->data, offset);
@@ -393,7 +397,7 @@ s32 loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, 
             break;
         }
 
-        WarLevelUnit *startEntity = &configuration->startEntities[configuration->startEntitiesCount];
+        WarLevelUnit* startEntity = &configuration->startEntities[configuration->startEntitiesCount];
         startEntity->x = readu8(rawResource->data, offset + 0) / 2;
         startEntity->y = readu8(rawResource->data, offset + 1) / 2;
         startEntity->type = readu8(rawResource->data, offset + 2);
@@ -421,14 +425,14 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
     }
 
     // DEBUG: This is debug code, remove it!
-    if ((index >= 117 && index <= 140) || index >= 141)
-    {
-        char fileName[10] = {0};
-        sprintf(fileName, "res%d", index);
-        FILE* f = fopen(fileName, "wb");
-        fwrite(rawResource.data, sizeof(u8), rawResource.length, f);
-        fclose(f);
-    }
+    // if (index >= 117 && index <= 188)
+    // {
+    //     char fileName[10] = {0};
+    //     sprintf(fileName, "res%d", index);
+    //     FILE* f = fopen(fileName, "wb");
+    //     fwrite(rawResource.data, sizeof(u8), rawResource.length, f);
+    //     fclose(f);
+    // }
 
     u32 allowId = readu32(rawResource.data, 0);
 
@@ -602,40 +606,43 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
         // skip marker 0xFFFF
         offset += 2;
 
-        for (s32 i = 0; i < 6; i++)
+        while (offset < goldminesOffset)
         {
+            WarCustomMapConfiguration* configuration = &resource->levelInfo.startConfigurations[resource->levelInfo.startConfigurationsCount];
+            configuration->startEntitiesCount = 0;
+
             s32 offset0 = readu16(rawResource.data, offset);
-            offset0 = loadCustomStartEntities(resource, &rawResource, offset0, i, 0);
-            loadStartingRoads(resource, &rawResource, offset0 + 2);
+            offset0 = loadCustomStartEntities(resource, &rawResource, offset0, configuration, 0);
+            offset0 = loadStartRoads(resource, &rawResource, offset0 + 2);
             offset += 2;
 
             s32 offset1 = readu16(rawResource.data, offset);
-            offset1 = loadCustomStartEntities(resource, &rawResource, offset1, i, 1);
-            loadStartingRoads(resource, &rawResource, offset1 + 2);
+            offset1 = loadCustomStartEntities(resource, &rawResource, offset1, configuration, 1);
+            offset1 = loadStartRoads(resource, &rawResource, offset1 + 2);
             offset += 2;
 
             // skip marker 0xFFFF
             offset += 2;
-        }
 
-        resource->customMapInfo.startConfigurationsCount = 6;
+            resource->levelInfo.startConfigurationsCount++;
+        }
     }
     else
     {
         // starting units
-        loadStartingEntities(resource, &rawResource, offset);
+        offset = loadStartEntities(resource, &rawResource, offset);
 
         // skip marker 0xFFFF
         offset += 2;
 
         // roads
-        loadStartingRoads(resource, &rawResource, offset);
+        offset = loadStartRoads(resource, &rawResource, offset);
 
         // skip marker 0xFFFF
         offset += 2;
 
         // walls
-        loadStartingWalls(resource, &rawResource, offset);
+        offset = loadStartWalls(resource, &rawResource, offset);
 
         // skip marker 0xFFFF
         offset += 2;

@@ -21,4 +21,6 @@ void handleYourRaceLeft(WarContext* context, WarEntity* entity);
 void handleYourRaceRight(WarContext* context, WarEntity* entity);
 void handleEnemyRaceLeft(WarContext* context, WarEntity* entity);
 void handleEnemyRaceRight(WarContext* context, WarEntity* entity);
+void handleMapLeft(WarContext* context, WarEntity* entity);
+void handleMapRight(WarContext* context, WarEntity* entity);
 void handleCustomGameOk(WarContext* context, WarEntity* entity);
