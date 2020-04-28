@@ -1924,6 +1924,58 @@ typedef struct
     s32 level;
 } WarUpgrade;
 
+typedef enum
+{
+    WAR_REQUEST_STATUS_NOT_STARTED,
+    WAR_REQUEST_STATUS_STARTED,
+    WAR_REQUEST_STATUS_COMPLETED,
+} WarAIRequestStatus;
+
+typedef enum
+{
+    WAR_AI_COMMAND_REQUEST,
+    WAR_AI_COMMAND_WAIT
+} WarAICommandType;
+
+typedef struct
+{
+    u32 id;
+    WarAICommandType type;
+
+    union
+    {
+        struct
+        {
+            WarAIRequestStatus status;
+            WarUnitType unitType;
+            s32 count;
+        } request;
+
+        struct
+        {
+            WarUnitType unitType;
+        } wait;
+    };
+} WarAICommand;
+
+shlDeclareQueue(WarAICommandQueue, WarAICommand*)
+shlDefineQueue(WarAICommandQueue, WarAICommand*)
+
+bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
+{
+    return command1->id == command2->id;
+}
+
+void aiCommandFree(WarAICommand* command)
+{
+    free((void)command);
+}
+
+typedef struct
+{
+    WarAICommandQueue commands;
+} WarAI;
+
 typedef struct
 {
     s32 index;
@@ -1933,6 +1985,7 @@ typedef struct
     bool godMode;
     bool features[MAX_FEATURES_COUNT];
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
+    WarAI* ai;
 } WarPlayerInfo;
 
 typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);

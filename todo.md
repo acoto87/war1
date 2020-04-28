@@ -250,12 +250,12 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [x] After a number of seconds (3 maybe?) an area without friendly units remain with fog.
     * [x] That is, buildings, roads, ruins, walls, trees are shown in the map, with a fade of fog.
     * [x] Moving units are not shown in areas with fog.
+* [x] Make custom games (this is for be able to develop the AI in a custom game and not in a campaign map)
+    * [x] Make custom game menu scene
+    * [x] Make functionality to start a custom game
 * [ ] Change the palette of the unit portraits depending on the tileset of the current map (building portraits looks different).
 * [ ] Add explosion animation to living npc units when clicking to many times.
 * [ ] Make Ctrl+click select all units of the same type on the screen.
-* [ ] Make custom games (this is for be able to develop the AI in a custom game and not in a campaign map)
-    * [x] Make custom game menu scene
-    * [ ] Make functionality to start a custom game
 * [ ] Make feature to select a point where automatically the trained unit will go.
 
 ## Animations/actions
@@ -341,7 +341,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 ## Pathfinding
 
 * [x] Add path finding algorithm to move the entities.
-    * [x] For now BFS is implemented.
+    * [x] Make BFS is implementation.
     * [x] Implement A* algorithm for pathfinding.
     * [x] Test the implementation of the A* algorithm for pathfinding.
 * [x] Update the map in each interation of the state machines to support updating the paths when moving units.
@@ -355,6 +355,10 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Remove BFS implementation.
 * [ ] Check again the path finding stuff, because now the units will go for side edges of buildings when a corner is closest.
 * [ ] Workers don't collide well while harvesting wood or gold when near the townhall.
+
+## AI
+
+* [ ] Make scripted AI
 
 ## UI system
 

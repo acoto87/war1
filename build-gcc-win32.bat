@@ -16,8 +16,10 @@ REM Compiler flags
 REM SET ProfilerFlags="-pg"
 REM SET OptimizeFlags="-O2"
 REM SET AssemblyFlags="-g -Wa,-ahl"
-SET CommonCompilerFlags=-std=c99 -Wall -Wno-misleading-indentation -x c -static-libgcc %ProfilerFlags% %OptimizeFlags% %AssemblyFlags% -I %IncludePath%
+SET CommonCompilerFlags=-std=c99 -g -Wall -Wno-misleading-indentation -x c -static-libgcc %ProfilerFlags% %OptimizeFlags% %AssemblyFlags% -I %IncludePath%
 SET CommonLinkerFlags=-L %LibPath% -l glfw3 -l opengl32 -l ws2_32
+
+ctime -begin build_timings.ctm
 
 REM Create output path if doesn't exists
 IF NOT EXIST %OutputPath% MKDIR %OutputPath%
@@ -37,3 +39,8 @@ if %ERRORLEVEL% == 0 (
 )
 
 POPD
+
+ctime -end build_timings.ctm
+
+REM ctime -stats build_timings.ctm
+REM ctime -csv build_timings.ctm

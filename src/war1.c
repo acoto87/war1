@@ -93,6 +93,7 @@
 #include "war_scene_menu.h"
 #include "war_scenes.h"
 #include "war_ui.h"
+#include "war_ai.h"
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_net.c"
@@ -143,6 +144,7 @@
 #include "war_scene_briefing.c"
 #include "war_scenes.c"
 #include "war_ui.c"
+#include "war_ai.c"
 #include "war_game.c"
 
 void glfwErrorCallback(int error, const char* description)

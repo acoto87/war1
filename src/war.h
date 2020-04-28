@@ -64,8 +64,10 @@ void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
 
 bool loadDataFile(WarContext* context);
 
-vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
+vec2 getDirFromArrowKeys(WarContext* context)
 {
+    WarInput* input = &context->input;
+
     vec2 dir = VEC2_ZERO;
 
     if (isKeyPressed(input, WAR_KEY_LEFT))
@@ -82,8 +84,10 @@ vec2 getDirFromArrowKeys(WarContext* context, WarInput* input)
     return dir;
 }
 
-vec2 getDirFromMousePos(WarContext* context, WarInput* input)
+vec2 getDirFromMousePos(WarContext* context)
 {
+    WarInput* input = &context->input;
+
     vec2 dir = VEC2_ZERO;
 
     if (input->pos.x < MAP_EDGE_SCROLL_GAP)
