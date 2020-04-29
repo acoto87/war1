@@ -1934,7 +1934,12 @@ typedef enum
 typedef enum
 {
     WAR_AI_COMMAND_REQUEST,
-    WAR_AI_COMMAND_WAIT
+    WAR_AI_COMMAND_WAIT,
+    WAR_AI_COMMAND_ATTACK,
+    WAR_AI_COMMAND_DEFEND,
+    WAR_AI_COMMAND_SLEEP,
+
+    WAR_AI_COMMAND_COUNT
 } WarAICommandType;
 
 typedef struct
@@ -1954,12 +1959,21 @@ typedef struct
         struct
         {
             WarUnitType unitType;
+            s32 count;
         } wait;
+
+        struct
+        {
+            s32 time;
+        } sleep;
     };
 } WarAICommand;
 
 shlDeclareQueue(WarAICommandQueue, WarAICommand*)
 shlDefineQueue(WarAICommandQueue, WarAICommand*)
+
+shlDeclareList(WarAICommandList, WarAICommand*)
+shlDefineList(WarAICommandList, WarAICommand*)
 
 bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
 {
@@ -1968,17 +1982,22 @@ bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
 
 void aiCommandFree(WarAICommand* command)
 {
-    free((void)command);
+    free((void*)command);
 }
+
+#define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
+#define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
 
 typedef struct
 {
-    WarAICommandQueue commands;
+    u32 staticCommandId;
+    WarAICommandQueue currentCommands;
+    WarAICommandList nextCommands;
 } WarAI;
 
 typedef struct
 {
-    s32 index;
+    u8 index;
     WarRace race;
     s32 gold;
     s32 wood;

@@ -765,6 +765,9 @@ void enterMap(WarContext* context)
         }
     }
 
+    // init AI
+    initAI(context);
+
     // add ui entities
     createMapUI(context);
     createMenu(context);
