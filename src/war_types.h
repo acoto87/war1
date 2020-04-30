@@ -1926,10 +1926,10 @@ typedef struct
 
 typedef enum
 {
-    WAR_REQUEST_STATUS_NOT_STARTED,
-    WAR_REQUEST_STATUS_STARTED,
-    WAR_REQUEST_STATUS_COMPLETED,
-} WarAIRequestStatus;
+    WAR_AI_COMMAND_STATUS_CREATED,
+    WAR_AI_COMMAND_STATUS_STARTED,
+    WAR_AI_COMMAND_STATUS_COMPLETED,
+} WarAICommandStatus;
 
 typedef enum
 {
@@ -1946,13 +1946,14 @@ typedef struct
 {
     u32 id;
     WarAICommandType type;
+    WarAICommandStatus status;
 
     union
     {
         struct
         {
-            WarAIRequestStatus status;
             WarUnitType unitType;
+            bool checkExisting;
             s32 count;
         } request;
 

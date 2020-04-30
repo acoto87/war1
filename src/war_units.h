@@ -1661,6 +1661,44 @@ WarUnitType getTownHallOfRace(WarRace race)
     }
 }
 
+WarUnitType getProducerUnitOfType(WarUnitType type)
+{
+    switch (type)
+    {
+        case WAR_UNIT_PEASANT:
+            return WAR_UNIT_TOWNHALL_HUMANS;
+        case WAR_UNIT_PEON:
+            return WAR_UNIT_TOWNHALL_ORCS;
+
+        case WAR_UNIT_FOOTMAN:
+        case WAR_UNIT_CATAPULT_HUMANS:
+        case WAR_UNIT_KNIGHT:
+        case WAR_UNIT_ARCHER:
+            return WAR_UNIT_BARRACKS_HUMANS;
+
+        case WAR_UNIT_GRUNT:
+        case WAR_UNIT_CATAPULT_ORCS:
+        case WAR_UNIT_RAIDER:
+        case WAR_UNIT_SPEARMAN:
+            return WAR_UNIT_BARRACKS_ORCS;
+
+        case WAR_UNIT_CONJURER:
+            return WAR_UNIT_TOWER_HUMANS;
+        case WAR_UNIT_WARLOCK:
+            return WAR_UNIT_TOWER_ORCS;
+        case WAR_UNIT_CLERIC:
+            return WAR_UNIT_CHURCH;
+        case WAR_UNIT_NECROLYTE:
+            return WAR_UNIT_TEMPLE;
+
+        default:
+        {
+            logWarning("There is not producer unit for unit type %d\n", type);
+            return -1;
+        }
+    }
+}
+
 vec2 getUnitSize(WarEntity* entity)
 {
     assert(isUnit(entity));

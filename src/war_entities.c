@@ -508,13 +508,10 @@ WarEntity* findEntity(WarContext* context, WarEntityId id)
 
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
 {
-    WarMap* map = context->map;
-    WarEntityManager* manager = &map->entityManager;
-
     WarEntity* result = NULL;
     f32 minDst = INT32_MAX;
 
-    WarEntityList* units = WarEntityMapGet(&manager->entitiesByType, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     assert(units);
 
     for (s32 i = 0; i < units->count; i++)
