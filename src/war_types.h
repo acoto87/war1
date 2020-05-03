@@ -1953,7 +1953,6 @@ typedef struct
         struct
         {
             WarUnitType unitType;
-            bool checkExisting;
             s32 count;
         } request;
 
@@ -1965,7 +1964,7 @@ typedef struct
 
         struct
         {
-            s32 time;
+            f32 time;
         } sleep;
     };
 } WarAICommand;
@@ -1992,8 +1991,9 @@ void aiCommandFree(WarAICommand* command)
 typedef struct
 {
     u32 staticCommandId;
-    WarAICommandQueue currentCommands;
-    WarAICommandList nextCommands;
+    WarAICommandList currentCommands;
+    WarAICommandQueue nextCommands;
+    void* customData;
 } WarAI;
 
 typedef struct

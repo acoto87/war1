@@ -2,6 +2,7 @@ WarAI* createAI(WarContext* context)
 {
     WarAI* ai = (WarAI*)xmalloc(sizeof(WarAI));
     ai->staticCommandId = 0;
+    ai->customData = NULL;
 
     WarAICommandListInit(&ai->currentCommands, WarAICommandListDefaultOptions);
     WarAICommandQueueInit(&ai->nextCommands, WarAICommandQueueDefaultOptions);
@@ -19,38 +20,110 @@ WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarA
     command->type = type;
     command->status = WAR_AI_COMMAND_STATUS_CREATED;
 
-    WarAIRequestQueuePush(&ai->nextCommands, command);
-
     return command;
 }
 
-void addUnitRequest(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, s32 count, bool checkExisting)
+WarAICommand* createUnitRequest(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, s32 count)
 {
     WarAICommand* request = createAICommand(context, aiPlayer, WAR_AI_COMMAND_REQUEST);
     request->request.unitType = unitType;
     request->request.count = count;
-    request->request.checkExisting = checkExisting;
+    return request;
 }
 
-void waitForUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, s32 count)
+WarAICommand* createWaitForUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, s32 count)
 {
     WarAICommand* wait = createAICommand(context, aiPlayer, WAR_AI_COMMAND_WAIT);
     wait->wait.unitType = unitType;
     wait->wait.count = count;
+    return wait;
 }
 
-void sleepForTime(WarContext* context, WarPlayerInfo* aiPlayer,s32 time)
+WarAICommand* createSleepForTime(WarContext* context, WarPlayerInfo* aiPlayer, f32 time)
 {
     WarAICommand* sleep = createAICommand(context, aiPlayer, WAR_AI_COMMAND_SLEEP);
     sleep->sleep.time = time;
+    return sleep;
 }
 
-#define isValidUnitType(type) inRange(type, WAR_UNIT_FOOTMAN, WAR_UNIT_COUNT)
+typedef struct
+{
+    s32 index;
+    WarAICommandList commands;
+} WarAICustomData;
 
-bool tryBuildUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType)
+void initAI(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    WarAICustomData* customData = (WarAICustomData*)xmalloc(sizeof(WarAICustomData));
+    customData->index = 0;
+
+    WarAICommandList* commands = &customData->commands;
+    WarAICommandListInit(commands, WarAICommandListDefaultOptions);
+
+    WarUnitType townHall = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
+    WarAICommandListAdd(commands, createUnitRequest(context, aiPlayer, townHall, 1));
+    WarAICommandListAdd(commands, createWaitForUnit(context, aiPlayer, townHall, 1));
+
+    WarUnitType worker = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
+    WarAICommandListAdd(commands, createUnitRequest(context, aiPlayer, worker, 2));
+    WarAICommandListAdd(commands, createWaitForUnit(context, aiPlayer, worker, 2));
+    WarAICommandListAdd(commands, createUnitRequest(context, aiPlayer, worker, 2));
+    WarAICommandListAdd(commands, createWaitForUnit(context, aiPlayer, worker, 4));
+
+    ai->customData = customData;
+}
+
+WarAICommand* getNextAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    WarAICustomData* customData = (WarAICustomData*)ai->customData;
+    assert(customData);
+
+    if (customData->index < customData->commands.count)
+    {
+        return customData->commands.items[customData->index++];
+    }
+
+    return createSleepForTime(context, aiPlayer, 10);
+}
+
+void initAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    aiPlayer->ai = createAI(context);
+    initAI(context, aiPlayer);
+}
+
+void initAIPlayers(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    // for now assume player 1 is the only AI
+    initAIPlayer(context, &map->players[1]);
+}
+
+bool tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType)
 {
     if (isDudeUnitType(unitType))
     {
+        WarUnitStats stats = getUnitStats(unitType);
+        if (!enoughPlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+        {
+            // there is not enough resources to create the unit
+            return false;
+        }
+
+        // check if there is enough food
+        if (!enoughFarmFood(context, aiPlayer))
+        {
+            // set a request for supply because there is not enough food
+            return false;
+        }
+
         WarUnitType producerType = getProducerUnitOfType(unitType);
         if (isValidUnitType(producerType))
         {
@@ -62,7 +135,11 @@ bool tryBuildUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unit
                 {
                     if (!isTraining(entity) && !isUpgrading(entity))
                     {
-                        // this building can train the unit
+                        if (decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+                        {
+                            WarState* trainState = createTrainState(context, entity, unitType, stats.buildTime);
+                            changeNextState(context, entity, trainState, true, true);
+                        }
 
                         return true;
                     }
@@ -96,20 +173,10 @@ bool executeRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAI
 {
     command->status = WAR_AI_COMMAND_STATUS_STARTED;
 
-    if (command->request.checkExisting)
-    {
-        s32 numberOfUnits = getNumberOfUnitsOfType(context, aiPlayer->index, command->request.unitType);
-        command->request.count -= numberOfUnits;
-        if (command->request.count <= 0)
-        {
-            command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
-            return true;
-        }
-    }
-
-    if (tryBuildUnit(context, aiPlayer, command->request.unitType))
+    if (tryCreateUnit(context, aiPlayer, command->request.unitType))
     {
         command->request.count--;
+
         if (command->request.count == 0)
         {
             command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
@@ -179,32 +246,12 @@ bool executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand
     }
 }
 
-void initAI(WarContext* context)
-{
-    WarMap* map = context->map;
-
-    // for now assume player 1 is the only AI
-    WarPlayerInfo* aiPlayer = &map->players[1];
-    aiPlayer->ai = createAI(context);
-}
-
-void updateAICommands(WarContext* context, WarPlayerInfo* aiPlayer)
-{
-    WarUnitType townHall = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
-    addUnitRequest(context, aiPlayer, townHall, 1, true);
-    waitForUnit(context, aiPlayer, townHall, 1);
-
-    WarUnitType worker = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-    addUnitRequest(context, aiPlayer, worker, 1, true);
-    waitForUnit(context, aiPlayer, worker, 1);
-}
-
-bool processAICurrentCommands(WarContext* context, WarPlayerInfo* aiPlayer)
+bool updateAICurrentCommands(WarContext* context, WarPlayerInfo* aiPlayer)
 {
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    bool processNext = true;
+    bool updateNext = true;
 
     WarAICommandList* commands = &ai->currentCommands;
     for (s32 i = 0; i < commands->count; i++)
@@ -212,47 +259,75 @@ bool processAICurrentCommands(WarContext* context, WarPlayerInfo* aiPlayer)
         WarAICommand* command = commands->items[i];
         if (!executeAICommand(context, aiPlayer, command))
         {
-            processNext = false;
+            updateNext = false;
         }
     }
 
-    return processNext;
+    return updateNext;
 }
 
-void processAINextCommands(WarContext* context, WarPlayerInfo* aiPlayer)
+void updateAINextCommands(WarContext* context, WarPlayerInfo* aiPlayer)
 {
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    bool processNext = true;
+#define isWaitOrSleep(command) ((command)->type == WAR_AI_COMMAND_WAIT || (command)->type == WAR_AI_COMMAND_SLEEP)
 
     WarAICommandList* currentCommands = &ai->currentCommands;
     WarAICommandQueue* nextCommands = &ai->nextCommands;
     if (nextCommands->count > 0)
     {
-        WarAICommand* command = WarAICommandQueuePop(nextCommands);
-        while (nextCommands->count > 0 &&
-               command->type != WAR_AI_COMMAND_WAIT &&
-               command->type != WAR_AI_COMMAND_SLEEP)
+        WarAICommand* command = NULL;
+        do
         {
-            WarAICommandListAdd(currentCommands, command);
             command = WarAICommandQueuePop(nextCommands);
+            WarAICommandListAdd(currentCommands, command);
+        } while (nextCommands->count > 0 && !isWaitOrSleep(command));
+    }
+
+#undef isWaitOrSleep
+}
+
+void removeCompletedAICommands(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    WarAICommandList* commands = &ai->currentCommands;
+    for (s32 i = commands->count - 1; i >= 0; i--)
+    {
+        WarAICommand* command = commands->items[i];
+        if (command->status == WAR_AI_COMMAND_STATUS_COMPLETED)
+        {
+            WarAICommandListRemoveAt(commands, i);
         }
     }
 }
 
-void updateAI(WarContext* context)
+void updateAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    if (updateAICurrentCommands(context, aiPlayer))
+    {
+        WarAICommand* command = getNextAICommand(context, aiPlayer);
+        if (command)
+        {
+            WarAICommandQueuePush(&ai->nextCommands, command);
+        }
+
+        updateAINextCommands(context, aiPlayer);
+    }
+
+    removeCompletedAICommands(context, aiPlayer);
+}
+
+
+void updateAIPlayers(WarContext* context)
 {
     WarMap* map = context->map;
 
     // for now assume player 1 is the only AI
-    WarPlayerInfo* aiPlayer = &map->players[1];
-
-    updateAICommands(context, aiPlayer);
-    if (processAICurrentCommands(context, aiPlayer))
-    {
-        processAINextCommands(context, aiPlayer);
-    }
-
-    // TODO: delete completed requests from current commands
+    updateAIPlayer(context, &map->players[1]);
 }

@@ -65,7 +65,7 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
         unit->buildPercent = 1;
 
         // ...create the unit
-        WarEntity* unitToBuild = createDude(context, state->train.unitToBuild, 0, 0, 0, false);
+        WarEntity* unitToBuild = createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
 
         // ...find an empty position to put it
         vec2 position = getUnitCenterPosition(entity, true);

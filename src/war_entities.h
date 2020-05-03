@@ -131,12 +131,14 @@ WarEntityList* getUnitsOfType(WarContext* context, WarUnitType type);
 WarEntityList* getUIEntities(WarContext* context);
 
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade);
+bool enoughPlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
 bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
 void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
 bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp);
 bool decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp);
 bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana);
 void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana);
+bool enoughFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h);
 bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y);

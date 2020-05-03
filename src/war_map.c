@@ -738,8 +738,8 @@ void enterMap(WarContext* context)
 
             player->index = i;
             player->race = levelInfo->levelInfo.races[i];
-            player->gold = levelInfo->levelInfo.gold[i];
-            player->wood = levelInfo->levelInfo.lumber[i];
+            player->gold = 4000; // levelInfo->levelInfo.gold[i];
+            player->wood = 4000; // levelInfo->levelInfo.lumber[i];
             player->godMode = false;
 
             for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
@@ -766,7 +766,7 @@ void enterMap(WarContext* context)
     }
 
     // init AI
-    initAI(context);
+    initAIPlayers(context);
 
     // add ui entities
     createMapUI(context);
@@ -1303,13 +1303,15 @@ void updateCommandButtons(WarContext* context)
 
     // if the selected unit is a farm,
     // just show the text about the food consumtion
+    //
+    // FIX: this information shouldn't be visible if the selected unit is not friendly
     if (entity->unit.type == WAR_UNIT_FARM_HUMANS ||
         entity->unit.type == WAR_UNIT_FARM_ORCS)
     {
         if (!entity->unit.building)
         {
-            s32 farmsCount = getNumberOfBuildingsOfType(context, 0, entity->unit.type, true);
-            s32 dudesCount = getTotalNumberOfDudes(context, 0);
+            s32 farmsCount = getNumberOfBuildingsOfType(context, entity->unit.player, entity->unit.type, true);
+            s32 dudesCount = getTotalNumberOfDudes(context, entity->unit.player);
 
             setUIText(commandTexts[0], "FOOD USAGE:");
             setUITextHighlight(commandTexts[0], NO_HIGHLIGHT, 0);
@@ -1900,7 +1902,7 @@ void updateMapCursor(WarContext* context)
         }
         else
         {
-            vec2 dir = getDirFromMousePos(context, input);
+            vec2 dir = getDirFromMousePos(context);
             if (dir.x < 0 && dir.y < 0)         // -1, -1
                 changeCursorType(context, entity, WAR_CURSOR_ARROW_UP_LEFT);
             else if (dir.x < 0 && dir.y > 0)    // -1,  1
@@ -2434,7 +2436,7 @@ void updateMap(WarContext* context)
         updateSelection(context);
     }
 
-    updateAI(context);
+    updateAIPlayers(context);
 
     updateStateMachines(context);
     updateActions(context);

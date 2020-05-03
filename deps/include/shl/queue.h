@@ -1,4 +1,4 @@
-/*  
+/*
     queue.h - acoto87 (acoto87@gmail.com)
 
     MIT License
@@ -60,7 +60,7 @@
     itemType typeName ## Pop(typeName* queue); \
     bool typeName ## Contains(typeName* queue, itemType value); \
     void typeName ## Clear(typeName* queue);
-    
+
 #define shlDefineQueue(typeName, itemType) \
     void typeName ## __resize(typeName *queue) \
     { \
@@ -135,7 +135,7 @@
         \
         itemType value = queue->items[queue->head]; \
         queue->items[queue->head] = queue->defaultValue; \
-        queue->head++; \
+        queue->head = (queue->head + 1) % queue->capacity; \
         queue->count--; \
         return value; \
     } \

@@ -1768,6 +1768,11 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
     }
 }
 
+bool enoughPlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+{
+    return player->gold >= gold && player->wood >= wood;
+}
+
 bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
 {
     if (player->gold < gold)
@@ -1840,17 +1845,19 @@ void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     unit->mana = clamp(unit->mana + mana, 0, unit->maxMana);
 }
 
-bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
+bool enoughFarmFood(WarContext* context, WarPlayerInfo* player)
 {
-    s32 dudesCount = getTotalNumberOfDudes(context, player->index);
-
-    WarUnitType farmType = isHumanPlayer(player)
-        ? WAR_UNIT_FARM_HUMANS : WAR_UNIT_FARM_ORCS;
-
+    WarUnitType farmType = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, player->race);
     s32 farmCount = getNumberOfBuildingsOfType(context, player->index, farmType, true);
     s32 foodCount = farmCount * 4 + 1;
 
-    if (dudesCount + 1 > foodCount)
+    s32 dudesCount = getTotalNumberOfDudes(context, player->index);
+    return dudesCount + 1 <= foodCount;
+}
+
+bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
+{
+    if (!enoughFarmFood(context, player))
     {
         setFlashStatus(context, 1.5f, "NOT ENOUGH FOOD... BUILD MORE FARMS");
         return false;

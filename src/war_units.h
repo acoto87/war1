@@ -1942,6 +1942,8 @@ s32 getTotalNumberOfUnits(WarContext* context, u8 player);
 #define playerHasUnit(context, player, unitType) (getNumberOfUnitsOfType(context, player, unitType) > 0)
 #define playerHasBuilding(context, player, unitType) (getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
 
+#define isValidUnitType(type) inRange(type, WAR_UNIT_FOOTMAN, WAR_UNIT_COUNT)
+
 void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
 void getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
 void getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
