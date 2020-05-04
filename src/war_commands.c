@@ -184,6 +184,8 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
         {
             if (isWorkerUnit(entity))
             {
+                // TODO: this part here can be factored into a `sendWorkerToMine` function or something
+                // and reused in the AI functionality
                 if (isCarryingResources(entity))
                 {
                     // find the closest town hall to deliver the gold

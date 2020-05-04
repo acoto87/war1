@@ -1935,9 +1935,9 @@ typedef enum
 {
     WAR_AI_COMMAND_REQUEST,
     WAR_AI_COMMAND_WAIT,
-    WAR_AI_COMMAND_ATTACK,
-    WAR_AI_COMMAND_DEFEND,
     WAR_AI_COMMAND_SLEEP,
+    WAR_AI_COMMAND_GOLD,
+    WAR_AI_COMMAND_WOOD,
 
     WAR_AI_COMMAND_COUNT
 } WarAICommandType;
@@ -1966,6 +1966,18 @@ typedef struct
         {
             f32 time;
         } sleep;
+
+        struct
+        {
+            s32 count;
+            bool freeWorker;
+        } gold;
+
+        struct
+        {
+            s32 count;
+            bool freeWorker;
+        } wood;
     };
 } WarAICommand;
 

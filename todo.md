@@ -358,7 +358,8 @@ This was the result of deleting the entity and the engine trying to free the spr
 
 ## AI
 
-* [ ] Make scripted AI
+* [ ] Make scripted AI engine
+* [ ] Make basic scripted AI
 
 ## UI system
 

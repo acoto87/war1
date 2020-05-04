@@ -738,8 +738,8 @@ void enterMap(WarContext* context)
 
             player->index = i;
             player->race = levelInfo->levelInfo.races[i];
-            player->gold = 4000; // levelInfo->levelInfo.gold[i];
-            player->wood = 4000; // levelInfo->levelInfo.lumber[i];
+            player->gold = levelInfo->levelInfo.gold[i];
+            player->wood = levelInfo->levelInfo.lumber[i];
             player->godMode = false;
 
             for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
