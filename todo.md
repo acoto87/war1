@@ -27,7 +27,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Death animation of scorpions loops.
 * [x] Spell animation isn't shown.
 * [x] Mana of magic units don't increase over time.
-* [x] Use `tileInRange` to calculate near units? used in splash damage.
+* [x] Use `unitTileInRange` to calculate near units? used in splash damage.
 * [x] Fix colors of Rain of Fire portrait
 * [x] Fix colors of Poison Cloud
 * [x] Fix orc maps tile displacements

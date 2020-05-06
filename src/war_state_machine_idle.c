@@ -11,7 +11,7 @@ void enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
     {
         WarMap* map = context->map;
         vec2 unitSize = getUnitSize(entity);
-        vec2 position = getUnitPosition(entity, true);
+        vec2 position = getEntityPosition(entity, true);
         setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
         setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
@@ -23,7 +23,7 @@ void leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
     {
         WarMap* map = context->map;
         vec2 unitSize = getUnitSize(entity);
-        vec2 position = getUnitPosition(entity, true);
+        vec2 position = getEntityPosition(entity, true);
         setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
     }
 }
@@ -53,7 +53,7 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
             WarEntity* enemy = getNearEnemy(context, entity);
             if (enemy)
             {
-                vec2 enemyPosition = getUnitPosition(enemy, true);
+                vec2 enemyPosition = getEntityPosition(enemy, true);
                 WarState* attackState = createAttackState(context, entity, enemy->id, enemyPosition);
                 changeNextState(context, entity, attackState, true, true);
             }

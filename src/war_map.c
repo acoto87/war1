@@ -149,7 +149,7 @@ void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileSta
 
     s32 sight = getUnitSightRange(entity);
 
-    vec2 position = getUnitPosition(entity, true);
+    vec2 position = getEntityPosition(entity, true);
     vec2 unitSize = getUnitSize(entity);
     rect unitRect = rectv(position, unitSize);
     unitRect = rectExpand(unitRect, sight, sight);
@@ -231,7 +231,7 @@ bool isAnyUnitTileInStates(WarMap* map, WarEntity* entity, WarMapTileState state
 
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 position = getUnitPosition(entity, true);
+    vec2 position = getEntityPosition(entity, true);
     return isAnyTileInStates(map, position.x, position.y, unit->sizex, unit->sizey, state);
 }
 
@@ -288,7 +288,7 @@ bool areAllUnitTilesInState(WarMap* map, WarEntity* entity, WarMapTileState stat
 
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 position = getUnitPosition(entity, true);
+    vec2 position = getEntityPosition(entity, true);
     return areAllTilesInState(map, position.x, position.y, unit->sizex, unit->sizey, state);
 }
 
@@ -2188,7 +2188,7 @@ void updateFoW(WarContext* context)
                         WarState* attackState = getAttackState(entity);
                         vec2 targetTile = attackState->attack.targetTile;
 
-                        if (tileInRange(entity, targetTile, stats.range))
+                        if (unitTileInRange(entity, targetTile, stats.range))
                         {
                             WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
                             if (piece)

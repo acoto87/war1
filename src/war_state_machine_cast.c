@@ -32,7 +32,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (stats.range)
     {
-        if(!tileInRange(entity, targetTile, stats.range))
+        if(!unitTileInRange(entity, targetTile, stats.range))
         {
             WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, stats.range);
             followState->nextState = state;

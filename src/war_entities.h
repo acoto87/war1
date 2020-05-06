@@ -114,6 +114,7 @@ WarEntity* createDude(WarContext* context, WarUnitType type, s32 x, s32 y, u8 pl
 WarEntity* createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToBuild);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
+WarEntity* findClosestForest(WarContext* context, WarEntity* entity);
 WarEntity* findUIEntity(WarContext* context, const char* name);
 WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool includeWalls);
 void removeEntity(WarContext* context, WarEntity* entity);

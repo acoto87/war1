@@ -36,7 +36,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         // when going to an attacking point (where there is no target unit)
         // check if the attacking unit is in range 1, no matter if the range
         // of the attacking unit is greater
-        if(!tileInRange(entity, targetTile, 1))
+        if(!unitTileInRange(entity, targetTile, 1))
         {
             WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
@@ -67,7 +67,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    if(isWall(targetEntity) && !tileInRange(entity, targetTile, stats.range))
+    if(isWall(targetEntity) && !unitTileInRange(entity, targetTile, stats.range))
     {
         WarState* followState = createFollowState(context, entity, 0, targetTile, stats.range);
         followState->nextState = state;

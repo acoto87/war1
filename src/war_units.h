@@ -1728,6 +1728,8 @@ vec2 getUnitSpriteSize(WarEntity* entity)
 
 rect getUnitSpriteRect(WarEntity* entity)
 {
+    assert(isUnit(entity));
+
     vec2 frameSize = getUnitFrameSize(entity);
     vec2 unitSize = getUnitSpriteSize(entity);
     vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
@@ -1736,6 +1738,8 @@ rect getUnitSpriteRect(WarEntity* entity)
 
 vec2 getUnitSpriteCenter(WarEntity* entity)
 {
+    assert(isUnit(entity));
+
     vec2 frameSize = getUnitFrameSize(entity);
     vec2 unitSize = getUnitSpriteSize(entity);
     vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
@@ -1749,7 +1753,7 @@ rect getUnitRect(WarEntity* entity)
     return rectv(entity->transform.position, getUnitSpriteSize(entity));
 }
 
-vec2 getUnitPosition(WarEntity* entity, bool inTiles)
+vec2 getEntityPosition(WarEntity* entity, bool inTiles)
 {
     vec2 position = entity->transform.position;
     return inTiles ? vec2MapToTileCoordinates(position) : position;
@@ -1757,6 +1761,8 @@ vec2 getUnitPosition(WarEntity* entity, bool inTiles)
 
 vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
 {
+    assert(isUnit(entity));
+
     WarTransformComponent* transform = &entity->transform;
     vec2 spriteSize = getUnitSpriteSize(entity);
     vec2 unitCenter = vec2Half(spriteSize);
@@ -1764,7 +1770,7 @@ vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
     return inTiles ? vec2MapToTileCoordinates(position) : position;
 }
 
-void setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
+void setEntityPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
@@ -1776,6 +1782,8 @@ void setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
 
 void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
+    assert(isUnit(entity));
+
     if (inTiles)
     {
         position = vec2TileToMapCoordinates(position, true);
@@ -1861,7 +1869,7 @@ vec2 unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
     return getClosestPointOnRect(position, unitRect);
 }
 
-s32 entityTileDistance(WarEntity* entity, vec2 targetPosition)
+s32 unitDistanceInTilesToPosition(WarEntity* entity, vec2 targetPosition)
 {
     assert(isUnit(entity));
 
@@ -1870,21 +1878,22 @@ s32 entityTileDistance(WarEntity* entity, vec2 targetPosition)
     return (s32)distance;
 }
 
-bool tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
+bool unitTileInRange(WarEntity* entity, vec2 targetTile, s32 range)
 {
+    assert(isUnit(entity));
     assert(range >= 0);
 
-    s32 distance = entityTileDistance(entity, targetTile);
+    s32 distance = unitDistanceInTilesToPosition(entity, targetTile);
     return distance <= range;
 }
 
-s32 unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
+s32 unitDistanceInTilesToUnit(WarEntity* entity, WarEntity* targetEntity)
 {
     assert(isUnit(entity));
     assert(isUnit(targetEntity));
 
     vec2 pointOnTarget = unitPointOnTarget(entity, targetEntity);
-    return entityTileDistance(entity, pointOnTarget);
+    return unitDistanceInTilesToPosition(entity, pointOnTarget);
 }
 
 bool unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
@@ -1893,7 +1902,7 @@ bool unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
     assert(isUnit(targetEntity));
     assert(range >= 0);
 
-    s32 distance = unitDistanceInTiles(entity, targetEntity);
+    s32 distance = unitDistanceInTilesToUnit(entity, targetEntity);
     return distance <= range;
 }
 

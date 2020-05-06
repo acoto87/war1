@@ -131,7 +131,9 @@ WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position
             {
                 vec2 newPosition = vec2i(xx, yy);
                 if (!vec2ListContains(&positions, newPosition))
+                {
                     vec2ListAdd(&positions, newPosition);
+                }
             }
         }
     }

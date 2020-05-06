@@ -84,10 +84,11 @@ void initAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAICommandListAdd(commands, createWaitAICommand(context, aiPlayer, townHallType, 1));
 
     WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-    WarAICommandListAdd(commands, createRequestAICommand(context, aiPlayer, workerType, 1));
-    WarAICommandListAdd(commands, createWaitAICommand(context, aiPlayer, workerType, 1));
+    WarAICommandListAdd(commands, createRequestAICommand(context, aiPlayer, workerType, 2));
+    WarAICommandListAdd(commands, createWaitAICommand(context, aiPlayer, workerType, 2));
 
     WarAICommandListAdd(commands, createGoldAICommand(context, aiPlayer, 1, true));
+    WarAICommandListAdd(commands, createWoodAICommand(context, aiPlayer, 1, true));
 
     // TODO: create a WAIT_FOR_GOLD and WAIT_FOR_WOOD command
     // should it be a WAIT_FOR_RESOURCE command that takes a resources kind and amount?
@@ -330,6 +331,117 @@ bool executeGoldAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICom
     return true;
 }
 
+bool executeWoodAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+{
+    WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
+    WarEntityList* workers = getUnitsOfType(context, workerType);
+
+    // look first for free workers
+    for (s32 i = 0; i < workers->count; i++)
+    {
+        if (command->wood.count == 0)
+            break;
+
+        WarEntity* worker = workers->items[i];
+        if (worker)
+        {
+            WarRace workerRace = getUnitRace(worker);
+            if (workerRace == aiPlayer->race && isIdle(worker))
+            {
+                // TODO: this part here can be factored into a `sendWorkerToForest` function or something
+                // and reused in the UI commands functionality
+
+                // send worker to mine to nearest gold mine from town hall
+                WarEntity* townHall = findClosestUnitOfType(context, worker, getTownHallOfRace(workerRace));
+                assert(townHall);
+
+                vec2 townHallPosition = getUnitCenterPosition(townHall, true);
+
+                WarEntity* forest = findClosestForest(context, townHall);
+                if (forest)
+                {
+                    WarTree* tree = findAccesibleTree(context, forest, townHallPosition);
+                    if (tree)
+                    {
+                        vec2 treeTile = vec2i(tree->tilex, tree->tiley);
+
+                        if (isCarryingResources(worker))
+                        {
+                            WarState* deliverState = createDeliverState(context, worker, townHall->id);
+                            deliverState->nextState = createGatherWoodState(context, worker, forest->id, treeTile);
+                            changeNextState(context, worker, deliverState, true, true);
+                        }
+                        else
+                        {
+                            WarState* gatherGoldOrWoodState = createGatherWoodState(context, worker, forest->id, treeTile);
+                            changeNextState(context, worker, gatherGoldOrWoodState, true, true);
+                        }
+
+                        command->wood.count--;
+                    }
+                }
+            }
+        }
+    }
+
+    if (command->wood.count > 0)
+    {
+        if (command->wood.freeWorker)
+        {
+            for (s32 i = 0; i < workers->count; i++)
+            {
+                if (command->wood.count == 0)
+                    break;
+
+                WarEntity* worker = workers->items[i];
+                if (worker)
+                {
+                    WarRace workerRace = getUnitRace(worker);
+                    if (workerRace == aiPlayer->race && !isIdle(worker) &&
+                        !isMining(worker) && !isGoingToMine(worker) &&
+                        !isBuilding(worker) && !isGoingToBuild(worker))
+                    {
+                        // send worker to mine to nearest gold mine from town hall
+                        WarEntity* townHall = findClosestUnitOfType(context, worker, getTownHallOfRace(workerRace));
+                        assert(townHall);
+
+                        WarEntity* forest = findClosestForest(context, townHall);
+                        if (forest)
+                        {
+                            WarTree* tree = findAccesibleTree(context, forest, vec2MapToTileCoordinates(worker->transform.position));
+                            if (tree)
+                            {
+                                vec2 treeTile = vec2i(tree->tilex, tree->tiley);
+
+                                if (isCarryingResources(worker))
+                                {
+                                    WarState* deliverState = createDeliverState(context, worker, townHall->id);
+                                    deliverState->nextState = createGatherWoodState(context, worker, forest->id, treeTile);
+                                    changeNextState(context, worker, deliverState, true, true);
+                                }
+                                else
+                                {
+                                    WarState* gatherGoldOrWoodState = createGatherWoodState(context, worker, forest->id, treeTile);
+                                    changeNextState(context, worker, gatherGoldOrWoodState, true, true);
+                                }
+                            }
+
+                            command->wood.count--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (command->wood.count == 0)
+    {
+        command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
+    }
+
+    return true;
+}
+
 bool executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
 {
     if (command->status == WAR_AI_COMMAND_STATUS_COMPLETED)
@@ -357,6 +469,11 @@ bool executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand
         case WAR_AI_COMMAND_GOLD:
         {
             return executeGoldAICommand(context, aiPlayer, command);
+        }
+
+        case WAR_AI_COMMAND_WOOD:
+        {
+            return executeWoodAICommand(context, aiPlayer, command);
         }
 
         default:

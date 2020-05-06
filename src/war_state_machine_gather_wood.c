@@ -46,13 +46,13 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
             changeNextState(context, entity, idleState, true, true);
             return;
         }
-        
+
         treePosition = vec2i(tree->tilex, tree->tiley);
         state->wood.position = treePosition;
     }
 
     // if the tree is not in range, go to it
-    if (!tileInRange(entity, treePosition, stats.range))
+    if (!unitTileInRange(entity, treePosition, stats.range))
     {
         WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition));
         moveState->nextState = state;

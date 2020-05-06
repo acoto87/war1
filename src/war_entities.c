@@ -519,11 +519,47 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
         WarEntity* target = units->items[i];
         if (isUnitOfType(target, type))
         {
-            s32 dst = unitDistanceInTiles(entity, target);
+            s32 dst = unitDistanceInTilesToUnit(entity, target);
             if (dst < minDst)
             {
                 result = target;
                 minDst = dst;
+            }
+        }
+    }
+
+    return result;
+}
+
+WarEntity* findClosestForest(WarContext* context, WarEntity* entity)
+{
+    WarEntity* result = NULL;
+    f32 minDst = INT32_MAX;
+
+    vec2 entityPosition = vec2MapToTileCoordinates(entity->transform.position);
+
+    WarEntityList* forests = getEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
+    assert(forests);
+
+    for (s32 i = 0; i < forests->count; i++)
+    {
+        WarEntity* forest = forests->items[i];
+        if (forest)
+        {
+            // FACTOR: find the closets tree on the forest to the entity
+            for (s32 j = 0; j < forest->forest.trees.count; j++)
+            {
+                WarTree* tree = &forest->forest.trees.items[j];
+                if (tree)
+                {
+                    vec2 treePosition = vec2i(tree->tilex, tree->tiley);
+                    s32 dst = vec2DistanceInTiles(entityPosition, treePosition);
+                    if (dst < minDst)
+                    {
+                        result = forest;
+                        minDst = dst;
+                    }
+                }
             }
         }
     }
@@ -855,8 +891,8 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
     if (!isDead1 && isDead2)
         return 1;
 
-    vec2 p1 = getUnitPosition((WarEntity*)e1, false);
-    vec2 p2 = getUnitPosition((WarEntity*)e2, false);
+    vec2 p1 = getEntityPosition((WarEntity*)e1, false);
+    vec2 p2 = getEntityPosition((WarEntity*)e2, false);
 
     return p1.y - p2.y;
 }
@@ -1924,7 +1960,7 @@ WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance
         WarEntity* other = units->items[i];
         if (other)
         {
-            if (tileInRange(other, tilePosition, distance))
+            if (unitTileInRange(other, tilePosition, distance))
             {
                 WarEntityListAdd(nearUnits, other);
             }
@@ -1950,7 +1986,7 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
                     continue;
             }
 
-            if (tileInRange(other, position, NEAR_ENEMY_RADIUS))
+            if (unitTileInRange(other, position, NEAR_ENEMY_RADIUS))
             {
                 return other;
             }
