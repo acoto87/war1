@@ -1,3 +1,5 @@
+#pragma once
+
 #define isEntityOfType(entity, entityType) ((entity)->type == (entityType))
 
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);
@@ -129,6 +131,7 @@ WarEntityManager* getEntityManager(WarContext* context);
 WarEntityList* getEntities(WarContext* context);
 WarEntityList* getEntitiesOfType(WarContext* context, WarEntityType type);
 WarEntityList* getUnitsOfType(WarContext* context, WarUnitType type);
+WarEntityList* getUnitsOfTypeOfPlayer(WarContext* context, WarUnitType type, u8 player);
 WarEntityList* getUIEntities(WarContext* context);
 
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade);
@@ -157,3 +160,5 @@ void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
 void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
 void meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece);
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount);
+bool sendWorkerToMine(WarContext* context, WarEntity* worker, WarEntity* goldmine, WarEntity* townHall);
+bool sendWorkerToChop(WarContext* context, WarEntity* worker, WarEntity* forest, vec2 treeTile, WarEntity* townHall);

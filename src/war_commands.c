@@ -184,34 +184,16 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
         {
             if (isWorkerUnit(entity))
             {
-                // TODO: this part here can be factored into a `sendWorkerToMine` function or something
-                // and reused in the AI functionality
-                if (isCarryingResources(entity))
+                if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                 {
-                    // find the closest town hall to deliver the gold
-                    WarRace race = getUnitRace(entity);
-                    WarUnitType townHallType = getTownHallOfRace(race);
-                    WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
-                    if (townHall)
-                    {
-                        WarState* deliverState = createDeliverState(context, entity, townHall->id);
-                        deliverState->nextState = isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST)
-                            ? createGatherWoodState(context, entity, targetEntity->id, targetTile)
-                            : createGatherGoldState(context, entity, targetEntity->id);
-
-                        changeNextState(context, entity, deliverState, true, true);
-                    }
+                    if (sendWorkerToChop(context, entity, targetEntity, targetTile, NULL))
+                        goingToHarvest = true;
                 }
                 else
                 {
-                    WarState* gatherGoldOrWoodState = isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST)
-                        ? createGatherWoodState(context, entity, targetEntity->id, targetTile)
-                        : createGatherGoldState(context, entity, targetEntity->id);
-
-                    changeNextState(context, entity, gatherGoldOrWoodState, true, true);
+                    if (sendWorkerToMine(context, entity, targetEntity, NULL))
+                        goingToHarvest = true;
                 }
-
-                goingToHarvest = true;
             }
             else if (isDudeUnit(entity))
             {

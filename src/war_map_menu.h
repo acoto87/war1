@@ -1,3 +1,5 @@
+#pragma once
+
 void createMenu(WarContext* context);
 void createOptionsMenu(WarContext* context);
 void createGameOverMenu(WarContext* context);

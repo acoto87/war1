@@ -103,10 +103,10 @@ shlDefineMap(SSMap, const char*, char*)
 
 //
 // Forward references to other structs that need a reference to these ones.
-// See WarButtonComponent, WarState.building.
 //
 struct _WarContext;
 struct _WarEntity;
+struct _WarPlayerInfo;
 
 // Input
 typedef enum
@@ -1924,62 +1924,68 @@ typedef struct
     s32 level;
 } WarUpgrade;
 
-typedef enum
-{
-    WAR_AI_COMMAND_STATUS_CREATED,
-    WAR_AI_COMMAND_STATUS_STARTED,
-    WAR_AI_COMMAND_STATUS_COMPLETED,
-} WarAICommandStatus;
+typedef u32 WarAICommandId;
 
 typedef enum
 {
-    WAR_AI_COMMAND_REQUEST,
-    WAR_AI_COMMAND_WAIT,
-    WAR_AI_COMMAND_SLEEP,
-    WAR_AI_COMMAND_GOLD,
-    WAR_AI_COMMAND_WOOD,
+    WAR_AI_COMMAND_NONE,        // do nothing with this command
+    WAR_AI_COMMAND_REQUEST,     // request unit or building
+    WAR_AI_COMMAND_RESOURCE,    // sent worker to resource
+    WAR_AI_COMMAND_SLEEP,       // sleep for some time
 
     WAR_AI_COMMAND_COUNT
 } WarAICommandType;
 
-typedef struct
+typedef struct _WarAICommand
 {
-    u32 id;
+    WarAICommandId id;
     WarAICommandType type;
-    WarAICommandStatus status;
 
     union
     {
         struct
         {
             WarUnitType unitType;
-            s32 count;
+            bool waitForIdleWorker;
         } request;
 
         struct
         {
-            WarUnitType unitType;
+            WarResourceKind resourceKind;
             s32 count;
-        } wait;
+            bool waitForIdleWorker;
+        } resource;
 
         struct
         {
             f32 time;
         } sleep;
-
-        struct
-        {
-            s32 count;
-            bool freeWorker;
-        } gold;
-
-        struct
-        {
-            s32 count;
-            bool freeWorker;
-        } wood;
     };
 } WarAICommand;
+
+typedef struct _WarAICommandResult
+{
+    WarAICommandId commandId;
+    WarAICommandType commandType;
+    bool completed;
+
+    union
+    {
+        struct
+        {
+            WarUnitType unitType;
+            WarEntityId buildingId;
+            WarEntityId workerId;
+        } request;
+
+        struct
+        {
+            WarResourceKind resourceKind;
+            s32 count;
+            WarEntityId workerIds[4];
+        } resource;
+    };
+} WarAICommandResult;
 
 shlDeclareQueue(WarAICommandQueue, WarAICommand*)
 shlDefineQueue(WarAICommandQueue, WarAICommand*)
@@ -2000,15 +2006,26 @@ void aiCommandFree(WarAICommand* command)
 #define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
 #define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
 
+typedef void (*WarAIInitFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
+typedef struct _WarAICommand* (*WarAIGetCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
+typedef void (*WarAIExecutedCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command, struct _WarAICommandResult* result);
+
 typedef struct
 {
+    char name[20];
     u32 staticCommandId;
-    WarAICommandList currentCommands;
-    WarAICommandQueue nextCommands;
+
+    bool sleeping;
+    f32 sleepTime;
+
+    WarAIInitFunc initFunc;
+    WarAIGetCommandFunc getCommandFunc;
+    WarAIExecutedCommandFunc executedCommandFunc;
+
     void* customData;
 } WarAI;
 
-typedef struct
+typedef struct _WarPlayerInfo
 {
     u8 index;
     WarRace race;

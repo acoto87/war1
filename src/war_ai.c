@@ -1,11 +1,17 @@
-WarAI* createAI(WarContext* context)
+WarAI* createAI(WarContext* context, const char* name)
 {
     WarAI* ai = (WarAI*)xmalloc(sizeof(WarAI));
-    ai->staticCommandId = 0;
-    ai->customData = NULL;
+    memset(ai->name, 0, sizeof(ai->name));
+    strcpy(ai->name, name);
 
-    WarAICommandListInit(&ai->currentCommands, WarAICommandListDefaultOptions);
-    WarAICommandQueueInit(&ai->nextCommands, WarAICommandQueueDefaultOptions);
+    ai->staticCommandId = 0;
+
+    WarAIData aiData = getAIData(name);
+    ai->initFunc = aiData.initFunc;
+    ai->getCommandFunc = aiData.getCommandFunc;
+    ai->executedCommandFunc = aiData.executedCommandFunc;
+
+    ai->customData = NULL;
 
     return ai;
 }
@@ -18,25 +24,25 @@ WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarA
     WarAICommand* command = (WarAICommand*)xcalloc(1, sizeof(WarAICommand));
     command->id = ++ai->staticCommandId;
     command->type = type;
-    command->status = WAR_AI_COMMAND_STATUS_CREATED;
 
     return command;
 }
 
-WarAICommand* createRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, s32 count)
+WarAICommand* createRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool waitForIdleWorker)
 {
     WarAICommand* request = createAICommand(context, aiPlayer, WAR_AI_COMMAND_REQUEST);
     request->request.unitType = unitType;
-    request->request.count = count;
+    request->request.waitForIdleWorker = waitForIdleWorker;
     return request;
 }
 
-WarAICommand* createWaitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, s32 count)
+WarAICommand* createResourceAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarResourceKind resourceKind, s32 count, bool waitForIdleWorker)
 {
-    WarAICommand* wait = createAICommand(context, aiPlayer, WAR_AI_COMMAND_WAIT);
-    wait->wait.unitType = unitType;
-    wait->wait.count = count;
-    return wait;
+    WarAICommand* resource = createAICommand(context, aiPlayer, WAR_AI_COMMAND_RESOURCE);
+    resource->resource.resourceKind = resourceKind;
+    resource->resource.count = count;
+    resource->resource.waitForIdleWorker = waitForIdleWorker;
+    return resource;
 }
 
 WarAICommand* createSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer, f32 time)
@@ -46,76 +52,38 @@ WarAICommand* createSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer,
     return sleep;
 }
 
-WarAICommand* createGoldAICommand(WarContext* context, WarPlayerInfo* aiPlayer, s32 count, bool freeWorker)
+WarAICommandResult* createAICommandResult(WarContext* context, WarAICommand* command, bool completed)
 {
-    WarAICommand* gold = createAICommand(context, aiPlayer, WAR_AI_COMMAND_GOLD);
-    gold->gold.count = count;
-    gold->gold.freeWorker = freeWorker;
-    return gold;
+    WarAICommandResult* result = (WarAICommandResult*)xcalloc(1, sizeof(WarAICommandResult));
+    result->commandId = command->id;
+    result->commandType = command->type;
+    result->completed = completed;
+    return result;
 }
 
-WarAICommand* createWoodAICommand(WarContext* context, WarPlayerInfo* aiPlayer, s32 count, bool freeWorker)
+WarAICommandResult* createRequestAICommandResult(WarContext* context, WarAICommand* command, bool completed, WarEntityId buildingId, WarEntityId workerId)
 {
-    WarAICommand* wood = createAICommand(context, aiPlayer, WAR_AI_COMMAND_WOOD);
-    wood->wood.count = count;
-    wood->wood.freeWorker = freeWorker;
-    return wood;
+    WarAICommandResult* result = createAICommandResult(context, command, completed);
+    result->request.unitType = command->request.unitType;
+    result->request.buildingId = buildingId;
+    result->request.workerId = workerId;
+    return result;
 }
 
-typedef struct
+WarAICommandResult* createResourceAICommandResult(WarContext* context, WarAICommand* command, bool completed, s32 count, WarEntityId workerIds[])
 {
-    s32 index;
-    WarAICommandList commands;
-} WarAICustomData;
-
-void initAI(WarContext* context, WarPlayerInfo* aiPlayer)
-{
-    WarAI* ai = aiPlayer->ai;
-    assert(ai);
-
-    WarAICustomData* customData = (WarAICustomData*)xmalloc(sizeof(WarAICustomData));
-    customData->index = 0;
-
-    WarAICommandList* commands = &customData->commands;
-    WarAICommandListInit(commands, WarAICommandListDefaultOptions);
-
-    WarUnitType townHallType = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
-    WarAICommandListAdd(commands, createRequestAICommand(context, aiPlayer, townHallType, 1));
-    WarAICommandListAdd(commands, createWaitAICommand(context, aiPlayer, townHallType, 1));
-
-    WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-    WarAICommandListAdd(commands, createRequestAICommand(context, aiPlayer, workerType, 2));
-    WarAICommandListAdd(commands, createWaitAICommand(context, aiPlayer, workerType, 2));
-
-    WarAICommandListAdd(commands, createGoldAICommand(context, aiPlayer, 1, true));
-    WarAICommandListAdd(commands, createWoodAICommand(context, aiPlayer, 1, true));
-
-    // TODO: create a WAIT_FOR_GOLD and WAIT_FOR_WOOD command
-    // should it be a WAIT_FOR_RESOURCE command that takes a resources kind and amount?
-
-    ai->customData = customData;
-}
-
-WarAICommand* getNextAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
-{
-    WarAI* ai = aiPlayer->ai;
-    assert(ai);
-
-    WarAICustomData* customData = (WarAICustomData*)ai->customData;
-    assert(customData);
-
-    if (customData->index < customData->commands.count)
-    {
-        return customData->commands.items[customData->index++];
-    }
-
-    return createSleepAICommand(context, aiPlayer, 10);
+    WarAICommandResult* result = createAICommandResult(context, command, completed);
+    result->resource.resourceKind = command->resource.resourceKind;
+    result->resource.count = count;
+    memset(result->resource.workerIds, 0, sizeof(result->resource.workerIds));
+    memcpy(result->resource.workerIds, workerIds, count * sizeof(WarEntityId));
+    return result;
 }
 
 void initAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
 {
-    aiPlayer->ai = createAI(context);
-    initAI(context, aiPlayer);
+    aiPlayer->ai = createAI(context, "land-attack");
+    aiPlayer->ai->initFunc(context, aiPlayer);
 }
 
 void initAIPlayers(WarContext* context)
@@ -126,329 +94,206 @@ void initAIPlayers(WarContext* context)
     initAIPlayer(context, &map->players[1]);
 }
 
-bool tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType)
+WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
 {
+    WarAICommandResult* result = NULL;
+
+    WarUnitType unitType = command->request.unitType;
+
     if (isDudeUnitType(unitType))
     {
         WarUnitStats stats = getUnitStats(unitType);
         if (!enoughPlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
         {
             // there is not enough resources to create the unit
-            return false;
+            return result;
         }
 
         // check if there is enough food
         if (!enoughFarmFood(context, aiPlayer))
         {
             // set a request for supply because there is not enough food
-            return false;
+            return result;
         }
 
         WarUnitType producerType = getProducerUnitOfType(unitType);
         if (isValidUnitType(producerType))
         {
-            WarEntityList* units = getUnitsOfType(context, producerType);
-            for (s32 i = 0; i < units->count; i++)
+            WarEntityList* producerUnits = getUnitsOfTypeOfPlayer(context, producerType, aiPlayer->index);
+            for (s32 i = 0; i < producerUnits->count; i++)
             {
-                WarEntity* entity = units->items[i];
-                if (entity && entity->unit.player == aiPlayer->index)
+                WarEntity* producer = producerUnits->items[i];
+                if (!isTraining(producer) && !isUpgrading(producer))
                 {
-                    if (!isTraining(entity) && !isUpgrading(entity))
+                    if (decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
                     {
-                        if (decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
-                        {
-                            WarState* trainState = createTrainState(context, entity, unitType, stats.buildTime);
-                            changeNextState(context, entity, trainState, true, true);
-                        }
+                        WarState* trainState = createTrainState(context, producer, unitType, stats.buildTime);
+                        changeNextState(context, producer, trainState, true, true);
 
-                        return true;
+                        result = createRequestAICommandResult(context, command, true, producer->id, 0);
+                        break;
                     }
                 }
             }
+            WarEntityListFree(producerUnits);
         }
-
-        // if there is no building to train the unit or all of them are busy
-        // let the request live to try again later
-        return false;
     }
-
-    if (isBuildingUnitType(unitType))
+    else if (isBuildingUnitType(unitType))
     {
         // find a free worker
         // find a place to build
         // send worker to build the building
 
         // if there is no free worker, try to get one assigned to a resource
-
-        // at the worst case, the building can't be built right now, so
-        // let the request live to try again later
-        return true;
+        return result;
+    }
+    else
+    {
+        logWarning("Unkown unit type %d to be built by player %d\n", unitType, aiPlayer->index);
     }
 
-    logWarning("Unkown unit type %d to be built by player %d\n", unitType, aiPlayer->index);
-    return false;
+    return result;
 }
 
-bool executeRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+static s32 idleWorkersCompare(const WarEntity* e1, const WarEntity* e2)
 {
-    command->status = WAR_AI_COMMAND_STATUS_STARTED;
+    assert(isUnit(e1));
+    assert(isUnit(e2));
 
-    if (tryCreateUnit(context, aiPlayer, command->request.unitType))
+    s32 idle1 = isIdle((WarEntity*)e1);
+    s32 idle2 = isIdle((WarEntity*)e2);
+
+    return idle2 - idle1;
+}
+
+bool findMineForWorker(WarContext* context, WarEntity* worker)
+{
+    WarRace workerRace = getUnitRace(worker);
+    WarEntityType townHallType = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, workerRace);
+    WarEntity* townHall = findClosestUnitOfType(context, worker, townHallType);
+    assert(townHall);
+
+    WarEntity* goldmine = findClosestUnitOfType(context, townHall, WAR_UNIT_GOLDMINE);
+    return goldmine && sendWorkerToMine(context, worker, goldmine, townHall);
+}
+
+bool findForestForWorker(WarContext* context, WarEntity* worker)
+{
+    WarRace workerRace = getUnitRace(worker);
+    WarEntityType townHallType = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, workerRace);
+    WarEntity* townHall = findClosestUnitOfType(context, worker, townHallType);
+    assert(townHall);
+
+    vec2 townHallPosition = getUnitCenterPosition(townHall, true);
+
+    WarEntity* forest = findClosestForest(context, townHall);
+    if (forest)
     {
-        command->request.count--;
-
-        if (command->request.count == 0)
+        WarTree* tree = findAccesibleTree(context, forest, townHallPosition);
+        if (tree)
         {
-            command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
+            vec2 treeTile = vec2i(tree->tilex, tree->tiley);
+            return sendWorkerToChop(context, worker, forest, treeTile, townHall);
         }
     }
 
-    return true;
-}
-
-bool executeWaitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
-{
-    command->status = WAR_AI_COMMAND_STATUS_STARTED;
-
-    s32 numberOfUnits = getNumberOfUnitsOfType(context, aiPlayer->index, command->wait.unitType);
-    if (numberOfUnits >= command->wait.count)
-    {
-        command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
-        return true;
-    }
-
     return false;
 }
 
-bool executeSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+WarAICommandResult* executeResourceAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
 {
-    command->status = WAR_AI_COMMAND_STATUS_STARTED;
-    command->sleep.time -= context->deltaTime;
-
-    if (command->sleep.time <= 0)
+    WarResourceKind resourceKind = command->resource.resourceKind;
+    if (resourceKind != WAR_RESOURCE_GOLD && resourceKind != WAR_RESOURCE_WOOD)
     {
-        command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
-        return true;
+        logWarning("Can't execute resource AI command for resource kind: %d\n", command->resource.resourceKind);
+        return NULL;
     }
 
-    return false;
-}
+    s32 count = command->resource.count;
+    if (count == 0)
+    {
+        logWarning("Sending 0 workers to harvest resource %d?\n", resourceKind);
+        return NULL;
+    }
 
-bool executeGoldAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
-{
+    if (count > 4)
+    {
+        logError("Can't send more than 4 workers to harvest resources at the same time: %d\n", count);
+        return NULL;
+    }
+
+    bool waitForIdleWorker = command->resource.waitForIdleWorker;
+
     WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-    WarEntityList* workers = getUnitsOfType(context, workerType);
+    WarEntityList* workers = getUnitsOfTypeOfPlayer(context, workerType, aiPlayer->index);
 
-    // look first for free workers
+    WarEntityListSort(workers, idleWorkersCompare);
+
+    s32 workerCount = 0;
+    WarEntityId workerIds[4];
+
     for (s32 i = 0; i < workers->count; i++)
     {
-        if (command->gold.count == 0)
+        if (workerCount == count)
             break;
 
         WarEntity* worker = workers->items[i];
         if (worker)
         {
-            WarRace workerRace = getUnitRace(worker);
-            if (workerRace == aiPlayer->race && isIdle(worker))
+            if (isIdle(worker))
             {
-                // TODO: this part here can be factored into a `sendWorkerToMine` function or something
-                // and reused in the UI commands functionality
-
-                // send worker to mine to nearest gold mine from town hall
-                WarEntity* townHall = findClosestUnitOfType(context, worker, getTownHallOfRace(workerRace));
-                assert(townHall);
-
-                WarEntity* goldmine = findClosestUnitOfType(context, townHall, WAR_UNIT_GOLDMINE);
-                if (goldmine)
+                if (resourceKind == WAR_RESOURCE_GOLD)
                 {
-                    if (isCarryingResources(worker))
-                    {
-                        WarState* deliverState = createDeliverState(context, worker, townHall->id);
-                        deliverState->nextState = createGatherGoldState(context, worker, goldmine->id);
-                        changeNextState(context, worker, deliverState, true, true);
-                    }
-                    else
-                    {
-                        WarState* gatherGoldOrWoodState = createGatherGoldState(context, worker, goldmine->id);
-                        changeNextState(context, worker, gatherGoldOrWoodState, true, true);
-                    }
-
-                    command->gold.count--;
+                    if (findMineForWorker(context, worker))
+                        workerIds[workerCount++] = worker->id;
                 }
+                else if (resourceKind == WAR_RESOURCE_WOOD)
+                {
+                    if (findForestForWorker(context, worker))
+                        workerIds[workerCount++] = worker->id;
+                }
+            }
+            else if (!waitForIdleWorker)
+            {
+                if (resourceKind == WAR_RESOURCE_GOLD && !isMining(worker) && !isGoingToMine(worker))
+                {
+                    if (findMineForWorker(context, worker))
+                        workerIds[workerCount++] = worker->id;
+                }
+                else if (resourceKind == WAR_RESOURCE_WOOD && !isChopping(worker) && !isGoingToChop(worker))
+                {
+                    if (findForestForWorker(context, worker))
+                        workerIds[workerCount++] = worker->id;
+                }
+            }
+            else
+            {
+                // since the data is sorted, first the idle workers and then the others,
+                // from here there is only non-idle workers, and we need to wait for idle ones
+                // we can stop searching for idle workers at this point
+                break;
             }
         }
     }
 
-    if (command->gold.count > 0)
-    {
-        if (command->gold.freeWorker)
-        {
-            for (s32 i = 0; i < workers->count; i++)
-            {
-                if (command->gold.count == 0)
-                    break;
+    WarEntityListFree(workers);
 
-                WarEntity* worker = workers->items[i];
-                if (worker)
-                {
-                    WarRace workerRace = getUnitRace(worker);
-                    if (workerRace == aiPlayer->race && !isIdle(worker) &&
-                        !isMining(worker) && !isGoingToMine(worker) &&
-                        !isBuilding(worker) && !isGoingToBuild(worker))
-                    {
-                        // send worker to mine to nearest gold mine from town hall
-                        WarEntity* townHall = findClosestUnitOfType(context, worker, getTownHallOfRace(workerRace));
-                        assert(townHall);
-
-                        WarEntity* goldmine = findClosestUnitOfType(context, townHall, WAR_UNIT_GOLDMINE);
-                        if (goldmine)
-                        {
-                            if (isCarryingResources(worker))
-                            {
-                                WarState* deliverState = createDeliverState(context, worker, townHall->id);
-                                deliverState->nextState = createGatherGoldState(context, worker, goldmine->id);
-                                changeNextState(context, worker, deliverState, true, true);
-                            }
-                            else
-                            {
-                                WarState* gatherGoldOrWoodState = createGatherGoldState(context, worker, goldmine->id);
-                                changeNextState(context, worker, gatherGoldOrWoodState, true, true);
-                            }
-
-                            command->gold.count--;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (command->gold.count == 0)
-    {
-        command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
-    }
-
-    return true;
+    return createResourceAICommandResult(context, command, workerCount == count, workerCount, workerIds);
 }
 
-bool executeWoodAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+WarAICommandResult* executeSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
 {
-    WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-    WarEntityList* workers = getUnitsOfType(context, workerType);
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
 
-    // look first for free workers
-    for (s32 i = 0; i < workers->count; i++)
-    {
-        if (command->wood.count == 0)
-            break;
+    ai->sleeping = true;
+    ai->sleepTime = command->sleep.time;
 
-        WarEntity* worker = workers->items[i];
-        if (worker)
-        {
-            WarRace workerRace = getUnitRace(worker);
-            if (workerRace == aiPlayer->race && isIdle(worker))
-            {
-                // TODO: this part here can be factored into a `sendWorkerToForest` function or something
-                // and reused in the UI commands functionality
-
-                // send worker to mine to nearest gold mine from town hall
-                WarEntity* townHall = findClosestUnitOfType(context, worker, getTownHallOfRace(workerRace));
-                assert(townHall);
-
-                vec2 townHallPosition = getUnitCenterPosition(townHall, true);
-
-                WarEntity* forest = findClosestForest(context, townHall);
-                if (forest)
-                {
-                    WarTree* tree = findAccesibleTree(context, forest, townHallPosition);
-                    if (tree)
-                    {
-                        vec2 treeTile = vec2i(tree->tilex, tree->tiley);
-
-                        if (isCarryingResources(worker))
-                        {
-                            WarState* deliverState = createDeliverState(context, worker, townHall->id);
-                            deliverState->nextState = createGatherWoodState(context, worker, forest->id, treeTile);
-                            changeNextState(context, worker, deliverState, true, true);
-                        }
-                        else
-                        {
-                            WarState* gatherGoldOrWoodState = createGatherWoodState(context, worker, forest->id, treeTile);
-                            changeNextState(context, worker, gatherGoldOrWoodState, true, true);
-                        }
-
-                        command->wood.count--;
-                    }
-                }
-            }
-        }
-    }
-
-    if (command->wood.count > 0)
-    {
-        if (command->wood.freeWorker)
-        {
-            for (s32 i = 0; i < workers->count; i++)
-            {
-                if (command->wood.count == 0)
-                    break;
-
-                WarEntity* worker = workers->items[i];
-                if (worker)
-                {
-                    WarRace workerRace = getUnitRace(worker);
-                    if (workerRace == aiPlayer->race && !isIdle(worker) &&
-                        !isMining(worker) && !isGoingToMine(worker) &&
-                        !isBuilding(worker) && !isGoingToBuild(worker))
-                    {
-                        // send worker to mine to nearest gold mine from town hall
-                        WarEntity* townHall = findClosestUnitOfType(context, worker, getTownHallOfRace(workerRace));
-                        assert(townHall);
-
-                        WarEntity* forest = findClosestForest(context, townHall);
-                        if (forest)
-                        {
-                            WarTree* tree = findAccesibleTree(context, forest, vec2MapToTileCoordinates(worker->transform.position));
-                            if (tree)
-                            {
-                                vec2 treeTile = vec2i(tree->tilex, tree->tiley);
-
-                                if (isCarryingResources(worker))
-                                {
-                                    WarState* deliverState = createDeliverState(context, worker, townHall->id);
-                                    deliverState->nextState = createGatherWoodState(context, worker, forest->id, treeTile);
-                                    changeNextState(context, worker, deliverState, true, true);
-                                }
-                                else
-                                {
-                                    WarState* gatherGoldOrWoodState = createGatherWoodState(context, worker, forest->id, treeTile);
-                                    changeNextState(context, worker, gatherGoldOrWoodState, true, true);
-                                }
-                            }
-
-                            command->wood.count--;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (command->wood.count == 0)
-    {
-        command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
-    }
-
-    return true;
+    return NULL;
 }
 
-bool executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+WarAICommandResult* executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
 {
-    if (command->status == WAR_AI_COMMAND_STATUS_COMPLETED)
-    {
-        return true;
-    }
-
     switch (command->type)
     {
         case WAR_AI_COMMAND_REQUEST:
@@ -456,9 +301,9 @@ bool executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand
             return executeRequestAICommand(context, aiPlayer, command);
         }
 
-        case WAR_AI_COMMAND_WAIT:
+        case WAR_AI_COMMAND_RESOURCE:
         {
-            return executeWaitAICommand(context, aiPlayer, command);
+            return executeResourceAICommand(context, aiPlayer, command);
         }
 
         case WAR_AI_COMMAND_SLEEP:
@@ -466,78 +311,10 @@ bool executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand
             return executeSleepAICommand(context, aiPlayer, command);
         }
 
-        case WAR_AI_COMMAND_GOLD:
-        {
-            return executeGoldAICommand(context, aiPlayer, command);
-        }
-
-        case WAR_AI_COMMAND_WOOD:
-        {
-            return executeWoodAICommand(context, aiPlayer, command);
-        }
-
         default:
         {
             logWarning("AI commands of type %d are NOT handled yet\n", command->type);
-            return true;
-        }
-    }
-}
-
-bool updateAICurrentCommands(WarContext* context, WarPlayerInfo* aiPlayer)
-{
-    WarAI* ai = aiPlayer->ai;
-    assert(ai);
-
-    bool updateNext = true;
-
-    WarAICommandList* commands = &ai->currentCommands;
-    for (s32 i = 0; i < commands->count; i++)
-    {
-        WarAICommand* command = commands->items[i];
-        if (!executeAICommand(context, aiPlayer, command))
-        {
-            updateNext = false;
-        }
-    }
-
-    return updateNext;
-}
-
-void updateAINextCommands(WarContext* context, WarPlayerInfo* aiPlayer)
-{
-    WarAI* ai = aiPlayer->ai;
-    assert(ai);
-
-#define isWaitOrSleep(command) ((command)->type == WAR_AI_COMMAND_WAIT || (command)->type == WAR_AI_COMMAND_SLEEP)
-
-    WarAICommandList* currentCommands = &ai->currentCommands;
-    WarAICommandQueue* nextCommands = &ai->nextCommands;
-    if (nextCommands->count > 0)
-    {
-        WarAICommand* command = NULL;
-        do
-        {
-            command = WarAICommandQueuePop(nextCommands);
-            WarAICommandListAdd(currentCommands, command);
-        } while (nextCommands->count > 0 && !isWaitOrSleep(command));
-    }
-
-#undef isWaitOrSleep
-}
-
-void removeCompletedAICommands(WarContext* context, WarPlayerInfo* aiPlayer)
-{
-    WarAI* ai = aiPlayer->ai;
-    assert(ai);
-
-    WarAICommandList* commands = &ai->currentCommands;
-    for (s32 i = commands->count - 1; i >= 0; i--)
-    {
-        WarAICommand* command = commands->items[i];
-        if (command->status == WAR_AI_COMMAND_STATUS_COMPLETED)
-        {
-            WarAICommandListRemoveAt(commands, i);
+            return NULL;
         }
     }
 }
@@ -547,20 +324,26 @@ void updateAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    if (updateAICurrentCommands(context, aiPlayer))
+    if (ai->sleeping)
     {
-        WarAICommand* command = getNextAICommand(context, aiPlayer);
-        if (command)
+        ai->sleepTime -= context->deltaTime;
+
+        if (ai->sleepTime > 0)
         {
-            WarAICommandQueuePush(&ai->nextCommands, command);
+            return;
         }
 
-        updateAINextCommands(context, aiPlayer);
+        ai->sleeping = false;
+        ai->sleepTime = 0.0f;
     }
 
-    removeCompletedAICommands(context, aiPlayer);
+    WarAICommand* command = ai->getCommandFunc(context, aiPlayer);
+    if (command)
+    {
+        WarAICommandResult* result = executeAICommand(context, aiPlayer, command);
+        ai->executedCommandFunc(context, aiPlayer, command, result);
+    }
 }
-
 
 void updateAIPlayers(WarContext* context)
 {

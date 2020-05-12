@@ -1,3 +1,5 @@
+#pragma once
+
 const char* features[MAX_FEATURES_COUNT * 2] = {
 	// Units. 0 - 6
 	"unit-footman",             "unit-grunt",

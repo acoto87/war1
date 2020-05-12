@@ -1,3 +1,5 @@
+#pragma once
+
 void enterSceneMainMenu(WarContext* context);
 
 void createMainMenu(WarContext* context);

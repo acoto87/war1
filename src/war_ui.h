@@ -1,3 +1,5 @@
+#pragma once
+
 bool isUIEntity(WarEntity* entity);
 
 void clearUIText(WarEntity* uiText);

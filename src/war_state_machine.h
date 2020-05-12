@@ -1,3 +1,5 @@
+#pragma once
+
 typedef struct
 {
     WarStateType type;
@@ -69,7 +71,7 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGatheringGold(entity) hasState(entity, WAR_STATE_GOLD)
 #define isMining(entity) hasState(entity, WAR_STATE_MINING)
 #define isGatheringWood(entity) hasState(entity, WAR_STATE_WOOD)
-#define isChopping(entity) hasState(entity, WAR_STATE_CHOP)
+#define isChopping(entity) hasState(entity, WAR_STATE_CHOPPING)
 #define isDelivering(entity) hasState(entity, WAR_STATE_DELIVER)
 #define isTraining(entity) hasState(entity, WAR_STATE_TRAIN)
 #define isUpgrading(entity) hasState(entity, WAR_STATE_UPGRADE)
@@ -88,7 +90,7 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 #define isGoingToGatherGold(entity) hasNextState(entity, WAR_STATE_GOLD)
 #define isGoingToMine(entity) hasNextState(entity, WAR_STATE_MINING)
 #define isGoingToGatherWood(entity) hasNextState(entity, WAR_STATE_WOOD)
-#define isGoingToChop(entity) hasNextState(entity, WAR_STATE_CHOP)
+#define isGoingToChop(entity) hasNextState(entity, WAR_STATE_CHOPPING)
 #define isGoingToDeliver(entity) hasNextState(entity, WAR_STATE_DELIVER)
 #define isGoingToTrain(entity) hasNextState(entity, WAR_STATE_TRAIN)
 #define isGoingToUpgrade(entity) hasNextState(entity, WAR_STATE_UPGRADE)

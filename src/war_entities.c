@@ -870,6 +870,24 @@ WarEntityList* getUnitsOfType(WarContext* context, WarUnitType type)
     return WarUnitMapGet(&manager->unitsByType, type);
 }
 
+WarEntityList* getUnitsOfTypeOfPlayer(WarContext* context, WarUnitType type, u8 player)
+{
+    WarEntityList* unitsOfPlayer = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+    WarEntityListInit(unitsOfPlayer, WarEntityListNonFreeOptions);
+
+    WarEntityList* units = getUnitsOfType(context, type);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* unit = units->items[i];
+        if (unit && unit->unit.player == player)
+        {
+            WarEntityListAdd(unitsOfPlayer, unit);
+        }
+    }
+
+    return unitsOfPlayer;
+}
+
 WarEntityList* getUIEntities(WarContext* context)
 {
     WarEntityManager* manager = getEntityManager(context);
@@ -2279,4 +2297,56 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
     }
 
     return amount;
+}
+
+bool sendWorkerToMine(WarContext* context, WarEntity* worker, WarEntity* goldmine, WarEntity* townHall)
+{
+    if (isCarryingResources(worker))
+    {
+        if (!townHall)
+        {
+            WarRace race = getUnitRace(worker);
+            WarUnitType townHallType = getTownHallOfRace(race);
+            townHall = findClosestUnitOfType(context, worker, townHallType);
+            if (!townHall)
+                return false;
+        }
+
+        WarState* deliverState = createDeliverState(context, worker, townHall->id);
+        deliverState->nextState = createGatherGoldState(context, worker, goldmine->id);
+        changeNextState(context, worker, deliverState, true, true);
+    }
+    else
+    {
+        WarState* gatherGoldState = createGatherGoldState(context, worker, goldmine->id);
+        changeNextState(context, worker, gatherGoldState, true, true);
+    }
+
+    return true;
+}
+
+bool sendWorkerToChop(WarContext* context, WarEntity* worker, WarEntity* forest, vec2 treeTile, WarEntity* townHall)
+{
+    if (isCarryingResources(worker))
+    {
+        if (!townHall)
+        {
+            WarRace race = getUnitRace(worker);
+            WarUnitType townHallType = getTownHallOfRace(race);
+            townHall = findClosestUnitOfType(context, worker, townHallType);
+            if (!townHall)
+                return false;
+        }
+
+        WarState* deliverState = createDeliverState(context, worker, townHall->id);
+        deliverState->nextState = createGatherWoodState(context, worker, forest->id, treeTile);
+        changeNextState(context, worker, deliverState, true, true);
+    }
+    else
+    {
+        WarState* gatherWoodState = createGatherWoodState(context, worker, forest->id, treeTile);
+        changeNextState(context, worker, gatherWoodState, true, true);
+    }
+
+    return true;
 }

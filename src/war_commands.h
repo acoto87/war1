@@ -1,3 +1,5 @@
+#pragma once
+
 bool executeCommand(WarContext* context);
 
 // train units

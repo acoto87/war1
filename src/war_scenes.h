@@ -1,3 +1,5 @@
+#pragma once
+
 typedef void (*WarSceneFunc)(WarContext* context);
 
 typedef struct

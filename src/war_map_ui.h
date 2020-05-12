@@ -1,3 +1,5 @@
+#pragma once
+
 void createMapUI(WarContext* context);
 
 WarEntity* createUIMinimap(WarContext* context, char* name, vec2 position);
