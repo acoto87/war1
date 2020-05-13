@@ -2006,6 +2006,8 @@ void aiCommandFree(WarAICommand* command)
 #define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
 #define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
 
+typedef WarAICommandResult* (*WarAIExecuteFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command);
+
 typedef void (*WarAIInitFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
 typedef struct _WarAICommand* (*WarAIGetCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
 typedef void (*WarAIExecutedCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command, struct _WarAICommandResult* result);

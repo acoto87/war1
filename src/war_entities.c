@@ -1943,11 +1943,15 @@ bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
     return true;
 }
 
-bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y)
+bool canBuildingBeBuilt(WarContext* context, WarUnitType unitType, s32 x, s32 y)
 {
-    WarUnitData data = getUnitData(buildingToBuild);
+    WarUnitData data = getUnitData(unitType);
+    return checkRectToBuild(context, x, y, data.sizex, data.sizey);
+}
 
-    if (!checkRectToBuild(context, x, y, data.sizex, data.sizey))
+bool checkTileToBuild(WarContext* context, WarUnitType unitType, s32 x, s32 y)
+{
+    if (!canBuildingBeBuilt(context, unitType, x, y))
     {
         setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
         return false;
@@ -1956,9 +1960,14 @@ bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s
     return true;
 }
 
+bool canRoadOrWallBeBuilt(WarContext* context, s32 x, s32 y)
+{
+    return checkRectToBuild(context, x, y, 1, 1);
+}
+
 bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 {
-    if (!checkRectToBuild(context, x, y, 1, 1))
+    if (!canRoadOrWallBeBuilt(context, x, y))
     {
         setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
         return false;

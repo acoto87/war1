@@ -34,6 +34,7 @@ WarAICommand* createSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer,
 WarAICommandResult* createAICommandResult(WarContext* context, WarAICommand* command, bool completed);
 WarAICommandResult* createRequestAICommandResult(WarContext* context, WarAICommand* command, bool completed, WarEntityId buildingId, WarEntityId workerId);
 WarAICommandResult* createResourceAICommandResult(WarContext* context, WarAICommand* command, bool completed, s32 count, WarEntityId workerIds[]);
+WarAICommandResult* createSleepAICommandResult(WarContext* context, WarAICommand* command, bool completed);
 
 void initAIPlayers(WarContext* context);
 void updateAIPlayers(WarContext* context);

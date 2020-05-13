@@ -25,14 +25,19 @@ void landAttackInitAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAICommandListAdd(commands, workerRequest);
     WarAICommandFlagsMapSet(commandFlags, workerRequest->id, WAR_AI_COMMAND_FLAG_WAIT);
 
+    WarUnitType farmType = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, aiPlayer->race);
+    WarAICommand* farmRequest = createRequestAICommand(context, aiPlayer, farmType, false);
+    WarAICommandListAdd(commands, farmRequest);
+    WarAICommandFlagsMapSet(commandFlags, farmRequest->id, WAR_AI_COMMAND_FLAG_WAIT);
+
     WarAICommandListAdd(commands, createResourceAICommand(context, aiPlayer, WAR_RESOURCE_GOLD, 1, true));
 
-    workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-    workerRequest = createRequestAICommand(context, aiPlayer, workerType, false);
-    WarAICommandListAdd(commands, workerRequest);
-    WarAICommandFlagsMapSet(commandFlags, workerRequest->id, WAR_AI_COMMAND_FLAG_WAIT);
+    // workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
+    // workerRequest = createRequestAICommand(context, aiPlayer, workerType, false);
+    // WarAICommandListAdd(commands, workerRequest);
+    // WarAICommandFlagsMapSet(commandFlags, workerRequest->id, WAR_AI_COMMAND_FLAG_WAIT);
 
-    WarAICommandListAdd(commands, createResourceAICommand(context, aiPlayer, WAR_RESOURCE_WOOD, 1, true));
+    // WarAICommandListAdd(commands, createResourceAICommand(context, aiPlayer, WAR_RESOURCE_WOOD, 1, true));
 
     // TODO: create a WAIT_FOR_GOLD and WAIT_FOR_WOOD command
     // should it be a WAIT_FOR_RESOURCE command that takes a resources kind and amount?
@@ -69,21 +74,48 @@ WarAICommand* landAttackGetAICommand(WarContext* context, WarPlayerInfo* aiPlaye
                             WarAICommandResult* lastCommandResult = WarAICommandResultsMapGet(commandResults, lastCommand->id);
 
                             WarUnitType unitType = lastCommand->request.unitType;
+                            WarEntityId buildingId = lastCommandResult->request.buildingId;
+                            WarEntityId workerId = lastCommandResult->request.workerId;
+
                             if (isDudeUnitType(unitType))
                             {
-                                WarEntityId buildingId = lastCommandResult->request.buildingId;
                                 WarEntity* building = findEntity(context, buildingId);
                                 if (building)
                                 {
                                     if (isTraining(building) || isGoingToTrain(building))
                                     {
-                                        // building still training
+                                        // building is still training
                                         return NULL;
                                     }
                                 }
                             }
                             else if (isBuildingUnitType(unitType))
                             {
+                                WarEntity* building = findEntity(context, buildingId);
+                                if (building)
+                                {
+                                    if (isBuilding(building) || isGoingToBuild(building))
+                                    {
+                                        logInfo("building is still being built\n");
+                                        // building is still being built
+                                        return NULL;
+                                    }
+                                }
+
+                                logInfo("finding worker %d\n", workerId);
+                                WarEntity* worker = findEntity(context, workerId);
+
+                                if (worker)
+                                {
+                                    logInfo("worker found\n");
+
+                                    if (isRepairing2(worker) || isGoingToRepair2(worker))
+                                    {
+                                        logInfo("worker is still repairing\n");
+                                        // worker is still repairing
+                                        return NULL;
+                                    }
+                                }
                             }
                         }
                     }
@@ -91,6 +123,7 @@ WarAICommand* landAttackGetAICommand(WarContext* context, WarPlayerInfo* aiPlaye
             }
         }
 
+        logInfo("returning command %d of type %d\n", commands->items[customData->index]->id, commands->items[customData->index]->type);
         return commands->items[customData->index++];
     }
 
