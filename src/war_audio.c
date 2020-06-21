@@ -458,8 +458,8 @@ bool initAudio(WarContext* context)
 
     context->musicEnabled = true;
     context->soundEnabled = true;
-    context->musicVolume = 1.0f;
-    context->soundVolume = 1.0f;
+    // context->musicVolume = 1.0f;
+    // context->soundVolume = 1.0f;
 
     return true;
 }

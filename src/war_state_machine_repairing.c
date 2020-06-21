@@ -100,16 +100,17 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
         WarUnitAction* action = unit->actions.items[unit->actionIndex];
         if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
         {
-            if (!decreasePlayerResources(context, player, 1, 1))
+            if (!decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, 1) ||
+                !decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, 1))
             {
                 WarState* idleState = createIdleState(context, entity, true);
                 changeNextState(context, entity, idleState, true, true);
                 return;
             }
 
-            // to calculate the amount of wood and gold needed to repair a 
+            // to calculate the amount of wood and gold needed to repair a
             // building I'm taking the 12% of the damage of the building,
-            // so for the a FARM if it has a damage of 200, the amount of 
+            // so for the a FARM if it has a damage of 200, the amount of
             // wood and gold would be 200 * 0.12 = 24.
             //
             // when repairing each second the amount of wood and gold decrease

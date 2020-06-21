@@ -60,6 +60,28 @@ bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
     return false;
 }
 
+bool isInsideBuilding(WarEntity* entity)
+{
+    if (isMining(entity))
+    {
+        return true;
+    }
+
+    if(isDelivering(entity))
+    {
+        WarState* deliver = getDeliverState(entity);
+        return deliver->deliver.insideBuilding;
+    }
+
+    if (isRepairing2(entity))
+    {
+        WarState* repairing = getRepairingState(entity);
+        return repairing->repairing.insideBuilding;
+    }
+
+    return false;
+}
+
 bool displayUnitOnMinimap(WarEntity* entity)
 {
     assert(isUnit(entity));

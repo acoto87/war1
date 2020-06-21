@@ -1941,6 +1941,8 @@ s32 getUnitSightRange(WarEntity* entity)
     return sight;
 }
 
+bool isInsideBuilding(WarEntity* entity);
+
 bool displayUnitOnMinimap(WarEntity* entity);
 u8Color getUnitColorOnMinimap(WarEntity* entity);
 

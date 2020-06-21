@@ -752,7 +752,8 @@ bool executeCommand(WarContext* context)
 
             WarUnitStats stats = getUnitStats(unitToTrain);
             if (checkFarmFood(context, player) &&
-                decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
+                decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost) &&
+                decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost))
             {
                 WarState* trainState = createTrainState(context, selectedEntity, unitToTrain, stats.buildTime);
                 changeNextState(context, selectedEntity, trainState, true, true);
@@ -796,7 +797,7 @@ bool executeCommand(WarContext* context)
 
             WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
             s32 level = getUpgradeLevel(player, upgradeToBuild);
-            if (decreasePlayerResources(context, player, stats.goldCost[level], 0))
+            if (decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost[level]))
             {
                 WarState* upgradeState = createUpgradeState(context, selectedEntity, upgradeToBuild, stats.buildTime);
                 changeNextState(context, selectedEntity, upgradeState, true, true);
@@ -841,7 +842,8 @@ bool executeCommand(WarContext* context)
                     WarBuildingStats stats = getBuildingStats(buildingToBuild);
                     if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y))
                     {
-                        if (decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
+                        if (decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost) &&
+                            decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost))
                         {
                             WarEntity* building = createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
                             WarState* repairState = createRepairState(context, worker, building->id);
@@ -881,7 +883,8 @@ bool executeCommand(WarContext* context)
 
                     if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y))
                     {
-                        if (decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
+                        if (decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, WAR_WALL_GOLD_COST) &&
+                            decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, WAR_WALL_WOOD_COST))
                         {
                             WarEntity* wall = map->wall;
                             WarWallPiece* piece = addWallPiece(wall, targetTile.x, targetTile.y, 0);
@@ -929,7 +932,8 @@ bool executeCommand(WarContext* context)
 
                     if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y))
                     {
-                        if (decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
+                        if (decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, WAR_ROAD_GOLD_COST) &&
+                            decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, WAR_ROAD_WOOD_COST))
                         {
                             WarEntity* road = map->road;
                             addRoadPiece(road, targetTile.x, targetTile.y, 0);
@@ -1359,7 +1363,9 @@ void cancel(WarContext* context, WarEntity* entity)
             if (isBuilding(selectedEntity) || isGoingToBuild(selectedEntity))
             {
                 WarBuildingStats stats = getBuildingStats(selectedEntity->unit.type);
-                increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
+
+                increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
+                increasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
 
                 WarState* collapseState = createCollapseState(context, selectedEntity);
                 changeNextState(context, selectedEntity, collapseState, true, true);
@@ -1374,7 +1380,9 @@ void cancel(WarContext* context, WarEntity* entity)
                     WarUnitType unitToBuild = trainState->train.unitToBuild;
 
                     WarUnitStats stats = getUnitStats(unitToBuild);
-                    increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
+
+                    increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
+                    increasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
                 }
                 else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
                 {
@@ -1384,7 +1392,8 @@ void cancel(WarContext* context, WarEntity* entity)
 
                     s32 upgradeLevel = getUpgradeLevel(player, upgradeToBuild);
                     WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
-                    increasePlayerResources(context, player, stats.goldCost[upgradeLevel], 0);
+
+                    increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]);
                 }
 
                 WarState* idleState = createIdleState(context, entity, false);

@@ -1931,43 +1931,22 @@ typedef enum
     WAR_AI_COMMAND_NONE,        // do nothing with this command
     WAR_AI_COMMAND_REQUEST,     // request unit or building
     WAR_AI_COMMAND_RESOURCE,    // sent worker to resource
+    WAR_AI_COMMAND_WAIT,        // wait for buildings, units, resources
     WAR_AI_COMMAND_SLEEP,       // sleep for some time
 
     WAR_AI_COMMAND_COUNT
 } WarAICommandType;
 
-typedef struct _WarAICommand
+typedef enum
 {
-    WarAICommandId id;
-    WarAICommandType type;
-
-    union
-    {
-        struct
-        {
-            WarUnitType unitType;
-            bool waitForIdleWorker;
-        } request;
-
-        struct
-        {
-            WarResourceKind resourceKind;
-            s32 count;
-            bool waitForIdleWorker;
-        } resource;
-
-        struct
-        {
-            f32 time;
-        } sleep;
-    };
-} WarAICommand;
+    WAR_AI_COMMAND_STATUS_RUNNING,
+    WAR_AI_COMMAND_STATUS_DONE,
+    WAR_AI_COMMAND_STATUS_FAILED
+} WarAICommandStatus;
 
 typedef struct _WarAICommandResult
 {
-    WarAICommandId commandId;
-    WarAICommandType commandType;
-    bool completed;
+    WarAICommandStatus status;
 
     union
     {
@@ -1987,6 +1966,42 @@ typedef struct _WarAICommandResult
     };
 } WarAICommandResult;
 
+typedef struct _WarAICommand
+{
+    WarAICommandId id;
+    WarAICommandType type;
+    WarAICommandResult* result;
+
+    union
+    {
+        struct
+        {
+            WarUnitType unitType;
+            bool checkExisting;
+            bool waitForIdleWorker;
+        } request;
+
+        struct
+        {
+            WarResourceKind resourceKind;
+            s32 count;
+            bool waitForIdleWorker;
+        } resource;
+
+        struct
+        {
+            WarAICommandId commandId;
+            WarResourceKind resource;
+            s32 amount;
+        } wait;
+
+        struct
+        {
+            f32 time;
+        } sleep;
+    };
+} WarAICommand;
+
 shlDeclareQueue(WarAICommandQueue, WarAICommand*)
 shlDefineQueue(WarAICommandQueue, WarAICommand*)
 
@@ -2004,13 +2019,15 @@ void aiCommandFree(WarAICommand* command)
 }
 
 #define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
+#define WarAICommandListNonFreeOptions ((WarAICommandListOptions){NULL, aiCommandEquals, NULL})
 #define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
+#define WarAICommandQueueNonFreeOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, NULL})
 
 typedef WarAICommandResult* (*WarAIExecuteFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command);
 
 typedef void (*WarAIInitFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
 typedef struct _WarAICommand* (*WarAIGetCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
-typedef void (*WarAIExecutedCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command, struct _WarAICommandResult* result);
+typedef void (*WarAIExecutedCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command);
 
 typedef struct
 {
@@ -2060,6 +2077,10 @@ typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
     ((player)->upgrades[(upgrade)/2].level <= (player)->upgrades[(upgrade)/2].allowed)
 #define setUpgradeAllowed(player, upgrade, value) \
     ((player)->upgrades[(upgrade)/2].allowed = (value))
+
+#define getPlayerResourceAmount(player, resource) ((resource) != WAR_RESOURCE_NONE) \
+    ? ((resource) == WAR_RESOURCE_GOLD ? (player)->gold : (player)->wood) \
+    : 0;
 
 #define STATUS_TEXT_MAX_LENGTH 40
 #define CHEAT_TEXT_MAX_LENGTH 32

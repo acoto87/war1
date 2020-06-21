@@ -24,14 +24,16 @@ WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarA
     WarAICommand* command = (WarAICommand*)xcalloc(1, sizeof(WarAICommand));
     command->id = ++ai->staticCommandId;
     command->type = type;
+    command->result = NULL;
 
     return command;
 }
 
-WarAICommand* createRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool waitForIdleWorker)
+WarAICommand* createRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker)
 {
     WarAICommand* request = createAICommand(context, aiPlayer, WAR_AI_COMMAND_REQUEST);
     request->request.unitType = unitType;
+    request->request.checkExisting = checkExisting;
     request->request.waitForIdleWorker = waitForIdleWorker;
     return request;
 }
@@ -45,6 +47,15 @@ WarAICommand* createResourceAICommand(WarContext* context, WarPlayerInfo* aiPlay
     return resource;
 }
 
+WarAICommand* createWaitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandId commandId, WarResourceKind resource, s32 amount)
+{
+    WarAICommand* wait = createAICommand(context, aiPlayer, WAR_AI_COMMAND_WAIT);
+    wait->wait.commandId = commandId;
+    wait->wait.resource = resource;
+    wait->wait.amount = amount;
+    return wait;
+}
+
 WarAICommand* createSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer, f32 time)
 {
     WarAICommand* sleep = createAICommand(context, aiPlayer, WAR_AI_COMMAND_SLEEP);
@@ -52,27 +63,25 @@ WarAICommand* createSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer,
     return sleep;
 }
 
-WarAICommandResult* createAICommandResult(WarContext* context, WarAICommand* command, bool completed)
+WarAICommandResult* createAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status)
 {
     WarAICommandResult* result = (WarAICommandResult*)xcalloc(1, sizeof(WarAICommandResult));
-    result->commandId = command->id;
-    result->commandType = command->type;
-    result->completed = completed;
+    result->status = status;
     return result;
 }
 
-WarAICommandResult* createRequestAICommandResult(WarContext* context, WarAICommand* command, bool completed, WarEntityId buildingId, WarEntityId workerId)
+WarAICommandResult* createRequestAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, WarEntityId buildingId, WarEntityId workerId)
 {
-    WarAICommandResult* result = createAICommandResult(context, command, completed);
+    WarAICommandResult* result = createAICommandResult(context, command, status);
     result->request.unitType = command->request.unitType;
     result->request.buildingId = buildingId;
     result->request.workerId = workerId;
     return result;
 }
 
-WarAICommandResult* createResourceAICommandResult(WarContext* context, WarAICommand* command, bool completed, s32 count, WarEntityId workerIds[])
+WarAICommandResult* createResourceAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, s32 count, WarEntityId workerIds[])
 {
-    WarAICommandResult* result = createAICommandResult(context, command, completed);
+    WarAICommandResult* result = createAICommandResult(context, command, status);
     result->resource.resourceKind = command->resource.resourceKind;
     result->resource.count = count;
     memset(result->resource.workerIds, 0, sizeof(result->resource.workerIds));
@@ -80,14 +89,14 @@ WarAICommandResult* createResourceAICommandResult(WarContext* context, WarAIComm
     return result;
 }
 
-WarAICommandResult* createSleepAICommandResult(WarContext* context, WarAICommand* command, bool completed)
+WarAICommandResult* createSleepAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status)
 {
-    return createAICommandResult(context, command, completed);
+    return createAICommandResult(context, command, status);
 }
 
 void initAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
 {
-    aiPlayer->ai = createAI(context, "land-attack");
+    aiPlayer->ai = createAI(context, "level");
     aiPlayer->ai->initFunc(context, aiPlayer);
 }
 
@@ -197,17 +206,29 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
     WarAICommandResult* result = NULL;
 
     WarUnitType unitType = command->request.unitType;
+    bool checkExisting = command->request.checkExisting;
     bool waitForIdleWorker = command->request.waitForIdleWorker;
+
+    if (checkExisting)
+    {
+        if (playerHasUnit(context, aiPlayer->index, unitType))
+        {
+            result = createRequestAICommandResult(context, command, WAR_AI_COMMAND_STATUS_DONE, 0, 0);
+            return result;
+        }
+    }
 
     if (isDudeUnitType(unitType))
     {
         WarUnitStats stats = getUnitStats(unitType);
-        if (!enoughPlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+        if (!enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) ||
+            !enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
         {
             // NOTE: I think here I should return a result with some kind of
             // status WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE or something?
 
             // there is not enough resources to create the unit
+            result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
             return result;
         }
 
@@ -218,6 +239,7 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
             // status WAR_AI_COMMAND_RESULT_NOT_ENOUGH_SUPPLY or something?
 
             // set a request for supply because there is not enough food
+            result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
             return result;
         }
 
@@ -230,12 +252,13 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
                 WarEntity* producer = producerUnits->items[i];
                 if (!isTraining(producer) && !isUpgrading(producer))
                 {
-                    if (decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+                    if (decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) &&
+                        decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
                     {
                         WarState* trainState = createTrainState(context, producer, unitType, stats.buildTime);
                         changeNextState(context, producer, trainState, true, true);
 
-                        result = createRequestAICommandResult(context, command, true, producer->id, 0);
+                        result = createRequestAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, producer->id, 0);
                         break;
                     }
                 }
@@ -246,12 +269,14 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
     else if (isBuildingUnitType(unitType))
     {
         WarBuildingStats stats = getBuildingStats(unitType);
-        if (!enoughPlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+        if (!enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) ||
+            !enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
         {
             // NOTE: I think here I should return a result with some kind of
             // status WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE or something?
 
             // there is not enough resources to create the unit
+            result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
             return result;
         }
 
@@ -261,26 +286,26 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
         WarEntityListSort(workers, idleWorkersCompare);
 
         // find a worker that can build the stuff
-        if (workers->count > 0)
+        for (s32 i = 0; i < workers->count; i++)
         {
-            WarEntity* worker = workers->items[0];
-
-            // since this worker collection is sorted by idle then,
-            // if the first worker doesn't satisfy this condition,
-            // no other will
-            if (isIdle(worker) || !waitForIdleWorker)
+            WarEntity* worker = workers->items[i];
+            if (isIdle(worker) || (!waitForIdleWorker && !isInsideBuilding(worker)))
             {
+                logInfo("found worker to build the stuff: %d\n", worker->id);
+
                 // find a place to build
                 vec2 targetTile = getUnitCenterPosition(worker, true);
                 if (findPlaceToBuild(context, unitType, targetTile, &targetTile))
                 {
-                    if (decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+                    if (decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) &&
+                        decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
                     {
                         WarEntity* building = createBuilding(context, unitType, targetTile.x, targetTile.y, aiPlayer->index, true);
                         WarState* repairState = createRepairState(context, worker, building->id);
                         changeNextState(context, worker, repairState, true, true);
 
-                        result = createRequestAICommandResult(context, command, true, building->id, worker->id);
+                        result = createRequestAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, building->id, worker->id);
+                        break;
                     }
                 }
             }
@@ -293,6 +318,11 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
         logWarning("Unkown unit type %d to be built by player %d\n", unitType, aiPlayer->index);
     }
 
+    if (!result)
+    {
+        result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
+    }
+
     return result;
 }
 
@@ -302,20 +332,20 @@ WarAICommandResult* executeResourceAICommand(WarContext* context, WarPlayerInfo*
     if (resourceKind != WAR_RESOURCE_GOLD && resourceKind != WAR_RESOURCE_WOOD)
     {
         logWarning("Can't execute resource AI command for resource kind: %d\n", command->resource.resourceKind);
-        return NULL;
+        return createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
     }
 
     s32 count = command->resource.count;
     if (count == 0)
     {
         logWarning("Sending 0 workers to harvest resource %d?\n", resourceKind);
-        return NULL;
+        return createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
     }
 
     if (count > 4)
     {
         logError("Can't send more than 4 workers to harvest resources at the same time: %d\n", count);
-        return NULL;
+        return createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
     }
 
     bool waitForIdleWorker = command->resource.waitForIdleWorker;
@@ -347,7 +377,7 @@ WarAICommandResult* executeResourceAICommand(WarContext* context, WarPlayerInfo*
                     workerIds[workerCount++] = worker->id;
             }
         }
-        else if (!waitForIdleWorker)
+        else if (!waitForIdleWorker && !isInsideBuilding(worker))
         {
             if (resourceKind == WAR_RESOURCE_GOLD && !isMining(worker) && !isGoingToMine(worker))
             {
@@ -371,7 +401,18 @@ WarAICommandResult* executeResourceAICommand(WarContext* context, WarPlayerInfo*
 
     WarEntityListFree(workers);
 
-    return createResourceAICommandResult(context, command, workerCount == count, workerCount, workerIds);
+    WarAICommandStatus status = WAR_AI_COMMAND_STATUS_RUNNING;
+    if (workerCount == 0)
+        status = WAR_AI_COMMAND_STATUS_FAILED;
+    else if (workerCount == count)
+        status = WAR_AI_COMMAND_STATUS_DONE;
+
+    return createResourceAICommandResult(context, command, status, workerCount, workerIds);
+}
+
+WarAICommandResult* executeWaitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+{
+    return createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING);
 }
 
 WarAICommandResult* executeSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
@@ -392,6 +433,7 @@ WarAICommandResult* executeAICommand(WarContext* context, WarPlayerInfo* aiPlaye
         NULL,                       // WAR_AI_COMMAND_NONE
         executeRequestAICommand,    // WAR_AI_COMMAND_REQUEST
         executeResourceAICommand,   // WAR_AI_COMMAND_RESOURCE
+        executeWaitAICommand,       // WAR_AI_COMMAND_WAIT
         executeSleepAICommand,      // WAR_AI_COMMAND_SLEEP
     };
 
@@ -399,7 +441,7 @@ WarAICommandResult* executeAICommand(WarContext* context, WarPlayerInfo* aiPlaye
     if (!executeFunc)
     {
         logError("AI commands of type %d can't be executed\n", command->type);
-        return NULL;
+        return createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
     }
 
     return executeFunc(context, aiPlayer, command);
@@ -412,6 +454,7 @@ void updateAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
 
     if (ai->sleeping)
     {
+        // should I use here the time scaling factors of the game?
         ai->sleepTime -= context->deltaTime;
 
         if (ai->sleepTime > 0)
@@ -426,10 +469,10 @@ void updateAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAICommand* command = ai->getCommandFunc(context, aiPlayer);
     if (command && command->type != WAR_AI_COMMAND_NONE)
     {
-        WarAICommandResult* result = executeAICommand(context, aiPlayer, command);
-        ai->executedCommandFunc(context, aiPlayer, command, result);
+        command->result = executeAICommand(context, aiPlayer, command);
+        ai->executedCommandFunc(context, aiPlayer, command);
 
-        // we shouldn't use here `command` or `result` since the AI could dispose them
+        // I shouldn't use here `command` or `result` since the AI could dispose them
     }
 }
 

@@ -1822,34 +1822,74 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
     }
 }
 
-bool enoughPlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+bool enoughPlayerResource(WarContext* context, WarPlayerInfo* player, WarResourceKind resource, s32 amount)
 {
-    return player->gold >= gold && player->wood >= wood;
+    switch (resource)
+    {
+        case WAR_RESOURCE_GOLD: return player->gold >= amount;
+        case WAR_RESOURCE_WOOD: return player->wood >= amount;
+        default:
+        {
+            logWarning("Trying to check player resource %d by %d\n", resource, amount);
+            return false;
+        }
+    }
 }
 
-bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+bool decreasePlayerResource(WarContext* context, WarPlayerInfo* player, WarResourceKind resource, s32 amount)
 {
-    if (player->gold < gold)
+    switch (resource)
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH GOLD... MINE MORE GOLD");
-        return false;
-    }
+        case WAR_RESOURCE_GOLD:
+        {
+            if (player->gold < amount)
+            {
+                setFlashStatus(context, 1.5f, "NOT ENOUGH GOLD... MINE MORE GOLD");
+                return false;
+            }
 
-    if (player->wood < wood)
-    {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH LUMBER... CHOP MORE TREES");
-        return false;
-    }
+            player->gold -= amount;
+            return true;
+        }
+        case WAR_RESOURCE_WOOD:
+        {
+            if (player->wood < amount)
+            {
+                setFlashStatus(context, 1.5f, "NOT ENOUGH LUMBER... CHOP MORE TREES");
+                return false;
+            }
 
-    player->gold -= gold;
-    player->wood -= wood;
-    return true;
+            player->wood -= amount;
+            return true;
+        }
+        default:
+        {
+            logWarning("Trying to decrease player resource %d by %d\n", resource, amount);
+            return false;
+        }
+    }
 }
 
-void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+void increasePlayerResource(WarContext* context, WarPlayerInfo* player, WarResourceKind resource, s32 amount)
 {
-    player->gold += gold;
-    player->wood += wood;
+    switch (resource)
+    {
+        case WAR_RESOURCE_GOLD:
+        {
+            player->gold += amount;
+            break;
+        }
+        case WAR_RESOURCE_WOOD:
+        {
+            player->wood += amount;
+            break;
+        }
+        default:
+        {
+            logWarning("Trying to increase player resource %d by %d\n", resource, amount);
+            break;
+        }
+    }
 }
 
 bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)

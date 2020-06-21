@@ -68,7 +68,9 @@ void applyGoldCheat(WarContext* context, const char* argument)
     if (!map)
         return;
 
-    increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
+    increasePlayerResource(context, &map->players[0], WAR_RESOURCE_GOLD, CHEAT_GOLD_INCREASE);
+    increasePlayerResource(context, &map->players[0], WAR_RESOURCE_WOOD, CHEAT_WOOD_INCREASE);
+
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 

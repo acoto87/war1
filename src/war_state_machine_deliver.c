@@ -17,6 +17,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
+    WarPlayerInfo* unitPlayer = &map->players[unit->player];
     WarUnitStats stats = getUnitStats(unit->type);
 
     WarEntity* townHall = findEntity(context, state->deliver.townHallId);
@@ -59,14 +60,8 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    if (unit->resourceKind == WAR_RESOURCE_GOLD)
-    {
-        increasePlayerResources(context, &map->players[0], unit->amount, 0);
-    }
-    else if (unit->resourceKind == WAR_RESOURCE_WOOD)
-    {
-        increasePlayerResources(context, &map->players[0], 0, unit->amount);
-    }
+    increasePlayerResource(context, unitPlayer, unit->resourceKind, unit->amount);
+    logInfo("Player %d resources are now: %d, %d\n", unitPlayer->index, unitPlayer->gold, unitPlayer->wood);
 
     unit->resourceKind = WAR_RESOURCE_NONE;
     unit->amount = 0;

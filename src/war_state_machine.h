@@ -101,28 +101,6 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 
 #define setDelay(state, seconds) ((state)->delay = (seconds))
 
-bool isInsideBuilding(WarEntity* entity)
-{
-    if (isMining(entity))
-    {
-        return true;
-    }
-
-    if(isDelivering(entity))
-    {
-        WarState* deliver = getDeliverState(entity);
-        return deliver->deliver.insideBuilding;
-    }
-
-    if (isRepairing2(entity))
-    {
-        WarState* repairing = getRepairingState(entity);
-        return repairing->repairing.insideBuilding;
-    }
-
-    return false;
-}
-
 void enterState(WarContext* context, WarEntity* entity, WarState* state);
 void leaveState(WarContext* context, WarEntity* entity, WarState* state);
 void updateStateMachine(WarContext* context, WarEntity* entity);

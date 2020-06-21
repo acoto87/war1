@@ -135,9 +135,9 @@ WarEntityList* getUnitsOfTypeOfPlayer(WarContext* context, WarUnitType type, u8 
 WarEntityList* getUIEntities(WarContext* context);
 
 void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade);
-bool enoughPlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
-bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
-void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood);
+bool enoughPlayerResource(WarContext* context, WarPlayerInfo* player, WarResourceKind resource, s32 amount);
+bool decreasePlayerResource(WarContext* context, WarPlayerInfo* player, WarResourceKind resource, s32 amount);
+void increasePlayerResource(WarContext* context, WarPlayerInfo* player, WarResourceKind resource, s32 amount);
 bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp);
 bool decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp);
 bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana);
