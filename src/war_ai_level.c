@@ -12,82 +12,32 @@ void levelInitAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAICommandList* runningCommands = &customData->runningCommands;
     WarAICommandListInit(runningCommands, WarAICommandListDefaultOptions);
 
-    // create townhall and wait => this can generate wait commands when the create is executed?
-    // create worker and wait
-    // create farm and wait
-    // send worker to mine
-    // wait for gold
-
-    // vs
-
-    // create townhall
-    // wait for townhall => more explicitly waiting for things, but how to link the wait with the command that will be waited
-    // create worker
-    // wait for worker
-    // create farm
-    // wait for farm
-    // send worker to mine
-    // wait for gold
-
-    // second variant will allow things like:
-    //
-    // create townhall
-    // wait for townhall
-    // create worker
-    // wait for worker
-    // create farm
-    // wait for farm
-    // send worker to mine
-    // send worker to wood
-    // create farm
-    // wait for everything?
-
-    WarUnitType townHallType = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
-    WarAICommand* checkTownHall = createRequestAICommand(context, aiPlayer, townHallType, true, true);
-    WarAICommandQueuePush(commands, checkTownHall);
-
-    WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-    WarAICommand* firstWorker = createRequestAICommand(context, aiPlayer, workerType, false, false);
-    WarAICommandQueuePush(commands, firstWorker);
-
-    WarAICommand* waitForFirstWorker = createWaitForCommand(context, aiPlayer, firstWorker->id);
-    WarAICommandQueuePush(commands, waitForFirstWorker);
-
-    WarUnitType farmType = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, aiPlayer->race);
-    WarAICommand* firstFarm = createRequestAICommand(context, aiPlayer, farmType, false, true);
-    WarAICommandQueuePush(commands, firstFarm);
-
-    WarAICommand* waitForFirstFarm = createWaitForCommand(context, aiPlayer, firstFarm->id);
-    WarAICommandQueuePush(commands, waitForFirstFarm);
-
-    WarAICommand* sendToGold = createResourceAICommand(context, aiPlayer, WAR_RESOURCE_GOLD, 1, true);
-    WarAICommandQueuePush(commands, sendToGold);
-
-    WarAICommand* waitForGold = createWaitForResource(context, aiPlayer, WAR_RESOURCE_GOLD, 400);
-    WarAICommandQueuePush(commands, waitForGold);
-
-    WarAICommand* secondWorker = createRequestAICommand(context, aiPlayer, workerType, false, false);
-    WarAICommandQueuePush(commands, secondWorker);
-
-    WarAICommand* waitForSecondWorker = createWaitForCommand(context, aiPlayer, secondWorker->id);
-    WarAICommandQueuePush(commands, waitForSecondWorker);
-
-    WarAICommand* sendToWood = createResourceAICommand(context, aiPlayer, WAR_RESOURCE_WOOD, 1, true);
-    WarAICommandQueuePush(commands, sendToWood);
-
-    waitForGold = createWaitForResource(context, aiPlayer, WAR_RESOURCE_GOLD, 600);
-    WarAICommandQueuePush(commands, waitForGold);
-
-    WarAICommand* waitForWood = createWaitForResource(context, aiPlayer, WAR_RESOURCE_WOOD, 300);
-    WarAICommandQueuePush(commands, waitForWood);
-
-    WarAICommand* secondFarm = createRequestAICommand(context, aiPlayer, farmType, false, false);
-    WarAICommandQueuePush(commands, secondFarm);
-
-    WarAICommand* waitForSecondFarm = createWaitForCommand(context, aiPlayer, secondFarm->id);
-    WarAICommandQueuePush(commands, waitForSecondFarm);
-
     ai->customData = customData;
+
+    requestTownHall(context, aiPlayer, true, true);
+    requestPeasantOrPeon(context, aiPlayer);
+    waitForUnit(context, aiPlayer, -1);
+    sendToGatherGold(context, aiPlayer, 1, true);
+    requestPeasantOrPeon(context, aiPlayer);
+    waitForUnit(context, aiPlayer, -1);
+    sendToGatherWood(context, aiPlayer, 1, true);
+    waitForGold(context, aiPlayer, 500);
+    waitForWood(context, aiPlayer, 300);
+    requestFarm(context, aiPlayer, false, false);
+    waitForUnit(context, aiPlayer, -1);
+    sendToGatherGold(context, aiPlayer, 1, true);
+    waitForGold(context, aiPlayer, 400);
+    requestPeasantOrPeon(context, aiPlayer);
+    waitForUnit(context, aiPlayer, -1);
+    sendToGatherWood(context, aiPlayer, 1, true);
+    waitForGold(context, aiPlayer, 600);
+    waitForWood(context, aiPlayer, 500);
+    requestBarracks(context, aiPlayer, false, false);
+    waitForUnit(context, aiPlayer, -1);
+    sendToGatherGold(context, aiPlayer, 1, true);
+    waitForGold(context, aiPlayer, 400);
+    requestFootmanOrGrunt(context, aiPlayer);
+    waitForUnit(context, aiPlayer, -1);
 }
 
 WarAICommand* levelGetAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
@@ -112,11 +62,11 @@ WarAICommand* levelGetAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
         {
             WarAICommandResult* commandResult = command->result;
 
-            if (command->type == WAR_AI_COMMAND_REQUEST)
+            if (command->type == WAR_AI_COMMAND_REQUEST_UNIT)
             {
-                WarUnitType unitType = commandResult->request.unitType;
-                WarEntityId buildingId = commandResult->request.buildingId;
-                WarEntityId workerId = commandResult->request.workerId;
+                WarUnitType unitType = commandResult->requestUnit.unitType;
+                WarEntityId buildingId = commandResult->requestUnit.buildingId;
+                WarEntityId workerId = commandResult->requestUnit.workerId;
 
                 if (isDudeUnitType(unitType))
                 {
@@ -192,6 +142,9 @@ WarAICommand* levelGetAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
                     {
                         status = WAR_AI_COMMAND_STATUS_DONE;
                     }
+
+                    // what if the AI is waiting for a particular resource and there is no
+                    // worker gathering it, maybe fail this command? put some workers to gather the resource?
                 }
                 else
                 {
@@ -240,11 +193,6 @@ WarAICommand* levelGetAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
             logInfo("returning NULL command\n");
         }
 
-        if (command->id == 13)
-        {
-            int x = 10;
-        }
-
         return command;
     }
 
@@ -269,4 +217,235 @@ void levelExecutedAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAIC
         WarAICommandList* runningCommands = &customData->runningCommands;
         WarAICommandListAdd(runningCommands, command);
     }
+    else
+    {
+        logWarning("AI command failed: %d - %d\n", command->id, command->type);
+
+        free(command);
+    }
+}
+
+WarAICommand* requestUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    WarAICustomData* customData = (WarAICustomData*)ai->customData;
+    assert(customData);
+
+    WarAICommand* command = createRequestUnitAICommand(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+    WarAICommandQueuePush(&customData->commands, command);
+
+    return command;
+}
+
+WarAICommand* requestFootmanOrGrunt(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_FOOTMAN, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, false, false);
+}
+
+WarAICommand* requestPeasantOrPeon(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, false, false);
+}
+WarAICommand* requestCatapult(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_CATAPULT_HUMANS, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, false, false);
+}
+WarAICommand* requestKnightOrRider(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_KNIGHT, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, false, false);
+}
+WarAICommand* requestArcherOrSpearman(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_ARCHER, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, false, false);
+}
+WarAICommand* requestConjurerOrWarlock(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_CONJURER, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, false, false);
+}
+WarAICommand* requestClericOrNecrolyte(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_CLERIC, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, false, false);
+}
+
+WarAICommand* requestFarm(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+}
+
+WarAICommand* requestBarracks(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_BARRACKS_HUMANS, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+}
+
+WarAICommand* requestChurchOrTemple(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_CHURCH, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+}
+
+WarAICommand* requestTower(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_TOWER_HUMANS, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+}
+
+WarAICommand* requestTownHall(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+}
+
+WarAICommand* requestLumbermill(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_LUMBERMILL_HUMANS, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+}
+
+WarAICommand* requestStableOrKennel(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_STABLE, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+}
+
+WarAICommand* requestBlacksmith(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker)
+{
+    WarUnitType unitType = getUnitTypeForRace(WAR_UNIT_BLACKSMITH_HUMANS, aiPlayer->race);
+    return requestUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
+}
+
+WarAICommand* requestUpgrade(WarContext* context, WarPlayerInfo* aiPlayer, WarUpgradeType upgradeType)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    WarAICustomData* customData = (WarAICustomData*)ai->customData;
+    assert(customData);
+
+    WarAICommand* command = createRequestUpgradeAICommand(context, aiPlayer, upgradeType);
+    WarAICommandQueuePush(&customData->commands, command);
+
+    return command;
+}
+
+WarAICommand* requestUpgradeArrowsOrSpears(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_ARROWS, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeSwordsOrAxes(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_SWORDS, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeHorsesOrWolves(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_HORSES, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeScorpionsOrSpiders(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_SCORPIONS, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeRainOfFireOrPoisonCloud(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_RAIN_OF_FIRE, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeWaterElementalOrDaemon(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_WATER_ELEMENTAL, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeHealingOrRaiseDead(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_HEALING, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeFarSightOrDarkVision(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_FAR_SIGHT, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeInvisibilityOrUnholyArmor(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_INVISIBILITY, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* requestUpgradeShields(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarUpgradeType upgradeType = getUpgradeTypeForRace(WAR_UPGRADE_SHIELD, aiPlayer->race);
+    return requestUpgrade(context, aiPlayer, upgradeType);
+}
+
+WarAICommand* sendToGatherResource(WarContext* context, WarPlayerInfo* aiPlayer, WarResourceKind resource, s32 count, bool waitForIdleWorker)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    WarAICustomData* customData = (WarAICustomData*)ai->customData;
+    assert(customData);
+
+    WarAICommand* command = createResourceAICommand(context, aiPlayer, resource, count, waitForIdleWorker);
+    WarAICommandQueuePush(&customData->commands, command);
+
+    return command;
+}
+
+WarAICommand* waitForUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandId commandId)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    WarAICustomData* customData = (WarAICustomData*)ai->customData;
+    assert(customData);
+
+    if (commandId < 0)
+    {
+        s32 indexFromEnd = abs(commandId);
+        if (indexFromEnd <= customData->commands.count)
+        {
+            WarAICommand* commandToWaitFor = customData->commands.items[customData->commands.count - indexFromEnd];
+            commandId = commandToWaitFor->id;
+        }
+    }
+
+    WarAICommand* command = createWaitAICommand(context, aiPlayer, commandId, WAR_RESOURCE_NONE, 0);
+    WarAICommandQueuePush(&customData->commands, command);
+
+    return command;
+}
+
+WarAICommand* waitForResource(WarContext* context, WarPlayerInfo* aiPlayer, WarResourceKind resource, s32 amount)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
+
+    WarAICustomData* customData = (WarAICustomData*)ai->customData;
+    assert(customData);
+
+    WarAICommand* command = createWaitAICommand(context, aiPlayer, 0, resource, amount);
+    WarAICommandQueuePush(&customData->commands, command);
+
+    return command;
 }

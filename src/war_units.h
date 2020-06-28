@@ -1606,7 +1606,99 @@ WarRace getUnitRace(WarEntity* entity)
 #define isOrcUnit(entity) (getUnitRace(entity) == WAR_RACE_ORCS)
 #define isNeutralUnit(entity) (getUnitRace(entity) == WAR_RACE_NEUTRAL)
 
-WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race);
+WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race)
+{
+    if (race == WAR_RACE_HUMANS)
+    {
+        switch (type)
+        {
+            case WAR_UNIT_GRUNT: return WAR_UNIT_FOOTMAN;
+            case WAR_UNIT_PEON: return WAR_UNIT_PEASANT;
+            case WAR_UNIT_CATAPULT_ORCS: return WAR_UNIT_CATAPULT_HUMANS;
+            case WAR_UNIT_RAIDER: return WAR_UNIT_KNIGHT;
+            case WAR_UNIT_SPEARMAN: return WAR_UNIT_ARCHER;
+            case WAR_UNIT_WARLOCK: return WAR_UNIT_CONJURER;
+            case WAR_UNIT_NECROLYTE: return WAR_UNIT_CLERIC;
+            case WAR_UNIT_FARM_ORCS: return WAR_UNIT_FARM_HUMANS;
+            case WAR_UNIT_BARRACKS_ORCS: return WAR_UNIT_BARRACKS_HUMANS;
+            case WAR_UNIT_TEMPLE: return WAR_UNIT_CHURCH;
+            case WAR_UNIT_TOWER_ORCS: return WAR_UNIT_TOWER_HUMANS;
+            case WAR_UNIT_TOWNHALL_ORCS: return WAR_UNIT_TOWNHALL_HUMANS;
+            case WAR_UNIT_LUMBERMILL_ORCS: return WAR_UNIT_LUMBERMILL_HUMANS;
+            case WAR_UNIT_KENNEL: return WAR_UNIT_STABLE;
+            case WAR_UNIT_BLACKSMITH_ORCS: return WAR_UNIT_BLACKSMITH_HUMANS;
+            case WAR_UNIT_ORC_CORPSE: return WAR_UNIT_HUMAN_CORPSE;
+            default: return type;
+        }
+    }
+
+    if (race == WAR_RACE_ORCS)
+    {
+        switch (type)
+        {
+            case WAR_UNIT_FOOTMAN: return WAR_UNIT_GRUNT;
+            case WAR_UNIT_PEASANT: return WAR_UNIT_PEON;
+            case WAR_UNIT_CATAPULT_HUMANS: return WAR_UNIT_CATAPULT_ORCS;
+            case WAR_UNIT_KNIGHT: return WAR_UNIT_RAIDER;
+            case WAR_UNIT_ARCHER: return WAR_UNIT_SPEARMAN;
+            case WAR_UNIT_CONJURER: return WAR_UNIT_WARLOCK;
+            case WAR_UNIT_CLERIC: return WAR_UNIT_NECROLYTE;
+            case WAR_UNIT_FARM_HUMANS: return WAR_UNIT_FARM_ORCS;
+            case WAR_UNIT_BARRACKS_HUMANS: return WAR_UNIT_BARRACKS_ORCS;
+            case WAR_UNIT_CHURCH: return WAR_UNIT_TEMPLE;
+            case WAR_UNIT_TOWER_HUMANS: return WAR_UNIT_TOWER_ORCS;
+            case WAR_UNIT_TOWNHALL_HUMANS: return WAR_UNIT_TOWNHALL_ORCS;
+            case WAR_UNIT_LUMBERMILL_HUMANS: return WAR_UNIT_LUMBERMILL_ORCS;
+            case WAR_UNIT_STABLE: return WAR_UNIT_KENNEL;
+            case WAR_UNIT_BLACKSMITH_HUMANS: return WAR_UNIT_BLACKSMITH_ORCS;
+            case WAR_UNIT_HUMAN_CORPSE: return WAR_UNIT_ORC_CORPSE;
+            default: return type;
+        }
+    }
+
+    logInfo("Trying to get unit type %d for race %d, returning %d\n", type, race, type);
+    return type;
+}
+
+WarUpgradeType getUpgradeTypeForRace(WarUpgradeType type, WarRace race)
+{
+    if (race == WAR_RACE_HUMANS)
+    {
+        switch (type)
+        {
+            case WAR_UPGRADE_SPEARS: return WAR_UPGRADE_ARROWS;
+            case WAR_UPGRADE_AXES: return WAR_UPGRADE_SWORDS;
+            case WAR_UPGRADE_WOLVES: return WAR_UPGRADE_HORSES;
+            case WAR_UPGRADE_SPIDERS: return WAR_UPGRADE_SCORPIONS;
+            case WAR_UPGRADE_POISON_CLOUD: return WAR_UPGRADE_RAIN_OF_FIRE;
+            case WAR_UPGRADE_DAEMON: return WAR_UPGRADE_WATER_ELEMENTAL;
+            case WAR_UPGRADE_RAISE_DEAD: return WAR_UPGRADE_HEALING;
+            case WAR_UPGRADE_DARK_VISION: return WAR_UPGRADE_FAR_SIGHT;
+            case WAR_UPGRADE_UNHOLY_ARMOR: return WAR_UPGRADE_INVISIBILITY;
+            default: return type;
+        }
+    }
+
+    if (race == WAR_RACE_ORCS)
+    {
+        switch (type)
+        {
+            case WAR_UPGRADE_ARROWS: return WAR_UPGRADE_SPEARS;
+            case WAR_UPGRADE_SWORDS: return WAR_UPGRADE_AXES;
+            case WAR_UPGRADE_HORSES: return WAR_UPGRADE_WOLVES;
+            case WAR_UPGRADE_SCORPIONS: return WAR_UPGRADE_SPIDERS;
+            case WAR_UPGRADE_RAIN_OF_FIRE: return WAR_UPGRADE_POISON_CLOUD;
+            case WAR_UPGRADE_WATER_ELEMENTAL: return WAR_UPGRADE_DAEMON;
+            case WAR_UPGRADE_HEALING: return WAR_UPGRADE_RAISE_DEAD;
+            case WAR_UPGRADE_FAR_SIGHT: return WAR_UPGRADE_DARK_VISION;
+            case WAR_UPGRADE_INVISIBILITY: return WAR_UPGRADE_UNHOLY_ARMOR;
+            default: return type;
+        }
+    }
+
+    logInfo("Trying to get upgrade type %d for race %d, returning %d\n", type, race, type);
+    return type;
+}
 
 WarProjectileType getProjectileType(WarUnitType type)
 {
@@ -1663,7 +1755,7 @@ WarUnitType getTownHallOfRace(WarRace race)
     }
 }
 
-WarUnitType getProducerUnitOfType(WarUnitType type)
+WarUnitType getUnitTypeProducer(WarUnitType type)
 {
     switch (type)
     {
@@ -1696,6 +1788,61 @@ WarUnitType getProducerUnitOfType(WarUnitType type)
         default:
         {
             logWarning("There is not producer unit for unit type %d\n", type);
+            return -1;
+        }
+    }
+}
+
+WarUnitType getUpgradeTypeProducer(WarUpgradeType type, WarRace race)
+{
+    switch (type)
+    {
+        case WAR_UPGRADE_SWORDS:
+            return WAR_UNIT_BLACKSMITH_HUMANS;
+
+        case WAR_UPGRADE_AXES:
+            return WAR_UNIT_BLACKSMITH_ORCS;
+
+        case WAR_UPGRADE_ARROWS:
+            return WAR_UNIT_LUMBERMILL_HUMANS;
+
+        case WAR_UPGRADE_SPEARS:
+            return WAR_UNIT_LUMBERMILL_ORCS;
+
+        case WAR_UPGRADE_HORSES:
+            return WAR_UNIT_STABLE;
+
+        case WAR_UPGRADE_WOLVES:
+            return WAR_UNIT_KENNEL;
+
+        case WAR_UPGRADE_HEALING:
+        case WAR_UPGRADE_FAR_SIGHT:
+        case WAR_UPGRADE_INVISIBILITY:
+            return WAR_UNIT_CHURCH;
+
+        case WAR_UPGRADE_RAISE_DEAD:
+        case WAR_UPGRADE_DARK_VISION:
+        case WAR_UPGRADE_UNHOLY_ARMOR:
+            return WAR_UNIT_TEMPLE;
+
+        case WAR_UPGRADE_SCORPIONS:
+        case WAR_UPGRADE_RAIN_OF_FIRE:
+        case WAR_UPGRADE_WATER_ELEMENTAL:
+            return WAR_UNIT_TOWER_HUMANS;
+
+        case WAR_UPGRADE_SPIDERS:
+        case WAR_UPGRADE_POISON_CLOUD:
+        case WAR_UPGRADE_DAEMON:
+            return WAR_UNIT_TOWER_ORCS;
+
+        case WAR_UPGRADE_SHIELD:
+            return race == WAR_RACE_HUMANS
+                ? WAR_UNIT_BLACKSMITH_HUMANS
+                : WAR_UNIT_BLACKSMITH_ORCS;
+
+        default:
+        {
+            logWarning("There is not producer unit for upgrade type %d\n", type);
             return -1;
         }
     }

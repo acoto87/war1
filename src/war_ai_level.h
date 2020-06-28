@@ -7,98 +7,48 @@ typedef struct
     WarAICommandList runningCommands;
 } WarAICustomData;
 
-// WarAICommand* createUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker)
-// {
-//     WarAI* ai = aiPlayer->ai;
-//     assert(ai);
+WarAICommand* requestUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker);
 
-//     WarAICustomData* customData = (WarAICustomData*)ai->customData;
-//     assert(customData);
+WarAICommand* requestFootmanOrGrunt(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestPeasantOrPeon(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestCatapult(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestKnightOrRider(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestArcherOrSpearman(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestConjurerOrWarlock(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestClericOrNecrolyte(WarContext* context, WarPlayerInfo* aiPlayer);
 
-//     WarAICommand* command = createRequestAICommand(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
-//     WarAICommandQueuePush(&customData->commands, command);
+WarAICommand* requestFarm(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker);
+WarAICommand* requestBarracks(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker);
+WarAICommand* requestChurchOrTemple(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker);
+WarAICommand* requestTower(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker);
+WarAICommand* requestTownHall(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker);
+WarAICommand* requestLumbermill(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker);
+WarAICommand* requestStableOrKennel(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker);
+WarAICommand* requestBlacksmith(WarContext* context, WarPlayerInfo* aiPlayer, bool checkExisting, bool waitForIdleWorker);
 
-//     return command;
-// }
+WarAICommand* requestUpgrade(WarContext* context, WarPlayerInfo* aiPlayer, WarUpgradeType upgradeType);
 
-// WarAICommand* createUnitAndWait(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker)
-// {
-//     WarAICommand* command = createUnit(context, aiPlayer, unitType, checkExisting, waitForIdleWorker);
-//     command->wait = true;
-//     return command;
-// }
+WarAICommand* requestUpgradeArrowsOrSpears(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeSwordsOrAxes(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeHorsesOrWolves(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeScorpionsOrSpiders(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeRainOfFireOrPoisonCloud(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeWaterElementalOrDaemon(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeHealingOrRaiseDead(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeFarSightOrDarkVision(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeInvisibilityOrUnholyArmor(WarContext* context, WarPlayerInfo* aiPlayer);
+WarAICommand* requestUpgradeShields(WarContext* context, WarPlayerInfo* aiPlayer);
 
-// #define createFootman(context, aiPlayer, wait) wait \
-//     ? createUnitAndWait(context, aiPlayer, WAR_UNIT_FOOTMAN, false, false) \
-//     : createUnit(context, aiPlayer, WAR_UNIT_FOOTMAN, false, false)
-// #define createGrunt(context, aiPlayer, wait) wait \
-//     ? createUnitAndWait(context, aiPlayer, WAR_UNIT_GRUNT, false, false) \
-//     : createUnit(context, aiPlayer, WAR_UNIT_GRUNT, false, false)
-// #define createFootmanOrGrunt(context, aiPlayer, wait) wait \
-//     ? createUnitAndWait(context, aiPlayer, getUnitTypeForRace(WAR_UNIT_FOOTMAN, aiPlayer->race), false, false)
-//     : createUnit(context, aiPlayer, getUnitTypeForRace(WAR_UNIT_FOOTMAN, aiPlayer->race), false, false)
+WarAICommand* sendToGatherResource(WarContext* context, WarPlayerInfo* aiPlayer, WarResourceKind resource, s32 count, bool waitForIdleWorker);
 
-// WAR_UNIT_PEASANT,
-// WAR_UNIT_PEON,
-// WAR_UNIT_CATAPULT_HUMANS,
-// WAR_UNIT_CATAPULT_ORCS,
-// WAR_UNIT_KNIGHT,
-// WAR_UNIT_RAIDER,
-// WAR_UNIT_ARCHER,
-// WAR_UNIT_SPEARMAN,
-// WAR_UNIT_CONJURER,
-// WAR_UNIT_WARLOCK,
-// WAR_UNIT_CLERIC,
-// WAR_UNIT_NECROLYTE,
-// WAR_UNIT_MEDIVH,
-// WAR_UNIT_LOTHAR,
-// WAR_UNIT_WOUNDED,
-// WAR_UNIT_GRIZELDA,
-// WAR_UNIT_GARONA,
-// WAR_UNIT_OGRE,
-// WAR_UNIT_SPIDER,
-// WAR_UNIT_SLIME,
-// WAR_UNIT_FIRE_ELEMENTAL,
-// WAR_UNIT_SCORPION,
-// WAR_UNIT_BRIGAND,
-// WAR_UNIT_THE_DEAD,
-// WAR_UNIT_SKELETON,
-// WAR_UNIT_DAEMON,
-// WAR_UNIT_WATER_ELEMENTAL,
-// WAR_UNIT_DRAGON_CYCLOPS_GIANT,
-// WAR_UNIT_26,
-// WAR_UNIT_30,
+#define sendToGatherGold(context, aiPlayer, count, waitForIdleWorker) sendToGatherResource(context, aiPlayer, WAR_RESOURCE_GOLD, count, waitForIdleWorker)
+#define sendToGatherWood(context, aiPlayer, count, waitForIdleWorker) sendToGatherResource(context, aiPlayer, WAR_RESOURCE_WOOD, count, waitForIdleWorker)
 
-// // buildings
-// WAR_UNIT_FARM_HUMANS,
-// WAR_UNIT_FARM_ORCS,
-// WAR_UNIT_BARRACKS_HUMANS,
-// WAR_UNIT_BARRACKS_ORCS,
-// WAR_UNIT_CHURCH,
-// WAR_UNIT_TEMPLE,
-// WAR_UNIT_TOWER_HUMANS,
-// WAR_UNIT_TOWER_ORCS,
-// WAR_UNIT_TOWNHALL_HUMANS,
-// WAR_UNIT_TOWNHALL_ORCS,
-// WAR_UNIT_LUMBERMILL_HUMANS,
-// WAR_UNIT_LUMBERMILL_ORCS,
-// WAR_UNIT_STABLE,
-// WAR_UNIT_KENNEL,
-// WAR_UNIT_BLACKSMITH_HUMANS,
-// WAR_UNIT_BLACKSMITH_ORCS,
-// WAR_UNIT_STORMWIND,
-// WAR_UNIT_BLACKROCK,
+WarAICommand* waitForUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandId commandId);
+WarAICommand* waitForResource(WarContext* context, WarPlayerInfo* aiPlayer, WarResourceKind resource, s32 amount);
 
-// // neutral
-// WAR_UNIT_GOLDMINE,
-
-// WAR_UNIT_51,
-
-// // others
-// WAR_UNIT_HUMAN_CORPSE,
-// WAR_UNIT_ORC_CORPSE,
-
-// WAR_UNIT_COUNT
+#define waitForGold(context, aiPlayer, amount) waitForResource(context, aiPlayer, WAR_RESOURCE_GOLD, amount)
+#define waitForWood(context, aiPlayer, amount) waitForResource(context, aiPlayer, WAR_RESOURCE_WOOD, amount)
 
 void levelInitAI(WarContext* context, WarPlayerInfo* aiPlayer);
 WarAICommand* levelGetAICommand(WarContext* context, WarPlayerInfo* aiPlayer);

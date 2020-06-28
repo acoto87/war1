@@ -1924,15 +1924,16 @@ typedef struct
     s32 level;
 } WarUpgrade;
 
-typedef u32 WarAICommandId;
+typedef s16 WarAICommandId;
 
 typedef enum
 {
-    WAR_AI_COMMAND_NONE,        // do nothing with this command
-    WAR_AI_COMMAND_REQUEST,     // request unit or building
-    WAR_AI_COMMAND_RESOURCE,    // sent worker to resource
-    WAR_AI_COMMAND_WAIT,        // wait for buildings, units, resources
-    WAR_AI_COMMAND_SLEEP,       // sleep for some time
+    WAR_AI_COMMAND_NONE,            // do nothing with this command
+    WAR_AI_COMMAND_REQUEST_UNIT,    // request unit or building
+    WAR_AI_COMMAND_REQUEST_UPGRADE, // request upgrade
+    WAR_AI_COMMAND_RESOURCE,        // send worker to gather resources
+    WAR_AI_COMMAND_WAIT,            // wait for buildings, units, resources
+    WAR_AI_COMMAND_SLEEP,           // sleep for some time
 
     WAR_AI_COMMAND_COUNT
 } WarAICommandType;
@@ -1955,7 +1956,13 @@ typedef struct _WarAICommandResult
             WarUnitType unitType;
             WarEntityId buildingId;
             WarEntityId workerId;
-        } request;
+        } requestUnit;
+
+        struct
+        {
+            WarUpgradeType upgradeType;
+            WarEntityId buildingId;
+        } requestUpgrade;
 
         struct
         {
@@ -1979,7 +1986,12 @@ typedef struct _WarAICommand
             WarUnitType unitType;
             bool checkExisting;
             bool waitForIdleWorker;
-        } request;
+        } requestUnit;
+
+        struct
+        {
+            WarUpgradeType upgradeType;
+        } requestUpgrade;
 
         struct
         {

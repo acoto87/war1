@@ -29,12 +29,19 @@ WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarA
     return command;
 }
 
-WarAICommand* createRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker)
+WarAICommand* createRequestUnitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker)
 {
-    WarAICommand* request = createAICommand(context, aiPlayer, WAR_AI_COMMAND_REQUEST);
-    request->request.unitType = unitType;
-    request->request.checkExisting = checkExisting;
-    request->request.waitForIdleWorker = waitForIdleWorker;
+    WarAICommand* request = createAICommand(context, aiPlayer, WAR_AI_COMMAND_REQUEST_UNIT);
+    request->requestUnit.unitType = unitType;
+    request->requestUnit.checkExisting = checkExisting;
+    request->requestUnit.waitForIdleWorker = waitForIdleWorker;
+    return request;
+}
+
+WarAICommand* createRequestUpgradeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUpgradeType upgradeType)
+{
+    WarAICommand* request = createAICommand(context, aiPlayer, WAR_AI_COMMAND_REQUEST_UPGRADE);
+    request->requestUpgrade.upgradeType = upgradeType;
     return request;
 }
 
@@ -70,12 +77,20 @@ WarAICommandResult* createAICommandResult(WarContext* context, WarAICommand* com
     return result;
 }
 
-WarAICommandResult* createRequestAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, WarEntityId buildingId, WarEntityId workerId)
+WarAICommandResult* createRequestUnitAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, WarEntityId buildingId, WarEntityId workerId)
 {
     WarAICommandResult* result = createAICommandResult(context, command, status);
-    result->request.unitType = command->request.unitType;
-    result->request.buildingId = buildingId;
-    result->request.workerId = workerId;
+    result->requestUnit.unitType = command->requestUnit.unitType;
+    result->requestUnit.buildingId = buildingId;
+    result->requestUnit.workerId = workerId;
+    return result;
+}
+
+WarAICommandResult* createRequestUpgradeAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, WarEntityId buildingId)
+{
+    WarAICommandResult* result = createAICommandResult(context, command, status);
+    result->requestUpgrade.upgradeType = command->requestUpgrade.upgradeType;
+    result->requestUpgrade.buildingId = buildingId;
     return result;
 }
 
@@ -201,19 +216,19 @@ static bool findForestForWorker(WarContext* context, WarEntity* worker)
     return false;
 }
 
-WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+WarAICommandResult* executeRequestUnitCommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
 {
     WarAICommandResult* result = NULL;
 
-    WarUnitType unitType = command->request.unitType;
-    bool checkExisting = command->request.checkExisting;
-    bool waitForIdleWorker = command->request.waitForIdleWorker;
+    WarUnitType unitType = command->requestUnit.unitType;
+    bool checkExisting = command->requestUnit.checkExisting;
+    bool waitForIdleWorker = command->requestUnit.waitForIdleWorker;
 
     if (checkExisting)
     {
         if (playerHasUnit(context, aiPlayer->index, unitType))
         {
-            result = createRequestAICommandResult(context, command, WAR_AI_COMMAND_STATUS_DONE, 0, 0);
+            result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_DONE, 0, 0);
             return result;
         }
     }
@@ -243,14 +258,16 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
             return result;
         }
 
-        WarUnitType producerType = getProducerUnitOfType(unitType);
+        WarUnitType producerType = getUnitTypeProducer(unitType);
         if (isValidUnitType(producerType))
         {
             WarEntityList* producerUnits = getUnitsOfTypeOfPlayer(context, producerType, aiPlayer->index);
             for (s32 i = 0; i < producerUnits->count; i++)
             {
                 WarEntity* producer = producerUnits->items[i];
-                if (!isTraining(producer) && !isUpgrading(producer))
+                if (!isBuilding(producer) && !isGoingToBuild(producer) &&
+                    !isTraining(producer) && !isGoingToTrain(producer) &&
+                    !isUpgrading(producer) && !isGoingToUpgrade(producer))
                 {
                     if (decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) &&
                         decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
@@ -258,7 +275,7 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
                         WarState* trainState = createTrainState(context, producer, unitType, stats.buildTime);
                         changeNextState(context, producer, trainState, true, true);
 
-                        result = createRequestAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, producer->id, 0);
+                        result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, producer->id, 0);
                         break;
                     }
                 }
@@ -304,7 +321,7 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
                         WarState* repairState = createRepairState(context, worker, building->id);
                         changeNextState(context, worker, repairState, true, true);
 
-                        result = createRequestAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, building->id, worker->id);
+                        result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, building->id, worker->id);
                         break;
                     }
                 }
@@ -316,6 +333,66 @@ WarAICommandResult* executeRequestAICommand(WarContext* context, WarPlayerInfo* 
     else
     {
         logWarning("Unkown unit type %d to be built by player %d\n", unitType, aiPlayer->index);
+    }
+
+    if (!result)
+    {
+        result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
+    }
+
+    return result;
+}
+
+WarAICommandResult* executeRequestUpgradeCommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+{
+    WarAICommandResult* result = NULL;
+
+    WarUpgradeType upgradeType = command->requestUpgrade.upgradeType;
+
+    if (!hasRemainingUpgrade(aiPlayer, upgradeType))
+    {
+        // NOTE: I think here I should return a result with some kind of
+        // status WAR_AI_COMMAND_RESULT_NOT_MORE_UPGRADE or something?
+
+        // there is not enough resources to create the unit
+        result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
+        return result;
+    }
+
+    s32 upgradeLevel = getUpgradeLevel(aiPlayer, upgradeType);
+    WarUpgradeStats stats = getUpgradeStats(upgradeType);
+    if (!enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]))
+    {
+        // NOTE: I think here I should return a result with some kind of
+        // status WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE or something?
+
+        // there is not enough resources to create the unit
+        result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
+        return result;
+    }
+
+    WarUnitType producerType = getUpgradeTypeProducer(upgradeType, aiPlayer->race);
+    if (isValidUnitType(producerType))
+    {
+        WarEntityList* producerUnits = getUnitsOfTypeOfPlayer(context, producerType, aiPlayer->index);
+        for (s32 i = 0; i < producerUnits->count; i++)
+        {
+            WarEntity* producer = producerUnits->items[i];
+            if (!isBuilding(producer) && !isGoingToBuild(producer) &&
+                !isTraining(producer) && !isGoingToTrain(producer) &&
+                !isUpgrading(producer) && !isGoingToUpgrade(producer))
+            {
+                if (decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]))
+                {
+                    WarState* upgradeState = createUpgradeState(context, producer, upgradeType, stats.buildTime);
+                    changeNextState(context, producer, upgradeState, true, true);
+
+                    result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, producer->id, 0);
+                    break;
+                }
+            }
+        }
+        WarEntityListFree(producerUnits);
     }
 
     if (!result)
@@ -423,18 +500,19 @@ WarAICommandResult* executeSleepAICommand(WarContext* context, WarPlayerInfo* ai
     ai->sleeping = true;
     ai->sleepTime = command->sleep.time;
 
-    return createSleepAICommandResult(context, command, true);
+    return createSleepAICommandResult(context, command, WAR_AI_COMMAND_STATUS_DONE);
 }
 
 WarAICommandResult* executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
 {
     static WarAIExecuteFunc executeFuncs[WAR_AI_COMMAND_COUNT] =
     {
-        NULL,                       // WAR_AI_COMMAND_NONE
-        executeRequestAICommand,    // WAR_AI_COMMAND_REQUEST
-        executeResourceAICommand,   // WAR_AI_COMMAND_RESOURCE
-        executeWaitAICommand,       // WAR_AI_COMMAND_WAIT
-        executeSleepAICommand,      // WAR_AI_COMMAND_SLEEP
+        NULL,                           // WAR_AI_COMMAND_NONE
+        executeRequestUnitCommand,      // WAR_AI_COMMAND_REQUEST_UNIT
+        executeRequestUpgradeCommand,   // WAR_AI_COMMAND_REQUEST_UPGRADE
+        executeResourceAICommand,       // WAR_AI_COMMAND_RESOURCE
+        executeWaitAICommand,           // WAR_AI_COMMAND_WAIT
+        executeSleepAICommand,          // WAR_AI_COMMAND_SLEEP
     };
 
     WarAIExecuteFunc executeFunc = executeFuncs[(s32)command->type];
