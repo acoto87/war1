@@ -239,49 +239,51 @@ WarAICommandResult* executeRequestUnitCommand(WarContext* context, WarPlayerInfo
         if (!enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) ||
             !enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
         {
-            // NOTE: I think here I should return a result with some kind of
-            // status WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE or something?
-
-            // there is not enough resources to create the unit
+            // WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE ?
             result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
             return result;
         }
 
-        // check if there is enough food
         if (!enoughFarmFood(context, aiPlayer))
         {
-            // NOTE: I think here I should return a result with some kind of
-            // status WAR_AI_COMMAND_RESULT_NOT_ENOUGH_SUPPLY or something?
-
-            // set a request for supply because there is not enough food
+            // WAR_AI_COMMAND_RESULT_NOT_ENOUGH_SUPPLY ?
             result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
             return result;
         }
 
         WarUnitType producerType = getUnitTypeProducer(unitType);
-        if (isValidUnitType(producerType))
-        {
-            WarEntityList* producerUnits = getUnitsOfTypeOfPlayer(context, producerType, aiPlayer->index);
-            for (s32 i = 0; i < producerUnits->count; i++)
-            {
-                WarEntity* producer = producerUnits->items[i];
-                if (!isBuilding(producer) && !isGoingToBuild(producer) &&
-                    !isTraining(producer) && !isGoingToTrain(producer) &&
-                    !isUpgrading(producer) && !isGoingToUpgrade(producer))
-                {
-                    if (decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) &&
-                        decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
-                    {
-                        WarState* trainState = createTrainState(context, producer, unitType, stats.buildTime);
-                        changeNextState(context, producer, trainState, true, true);
+        assert(isValidUnitType(producerType));
 
-                        result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, producer->id, 0);
-                        break;
-                    }
-                }
+        // find a producer (typically a building) that can build the stuff
+        WarEntityList* producerUnits = getUnitsOfTypeOfPlayer(context, producerType, aiPlayer->index);
+        for (s32 i = 0; i < producerUnits->count; i++)
+        {
+            WarEntity* producer = producerUnits->items[i];
+            if (!isBuilding(producer) && !isGoingToBuild(producer) &&
+                !isTraining(producer) && !isGoingToTrain(producer) &&
+                !isUpgrading(producer) && !isGoingToUpgrade(producer))
+            {
+                // playerResourcesDecreased should be true at this point because we checked earlier
+                bool playerResourcesDecreased = decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) &&
+                                                decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost);
+
+                assert(playerResourcesDecreased);
+
+                WarState* trainState = createTrainState(context, producer, unitType, stats.buildTime);
+                changeNextState(context, producer, trainState, true, true);
+
+                result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, producer->id, 0);
+                break;
             }
-            WarEntityListFree(producerUnits);
         }
+
+        if (!result)
+        {
+            // WAR_AI_COMMAND_RESULT_NO_PRODUCER_AVAILABLE ?
+            result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
+        }
+
+        WarEntityListFree(producerUnits);
     }
     else if (isBuildingUnitType(unitType))
     {
@@ -289,10 +291,7 @@ WarAICommandResult* executeRequestUnitCommand(WarContext* context, WarPlayerInfo
         if (!enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) ||
             !enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
         {
-            // NOTE: I think here I should return a result with some kind of
-            // status WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE or something?
-
-            // there is not enough resources to create the unit
+            // WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE ?
             result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
             return result;
         }
@@ -308,36 +307,45 @@ WarAICommandResult* executeRequestUnitCommand(WarContext* context, WarPlayerInfo
             WarEntity* worker = workers->items[i];
             if (isIdle(worker) || (!waitForIdleWorker && !isInsideBuilding(worker)))
             {
-                logInfo("found worker to build the stuff: %d\n", worker->id);
-
                 // find a place to build
                 vec2 targetTile = getUnitCenterPosition(worker, true);
                 if (findPlaceToBuild(context, unitType, targetTile, &targetTile))
                 {
-                    if (decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) &&
-                        decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost))
-                    {
-                        WarEntity* building = createBuilding(context, unitType, targetTile.x, targetTile.y, aiPlayer->index, true);
-                        WarState* repairState = createRepairState(context, worker, building->id);
-                        changeNextState(context, worker, repairState, true, true);
+                    // playerResourcesDecreased should be true at this point because we checked earlier
+                    bool playerResourcesDecreased = decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost) &&
+                                                    decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_WOOD, stats.woodCost);
 
-                        result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, building->id, worker->id);
-                        break;
-                    }
+                    assert(playerResourcesDecreased);
+
+                    WarEntity* building = createBuilding(context, unitType, targetTile.x, targetTile.y, aiPlayer->index, true);
+                    WarState* repairState = createRepairState(context, worker, building->id);
+                    changeNextState(context, worker, repairState, true, true);
+
+                    result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, building->id, worker->id);
                 }
+                else
+                {
+                    // WAR_AI_COMMAND_RESULT_NOT_ENOUGH_SPACE ?
+                    result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
+                }
+
+                break;
             }
+        }
+
+        if (!result)
+        {
+            // WAR_AI_COMMAND_RESULT_NO_WORKER_AVAILABLE ?
+            result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
         }
 
         WarEntityListFree(workers);
     }
     else
     {
-        logWarning("Unkown unit type %d to be built by player %d\n", unitType, aiPlayer->index);
-    }
-
-    if (!result)
-    {
-        result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
+        logError("Unkown unit type %d to be built by player %d\n", unitType, aiPlayer->index);
+        assert(false);
+        return NULL;
     }
 
     return result;
@@ -351,10 +359,7 @@ WarAICommandResult* executeRequestUpgradeCommand(WarContext* context, WarPlayerI
 
     if (!hasRemainingUpgrade(aiPlayer, upgradeType))
     {
-        // NOTE: I think here I should return a result with some kind of
-        // status WAR_AI_COMMAND_RESULT_NOT_MORE_UPGRADE or something?
-
-        // there is not enough resources to create the unit
+        // WAR_AI_COMMAND_RESULT_NOT_MORE_UPGRADE ?
         result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
         return result;
     }
@@ -363,42 +368,41 @@ WarAICommandResult* executeRequestUpgradeCommand(WarContext* context, WarPlayerI
     WarUpgradeStats stats = getUpgradeStats(upgradeType);
     if (!enoughPlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]))
     {
-        // NOTE: I think here I should return a result with some kind of
-        // status WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE or something?
-
-        // there is not enough resources to create the unit
+        // WAR_AI_COMMAND_RESULT_NOT_ENOUGH_RESOURCE ?
         result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
         return result;
     }
 
     WarUnitType producerType = getUpgradeTypeProducer(upgradeType, aiPlayer->race);
-    if (isValidUnitType(producerType))
-    {
-        WarEntityList* producerUnits = getUnitsOfTypeOfPlayer(context, producerType, aiPlayer->index);
-        for (s32 i = 0; i < producerUnits->count; i++)
-        {
-            WarEntity* producer = producerUnits->items[i];
-            if (!isBuilding(producer) && !isGoingToBuild(producer) &&
-                !isTraining(producer) && !isGoingToTrain(producer) &&
-                !isUpgrading(producer) && !isGoingToUpgrade(producer))
-            {
-                if (decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]))
-                {
-                    WarState* upgradeState = createUpgradeState(context, producer, upgradeType, stats.buildTime);
-                    changeNextState(context, producer, upgradeState, true, true);
+    assert(isValidUnitType(producerType));
 
-                    result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, producer->id, 0);
-                    break;
-                }
-            }
+    // find a producer (typically a building) that can build the stuff
+    WarEntityList* producerUnits = getUnitsOfTypeOfPlayer(context, producerType, aiPlayer->index);
+    for (s32 i = 0; i < producerUnits->count; i++)
+    {
+        WarEntity* producer = producerUnits->items[i];
+        if (!isBuilding(producer) && !isGoingToBuild(producer) &&
+            !isTraining(producer) && !isGoingToTrain(producer) &&
+            !isUpgrading(producer) && !isGoingToUpgrade(producer))
+        {
+            bool playerResourcesDecreased = decreasePlayerResource(context, aiPlayer, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]);
+            assert(playerResourcesDecreased);
+
+            WarState* upgradeState = createUpgradeState(context, producer, upgradeType, stats.buildTime);
+            changeNextState(context, producer, upgradeState, true, true);
+
+            result = createRequestUnitAICommandResult(context, command, WAR_AI_COMMAND_STATUS_RUNNING, producer->id, 0);
+            break;
         }
-        WarEntityListFree(producerUnits);
     }
 
     if (!result)
     {
+        // WAR_AI_COMMAND_RESULT_NO_PRODUCER_AVAILABLE ?
         result = createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
     }
+
+    WarEntityListFree(producerUnits);
 
     return result;
 }
@@ -408,20 +412,25 @@ WarAICommandResult* executeResourceAICommand(WarContext* context, WarPlayerInfo*
     WarResourceKind resourceKind = command->resource.resourceKind;
     if (resourceKind != WAR_RESOURCE_GOLD && resourceKind != WAR_RESOURCE_WOOD)
     {
-        logWarning("Can't execute resource AI command for resource kind: %d\n", command->resource.resourceKind);
-        return createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
+        logError("Can't execute resource AI command for resource kind: %d\n", command->resource.resourceKind);
+        assert(false);
+        return NULL;
     }
 
     s32 count = command->resource.count;
     if (count == 0)
     {
         logWarning("Sending 0 workers to harvest resource %d?\n", resourceKind);
+
+        // WAR_AI_COMMAND_STATUS_NOT_ENOUGH_WORKERS ?
         return createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
     }
 
     if (count > 4)
     {
         logError("Can't send more than 4 workers to harvest resources at the same time: %d\n", count);
+
+        // // WAR_AI_COMMAND_STATUS_TOO_MANY_WORKERS ?
         return createAICommandResult(context, command, WAR_AI_COMMAND_STATUS_FAILED);
     }
 
@@ -435,43 +444,31 @@ WarAICommandResult* executeResourceAICommand(WarContext* context, WarPlayerInfo*
     s32 workerCount = 0;
     WarEntityId workerIds[4] = {0};
 
-    for (s32 i = 0; i < workers->count; i++)
+    for (s32 i = 0; i < workers->count && workerCount < count; i++)
     {
-        if (workerCount == count)
-            break;
-
         WarEntity* worker = workers->items[i];
-        if (isIdle(worker))
+
+        bool isIdle = isIdle(worker);
+        if (isIdle || (!waitForIdleWorker && !isInsideBuilding(worker)))
         {
             if (resourceKind == WAR_RESOURCE_GOLD)
             {
-                if (findMineForWorker(context, worker))
+                bool isMining = !isIdle && (isMining(worker) || isGoingToMine(worker));
+                if (!isMining && findMineForWorker(context, worker))
                     workerIds[workerCount++] = worker->id;
             }
             else if (resourceKind == WAR_RESOURCE_WOOD)
             {
-                if (findForestForWorker(context, worker))
-                    workerIds[workerCount++] = worker->id;
-            }
-        }
-        else if (!waitForIdleWorker && !isInsideBuilding(worker))
-        {
-            if (resourceKind == WAR_RESOURCE_GOLD && !isMining(worker) && !isGoingToMine(worker))
-            {
-                if (findMineForWorker(context, worker))
-                    workerIds[workerCount++] = worker->id;
-            }
-            else if (resourceKind == WAR_RESOURCE_WOOD && !isChopping(worker) && !isGoingToChop(worker))
-            {
-                if (findForestForWorker(context, worker))
+                bool isChopping = !isIdle && (isChopping(worker) || isGoingToChop(worker));
+                if (!isChopping && findForestForWorker(context, worker))
                     workerIds[workerCount++] = worker->id;
             }
         }
         else
         {
             // since the data is sorted, first the idle workers and then the others,
-            // from here there is only non-idle workers, and we need to wait for idle ones
-            // we can stop searching for idle workers at this point
+            // from this index, there is only non-idle workers, and we need to wait for idle ones,
+            // or every worker are inside buildings. so we can stop searching for idle workers at this point
             break;
         }
     }
