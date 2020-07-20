@@ -156,8 +156,6 @@ void glfwErrorCallback(int error, const char* description)
 
 int main()
 {
-    printf("WarEntity size: %d\n", sizeof(WarEntity));
-
     srand(time(NULL));
 
     initLog(LOG_SEVERITY_DEBUG);

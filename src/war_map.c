@@ -1045,7 +1045,7 @@ void updateSelection(WarContext* context)
                 clearSelection(context);
 
                 // and add the new selection
-                s32 selectedEntitiesCount = min(newSelectedEntities.count, 4);
+                s32 selectedEntitiesCount = min(newSelectedEntities.count, MAX_UNIT_SELECTION_COUNT);
                 for (s32 i = 0; i < selectedEntitiesCount; i++)
                 {
                     WarEntity* entity = newSelectedEntities.items[i];
@@ -2119,6 +2119,41 @@ void updateSpells(WarContext* context)
     WarEntityIdListFree(&spellsToRemove);
 }
 
+void updateSquads(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    s32 count = 0;
+    WarEntityId units[4];
+
+    for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
+    {
+        WarPlayerInfo* player = &map->players[i];
+        for (s32 j = 0; j < MAX_SQUAD_COUNT; j++)
+        {
+            WarSquad* squad = &player->squads[j];
+            if (squad->count > 0)
+            {
+                count = 0;
+
+                for (s32 k = 0; k < squad->count; k++)
+                {
+                    WarEntityId entityId = squad->units[k];
+                    WarEntity* entity = findEntity(context, entityId);
+                    if (!isDead(entity) && !isGoingToDie(entity) &&
+                        !isCollapsing(entity) && !isGoingToCollapse(entity))
+                    {
+                        units[count++] = entityId;
+                    }
+                }
+
+                squad->count = count;
+                memcpy(squad->units, units, count * sizeof(WarEntityId));
+            }
+        }
+    }
+}
+
 void updateFoW(WarContext* context)
 {
     WarMap* map = context->map;
@@ -2444,6 +2479,7 @@ void updateMap(WarContext* context)
     updateProjectiles(context);
     updateMagic(context);
     updateSpells(context);
+    updateSquads(context);
 
     updateFoW(context);
     determineFoWTypes(context);

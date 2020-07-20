@@ -233,6 +233,21 @@ s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
     return count;
 }
 
+bool isInSquad(WarContext* context, WarPlayerInfo* player, WarEntityId entityId)
+{
+    for (s32 i = 0; i < MAX_SQUAD_COUNT; i++)
+    {
+        WarSquad* squad = &player->squads[i];
+        for (s32 j = 0; j < squad->count; j++)
+        {
+            if (squad->units[j] == entityId)
+                return true;
+        }
+    }
+
+    return false;
+}
+
 void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[])
 {
     assert(entity);

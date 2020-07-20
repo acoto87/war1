@@ -8,6 +8,8 @@
 #define MAX_CUSTOM_MAP_GOLDMINES_COUNT 10
 #define MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT 10
 #define MAX_CUSTOM_MAP_ENTITIES_COUNT 100
+#define MAX_UNIT_SELECTION_COUNT 4
+#define MAX_SQUAD_COUNT 10
 
 // all palettes have 768 colors
 #define PALETTE_LENGTH 768
@@ -1924,6 +1926,21 @@ typedef struct
     s32 level;
 } WarUpgrade;
 
+typedef s16 WarSquadId;
+
+typedef struct
+{
+    WarSquadId id;
+    s32 count;
+    WarEntityId units[MAX_UNIT_SELECTION_COUNT];
+} WarSquad;
+
+typedef struct
+{
+    WarUnitType unitType;
+    s32 count;
+} WarSquadUnitRequest;
+
 typedef s16 WarAICommandId;
 
 typedef enum
@@ -1932,6 +1949,8 @@ typedef enum
     WAR_AI_COMMAND_REQUEST_UNIT,    // request unit or building
     WAR_AI_COMMAND_REQUEST_UPGRADE, // request upgrade
     WAR_AI_COMMAND_RESOURCE,        // send worker to gather resources
+    WAR_AI_COMMAND_SQUAD,           // request squads
+    WAR_AI_COMMAND_ATTACK,          // request attack
     WAR_AI_COMMAND_WAIT,            // wait for buildings, units, resources
     WAR_AI_COMMAND_SLEEP,           // sleep for some time
 
@@ -1970,6 +1989,12 @@ typedef struct _WarAICommandResult
             s32 count;
             WarEntityId workerIds[4];
         } resource;
+
+        struct
+        {
+            s32 count;
+            WarEntityId unitIds[MAX_UNIT_SELECTION_COUNT];
+        } squad;
     };
 } WarAICommandResult;
 
@@ -1999,6 +2024,18 @@ typedef struct _WarAICommand
             s32 count;
             bool waitForIdleWorker;
         } resource;
+
+        struct
+        {
+            WarSquadId id;
+            s32 count;
+            WarSquadUnitRequest requests[MAX_UNIT_SELECTION_COUNT];
+        } squad;
+
+        struct
+        {
+            WarSquadId id;
+        } attack;
 
         struct
         {
@@ -2035,24 +2072,21 @@ void aiCommandFree(WarAICommand* command)
 #define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
 #define WarAICommandQueueNonFreeOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, NULL})
 
-typedef WarAICommandResult* (*WarAIExecuteFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command);
-
 typedef void (*WarAIInitFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
-typedef struct _WarAICommand* (*WarAIGetCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
-typedef void (*WarAIExecutedCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command);
+typedef WarAICommand* (*WarAIGetCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
+typedef WarAICommandResult* (*WarAIExecuteFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command);
 
 typedef struct
 {
     char name[20];
-    u32 staticCommandId;
 
     bool sleeping;
     f32 sleepTime;
 
+    WarAICommandList commands;
+
     WarAIInitFunc initFunc;
     WarAIGetCommandFunc getCommandFunc;
-    WarAIExecutedCommandFunc executedCommandFunc;
-
     void* customData;
 } WarAI;
 
@@ -2065,6 +2099,7 @@ typedef struct _WarPlayerInfo
     bool godMode;
     bool features[MAX_FEATURES_COUNT];
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
+    WarSquad squads[MAX_SQUAD_COUNT];
     WarAI* ai;
 } WarPlayerInfo;
 
@@ -2170,8 +2205,6 @@ typedef struct
 
 typedef struct
 {
-    s32 staticEntityId;
-
     WarEntityList entities;
     WarEntityMap entitiesByType;
     WarUnitMap unitsByType;

@@ -2,9 +2,7 @@
 
 typedef struct
 {
-    s32 index;
     WarAICommandQueue commands;
-    WarAICommandList runningCommands;
 } WarAICustomData;
 
 WarAICommand* requestUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker);
@@ -50,6 +48,17 @@ WarAICommand* waitForResource(WarContext* context, WarPlayerInfo* aiPlayer, WarR
 #define waitForGold(context, aiPlayer, amount) waitForResource(context, aiPlayer, WAR_RESOURCE_GOLD, amount)
 #define waitForWood(context, aiPlayer, amount) waitForResource(context, aiPlayer, WAR_RESOURCE_WOOD, amount)
 
+WarAICommand* requestSquad(WarContext* context, WarPlayerInfo* aiPlayer, WarSquadId id, s32 count, WarSquadUnitRequest requests[]);
+
+WarSquadUnitRequest createSquadUnitRequest(WarUnitType unitType, s32 count);
+WarSquadUnitRequest squadFootmanOrGruntRequest(WarPlayerInfo* aiPlayer, s32 count);
+WarSquadUnitRequest squadCatapultRequest(WarPlayerInfo* aiPlayer, s32 count);
+WarSquadUnitRequest squadKnightOrRiderRequest(WarPlayerInfo* aiPlayer, s32 count);
+WarSquadUnitRequest squadArcherOrSpearmanRequest(WarPlayerInfo* aiPlayer, s32 count);
+WarSquadUnitRequest squadConjurerOrWarlockRequest(WarPlayerInfo* aiPlayer, s32 count);
+WarSquadUnitRequest squadClericOrNecrolyteRequest(WarPlayerInfo* aiPlayer, s32 count);
+
+WarAICommand* attackWithSquad(WarContext* context, WarPlayerInfo* aiPlayer, WarSquadId id);
+
 void levelInitAI(WarContext* context, WarPlayerInfo* aiPlayer);
 WarAICommand* levelGetAICommand(WarContext* context, WarPlayerInfo* aiPlayer);
-void levelExecutedAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command);

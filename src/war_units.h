@@ -2099,6 +2099,8 @@ s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitT
 s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType);
 s32 getTotalNumberOfUnits(WarContext* context, u8 player);
 
+bool isInSquad(WarContext* context, WarPlayerInfo* player, WarEntityId entityId);
+
 #define playerHasUnit(context, player, unitType) (getNumberOfUnitsOfType(context, player, unitType) > 0)
 #define playerHasBuilding(context, player, unitType) (getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
 

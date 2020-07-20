@@ -5,12 +5,11 @@ typedef struct
     char name[20];
     WarAIInitFunc initFunc;
     WarAIGetCommandFunc getCommandFunc;
-    WarAIExecutedCommandFunc executedCommandFunc;
 } WarAIData;
 
 const WarAIData aiData[] =
 {
-    { "level", levelInitAI, levelGetAICommand, levelExecutedAICommand }
+    { "level", levelInitAI, levelGetAICommand }
 };
 
 WarAIData getAIData(const char* name)
@@ -30,6 +29,8 @@ WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarA
 WarAICommand* createRequestUnitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, bool checkExisting, bool waitForIdleWorker);
 WarAICommand* createRequestUpgradeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarUpgradeType upgrade);
 WarAICommand* createResourceAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarResourceKind resourceKind, s32 count, bool waitForIdleWorker);
+WarAICommand* createSquadAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarSquadId id, s32 count, WarSquadUnitRequest requests[]);
+WarAICommand* createAttackAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarSquadId id);
 WarAICommand* createWaitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandId commandId, WarResourceKind resource, s32 amount);
 WarAICommand* createSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer, f32 time);
 
@@ -37,6 +38,7 @@ WarAICommandResult* createAICommandResult(WarContext* context, WarAICommand* com
 WarAICommandResult* createRequestUnitAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, WarEntityId buildingId, WarEntityId workerId);
 WarAICommandResult* createRequestUpgradeAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, WarEntityId buildingId);
 WarAICommandResult* createResourceAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, s32 count, WarEntityId workerIds[]);
+WarAICommandResult* createSquadAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status, s32 count, WarEntityId unitIds[]);
 WarAICommandResult* createSleepAICommandResult(WarContext* context, WarAICommand* command, WarAICommandStatus status);
 
 void initAIPlayers(WarContext* context);

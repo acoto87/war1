@@ -367,10 +367,12 @@ void removeSightComponent(WarContext* context, WarEntity* entity)
 // Entities
 WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene)
 {
+    static WarEntityId staticEntityId = 0;
+
     WarEntityManager* manager = getEntityManager(context);
 
     WarEntity* entity = (WarEntity *)xcalloc(1, sizeof(WarEntity));
-    entity->id = ++manager->staticEntityId;
+    entity->id = ++staticEntityId;
     entity->type = type;
     entity->enabled = true;
 
@@ -796,8 +798,6 @@ bool isStaticEntity(WarEntity* entity)
 
 void initEntityManager(WarEntityManager* manager)
 {
-    manager->staticEntityId = 0;
-
     // initialize entities list
     WarEntityListInit(&manager->entities, WarEntityListDefaultOptions);
 
