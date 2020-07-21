@@ -597,7 +597,7 @@ WarAICommandResult* executeAttackAICommand(WarContext* context, WarPlayerInfo* a
         : enemyTownHalls->items[0];
 
     // find attack point and send to attack
-    vec2 townHallTile = getUnitCenterPosition(enemyTownHall, true);;
+    vec2 townHallTile = getEntityPosition(enemyTownHall, true);
 
     // WAR_AI_COMMAND_STATUS_NO_SQUAD
     WarAICommandStatus status = WAR_AI_COMMAND_STATUS_FAILED;
