@@ -508,6 +508,15 @@ WarEntity* findEntity(WarContext* context, WarEntityId id)
     return WarEntityIdMapGet(&manager->entitiesById, id);
 }
 
+WarEntity* findEntityAt(WarContext* context, vec2 targetTile)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+    return findEntity(context, targetEntityId);
+}
+
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
 {
     WarEntity* result = NULL;

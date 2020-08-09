@@ -1,90 +1,30 @@
 #pragma once
 
-bool executeCommand(WarContext* context);
+WarCommand* createAICommand(WarContext* context, WarPlayerInfo* player, WarCommandType type);
 
-// train units
-void trainFootman(WarContext* context, WarEntity* entity);
-void trainGrunt(WarContext* context, WarEntity* entity);
-void trainPeasant(WarContext* context, WarEntity* entity);
-void trainPeon(WarContext* context, WarEntity* entity);
-void trainHumanCatapult(WarContext* context, WarEntity* entity);
-void trainOrcCatapult(WarContext* context, WarEntity* entity);
-void trainKnight(WarContext* context, WarEntity* entity);
-void trainRaider(WarContext* context, WarEntity* entity);
-void trainArcher(WarContext* context, WarEntity* entity);
-void trainSpearman(WarContext* context, WarEntity* entity);
-void trainConjurer(WarContext* context, WarEntity* entity);
-void trainWarlock(WarContext* context, WarEntity* entity);
-void trainCleric(WarContext* context, WarEntity* entity);
-void trainNecrolyte(WarContext* context, WarEntity* entity);
+WarCommand* createTrainCommand(WarContext* context, WarPlayerInfo* player, WarUnitType unitType, WarEntityId buildingId);
+WarCommand* createBuildCommand(WarContext* context, WarPlayerInfo* player, WarUnitType unitType, WarEntityId workerId, vec2 position);
+WarCommand* createBuildWallCommand(WarContext* context, WarPlayerInfo* player, vec2 position);
+WarCommand* createBuildRoadCommand(WarContext* context, WarPlayerInfo* player, vec2 position);
+WarCommand* createUpgradeCommand(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgradeType, WarEntityId buildingId);
+WarCommand* createMoveCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, vec2 position);
+WarCommand* createSquadMoveCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, vec2 position);
+WarCommand* createFollowCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId);
+WarCommand* createSquadFollowCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarEntityId targetEntityId);
+WarCommand* createAttackEnemyCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId);
+WarCommand* createAttackPositionCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, vec2 position);
+WarCommand* createSquadAttackEnemyCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarEntityId targetEntityId);
+WarCommand* createSquadAttackPositionCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, vec2 position);
+WarCommand* createStopCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup);
+WarCommand* createSquadStopCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId);
+WarCommand* createGatherGoldCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId);
+WarCommand* createGatherWoodCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId, vec2 targetTile);
+WarCommand* createDeliverCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId);
+WarCommand* createRepairCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId);
+WarCommand* createCastCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarSpellType spellType, vec2 position);
+WarCommand* createSquadCastCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarSpellType spellType, vec2 position);
+WarCommand* createSquadCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarUnitGroup unitGroup);
+WarCommand* createWaitCommand(WarContext* context, WarPlayerInfo* player, WarCommandId commandId, WarResourceKind resource, s32 amount);
+WarCommand* createSleepCommand(WarContext* context, WarPlayerInfo* player, f32 time);
 
-// upgrades
-void upgradeSwords(WarContext* context, WarEntity* entity);
-void upgradeAxes(WarContext* context, WarEntity* entity);
-void upgradeHumanShields(WarContext* context, WarEntity* entity);
-void upgradeOrcsShields(WarContext* context, WarEntity* entity);
-void upgradeArrows(WarContext* context, WarEntity* entity);
-void upgradeSpears(WarContext* context, WarEntity* entity);
-void upgradeHorses(WarContext* context, WarEntity* entity);
-void upgradeWolves(WarContext* context, WarEntity* entity);
-void upgradeScorpions(WarContext* context, WarEntity* entity);
-void upgradeSpiders(WarContext* context, WarEntity* entity);
-void upgradeRainOfFire(WarContext* context, WarEntity* entity);
-void upgradePoisonCloud(WarContext* context, WarEntity* entity);
-void upgradeWaterElemental(WarContext* context, WarEntity* entity);
-void upgradeDaemon(WarContext* context, WarEntity* entity);
-void upgradeHealing(WarContext* context, WarEntity* entity);
-void upgradeRaiseDead(WarContext* context, WarEntity* entity);
-void upgradeFarSight(WarContext* context, WarEntity* entity);
-void upgradeDarkVision(WarContext* context, WarEntity* entity);
-void upgradeInvisibility(WarContext* context, WarEntity* entity);
-void upgradeUnholyArmor(WarContext* context, WarEntity* entity);
-
-// cancel
-void cancel(WarContext* context, WarEntity* entity);
-
-// basic
-void move(WarContext* context, WarEntity* entity);
-void stop(WarContext* context, WarEntity* entity);
-void harvest(WarContext* context, WarEntity* entity);
-void deliver(WarContext* context, WarEntity* entity);
-void repair(WarContext* context, WarEntity* entity);
-void attack(WarContext* context, WarEntity* entity);
-void buildBasic(WarContext* context, WarEntity* entity);
-void buildAdvanced(WarContext* context, WarEntity* entity);
-
-// build buildings
-void buildFarmHumans(WarContext* context, WarEntity* entity);
-void buildFarmOrcs(WarContext* context, WarEntity* entity);
-void buildBarracksHumans(WarContext* context, WarEntity* entity);
-void buildBarracksOrcs(WarContext* context, WarEntity* entity);
-void buildChurch(WarContext* context, WarEntity* entity);
-void buildTemple(WarContext* context, WarEntity* entity);
-void buildTowerHumans(WarContext* context, WarEntity* entity);
-void buildTowerOrcs(WarContext* context, WarEntity* entity);
-void buildTownHallHumans(WarContext* context, WarEntity* entity);
-void buildTownHallOrcs(WarContext* context, WarEntity* entity);
-void buildLumbermillHumans(WarContext* context, WarEntity* entity);
-void buildLumbermillOrcs(WarContext* context, WarEntity* entity);
-void buildStable(WarContext* context, WarEntity* entity);
-void buildKennel(WarContext* context, WarEntity* entity);
-void buildBlacksmithHumans(WarContext* context, WarEntity* entity);
-void buildBlacksmithOrcs(WarContext* context, WarEntity* entity);
-void buildWall(WarContext* context, WarEntity* entity);
-void buildRoad(WarContext* context, WarEntity* entity);
-
-// spells
-void castRainOfFire(WarContext* context, WarEntity* entity);
-void castPoisonCloud(WarContext* context, WarEntity* entity);
-void castHeal(WarContext* context, WarEntity* entity);
-void castFarSight(WarContext* context, WarEntity* entity);
-void castDarkVision(WarContext* context, WarEntity* entity);
-void castInvisibility(WarContext* context, WarEntity* entity);
-void castUnHolyArmor(WarContext* context, WarEntity* entity);
-void castRaiseDead(WarContext* context, WarEntity* entity);
-
-// summons
-void summonSpider(WarContext* context, WarEntity* entity);
-void summonScorpion(WarContext* context, WarEntity* entity);
-void summonDaemon(WarContext* context, WarEntity* entity);
-void summonWaterElemental(WarContext* context, WarEntity* entity);
+WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command);

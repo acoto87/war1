@@ -132,7 +132,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Make ruins behavior like the trees.
 * [x] Update minimap with chopped trees.
 * [x] Make a `setUITextFormat` method that takes a format with arguments `printf` style.
-* [x] Rename `WarUnitCommandBaseData` to something like `WarUnitCommandBaseData`.
+* [x] Rename `WarUICommandBaseData` to something like `WarUICommandBaseData`.
 * [x] Show corresponding WIN or LOSE messages in game over menu.
 * [x] Skip briefing with click.
 * [x] Create EntityManager to manage entities.
@@ -182,6 +182,16 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
 * [ ] Check behavior of invisible units when are under attack (it maybe work with workers, to stop the attack on it)
 * [ ] Zoom feature
+
+## Migration to commands
+
+* [ ] When querying the map tiles for unit, maybe the I can deny information for non-visible entities. That way, when getting entities from map tiles I don't need to check to see if the entity is visible or not.
+* [ ] Make convenient functions for the different states of the unit state machines
+* [x] Rename enemyId from attack commands because the player and AIs can attack friendly units
+* [x] Make a convenient function getSelectedUnitIds to use in executeUICommand
+* [x] Make macro INVALID_ENTITY, or NO_ENTITY that maps to WarEntityId = 0
+* [ ] What happens when selecting various units to attack and some of those units can't attack (like peasants) do they move to the target instead? or do they stay?
+* [ ] War_units.h only with function prototypes, implementations to war_units.c
 
 ## Gameplay
 

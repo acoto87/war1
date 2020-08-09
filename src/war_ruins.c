@@ -27,7 +27,7 @@ WarRuinPiece* getRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
 void determineRuinTypes(WarContext* context, WarEntity* entity)
 {
     assert(entity);
-    assert(entity->type == WAR_ENTITY_TYPE_RUIN);
+    assert(isRuin(entity));
 
     WarMap* map = context->map;
 
@@ -50,19 +50,19 @@ void determineRuinTypes(WarContext* context, WarEntity* entity)
         {
             s32 xx = pi->tilex + dirX[d];
             s32 yy = pi->tiley + dirY[d];
-            
+
             if (!isInside(map->finder, xx, yy) || hasRuinPieceAtPosition(entity, xx, yy))
             {
                 index = index | (1 << d);
             }
         }
-        
+
         pi->type = ruinTileTypeMap[index];
 
         if (pi->type == WAR_RUIN_PIECE_NONE)
             s32ListAdd(&invalidPieces, i);
     }
-    
+
     for (s32 i = invalidPieces.count - 1; i >= 0; i--)
         WarRuinPieceListRemoveAt(pieces, invalidPieces.items[i]);
 
@@ -86,7 +86,7 @@ WarEntity* createRuins(WarContext* context)
 void addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim)
 {
     assert(entity);
-    assert(entity->type == WAR_ENTITY_TYPE_RUIN);
+    assert(isRuin(entity));
 
     WarRuinPieceList* pieces = &entity->ruin.pieces;
 

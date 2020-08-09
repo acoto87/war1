@@ -15,5 +15,5 @@ void setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit);
 void setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUnitComponent* unit);
 
 void renderSelectionRect(WarContext* context);
-void renderCommand(WarContext* context);
+void renderUICommand(WarContext* context);
 void renderMapUI(WarContext* context);

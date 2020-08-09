@@ -26,7 +26,7 @@ WarWallPiece* getWallPieceAtPosition(WarEntity* wall, s32 x, s32 y)
 
 void determineWallTypes(WarContext* context, WarEntity* entity)
 {
-    assert(entity->type == WAR_ENTITY_TYPE_WALL);
+    assert(isWall(entity));
 
     WarMap* map = context->map;
 
@@ -67,7 +67,7 @@ WarWallPiece* addWallPiece(WarEntity* entity, s32 x, s32 y, s32 player)
 
 void addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
 {
-    assert(entity->type == WAR_ENTITY_TYPE_WALL);
+    assert(isWall(entity));
 
     WarWallPieceList *pieces = &entity->wall.pieces;
 

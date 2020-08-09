@@ -27,7 +27,7 @@ WarTree* getTreeAtPosition(WarEntity* forest, s32 x, s32 y)
 void determineTreeTiles(WarContext* context, WarEntity* forest)
 {
     assert(forest);
-    assert(forest->type == WAR_ENTITY_TYPE_FOREST);
+    assert(isForest(forest));
 
     WarMap* map = context->map;
 
@@ -54,9 +54,8 @@ void determineTreeTiles(WarContext* context, WarEntity* forest)
             s32 yy = ti->tiley + dirY[d];
             if (isInside(map->finder, xx, yy))
             {
-                WarEntityId entityId = getTileEntityId(map->finder, xx, yy);
-                WarEntity* entity = findEntity(context, entityId);
-                if (entity && entity->type == WAR_ENTITY_TYPE_FOREST)
+                WarEntity* entity = findEntityAt(context, vec2i(xx, yy));
+                if (entity && isForest(entity))
                 {
                     WarTree* tree = getTreeAtPosition(entity, xx, yy);
                     if (tree && tree->amount > 0)
@@ -146,7 +145,7 @@ WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position
 void plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
 {
     assert(forest);
-    assert(forest->type == WAR_ENTITY_TYPE_FOREST);
+    assert(isForest(forest));
 
     WarMap* map = context->map;
 
@@ -205,7 +204,7 @@ void takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
     assert(map);
 
     assert(forest);
-    assert(forest->type == WAR_ENTITY_TYPE_FOREST);
+    assert(isForest(forest));
     assert(tree);
 
     WarTreeData data = getTreeData(WAR_TREE_CHOPPED);

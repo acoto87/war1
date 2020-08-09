@@ -1,6 +1,10 @@
 #pragma once
 
 #define isEntityOfType(entity, entityType) ((entity)->type == (entityType))
+#define isRoad(entity) isEntityOfType(entity, WAR_ENTITY_TYPE_ROAD)
+#define isWall(entity) isEntityOfType(entity, WAR_ENTITY_TYPE_WALL)
+#define isRuin(entity) isEntityOfType(entity, WAR_ENTITY_TYPE_RUIN)
+#define isForest(entity) isEntityOfType(entity, WAR_ENTITY_TYPE_FOREST)
 
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);
 void removeTransformComponent(WarContext* context, WarEntity* entity);
@@ -115,6 +119,7 @@ WarEntity* createUnit(WarContext* context, WarUnitType type,
 WarEntity* createDude(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToTrain);
 WarEntity* createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToBuild);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
+WarEntity* findEntityAt(WarContext* context, vec2 targetTile);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
 WarEntity* findClosestForest(WarContext* context, WarEntity* entity);
 WarEntity* findUIEntity(WarContext* context, const char* name);
@@ -146,7 +151,7 @@ bool enoughFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h);
 bool canBuildingBeBuilt(WarContext* context, WarUnitType unitType, s32 x, s32 y);
-bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y);
+bool checkTileToBuild(WarContext* context, WarUnitType unitType, s32 x, s32 y);
 bool canRoadOrWallBeBuilt(WarContext* context, s32 x, s32 y);
 bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y);
 WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance);

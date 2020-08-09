@@ -683,6 +683,8 @@ typedef enum
 //
 typedef u16 WarEntityId;
 
+#define NO_ENTITY 0
+
 bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
 {
     return id1 == id2;
@@ -744,6 +746,8 @@ typedef enum
     WAR_FEATURE_SPELL_DAEMON,
     WAR_FEATURE_UNIT_ROAD,
     WAR_FEATURE_UNIT_WALL,
+
+    WAR_FEATURE_COUNT
 } WarFeatureType;
 
 typedef enum
@@ -767,6 +771,8 @@ typedef enum
     WAR_UPGRADE_INVISIBILITY,
     WAR_UPGRADE_UNHOLY_ARMOR,
     WAR_UPGRADE_SHIELD,
+
+    WAR_UPGRADE_COUNT
 } WarUpgradeType;
 
 typedef enum
@@ -786,124 +792,126 @@ typedef enum
     WAR_SUMMON_SCORPION,
     WAR_SUMMON_DAEMON,
     WAR_SUMMON_WATER_ELEMENTAL,
+
+    WAR_SPELL_COUNT
 } WarSpellType;
 
 typedef enum
 {
-    WAR_COMMAND_NONE, // 0
+    WAR_UI_COMMAND_NONE, // 0
 
     // unit commands
-    WAR_COMMAND_MOVE, // 1
-    WAR_COMMAND_STOP,
-    WAR_COMMAND_HARVEST,
-    WAR_COMMAND_DELIVER,
-    WAR_COMMAND_REPAIR,
-    WAR_COMMAND_ATTACK,
+    WAR_UI_COMMAND_MOVE, // 1
+    WAR_UI_COMMAND_STOP,
+    WAR_UI_COMMAND_GATHER,
+    WAR_UI_COMMAND_DELIVER,
+    WAR_UI_COMMAND_REPAIR,
+    WAR_UI_COMMAND_ATTACK,
 
     // train commands
-    WAR_COMMAND_TRAIN_FOOTMAN, // 7
-    WAR_COMMAND_TRAIN_GRUNT,
-    WAR_COMMAND_TRAIN_PEASANT,
-    WAR_COMMAND_TRAIN_PEON,
-    WAR_COMMAND_TRAIN_CATAPULT_HUMANS,
-    WAR_COMMAND_TRAIN_CATAPULT_ORCS,
-    WAR_COMMAND_TRAIN_KNIGHT,
-    WAR_COMMAND_TRAIN_RAIDER,
-    WAR_COMMAND_TRAIN_ARCHER,
-    WAR_COMMAND_TRAIN_SPEARMAN,
-    WAR_COMMAND_TRAIN_CONJURER,
-    WAR_COMMAND_TRAIN_WARLOCK,
-    WAR_COMMAND_TRAIN_CLERIC,
-    WAR_COMMAND_TRAIN_NECROLYTE,
+    WAR_UI_COMMAND_TRAIN_FOOTMAN, // 7
+    WAR_UI_COMMAND_TRAIN_GRUNT,
+    WAR_UI_COMMAND_TRAIN_PEASANT,
+    WAR_UI_COMMAND_TRAIN_PEON,
+    WAR_UI_COMMAND_TRAIN_CATAPULT_HUMANS,
+    WAR_UI_COMMAND_TRAIN_CATAPULT_ORCS,
+    WAR_UI_COMMAND_TRAIN_KNIGHT,
+    WAR_UI_COMMAND_TRAIN_RAIDER,
+    WAR_UI_COMMAND_TRAIN_ARCHER,
+    WAR_UI_COMMAND_TRAIN_SPEARMAN,
+    WAR_UI_COMMAND_TRAIN_CONJURER,
+    WAR_UI_COMMAND_TRAIN_WARLOCK,
+    WAR_UI_COMMAND_TRAIN_CLERIC,
+    WAR_UI_COMMAND_TRAIN_NECROLYTE,
 
     // spell commands
-    WAR_COMMAND_SPELL_HEALING, // 21
-    WAR_COMMAND_SPELL_FAR_SIGHT,
-    WAR_COMMAND_SPELL_INVISIBILITY,
-    WAR_COMMAND_SPELL_RAIN_OF_FIRE,
-    WAR_COMMAND_SPELL_POISON_CLOUD,
-    WAR_COMMAND_SPELL_RAISE_DEAD,
-    WAR_COMMAND_SPELL_DARK_VISION,
-    WAR_COMMAND_SPELL_UNHOLY_ARMOR,
+    WAR_UI_COMMAND_SPELL_HEALING, // 21
+    WAR_UI_COMMAND_SPELL_FAR_SIGHT,
+    WAR_UI_COMMAND_SPELL_INVISIBILITY,
+    WAR_UI_COMMAND_SPELL_RAIN_OF_FIRE,
+    WAR_UI_COMMAND_SPELL_POISON_CLOUD,
+    WAR_UI_COMMAND_SPELL_RAISE_DEAD,
+    WAR_UI_COMMAND_SPELL_DARK_VISION,
+    WAR_UI_COMMAND_SPELL_UNHOLY_ARMOR,
 
     // summons
-    WAR_COMMAND_SUMMON_SPIDER, // 29
-    WAR_COMMAND_SUMMON_SCORPION,
-    WAR_COMMAND_SUMMON_DAEMON,
-    WAR_COMMAND_SUMMON_WATER_ELEMENTAL,
+    WAR_UI_COMMAND_SUMMON_SPIDER, // 29
+    WAR_UI_COMMAND_SUMMON_SCORPION,
+    WAR_UI_COMMAND_SUMMON_DAEMON,
+    WAR_UI_COMMAND_SUMMON_WATER_ELEMENTAL,
 
     // build commands
-    WAR_COMMAND_BUILD_BASIC, // 33
-    WAR_COMMAND_BUILD_ADVANCED,
-    WAR_COMMAND_BUILD_FARM_HUMANS,
-    WAR_COMMAND_BUILD_FARM_ORCS,
-    WAR_COMMAND_BUILD_BARRACKS_HUMANS,
-    WAR_COMMAND_BUILD_BARRACKS_ORCS,
-    WAR_COMMAND_BUILD_CHURCH,
-    WAR_COMMAND_BUILD_TEMPLE,
-    WAR_COMMAND_BUILD_TOWER_HUMANS,
-    WAR_COMMAND_BUILD_TOWER_ORCS,
-    WAR_COMMAND_BUILD_TOWNHALL_HUMANS,
-    WAR_COMMAND_BUILD_TOWNHALL_ORCS,
-    WAR_COMMAND_BUILD_LUMBERMILL_HUMANS,
-    WAR_COMMAND_BUILD_LUMBERMILL_ORCS,
-    WAR_COMMAND_BUILD_STABLE,
-    WAR_COMMAND_BUILD_KENNEL,
-    WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,
-    WAR_COMMAND_BUILD_BLACKSMITH_ORCS,
-    WAR_COMMAND_BUILD_ROAD,
-    WAR_COMMAND_BUILD_WALL,
+    WAR_UI_COMMAND_BUILD_BASIC, // 33
+    WAR_UI_COMMAND_BUILD_ADVANCED,
+    WAR_UI_COMMAND_BUILD_FARM_HUMANS,
+    WAR_UI_COMMAND_BUILD_FARM_ORCS,
+    WAR_UI_COMMAND_BUILD_BARRACKS_HUMANS,
+    WAR_UI_COMMAND_BUILD_BARRACKS_ORCS,
+    WAR_UI_COMMAND_BUILD_CHURCH,
+    WAR_UI_COMMAND_BUILD_TEMPLE,
+    WAR_UI_COMMAND_BUILD_TOWER_HUMANS,
+    WAR_UI_COMMAND_BUILD_TOWER_ORCS,
+    WAR_UI_COMMAND_BUILD_TOWNHALL_HUMANS,
+    WAR_UI_COMMAND_BUILD_TOWNHALL_ORCS,
+    WAR_UI_COMMAND_BUILD_LUMBERMILL_HUMANS,
+    WAR_UI_COMMAND_BUILD_LUMBERMILL_ORCS,
+    WAR_UI_COMMAND_BUILD_STABLE,
+    WAR_UI_COMMAND_BUILD_KENNEL,
+    WAR_UI_COMMAND_BUILD_BLACKSMITH_HUMANS,
+    WAR_UI_COMMAND_BUILD_BLACKSMITH_ORCS,
+    WAR_UI_COMMAND_BUILD_ROAD,
+    WAR_UI_COMMAND_BUILD_WALL,
 
     // upgrades
-    WAR_COMMAND_UPGRADE_SWORDS, // 53
-    WAR_COMMAND_UPGRADE_AXES,
-    WAR_COMMAND_UPGRADE_SHIELD_HUMANS,
-    WAR_COMMAND_UPGRADE_SHIELD_ORCS,
-    WAR_COMMAND_UPGRADE_ARROWS,
-    WAR_COMMAND_UPGRADE_SPEARS,
-    WAR_COMMAND_UPGRADE_HORSES,
-    WAR_COMMAND_UPGRADE_WOLVES,
-    WAR_COMMAND_UPGRADE_SCORPION,
-    WAR_COMMAND_UPGRADE_SPIDER,
-    WAR_COMMAND_UPGRADE_RAIN_OF_FIRE,
-    WAR_COMMAND_UPGRADE_POISON_CLOUD,
-    WAR_COMMAND_UPGRADE_WATER_ELEMENTAL,
-    WAR_COMMAND_UPGRADE_DAEMON,
-    WAR_COMMAND_UPGRADE_HEALING,
-    WAR_COMMAND_UPGRADE_RAISE_DEAD,
-    WAR_COMMAND_UPGRADE_FAR_SIGHT,
-    WAR_COMMAND_UPGRADE_DARK_VISION,
-    WAR_COMMAND_UPGRADE_INVISIBILITY,
-    WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,
+    WAR_UI_COMMAND_UPGRADE_SWORDS, // 53
+    WAR_UI_COMMAND_UPGRADE_AXES,
+    WAR_UI_COMMAND_UPGRADE_SHIELD_HUMANS,
+    WAR_UI_COMMAND_UPGRADE_SHIELD_ORCS,
+    WAR_UI_COMMAND_UPGRADE_ARROWS,
+    WAR_UI_COMMAND_UPGRADE_SPEARS,
+    WAR_UI_COMMAND_UPGRADE_HORSES,
+    WAR_UI_COMMAND_UPGRADE_WOLVES,
+    WAR_UI_COMMAND_UPGRADE_SCORPION,
+    WAR_UI_COMMAND_UPGRADE_SPIDER,
+    WAR_UI_COMMAND_UPGRADE_RAIN_OF_FIRE,
+    WAR_UI_COMMAND_UPGRADE_POISON_CLOUD,
+    WAR_UI_COMMAND_UPGRADE_WATER_ELEMENTAL,
+    WAR_UI_COMMAND_UPGRADE_DAEMON,
+    WAR_UI_COMMAND_UPGRADE_HEALING,
+    WAR_UI_COMMAND_UPGRADE_RAISE_DEAD,
+    WAR_UI_COMMAND_UPGRADE_FAR_SIGHT,
+    WAR_UI_COMMAND_UPGRADE_DARK_VISION,
+    WAR_UI_COMMAND_UPGRADE_INVISIBILITY,
+    WAR_UI_COMMAND_UPGRADE_UNHOLY_ARMOR,
 
     // cancel
-    WAR_COMMAND_CANCEL // 73
-} WarUnitCommandType;
+    WAR_UI_COMMAND_CANCEL, // 73
+
+    WAR_UI_COMMAND_COUNT
+} WarUICommandType;
 
 typedef struct
 {
-    WarUnitCommandType type;
+    WarUICommandType type;
 
     union
     {
         struct
         {
-            WarUnitType unitToTrain;
-            WarUnitType buildingUnit;
+            WarUnitType unitType;
         } train;
 
         struct
         {
             WarUpgradeType upgradeToBuild;
-            WarUnitType buildingUnit;
         } upgrade;
 
         struct
         {
-            WarUnitType buildingToBuild;
+            WarUnitType unitType;
         } build;
     };
-} WarUnitCommand;
+} WarUICommand;
 
 typedef enum
 {
@@ -1244,10 +1252,11 @@ typedef enum
 typedef struct _WarState
 {
     WarStateType type;
-    s32 entityId;
+    WarEntityId entityId;
+    struct _WarState* nextState;
+
     f32 nextUpdateTime;
     f32 delay;
-    struct _WarState* nextState;
 
     union
     {
@@ -1937,36 +1946,77 @@ typedef struct
 
 typedef struct
 {
-    WarUnitType unitType;
     s32 count;
-} WarSquadUnitRequest;
+    WarEntityId unitIds[MAX_UNIT_SELECTION_COUNT];
+} WarUnitGroup;
 
-typedef s16 WarAICommandId;
-
-typedef enum
-{
-    WAR_AI_COMMAND_NONE,            // do nothing with this command
-    WAR_AI_COMMAND_REQUEST_UNIT,    // request unit or building
-    WAR_AI_COMMAND_REQUEST_UPGRADE, // request upgrade
-    WAR_AI_COMMAND_RESOURCE,        // send worker to gather resources
-    WAR_AI_COMMAND_SQUAD,           // request squads
-    WAR_AI_COMMAND_ATTACK,          // request attack
-    WAR_AI_COMMAND_WAIT,            // wait for buildings, units, resources
-    WAR_AI_COMMAND_SLEEP,           // sleep for some time
-
-    WAR_AI_COMMAND_COUNT
-} WarAICommandType;
+typedef s16 WarCommandId;
 
 typedef enum
 {
-    WAR_AI_COMMAND_STATUS_RUNNING,
-    WAR_AI_COMMAND_STATUS_DONE,
-    WAR_AI_COMMAND_STATUS_FAILED
-} WarAICommandStatus;
+    WAR_COMMAND_NONE,                // do nothing with this command
+    WAR_COMMAND_TRAIN,
+    WAR_COMMAND_BUILD,
+    WAR_COMMAND_BUILD_WALL,
+    WAR_COMMAND_BUILD_ROAD,
+    WAR_COMMAND_UPGRADE,
+    WAR_COMMAND_MOVE,
+    WAR_COMMAND_FOLLOW,
+    WAR_COMMAND_ATTACK,
+    WAR_COMMAND_STOP,
+    WAR_COMMAND_GATHER,
+    WAR_COMMAND_DELIVER,
+    WAR_COMMAND_REPAIR,
+    WAR_COMMAND_CAST,
+    WAR_COMMAND_SQUAD,
+    WAR_COMMAND_WAIT,               // wait for buildings, units, resources
+    WAR_COMMAND_SLEEP,              // sleep for some time
 
-typedef struct _WarAICommandResult
+    WAR_COMMAND_COUNT
+} WarCommandType;
+
+typedef enum
 {
-    WarAICommandStatus status;
+    WAR_COMMAND_STATUS_NONE,
+    WAR_COMMAND_STATUS_RUNNING,
+    WAR_COMMAND_STATUS_DONE,
+    WAR_COMMAND_STATUS_FAILED,
+
+    WAR_COMMAND_STATUS_INVALID_UNIT_TYPE,
+    WAR_COMMAND_STATUS_INVALID_UNIT_RACE,
+    WAR_COMMAND_STATUS_INVALID_PRODUCER,
+    WAR_COMMAND_STATUS_INVALID_WORKER,
+    WAR_COMMAND_STATUS_INVALID_POSITION,
+    WAR_COMMAND_STATUS_INVALID_UPGRADE_TYPE,
+    WAR_COMMAND_STATUS_INVALID_UPGRADE_RACE,
+    WAR_COMMAND_STATUS_INVALID_RESOURCE,
+    WAR_COMMAND_STATUS_INVALID_GOLDMINE,
+    WAR_COMMAND_STATUS_INVALID_FOREST,
+    WAR_COMMAND_STATUS_INVALID_TREE,
+    WAR_COMMAND_STATUS_INVALID_TARGET,
+    WAR_COMMAND_STATUS_INVALID_SQUAD,
+    WAR_COMMAND_STATUS_INVALID_MOVE_TARGET,
+    WAR_COMMAND_STATUS_INVALID_FOLLOW_TARGET,
+    WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET,
+
+    WAR_COMMAND_STATUS_PRODUCER_NOT_READY,
+    WAR_COMMAND_STATUS_PRODUCER_BUSY,
+    WAR_COMMAND_STATUS_NOT_ENOUGH_FOOD,
+    WAR_COMMAND_STATUS_NOT_ENOUGH_GOLD,
+    WAR_COMMAND_STATUS_NOT_ENOUGH_WOOD,
+    WAR_COMMAND_STATUS_WORKER_BUSY,
+    WAR_COMMAND_STATUS_NOT_MORE_UPGRADE,
+    WAR_COMMAND_STATUS_NO_UNITS,
+    WAR_COMMAND_STATUS_TOO_MANY_UNITS,
+
+    WAR_COMMAND_STATUS_COUNT
+} WarCommandStatus;
+
+typedef struct _WarCommand
+{
+    WarCommandId id;
+    WarCommandType type;
+    WarCommandStatus status;
 
     union
     {
@@ -1974,72 +2024,96 @@ typedef struct _WarAICommandResult
         {
             WarUnitType unitType;
             WarEntityId buildingId;
+        } train;
+
+        struct
+        {
+            WarUnitType unitType;
             WarEntityId workerId;
-        } requestUnit;
+            vec2 position;
+        } build;
+
+        struct
+        {
+            vec2 position;
+        } wall;
+
+        struct
+        {
+            vec2 position;
+        } road;
 
         struct
         {
             WarUpgradeType upgradeType;
             WarEntityId buildingId;
-        } requestUpgrade;
+        } upgrade;
 
         struct
         {
-            WarResourceKind resourceKind;
-            s32 count;
-            WarEntityId workerIds[4];
-        } resource;
+            WarSquadId squadId;
+            WarUnitGroup unitGroup;
+            vec2 position;
+        } move;
 
         struct
         {
-            s32 count;
-            WarEntityId unitIds[MAX_UNIT_SELECTION_COUNT];
-        } squad;
-    };
-} WarAICommandResult;
-
-typedef struct _WarAICommand
-{
-    WarAICommandId id;
-    WarAICommandType type;
-    WarAICommandResult* result;
-
-    union
-    {
-        struct
-        {
-            WarUnitType unitType;
-            bool checkExisting;
-            bool waitForIdleWorker;
-        } requestUnit;
+            WarSquadId squadId;
+            WarUnitGroup unitGroup;
+            WarEntityId targetEntityId;
+        } follow;
 
         struct
         {
-            WarUpgradeType upgradeType;
-        } requestUpgrade;
-
-        struct
-        {
-            WarResourceKind resourceKind;
-            s32 count;
-            bool waitForIdleWorker;
-        } resource;
-
-        struct
-        {
-            WarSquadId id;
-            s32 count;
-            WarSquadUnitRequest requests[MAX_UNIT_SELECTION_COUNT];
-        } squad;
-
-        struct
-        {
-            WarSquadId id;
+            WarSquadId squadId;
+            WarUnitGroup unitGroup;
+            WarEntityId targetEntityId;
+            vec2 position;
         } attack;
 
         struct
         {
-            WarAICommandId commandId;
+            WarSquadId squadId;
+            WarUnitGroup unitGroup;
+        } stop;
+
+        struct
+        {
+            WarUnitGroup unitGroup;
+            WarResourceKind resource;
+            WarEntityId targetEntityId;
+            vec2 targetTile;
+        } gather;
+
+        struct
+        {
+            WarUnitGroup unitGroup;
+            WarEntityId targetEntityId;
+        } deliver;
+
+        struct
+        {
+            WarUnitGroup unitGroup;
+            WarEntityId targetEntityId;
+        } repair;
+
+        struct
+        {
+            WarSquadId squadId;
+            WarUnitGroup unitGroup;
+            WarSpellType spellType;
+            vec2 position;
+        } cast;
+
+        struct
+        {
+            WarSquadId squadId;
+            WarUnitGroup unitGroup;
+        } squad;
+
+        struct
+        {
+            WarCommandId commandId;
             WarResourceKind resource;
             s32 amount;
         } wait;
@@ -2049,32 +2123,32 @@ typedef struct _WarAICommand
             f32 time;
         } sleep;
     };
-} WarAICommand;
+} WarCommand;
 
-shlDeclareQueue(WarAICommandQueue, WarAICommand*)
-shlDefineQueue(WarAICommandQueue, WarAICommand*)
+shlDeclareQueue(WarCommandQueue, WarCommand*)
+shlDefineQueue(WarCommandQueue, WarCommand*)
 
-shlDeclareList(WarAICommandList, WarAICommand*)
-shlDefineList(WarAICommandList, WarAICommand*)
+shlDeclareList(WarCommandList, WarCommand*)
+shlDefineList(WarCommandList, WarCommand*)
 
-bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
+bool commandEquals(const WarCommand* command1, const WarCommand* command2)
 {
     return command1->id == command2->id;
 }
 
-void aiCommandFree(WarAICommand* command)
+void commandFree(WarCommand* command)
 {
     free((void*)command);
 }
 
-#define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
-#define WarAICommandListNonFreeOptions ((WarAICommandListOptions){NULL, aiCommandEquals, NULL})
-#define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
-#define WarAICommandQueueNonFreeOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, NULL})
+#define WarCommandListDefaultOptions ((WarCommandListOptions){NULL, commandEquals, commandFree})
+#define WarCommandListNonFreeOptions ((WarCommandListOptions){NULL, commandEquals, NULL})
+#define WarCommandQueueDefaultOptions ((WarCommandQueueOptions){NULL, commandEquals, commandFree})
+#define WarCommandQueueNonFreeOptions ((WarCommandQueueOptions){NULL, commandEquals, NULL})
 
 typedef void (*WarAIInitFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
-typedef WarAICommand* (*WarAIGetCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
-typedef WarAICommandResult* (*WarAIExecuteFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarAICommand* command);
+typedef WarCommand* (*WarAINextCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
+typedef WarCommandStatus (*WarExecuteFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarCommand* command);
 
 typedef struct
 {
@@ -2083,10 +2157,8 @@ typedef struct
     bool sleeping;
     f32 sleepTime;
 
-    WarAICommandList commands;
-
     WarAIInitFunc initFunc;
-    WarAIGetCommandFunc getCommandFunc;
+    WarAINextCommandFunc getCommandFunc;
     void* customData;
 } WarAI;
 
@@ -2100,6 +2172,7 @@ typedef struct _WarPlayerInfo
     bool features[MAX_FEATURES_COUNT];
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
     WarSquad squads[MAX_SQUAD_COUNT];
+    WarCommandList commands;
     WarAI* ai;
 } WarPlayerInfo;
 
@@ -2125,9 +2198,9 @@ typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
 #define setUpgradeAllowed(player, upgrade, value) \
     ((player)->upgrades[(upgrade)/2].allowed = (value))
 
-#define getPlayerResourceAmount(player, resource) ((resource) != WAR_RESOURCE_NONE) \
+#define getPlayerResourceAmount(player, resource) (((resource) != WAR_RESOURCE_NONE) \
     ? ((resource) == WAR_RESOURCE_GOLD ? (player)->gold : (player)->wood) \
-    : 0;
+    : 0);
 
 #define STATUS_TEXT_MAX_LENGTH 40
 #define CHEAT_TEXT_MAX_LENGTH 32
@@ -2271,7 +2344,7 @@ typedef struct
     bool fowEnabled;
 
     WarPathFinder finder;
-    WarUnitCommand command;
+    WarUICommand uiCommand;
     WarFlashStatus flashStatus;
     WarCheatStatus cheatStatus;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];

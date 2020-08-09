@@ -382,41 +382,40 @@ void renderSelectionRect(WarContext* context)
     nvgRestore(gfx);
 }
 
-void renderCommand(WarContext* context)
+void renderUICommand(WarContext* context)
 {
     WarMap* map = context->map;
-    WarUnitCommand* command = &map->command;
-
     WarInput* input = &context->input;
+    WarUICommand* uiCommand = &map->uiCommand;
 
     NVGcontext* gfx = context->gfx;
 
     nvgSave(gfx);
 
-    switch (command->type)
+    switch (uiCommand->type)
     {
-        case WAR_COMMAND_BUILD_FARM_HUMANS:
-        case WAR_COMMAND_BUILD_FARM_ORCS:
-        case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
-        case WAR_COMMAND_BUILD_BARRACKS_ORCS:
-        case WAR_COMMAND_BUILD_CHURCH:
-        case WAR_COMMAND_BUILD_TEMPLE:
-        case WAR_COMMAND_BUILD_TOWER_HUMANS:
-        case WAR_COMMAND_BUILD_TOWER_ORCS:
-        case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
-        case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
-        case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
-        case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
-        case WAR_COMMAND_BUILD_STABLE:
-        case WAR_COMMAND_BUILD_KENNEL:
-        case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
-        case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
+        case WAR_UI_COMMAND_BUILD_FARM_HUMANS:
+        case WAR_UI_COMMAND_BUILD_FARM_ORCS:
+        case WAR_UI_COMMAND_BUILD_BARRACKS_HUMANS:
+        case WAR_UI_COMMAND_BUILD_BARRACKS_ORCS:
+        case WAR_UI_COMMAND_BUILD_CHURCH:
+        case WAR_UI_COMMAND_BUILD_TEMPLE:
+        case WAR_UI_COMMAND_BUILD_TOWER_HUMANS:
+        case WAR_UI_COMMAND_BUILD_TOWER_ORCS:
+        case WAR_UI_COMMAND_BUILD_TOWNHALL_HUMANS:
+        case WAR_UI_COMMAND_BUILD_TOWNHALL_ORCS:
+        case WAR_UI_COMMAND_BUILD_LUMBERMILL_HUMANS:
+        case WAR_UI_COMMAND_BUILD_LUMBERMILL_ORCS:
+        case WAR_UI_COMMAND_BUILD_STABLE:
+        case WAR_UI_COMMAND_BUILD_KENNEL:
+        case WAR_UI_COMMAND_BUILD_BLACKSMITH_HUMANS:
+        case WAR_UI_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
             vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
             position = vec2MapToTileCoordinates(position);
 
-            WarUnitType buildingToBuild = command->build.buildingToBuild;
-            WarUnitData data = getUnitData(buildingToBuild);
+            WarUnitType unitType = uiCommand->build.unitType;
+            WarUnitData data = getUnitData(unitType);
 
             NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, data.sizex, data.sizey)
                 ? NVG_GRAY_TRANSPARENT : NVG_RED_TRANSPARENT;
@@ -430,8 +429,8 @@ void renderCommand(WarContext* context)
             break;
         }
 
-        case WAR_COMMAND_BUILD_WALL:
-        case WAR_COMMAND_BUILD_ROAD:
+        case WAR_UI_COMMAND_BUILD_WALL:
+        case WAR_UI_COMMAND_BUILD_ROAD:
         {
             vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
             position = vec2MapToTileCoordinates(position);
@@ -465,7 +464,7 @@ void renderMapUI(WarContext* context)
     nvgSave(gfx);
 
     renderSelectionRect(context);
-    renderCommand(context);
+    renderUICommand(context);
     renderUIEntities(context);
 
     nvgRestore(gfx);

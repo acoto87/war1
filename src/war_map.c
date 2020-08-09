@@ -1033,12 +1033,12 @@ void updateSelection(WarContext* context)
                     WarEntityId selectedEntityId = map->selectedEntities.items[0];
                     if (selectedEntityId != newSelectedEntity->id)
                     {
-                        map->command.type = WAR_COMMAND_NONE;
+                        map->uiCommand.type = WAR_UI_COMMAND_NONE;
                     }
                 }
                 else
                 {
-                    map->command.type = WAR_COMMAND_NONE;
+                    map->uiCommand.type = WAR_UI_COMMAND_NONE;
                 }
 
                 // clear the current selection
@@ -1071,13 +1071,12 @@ void updateTreesEdit(WarContext* context)
         if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = vec2ScreenToMapCoordinates(context, input->pos);
-            pointerPos =  vec2MapToTileCoordinates(pointerPos);
+            pointerPos = vec2MapToTileCoordinates(pointerPos);
 
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntityId entityId = getTileEntityId(map->finder, x, y);
-            WarEntity* entity = findEntity(context, entityId);
+            WarEntity* entity = findEntityAt(context, pointerPos);
             if (!entity)
             {
                 entity = map->forest;
@@ -1085,7 +1084,7 @@ void updateTreesEdit(WarContext* context)
                 plantTree(context, entity, x, y);
                 determineAllTreeTiles(context);
             }
-            else if (entity->type == WAR_ENTITY_TYPE_FOREST)
+            else if (isForest(entity))
             {
                 WarTree* tree = getTreeAtPosition(entity, x, y);
                 if (tree)
@@ -1338,12 +1337,12 @@ void updateCommandButtons(WarContext* context)
     }
 
     // determine the commands for the selected unit(s)
-    WarUnitCommandType commands[6] = {0};
+    WarUICommandType commands[6] = {0};
     getUnitCommands(context, entity, commands);
 
     if (selectedEntitiesCount > 1)
     {
-        WarUnitCommandType selectedCommands[6] = {0};
+        WarUICommandType selectedCommands[6] = {0};
         for (s32 i = 1; i < selectedEntitiesCount; i++)
         {
             WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[i]);
@@ -1356,7 +1355,7 @@ void updateCommandButtons(WarContext* context)
             {
                 if (commands[j] != selectedCommands[j])
                 {
-                    commands[j] = WAR_COMMAND_NONE;
+                    commands[j] = WAR_UI_COMMAND_NONE;
                 }
             }
         }
@@ -1364,9 +1363,9 @@ void updateCommandButtons(WarContext* context)
 
     for (s32 i = 0; i < arrayLength(commands); i++)
     {
-        if (commands[i] != WAR_COMMAND_NONE)
+        if (commands[i] != WAR_UI_COMMAND_NONE)
         {
-            WarUnitCommandData commandData = getUnitCommandData(context, entity, commands[i]);
+            WarUICommandData commandData = getUnitCommandData(context, entity, commands[i]);
             setUIImage(commandButtons[i], commandData.frameIndex);
             setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.highlightCount, commandData.tooltip);
             commandButtons[i]->button.enabled = true;
@@ -1381,12 +1380,12 @@ void updateCommandButtons(WarContext* context)
 void updateCommandFromRightClick(WarContext* context)
 {
     WarMap* map = context->map;
-    WarUnitCommand* command = &map->command;
+    WarUICommand* command = &map->uiCommand;
     WarInput* input = &context->input;
 
     if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
     {
-        if (command->type == WAR_COMMAND_NONE)
+        if (command->type == WAR_UI_COMMAND_NONE)
         {
             s32 selEntitiesCount = map->selectedEntities.count;
             if (selEntitiesCount > 0)
@@ -1397,22 +1396,21 @@ void updateCommandFromRightClick(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    WarEntity* targetEntity = findEntityAt(context, targetTile);
                     if (targetEntity)
                     {
-                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
+                        if (isGoldmineUnit(targetEntity))
                         {
                             if (!isUnitUnknown(map, targetEntity))
-                                executeHarvestCommand(context, targetEntity, targetTile);
+                                executeGatherUICommand(context, targetEntity, targetTile);
                             else
-                                executeMoveCommand(context, targetPoint);
+                                executeMoveUICommand(context, targetTile);
                         }
-                        else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
+                        else if (isForest(targetEntity))
                         {
                             if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
-                                executeHarvestCommand(context, targetEntity, targetTile);
+                                executeGatherUICommand(context, targetEntity, targetTile);
                             }
                             else
                             {
@@ -1420,11 +1418,11 @@ void updateCommandFromRightClick(WarContext* context)
                                 if (tree)
                                 {
                                     targetTile = vec2i(tree->tilex, tree->tiley);
-                                    executeHarvestCommand(context, targetEntity, targetTile);
+                                    executeGatherUICommand(context, targetEntity, targetTile);
                                 }
                                 else
                                 {
-                                    executeMoveCommand(context, targetPoint);
+                                    executeMoveUICommand(context, targetTile);
                                 }
                             }
                         }
@@ -1435,48 +1433,47 @@ void updateCommandFromRightClick(WarContext* context)
                             {
                                 if (isEnemyUnit(context, targetEntity))
                                 {
-                                    executeAttackCommand(context, targetEntity, targetTile);
+                                    executeAttackUICommand(context, targetEntity, targetTile);
                                 }
                                 else
                                 {
-                                    executeDeliverCommand(context, targetEntity);
+                                    executeDeliverUICommand(context, targetEntity);
                                 }
                             }
                             else
                             {
-                                executeMoveCommand(context, targetPoint);
+                                executeMoveUICommand(context, targetTile);
                             }
                         }
                         else if (isWall(targetEntity))
                         {
                             // it doesn't matter if the wall piece is visible or not,
                             // the unit will walk to it
-                            executeMoveCommand(context, targetPoint);
+                            executeMoveUICommand(context, targetTile);
                         }
                         else
                         {
                             if (isEnemyUnit(context, targetEntity))
                             {
-                                executeAttackCommand(context, targetEntity, targetTile);
+                                executeAttackUICommand(context, targetEntity, targetTile);
                             }
                             else
                             {
-                                executeFollowCommand(context, targetEntity);
+                                executeFollowUICommand(context, targetEntity);
                             }
                         }
                     }
                     else
                     {
-                        executeMoveCommand(context, targetPoint);
+                        executeMoveUICommand(context, targetTile);
                     }
                 }
                 // if the right click was on the minimap
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 offset = vec2ScreenToMinimapCoordinates(context, input->pos);
-                    vec2 targetPoint = vec2TileToMapCoordinates(offset, true);
+                    vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
 
-                    executeMoveCommand(context, targetPoint);
+                    executeMoveUICommand(context, targetTile);
                 }
             }
         }
@@ -1646,8 +1643,8 @@ void updateStatus(WarContext* context)
                 {
                     WarState* trainState = getTrainState(selectedEntity);
                     WarUnitType unitToBuild = trainState->train.unitToBuild;
-                    WarUnitCommandMapping commandMapping = getCommandMappingFromUnitType(unitToBuild);
-                    WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
+                    WarUICommandMapping commandMapping = getCommandMappingFromUnitType(unitToBuild);
+                    WarUICommandBaseData commandData = getCommandBaseData(commandMapping.type);
 
                     strcpy(statusText, commandData.tooltip2);
                 }
@@ -1655,8 +1652,8 @@ void updateStatus(WarContext* context)
                 {
                     WarState* upgradeState = getUpgradeState(selectedEntity);
                     WarUpgradeType upgradeToBuild = upgradeState->upgrade.upgradeToBuild;
-                    WarUnitCommandMapping commandMapping = getCommandMappingFromUpgradeType(upgradeToBuild);
-                    WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
+                    WarUICommandMapping commandMapping = getCommandMappingFromUpgradeType(upgradeToBuild);
+                    WarUICommandBaseData commandData = getCommandBaseData(commandMapping.type);
 
                     strcpy(statusText, commandData.tooltip2);
                 }
@@ -1743,51 +1740,51 @@ void updateMapCursor(WarContext* context)
 
         if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
         {
-            WarUnitCommand* command = &map->command;
+            WarUICommand* command = &map->uiCommand;
             switch (command->type)
             {
-                case WAR_COMMAND_ATTACK:
-                case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
-                case WAR_COMMAND_SPELL_POISON_CLOUD:
+                case WAR_UI_COMMAND_ATTACK:
+                case WAR_UI_COMMAND_SPELL_RAIN_OF_FIRE:
+                case WAR_UI_COMMAND_SPELL_POISON_CLOUD:
                 {
                     changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
                     break;
                 }
 
-                case WAR_COMMAND_MOVE:
-                case WAR_COMMAND_STOP:
-                case WAR_COMMAND_HARVEST:
-                case WAR_COMMAND_DELIVER:
-                case WAR_COMMAND_REPAIR:
-                case WAR_COMMAND_SPELL_HEALING:
-                case WAR_COMMAND_SPELL_FAR_SIGHT:
-                case WAR_COMMAND_SPELL_INVISIBILITY:
-                case WAR_COMMAND_SPELL_RAISE_DEAD:
-                case WAR_COMMAND_SPELL_DARK_VISION:
-                case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
+                case WAR_UI_COMMAND_MOVE:
+                case WAR_UI_COMMAND_STOP:
+                case WAR_UI_COMMAND_GATHER:
+                case WAR_UI_COMMAND_DELIVER:
+                case WAR_UI_COMMAND_REPAIR:
+                case WAR_UI_COMMAND_SPELL_HEALING:
+                case WAR_UI_COMMAND_SPELL_FAR_SIGHT:
+                case WAR_UI_COMMAND_SPELL_INVISIBILITY:
+                case WAR_UI_COMMAND_SPELL_RAISE_DEAD:
+                case WAR_UI_COMMAND_SPELL_DARK_VISION:
+                case WAR_UI_COMMAND_SPELL_UNHOLY_ARMOR:
                 {
                     changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                     break;
                 }
 
-                case WAR_COMMAND_BUILD_FARM_HUMANS:
-                case WAR_COMMAND_BUILD_FARM_ORCS:
-                case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
-                case WAR_COMMAND_BUILD_BARRACKS_ORCS:
-                case WAR_COMMAND_BUILD_CHURCH:
-                case WAR_COMMAND_BUILD_TEMPLE:
-                case WAR_COMMAND_BUILD_TOWER_HUMANS:
-                case WAR_COMMAND_BUILD_TOWER_ORCS:
-                case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
-                case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
-                case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
-                case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
-                case WAR_COMMAND_BUILD_STABLE:
-                case WAR_COMMAND_BUILD_KENNEL:
-                case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
-                case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
-                case WAR_COMMAND_BUILD_ROAD:
-                case WAR_COMMAND_BUILD_WALL:
+                case WAR_UI_COMMAND_BUILD_FARM_HUMANS:
+                case WAR_UI_COMMAND_BUILD_FARM_ORCS:
+                case WAR_UI_COMMAND_BUILD_BARRACKS_HUMANS:
+                case WAR_UI_COMMAND_BUILD_BARRACKS_ORCS:
+                case WAR_UI_COMMAND_BUILD_CHURCH:
+                case WAR_UI_COMMAND_BUILD_TEMPLE:
+                case WAR_UI_COMMAND_BUILD_TOWER_HUMANS:
+                case WAR_UI_COMMAND_BUILD_TOWER_ORCS:
+                case WAR_UI_COMMAND_BUILD_TOWNHALL_HUMANS:
+                case WAR_UI_COMMAND_BUILD_TOWNHALL_ORCS:
+                case WAR_UI_COMMAND_BUILD_LUMBERMILL_HUMANS:
+                case WAR_UI_COMMAND_BUILD_LUMBERMILL_ORCS:
+                case WAR_UI_COMMAND_BUILD_STABLE:
+                case WAR_UI_COMMAND_BUILD_KENNEL:
+                case WAR_UI_COMMAND_BUILD_BLACKSMITH_HUMANS:
+                case WAR_UI_COMMAND_BUILD_BLACKSMITH_ORCS:
+                case WAR_UI_COMMAND_BUILD_ROAD:
+                case WAR_UI_COMMAND_BUILD_WALL:
                 {
                     changeCursorType(context, entity, WAR_CURSOR_ARROW);
                     break;
@@ -1813,19 +1810,19 @@ void updateMapCursor(WarContext* context)
                             isFriendlyUnit(context, selectedEntity) &&
                             isDudeUnit(selectedEntity))
                         {
-                            if (isUnitOfType(entityUnderCursor, WAR_UNIT_GOLDMINE) &&
+                            if (isGoldmineUnit(entityUnderCursor) &&
                                 !isUnitUnknown(map, entityUnderCursor) &&
                                 isWorkerUnit(selectedEntity))
                             {
                                 changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                             }
-                            else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) &&
+                            else if (isForest(entityUnderCursor) &&
                                      !isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
                                      isWorkerUnit(selectedEntity))
                             {
                                 changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                             }
-                            else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL) &&
+                            else if (isWall(entityUnderCursor) &&
                                      !isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
                                      isWarriorUnit(selectedEntity) &&
                                      canAttack(context, selectedEntity, entityUnderCursor))
@@ -1838,8 +1835,7 @@ void updateMapCursor(WarContext* context)
                             {
                                 changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
                             }
-                            else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
-                                     isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
+                            else if (isForest(entityUnderCursor) || isWall(entityUnderCursor))
                             {
                                 changeCursorType(context, entity, WAR_CURSOR_ARROW);
                             }
@@ -1848,8 +1844,7 @@ void updateMapCursor(WarContext* context)
                                 changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
                             }
                         }
-                        else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
-                                 isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
+                        else if (isForest(entityUnderCursor) || isWall(entityUnderCursor))
                         {
                             changeCursorType(context, entity, WAR_CURSOR_ARROW);
                         }
@@ -1858,8 +1853,7 @@ void updateMapCursor(WarContext* context)
                             changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
                         }
                     }
-                    else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
-                             isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
+                    else if (isForest(entityUnderCursor) || isWall(entityUnderCursor))
                     {
                         changeCursorType(context, entity, WAR_CURSOR_ARROW);
                     }
@@ -1874,20 +1868,20 @@ void updateMapCursor(WarContext* context)
         }
         else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
         {
-            WarUnitCommand* command = &map->command;
+            WarUICommand* command = &map->uiCommand;
             switch (command->type)
             {
-                case WAR_COMMAND_ATTACK:
-                case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
-                case WAR_COMMAND_SPELL_POISON_CLOUD:
+                case WAR_UI_COMMAND_ATTACK:
+                case WAR_UI_COMMAND_SPELL_RAIN_OF_FIRE:
+                case WAR_UI_COMMAND_SPELL_POISON_CLOUD:
                 {
                     changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
                     break;
                 }
 
-                case WAR_COMMAND_MOVE:
-                case WAR_COMMAND_SPELL_FAR_SIGHT:
-                case WAR_COMMAND_SPELL_DARK_VISION:
+                case WAR_UI_COMMAND_MOVE:
+                case WAR_UI_COMMAND_SPELL_FAR_SIGHT:
+                case WAR_UI_COMMAND_SPELL_DARK_VISION:
                 {
                     changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                     break;
@@ -2461,7 +2455,7 @@ void updateMap(WarContext* context)
         return;
     }
 
-    if (!executeCommand(context))
+    if (!executeUICommand(context))
     {
         // only update the selection if the current command doesn't get
         // executed or there is no command at all.

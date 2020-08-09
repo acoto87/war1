@@ -26,7 +26,7 @@ WarRoadPiece* getRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
 
 void determineRoadTypes(WarContext* context, WarEntity* entity)
 {
-    assert(entity->type == WAR_ENTITY_TYPE_ROAD);
+    assert(isRoad(entity));
 
     WarMap* map = context->map;
 
@@ -66,7 +66,7 @@ void addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player)
 
 void addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
 {
-    assert(entity->type == WAR_ENTITY_TYPE_ROAD);
+    assert(isRoad(entity));
 
     WarRoadPieceList* pieces = &entity->road.pieces;
 
@@ -81,7 +81,7 @@ void addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
 
     s32 dy = y2 - y1;
     dy = sign(dy);
-    
+
     s32 x = x1;
     s32 y = y1;
 

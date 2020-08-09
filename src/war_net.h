@@ -15,8 +15,8 @@
 #define RESPONSE_READ_SIZE 2048
 #define RESPONSE_MAX_SIZE (5 * 1024 * 1024) // 5MB
 
-bool initNetwork();
-bool cleanNetwork();
+bool initNetwork(void);
+bool cleanNetwork(void);
 u32 connectToHost(const char* host);
 bool requestResource(u32 sck, const char* resource, const char* host);
 s32 readResponse(u32 sck, char responseBuffer[], s32 responseBufferLength);
