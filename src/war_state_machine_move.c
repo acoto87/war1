@@ -107,10 +107,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 state->move.waitCount++;
 
-                WarState* waitState = createWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME));
-                waitState->nextState = state;
-                changeNextState(context, entity, waitState, false, true);
-
+                sendToWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME), state);
                 return;
             }
 
@@ -227,10 +224,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 
             state->move.waitCount++;
 
-            WarState* waitState = createWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME));
-            waitState->nextState = state;
-            changeNextState(context, entity, waitState, false, true);
-
+            sendToWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME), state);
             return;
         }
 

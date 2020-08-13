@@ -39,8 +39,7 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // the unit arrive to the goldmine, go mining
-    WarState* miningState = createMiningState(context, entity, goldmine->id);
-    changeNextState(context, entity, miningState, true, true);
+    sendToMiningState(context, entity, goldmine->id);
 }
 
 void freeGatherGoldState(WarState* state)

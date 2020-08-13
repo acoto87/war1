@@ -39,8 +39,7 @@ void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     // the unit arrive to the building, go repairing
-    WarState* repairingState = createRepairingState(context, entity, building->id);
-    changeNextState(context, entity, repairingState, true, true);
+    sendToRepairingState(context, entity, building->id);
 }
 
 void freeRepairState(WarState* state)

@@ -281,8 +281,7 @@ WarCommandStatus executeTrainCommand(WarContext* context, WarPlayerInfo* player,
     decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
     decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
 
-    WarState* trainState = createTrainState(context, producer, unitType, stats.buildTime);
-    changeNextState(context, producer, trainState, true, true);
+    sendToTrainState(context, producer, unitType, stats.buildTime);
 
     return WAR_COMMAND_STATUS_RUNNING;
 }
@@ -341,8 +340,7 @@ WarCommandStatus executeBuildCommand(WarContext* context, WarPlayerInfo* player,
     decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
 
     WarEntity* building = createBuilding(context, unitType, targetTile.x, targetTile.y, player->index, true);
-    WarState* repairState = createRepairState(context, worker, building->id);
-    changeNextState(context, worker, repairState, true, true);
+    sendToRepairState(context, worker, building->id);
 
     return WAR_COMMAND_STATUS_RUNNING;
 }
@@ -467,8 +465,7 @@ WarCommandStatus executeUpgradeCommand(WarContext* context, WarPlayerInfo* playe
 
     decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]);
 
-    WarState* upgradeState = createUpgradeState(context, producer, upgradeType, stats.buildTime);
-    changeNextState(context, producer, upgradeState, true, true);
+    sendToUpgradeState(context, producer, upgradeType, stats.buildTime);
 
     return WAR_COMMAND_STATUS_RUNNING;
 }
@@ -865,8 +862,7 @@ WarCommandStatus executeDeliverCommand(WarContext* context, WarPlayerInfo* playe
                     continue;
             }
 
-            WarState* deliverState = createDeliverState(context, unit, townHall->id);
-            changeNextState(context, unit, deliverState, true, true);
+            sendToDeliverState(context, unit, townHall->id, NULL);
 
             status = WAR_COMMAND_STATUS_DONE;
         }
@@ -904,8 +900,7 @@ WarCommandStatus executeRepairCommand(WarContext* context, WarPlayerInfo* player
         WarEntity* unit = findEntity(context, unitId);
         if (unit && isWorkerUnit(unit) && isFriendlyUnit(context, unit))
         {
-            WarState* repairState = createRepairState(context, unit, targetEntity->id);
-            changeNextState(context, unit, repairState, true, true);
+            sendToRepairState(context, unit, targetEntity->id);
 
             status = WAR_COMMAND_STATUS_DONE;
         }
@@ -971,8 +966,7 @@ WarCommandStatus executeCancelCommand(WarContext* context, WarPlayerInfo* player
         increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
         increasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
 
-        WarState* collapseState = createCollapseState(context, targetEntity);
-        changeNextState(context, targetEntity, collapseState, true, true);
+        sendToCollapseState(context, targetEntity);
     }
 
     if (isTraining(targetEntity) || isGoingToTrain(targetEntity))

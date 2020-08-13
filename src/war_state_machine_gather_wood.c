@@ -59,8 +59,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // the unit arrive to the tree, go chopping
-    WarState* choppingState = createChoppingState(context, entity, forest->id, treePosition);
-    changeNextState(context, entity, choppingState, true, true);
+    sendToChoppingState(context, entity, forest->id, treePosition);
 }
 
 void freeGatherWoodState(WarState* state)

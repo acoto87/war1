@@ -494,8 +494,7 @@ WarEntity* createBuilding(WarContext* context,
     if (isGoingToBuild)
     {
         WarBuildingStats stats = getBuildingStats(type);
-        WarState* buildState = createBuildState(context, entity, stats.buildTime);
-        changeNextState(context, entity, buildState, true, true);
+        sendToBuildState(context, entity, stats.buildTime);
     }
 
     return entity;
@@ -2155,8 +2154,7 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
     {
         if (isBuildingUnit(entity))
         {
-            WarState* collapseState = createCollapseState(context, entity);
-            changeNextState(context, entity, collapseState, true, true);
+            sendToCollapseState(context, entity);
 
             createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
@@ -2343,8 +2341,7 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
     {
         if (!isCollapsing(goldmine) && !isGoingToCollapse(goldmine))
         {
-            WarState* collapseState = createCollapseState(context, goldmine);
-            changeNextState(context, goldmine, collapseState, true, true);
+            sendToCollapseState(context, goldmine);
 
             createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
@@ -2366,14 +2363,11 @@ bool sendWorkerToMine(WarContext* context, WarEntity* worker, WarEntity* goldmin
                 return false;
         }
 
-        WarState* deliverState = createDeliverState(context, worker, townHall->id);
-        deliverState->nextState = createGatherGoldState(context, worker, goldmine->id);
-        changeNextState(context, worker, deliverState, true, true);
+        sendToDeliverState(context, worker, townHall->id, createGatherGoldState(context, worker, goldmine->id));
     }
     else
     {
-        WarState* gatherGoldState = createGatherGoldState(context, worker, goldmine->id);
-        changeNextState(context, worker, gatherGoldState, true, true);
+        sendToGatherGoldState(context, worker, goldmine->id);
     }
 
     return true;
@@ -2392,14 +2386,11 @@ bool sendWorkerToChop(WarContext* context, WarEntity* worker, WarEntity* forest,
                 return false;
         }
 
-        WarState* deliverState = createDeliverState(context, worker, townHall->id);
-        deliverState->nextState = createGatherWoodState(context, worker, forest->id, treeTile);
-        changeNextState(context, worker, deliverState, true, true);
+        sendToDeliverState(context, worker, townHall->id, createGatherWoodState(context, worker, forest->id, treeTile));
     }
     else
     {
-        WarState* gatherWoodState = createGatherWoodState(context, worker, forest->id, treeTile);
-        changeNextState(context, worker, gatherWoodState, true, true);
+        sendToGatherWoodState(context, worker, forest->id, treeTile);
     }
 
     return true;

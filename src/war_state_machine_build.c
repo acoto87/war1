@@ -53,8 +53,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* collapseState = createCollapseState(context, entity);
-            changeNextState(context, entity, collapseState, true, true);
+            sendToCollapseState(context, entity);
         }
 
         return;

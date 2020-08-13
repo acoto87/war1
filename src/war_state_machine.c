@@ -125,6 +125,80 @@ void sendToDeathState(WarContext* context, WarEntity* entity)
     changeNextState(context, entity, deathState, true, true);
 }
 
+void sendToCollapseState(WarContext* context, WarEntity* entity)
+{
+    WarState* collapseState = createCollapseState(context, entity);
+    changeNextState(context, entity, collapseState, true, true);
+}
+
+void sendToWaitState(WarContext* context, WarEntity* entity, f32 waitTime, WarState* nextState)
+{
+    WarState* waitState = createWaitState(context, entity, waitTime);
+    waitState->nextState = nextState;
+    changeNextState(context, entity, waitState, false, true);
+}
+
+void sendToGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
+{
+    WarState* gatherGoldState = createGatherGoldState(context, entity, goldmineId);
+    changeNextState(context, entity, gatherGoldState, true, true);
+}
+
+void sendToMiningState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
+{
+    WarState* miningState = createMiningState(context, entity, goldmineId);
+    changeNextState(context, entity, miningState, true, true);
+}
+
+void sendToGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
+{
+    WarState* gatherWoodState = createGatherWoodState(context, entity, forestId, position);
+    changeNextState(context, entity, gatherWoodState, true, true);
+}
+
+void sendToChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
+{
+    WarState* choppingState = createChoppingState(context, entity, forestId, position);
+    changeNextState(context, entity, choppingState, true, true);
+}
+
+void sendToDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId, WarState* nextState)
+{
+    WarState* deliverState = createDeliverState(context, entity, townHallId);
+    deliverState->nextState = nextState;
+    changeNextState(context, entity, deliverState, true, true);
+}
+
+void sendToTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
+{
+    WarState* trainState = createTrainState(context, entity, unitToBuild, buildTime);
+    changeNextState(context, entity, trainState, true, true);
+}
+
+void sendToUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
+{
+    WarState* upgradeState = createUpgradeState(context, entity, upgradeToBuild, buildTime);
+    changeNextState(context, entity, upgradeState, true, true);
+}
+
+void sendToBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
+{
+    WarState* buildState = createBuildState(context, entity, buildTime);
+    changeNextState(context, entity, buildState, true, true);
+}
+
+void sendToRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
+{
+    WarState* repairState = createRepairState(context, entity, buildingId);
+    changeNextState(context, entity, repairState, true, true);
+}
+
+void sendToRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
+{
+    WarState* repairingState = createRepairingState(context, entity, buildingId);
+    changeNextState(context, entity, repairingState, true, true);
+}
+
 void enterState(WarContext* context, WarEntity* entity, WarState* state)
 {
     if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))

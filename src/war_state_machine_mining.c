@@ -76,9 +76,7 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
             return;
         }
 
-        WarState* deliverState = createDeliverState(context, entity, townHall->id);
-        deliverState->nextState = createGatherGoldState(context, entity, goldmine->id);
-        changeNextState(context, entity, deliverState, true, true);
+        sendToDeliverState(context, entity, townHall->id, createGatherGoldState(context, entity, goldmine->id));
     }
 }
 

@@ -41,8 +41,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
 
     if (!tree || tree->amount == 0)
     {
-        WarState* gatherWoodState = createGatherWoodState(context, entity, forest->id, treePosition);
-        changeNextState(context, entity, gatherWoodState, true, true);
+        sendToGatherWoodState(context, entity, forest->id, treePosition);)
         return;
     }
 
@@ -80,9 +79,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
                 return;
             }
 
-            WarState* deliverState = createDeliverState(context, entity, townHall->id);
-            deliverState->nextState = createGatherWoodState(context, entity, forest->id, treePosition);
-            changeNextState(context, entity, deliverState, true, true);
+            sendToDeliverState(context, entity, townHall->id, createGatherWoodState(context, entity, forest->id, treePosition));
         }
 
         // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
