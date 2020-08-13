@@ -25,8 +25,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     // if the town hall doesn't exists (or other units attacking it), go idle
     if (!townHall)
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        sendToIdleState(context, entity, true);
         return;
     }
 
@@ -53,8 +52,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, true);
         }
 
         return;

@@ -15,9 +15,7 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
-
+        sendToIdleState(context, entity, true);
         return;
     }
 
@@ -30,9 +28,7 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
         // if there is already someone building it, go idle
         if (buildState->build.workerId)
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
-
+            sendToIdleState(context, entity, true);
             return;
         }
 
@@ -87,9 +83,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
             setUnitCenterPosition(entity, spawnPosition, true);
         }
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
-
+        sendToIdleState(context, entity, true);
         return;
     }
 
@@ -103,8 +97,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
             if (!decreasePlayerResource(context, player, WAR_RESOURCE_GOLD, 1) ||
                 !decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, 1))
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                sendToIdleState(context, entity, true);
                 return;
             }
 
@@ -122,8 +115,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
             {
                 building->unit.hp = building->unit.maxhp;
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                sendToIdleState(context, entity, true);
             }
 
             action->lastActionStep = WAR_ACTION_STEP_NONE;
@@ -138,8 +130,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
         setUnitCenterPosition(entity, spawnPosition, true);
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        sendToIdleState(context, entity, true);
     }
 }
 

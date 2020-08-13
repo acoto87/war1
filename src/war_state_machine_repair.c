@@ -23,8 +23,7 @@ void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        sendToIdleState(context, entity, true);
         return;
     }
 

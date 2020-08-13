@@ -61,8 +61,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, true);
         }
 
         freePath(path);

@@ -27,8 +27,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
     // if the forest doesn't exists, go idle
     if (!forest)
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        sendToIdleState(context, entity, true);
         return;
     }
 
@@ -42,8 +41,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
         // if there is no more nearby tree, go idle
         if (!tree)
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, true);
             return;
         }
 

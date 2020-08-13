@@ -45,8 +45,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             return;
         }
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        sendToIdleState(context, entity, true);
         return;
     }
 
@@ -105,8 +104,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             if (isDead(targetEntity) || isGoingToDie(targetEntity) ||
                 isCollapsing(targetEntity) || isGoingToCollapse(targetEntity))
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                sendToIdleState(context, entity, true);
             }
             else
             {
@@ -133,8 +131,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                 // one of them could destroy the piece, so the other should stop doing further damage.
                 if (piece->hp == 0)
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    sendToIdleState(context, entity, true);
                 }
                 else
                 {

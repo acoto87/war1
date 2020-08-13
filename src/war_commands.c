@@ -740,8 +740,7 @@ WarCommandStatus executeStopCommand(WarContext* context, WarPlayerInfo* player, 
         if (!isFriendlyUnit(context, unit))
             continue;
 
-        WarState* idleState = createIdleState(context, unit, true);
-        changeNextState(context, unit, idleState, true, true);
+        sendToIdleState(context, unit, true);
 
         status = WAR_COMMAND_STATUS_DONE;
     }
@@ -992,8 +991,7 @@ WarCommandStatus executeCancelCommand(WarContext* context, WarPlayerInfo* player
         increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
         increasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
 
-        WarState* idleState = createIdleState(context, targetEntity, false);
-        changeNextState(context, targetEntity, idleState, true, true);
+        sendToIdleState(context, targetEntity, false);
     }
 
     if (isUpgrading(targetEntity) || isGoingToUpgrade(targetEntity))
@@ -1007,8 +1005,7 @@ WarCommandStatus executeCancelCommand(WarContext* context, WarPlayerInfo* player
 
         increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]);
 
-        WarState* idleState = createIdleState(context, targetEntity, false);
-        changeNextState(context, targetEntity, idleState, true, true);
+        sendToIdleState(context, targetEntity, false);
     }
 
     return WAR_COMMAND_STATUS_DONE;

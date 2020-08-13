@@ -719,8 +719,7 @@ void enterMap(WarContext* context)
 
         addStateMachineComponent(context, wall);
 
-        WarState* idleState = createIdleState(context, wall, false);
-        changeNextState(context, wall, idleState, true, true);
+        sendToIdleState(context, wall, false);
 
         map->wall = wall;
     }

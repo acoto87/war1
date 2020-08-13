@@ -15,8 +15,7 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, true);
         }
 
         return;
@@ -36,8 +35,7 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, true);
         }
 
         return;
@@ -125,8 +123,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (!changeStateNextState(context, entity, state))
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    sendToIdleState(context, entity, true);
                 }
 
                 return;
@@ -183,8 +180,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (!changeStateNextState(context, entity, state))
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    sendToIdleState(context, entity, true);
                 }
 
                 return;
@@ -203,8 +199,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (!changeStateNextState(context, entity, state))
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    sendToIdleState(context, entity, true);
                 }
 
                 return;
@@ -226,8 +221,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (!changeStateNextState(context, entity, state))
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    sendToIdleState(context, entity, true);
                 }
 
                 return;

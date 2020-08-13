@@ -43,8 +43,7 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, false);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, false);
         }
 
         return;
@@ -71,8 +70,7 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, false);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, false);
         }
 
         return;

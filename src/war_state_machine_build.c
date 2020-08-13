@@ -99,8 +99,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
 
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, false);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, false);
         }
 
         WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;

@@ -1,4 +1,4 @@
-WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] = 
+WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
 {
     { WAR_STATE_IDLE,       enterIdleState,       leaveIdleState,       updateIdleState,       freeIdleState       },
     { WAR_STATE_MOVE,       enterMoveState,       leaveMoveState,       updateMoveState,       freeMoveState       },
@@ -89,6 +89,42 @@ bool hasNextState(WarEntity* entity, WarStateType type)
     return getNextState(entity, type) != NULL;
 }
 
+void sendToIdleState(WarContext* context, WarEntity* entity, bool lookAround)
+{
+    WarState* idleState = createIdleState(context, entity, lookAround);
+    changeNextState(context, entity, idleState, true, true);
+}
+
+void sendToMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
+{
+    WarState* moveState = createMoveState(context, entity, positionCount, positions);
+    changeNextState(context, entity, moveState, true, true);
+}
+
+void sendToPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
+{
+    WarState* patrolState = createPatrolState(context, entity, positionCount, positions);
+    changeNextState(context, entity, patrolState, true, true);
+}
+
+void sendToFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
+{
+    WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, distance);
+    changeNextState(context, entity, followState, true, true);
+}
+
+void sendToAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
+{
+    WarState* attackState = createAttackState(context, entity, targetEntityId, targetTile);
+    changeNextState(context, entity, attackState, true, true);
+}
+
+void sendToDeathState(WarContext* context, WarEntity* entity)
+{
+    WarState* deathState = createDeathState(context, entity);
+    changeNextState(context, entity, deathState, true, true);
+}
+
 void enterState(WarContext* context, WarEntity* entity, WarState* state)
 {
     if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
@@ -127,7 +163,7 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
         {
             if (stateMachine->leaveState)
                 leaveState(context, entity, stateMachine->currentState);
-            
+
             stateMachine->currentState = stateMachine->nextState;
             stateMachine->nextState = NULL;
 

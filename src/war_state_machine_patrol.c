@@ -13,10 +13,9 @@ void enterPatrolState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, true);
         }
-        
+
         return;
     }
 
@@ -40,8 +39,7 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     f32 distance = vec2Distance(actualPosition, shouldBeAt);
     if (distance >= MOVE_EPSILON)
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        sendToIdleState(context, entity, true);
 
         return;
     }

@@ -32,8 +32,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     // if the forest doesn't exists, go idle
     if (!forest)
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        sendToIdleState(context, entity, true);
         return;
     }
 
@@ -77,8 +76,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
             // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
             if (!townHall)
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                sendToIdleState(context, entity, true);
                 return;
             }
 

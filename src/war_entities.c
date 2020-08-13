@@ -456,8 +456,7 @@ WarEntity* createUnit(WarContext* context,
         entity->unit.armor = buildingStats.armor;
     }
 
-    WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
-    changeNextState(context, entity, idleState, true, true);
+    sendToIdleState(context, entity, isDudeUnit(entity));
 
     if (addToMap)
     {
@@ -2236,8 +2235,7 @@ void rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity
         else
         {
             // stop attacking if the magic unit rans out of mana
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, true);
         }
     }
     else
@@ -2269,8 +2267,7 @@ void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
         else
         {
             // stop attacking if the magic unit rans out of mana
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            sendToIdleState(context, entity, true);
         }
     }
     else

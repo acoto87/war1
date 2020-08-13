@@ -25,8 +25,7 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     // so, this unit get nothing
     if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        sendToIdleState(context, entity, true);
         return;
     }
 

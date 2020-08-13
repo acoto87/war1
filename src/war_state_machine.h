@@ -101,6 +101,27 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 
 #define setDelay(state, seconds) ((state)->delay = (seconds))
 
+void sendToIdleState(WarContext* context, WarEntity* entity, bool lookAround);
+void sendToMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
+void sendToPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
+void sendToFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance);
+void sendToAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile);
+void sendToDeathState(WarContext* context, WarEntity* entity);
+// void sendToDamagedState(WarContext* context, WarEntity* entity);
+// void sendToCollapseState(WarContext* context, WarEntity* entity);
+// void sendToWaitState(WarContext* context, WarEntity* entity, f32 waitTime);
+// void sendToGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId);
+// void sendToMiningState(WarContext* context, WarEntity* entity, WarEntityId goldmineId);
+// void sendToGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 position);
+// void sendToChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position);
+// void sendToDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId);
+// void sendToTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime);
+// void sendToUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime);
+// void sendToBuildState(WarContext* context, WarEntity* entity, f32 buildTime);
+// void sendToRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
+// void sendToRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
+// void sendToCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile);
+
 void enterState(WarContext* context, WarEntity* entity, WarState* state);
 void leaveState(WarContext* context, WarEntity* entity, WarState* state);
 void updateStateMachine(WarContext* context, WarEntity* entity);
