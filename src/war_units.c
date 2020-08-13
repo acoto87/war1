@@ -984,6 +984,40 @@ WarUnitType getUpgradeTypeProducer(WarUpgradeType type, WarRace race)
     }
 }
 
+WarUnitType getSpellCasterType(WarSpellType type)
+{
+    switch (type)
+    {
+        // spells
+        case WAR_SPELL_HEALING:
+        case WAR_SPELL_FAR_SIGHT:
+        case WAR_SPELL_INVISIBILITY:
+            return WAR_UNIT_CLERIC;
+
+        case WAR_SPELL_RAIN_OF_FIRE:
+        case WAR_SUMMON_SCORPION:
+        case WAR_SUMMON_WATER_ELEMENTAL:
+            return WAR_UNIT_CONJURER;
+
+        case WAR_SPELL_RAISE_DEAD:
+        case WAR_SPELL_DARK_VISION:
+        case WAR_SPELL_UNHOLY_ARMOR:
+            return WAR_UNIT_NECROLYTE;
+
+        case WAR_SPELL_POISON_CLOUD:
+        case WAR_SUMMON_SPIDER:
+        case WAR_SUMMON_DAEMON:
+            return WAR_UNIT_WARLOCK;
+
+        default:
+        {
+            logWarning("Trying to get spell caster of spell type: %d\n", type);
+            assert(false);
+            return WAR_UNIT_FOOTMAN;
+        }
+    }
+}
+
 vec2 getUnitSize(WarEntity* entity)
 {
     assert(isUnit(entity));

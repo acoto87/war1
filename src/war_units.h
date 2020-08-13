@@ -1228,6 +1228,7 @@ bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
 
 WarUnitType getUnitTypeProducer(WarUnitType type);
 WarUnitType getUpgradeTypeProducer(WarUpgradeType type, WarRace race);
+WarUnitType getSpellCasterType(WarSpellType type);
 
 vec2 getUnitSize(WarEntity* entity);
 vec2 getUnitFrameSize(WarEntity* entity);

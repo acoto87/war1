@@ -131,7 +131,9 @@ WarCommand* createSquadStopCommand(WarContext* context, WarPlayerInfo* player, W
     return command;
 }
 
-WarCommand* createGatherGoldCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId)
+WarCommand* createGatherGoldCommand(
+    WarContext* context, WarPlayerInfo* player,
+    WarUnitGroup unitGroup, WarEntityId targetEntityId)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_GATHER);
     command->gather.unitGroup = unitGroup;
@@ -140,7 +142,10 @@ WarCommand* createGatherGoldCommand(WarContext* context, WarPlayerInfo* player, 
     return command;
 }
 
-WarCommand* createGatherWoodCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId, vec2 targetTile)
+WarCommand* createGatherWoodCommand(
+    WarContext* context, WarPlayerInfo* player,
+    WarUnitGroup unitGroup, WarEntityId targetEntityId,
+    vec2 targetTile)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_GATHER);
     command->gather.unitGroup = unitGroup;
@@ -150,7 +155,9 @@ WarCommand* createGatherWoodCommand(WarContext* context, WarPlayerInfo* player, 
     return command;
 }
 
-WarCommand* createDeliverCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId)
+WarCommand* createDeliverCommand(
+    WarContext* context, WarPlayerInfo* player,
+    WarUnitGroup unitGroup, WarEntityId targetEntityId)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_DELIVER);
     command->deliver.unitGroup = unitGroup;
@@ -158,7 +165,9 @@ WarCommand* createDeliverCommand(WarContext* context, WarPlayerInfo* player, War
     return command;
 }
 
-WarCommand* createRepairCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId)
+WarCommand* createRepairCommand(
+    WarContext* context, WarPlayerInfo* player,
+    WarUnitGroup unitGroup, WarEntityId targetEntityId)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_REPAIR);
     command->repair.unitGroup = unitGroup;
@@ -166,21 +175,29 @@ WarCommand* createRepairCommand(WarContext* context, WarPlayerInfo* player, WarU
     return command;
 }
 
-WarCommand* createCastCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarSpellType spellType, vec2 position)
+WarCommand* createCastCommand(
+    WarContext* context, WarPlayerInfo* player,
+    WarUnitGroup unitGroup, WarSpellType spellType,
+    WarEntityId targetEntityId, vec2 position)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_CAST);
     command->cast.squadId = WAR_INVALID_SQUAD;
     command->cast.unitGroup = unitGroup;
     command->cast.spellType = spellType;
+    command->cast.targetEntityId = targetEntityId;
     command->cast.position = position;
     return command;
 }
 
-WarCommand* createSquadCastCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarSpellType spellType, vec2 position)
+WarCommand* createSquadCastCommand(
+    WarContext* context, WarPlayerInfo* player,
+    WarSquadId squadId, WarSpellType spellType,
+    WarEntityId targetEntityId, vec2 position)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_CAST);
     command->cast.squadId = squadId;
     command->cast.spellType = spellType;
+    command->cast.targetEntityId = targetEntityId;
     command->cast.position = position;
     return command;
 }
@@ -909,6 +926,62 @@ WarCommandStatus executeRepairCommand(WarContext* context, WarPlayerInfo* player
     return status;
 }
 
+WarCommandStatus executeCastCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarSquadId squadId = command->cast.squadId;
+    WarUnitGroup unitGroup = command->cast.unitGroup;
+    WarSpellType spellType = command->cast.spellType;
+    WarEntityId targetEntityId = command->cast.targetEntityId;
+    vec2 position = command->cast.position;
+
+    if (inRange(squadId, 0, MAX_SQUAD_COUNT))
+    {
+        unitGroup = createUnitGroupFromSquad(&player->squads[squadId]);
+    }
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    if (!targetEntityId && vec2IsZero(position))
+    {
+        return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
+    }
+
+    if (targetEntityId)
+    {
+        WarEntity* targetEntity = findEntity(context, targetEntityId);
+        if (!targetEntity || isDead(targetEntity) || isGoingToDie(targetEntity) || isCollapsing(targetEntity))
+        {
+            return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
+        }
+    }
+
+    WarUnitType casterType = getSpellCasterType(spellType);
+
+    WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+    for (s32 i = 0; i < unitGroup.count; i++)
+    {
+        WarEntityId unitId = unitGroup.unitIds[i];
+        WarEntity* unit = findEntity(context, unitId);
+        if (unit && isMagicUnit(unit) && isFriendlyUnit(context, unit) && unit->unit.type == casterType)
+        {
+            sendToCastState(context, unit, spellType, targetEntityId, position);
+
+            status = WAR_COMMAND_STATUS_DONE;
+        }
+    }
+
+    return status;
+}
+
 WarCommandStatus executeSquadCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
 {
     WarSquadId squadId = command->squad.squadId;
@@ -1016,7 +1089,7 @@ WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarC
         executeGatherCommand,       // WAR_COMMAND_GATHER,
         executeDeliverCommand,      // WAR_COMMAND_DELIVER,
         executeRepairCommand,       // WAR_COMMAND_REPAIR,
-        NULL,                       // WAR_COMMAND_CAST,
+        executeCastCommand,         // WAR_COMMAND_CAST,
         executeSquadCommand,        // WAR_COMMAND_SQUAD,
         executeWaitCommand,         // WAR_COMMAND_WAIT,
         executeSleepCommand,        // WAR_COMMAND_SLEEP,

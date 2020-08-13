@@ -21,8 +21,8 @@ WarCommand* createGatherGoldCommand(WarContext* context, WarPlayerInfo* player, 
 WarCommand* createGatherWoodCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId, vec2 targetTile);
 WarCommand* createDeliverCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId);
 WarCommand* createRepairCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId);
-WarCommand* createCastCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarSpellType spellType, vec2 position);
-WarCommand* createSquadCastCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarSpellType spellType, vec2 position);
+WarCommand* createCastCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarSpellType spellType, WarEntityId targetEntityId, vec2 position);
+WarCommand* createSquadCastCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarSpellType spellType, WarEntityId targetEntityId, vec2 position);
 WarCommand* createSquadCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarUnitGroup unitGroup);
 WarCommand* createWaitCommand(WarContext* context, WarPlayerInfo* player, WarCommandId commandId, WarResourceKind resource, s32 amount);
 WarCommand* createSleepCommand(WarContext* context, WarPlayerInfo* player, f32 time);

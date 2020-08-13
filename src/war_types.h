@@ -2106,6 +2106,7 @@ typedef struct _WarCommand
             WarSquadId squadId;
             WarUnitGroup unitGroup;
             WarSpellType spellType;
+            WarEntityId targetEntityId;
             vec2 position;
         } cast;
 
