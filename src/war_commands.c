@@ -536,8 +536,7 @@ WarCommandStatus executeMoveCommand(WarContext* context, WarPlayerInfo* player, 
             }
             else
             {
-                WarState* moveState = createMoveState(context, unit, 2, arrayArg(vec2, position, targetTile));
-                changeNextState(context, unit, moveState, true, true);
+                sendToMoveState(context, unit, 2, arrayArg(vec2, position, targetTile));
             }
         }
         else if (isKeyPressed(input, WAR_KEY_CTRL))
@@ -566,8 +565,7 @@ WarCommandStatus executeMoveCommand(WarContext* context, WarPlayerInfo* player, 
         }
         else
         {
-            WarState* moveState = createMoveState(context, unit, 2, arrayArg(vec2, position, targetTile));
-            changeNextState(context, unit, moveState, true, true);
+            sendToMoveState(context, unit, 2, arrayArg(vec2, position, targetTile));
         }
 
         status = WAR_COMMAND_STATUS_DONE;
