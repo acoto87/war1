@@ -241,8 +241,7 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
 
 //         if (isConjurerOrWarlockUnit(entity))
 //         {
-//             WarState* castState = createCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetTile);
-//             changeNextState(context, entity, castState, true, true);
+//             sendToCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetTile);
 //         }
 //     }
 // }
@@ -260,8 +259,7 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
 
 //         if (isConjurerOrWarlockUnit(entity))
 //         {
-//             WarState* castState = createCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetTile);
-//             changeNextState(context, entity, castState, true, true);
+//             sendToCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetTile);
 //         }
 //     }
 // }
@@ -284,8 +282,7 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
 //                 // the unit can't heal itself
 //                 if (entity->id != targetEntity->id)
 //                 {
-//                     WarState* castState = createCastState(context, entity, WAR_SPELL_HEALING, targetEntity->id, targetTile);
-//                     changeNextState(context, entity, castState, true, true);
+//                     sendToCastState(context, entity, WAR_SPELL_HEALING, targetEntity->id, targetTile);
 //                 }
 //             }
 //         }
@@ -307,8 +304,7 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
 
 //             if (isClericOrNecrolyteUnit(entity))
 //             {
-//                 WarState* castState = createCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetTile);
-//                 changeNextState(context, entity, castState, true, true);
+//                 sendToCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetTile);
 //             }
 //         }
 //     }
@@ -329,8 +325,7 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
 
 //             if (isClericOrNecrolyteUnit(entity))
 //             {
-//                 WarState* castState = createCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetTile);
-//                 changeNextState(context, entity, castState, true, true);
+//                 sendToCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetTile);
 //             }
 //         }
 //     }
@@ -349,8 +344,7 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
 
 //         if (isClericOrNecrolyteUnit(entity))
 //         {
-//             WarState* castState = createCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetTile);
-//             changeNextState(context, entity, castState, true, true);
+//             sendToCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetTile);
 //         }
 //     }
 // }
@@ -369,8 +363,7 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
 //         if (isClericOrNecrolyteUnit(entity))
 //         {
 //             WarSpellType spellType = isHumanUnit(entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
-//             WarState* castState = createCastState(context, entity, spellType, 0, targetTile);
-//             changeNextState(context, entity, castState, true, true);
+//             sendToCastState(context, entity, spellType, 0, targetTile);
 //         }
 //     }
 // }

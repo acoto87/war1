@@ -119,7 +119,7 @@ void sendToUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType u
 void sendToBuildState(WarContext* context, WarEntity* entity, f32 buildTime);
 void sendToRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
 void sendToRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
-// void sendToCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile);
+void sendToCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile);
 
 void enterState(WarContext* context, WarEntity* entity, WarState* state);
 void leaveState(WarContext* context, WarEntity* entity, WarState* state);

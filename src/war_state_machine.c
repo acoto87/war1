@@ -199,6 +199,12 @@ void sendToRepairingState(WarContext* context, WarEntity* entity, WarEntityId bu
     changeNextState(context, entity, repairingState, true, true);
 }
 
+void sendToCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile)
+{
+    WarState* castState = createCastState(context, entity, spellType, targetEntityId, targetTile);
+    changeNextState(context, entity, castState, true, true);
+}
+
 void enterState(WarContext* context, WarEntity* entity, WarState* state)
 {
     if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
