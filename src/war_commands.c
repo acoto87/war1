@@ -51,7 +51,7 @@ WarCommand* createUpgradeCommand(WarContext* context, WarPlayerInfo* player, War
 WarCommand* createMoveCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, vec2 position)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_MOVE);
-    command->move.squadId = -1;
+    command->move.squadId = WAR_INVALID_SQUAD;
     command->move.unitGroup = unitGroup;
     command->move.position = position;
     return command;
@@ -68,7 +68,7 @@ WarCommand* createSquadMoveCommand(WarContext* context, WarPlayerInfo* player, W
 WarCommand* createFollowCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_FOLLOW);
-    command->follow.squadId = -1;
+    command->follow.squadId = WAR_INVALID_SQUAD;
     command->follow.unitGroup = unitGroup;
     command->follow.targetEntityId = targetEntityId;
     return command;
@@ -85,6 +85,7 @@ WarCommand* createSquadFollowCommand(WarContext* context, WarPlayerInfo* player,
 WarCommand* createAttackEnemyCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarEntityId targetEntityId)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_ATTACK);
+    command->attack.squadId = WAR_INVALID_SQUAD;
     command->attack.unitGroup = unitGroup;
     command->attack.targetEntityId = targetEntityId;
     return command;
@@ -93,6 +94,7 @@ WarCommand* createAttackEnemyCommand(WarContext* context, WarPlayerInfo* player,
 WarCommand* createAttackPositionCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, vec2 position)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_ATTACK);
+    command->attack.squadId = WAR_INVALID_SQUAD;
     command->attack.unitGroup = unitGroup;
     command->attack.position = position;
     return command;
@@ -117,6 +119,7 @@ WarCommand* createSquadAttackPositionCommand(WarContext* context, WarPlayerInfo*
 WarCommand* createStopCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_STOP);
+    command->stop.squadId = WAR_INVALID_SQUAD;
     command->stop.unitGroup = unitGroup;
     return command;
 }
@@ -166,6 +169,7 @@ WarCommand* createRepairCommand(WarContext* context, WarPlayerInfo* player, WarU
 WarCommand* createCastCommand(WarContext* context, WarPlayerInfo* player, WarUnitGroup unitGroup, WarSpellType spellType, vec2 position)
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_CAST);
+    command->cast.squadId = WAR_INVALID_SQUAD;
     command->cast.unitGroup = unitGroup;
     command->cast.spellType = spellType;
     command->cast.position = position;
@@ -208,6 +212,13 @@ WarCommand* createSleepCommand(WarContext* context, WarPlayerInfo* player, f32 t
 {
     WarCommand* command = createCommand(context, player, WAR_COMMAND_SLEEP);
     command->sleep.time = time;
+    return command;
+}
+
+WarCommand* createCancelCommand(WarContext* context, WarPlayerInfo* player, WarEntityId targetEntityId)
+{
+    WarCommand* command = createCommand(context, player, WAR_COMMAND_CANCEL);
+    command->cancel.targetEntityId = targetEntityId;
     return command;
 }
 
@@ -256,7 +267,7 @@ WarCommandStatus executeTrainCommand(WarContext* context, WarPlayerInfo* player,
         return WAR_COMMAND_STATUS_NOT_ENOUGH_FOOD;
     }
 
-    WarBuildingStats stats = getBuildingStats(unitType);
+    WarUnitStats stats = getUnitStats(unitType);
     if (!enoughPlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost))
     {
         return WAR_COMMAND_STATUS_NOT_ENOUGH_GOLD;
@@ -315,7 +326,7 @@ WarCommandStatus executeBuildCommand(WarContext* context, WarPlayerInfo* player,
         return WAR_COMMAND_STATUS_INVALID_POSITION;
     }
 
-    WarUnitStats stats = getUnitStats(unitType);
+    WarBuildingStats stats = getBuildingStats(unitType);
     if (!enoughPlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost))
     {
         return WAR_COMMAND_STATUS_NOT_ENOUGH_GOLD;
@@ -643,7 +654,7 @@ WarCommandStatus executeAttackCommand(WarContext* context, WarPlayerInfo* player
         return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
     }
 
-    if (!targetEntityId || vec2IsZero(targetTile))
+    if (!targetEntityId && vec2IsZero(targetTile))
     {
         return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
     }
@@ -946,6 +957,63 @@ WarCommandStatus executeSleepCommand(WarContext* context, WarPlayerInfo* player,
     return WAR_COMMAND_STATUS_DONE;
 }
 
+WarCommandStatus executeCancelCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarEntityId targetEntityId = command->cancel.targetEntityId;
+    if (!targetEntityId)
+    {
+        return WAR_COMMAND_STATUS_INVALID_CANCEL_TARGET;
+    }
+
+    WarEntity* targetEntity = findEntity(context, targetEntityId);
+    if (!targetEntity || !isBuildingUnit(targetEntity))
+    {
+        return WAR_COMMAND_STATUS_INVALID_CANCEL_TARGET;
+    }
+
+    if (isBuilding(targetEntity) || isGoingToBuild(targetEntity))
+    {
+        WarBuildingStats stats = getBuildingStats(targetEntity->unit.type);
+
+        increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
+        increasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
+
+        WarState* collapseState = createCollapseState(context, targetEntity);
+        changeNextState(context, targetEntity, collapseState, true, true);
+    }
+
+    if (isTraining(targetEntity) || isGoingToTrain(targetEntity))
+    {
+        WarState* trainState = getTrainState(targetEntity);
+        WarUnitType unitToBuild = trainState->train.unitToBuild;
+
+        WarUnitStats stats = getUnitStats(unitToBuild);
+
+        increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
+        increasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
+
+        WarState* idleState = createIdleState(context, targetEntity, false);
+        changeNextState(context, targetEntity, idleState, true, true);
+    }
+
+    if (isUpgrading(targetEntity) || isGoingToUpgrade(targetEntity))
+    {
+        WarState* upgradeState = getUpgradeState(targetEntity);
+        WarUpgradeType upgradeToBuild = upgradeState->upgrade.upgradeToBuild;
+        assert(hasRemainingUpgrade(player, upgradeToBuild));
+
+        s32 upgradeLevel = getUpgradeLevel(player, upgradeToBuild);
+        WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
+
+        increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]);
+
+        WarState* idleState = createIdleState(context, targetEntity, false);
+        changeNextState(context, targetEntity, idleState, true, true);
+    }
+
+    return WAR_COMMAND_STATUS_DONE;
+}
+
 WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
 {
     static WarExecuteFunc executeFuncs[WAR_COMMAND_COUNT] =
@@ -957,15 +1025,17 @@ WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarC
         executeBuildRoadCommand,    // WAR_COMMAND_BUILD_ROAD,
         executeUpgradeCommand,      // WAR_COMMAND_UPGRADE,
         executeMoveCommand,         // WAR_COMMAND_MOVE,
+        executeFollowCommand,       // WAR_COMMAND_FOLLOW,
         executeAttackCommand,       // WAR_COMMAND_ATTACK,
         executeStopCommand,         // WAR_COMMAND_STOP
         executeGatherCommand,       // WAR_COMMAND_GATHER,
         executeDeliverCommand,      // WAR_COMMAND_DELIVER,
         executeRepairCommand,       // WAR_COMMAND_REPAIR,
-        NULL,         // WAR_COMMAND_CAST,
+        NULL,                       // WAR_COMMAND_CAST,
         executeSquadCommand,        // WAR_COMMAND_SQUAD,
         executeWaitCommand,         // WAR_COMMAND_WAIT,
         executeSleepCommand,        // WAR_COMMAND_SLEEP,
+        executeCancelCommand,       // WAR_COMMAND_CANCEL
     };
 
     WarExecuteFunc executeFunc = executeFuncs[(s32)command->type];

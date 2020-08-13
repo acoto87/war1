@@ -191,7 +191,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Make a convenient function getSelectedUnitIds to use in executeUICommand
 * [x] Make macro INVALID_ENTITY, or NO_ENTITY that maps to WarEntityId = 0
 * [ ] What happens when selecting various units to attack and some of those units can't attack (like peasants) do they move to the target instead? or do they stay?
-* [ ] War_units.h only with function prototypes, implementations to war_units.c
+* [x] War_units.h only with function prototypes, implementations to war_units.c
 
 ## Gameplay
 

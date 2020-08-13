@@ -1937,6 +1937,8 @@ typedef struct
 
 typedef s16 WarSquadId;
 
+#define WAR_INVALID_SQUAD -1
+
 typedef struct
 {
     WarSquadId id;
@@ -1971,6 +1973,7 @@ typedef enum
     WAR_COMMAND_SQUAD,
     WAR_COMMAND_WAIT,               // wait for buildings, units, resources
     WAR_COMMAND_SLEEP,              // sleep for some time
+    WAR_COMMAND_CANCEL,
 
     WAR_COMMAND_COUNT
 } WarCommandType;
@@ -1998,6 +2001,7 @@ typedef enum
     WAR_COMMAND_STATUS_INVALID_MOVE_TARGET,
     WAR_COMMAND_STATUS_INVALID_FOLLOW_TARGET,
     WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET,
+    WAR_COMMAND_STATUS_INVALID_CANCEL_TARGET,
 
     WAR_COMMAND_STATUS_PRODUCER_NOT_READY,
     WAR_COMMAND_STATUS_PRODUCER_BUSY,
@@ -2122,6 +2126,11 @@ typedef struct _WarCommand
         {
             f32 time;
         } sleep;
+
+        struct
+        {
+            WarEntityId targetEntityId;
+        } cancel;
     };
 } WarCommand;
 

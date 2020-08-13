@@ -26,5 +26,6 @@ WarCommand* createSquadCastCommand(WarContext* context, WarPlayerInfo* player, W
 WarCommand* createSquadCommand(WarContext* context, WarPlayerInfo* player, WarSquadId squadId, WarUnitGroup unitGroup);
 WarCommand* createWaitCommand(WarContext* context, WarPlayerInfo* player, WarCommandId commandId, WarResourceKind resource, s32 amount);
 WarCommand* createSleepCommand(WarContext* context, WarPlayerInfo* player, f32 time);
+WarCommand* createCancelCommand(WarContext* context, WarPlayerInfo* player, WarEntityId targetEntityId);
 
 WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command);

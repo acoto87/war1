@@ -1402,9 +1402,13 @@ void updateCommandFromRightClick(WarContext* context)
                         if (isGoldmineUnit(targetEntity))
                         {
                             if (!isUnitUnknown(map, targetEntity))
+                            {
                                 executeGatherUICommand(context, targetEntity, targetTile);
+                            }
                             else
+                            {
                                 executeMoveUICommand(context, targetTile);
+                            }
                         }
                         else if (isForest(targetEntity))
                         {
@@ -1472,7 +1476,6 @@ void updateCommandFromRightClick(WarContext* context)
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
-
                     executeMoveUICommand(context, targetTile);
                 }
             }

@@ -1127,47 +1127,17 @@ void cancel(WarContext* context, WarEntity* entity)
     {
         WarEntityId selectedEntityId = map->selectedEntities.items[i];
         WarEntity* selectedEntity = findEntity(context, selectedEntityId);
-
-        if (isBuildingUnit(selectedEntity))
+        if (selectedEntity)
         {
-            if (isBuilding(selectedEntity) || isGoingToBuild(selectedEntity))
+            bool playCollapsedSound = isBuildingUnit(selectedEntity) && (isBuilding(selectedEntity) || isGoingToBuild(selectedEntity));
+
+            WarCommand* command = createCancelCommand(context, player, selectedEntityId);
+            WarCommandStatus status = executeCommand(context, player, command);
+            commandFree(command);
+
+            if (status < WAR_COMMAND_STATUS_FAILED && playCollapsedSound)
             {
-                WarBuildingStats stats = getBuildingStats(selectedEntity->unit.type);
-
-                increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
-                increasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
-
-                WarState* collapseState = createCollapseState(context, selectedEntity);
-                changeNextState(context, selectedEntity, collapseState, true, true);
-
                 createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
-            }
-            else if (selectedEntity->unit.building)
-            {
-                if (isTraining(selectedEntity) || isGoingToTrain(selectedEntity))
-                {
-                    WarState* trainState = getTrainState(selectedEntity);
-                    WarUnitType unitToBuild = trainState->train.unitToBuild;
-
-                    WarUnitStats stats = getUnitStats(unitToBuild);
-
-                    increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost);
-                    increasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
-                }
-                else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
-                {
-                    WarState* upgradeState = getUpgradeState(selectedEntity);
-                    WarUpgradeType upgradeToBuild = upgradeState->upgrade.upgradeToBuild;
-                    assert(hasRemainingUpgrade(player, upgradeToBuild));
-
-                    s32 upgradeLevel = getUpgradeLevel(player, upgradeToBuild);
-                    WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
-
-                    increasePlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost[upgradeLevel]);
-                }
-
-                WarState* idleState = createIdleState(context, entity, false);
-                changeNextState(context, selectedEntity, idleState, true, true);
             }
         }
     }
