@@ -559,8 +559,7 @@ WarCommandStatus executeMoveCommand(WarContext* context, WarPlayerInfo* player, 
             }
             else
             {
-                WarState* patrolState = createPatrolState(context, unit, 2, arrayArg(vec2, position, targetTile));
-                changeNextState(context, unit, patrolState, true, true);
+                sendToPatrolState(context, unit, 2, arrayArg(vec2, position, targetTile));
             }
         }
         else
@@ -619,8 +618,7 @@ WarCommandStatus executeFollowCommand(WarContext* context, WarPlayerInfo* player
         if (!isFriendlyUnit(context, unit))
             continue;
 
-        WarState* followState = createFollowState(context, unit, targetEntity->id, VEC2_ZERO, 1);
-        changeNextState(context, unit, followState, true, true);
+        sendToFollowState(context, unit, targetEntity->id, VEC2_ZERO, 1);
 
         status = WAR_COMMAND_STATUS_DONE;
     }
@@ -683,8 +681,7 @@ WarCommandStatus executeAttackCommand(WarContext* context, WarPlayerInfo* player
                     {
                         if (canAttack(context, unit, targetEntity))
                         {
-                            WarState* attackState = createAttackState(context, unit, targetEntity->id, targetTile);
-                            changeNextState(context, unit, attackState, true, true);
+                            sendToAttackState(context, unit, targetEntity->id, targetTile);
 
                             status = WAR_COMMAND_STATUS_DONE;
                         }
@@ -692,8 +689,7 @@ WarCommandStatus executeAttackCommand(WarContext* context, WarPlayerInfo* player
                 }
                 else
                 {
-                    WarState* attackState = createAttackState(context, unit, 0, targetTile);
-                    changeNextState(context, unit, attackState, true, true);
+                    sendToAttackState(context, unit, 0, targetTile);
 
                     status = WAR_COMMAND_STATUS_DONE;
                 }

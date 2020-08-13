@@ -2164,8 +2164,7 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
         {
             vec2 position = getUnitCenterPosition(entity, false);
 
-            WarState* deathState = createDeathState(context, entity);
-            changeNextState(context, entity, deathState, true, true);
+            sendToDeathState(context, entity);
 
             if (entity->unit.type == WAR_UNIT_SCORPION ||
                 entity->unit.type == WAR_UNIT_SPIDER)

@@ -37,9 +37,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
                                        WAR_RESOURCE_NONE, 0, true);
 
         setUnitDirection(corpse, getUnitDirection(entity));
-
-        WarState* deathState = createDeathState(context, corpse);
-        changeNextState(context, corpse, deathState, true, true);
+        sendToDeathState(context, corpse);
     }
 
     removeEntityById(context, entity->id);
