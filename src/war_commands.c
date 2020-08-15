@@ -262,7 +262,7 @@ WarCommandStatus executeTrainCommand(WarContext* context, WarPlayerInfo* player,
 
     WarUnitType producerType = getUnitTypeProducer(unitType);
     WarEntity* producer = findEntity(context, producerId);
-    if (!producer || !isBuildingUnit(producer) || isCollapsing(producer) ||
+    if (!producer || !isBuildingUnit(producer) || isCollapsedUnit(producer) ||
         producer->unit.type != producerType)
     {
         return WAR_COMMAND_STATUS_INVALID_PRODUCER;
@@ -326,8 +326,7 @@ WarCommandStatus executeBuildCommand(WarContext* context, WarPlayerInfo* player,
     }
 
     WarEntity* worker = findEntity(context, workerId);
-    if (!worker || !isWorkerUnit(worker) ||
-        isDead(worker) || isGoingToDie(worker))
+    if (!worker || !isWorkerUnit(worker) || isDeadUnit(worker))
     {
         return WAR_COMMAND_STATUS_INVALID_WORKER;
     }
@@ -451,7 +450,7 @@ WarCommandStatus executeUpgradeCommand(WarContext* context, WarPlayerInfo* playe
 
     WarUnitType producerType = getUpgradeTypeProducer(upgradeType, player->race);
     WarEntity* producer = findEntity(context, producerId);
-    if (!producer || !isBuildingUnit(producer) || isCollapsing(producer) ||
+    if (!producer || !isBuildingUnit(producer) || isCollapsedUnit(producer) ||
         producer->unit.type != producerType)
     {
         return WAR_COMMAND_STATUS_INVALID_PRODUCER;
@@ -522,7 +521,7 @@ WarCommandStatus executeMoveCommand(WarContext* context, WarPlayerInfo* player, 
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (!unit || !isDudeUnit(unit) || isDead(unit) || isGoingToDie(unit))
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit))
             continue;
 
         if (!isFriendlyUnit(context, unit))
@@ -626,7 +625,7 @@ WarCommandStatus executeFollowCommand(WarContext* context, WarPlayerInfo* player
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (!unit || !isDudeUnit(unit) || isDead(unit) || isGoingToDie(unit))
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit))
             continue;
 
         if (!isFriendlyUnit(context, unit))
@@ -672,7 +671,7 @@ WarCommandStatus executeAttackCommand(WarContext* context, WarPlayerInfo* player
     if (targetEntityId)
     {
         targetEntity = findEntity(context, targetEntityId);
-        if (!targetEntity || isDead(targetEntity) || isGoingToDie(targetEntity) || isCollapsing(targetEntity))
+        if (!targetEntity || !isUnit(targetEntity) || isDeadUnit(targetEntity) || isCollapsedUnit(targetEntity))
         {
             return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
         }
@@ -684,7 +683,7 @@ WarCommandStatus executeAttackCommand(WarContext* context, WarPlayerInfo* player
     {
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
-        if (unit && isDudeUnit(unit) && !isDead(unit) && !isGoingToDie(unit))
+        if (unit && isDudeUnit(unit) && !isDeadUnit(unit))
         {
             if (isFriendlyUnit(context, unit))
             {
@@ -742,15 +741,12 @@ WarCommandStatus executeStopCommand(WarContext* context, WarPlayerInfo* player, 
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (!unit || !isDudeUnit(unit) || isDead(unit) || isGoingToDie(unit))
-            continue;
+        if (unit && isDudeUnit(unit) && isFriendlyUnit(context, unit) && !isDeadUnit(unit))
+        {
+            sendToIdleState(context, unit, true);
 
-        if (!isFriendlyUnit(context, unit))
-            continue;
-
-        sendToIdleState(context, unit, true);
-
-        status = WAR_COMMAND_STATUS_DONE;
+            status = WAR_COMMAND_STATUS_DONE;
+        }
     }
 
     return status;
@@ -783,7 +779,7 @@ WarCommandStatus executeGatherCommand(WarContext* context, WarPlayerInfo* player
             }
 
             WarEntity* goldmine = findEntity(context, targetEntityId);
-            if (!goldmine || !isGoldmineUnit(goldmine) || isCollapsing(goldmine))
+            if (!goldmine || !isGoldmineUnit(goldmine) || isCollapsedUnit(goldmine))
             {
                 return WAR_COMMAND_STATUS_INVALID_GOLDMINE;
             }
@@ -949,15 +945,10 @@ WarCommandStatus executeCastCommand(WarContext* context, WarPlayerInfo* player, 
         return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
     }
 
-    if (!targetEntityId && vec2IsZero(position))
-    {
-        return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
-    }
-
     if (targetEntityId)
     {
         WarEntity* targetEntity = findEntity(context, targetEntityId);
-        if (!targetEntity || isDead(targetEntity) || isGoingToDie(targetEntity) || isCollapsing(targetEntity))
+        if (!targetEntity || isDeadUnit(targetEntity) || isCollapsedUnit(targetEntity))
         {
             return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
         }
@@ -971,7 +962,8 @@ WarCommandStatus executeCastCommand(WarContext* context, WarPlayerInfo* player, 
     {
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
-        if (unit && isMagicUnit(unit) && isFriendlyUnit(context, unit) && unit->unit.type == casterType)
+        if (unit && isMagicUnit(unit) && isFriendlyUnit(context, unit) &&
+            isUnitOfType(unit, casterType) && !isDeadUnit(unit))
         {
             sendToCastState(context, unit, spellType, targetEntityId, position);
 

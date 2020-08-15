@@ -240,6 +240,37 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 break;
             }
 
+            case WAR_SUMMON_SPIDER:
+            case WAR_SUMMON_SCORPION:
+            case WAR_SUMMON_DAEMON:
+            case WAR_SUMMON_WATER_ELEMENTAL:
+            {
+                WarSpellMapping spellMapping = getSpellMapping(spellType);
+                WarUnitType unitTypeToSummon = spellMapping.mappedType;
+
+                while (decreaseUnitMana(context, entity, stats.manaCost))
+                {
+                    vec2 position = getUnitCenterPosition(entity, true);
+                    vec2 spawnPosition = findEmptyPosition(map->finder, position);
+
+                    WarEntity* summonedUnit = createUnit(
+                        context, unitTypeToSummon,
+                        spawnPosition.x, spawnPosition.y,
+                        unit->player, WAR_RESOURCE_NONE,
+                        0, true);
+
+                    vec2 unitSize = getUnitSize(summonedUnit);
+                    setStaticEntity(map->finder, spawnPosition.x, spawnPosition.y, unitSize.x, unitSize.y, summonedUnit->id);
+
+                    WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                    createSpellAnimation(context, animEntity, vec2TileToMapCoordinates(spawnPosition, true));
+
+                    createAudio(context, WAR_NORMAL_SPELL, false);
+                }
+
+                break;
+            }
+
             default:
             {
                 logWarning("Trying to cast wrong spell: %d\n", spellType);

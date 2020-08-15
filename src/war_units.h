@@ -748,16 +748,16 @@ const WarSpellStats spellStats[] =
 typedef struct
 {
     WarSpellType type;
-    s32 mappedType;
+    WarUnitType mappedType;
 } WarSpellMapping;
 
 const WarSpellMapping spellMappings[] =
 {
     // summon
-    { WAR_SUMMON_SPIDER,            WAR_UNIT_SPIDER             },
-    { WAR_SUMMON_SCORPION,          WAR_UNIT_SCORPION           },
-    { WAR_SUMMON_DAEMON,            WAR_UNIT_DAEMON             },
-    { WAR_SUMMON_WATER_ELEMENTAL,   WAR_UNIT_WATER_ELEMENTAL    },
+    { WAR_SUMMON_SPIDER,            WAR_UNIT_SPIDER          },
+    { WAR_SUMMON_SCORPION,          WAR_UNIT_SCORPION        },
+    { WAR_SUMMON_DAEMON,            WAR_UNIT_DAEMON          },
+    { WAR_SUMMON_WATER_ELEMENTAL,   WAR_UNIT_WATER_ELEMENTAL },
 };
 
 typedef struct
@@ -1218,6 +1218,9 @@ WarUnitType getTownHallOfRace(WarRace race);
 #define isHumanUnit(entity) (getUnitRace(entity) == WAR_RACE_HUMANS)
 #define isOrcUnit(entity) (getUnitRace(entity) == WAR_RACE_ORCS)
 #define isNeutralUnit(entity) (getUnitRace(entity) == WAR_RACE_NEUTRAL)
+
+#define isDeadUnit(entity) (isDead(entity) || isGoingToDie(entity))
+#define isCollapsedUnit(entity) (isCollapsing(entity) || isGoingToCollapse(entity))
 
 WarProjectileType getProjectileType(WarUnitType type);
 

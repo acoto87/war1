@@ -13,7 +13,7 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
     WarEntity* building = findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
-    if (!building || isCollapsing(building) || isGoingToCollapse(building))
+    if (!building || !isBuildingUnit(building) || isCollapsedUnit(building))
     {
         sendToIdleState(context, entity, true);
         return;
@@ -71,7 +71,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     WarEntity* building = findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
-    if (!building || isCollapsing(building) || isGoingToCollapse(building))
+    if (!building || !isBuildingUnit(building) || isCollapsedUnit(building))
     {
         if (state->repairing.insideBuilding)
         {

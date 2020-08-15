@@ -10,7 +10,7 @@ void executeGatherUICommand(WarContext* context, WarEntity* targetEntity, vec2 t
 void executeDeliverUICommand(WarContext* context, WarEntity* targetEntity);
 void executeRepairUICommand(WarContext* context, WarEntity* targetEntity);
 
-void executeSummonUICommand(WarContext* context, WarUICommandType summonType);
+void executeSummonUICommand(WarContext* context, WarSpellType spellType);
 void executeRainOfFireUICommand(WarContext* context, vec2 targetTile);
 void executePoisonCloudUICommand(WarContext* context, vec2 targetTile);
 void executeHealingUICommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile);

@@ -177,196 +177,19 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
     }
 }
 
-// void executeSummonCommand(WarContext* context, WarUICommandType summonType)
-// {
-//     WarMap* map = context->map;
+void executeSpellUICommand(WarContext* context, WarSpellType spellType, WarEntity* targetEntity, vec2 targetTile)
+{
+    WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
 
-//     bool casted = false;
+    WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
 
-//     s32 selEntitiesCount = map->selectedEntities.count;
-//     for(s32 i = 0; i < selEntitiesCount; i++)
-//     {
-//         WarEntityId entityId = map->selectedEntities.items[i];
-//         WarEntity* entity = findEntity(context, entityId);
-//         assert(entity);
+    WarEntityId targetEntityId = targetEntity ? targetEntity->id : NO_ENTITY;
 
-//         if (isConjurerOrWarlockUnit(entity))
-//         {
-//             WarUnitComponent* unit = &entity->unit;
-
-//             // when the unit summon another unit, it is not invisible anymore
-//             unit->invisible = false;
-//             unit->invisibilityTime = 0;
-
-//             WarUICommandMapping commandMapping = getCommandMapping(summonType);
-//             WarSpellMapping spellMapping = getSpellMapping(commandMapping.mappedType);
-//             WarSpellStats stats = getSpellStats(commandMapping.mappedType);
-
-//             while (decreaseUnitMana(context, entity, stats.manaCost))
-//             {
-//                 vec2 position = getUnitCenterPosition(entity, true);
-//                 vec2 spawnPosition = findEmptyPosition(map->finder, position);
-
-//                 WarEntity* summonedUnit = createUnit(context, spellMapping.mappedType,
-//                                                      spawnPosition.x, spawnPosition.y,
-//                                                      unit->player, WAR_RESOURCE_NONE, 0, true);
-
-//                 vec2 unitSize = getUnitSize(summonedUnit);
-//                 setStaticEntity(map->finder, spawnPosition.x, spawnPosition.y, unitSize.x, unitSize.y, summonedUnit->id);
-
-//                 WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-//                 createSpellAnimation(context, animEntity, vec2TileToMapCoordinates(spawnPosition, true));
-
-//                 casted = true;
-//             }
-//         }
-//     }
-
-//     if (casted)
-//     {
-//         createAudio(context, WAR_NORMAL_SPELL, false);
-//     }
-// }
-
-// void executeRainOfFireCommand(WarContext* context, vec2 targetTile)
-// {
-//     WarMap* map = context->map;
-
-//     s32 selEntitiesCount = map->selectedEntities.count;
-//     for(s32 i = 0; i < selEntitiesCount; i++)
-//     {
-//         WarEntityId entityId = map->selectedEntities.items[i];
-//         WarEntity* entity = findEntity(context, entityId);
-//         assert(entity);
-
-//         if (isConjurerOrWarlockUnit(entity))
-//         {
-//             sendToCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetTile);
-//         }
-//     }
-// }
-
-// void executePoisonCloudCommand(WarContext* context, vec2 targetTile)
-// {
-//     WarMap* map = context->map;
-
-//     s32 selEntitiesCount = map->selectedEntities.count;
-//     for(s32 i = 0; i < selEntitiesCount; i++)
-//     {
-//         WarEntityId entityId = map->selectedEntities.items[i];
-//         WarEntity* entity = findEntity(context, entityId);
-//         assert(entity);
-
-//         if (isConjurerOrWarlockUnit(entity))
-//         {
-//             sendToCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetTile);
-//         }
-//     }
-// }
-
-// void executeHealingCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
-// {
-//     WarMap* map = context->map;
-
-//     if (targetEntity && isDudeUnit(targetEntity))
-//     {
-//         s32 selEntitiesCount = map->selectedEntities.count;
-//         for(s32 i = 0; i < selEntitiesCount; i++)
-//         {
-//             WarEntityId entityId = map->selectedEntities.items[i];
-//             WarEntity* entity = findEntity(context, entityId);
-//             assert(entity);
-
-//             if (isClericOrNecrolyteUnit(entity))
-//             {
-//                 // the unit can't heal itself
-//                 if (entity->id != targetEntity->id)
-//                 {
-//                     sendToCastState(context, entity, WAR_SPELL_HEALING, targetEntity->id, targetTile);
-//                 }
-//             }
-//         }
-//     }
-// }
-
-// void executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
-// {
-//     WarMap* map = context->map;
-
-//     if (targetEntity && isDudeUnit(targetEntity))
-//     {
-//         s32 selEntitiesCount = map->selectedEntities.count;
-//         for(s32 i = 0; i < selEntitiesCount; i++)
-//         {
-//             WarEntityId entityId = map->selectedEntities.items[i];
-//             WarEntity* entity = findEntity(context, entityId);
-//             assert(entity);
-
-//             if (isClericOrNecrolyteUnit(entity))
-//             {
-//                 sendToCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetTile);
-//             }
-//         }
-//     }
-// }
-
-// void executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
-// {
-//     WarMap* map = context->map;
-
-//     if (targetEntity && isDudeUnit(targetEntity))
-//     {
-//         s32 selEntitiesCount = map->selectedEntities.count;
-//         for(s32 i = 0; i < selEntitiesCount; i++)
-//         {
-//             WarEntityId entityId = map->selectedEntities.items[i];
-//             WarEntity* entity = findEntity(context, entityId);
-//             assert(entity);
-
-//             if (isClericOrNecrolyteUnit(entity))
-//             {
-//                 sendToCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetTile);
-//             }
-//         }
-//     }
-// }
-
-// void executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
-// {
-//     WarMap* map = context->map;
-
-//     s32 selEntitiesCount = map->selectedEntities.count;
-//     for(s32 i = 0; i < selEntitiesCount; i++)
-//     {
-//         WarEntityId entityId = map->selectedEntities.items[i];
-//         WarEntity* entity = findEntity(context, entityId);
-//         assert(entity);
-
-//         if (isClericOrNecrolyteUnit(entity))
-//         {
-//             sendToCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetTile);
-//         }
-//     }
-// }
-
-// void executeSightCommand(WarContext* context, vec2 targetTile)
-// {
-//     WarMap* map = context->map;
-
-//     s32 selEntitiesCount = map->selectedEntities.count;
-//     for(s32 i = 0; i < selEntitiesCount; i++)
-//     {
-//         WarEntityId entityId = map->selectedEntities.items[i];
-//         WarEntity* entity = findEntity(context, entityId);
-//         assert(entity);
-
-//         if (isClericOrNecrolyteUnit(entity))
-//         {
-//             WarSpellType spellType = isHumanUnit(entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
-//             sendToCastState(context, entity, spellType, 0, targetTile);
-//         }
-//     }
-// }
+    WarCommand* command = createCastCommand(context, player, unitGroup, spellType, targetEntityId, targetTile);
+    WarCommandStatus status = executeCommand(context, player, command);
+    commandFree(command);
+}
 
 bool executeUICommand(WarContext* context)
 {
@@ -728,180 +551,61 @@ bool executeUICommand(WarContext* context)
             }
         }
 
-        // case WAR_UI_COMMAND_SUMMON_SPIDER:
-        // case WAR_UI_COMMAND_SUMMON_SCORPION:
-        // case WAR_UI_COMMAND_SUMMON_DAEMON:
-        // case WAR_UI_COMMAND_SUMMON_WATER_ELEMENTAL:
-        // {
-        //     executeSummonCommand(context, command->type);
+        case WAR_UI_COMMAND_SUMMON_SPIDER:
+        case WAR_UI_COMMAND_SUMMON_SCORPION:
+        case WAR_UI_COMMAND_SUMMON_DAEMON:
+        case WAR_UI_COMMAND_SUMMON_WATER_ELEMENTAL:
+        {
+            WarUICommandMapping uiCommandMapping = getCommandMapping(uiCommand->type);
+            WarSpellType spellType = (WarSpellType)uiCommandMapping.mappedType;
+            executeSpellUICommand(context, spellType, NULL, VEC2_ZERO);
 
-        //     command->type = WAR_UI_COMMAND_NONE;
-        //     return true;
-        // }
+            uiCommand->type = WAR_UI_COMMAND_NONE;
+            return true;
+        }
 
-        // case WAR_UI_COMMAND_SPELL_RAIN_OF_FIRE:
-        // {
-        //     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-        //     {
-        //         if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-        //             vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+        case WAR_UI_COMMAND_SPELL_RAIN_OF_FIRE:
+        case WAR_UI_COMMAND_SPELL_POISON_CLOUD:
+        case WAR_UI_COMMAND_SPELL_HEALING:
+        case WAR_UI_COMMAND_SPELL_INVISIBILITY:
+        case WAR_UI_COMMAND_SPELL_UNHOLY_ARMOR:
+        case WAR_UI_COMMAND_SPELL_RAISE_DEAD:
+        case WAR_UI_COMMAND_SPELL_FAR_SIGHT:
+        case WAR_UI_COMMAND_SPELL_DARK_VISION:
+        {
+            if (!wasButtonPressed(input, WAR_MOUSE_LEFT))
+            {
+                return false;
+            }
 
-        //             executeRainOfFireCommand(context, targetTile);
+            if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            {
+                vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
+                vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //         else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
-        //             executeRainOfFireCommand(context, targetTile);
+                WarEntity* targetEntity = findEntityAt(context, targetTile);
 
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //     }
+                WarUICommandMapping uiCommandMapping = getCommandMapping(uiCommand->type);
+                WarSpellType spellType = (WarSpellType)uiCommandMapping.mappedType;
+                executeSpellUICommand(context, spellType, targetEntity, targetTile);
 
-        //     return false;
-        // }
+                uiCommand->type = WAR_UI_COMMAND_NONE;
+                return true;
+            }
+            else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+            {
+                vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
 
-        // case WAR_UI_COMMAND_SPELL_POISON_CLOUD:
-        // {
-        //     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-        //     {
-        //         if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-        //             vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+                WarUICommandMapping uiCommandMapping = getCommandMapping(uiCommand->type);
+                WarSpellType spellType = (WarSpellType)uiCommandMapping.mappedType;
+                executeSpellUICommand(context, spellType, NULL, targetTile);
 
-        //             executePoisonCloudCommand(context, targetTile);
+                uiCommand->type = WAR_UI_COMMAND_NONE;
+                return true;
+            }
 
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //         else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
-        //             executePoisonCloudCommand(context, targetTile);
-
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //     }
-
-        //     return false;
-        // }
-
-        // case WAR_UI_COMMAND_SPELL_HEALING:
-        // {
-        //     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-        //     {
-        //         if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-        //             vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-        //             WarEntity* targetEntity = findEntityAt(context, targetTile);
-
-        //             executeHealingCommand(context, targetEntity, targetTile);
-
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //     }
-
-        //     return false;
-        // }
-
-        // case WAR_UI_COMMAND_SPELL_INVISIBILITY:
-        // {
-        //     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-        //     {
-        //         if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-        //             vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-        //             WarEntity* targetEntity = findEntityAt(context, targetTile);
-
-        //             executeInvisiblityCommand(context, targetEntity, targetTile);
-
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //     }
-
-        //     return false;
-        // }
-
-        // case WAR_UI_COMMAND_SPELL_UNHOLY_ARMOR:
-        // {
-        //     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-        //     {
-        //         if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-        //             vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-        //             WarEntity* targetEntity = findEntity(context, targetTile);
-
-        //             executeUnholyArmorCommand(context, targetEntity, targetTile);
-
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //     }
-
-        //     return false;
-        // }
-
-        // case WAR_UI_COMMAND_SPELL_RAISE_DEAD:
-        // {
-        //     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-        //     {
-        //         if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-        //             vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-        //             executeRaiseDeadCommand(context, targetTile);
-
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //     }
-
-        //     return false;
-        // }
-
-        // case WAR_UI_COMMAND_SPELL_FAR_SIGHT:
-        // case WAR_UI_COMMAND_SPELL_DARK_VISION:
-        // {
-        //     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
-        //     {
-        //         if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-        //             vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
-
-        //             executeSightCommand(context, targetTile);
-
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //         else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
-        //         {
-        //             vec2 targetTile = vec2ScreenToMinimapCoordinates(context, input->pos);
-        //             executeSightCommand(context, targetTile);
-
-        //             command->type = WAR_UI_COMMAND_NONE;
-        //             return true;
-        //         }
-        //     }
-
-        //     return false;
-        // }
+            break;
+        }
 
         case WAR_UI_COMMAND_BUILD_BASIC:
         case WAR_UI_COMMAND_BUILD_ADVANCED:

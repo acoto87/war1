@@ -40,21 +40,21 @@ bool areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 
 bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
-    if (isWarriorUnit(entity) && !isDead(entity) && !isGoingToDie(entity))
+    if (isWarriorUnit(entity) && !isDeadUnit(entity))
     {
         if (isUnit(targetEntity))
         {
-            if (!isDead(targetEntity) &&
-                !isGoingToDie(targetEntity) &&
+            if (!isDeadUnit(targetEntity) &&
                 !isCorpseUnit(targetEntity) &&
-                !isCollapsing(entity) &&
-                !isGoingToCollapse(entity))
+                !isCollapsedUnit(entity))
             {
                 return true;
             }
         }
         else if (isWall(targetEntity))
+        {
             return true;
+        }
     }
 
     return false;
@@ -93,16 +93,7 @@ bool displayUnitOnMinimap(WarEntity* entity)
 {
     assert(isUnit(entity));
 
-    if (isCorpseUnit(entity))
-        return false;
-
-    if (isDead(entity) || isGoingToDie(entity))
-        return false;
-
-    if (isCollapsing(entity) || isGoingToCollapse(entity))
-        return false;
-
-    return true;
+    return !isCorpseUnit(entity) && !isDeadUnit(entity) && !isCollapsedUnit(entity))
 }
 
 u8Color getUnitColorOnMinimap(WarEntity* entity)

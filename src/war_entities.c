@@ -615,13 +615,13 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
             if (unit->enabled)
             {
                 // don't change the cursor for dead units or corpses
-                if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                if (isDeadUnit(entity) || isCorpseUnit(entity))
                 {
                     continue;
                 }
 
                 // don't change the cursor for collased buildings
-                if (isCollapsing(entity) || isGoingToCollapse(entity))
+                if (isCollapsedUnit(entity))
                 {
                     continue;
                 }
@@ -907,8 +907,8 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
     assert(isUnit(e1));
     assert(isUnit(e2));
 
-    bool isDead1 = isCorpseUnit((WarEntity*)e1) || isDead((WarEntity*)e1) || isGoingToDie((WarEntity*)e1);
-    bool isDead2 = isCorpseUnit((WarEntity*)e2) || isDead((WarEntity*)e2) || isGoingToDie((WarEntity*)e2);
+    bool isDead1 = isCorpseUnit((WarEntity*)e1) || isDeadUnit((WarEntity*)e1);
+    bool isDead2 = isCorpseUnit((WarEntity*)e2) || isDeadUnit((WarEntity*)e2);
 
     if (isDead1 && !isDead2)
         return -1;
@@ -2339,7 +2339,7 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
 
     if (unit->amount == 0)
     {
-        if (!isCollapsing(goldmine) && !isGoingToCollapse(goldmine))
+        if (!isCollapsedUnit(goldmine))
         {
             sendToCollapseState(context, goldmine);
 

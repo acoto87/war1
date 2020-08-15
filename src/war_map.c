@@ -926,13 +926,13 @@ void updateSelection(WarContext* context)
                         if (unit->enabled)
                         {
                             // don't select dead units or corpses
-                            if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                            if (isDeadUnit(entity) || isCorpseUnit(entity))
                             {
                                 continue;
                             }
 
                             // don't select collased buildings
-                            if (isCollapsing(entity) || isGoingToCollapse(entity))
+                            if (isCollapsedUnit(entity))
                             {
                                 continue;
                             }
@@ -1968,7 +1968,7 @@ void updateMagic(WarContext* context)
         WarEntity* entity = units->items[i];
         if (entity && isMagicUnit(entity))
         {
-            if (isDead(entity) || isGoingToDie(entity))
+            if (isDeadUnit(entity))
                 continue;
 
             WarUnitComponent* unit = &entity->unit;
@@ -2023,9 +2023,7 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
         for (s32 i = 0; i < nearUnits->count; i++)
         {
             WarEntity* targetEntity = nearUnits->items[i];
-            if (targetEntity &&
-                !isDead(targetEntity) && !isGoingToDie(targetEntity) &&
-                !isCollapsing(targetEntity) && !isGoingToCollapse(targetEntity))
+            if (targetEntity && !isDeadUnit(targetEntity) && !isCollapsedUnit(targetEntity))
             {
                 takeDamage(context, targetEntity, 0, POISON_CLOUD_DAMAGE);
             }
@@ -2135,8 +2133,7 @@ void updateSquads(WarContext* context)
                 {
                     WarEntityId entityId = squad->units[k];
                     WarEntity* entity = findEntity(context, entityId);
-                    if (!isDead(entity) && !isGoingToDie(entity) &&
-                        !isCollapsing(entity) && !isGoingToCollapse(entity))
+                    if (!isDeadUnit(entity) && !isCollapsedUnit(entity))
                     {
                         units[count++] = entityId;
                     }

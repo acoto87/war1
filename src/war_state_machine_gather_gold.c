@@ -23,7 +23,7 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     // if the goldmine doesn't exists (it could ran out of gold, or other units attacking it), go idle
     // if the unit was already mining, and the gold mine ran out of gold, then another unit previouly got all the remaining gold
     // so, this unit get nothing
-    if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
+    if (!goldmine || !isBuildingUnit(goldmine) || isCollapsedUnit(goldmine))
     {
         sendToIdleState(context, entity, true);
         return;
