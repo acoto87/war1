@@ -19,6 +19,9 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
     WarMap* map = context->map;
 
     WarUnitComponent* unit = &entity->unit;
+
+    WarPlayerInfo* player = &map->players[unit->player];
+
     WarUnitStats stats = getUnitStats(unit->type);
     vec2 position = getUnitCenterPosition(entity, true);
 
@@ -36,7 +39,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
 
     if (!tree || tree->amount == 0 || !isPositionAccesible(map->finder, treePosition))
     {
-        tree = findAccesibleTree(context, forest, treePosition);
+        tree = findAccesibleTree(context, player, forest, treePosition);
 
         // if there is no more nearby tree, go idle
         if (!tree)

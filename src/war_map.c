@@ -106,15 +106,14 @@ vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v)
     return v;
 }
 
-WarMapTile* getMapTileState(WarMap* map, s32 x, s32 y)
+WarMapTile* getMapTileState(WarMap* map, WarPlayerInfo* player, s32 x, s32 y)
 {
     assert(inRange(x, 0, MAP_TILES_WIDTH) && inRange(y, 0, MAP_TILES_HEIGHT));
 
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
-    return &uiPlayer->tiles[y * MAP_TILES_WIDTH + x];
+    return &player->tiles[y * MAP_TILES_WIDTH + x];
 }
 
-void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState)
+void setMapTileState(WarMap* map, WarPlayerInfo* player, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState)
 {
     if (startX <= 0)
         startX = 0;
@@ -139,13 +138,13 @@ void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height,
             if ((y == startY || y == endY - 1) && (x == startX || x == endX - 1))
                 continue;
 
-            WarMapTile* tile = getMapTileState(map, x, y);
+            WarMapTile* tile = getMapTileState(map, player, x, y);
             tile->state = tileState;
         }
     }
 }
 
-void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileState)
+void setUnitMapTileState(WarMap* map, WarPlayerInfo* player, WarEntity* entity, WarMapTileState tileState)
 {
     assert(isUnit(entity));
 
@@ -156,10 +155,10 @@ void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileSta
     rect unitRect = rectv(position, unitSize);
     unitRect = rectExpand(unitRect, sight, sight);
 
-    setMapTileState(map, unitRect.x, unitRect.y, unitRect.width, unitRect.height, tileState);
+    setMapTileState(map, player, unitRect.x, unitRect.y, unitRect.width, unitRect.height, tileState);
 }
 
-bool isTileInState(WarMap* map, s32 x, s32 y, WarMapTileState state)
+bool isTileInState(WarMap* map, WarPlayerInfo* player, s32 x, s32 y, WarMapTileState state)
 {
     if (!map->fowEnabled)
     {
@@ -176,11 +175,11 @@ bool isTileInState(WarMap* map, s32 x, s32 y, WarMapTileState state)
         }
     }
 
-    WarMapTile* tile = getMapTileState(map, x, y);
+    WarMapTile* tile = getMapTileState(map, player, x, y);
     return tile->state == state;
 }
 
-bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state)
+bool isAnyTileInStates(WarMap* map, WarPlayerInfo* player, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state)
 {
     if (!map->fowEnabled)
     {
@@ -216,7 +215,7 @@ bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 heigh
     {
         for(s32 x = startX; x < endX; x++)
         {
-            WarMapTile* tile = getMapTileState(map, x, y);
+            WarMapTile* tile = getMapTileState(map, player, x, y);
             if (tile->state == state)
             {
                 return true;
@@ -227,17 +226,17 @@ bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 heigh
     return false;
 }
 
-bool isAnyUnitTileInStates(WarMap* map, WarEntity* entity, WarMapTileState state)
+bool isAnyUnitTileInStates(WarMap* map, WarPlayerInfo* player, WarEntity* entity, WarMapTileState state)
 {
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
 
     vec2 position = getEntityPosition(entity, true);
-    return isAnyTileInStates(map, position.x, position.y, unit->sizex, unit->sizey, state);
+    return isAnyTileInStates(map, player, position.x, position.y, unit->sizex, unit->sizey, state);
 }
 
-bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state)
+bool areAllTilesInState(WarMap* map, WarPlayerInfo* player, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state)
 {
     if (!map->fowEnabled)
     {
@@ -273,7 +272,7 @@ bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 heig
     {
         for(s32 x = startX; x < endX; x++)
         {
-            WarMapTile* tile = getMapTileState(map, x, y);
+            WarMapTile* tile = getMapTileState(map, player, x, y);
             if (tile->state != state)
             {
                 return false;
@@ -284,14 +283,14 @@ bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 heig
     return true;
 }
 
-bool areAllUnitTilesInState(WarMap* map, WarEntity* entity, WarMapTileState state)
+bool areAllUnitTilesInState(WarMap* map, WarPlayerInfo* player, WarEntity* entity, WarMapTileState state)
 {
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
 
     vec2 position = getEntityPosition(entity, true);
-    return areAllTilesInState(map, position.x, position.y, unit->sizex, unit->sizey, state);
+    return areAllTilesInState(map, player, position.x, position.y, unit->sizex, unit->sizey, state);
 }
 
 u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
@@ -913,6 +912,8 @@ void updateSelection(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+
     if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
         // if it was scrolling last frame, don't perform any selection this frame
@@ -955,7 +956,7 @@ void updateSelection(WarContext* context)
                             }
 
                             // don't select non-visible units
-                            if (!isUnitPartiallyVisible(map, entity))
+                            if (!isUnitPartiallyVisible(map, uiPlayer, entity))
                             {
                                 continue;
                             }
@@ -1390,8 +1391,10 @@ void updateCommandButtons(WarContext* context)
 void updateCommandFromRightClick(WarContext* context)
 {
     WarMap* map = context->map;
-    WarUICommand* command = &map->uiCommand;
     WarInput* input = &context->input;
+
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    WarUICommand* command = &map->uiCommand;
 
     if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
     {
@@ -1411,7 +1414,7 @@ void updateCommandFromRightClick(WarContext* context)
                     {
                         if (isGoldmineUnit(targetEntity))
                         {
-                            if (!isUnitUnknown(map, targetEntity))
+                            if (!isUnitUnknown(map, uiPlayer, targetEntity))
                             {
                                 executeGatherUICommand(context, targetEntity, targetTile);
                             }
@@ -1422,13 +1425,13 @@ void updateCommandFromRightClick(WarContext* context)
                         }
                         else if (isForest(targetEntity))
                         {
-                            if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
+                            if (isTileVisible(map, uiPlayer, (s32)targetTile.x, (s32)targetTile.y))
                             {
                                 executeGatherUICommand(context, targetEntity, targetTile);
                             }
                             else
                             {
-                                WarTree* tree = findAccesibleTree(context, targetEntity, targetTile);
+                                WarTree* tree = findAccesibleTree(context, uiPlayer, targetEntity, targetTile);
                                 if (tree)
                                 {
                                     targetTile = vec2i(tree->tilex, tree->tiley);
@@ -1443,7 +1446,7 @@ void updateCommandFromRightClick(WarContext* context)
                         else if (isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_HUMANS) ||
                                  isUnitOfType(targetEntity, WAR_UNIT_TOWNHALL_ORCS))
                         {
-                            if (!isUnitUnknown(map, targetEntity))
+                            if (!isUnitUnknown(map, uiPlayer, targetEntity))
                             {
                                 if (isEnemyUnit(context, targetEntity))
                                 {
@@ -1734,6 +1737,8 @@ void updateMapCursor(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+
     WarEntity* entity = findUIEntity(context, "cursor");
     if (entity)
     {
@@ -1824,19 +1829,19 @@ void updateMapCursor(WarContext* context)
                             isDudeUnit(selectedEntity))
                         {
                             if (isGoldmineUnit(entityUnderCursor) &&
-                                !isUnitUnknown(map, entityUnderCursor) &&
+                                !isUnitUnknown(map, uiPlayer, entityUnderCursor) &&
                                 isWorkerUnit(selectedEntity))
                             {
                                 changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                             }
                             else if (isForest(entityUnderCursor) &&
-                                     !isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
+                                     !isTileUnkown(map, uiPlayer, (s32)targetTile.x, (s32)targetTile.y) &&
                                      isWorkerUnit(selectedEntity))
                             {
                                 changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
                             }
                             else if (isWall(entityUnderCursor) &&
-                                     !isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
+                                     !isTileUnkown(map, uiPlayer, (s32)targetTile.x, (s32)targetTile.y) &&
                                      isWarriorUnit(selectedEntity) &&
                                      canAttack(context, selectedEntity, entityUnderCursor))
                             {
@@ -2161,124 +2166,121 @@ void updateFoW(WarContext* context)
 {
     WarMap* map = context->map;
 
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
-
-    for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+    for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
     {
-        WarMapTile* tile = &uiPlayer->tiles[i];
+        WarPlayerInfo* player = &map->players[i];
 
-        tile->type = WAR_FOG_PIECE_NONE;
-        tile->boundary = WAR_FOG_BOUNDARY_NONE;
-        if (tile->state == MAP_TILE_STATE_VISIBLE)
-            tile->state = MAP_TILE_STATE_FOG;
-    }
-
-    // the Holy Sight and Dark Vision spells are the first entities that change FoW
-    WarEntityList* sightSpells = getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
-    for (s32 i = 0; i < sightSpells->count; i++)
-    {
-        WarEntity* entity = sightSpells->items[i];
-        if (entity)
+        for (s32 j = 0; j < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; j++)
         {
-            WarSightComponent* sight = &entity->sight;
+            WarMapTile* tile = &player->tiles[j];
 
-            rect r = rectExpand(rectv(sight->position, VEC2_ONE), 3, 3);
-            setMapTileState(map, r.x, r.y, r.width, r.height, MAP_TILE_STATE_VISIBLE);
+            tile->type = WAR_FOG_PIECE_NONE;
+            tile->boundary = WAR_FOG_BOUNDARY_NONE;
+            if (tile->state == MAP_TILE_STATE_VISIBLE)
+                tile->state = MAP_TILE_STATE_FOG;
         }
-    }
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-
-    // do the update of the FoW for friendly units first
-    for (s32 i = 0; i < units->count; i++)
-    {
-        WarEntity* entity = units->items[i];
-        if (entity)
+        // the Holy Sight and Dark Vision spells are the first entities that change FoW
+        WarEntityList* sightSpells = getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
+        for (s32 j = 0; j < sightSpells->count; j++)
         {
-            if (isFriendlyUnit(context, entity))
+            WarEntity* entity = sightSpells->items[j];
+            if (entity)
             {
-                WarUnitComponent* unit = &entity->unit;
-                vec2 position = getUnitCenterPosition(entity, true);
-                s32 sightRange = getUnitSightRange(entity);
+                WarSightComponent* sight = &entity->sight;
 
-                if (isBuildingUnit(entity))
+                rect r = rectExpand(rectv(sight->position, VEC2_ONE), 3, 3);
+                setMapTileState(map, player, r.x, r.y, r.width, r.height, MAP_TILE_STATE_VISIBLE);
+            }
+        }
+
+        WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+
+        // do the update of the FoW for friendly units first
+        for (s32 j = 0; j < units->count; j++)
+        {
+            WarEntity* entity = units->items[j];
+            if (entity)
+            {
+                if (isFriendlyUnit(context, entity))
                 {
-                    // the friendly buildings are always seen by the player
-                    unit->hasBeenSeen = true;
-                }
+                    WarUnitComponent* unit = &entity->unit;
+                    vec2 position = getUnitCenterPosition(entity, true);
+                    s32 sightRange = getUnitSightRange(entity);
 
-                // mark the tiles of the unit as visible
-                setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
-
-                // reveal the attack target of the unit
-                WarEntity* targetEntity = getAttackTarget(context, entity);
-                if (targetEntity)
-                {
-                    WarUnitStats stats = getUnitStats(unit->type);
-
-                    if (isUnit(targetEntity))
+                    if (isBuildingUnit(entity))
                     {
-                        if (unitInRange(entity, targetEntity, stats.range))
-                        {
-                            setUnitMapTileState(map, targetEntity, MAP_TILE_STATE_VISIBLE);
-                        }
+                        // the friendly buildings are always seen by the player
+                        unit->hasBeenSeen = true;
                     }
-                    else if (isWall(targetEntity))
-                    {
-                        WarState* attackState = getAttackState(entity);
-                        vec2 targetTile = attackState->attack.targetTile;
 
-                        if (unitTileInRange(entity, targetTile, stats.range))
+                    // mark the tiles of the unit as visible
+                    setUnitMapTileState(map, player, entity, MAP_TILE_STATE_VISIBLE);
+
+                    // reveal the attack target of the unit
+                    WarEntity* targetEntity = getAttackTarget(context, entity);
+                    if (targetEntity)
+                    {
+                        WarUnitStats stats = getUnitStats(unit->type);
+
+                        if (isUnit(targetEntity))
                         {
-                            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
-                            if (piece)
+                            if (unitInRange(entity, targetEntity, stats.range))
                             {
-                                setMapTileState(map, targetTile.x, targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                                setUnitMapTileState(map, player, targetEntity, MAP_TILE_STATE_VISIBLE);
+                            }
+                        }
+                        else if (isWall(targetEntity))
+                        {
+                            WarState* attackState = getAttackState(entity);
+                            vec2 targetTile = attackState->attack.targetTile;
+
+                            if (unitTileInRange(entity, targetTile, stats.range))
+                            {
+                                WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
+                                if (piece)
+                                {
+                                    setMapTileState(map, player, targetTile.x, targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                                }
                             }
                         }
                     }
-                }
 
-                // reveal the attacker
-                WarEntity* attacker = getAttacker(context, entity);
-                if (attacker)
-                {
-                    // if the attacker is the same the unit is attacking to
-                    // don't change tile state because already happened above
-                    if (!targetEntity || attacker->id != targetEntity->id)
+                    // reveal the attacker
+                    WarEntity* attacker = getAttacker(context, entity);
+                    if (attacker)
                     {
-                        setUnitMapTileState(map, attacker, MAP_TILE_STATE_VISIBLE);
+                        // if the attacker is the same the unit is attacking to
+                        // don't change tile state because already happened above
+                        if (!targetEntity || attacker->id != targetEntity->id)
+                        {
+                            setUnitMapTileState(map, player, attacker, MAP_TILE_STATE_VISIBLE);
+                        }
                     }
-                }
 
-                // check near non-friendly building units to mark it as seen
-                WarEntityList* nearUnits = getNearUnits(context, position, sightRange);
-                for (s32 k = 0; k < nearUnits->count; k++)
-                {
-                    WarEntity* targetEntity = nearUnits->items[k];
-                    if (targetEntity && !isFriendlyUnit(context, targetEntity) && isBuildingUnit(targetEntity))
+                    // check near non-friendly building units to mark it as seen
+                    WarEntityList* nearUnits = getNearUnits(context, position, sightRange);
+                    for (s32 k = 0; k < nearUnits->count; k++)
                     {
-                        targetEntity->unit.hasBeenSeen = true;
+                        WarEntity* targetEntity = nearUnits->items[k];
+                        if (targetEntity && !isFriendlyUnit(context, targetEntity) && isBuildingUnit(targetEntity))
+                        {
+                            targetEntity->unit.hasBeenSeen = true;
+                        }
                     }
+                    WarEntityListFree(nearUnits);
                 }
-                WarEntityListFree(nearUnits);
             }
         }
-    }
 
-    // and then do the update of the FoW for enemies and neutrals units
-    for (s32 i = 0; i < units->count; i++)
-    {
-        WarEntity* entity = units->items[i];
-        if (entity)
+        // and then do the update of the FoW for enemies and neutrals units
+        for (s32 j = 0; j < units->count; j++)
         {
-            if (!isFriendlyUnit(context, entity))
+            WarEntity* entity = units->items[j];
+            if (entity && !isFriendlyUnit(context, entity) && !isUnitPartiallyVisible(map, player, entity))
             {
-                if (!isUnitPartiallyVisible(map, entity))
-                {
-                    // remove from selection enemy or neutral units that goes into fog
-                    removeEntityFromSelection(context, entity->id);
-                }
+                // remove from selection enemy or neutral units that goes into fog
+                removeEntityFromSelection(context, entity->id);
             }
         }
     }
@@ -2295,105 +2297,110 @@ void determineFoWTypes(WarContext* context)
     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
     const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
 
-    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
     {
-        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        WarPlayerInfo* player = &map->players[i];
+
+        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
         {
-            WarMapTile* tile = getMapTileState(map, x, y);
-            if (tile->state == MAP_TILE_STATE_VISIBLE)
+            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                s32 index = 0;
-                s32 unkownCount = 0;
-                s32 fogCount = 0;
-
-                for (s32 d = 0; d < dirC; d++)
+                WarMapTile* tile = getMapTileState(map, player, x, y);
+                if (tile->state == MAP_TILE_STATE_VISIBLE)
                 {
-                    s32 xx = x + dirX[d];
-                    s32 yy = y + dirY[d];
+                    s32 index = 0;
+                    s32 unkownCount = 0;
+                    s32 fogCount = 0;
 
-                    if (inRange(xx, 0, MAP_TILES_WIDTH) &&
-                        inRange(yy, 0, MAP_TILES_HEIGHT))
+                    for (s32 d = 0; d < dirC; d++)
                     {
-                        WarMapTile* neighborTile = getMapTileState(map, xx, yy);
-                        if (neighborTile->state == MAP_TILE_STATE_VISIBLE)
-                            index = index | (1 << d);
-                        else if (neighborTile->state == MAP_TILE_STATE_FOG)
-                            fogCount++;
-                        else
-                            unkownCount++;
-                    }
-                }
+                        s32 xx = x + dirX[d];
+                        s32 yy = y + dirY[d];
 
-                if (index != 0xFF)
-                {
-                    tile->type = fogTileTypeMap[index];
-                }
-
-                if (fogCount > 0)
-                    tile->boundary = WAR_FOG_BOUNDARY_FOG;
-                else if (unkownCount > 0)
-                    tile->boundary = WAR_FOG_BOUNDARY_UNKOWN;
-            }
-            else if (tile->state == MAP_TILE_STATE_FOG)
-            {
-                s32 index = 0;
-                s32 unkownCount = 0;
-
-                for (s32 d = 0; d < dirC; d++)
-                {
-                    s32 xx = x + dirX[d];
-                    s32 yy = y + dirY[d];
-
-                    if (inRange(xx, 0, MAP_TILES_WIDTH) &&
-                        inRange(yy, 0, MAP_TILES_HEIGHT))
-                    {
-                        WarMapTile* neighborTile = getMapTileState(map, xx, yy);
-                        if (neighborTile->state == MAP_TILE_STATE_VISIBLE ||
-                            neighborTile->state == MAP_TILE_STATE_FOG)
+                        if (inRange(xx, 0, MAP_TILES_WIDTH) &&
+                            inRange(yy, 0, MAP_TILES_HEIGHT))
                         {
-                            index = index | (1 << d);
-                        }
-                        else
-                        {
-                            unkownCount++;
+                            WarMapTile* neighborTile = getMapTileState(map, player, xx, yy);
+                            if (neighborTile->state == MAP_TILE_STATE_VISIBLE)
+                                index = index | (1 << d);
+                            else if (neighborTile->state == MAP_TILE_STATE_FOG)
+                                fogCount++;
+                            else
+                                unkownCount++;
                         }
                     }
-                }
 
-                if (index != 0xFF)
-                {
-                    tile->type = fogTileTypeMap[index];
-                }
-
-                if (unkownCount > 0)
-                {
-                    tile->boundary = WAR_FOG_BOUNDARY_UNKOWN;
-                }
-            }
-            else
-            {
-                s32 index = 0;
-
-                for (s32 d = 0; d < dirC; d++)
-                {
-                    s32 xx = x + dirX[d];
-                    s32 yy = y + dirY[d];
-
-                    if (inRange(xx, 0, MAP_TILES_WIDTH) &&
-                        inRange(yy, 0, MAP_TILES_HEIGHT))
+                    if (index != 0xFF)
                     {
-                        WarMapTile* neighborTile = getMapTileState(map, xx, yy);
-                        if (neighborTile->state == MAP_TILE_STATE_VISIBLE ||
-                            neighborTile->state == MAP_TILE_STATE_FOG)
+                        tile->type = fogTileTypeMap[index];
+                    }
+
+                    if (fogCount > 0)
+                        tile->boundary = WAR_FOG_BOUNDARY_FOG;
+                    else if (unkownCount > 0)
+                        tile->boundary = WAR_FOG_BOUNDARY_UNKOWN;
+                }
+                else if (tile->state == MAP_TILE_STATE_FOG)
+                {
+                    s32 index = 0;
+                    s32 unkownCount = 0;
+
+                    for (s32 d = 0; d < dirC; d++)
+                    {
+                        s32 xx = x + dirX[d];
+                        s32 yy = y + dirY[d];
+
+                        if (inRange(xx, 0, MAP_TILES_WIDTH) &&
+                            inRange(yy, 0, MAP_TILES_HEIGHT))
                         {
-                            index = index | (1 << d);
+                            WarMapTile* neighborTile = getMapTileState(map, player, xx, yy);
+                            if (neighborTile->state == MAP_TILE_STATE_VISIBLE ||
+                                neighborTile->state == MAP_TILE_STATE_FOG)
+                            {
+                                index = index | (1 << d);
+                            }
+                            else
+                            {
+                                unkownCount++;
+                            }
                         }
                     }
-                }
 
-                if (index == 0xFF)
+                    if (index != 0xFF)
+                    {
+                        tile->type = fogTileTypeMap[index];
+                    }
+
+                    if (unkownCount > 0)
+                    {
+                        tile->boundary = WAR_FOG_BOUNDARY_UNKOWN;
+                    }
+                }
+                else
                 {
-                    tile->type = fogTileTypeMap[index];
+                    s32 index = 0;
+
+                    for (s32 d = 0; d < dirC; d++)
+                    {
+                        s32 xx = x + dirX[d];
+                        s32 yy = y + dirY[d];
+
+                        if (inRange(xx, 0, MAP_TILES_WIDTH) &&
+                            inRange(yy, 0, MAP_TILES_HEIGHT))
+                        {
+                            WarMapTile* neighborTile = getMapTileState(map, player, xx, yy);
+                            if (neighborTile->state == MAP_TILE_STATE_VISIBLE ||
+                                neighborTile->state == MAP_TILE_STATE_FOG)
+                            {
+                                index = index | (1 << d);
+                            }
+                        }
+                    }
+
+                    if (index == 0xFF)
+                    {
+                        tile->type = fogTileTypeMap[index];
+                    }
                 }
             }
         }
@@ -2513,7 +2520,8 @@ void updateMap(WarContext* context)
 
 void renderTerrain(WarContext* context)
 {
-    WarMap *map = context->map;
+    WarMap* map = context->map;
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
 
     NVGcontext* gfx = context->gfx;
 
@@ -2529,7 +2537,7 @@ void renderTerrain(WarContext* context)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            WarMapTile* tile = getMapTileState(map, x, y);
+            WarMapTile* tile = getMapTileState(map, uiPlayer, x, y);
             if (!map->fowEnabled ||
                 tile->state == MAP_TILE_STATE_VISIBLE ||
                 tile->state == MAP_TILE_STATE_FOG)
@@ -2559,6 +2567,7 @@ void renderTerrain(WarContext* context)
 void renderFoW(WarContext* context)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
 
     if (!map->fowEnabled)
         return;
@@ -2574,7 +2583,7 @@ void renderFoW(WarContext* context)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            WarMapTile* tile = getMapTileState(map, x, y);
+            WarMapTile* tile = getMapTileState(map, uiPlayer, x, y);
             if (tile->type != WAR_FOG_PIECE_NONE)
             {
                 s32 tileIndex = (s32)tile->type;

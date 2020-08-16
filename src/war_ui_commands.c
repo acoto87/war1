@@ -257,7 +257,7 @@ bool executeUICommand(WarContext* context)
 
                     if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                     {
-                        if (!isUnitUnknown(map, targetEntity))
+                        if (!isUnitUnknown(map, player, targetEntity))
                         {
                             executeGatherUICommand(context, targetEntity, targetTile);
                         }
@@ -268,13 +268,13 @@ bool executeUICommand(WarContext* context)
                     }
                     else if (isForest(targetEntity))
                     {
-                        if (!isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y))
+                        if (!isTileUnkown(map, player, (s32)targetTile.x, (s32)targetTile.y))
                         {
                             executeGatherUICommand(context, targetEntity, targetTile);
                         }
                         else
                         {
-                            WarTree* tree = findAccesibleTree(context, targetEntity, targetTile);
+                            WarTree* tree = findAccesibleTree(context, player, targetEntity, targetTile);
                             if (tree)
                             {
                                 targetTile = vec2i(tree->tilex, tree->tiley);
@@ -313,8 +313,8 @@ bool executeUICommand(WarContext* context)
                 vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                 vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
-                    isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
+                if (isTileVisible(map, player, (s32)targetTile.x, (s32)targetTile.y) ||
+                    isTileFog(map, player, (s32)targetTile.x, (s32)targetTile.y))
                 {
                     WarEntity* targetEntity = findEntityAt(context, targetTile);
                     if (targetEntity && isBuildingUnit(targetEntity))
@@ -346,13 +346,13 @@ bool executeUICommand(WarContext* context)
                     if (isUnit(targetEntity))
                     {
                         // if the target entity is not visible or partially visible, just attack to the point
-                        if (isUnitUnknown(map, targetEntity))
+                        if (isUnitUnknown(map, player, targetEntity))
                             targetEntity = NULL;
                     }
                     else if (isWall(targetEntity))
                     {
                         // if the target wall piece is not visible, just attack to the point
-                        if (!isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
+                        if (!isTileVisible(map, player, (s32)targetTile.x, (s32)targetTile.y))
                             targetEntity = NULL;
                     }
                 }

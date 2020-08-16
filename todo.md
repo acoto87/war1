@@ -183,6 +183,8 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Check behavior of invisible units when are under attack (it maybe work with workers, to stop the attack on it)
 * [ ] Zoom feature
 * [ ] Migrate FoW to be player-based, and not map-based
+    * [x] Pass tiles information to player info.
+    * [ ] Review that the correct player is retrieved for querying fow in each scenario.
     * [ ] When querying the map tiles for unit, maybe the I can deny information for non-visible entities. That way, when getting entities from map tiles, I don't need to check to see if the entity is visible or not.
 
 ## Gameplay

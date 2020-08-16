@@ -338,7 +338,7 @@ WarCommandStatus executeBuildCommand(WarContext* context, WarPlayerInfo* player,
         return WAR_COMMAND_STATUS_WORKER_BUSY;
     }
 
-    if (!canBuildingBeBuilt(context, unitType, targetTile.x, targetTile.y))
+    if (!canBuildingBeBuilt(context, player, unitType, targetTile.x, targetTile.y))
     {
         return WAR_COMMAND_STATUS_INVALID_POSITION;
     }
@@ -369,7 +369,7 @@ WarCommandStatus executeBuildWallCommand(WarContext* context, WarPlayerInfo* pla
 
     vec2 targetTile = command->wall.position;
 
-    if (!canRoadOrWallBeBuilt(context, targetTile.x, targetTile.y))
+    if (!canRoadOrWallBeBuilt(context, player, targetTile.x, targetTile.y))
     {
         return WAR_COMMAND_STATUS_INVALID_POSITION;
     }
@@ -403,7 +403,7 @@ WarCommandStatus executeBuildRoadCommand(WarContext* context, WarPlayerInfo* pla
 
     vec2 targetTile = command->wall.position;
 
-    if (!canRoadOrWallBeBuilt(context, targetTile.x, targetTile.y))
+    if (!canRoadOrWallBeBuilt(context, player, targetTile.x, targetTile.y))
     {
         return WAR_COMMAND_STATUS_INVALID_POSITION;
     }

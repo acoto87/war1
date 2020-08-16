@@ -388,6 +388,8 @@ void renderUICommand(WarContext* context)
     WarInput* input = &context->input;
     WarUICommand* uiCommand = &map->uiCommand;
 
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+
     NVGcontext* gfx = context->gfx;
 
     nvgSave(gfx);
@@ -417,7 +419,7 @@ void renderUICommand(WarContext* context)
             WarUnitType unitType = uiCommand->build.unitType;
             WarUnitData data = getUnitData(unitType);
 
-            NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, data.sizex, data.sizey)
+            NVGcolor fillColor = checkRectToBuild(context, uiPlayer, position.x, position.y, data.sizex, data.sizey)
                 ? NVG_GRAY_TRANSPARENT : NVG_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);
@@ -435,7 +437,7 @@ void renderUICommand(WarContext* context)
             vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
             position = vec2MapToTileCoordinates(position);
 
-            NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, 1, 1)
+            NVGcolor fillColor = checkRectToBuild(context, uiPlayer, position.x, position.y, 1, 1)
                 ? NVG_GRAY_TRANSPARENT : NVG_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);

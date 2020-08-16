@@ -25,25 +25,25 @@ void updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResourc
 s32 getMapTileIndex(WarContext* context, s32 x, s32 y);
 void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile);
 
-WarMapTile* getMapTileState(WarMap* map, s32 x, s32 y);
-void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState);
-void setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileState);
-bool isTileInState(WarMap* map, s32 x, s32 y, WarMapTileState state);
-bool isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state);
-bool isAnyUnitTileInStates(WarMap* map, WarEntity* entity, WarMapTileState state);
-bool areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state);
-bool areAllUnitTilesInState(WarMap* map, WarEntity* entity, WarMapTileState state);
+WarMapTile* getMapTileState(WarMap* map, WarPlayerInfo* player, s32 x, s32 y);
+void setMapTileState(WarMap* map, WarPlayerInfo* player, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState);
+void setUnitMapTileState(WarMap* map, WarPlayerInfo* player, WarEntity* entity, WarMapTileState tileState);
+bool isTileInState(WarMap* map, WarPlayerInfo* player, s32 x, s32 y, WarMapTileState state);
+bool isAnyTileInStates(WarMap* map, WarPlayerInfo* player, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state);
+bool isAnyUnitTileInStates(WarMap* map, WarPlayerInfo* player, WarEntity* entity, WarMapTileState state);
+bool areAllTilesInState(WarMap* map, WarPlayerInfo* player, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state);
+bool areAllUnitTilesInState(WarMap* map, WarPlayerInfo* player, WarEntity* entity, WarMapTileState state);
 
-#define isUnitPartiallyVisible(map, entity) isAnyUnitTileInStates(map, entity, MAP_TILE_STATE_VISIBLE)
-#define isUnitVisible(map, entity) areAllUnitTilesInState(map, entity, MAP_TILE_STATE_VISIBLE)
-#define isUnitPartiallyFog(map, entity) isAnyUnitTileInStates(map, entity, MAP_TILE_STATE_FOG)
-#define isUnitFog(map, entity) areAllUnitTilesInState(map, entity, MAP_TILE_STATE_FOG)
-#define isUnitPartiallyUnkown(map, entity) isAnyUnitTileInStates(map, entity, MAP_TILE_STATE_UNKOWN)
-#define isUnitUnknown(map, entity) areAllUnitTilesInState(map, entity, MAP_TILE_STATE_UNKOWN)
+#define isUnitPartiallyVisible(map, player, entity) isAnyUnitTileInStates(map, player, entity, MAP_TILE_STATE_VISIBLE)
+#define isUnitVisible(map, player, entity) areAllUnitTilesInState(map, player, entity, MAP_TILE_STATE_VISIBLE)
+#define isUnitPartiallyFog(map, player, entity) isAnyUnitTileInStates(map, player, entity, MAP_TILE_STATE_FOG)
+#define isUnitFog(map, player, entity) areAllUnitTilesInState(map, player, entity, MAP_TILE_STATE_FOG)
+#define isUnitPartiallyUnkown(map, player, entity) isAnyUnitTileInStates(map, player, entity, MAP_TILE_STATE_UNKOWN)
+#define isUnitUnknown(map, player, entity) areAllUnitTilesInState(map, player, entity, MAP_TILE_STATE_UNKOWN)
 
-#define isTileUnkown(map, x, y) isTileInState(map, x, y, MAP_TILE_STATE_UNKOWN)
-#define isTileFog(map, x, y) isTileInState(map, x, y, MAP_TILE_STATE_FOG)
-#define isTileVisible(map, x, y) isTileInState(map, x, y, MAP_TILE_STATE_VISIBLE)
+#define isTileUnkown(map, player, x, y) isTileInState(map, player, x, y, MAP_TILE_STATE_UNKOWN)
+#define isTileFog(map, player, x, y) isTileInState(map, player, x, y, MAP_TILE_STATE_FOG)
+#define isTileVisible(map, player, x, y) isTileInState(map, player, x, y, MAP_TILE_STATE_VISIBLE)
 
 void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
 

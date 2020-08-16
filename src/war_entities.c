@@ -596,9 +596,9 @@ WarEntity* findUIEntity(WarContext* context, const char* name)
 WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool includeWalls)
 {
     WarInput* input = &context->input;
-
     WarMap* map = context->map;
-    assert(map);
+
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
 
     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
@@ -627,7 +627,7 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
                 }
 
                 // don't change the cursor for non-visible units
-                if (!isUnitPartiallyVisible(map, entity))
+                if (!isUnitPartiallyVisible(map, uiPlayer, entity))
                 {
                     continue;
                 }
@@ -1160,6 +1160,7 @@ void renderForest(WarContext* context, WarEntity* entity)
 void renderUnit(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
 
     NVGcontext* gfx = context->gfx;
 
@@ -1182,7 +1183,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
     vec2 unitSize = getUnitSpriteSize(entity);
 
     // the unit is visible if it's partially on the clear areas of the fog
-    bool isVisible = isUnitPartiallyVisible(map, entity);
+    bool isVisible = isUnitPartiallyVisible(map, uiPlayer, entity);
 
     nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
     nvgTranslate(gfx, halff(unitSize.x), halff(unitSize.y));
@@ -1466,6 +1467,7 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 void renderMinimap(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
 
     NVGcontext* gfx = context->gfx;
 
@@ -1514,7 +1516,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
             WarUnitComponent* unit = &entity->unit;
             WarTransformComponent* transform = &entity->transform;
 
-            if (displayUnitOnMinimap(entity) && (isUnitPartiallyVisible(map, entity) || entity->unit.hasBeenSeen))
+            if (displayUnitOnMinimap(entity) && (isUnitPartiallyVisible(map, uiPlayer, entity) || entity->unit.hasBeenSeen))
             {
                 s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                 s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
@@ -1970,7 +1972,7 @@ bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
     return true;
 }
 
-bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
+bool checkRectToBuild(WarContext* context, WarPlayerInfo* player, s32 x, s32 y, s32 w, s32 h)
 {
     WarMap* map = context->map;
 
@@ -1982,7 +1984,7 @@ bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
             s32 yy = y + dy;
             if (inRange(xx, 0, MAP_TILES_WIDTH) && inRange(yy, 0, MAP_TILES_HEIGHT))
             {
-                if (!isEmpty(map->finder, xx, yy) || isTileUnkown(map, xx, yy))
+                if (!isEmpty(map->finder, xx, yy) || isTileUnkown(map, player, xx, yy))
                 {
                     return false;
                 }
@@ -1993,37 +1995,15 @@ bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
     return true;
 }
 
-bool canBuildingBeBuilt(WarContext* context, WarUnitType unitType, s32 x, s32 y)
+bool canBuildingBeBuilt(WarContext* context, WarPlayerInfo* player, WarUnitType unitType, s32 x, s32 y)
 {
     WarUnitData data = getUnitData(unitType);
-    return checkRectToBuild(context, x, y, data.sizex, data.sizey);
+    return checkRectToBuild(context, player, x, y, data.sizex, data.sizey);
 }
 
-bool checkTileToBuild(WarContext* context, WarUnitType unitType, s32 x, s32 y)
+bool canRoadOrWallBeBuilt(WarContext* context, WarPlayerInfo* player, s32 x, s32 y)
 {
-    if (!canBuildingBeBuilt(context, unitType, x, y))
-    {
-        setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
-        return false;
-    }
-
-    return true;
-}
-
-bool canRoadOrWallBeBuilt(WarContext* context, s32 x, s32 y)
-{
-    return checkRectToBuild(context, x, y, 1, 1);
-}
-
-bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
-{
-    if (!canRoadOrWallBeBuilt(context, x, y))
-    {
-        setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
-        return false;
-    }
-
-    return true;
+    return checkRectToBuild(context, player, x, y, 1, 1);
 }
 
 WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
