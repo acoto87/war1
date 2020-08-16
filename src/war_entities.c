@@ -1476,12 +1476,15 @@ void renderMinimap(WarContext* context, WarEntity* entity)
 
     // copy the minimap base to the first frame which is the one that will be rendered
     // copy only the visible tiles/pixels
+
+    WarMapTile* tiles = map->players[map->uiPlayer].tiles;
+
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
             s32 index = y * MAP_TILES_WIDTH + x;
-            WarMapTile* tile = &map->tiles[index];
+            WarMapTile* tile = &tiles[index];
 
             if (!map->fowEnabled ||
                 tile->state == MAP_TILE_STATE_VISIBLE ||

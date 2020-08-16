@@ -109,7 +109,9 @@ vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v)
 WarMapTile* getMapTileState(WarMap* map, s32 x, s32 y)
 {
     assert(inRange(x, 0, MAP_TILES_WIDTH) && inRange(y, 0, MAP_TILES_HEIGHT));
-    return &map->tiles[y * MAP_TILES_WIDTH + x];
+
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    return &uiPlayer->tiles[y * MAP_TILES_WIDTH + x];
 }
 
 void setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState)
@@ -333,7 +335,9 @@ void updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResourc
     u8Color color = U8COLOR_BLACK;
 
     s32 index = y * MAP_TILES_WIDTH + x;
-    WarMapTile* tile = &map->tiles[index];
+
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    WarMapTile* tile = &uiPlayer->tiles[index];
 
     if (!map->fowEnabled ||
         tile->state == MAP_TILE_STATE_VISIBLE ||
@@ -513,6 +517,7 @@ void enterMap(WarContext* context)
     map->fowEnabled = true;
     map->result = WAR_LEVEL_RESULT_NONE;
     map->objectivesTime = 1;
+    map->uiPlayer = 0;
 
     map->settings.gameSpeed = WAR_SPEED_NORMAL;
     map->settings.mouseScrollSpeed = WAR_SPEED_NORMAL;
@@ -547,9 +552,11 @@ void enterMap(WarContext* context)
 
     // set the initial state for the tiles
     {
+        WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+
         for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         {
-            WarMapTile* tile = &map->tiles[i];
+            WarMapTile* tile = &uiPlayer->tiles[i];
 
             tile->state = MAP_TILE_STATE_UNKOWN;
             tile->type = WAR_FOG_PIECE_NONE;
@@ -751,6 +758,10 @@ void enterMap(WarContext* context)
                 player->upgrades[j].allowed = levelInfo->levelInfo.allowedUpgrades[j][i];
                 player->upgrades[j].level = 0;
             }
+
+            memset(player->squads, 0, sizeof(player->squads));
+
+            WarCommandListInit(&player->commands, WarCommandListDefaultOptions);
         }
     }
 
@@ -2150,9 +2161,11 @@ void updateFoW(WarContext* context)
 {
     WarMap* map = context->map;
 
+    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
-        WarMapTile* tile = &map->tiles[i];
+        WarMapTile* tile = &uiPlayer->tiles[i];
 
         tile->type = WAR_FOG_PIECE_NONE;
         tile->boundary = WAR_FOG_BOUNDARY_NONE;

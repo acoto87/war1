@@ -182,16 +182,8 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
 * [ ] Check behavior of invisible units when are under attack (it maybe work with workers, to stop the attack on it)
 * [ ] Zoom feature
-
-## Migration to commands
-
-* [ ] When querying the map tiles for unit, maybe the I can deny information for non-visible entities. That way, when getting entities from map tiles I don't need to check to see if the entity is visible or not.
-* [ ] Make convenient functions for the different states of the unit state machines
-* [x] Rename enemyId from attack commands because the player and AIs can attack friendly units
-* [x] Make a convenient function getSelectedUnitIds to use in executeUICommand
-* [x] Make macro INVALID_ENTITY, or NO_ENTITY that maps to WarEntityId = 0
-* [ ] What happens when selecting various units to attack and some of those units can't attack (like peasants) do they move to the target instead? or do they stay?
-* [x] War_units.h only with function prototypes, implementations to war_units.c
+* [ ] Migrate FoW to be player-based, and not map-based
+    * [ ] When querying the map tiles for unit, maybe the I can deny information for non-visible entities. That way, when getting entities from map tiles, I don't need to check to see if the entity is visible or not.
 
 ## Gameplay
 
@@ -271,6 +263,19 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Make Ctrl+click select all units of the same type on the screen.
 * [ ] Make feature to select a point where automatically the trained unit will go.
 
+## Commands
+
+* [ ] Migrate to commands
+    * [x] Rename enemyId from attack commands because the player and AIs can attack friendly units.
+    * [x] Make a convenient function getSelectedUnitIds to use in executeUICommand.
+    * [x] Make macro INVALID_ENTITY, or NO_ENTITY that maps to WarEntityId = 0.
+
+    * [x] War_units.h only with function prototypes, implementations to war_units.c
+    * [x] Create the the concept of Command, separately from UI Command:
+        Command: All possible actions a player (human or AI) can do is translated into commands
+        UI Command: All possible actions a human player can do in the interface. All UI Commands are translated into Commands.
+    * [ ] What happens when selecting various units to attack and some of those units can't attack (like peasants) do they move to the target instead? or do they stay?
+
 ## Animations/actions
 
 * [x] Add animations data for each unit type.
@@ -347,15 +352,15 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [x] Gathering gold.
     * [x] Gathering wood
 * [x] Make a Leave function when the states are leaving, and not just free them. Let that responsibility to the state itself.
-* [ ] Make the state switching system can return values when going back to the previous state. This will allow follow and move to return to previous state (such attack) that there is no path to the target, so the unit can go idle.
-    * [ ] When an unit is going to attack another one, but can't reach it because of is blocked but other units, there is a loop between attack and follow states, because there is not mechanism to allow the follow state to tell the attack state that the target unit can't be reached, so the unit must go idle.
-* [ ] Remove the interval for state, each state machine updates every frame. I'm going to worry about performance issues that this may cause later.
-* [ ] Create nice functions to transition between states to not have to write this every time:
+* [x] Create nice functions to transition between states to not have to write this every time:
 
     ```c
     WarState* gatherWoodState = createGatherWoodState(context, worker, forest->id, treeTile);
     changeNextState(context, worker, gatherWoodState, true, true);
     ```
+* [ ] Make the state switching system can return values when going back to the previous state. This will allow follow and move to return to previous state (such attack) that there is no path to the target, so the unit can go idle.
+    * [ ] When an unit is going to attack another one, but can't reach it because of is blocked but other units, there is a loop between attack and follow states, because there is not mechanism to allow the follow state to tell the attack state that the target unit can't be reached, so the unit must go idle.
+* [ ] Remove the interval for state, each state machine updates every frame. I'm going to worry about performance issues that this may cause later.
 
 ## Pathfinding
 

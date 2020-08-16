@@ -41,7 +41,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
 
     if (!tree || tree->amount == 0)
     {
-        sendToGatherWoodState(context, entity, forest->id, treePosition);)
+        sendToGatherWoodState(context, entity, forest->id, treePosition);
         return;
     }
 

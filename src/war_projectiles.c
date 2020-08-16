@@ -108,7 +108,7 @@ void doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, 
     for (s32 i = 0; i < nearUnits->count; i++)
     {
         WarEntity* targetEntity = nearUnits->items[i];
-        if (targetEntity && !isDeadUnit(targetEntity) && !isCollasedUnit(targetEntity))
+        if (targetEntity && !isDeadUnit(targetEntity) && !isCollapsedUnit(targetEntity))
         {
             takeDamage(context, targetEntity, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
         }

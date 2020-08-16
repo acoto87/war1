@@ -93,7 +93,7 @@ bool displayUnitOnMinimap(WarEntity* entity)
 {
     assert(isUnit(entity));
 
-    return !isCorpseUnit(entity) && !isDeadUnit(entity) && !isCollapsedUnit(entity))
+    return !isCorpseUnit(entity) && !isDeadUnit(entity) && !isCollapsedUnit(entity);
 }
 
 u8Color getUnitColorOnMinimap(WarEntity* entity)

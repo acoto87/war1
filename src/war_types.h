@@ -2183,6 +2183,7 @@ typedef struct _WarPlayerInfo
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
     WarSquad squads[MAX_SQUAD_COUNT];
     WarCommandList commands;
+    WarMapTile tiles[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
     WarAI* ai;
 } WarPlayerInfo;
 
@@ -2332,7 +2333,6 @@ typedef struct
     WarSprite blackSprite;
 
     WarMapTilesetType tilesetType;
-    WarMapTile tiles[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
 
     WarEntityManager entityManager;
     WarEntityIdList selectedEntities;
@@ -2357,7 +2357,9 @@ typedef struct
     WarUICommand uiCommand;
     WarFlashStatus flashStatus;
     WarCheatStatus cheatStatus;
+
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
+    s32 uiPlayer;  // Index of the player that the UI is being rendering for, by default it's 0 (the human player)
 } WarMap;
 
 typedef enum

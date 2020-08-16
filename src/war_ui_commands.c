@@ -54,10 +54,10 @@ void executeMoveUICommand(WarContext* context, vec2 targetTile)
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
+    assert(unitGroup.count > 0);
 
     WarCommand* command = createMoveCommand(context, player, unitGroup, targetTile);
     WarCommandStatus status = executeCommand(context, player, command);
-    commandFree(command);
 
     if (status < WAR_COMMAND_STATUS_FAILED)
     {
@@ -73,10 +73,10 @@ void executeFollowUICommand(WarContext* context, WarEntity* targetEntity)
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
+    assert(unitGroup.count > 0);
 
     WarCommand* command = createFollowCommand(context, player, unitGroup, targetEntity->id);
     WarCommandStatus status = executeCommand(context, player, command);
-    commandFree(command);
 
     if (status < WAR_COMMAND_STATUS_FAILED)
     {
@@ -86,19 +86,19 @@ void executeFollowUICommand(WarContext* context, WarEntity* targetEntity)
 
 void executeAttackUICommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
-    WarMap* map = context->map;
-    assert(map);
+    assert(targetEntity || !vec2IsZero(targetTile));
 
+    WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
+    assert(unitGroup.count > 0);
 
     WarCommand* command = targetEntity
         ? createAttackEnemyCommand(context, player, unitGroup, targetEntity->id)
         : createAttackPositionCommand(context, player, unitGroup, targetTile);
 
     WarCommandStatus status = executeCommand(context, player, command);
-    commandFree(command);
 
     if (status < WAR_COMMAND_STATUS_FAILED)
     {
@@ -112,10 +112,10 @@ void executeStopUICommand(WarContext* context)
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
+    assert(unitGroup.count > 0);
 
     WarCommand* command = createStopCommand(context, player, unitGroup);
     executeCommand(context, player, command);
-    commandFree(command);
 }
 
 void executeGatherUICommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
@@ -126,13 +126,13 @@ void executeGatherUICommand(WarContext* context, WarEntity* targetEntity, vec2 t
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
+    assert(unitGroup.count > 0);
 
     WarCommand* command = isGoldmineUnit(targetEntity)
         ? createGatherGoldCommand(context, player, unitGroup, targetEntity->id)
         : createGatherWoodCommand(context, player, unitGroup, targetEntity->id, targetTile);
 
     WarCommandStatus status = executeCommand(context, player, command);
-    commandFree(command);
 
     if (status < WAR_COMMAND_STATUS_FAILED)
     {
@@ -146,10 +146,10 @@ void executeDeliverUICommand(WarContext* context, WarEntity* targetEntity)
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
+    assert(unitGroup.count > 0);
 
     WarCommand* command = createDeliverCommand(context, player, unitGroup, targetEntity ? targetEntity->id : 0);
     WarCommandStatus status = executeCommand(context, player, command);
-    commandFree(command);
 
     if (status < WAR_COMMAND_STATUS_FAILED)
     {
@@ -166,10 +166,10 @@ void executeRepairUICommand(WarContext* context, WarEntity* targetEntity)
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
+    assert(unitGroup.count > 0);
 
     WarCommand* command = createRepairCommand(context, player, unitGroup, targetEntity->id);
     WarCommandStatus status = executeCommand(context, player, command);
-    commandFree(command);
 
     if (status < WAR_COMMAND_STATUS_FAILED)
     {
@@ -183,12 +183,12 @@ void executeSpellUICommand(WarContext* context, WarSpellType spellType, WarEntit
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitGroup unitGroup = createUnitGroupFromSelection(context);
+    assert(unitGroup.count > 0);
 
     WarEntityId targetEntityId = targetEntity ? targetEntity->id : NO_ENTITY;
 
     WarCommand* command = createCastCommand(context, player, unitGroup, spellType, targetEntityId, targetTile);
-    WarCommandStatus status = executeCommand(context, player, command);
-    commandFree(command);
+    executeCommand(context, player, command);
 }
 
 bool executeUICommand(WarContext* context)
@@ -396,7 +396,6 @@ bool executeUICommand(WarContext* context)
 
             WarCommand* command = createTrainCommand(context, player, unitType, producerId);
             WarCommandStatus status = executeCommand(context, player, command);
-            commandFree(command);
 
             setFlashStatusFromCommandStatus(context, status);
 
@@ -435,7 +434,6 @@ bool executeUICommand(WarContext* context)
 
             WarCommand* command = createUpgradeCommand(context, player, upgradeToBuild, producerId);
             WarCommandStatus status = executeCommand(context, player, command);
-            commandFree(command);
 
             setFlashStatusFromCommandStatus(context, status);
 
@@ -460,6 +458,15 @@ bool executeUICommand(WarContext* context)
         case WAR_UI_COMMAND_BUILD_BLACKSMITH_HUMANS:
         case WAR_UI_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
+            // NOTE: It could happen that the worker which is selected to build
+            // get inside a building (because it's mining or delivering something)
+            // at that moment the worker is no longer selected
+            if (map->selectedEntities.count == 0)
+            {
+                uiCommand->type = WAR_UI_COMMAND_NONE;
+                return true;
+            }
+
             if (!wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
                 return false;
@@ -467,7 +474,6 @@ bool executeUICommand(WarContext* context)
 
             if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
             {
-                assert(map->selectedEntities.count > 0);
                 WarEntityId workerId = map->selectedEntities.items[0];
 
                 vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
@@ -477,7 +483,6 @@ bool executeUICommand(WarContext* context)
 
                 WarCommand* command = createBuildCommand(context, player, unitType, workerId, targetTile);
                 WarCommandStatus status = executeCommand(context, player, command);
-                commandFree(command);
 
                 if (status == WAR_COMMAND_STATUS_RUNNING)
                 {
@@ -513,7 +518,6 @@ bool executeUICommand(WarContext* context)
 
                 WarCommand* command = createBuildWallCommand(context, player, targetTile);
                 WarCommandStatus status = executeCommand(context, player, command);
-                commandFree(command);
 
                 setFlashStatusFromCommandStatus(context, status);
                 createAudioFromBuildCommandStatus(context, status);
@@ -542,7 +546,6 @@ bool executeUICommand(WarContext* context)
 
                 WarCommand* command = createBuildRoadCommand(context, player, targetTile);
                 WarCommandStatus status = executeCommand(context, player, command);
-                commandFree(command);
 
                 setFlashStatusFromCommandStatus(context, status);
                 createAudioFromBuildCommandStatus(context, status);
@@ -830,7 +833,6 @@ void cancel(WarContext* context, WarEntity* entity)
 
             WarCommand* command = createCancelCommand(context, player, selectedEntityId);
             WarCommandStatus status = executeCommand(context, player, command);
-            commandFree(command);
 
             if (status < WAR_COMMAND_STATUS_FAILED && playCollapsedSound)
             {

@@ -7,6 +7,8 @@ WarCommand* createCommand(WarContext* context, WarPlayerInfo* player, WarCommand
     command->type = type;
     command->status = WAR_COMMAND_STATUS_NONE;
 
+    WarCommandListAdd(&player->commands, command);
+
     return command;
 }
 
