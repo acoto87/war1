@@ -182,10 +182,12 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
 * [ ] Check behavior of invisible units when are under attack (it maybe work with workers, to stop the attack on it)
 * [ ] Zoom feature
-* [ ] Migrate FoW to be player-based, and not map-based
+* [ ] FoW to be player-based, and not map-based
     * [x] Pass tiles information to player info.
     * [ ] Review that the correct player is retrieved for querying fow in each scenario.
     * [ ] When querying the map tiles for unit, maybe the I can deny information for non-visible entities. That way, when getting entities from map tiles, I don't need to check to see if the entity is visible or not.
+* [ ] Implement replays
+* [ ] Implement observers for live games between AIs.
 
 ## Gameplay
 
@@ -264,6 +266,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Add explosion animation to living npc units when clicking to many times.
 * [ ] Make Ctrl+click select all units of the same type on the screen.
 * [ ] Make feature to select a point where automatically the trained unit will go.
+* [ ] Add rally point functionality to buildings that produces units.
 
 ## Commands
 
