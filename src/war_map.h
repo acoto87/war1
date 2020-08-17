@@ -49,6 +49,8 @@ void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type
 
 WarCampaignMapType getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex);
 
+WarPlayerInfo* getMapUIPlayer(WarMap* map);
+
 f32 getMapScaledSpeed(WarContext* context, f32 t);
 f32 getMapScaledTime(WarContext* context, f32 t);
 

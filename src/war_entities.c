@@ -598,7 +598,7 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
     WarInput* input = &context->input;
     WarMap* map = context->map;
 
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
 
     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
@@ -1160,7 +1160,8 @@ void renderForest(WarContext* context, WarEntity* entity)
 void renderUnit(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
 
     NVGcontext* gfx = context->gfx;
 
@@ -1467,7 +1468,8 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 void renderMinimap(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
 
     NVGcontext* gfx = context->gfx;
 
@@ -1479,18 +1481,13 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     // copy the minimap base to the first frame which is the one that will be rendered
     // copy only the visible tiles/pixels
 
-    WarMapTile* tiles = map->players[map->uiPlayer].tiles;
-
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
             s32 index = y * MAP_TILES_WIDTH + x;
-            WarMapTile* tile = &tiles[index];
 
-            if (!map->fowEnabled ||
-                tile->state == MAP_TILE_STATE_VISIBLE ||
-                tile->state == MAP_TILE_STATE_FOG)
+            if (!map->fowEnabled)
             {
                 frame0->data[index * 4 + 0] = frame1->data[index * 4 + 0];
                 frame0->data[index * 4 + 1] = frame1->data[index * 4 + 1];
@@ -1499,11 +1496,26 @@ void renderMinimap(WarContext* context, WarEntity* entity)
             }
             else
             {
-                frame0->data[index * 4 + 0] = 0;
-                frame0->data[index * 4 + 1] = 0;
-                frame0->data[index * 4 + 2] = 0;
-                frame0->data[index * 4 + 3] = 255;
+                assert(uiPlayer);
+
+                WarMapTile* tile = &uiPlayer->tiles[index];
+                if (tile->state == MAP_TILE_STATE_VISIBLE ||
+                    tile->state == MAP_TILE_STATE_FOG)
+                {
+                    frame0->data[index * 4 + 0] = frame1->data[index * 4 + 0];
+                    frame0->data[index * 4 + 1] = frame1->data[index * 4 + 1];
+                    frame0->data[index * 4 + 2] = frame1->data[index * 4 + 2];
+                    frame0->data[index * 4 + 3] = frame1->data[index * 4 + 3];
+                }
+                else
+                {
+                    frame0->data[index * 4 + 0] = 0;
+                    frame0->data[index * 4 + 1] = 0;
+                    frame0->data[index * 4 + 2] = 0;
+                    frame0->data[index * 4 + 3] = 255;
+                }
             }
+
         }
     }
 

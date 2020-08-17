@@ -335,14 +335,21 @@ void updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResourc
 
     s32 index = y * MAP_TILES_WIDTH + x;
 
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
-    WarMapTile* tile = &uiPlayer->tiles[index];
-
-    if (!map->fowEnabled ||
-        tile->state == MAP_TILE_STATE_VISIBLE ||
-        tile->state == MAP_TILE_STATE_FOG)
+    if (!map->fowEnabled)
     {
         color = getMapTileAverage(levelVisual, tileset, x, y);
+    }
+    else
+    {
+        WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
+        assert(uiPlayer);
+
+        WarMapTile* tile = &uiPlayer->tiles[index];
+        if (tile->state == MAP_TILE_STATE_VISIBLE ||
+            tile->state == MAP_TILE_STATE_FOG)
+        {
+            color = getMapTileAverage(levelVisual, tileset, x, y);
+        }
     }
 
     minimapFrame->data[index * 4 + 0] = color.r;
@@ -512,11 +519,13 @@ void enterMap(WarContext* context)
 
     map->playing = true;
     map->custom = levelInfo->levelInfo.customMap;
+    map->replay = false;
+    map->observer = false;
+    map->uiPlayer = 0;
     map->tilesetType = levelInfo->levelInfo.tilesetType;
     map->fowEnabled = true;
     map->result = WAR_LEVEL_RESULT_NONE;
     map->objectivesTime = 1;
-    map->uiPlayer = 0;
 
     map->settings.gameSpeed = WAR_SPEED_NORMAL;
     map->settings.mouseScrollSpeed = WAR_SPEED_NORMAL;
@@ -547,20 +556,6 @@ void enterMap(WarContext* context)
             data[4 * i + 3] = 255;
 
         map->blackSprite = createSprite(context, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT, data);
-    }
-
-    // set the initial state for the tiles
-    {
-        WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
-
-        for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-        {
-            WarMapTile* tile = &uiPlayer->tiles[i];
-
-            tile->state = MAP_TILE_STATE_UNKOWN;
-            tile->type = WAR_FOG_PIECE_NONE;
-            tile->boundary = WAR_FOG_BOUNDARY_NONE;
-        }
     }
 
     // create the map sprite
@@ -761,6 +756,14 @@ void enterMap(WarContext* context)
             memset(player->squads, 0, sizeof(player->squads));
 
             WarCommandListInit(&player->commands, WarCommandListDefaultOptions);
+
+            for (s32 j = 0; j < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; j++)
+            {
+                WarMapTile* tile = &player->tiles[j];
+                tile->state = MAP_TILE_STATE_UNKOWN;
+                tile->type = WAR_FOG_PIECE_NONE;
+                tile->boundary = WAR_FOG_BOUNDARY_NONE;
+            }
         }
     }
 
@@ -912,7 +915,7 @@ void updateSelection(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
 
     if(wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
@@ -1393,7 +1396,15 @@ void updateCommandFromRightClick(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    if (map->observer)
+    {
+        // NOTE: If there is an observer, then it can't do any command from right click
+        return;
+    }
+
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
+    assert(uiPlayer);
+
     WarUICommand* command = &map->uiCommand;
 
     if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
@@ -1737,7 +1748,7 @@ void updateMapCursor(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
 
     WarEntity* entity = findUIEntity(context, "cursor");
     if (entity)
@@ -2414,6 +2425,26 @@ WarCampaignMapType getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex)
         : WAR_CAMPAIGN_CUSTOM;
 }
 
+WarPlayerInfo* getMapUIPlayer(WarMap* map)
+{
+    if (map->observer)
+    {
+        if (map->uiPlayer < 0)
+        {
+            // NOTE: If the uiPlayer is -1 it means there is no specific ui player,
+            // then FoW need to be disabled
+            assert(!map->fowEnabled);
+            return NULL;
+        }
+
+        return &map->players[map->uiPlayer];
+    }
+
+    // NOTE: If there is no observer, then there must be always an ui player (the human player)
+    assert(map->uiPlayer == 0);
+    return &map->players[map->uiPlayer];
+}
+
 WarLevelResult checkObjectives(WarContext* context)
 {
     WarMap* map = context->map;
@@ -2521,7 +2552,7 @@ void updateMap(WarContext* context)
 void renderTerrain(WarContext* context)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
 
     NVGcontext* gfx = context->gfx;
 
@@ -2537,10 +2568,7 @@ void renderTerrain(WarContext* context)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            WarMapTile* tile = getMapTileState(map, uiPlayer, x, y);
-            if (!map->fowEnabled ||
-                tile->state == MAP_TILE_STATE_VISIBLE ||
-                tile->state == MAP_TILE_STATE_FOG)
+            if (!map->fowEnabled)
             {
                 // index of the tile in the tilesheet
                 u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
@@ -2558,6 +2586,31 @@ void renderTerrain(WarContext* context)
 
                 nvgRestore(gfx);
             }
+            else
+            {
+                assert(uiPlayer);
+
+                WarMapTile* tile = getMapTileState(map, uiPlayer, x, y);
+                if (tile->state == MAP_TILE_STATE_VISIBLE ||
+                    tile->state == MAP_TILE_STATE_FOG)
+                {
+                    // index of the tile in the tilesheet
+                    u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+
+                    // coordinates in pixels of the terrain tile
+                    s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                    s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
+
+                    nvgSave(gfx);
+                    nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+
+                    rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                    nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+
+                    nvgRestore(gfx);
+                }
+            }
         }
     }
 
@@ -2567,10 +2620,12 @@ void renderTerrain(WarContext* context)
 void renderFoW(WarContext* context)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
 
     if (!map->fowEnabled)
         return;
+
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
+    assert(uiPlayer);
 
     NVGcontext* gfx = context->gfx;
 
@@ -2772,4 +2827,4 @@ void renderMap(WarContext *context)
     renderMapUI(context);
 
     nvgRestore(gfx);
-}
+};

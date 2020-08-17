@@ -2298,8 +2298,17 @@ typedef struct
 
 typedef struct
 {
-    bool playing;
-    bool custom;
+    bool playing;   // Indicates if the map is being played
+    bool custom;    // Indicates if the map is a custom one (not a level)
+    bool replay;    // Indicates that if the map is a replay
+    bool observer;  // Indicates if there is an observer
+                    // If the map is a replay, then there is an observer.
+                    // If the map is not a replay, then there can be an observer for live matches.
+    s32 uiPlayer;   // Index of the player that the UI is being rendering for, by default it's 0
+                    // If the map is not a replay and there is no an observer, this uiPlayer index need to be always 0
+                    // If the map is a replay and/or there is an observer, this uiPlayer index can be also -1,
+                    // indicating that the observer is watching everything (aka FoW is disabled)
+
     WarLevelResult result;
 
     s32 levelInfoIndex;
@@ -2359,7 +2368,6 @@ typedef struct
     WarCheatStatus cheatStatus;
 
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
-    s32 uiPlayer;  // Index of the player that the UI is being rendering for, by default it's 0 (the human player)
 } WarMap;
 
 typedef enum

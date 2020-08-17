@@ -368,10 +368,8 @@ WarLevelResult checkMap01Objectives(WarContext* context)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    WarUnitType farmType = isHumanPlayer(player)
-        ? WAR_UNIT_FARM_HUMANS : WAR_UNIT_FARM_ORCS;
-    WarUnitType barracksType = isHumanPlayer(player)
-        ? WAR_UNIT_BARRACKS_HUMANS : WAR_UNIT_BARRACKS_ORCS;
+    WarUnitType farmType = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, player->race);
+    WarUnitType barracksType =getUnitTypeForRace(WAR_UNIT_BARRACKS_HUMANS, player->race);
 
     if (getNumberOfBuildingsOfType(context, player->index, farmType, true) >= 6 &&
         getNumberOfBuildingsOfType(context, player->index, barracksType, true) >= 1)

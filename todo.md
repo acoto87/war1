@@ -184,8 +184,39 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Zoom feature
 * [ ] FoW to be player-based, and not map-based
     * [x] Pass tiles information to player info.
-    * [ ] Review that the correct player is retrieved for querying fow in each scenario.
-    * [ ] When querying the map tiles for unit, maybe the I can deny information for non-visible entities. That way, when getting entities from map tiles, I don't need to check to see if the entity is visible or not.
+    * [x] Review that the correct player is retrieved for querying fow in each scenario.
+        When there is an observer (in a replay or live match), the uiPlayer field on WarMap can be any value from -1 to 4,
+        indicating the player that the UI will render information of.
+        When there is NOT and observer, the uiPlayer field on WarMap must be always 0 (the human player).
+        This will be tested with assertions in the code when retrieving the current uiPlayer for each scenario.
+        There are three scenarios regarding maps
+            Scenario 1
+                In this scenario the human player can only see the its own FoW info.
+                It can't change the player for which the UI is being displayed.
+                players[0] = human
+                players[1] = computer
+                players[2] = computer or none
+                players[3] = computer or none
+                players[4] = computer or none
+            Scenario 2
+                In this scenario the human observer can change dynamically for which player the game display the UI information for.
+                It can be none of the players, in that case, FoW is disabled and which ever unit the obverser selects it will display its information on UI.
+                live observer
+                players[0] = computer
+                players[1] = computer
+                players[2] = computer or none
+                players[3] = computer or none
+                players[4] = computer or none
+            Scenario 3
+                In this scenario the human observer can change dynamically for which player the game display the UI information for.
+                It can be none of the players, in that case, FoW is disabled and which ever unit the obverser selects it will display its information on UI.
+                replay observer
+                players[0] = computer or human (predefined commands)
+                players[1] = computer (predefined commands)
+                players[2] = computer (predefined commands) or none
+                players[3] = computer (predefined commands) or none
+                players[4] = computer or none
+    * [ ] When querying the map tiles for unit, maybe the I can deny information for non-visible entities by default. That way, when getting entities from map tiles, I don't need to check to see if the entity is visible or not.
 * [ ] Implement replays
 * [ ] Implement observers for live games between AIs.
 

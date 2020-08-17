@@ -388,7 +388,14 @@ void renderUICommand(WarContext* context)
     WarInput* input = &context->input;
     WarUICommand* uiCommand = &map->uiCommand;
 
-    WarPlayerInfo* uiPlayer = &map->players[map->uiPlayer];
+    if (map->observer)
+    {
+        // NOTE: If there is an observer there is no ui command to be rendered
+        return;
+    }
+
+    WarPlayerInfo* uiPlayer = getMapUIPlayer(map);
+    assert(uiPlayer);
 
     NVGcontext* gfx = context->gfx;
 
