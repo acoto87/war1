@@ -67,7 +67,17 @@ bool equalsS32(const s32 a, const s32 b)
     return a == b;
 }
 
-bool compareS32(const s32 a, const s32 b)
+s32 compareS32(const s32 a, const s32 b)
+{
+    return a - b;
+}
+
+bool equalsU32(const u32 a, const u32 b)
+{
+    return a == b;
+}
+
+s32 compareU32(const u32 a, const u32 b)
 {
     return a - b;
 }
@@ -75,7 +85,15 @@ bool compareS32(const s32 a, const s32 b)
 shlDeclareList(s32List, s32)
 shlDefineList(s32List, s32)
 
+shlDeclareList(u32List, u32)
+shlDefineList(u32List, u32)
+
+shlDeclareBinaryHeap(u32Heap, u32)
+shlDefineBinaryHeap(u32Heap, u32)
+
 #define s32ListDefaultOptions (s32ListOptions){0, equalsS32, NULL}
+#define u32ListDefaultOptions (u32ListOptions){0, equalsU32, NULL}
+#define u32HeapDefaultOptions (u32HeapOptions){0, equalsU32, compareU32, NULL}
 
 bool equalsVec2(const vec2 v1, const vec2 v2)
 {
@@ -309,14 +327,6 @@ typedef enum
     WAR_RESOURCE_TYPE_TILESET,
     WAR_RESOURCE_TYPE_TILES
 } WarResourceType;
-
-typedef enum
-{
-    WAR_LEVEL_TYPE_UNKOWN,
-    WAR_LEVEL_TYPE_1,
-    WAR_LEVEL_TYPE_2,
-    WAR_LEVEL_TYPE_3
-} WarLevelInfoType;
 
 typedef enum
 {
@@ -2367,6 +2377,7 @@ typedef struct
     WarFlashStatus flashStatus;
     WarCheatStatus cheatStatus;
 
+    s32 playersCount;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
 } WarMap;
 

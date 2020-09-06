@@ -1221,6 +1221,9 @@ WarUnitType getTownHallOfRace(WarRace race);
 
 #define isDeadUnit(entity) (isDead(entity) || isGoingToDie(entity))
 #define isCollapsedUnit(entity) (isCollapsing(entity) || isGoingToCollapse(entity))
+#define isTrainingUnit(entity) (isTraining(producer) || isGoingToTrain(producer))
+#define isUpgradingUnit(entity) (isUpgrading(producer) || isGoingToUpgrade(producer))
+#define isBeingBuiltUnit(entity) (isBuilding(entity) || isGoingToBuild(entity))
 
 WarProjectileType getProjectileType(WarUnitType type);
 

@@ -526,6 +526,7 @@ void enterMap(WarContext* context)
     map->fowEnabled = true;
     map->result = WAR_LEVEL_RESULT_NONE;
     map->objectivesTime = 1;
+    map->playersCount = 2;
 
     map->settings.gameSpeed = WAR_SPEED_NORMAL;
     map->settings.mouseScrollSpeed = WAR_SPEED_NORMAL;

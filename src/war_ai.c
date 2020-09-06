@@ -1,3 +1,19 @@
+const WarAIData aiData[] =
+{
+    { "level", levelInitAI, levelGetAICommand }
+};
+
+WarAIData getAIData(const char* name)
+{
+    s32 index = 0;
+    s32 length = arrayLength(aiData);
+    while (index < length && !strEquals(aiData[index].name, name))
+        index++;
+
+    assert(index < length);
+    return aiData[index];
+}
+
 WarAI* createAI(WarContext* context, const char* name)
 {
     WarAI* ai = (WarAI*)xmalloc(sizeof(WarAI));
@@ -17,18 +33,19 @@ void initAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
     aiPlayer->ai = createAI(context, "level");
 
     if (aiPlayer->ai->initFunc)
+    {
         aiPlayer->ai->initFunc(context, aiPlayer);
+    }
 }
 
 void initAIPlayers(WarContext* context)
 {
     WarMap* map = context->map;
 
-    // for now assume player 1 is the only AI
-    WarPlayerInfo* aiPlayer = &map->players[1];
-    WarCommandListInit(&aiPlayer->commands, WarCommandListDefaultOptions);
-
-    initAIPlayer(context, aiPlayer);
+    for (s32 i = 1; i < map->playersCount; i++)
+    {
+        initAIPlayer(context, &map->players[i]);
+    }
 }
 
 // static s32 idleWorkersCompare(const WarEntity* e1, const WarEntity* e2)
@@ -727,6 +744,8 @@ void updateAIPlayers(WarContext* context)
 {
     WarMap* map = context->map;
 
-    // for now assume player 1 is the only AI
-    updateAIPlayer(context, &map->players[1]);
+    for (s32 i = 1; i < map->playersCount; i++)
+    {
+        updateAIPlayer(context, &map->players[i]);
+    }
 }

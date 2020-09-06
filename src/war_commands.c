@@ -270,13 +270,12 @@ WarCommandStatus executeTrainCommand(WarContext* context, WarPlayerInfo* player,
         return WAR_COMMAND_STATUS_INVALID_PRODUCER;
     }
 
-    if (isBuilding(producer) || isGoingToBuild(producer))
+    if (isBeingBuiltUnit(producer))
     {
         return WAR_COMMAND_STATUS_PRODUCER_NOT_READY;
     }
 
-    if (isTraining(producer) || isGoingToTrain(producer) ||
-        isUpgrading(producer) || isGoingToUpgrade(producer))
+    if (isTrainingUnit(producer) || isUpgradingUnit(producer))
     {
         return WAR_COMMAND_STATUS_PRODUCER_BUSY;
     }
