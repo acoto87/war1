@@ -147,6 +147,7 @@ bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp);
 bool decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp);
 bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana);
 void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana);
+s32 getNumberOfSupplies(WarContext* context, WarPlayerInfo* player);
 bool enoughFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkFarmFood(WarContext* context, WarPlayerInfo* player);
 bool checkRectToBuild(WarContext* context, WarPlayerInfo* player, s32 x, s32 y, s32 w, s32 h);

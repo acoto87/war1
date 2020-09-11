@@ -1963,12 +1963,16 @@ void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     unit->mana = clamp(unit->mana + mana, 0, unit->maxMana);
 }
 
-bool enoughFarmFood(WarContext* context, WarPlayerInfo* player)
+s32 getNumberOfSupplies(WarContext* context, WarPlayerInfo* player)
 {
     WarUnitType farmType = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, player->race);
     s32 farmCount = getNumberOfBuildingsOfType(context, player->index, farmType, true);
-    s32 foodCount = farmCount * 4 + 1;
+    return farmCount * 4 + 1;
+}
 
+bool enoughFarmFood(WarContext* context, WarPlayerInfo* player)
+{
+    s32 foodCount = getNumberOfSupplies(context, player);
     s32 dudesCount = getTotalNumberOfDudes(context, player->index);
     return dudesCount + 1 <= foodCount;
 }

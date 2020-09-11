@@ -129,12 +129,9 @@ s32 getTotalNumberOfUnits(WarContext* context, u8 player)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity)
+        if (entity && entity->unit.player == player)
         {
-            if (entity->unit.player == player)
-            {
-                count++;
-            }
+            count++;
         }
     }
 
@@ -149,12 +146,13 @@ s32 getTotalNumberOfDudes(WarContext* context, u8 player)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity && isDudeUnit(entity) && !isSummonUnit(entity) && !isSkeletonUnit(entity))
+        if (entity &&
+            entity->unit.player == player &&
+            isDudeUnit(entity) &&
+            !isSummonUnit(entity) &&
+            !isSkeletonUnit(entity))
         {
-            if (entity->unit.player == player)
-            {
-                count++;
-            }
+            count++;
         }
     }
 
@@ -169,13 +167,12 @@ s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity)
+        if (entity &&
+            entity->unit.player == player &&
+            isBuildingUnit(entity))
         {
-            if (entity->unit.player == player && isBuildingUnit(entity))
+            if (!alreadyBuilt || !isBeingBuiltUnit(entity))
             {
-                if (alreadyBuilt && (isBuilding(entity) || isGoingToBuild(entity)))
-                    continue;
-
                 count++;
             }
         }
@@ -194,14 +191,12 @@ s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitT
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity)
+        if (entity &&
+            entity->unit.player == player &&
+            entity->unit.type == unitType)
         {
-            if (entity->unit.player == player &&
-                entity->unit.type == unitType)
+            if (!alreadyBuilt || !isBeingBuiltUnit(entity))
             {
-                if (alreadyBuilt && (isBuilding(entity) || isGoingToBuild(entity)))
-                    continue;
-
                 count++;
             }
         }
@@ -218,13 +213,11 @@ s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity)
+        if (entity &&
+            entity->unit.player == player &&
+            entity->unit.type == unitType)
         {
-            if (entity->unit.player == player &&
-                entity->unit.type == unitType)
-            {
-                count++;
-            }
+            count++;
         }
     }
 

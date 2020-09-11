@@ -241,6 +241,691 @@ WarCommand* createCancelCommand(WarContext* context, WarPlayerInfo* player, WarE
     return command;
 }
 
+WarCommandStatus canExecuteTrainCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarUnitType unitType = command->train.unitType;
+    WarEntityId producerId = command->train.buildingId;
+
+    if (!isValidUnitType(unitType) || !isTrainableUnitType(unitType))
+    {
+        return WAR_COMMAND_STATUS_INVALID_UNIT_TYPE;
+    }
+
+    WarRace unitTypeRace = getUnitTypeRace(unitType);
+    if (player->race != unitTypeRace)
+    {
+        return WAR_COMMAND_STATUS_INVALID_UNIT_RACE;
+    }
+
+    if (!producerId)
+    {
+        return WAR_COMMAND_STATUS_INVALID_PRODUCER;
+    }
+
+    WarUnitType producerType = getUnitTypeProducer(unitType);
+    WarEntity* producer = findEntity(context, producerId);
+    if (!producer || !isBuildingUnit(producer) || isCollapsedUnit(producer) ||
+        producer->unit.type != producerType)
+    {
+        return WAR_COMMAND_STATUS_INVALID_PRODUCER;
+    }
+
+    if (isBeingBuiltUnit(producer))
+    {
+        return WAR_COMMAND_STATUS_PRODUCER_NOT_READY;
+    }
+
+    if (isTrainingUnit(producer) || isUpgradingUnit(producer))
+    {
+        return WAR_COMMAND_STATUS_PRODUCER_BUSY;
+    }
+
+    if (!enoughFarmFood(context, player))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_FOOD;
+    }
+
+    WarUnitStats stats = getUnitStats(unitType);
+    if (!enoughPlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_GOLD;
+    }
+
+    if (!enoughPlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_WOOD;
+    }
+
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteBuildCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarUnitType unitType = command->build.unitType;
+    WarEntityId workerId = command->build.workerId;
+    vec2 targetTile = command->build.position;
+
+    if (!isValidUnitType(unitType) || !isBuildableUnitType(unitType))
+    {
+        return WAR_COMMAND_STATUS_INVALID_UNIT_TYPE;
+    }
+
+    WarRace unitTypeRace = getUnitTypeRace(unitType);
+    if (player->race != unitTypeRace)
+    {
+        return WAR_COMMAND_STATUS_INVALID_UNIT_RACE;
+    }
+
+    if (!workerId)
+    {
+        return WAR_COMMAND_STATUS_INVALID_WORKER;
+    }
+
+    WarEntity* worker = findEntity(context, workerId);
+    if (!worker || !isWorkerUnit(worker) || isDeadUnit(worker))
+    {
+        return WAR_COMMAND_STATUS_INVALID_WORKER;
+    }
+
+    if (isWorkerBusy(worker))
+    {
+        return WAR_COMMAND_STATUS_WORKER_BUSY;
+    }
+
+    if (!canBuildingBeBuilt(context, player, unitType, targetTile.x, targetTile.y))
+    {
+        return WAR_COMMAND_STATUS_INVALID_POSITION;
+    }
+
+    WarBuildingStats stats = getBuildingStats(unitType);
+    if (!enoughPlayerResource(context, player, WAR_RESOURCE_GOLD, stats.goldCost))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_GOLD;
+    }
+
+    if (!enoughPlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_WOOD;
+    }
+
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteBuildWallCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    vec2 targetTile = command->wall.position;
+
+    if (!canRoadOrWallBeBuilt(context, player, targetTile.x, targetTile.y))
+    {
+        return WAR_COMMAND_STATUS_INVALID_POSITION;
+    }
+
+    if (!enoughPlayerResource(context, player, WAR_RESOURCE_GOLD, WAR_WALL_GOLD_COST))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_GOLD;
+    }
+
+    if (!enoughPlayerResource(context, player, WAR_RESOURCE_WOOD, WAR_WALL_WOOD_COST))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_WOOD;
+    }
+
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteBuildRoadCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    vec2 targetTile = command->wall.position;
+
+    if (!canRoadOrWallBeBuilt(context, player, targetTile.x, targetTile.y))
+    {
+        return WAR_COMMAND_STATUS_INVALID_POSITION;
+    }
+
+    if (!enoughPlayerResource(context, player, WAR_RESOURCE_GOLD, WAR_ROAD_GOLD_COST))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_GOLD;
+    }
+
+    if (!enoughPlayerResource(context, player, WAR_RESOURCE_WOOD, WAR_ROAD_WOOD_COST))
+    {
+        return WAR_COMMAND_STATUS_NOT_ENOUGH_WOOD;
+    }
+
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteUpgradeCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarUpgradeType upgradeType = command->upgrade.upgradeType;
+    WarEntityId producerId = command->upgrade.buildingId;
+
+    if (!isValidUpgradeType(upgradeType))
+    {
+        return WAR_COMMAND_STATUS_INVALID_UPGRADE_TYPE;
+    }
+
+    WarRace upgradeTypeRace = getUpgradeTypeRace(upgradeType);
+    if (player->race != upgradeTypeRace && upgradeType != WAR_UPGRADE_SHIELD)
+    {
+        return WAR_COMMAND_STATUS_INVALID_UPGRADE_RACE;
+    }
+
+    if (!producerId)
+    {
+        return WAR_COMMAND_STATUS_INVALID_PRODUCER;
+    }
+
+    WarUnitType producerType = getUpgradeTypeProducer(upgradeType, player->race);
+    WarEntity* producer = findEntity(context, producerId);
+    if (!producer || !isBuildingUnit(producer) || isCollapsedUnit(producer) ||
+        producer->unit.type != producerType)
+    {
+        return WAR_COMMAND_STATUS_INVALID_PRODUCER;
+    }
+
+    if (isBuilding(producer) || isGoingToBuild(producer))
+    {
+        return WAR_COMMAND_STATUS_PRODUCER_NOT_READY;
+    }
+
+    if (isTraining(producer) || isGoingToTrain(producer) ||
+        isUpgrading(producer) || isGoingToUpgrade(producer))
+    {
+        return WAR_COMMAND_STATUS_PRODUCER_BUSY;
+    }
+
+    if (!hasRemainingUpgrade(player, upgradeType))
+    {
+        return WAR_COMMAND_STATUS_NOT_MORE_UPGRADE;
+    }
+
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteMoveCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarInput* input = &context->input;
+
+    WarSquadId squadId = command->move.squadId;
+    WarUnitGroup unitGroup = command->move.unitGroup;
+    vec2 targetTile = command->move.position;
+
+    if (inRange(squadId, 0, MAX_SQUAD_COUNT))
+    {
+        unitGroup = createUnitGroupFromSquad(&player->squads[squadId]);
+    }
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    if (vec2IsZero(targetTile))
+    {
+        return WAR_COMMAND_STATUS_INVALID_MOVE_TARGET;
+    }
+
+    WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+    for (s32 i = 0; i < unitGroup.count; i++)
+    {
+        WarEntityId unitId = unitGroup.unitIds[i];
+        WarEntity* unit = findEntity(context, unitId);
+
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit) || !isFriendlyUnit(context, unit))
+            continue;
+
+        status = WAR_COMMAND_STATUS_DONE;
+    }
+
+    return status;
+}
+
+WarCommandStatus canExecuteFollowCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarSquadId squadId = command->follow.squadId;
+    WarUnitGroup unitGroup = command->follow.unitGroup;
+    WarEntityId targetEntityId = command->follow.targetEntityId;
+
+    if (inRange(squadId, 0, MAX_SQUAD_COUNT))
+    {
+        unitGroup = createUnitGroupFromSquad(&player->squads[squadId]);
+    }
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    if (!targetEntityId)
+    {
+        return WAR_COMMAND_STATUS_INVALID_FOLLOW_TARGET;
+    }
+
+    WarEntity* targetEntity = findEntity(context, targetEntityId);
+    if (!targetEntity)
+    {
+        return WAR_COMMAND_STATUS_INVALID_FOLLOW_TARGET;
+    }
+
+    WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+    for (s32 i = 0; i < unitGroup.count; i++)
+    {
+        WarEntityId unitId = unitGroup.unitIds[i];
+        WarEntity* unit = findEntity(context, unitId);
+
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit) || !isFriendlyUnit(context, unit))
+            continue;
+
+        status = WAR_COMMAND_STATUS_DONE;
+    }
+
+    return status;
+}
+
+WarCommandStatus canExecuteAttackCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarSquadId squadId = command->attack.squadId;
+    WarUnitGroup unitGroup = command->attack.unitGroup;
+    WarEntityId targetEntityId = command->attack.targetEntityId;
+    vec2 targetTile = command->attack.position;
+
+    WarEntity* targetEntity = NULL;
+
+    if (inRange(squadId, 0, MAX_SQUAD_COUNT))
+    {
+        unitGroup = createUnitGroupFromSquad(&player->squads[squadId]);
+    }
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    if (!targetEntityId && vec2IsZero(targetTile))
+    {
+        return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
+    }
+
+    if (targetEntityId)
+    {
+        targetEntity = findEntity(context, targetEntityId);
+        if (!targetEntity || !isUnit(targetEntity) || isDeadUnit(targetEntity) || isCollapsedUnit(targetEntity))
+        {
+            return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
+        }
+    }
+
+    WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+    for (s32 i = 0; i < unitGroup.count; i++)
+    {
+        WarEntityId unitId = unitGroup.unitIds[i];
+        WarEntity* unit = findEntity(context, unitId);
+
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit) || !isFriendlyUnit(context, unit))
+            continue;
+
+        if (targetEntity && (unit->id == targetEntity->id || !canAttack(context, unit, targetEntity)))
+            continue;
+
+        status = WAR_COMMAND_STATUS_DONE;
+    }
+
+    return status;
+}
+
+WarCommandStatus canExecuteStopCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarSquadId squadId = command->stop.squadId;
+    WarUnitGroup unitGroup = command->stop.unitGroup;
+
+    if (inRange(squadId, 0, MAX_SQUAD_COUNT))
+    {
+        unitGroup = createUnitGroupFromSquad(&player->squads[squadId]);
+    }
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+    for (s32 i = 0; i < unitGroup.count; i++)
+    {
+        WarEntityId unitId = unitGroup.unitIds[i];
+        WarEntity* unit = findEntity(context, unitId);
+
+        if (!unit || !isDudeUnit(unit) || !isFriendlyUnit(context, unit) || isDeadUnit(unit))
+            continue;
+
+        status = WAR_COMMAND_STATUS_DONE;
+    }
+
+    return status;
+}
+
+WarCommandStatus canExecuteGatherCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarUnitGroup unitGroup = command->gather.unitGroup;
+    WarResourceKind resource = command->gather.resource;
+    WarEntityId targetEntityId = command->gather.targetEntityId;
+    vec2 targetTile = command->gather.targetTile;
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    switch (resource)
+    {
+        case WAR_RESOURCE_GOLD:
+        {
+            if (!targetEntityId)
+            {
+                return WAR_COMMAND_STATUS_INVALID_GOLDMINE;
+            }
+
+            WarEntity* goldmine = findEntity(context, targetEntityId);
+            if (!goldmine || !isGoldmineUnit(goldmine) || isCollapsedUnit(goldmine))
+            {
+                return WAR_COMMAND_STATUS_INVALID_GOLDMINE;
+            }
+
+            WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+            for (s32 i = 0; i < unitGroup.count; i++)
+            {
+                WarEntityId unitId = unitGroup.unitIds[i];
+                WarEntity* unit = findEntity(context, unitId);
+                if (!unit || !isWorkerUnit(unit) || !isFriendlyUnit(context, unit) || isWorkerBusy(unit) || isDeadUnit(unit))
+                    continue;
+
+                // TODO: Should I check here that there is a townhall nearby?
+                status = WAR_COMMAND_STATUS_DONE;
+            }
+
+            return status;
+        }
+        case WAR_RESOURCE_WOOD:
+        {
+            WarEntity* forest = findEntity(context, targetEntityId);
+            if (!forest)
+            {
+                return WAR_COMMAND_STATUS_INVALID_FOREST;
+            }
+
+            WarTree* tree = getTreeAtPosition(forest, (s32)targetTile.x, (s32)targetTile.y);
+            if (!tree)
+            {
+                return WAR_COMMAND_STATUS_INVALID_TREE;
+            }
+
+            WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+            for (s32 i = 0; i < unitGroup.count; i++)
+            {
+                WarEntityId unitId = unitGroup.unitIds[i];
+                WarEntity* unit = findEntity(context, unitId);
+
+                if (!unit || !isWorkerUnit(unit) || !isFriendlyUnit(context, unit) || isWorkerBusy(unit) || isDeadUnit(unit))
+                    continue;
+
+                // TODO: Should I check here that there is a townhall nearby?
+                status = WAR_COMMAND_STATUS_DONE;
+            }
+
+            return status;
+        }
+        default:
+        {
+            logWarning("Trying to execute gather command with resource: %d\n", resource);
+            return WAR_COMMAND_STATUS_INVALID_RESOURCE;
+        }
+    }
+}
+
+WarCommandStatus canExecuteDeliverCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarUnitGroup unitGroup = command->deliver.unitGroup;
+    WarEntityId targetEntityId = command->deliver.targetEntityId;
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    WarEntity* targetEntity = findEntity(context, targetEntityId);
+    if (!targetEntity)
+    {
+        // TODO: Should I find a townhall here if there is not targetEntity?
+        return WAR_COMMAND_STATUS_INVALID_TARGET;
+    }
+
+    WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+    for (s32 i = 0; i < unitGroup.count; i++)
+    {
+        WarEntityId unitId = unitGroup.unitIds[i];
+        WarEntity* unit = findEntity(context, unitId);
+
+        if (!unit || !isWorkerUnit(unit) || !isFriendlyUnit(context, unit) || !isCarryingResources(unit) || isDeadUnit(unit))
+            continue;
+
+        // TODO: Should I check here that there is a townhall nearby?
+        status = WAR_COMMAND_STATUS_DONE;
+    }
+
+    return status;
+}
+
+WarCommandStatus canExecuteRepairCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarUnitGroup unitGroup = command->repair.unitGroup;
+    WarEntityId targetEntityId = command->repair.targetEntityId;
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    WarEntity* targetEntity = findEntity(context, targetEntityId);
+    if (!isBuildingUnit(targetEntity) || isCollapsedUnit(targetEntity))
+    {
+        return WAR_COMMAND_STATUS_INVALID_TARGET;
+    }
+
+    WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+    for (s32 i = 0; i < unitGroup.count; i++)
+    {
+        WarEntityId unitId = unitGroup.unitIds[i];
+        WarEntity* unit = findEntity(context, unitId);
+        if (!unit && !isWorkerUnit(unit) && !isFriendlyUnit(context, unit))
+            continue;
+
+        status = WAR_COMMAND_STATUS_DONE;
+    }
+
+    return status;
+}
+
+WarCommandStatus canExecuteCastCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarSquadId squadId = command->cast.squadId;
+    WarUnitGroup unitGroup = command->cast.unitGroup;
+    WarSpellType spellType = command->cast.spellType;
+    WarEntityId targetEntityId = command->cast.targetEntityId;
+    vec2 position = command->cast.position;
+
+    if (inRange(squadId, 0, MAX_SQUAD_COUNT))
+    {
+        unitGroup = createUnitGroupFromSquad(&player->squads[squadId]);
+    }
+
+    if (unitGroup.count <= 0)
+    {
+        return WAR_COMMAND_STATUS_NO_UNITS;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    if (targetEntityId)
+    {
+        WarEntity* targetEntity = findEntity(context, targetEntityId);
+        if (!targetEntity || isDeadUnit(targetEntity) || isCollapsedUnit(targetEntity))
+        {
+            return WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET;
+        }
+    }
+
+    WarUnitType casterType = getSpellCasterType(spellType);
+
+    WarCommandStatus status = WAR_COMMAND_STATUS_FAILED;
+
+    for (s32 i = 0; i < unitGroup.count; i++)
+    {
+        WarEntityId unitId = unitGroup.unitIds[i];
+        WarEntity* unit = findEntity(context, unitId);
+        if (!unit || !isMagicUnit(unit) || !isFriendlyUnit(context, unit) ||
+            !isUnitOfType(unit, casterType) || isDeadUnit(unit))
+        {
+            continue;
+        }
+
+        status = WAR_COMMAND_STATUS_DONE;
+    }
+
+    return status;
+}
+
+WarCommandStatus canExecuteSquadCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarSquadId squadId = command->squad.squadId;
+    WarUnitGroup unitGroup = command->repair.unitGroup;
+
+    if (!inRange(squadId, 0, MAX_SQUAD_COUNT))
+    {
+        return WAR_COMMAND_STATUS_INVALID_SQUAD;
+    }
+
+    if (unitGroup.count > MAX_UNIT_SELECTION_COUNT)
+    {
+        return WAR_COMMAND_STATUS_TOO_MANY_UNITS;
+    }
+
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteWaitCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteSleepCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteCancelCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    WarEntityId targetEntityId = command->cancel.targetEntityId;
+    if (!targetEntityId)
+    {
+        return WAR_COMMAND_STATUS_INVALID_CANCEL_TARGET;
+    }
+
+    WarEntity* targetEntity = findEntity(context, targetEntityId);
+    if (!targetEntity || !isBuildingUnit(targetEntity) || isCollapsedUnit(targetEntity))
+    {
+        return WAR_COMMAND_STATUS_INVALID_CANCEL_TARGET;
+    }
+
+    if (!isBeingBuiltUnit(targetEntity) &&
+        !isTrainingUnit(targetEntity) &&
+        !isUpgradingUnit(targetEntity))
+    {
+        return WAR_COMMAND_STATUS_INVALID_CANCEL_TARGET;
+    }
+
+    return WAR_COMMAND_STATUS_DONE;
+}
+
+WarCommandStatus canExecuteCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
+{
+    static WarExecuteFunc canExecuteFuncs[WAR_COMMAND_COUNT] =
+    {
+        NULL,                          // WAR_COMMAND_NONE,
+        canExecuteTrainCommand,        // WAR_COMMAND_TRAIN,
+        canExecuteBuildCommand,        // WAR_COMMAND_BUILD,
+        canExecuteBuildWallCommand,    // WAR_COMMAND_BUILD_WALL,
+        canExecuteBuildRoadCommand,    // WAR_COMMAND_BUILD_ROAD,
+        canExecuteUpgradeCommand,      // WAR_COMMAND_UPGRADE,
+        canExecuteMoveCommand,         // WAR_COMMAND_MOVE,
+        canExecuteFollowCommand,       // WAR_COMMAND_FOLLOW,
+        canExecuteAttackCommand,       // WAR_COMMAND_ATTACK,
+        canExecuteStopCommand,         // WAR_COMMAND_STOP
+        canExecuteGatherCommand,       // WAR_COMMAND_GATHER,
+        canExecuteDeliverCommand,      // WAR_COMMAND_DELIVER,
+        canExecuteRepairCommand,       // WAR_COMMAND_REPAIR,
+        canExecuteCastCommand,         // WAR_COMMAND_CAST,
+        canExecuteSquadCommand,        // WAR_COMMAND_SQUAD,
+        canExecuteWaitCommand,         // WAR_COMMAND_WAIT,
+        canExecuteSleepCommand,        // WAR_COMMAND_SLEEP,
+        canExecuteCancelCommand,       // WAR_COMMAND_CANCEL
+    };
+
+    WarExecuteFunc canExecuteFunc = canExecuteFuncs[(s32)command->type];
+    if (!canExecuteFunc)
+    {
+        logError("Commands of type %d can't be executed\n", command->type);
+        return WAR_COMMAND_STATUS_FAILED;
+    }
+
+    return canExecuteFunc(context, player, command);
+}
+
 WarCommandStatus executeTrainCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
 {
     WarUnitType unitType = command->train.unitType;

@@ -1,6 +1,6 @@
 #pragma once
 
-WarCommand* createAICommand(WarContext* context, WarPlayerInfo* player, WarCommandType type);
+WarCommand* createCommand(WarContext* context, WarPlayerInfo* player, WarCommandType type);
 
 WarCommand* createTrainCommand(WarContext* context, WarPlayerInfo* player, WarUnitType unitType, WarEntityId buildingId);
 WarCommand* createBuildCommand(WarContext* context, WarPlayerInfo* player, WarUnitType unitType, WarEntityId workerId, vec2 position);
@@ -28,4 +28,5 @@ WarCommand* createWaitCommand(WarContext* context, WarPlayerInfo* player, WarCom
 WarCommand* createSleepCommand(WarContext* context, WarPlayerInfo* player, f32 time);
 WarCommand* createCancelCommand(WarContext* context, WarPlayerInfo* player, WarEntityId targetEntityId);
 
+WarCommandStatus canExecuteCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command);
 WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command);
