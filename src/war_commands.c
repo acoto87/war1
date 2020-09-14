@@ -445,8 +445,6 @@ WarCommandStatus canExecuteUpgradeCommand(WarContext* context, WarPlayerInfo* pl
 
 WarCommandStatus canExecuteMoveCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command)
 {
-    WarInput* input = &context->input;
-
     WarSquadId squadId = command->move.squadId;
     WarUnitGroup unitGroup = command->move.unitGroup;
     vec2 targetTile = command->move.position;
@@ -478,7 +476,7 @@ WarCommandStatus canExecuteMoveCommand(WarContext* context, WarPlayerInfo* playe
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit) || !isFriendlyUnit(context, unit))
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit))
             continue;
 
         status = WAR_COMMAND_STATUS_DONE;
@@ -526,7 +524,7 @@ WarCommandStatus canExecuteFollowCommand(WarContext* context, WarPlayerInfo* pla
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit) || !isFriendlyUnit(context, unit))
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit))
             continue;
 
         status = WAR_COMMAND_STATUS_DONE;
@@ -580,7 +578,7 @@ WarCommandStatus canExecuteAttackCommand(WarContext* context, WarPlayerInfo* pla
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit) || !isFriendlyUnit(context, unit))
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit))
             continue;
 
         if (targetEntity && (unit->id == targetEntity->id || !canAttack(context, unit, targetEntity)))
@@ -619,7 +617,7 @@ WarCommandStatus canExecuteStopCommand(WarContext* context, WarPlayerInfo* playe
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (!unit || !isDudeUnit(unit) || !isFriendlyUnit(context, unit) || isDeadUnit(unit))
+        if (!unit || !isDudeUnit(unit) || isDeadUnit(unit))
             continue;
 
         status = WAR_COMMAND_STATUS_DONE;
@@ -666,7 +664,7 @@ WarCommandStatus canExecuteGatherCommand(WarContext* context, WarPlayerInfo* pla
             {
                 WarEntityId unitId = unitGroup.unitIds[i];
                 WarEntity* unit = findEntity(context, unitId);
-                if (!unit || !isWorkerUnit(unit) || !isFriendlyUnit(context, unit) || isWorkerBusy(unit) || isDeadUnit(unit))
+                if (!unit || !isWorkerUnit(unit) || isWorkerBusy(unit) || isDeadUnit(unit))
                     continue;
 
                 // TODO: Should I check here that there is a townhall nearby?
@@ -696,7 +694,7 @@ WarCommandStatus canExecuteGatherCommand(WarContext* context, WarPlayerInfo* pla
                 WarEntityId unitId = unitGroup.unitIds[i];
                 WarEntity* unit = findEntity(context, unitId);
 
-                if (!unit || !isWorkerUnit(unit) || !isFriendlyUnit(context, unit) || isWorkerBusy(unit) || isDeadUnit(unit))
+                if (!unit || !isWorkerUnit(unit) || isWorkerBusy(unit) || isDeadUnit(unit))
                     continue;
 
                 // TODO: Should I check here that there is a townhall nearby?
@@ -742,7 +740,7 @@ WarCommandStatus canExecuteDeliverCommand(WarContext* context, WarPlayerInfo* pl
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (!unit || !isWorkerUnit(unit) || !isFriendlyUnit(context, unit) || !isCarryingResources(unit) || isDeadUnit(unit))
+        if (!unit || !isWorkerUnit(unit) || !isCarryingResources(unit) || isDeadUnit(unit))
             continue;
 
         // TODO: Should I check here that there is a townhall nearby?
@@ -779,7 +777,7 @@ WarCommandStatus canExecuteRepairCommand(WarContext* context, WarPlayerInfo* pla
     {
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
-        if (!unit && !isWorkerUnit(unit) && !isFriendlyUnit(context, unit))
+        if (!unit && !isWorkerUnit(unit))
             continue;
 
         status = WAR_COMMAND_STATUS_DONE;
@@ -794,7 +792,6 @@ WarCommandStatus canExecuteCastCommand(WarContext* context, WarPlayerInfo* playe
     WarUnitGroup unitGroup = command->cast.unitGroup;
     WarSpellType spellType = command->cast.spellType;
     WarEntityId targetEntityId = command->cast.targetEntityId;
-    vec2 position = command->cast.position;
 
     if (inRange(squadId, 0, MAX_SQUAD_COUNT))
     {
@@ -828,8 +825,7 @@ WarCommandStatus canExecuteCastCommand(WarContext* context, WarPlayerInfo* playe
     {
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
-        if (!unit || !isMagicUnit(unit) || !isFriendlyUnit(context, unit) ||
-            !isUnitOfType(unit, casterType) || isDeadUnit(unit))
+        if (!unit || !isMagicUnit(unit) || !isUnitOfType(unit, casterType) || isDeadUnit(unit))
         {
             continue;
         }
@@ -1042,7 +1038,10 @@ WarCommandStatus executeBuildCommand(WarContext* context, WarPlayerInfo* player,
     decreasePlayerResource(context, player, WAR_RESOURCE_WOOD, stats.woodCost);
 
     WarEntity* building = createBuilding(context, unitType, targetTile.x, targetTile.y, player->index, true);
+
     sendToRepairState(context, worker, building->id);
+
+    command->build.buildingId = building->id;
 
     return WAR_COMMAND_STATUS_RUNNING;
 }
@@ -1210,9 +1209,6 @@ WarCommandStatus executeMoveCommand(WarContext* context, WarPlayerInfo* player, 
         if (!unit || !isDudeUnit(unit) || isDeadUnit(unit))
             continue;
 
-        if (!isFriendlyUnit(context, unit))
-            continue;
-
         vec2 position = getUnitCenterPosition(unit, true);
 
         if (isKeyPressed(input, WAR_KEY_SHIFT))
@@ -1314,9 +1310,6 @@ WarCommandStatus executeFollowCommand(WarContext* context, WarPlayerInfo* player
         if (!unit || !isDudeUnit(unit) || isDeadUnit(unit))
             continue;
 
-        if (!isFriendlyUnit(context, unit))
-            continue;
-
         sendToFollowState(context, unit, targetEntity->id, VEC2_ZERO, 1);
 
         status = WAR_COMMAND_STATUS_DONE;
@@ -1371,29 +1364,25 @@ WarCommandStatus executeAttackCommand(WarContext* context, WarPlayerInfo* player
         WarEntity* unit = findEntity(context, unitId);
         if (unit && isDudeUnit(unit) && !isDeadUnit(unit))
         {
-            if (isFriendlyUnit(context, unit))
+            if (targetEntity)
             {
-                if (targetEntity)
+                // the unit can't attack itself
+                if (unit->id != targetEntity->id)
                 {
-                    // the unit can't attack itself
-                    if (unit->id != targetEntity->id)
+                    if (canAttack(context, unit, targetEntity))
                     {
-                        if (canAttack(context, unit, targetEntity))
-                        {
-                            sendToAttackState(context, unit, targetEntity->id, targetTile);
+                        sendToAttackState(context, unit, targetEntity->id, targetTile);
 
-                            status = WAR_COMMAND_STATUS_DONE;
-                        }
+                        status = WAR_COMMAND_STATUS_DONE;
                     }
                 }
-                else
-                {
-                    sendToAttackState(context, unit, 0, targetTile);
-
-                    status = WAR_COMMAND_STATUS_DONE;
-                }
             }
+            else
+            {
+                sendToAttackState(context, unit, 0, targetTile);
 
+                status = WAR_COMMAND_STATUS_DONE;
+            }
         }
     }
 
@@ -1427,7 +1416,7 @@ WarCommandStatus executeStopCommand(WarContext* context, WarPlayerInfo* player, 
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
 
-        if (unit && isDudeUnit(unit) && isFriendlyUnit(context, unit) && !isDeadUnit(unit))
+        if (unit && isDudeUnit(unit) && !isDeadUnit(unit))
         {
             sendToIdleState(context, unit, true);
 
@@ -1476,7 +1465,7 @@ WarCommandStatus executeGatherCommand(WarContext* context, WarPlayerInfo* player
             {
                 WarEntityId unitId = unitGroup.unitIds[i];
                 WarEntity* unit = findEntity(context, unitId);
-                if (unit && isWorkerUnit(unit) && isFriendlyUnit(context, unit) && !isWorkerBusy(unit))
+                if (unit && isWorkerUnit(unit) && !isWorkerBusy(unit))
                 {
                     if (sendWorkerToMine(context, unit, goldmine, NULL))
                     {
@@ -1507,7 +1496,7 @@ WarCommandStatus executeGatherCommand(WarContext* context, WarPlayerInfo* player
             {
                 WarEntityId unitId = unitGroup.unitIds[i];
                 WarEntity* unit = findEntity(context, unitId);
-                if (unit && isWorkerUnit(unit) && isFriendlyUnit(context, unit) && !isWorkerBusy(unit))
+                if (unit && isWorkerUnit(unit) && !isWorkerBusy(unit))
                 {
                     if (sendWorkerToChop(context, unit, forest, targetTile, NULL))
                     {
@@ -1549,7 +1538,7 @@ WarCommandStatus executeDeliverCommand(WarContext* context, WarPlayerInfo* playe
     {
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
-        if (unit && isWorkerUnit(unit) && isFriendlyUnit(context, unit) && isCarryingResources(unit))
+        if (unit && isWorkerUnit(unit) && isCarryingResources(unit))
         {
             WarEntity* townHall = targetEntity;
             if (!townHall)
@@ -1597,7 +1586,7 @@ WarCommandStatus executeRepairCommand(WarContext* context, WarPlayerInfo* player
     {
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
-        if (unit && isWorkerUnit(unit) && isFriendlyUnit(context, unit))
+        if (unit && isWorkerUnit(unit))
         {
             sendToRepairState(context, unit, targetEntity->id);
 
@@ -1648,8 +1637,7 @@ WarCommandStatus executeCastCommand(WarContext* context, WarPlayerInfo* player, 
     {
         WarEntityId unitId = unitGroup.unitIds[i];
         WarEntity* unit = findEntity(context, unitId);
-        if (unit && isMagicUnit(unit) && isFriendlyUnit(context, unit) &&
-            isUnitOfType(unit, casterType) && !isDeadUnit(unit))
+        if (unit && isMagicUnit(unit) && isUnitOfType(unit, casterType) && !isDeadUnit(unit))
         {
             sendToCastState(context, unit, spellType, targetEntityId, position);
 

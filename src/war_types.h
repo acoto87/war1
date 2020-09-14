@@ -417,6 +417,20 @@ typedef enum
     WAR_UNIT_COUNT
 } WarUnitType;
 
+shlDeclareList(WarUnitTypeList, WarUnitType)
+shlDefineList(WarUnitTypeList, WarUnitType)
+
+shlDeclareQueue(WarUnitTypeQueue, WarUnitType)
+shlDefineQueue(WarUnitTypeQueue, WarUnitType)
+
+bool equalsUnitType(const WarUnitType t1, const WarUnitType t2)
+{
+    return t1 == t2;
+}
+
+#define WarUnitTypeListDefaultOptions (WarUnitTypeListOptions){WAR_UNIT_FOOTMAN, equalsUnitType, NULL}
+#define WarUnitTypeQueueDefaultOptions (WarUnitTypeQueueOptions){WAR_UNIT_FOOTMAN, equalsUnitType, NULL}
+
 typedef struct
 {
     u8 dx;
@@ -1881,11 +1895,6 @@ uint32_t hashUnitType(const WarUnitType type)
     return type;
 }
 
-bool equalsUnitType(const WarUnitType t1, const WarUnitType t2)
-{
-    return t1 == t2;
-}
-
 shlDeclareMap(WarUnitMap, WarUnitType, WarEntityList*)
 shlDefineMap(WarUnitMap, WarUnitType, WarEntityList*)
 
@@ -2044,6 +2053,7 @@ typedef struct _WarCommand
         {
             WarUnitType unitType;
             WarEntityId workerId;
+            WarEntityId buildingId;
             vec2 position;
         } build;
 
@@ -2170,6 +2180,68 @@ typedef void (*WarAIInitFunc)(struct _WarContext* context, struct _WarPlayerInfo
 typedef WarCommand* (*WarAINextCommandFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer);
 typedef WarCommandStatus (*WarExecuteFunc)(struct _WarContext* context, struct _WarPlayerInfo* aiPlayer, struct _WarCommand* command);
 
+typedef enum
+{
+    WAR_AI_SYSTEM_RESOURCE,
+    WAR_AI_SYSTEM_TRAIN,
+    WAR_AI_SYSTEM_UPGRADE,
+    WAR_AI_SYSTEM_BUILD,
+    WAR_AI_SYSTEM_PLANNING,
+    WAR_AI_SYSTEM_SQUAD,
+    WAR_AI_SYSTEM_SCRIPT
+} WarAISystemType;
+
+typedef struct
+{
+    WarAISystemType type;
+    bool enabled;
+
+    union
+    {
+        struct
+        {
+            WarUnitType unitToTrain;
+        } train;
+
+        struct
+        {
+            WarUnitType unitToBuild;
+        } build;
+
+        struct
+        {
+            s32 index;
+            WPPlan plan;
+        } planning;
+
+        struct
+        {
+            s32 waitForGold;
+            s32 waitForWood;
+        } resource;
+    };
+} WarAISystem;
+
+shlDeclareMap(WarAISystemsMap, WarAISystemType, WarAISystem*)
+shlDefineMap(WarAISystemsMap, WarAISystemType, WarAISystem*)
+
+uint32_t aiSystemTypeHash(const WarAISystemType t)
+{
+    return t;
+}
+
+bool aiSystemTypeEquals(const WarAISystemType t1, const WarAISystemType t2)
+{
+    return t1 == t2;
+}
+
+void aiSystemFree(WarAISystem* system)
+{
+    free((void*)system);
+}
+
+#define WarAISystemsMapDefaultOptions (WarAISystemsMapOptions){NULL, aiSystemTypeHash, aiSystemTypeEquals, aiSystemFree}
+
 typedef struct
 {
     char name[20];
@@ -2179,6 +2251,10 @@ typedef struct
 
     WarAIInitFunc initFunc;
     WarAINextCommandFunc getCommandFunc;
+
+    WarCommandQueue commands;
+    WarAISystemsMap systems;
+
     void* customData;
 } WarAI;
 

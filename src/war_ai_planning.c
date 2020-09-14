@@ -335,9 +335,12 @@ WPAction createAction(WPActionType type, u32 start)
 {
     assert(type >= WP_ACTION_TYPE_COLLECT_GOLD && type < WP_ACTION_TYPE_COUNT);
 
+    static s32 staticActionId = 0;
+
     WPActionMetadata metadata = actions[type];
 
     WPAction result = (WPAction){0};
+    result.id = ++staticActionId;
     result.type = type;
     result.start = start;
     result.end = start + metadata.duration;
@@ -524,6 +527,30 @@ void wpSchedulePlan(WPPlan* plan, WPGameState gameState)
     u32HeapFree(&times);
 }
 
+void wpGroupPlan(const WPPlan* plan, WPGroupedPlan* groupedPlan)
+{
+    if (plan->count == 0)
+        return;
+
+    WPAction action = plan->items[0];
+    WPGroupedAction groupedAction = (WPGroupedAction){action.type, 1};
+
+    for (s32 i = 1; i < plan->count; i++)
+    {
+        action = plan->items[i];
+
+        if (action.type == groupedAction.type)
+        {
+            groupedAction.count++;
+        }
+        else
+        {
+            WPGroupedPlanAdd(groupedPlan, groupedAction);
+            groupedAction = (WPGroupedAction){action.type, 1};
+        }
+    }
+}
+
 void wpMEA(WPGameState* gameState, const WPGoal* goal, WPPlan* plan)
 {
     if (wpSatisfyGoal(gameState, goal))
@@ -561,23 +588,19 @@ void wpMEA(WPGameState* gameState, const WPGoal* goal, WPPlan* plan)
     wpMEA(gameState, goal, plan);
 }
 
-void wpBestPlan(WPGameState* gameState, const WPGoal* goal, WPPlan* plan)
+void wpBestPlan(
+    WPGameState* gameState, const WPGoal* goal,
+    s32 intermediateGoalsCount, const WPGoal intermediateGoals[],
+    WPPlan* plan)
 {
     WPGameState initialGameState = *gameState;
     wpMEA(&initialGameState, goal, plan);
     wpSchedulePlan(plan, *gameState);
 
     u32 planDuration = wpGetPlanDuration(plan);
+    printf("Direct plan with duration %d\n", planDuration);
 
-    WPGoal intermediateGoals[] =
-    {
-        wpCreateGoal(arrayArg(u32, 0, 0, 0, 0, 0, 4, 0)),
-        wpCreateGoal(arrayArg(u32, 0, 0, 0, 0, 0, 8, 0)),
-        wpCreateGoal(arrayArg(u32, 0, 0, 0, 0, 2, 8, 0)),
-        wpCreateGoal(arrayArg(u32, 0, 0, 0, 0, 2, 6, 0))
-    };
-
-    for (s32 i = 0; i < arrayLength(intermediateGoals); i++)
+    for (s32 i = 0; i < intermediateGoalsCount; i++)
     {
         WPGoal interGoal = intermediateGoals[i];
 
@@ -590,6 +613,7 @@ void wpBestPlan(WPGameState* gameState, const WPGoal* goal, WPPlan* plan)
         wpSchedulePlan(&interPlan, *gameState);
 
         u32 interPlanDuration = wpGetPlanDuration(&interPlan);
+        printf("If using intermediate goal %d with duration %d\n", i, interPlanDuration);
         if (interPlanDuration < planDuration)
         {
             planDuration = interPlanDuration;
@@ -611,8 +635,18 @@ char* resourceTypeToString(WPResourceType resourceType)
         case WP_RESOURCE_TYPE_SUPPLY: return "Supply";
         case WP_RESOURCE_TYPE_TOWNHALL: return "TownHall";
         case WP_RESOURCE_TYPE_BARRACKS: return "Barracks";
-        case WP_RESOURCE_TYPE_PEASANT_PEON: return "Peasant";
-        case WP_RESOURCE_TYPE_FOOTMAN_GRUNT: return "Footman";
+        case WP_RESOURCE_TYPE_CHURCH_TEMPLE: return "Church/Temple";
+        case WP_RESOURCE_TYPE_TOWER: return "Tower";
+        case WP_RESOURCE_TYPE_STABLE_KENNEL: return "Stable/Kennel";
+        case WP_RESOURCE_TYPE_LUMBERMILL: return "Lumbermill";
+        case WP_RESOURCE_TYPE_BLACKSMITH: return "Blacksmith";
+        case WP_RESOURCE_TYPE_PEASANT_PEON: return "Peasant/Peon";
+        case WP_RESOURCE_TYPE_FOOTMAN_GRUNT: return "Footman/Grunt";
+        case WP_RESOURCE_TYPE_ARCHER_SPEARMAN: return "Archer/Spearman";
+        case WP_RESOURCE_TYPE_KNIGHT_RAIDER: return "Knight/Rider";
+        case WP_RESOURCE_TYPE_CATAPULT: return "Catapult";
+        case WP_RESOURCE_TYPE_CONJURER_WARLOCK: return "Conjurer/Warlock";
+        case WP_RESOURCE_TYPE_CLERIC_NECROLYTE: return "Cleric/Necrolyte";
         default: return "<error>";
     }
 }
@@ -626,8 +660,18 @@ char* actionTypeToString(WPActionType actionType)
         case WP_ACTION_TYPE_BUILD_SUPPLY: return "Build Supply";
         case WP_ACTION_TYPE_BUILD_TOWNHALL: return "Build TownHall";
         case WP_ACTION_TYPE_BUILD_BARRACKS: return "Build Barracks";
-        case WP_ACTION_TYPE_TRAIN_PEASANT_PEON: return "Train Peasant";
-        case WP_ACTION_TYPE_TRAIN_FOOTMAN_GRUNT: return "Train Footman";
+        case WP_ACTION_TYPE_BUILD_CHURCH_TEMPLE: return "Build Church/Temple";
+        case WP_ACTION_TYPE_BUILD_TOWER: return "Build Tower";
+        case WP_ACTION_TYPE_BUILD_STABLE_KENNEL: return "Build Stable/Kennel";
+        case WP_ACTION_TYPE_BUILD_LUMBERMILL: return "Build Lumbermill";
+        case WP_ACTION_TYPE_BUILD_BLACKSMITH: return "Build Blacksmith";
+        case WP_ACTION_TYPE_TRAIN_PEASANT_PEON: return "Train Peasant/Peon";
+        case WP_ACTION_TYPE_TRAIN_FOOTMAN_GRUNT: return "Train Footman/Grunt";
+        case WP_ACTION_TYPE_TRAIN_ARCHER_SPEARMAN: return "Train Archer/Spearman";
+        case WP_ACTION_TYPE_TRAIN_KNIGHT_RAIDER: return "Train Knight/Rider";
+        case WP_ACTION_TYPE_TRAIN_CATAPULT: return "Train Captapult";
+        case WP_ACTION_TYPE_TRAIN_CONJURER_WARLOCK: return "Train Conjurer/Warlock";
+        case WP_ACTION_TYPE_TRAIN_CLERIC_NECROLYTE: return "Train Clerci/Necrolyte";
         default: return "<error>";
     }
 }
@@ -659,7 +703,8 @@ void printPlan(const WPPlan* plan)
 
 void testMEA()
 {
-    WPGameState gameState = wpCreateGameStateFromArgs(0,
+    WPGameState gameState = wpCreateGameStateFromArgs(
+        0, 4,
         WP_RESOURCE_TYPE_GOLD, 600,
         WP_RESOURCE_TYPE_WOOD, 400,
         WP_RESOURCE_TYPE_TOWNHALL, 1,
@@ -671,11 +716,20 @@ void testMEA()
     printGameState(&gameState);
     printf("======================\n");
 
-    // WPGoal goal = wpCreateGoal(arrayArg(u32, 12000, 9876, 100, 100, 100, 250, 300));
     WPGoal goal = wpCreateGoalFromArgs(
-        WP_RESOURCE_TYPE_PEASANT_PEON, 2,
-        WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 1
+        6,
+        WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 10,
+        WP_RESOURCE_TYPE_ARCHER_SPEARMAN, 10,
+        WP_RESOURCE_TYPE_KNIGHT_RAIDER, 6,
+        WP_RESOURCE_TYPE_CATAPULT, 4,
+        WP_RESOURCE_TYPE_CONJURER_WARLOCK, 2,
+        WP_RESOURCE_TYPE_CLERIC_NECROLYTE, 2
     );
+    // WPGoal goal = wpCreateGoalFromArgs(
+    //     2,
+    //     WP_RESOURCE_TYPE_PEASANT_PEON, 2,
+    //     WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 1
+    // );
 
     printf("Goal\n");
     printf("======================\n");
@@ -737,15 +791,69 @@ void testMEA()
 
 void testBestPlan()
 {
-    WPGameState gameState = wpCreateGameState(0, arrayArg(u32, 600, 400, 0, 1, 0, 1, 0));
+    WPGameState gameState = wpCreateGameStateFromArgs(
+        0, 5,
+        WP_RESOURCE_TYPE_GOLD, 600,
+        WP_RESOURCE_TYPE_WOOD, 400,
+        WP_RESOURCE_TYPE_SUPPLY, 1,
+        WP_RESOURCE_TYPE_TOWNHALL, 1,
+        WP_RESOURCE_TYPE_PEASANT_PEON, 1
+    );
 
     printf("Game state\n");
     printf("======================\n");
     printGameState(&gameState);
     printf("======================\n");
 
-    WPGoal goal = wpCreateGoal(arrayArg(u32, 12000, 9876, 100, 100, 100, 250, 300));
-    // WPGoal goal = wpCreateGoal(arrayArg(u32, 0, 0, 0, 0, 0, 2, 1));
+    WPGoal goal = wpCreateGoalFromArgs(
+        6,
+        WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 10,
+        WP_RESOURCE_TYPE_ARCHER_SPEARMAN, 10,
+        WP_RESOURCE_TYPE_KNIGHT_RAIDER, 6,
+        WP_RESOURCE_TYPE_CATAPULT, 4,
+        WP_RESOURCE_TYPE_CONJURER_WARLOCK, 2,
+        WP_RESOURCE_TYPE_CLERIC_NECROLYTE, 2
+    );
+    // WPGoal goal = wpCreateGoalFromArgs(
+    //     2,
+    //     WP_RESOURCE_TYPE_PEASANT_PEON, 2,
+    //     WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 1
+    // );
+
+    WPGoal intermediateGoals[] =
+    {
+        wpCreateGoalFromArgs(
+            1,
+            WP_RESOURCE_TYPE_PEASANT_PEON, 10
+        ),
+        wpCreateGoalFromArgs(
+            1,
+            WP_RESOURCE_TYPE_BARRACKS, 3
+        ),
+        wpCreateGoalFromArgs(
+            2,
+            WP_RESOURCE_TYPE_PEASANT_PEON, 10,
+            WP_RESOURCE_TYPE_BARRACKS, 3
+        ),
+        wpCreateGoalFromArgs(
+            2,
+            WP_RESOURCE_TYPE_PEASANT_PEON, 10,
+            WP_RESOURCE_TYPE_TOWER, 2
+        ),
+        wpCreateGoalFromArgs(
+            3,
+            WP_RESOURCE_TYPE_PEASANT_PEON, 10,
+            WP_RESOURCE_TYPE_BARRACKS, 3,
+            WP_RESOURCE_TYPE_TOWER, 2
+        ),
+        wpCreateGoalFromArgs(
+            4,
+            WP_RESOURCE_TYPE_PEASANT_PEON, 10,
+            WP_RESOURCE_TYPE_BARRACKS, 3,
+            WP_RESOURCE_TYPE_TOWER, 2,
+            WP_RESOURCE_TYPE_CHURCH_TEMPLE, 2
+        )
+    };
 
     printf("Goal\n");
     printf("======================\n");
@@ -759,7 +867,7 @@ void testBestPlan()
     WPGameState gameStateTest1 = gameState;
     WPPlan plan;
     WPPlanInit(&plan, WPPlanDefaultOptions);
-    wpBestPlan(&gameStateTest1, &goal, &plan);
+    wpBestPlan(&gameStateTest1, &goal, arrayLength(intermediateGoals), intermediateGoals, &plan);
     end = clock();
     cpuTimeUsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("cpu time used for BestPlan: %f\n", cpuTimeUsed);
@@ -774,4 +882,9 @@ void testBestPlan()
     else
         printf("Plan is NOT correct\n");
     printf("======================\n");
+
+    // printf("Plan after schedule\n");
+    // printf("======================\n");
+    // printPlan(&plan);
+    // printf("======================\n");
 }

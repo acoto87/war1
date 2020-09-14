@@ -69,6 +69,12 @@ typedef struct
 typedef struct
 {
     WPActionType type;
+    u32 count;
+} WPGroupedAction;
+
+typedef struct
+{
+    WPActionType type;
     u32 duration;
     u32 require[WP_RESOURCE_TYPE_COUNT];
     u32 borrow[WP_RESOURCE_TYPE_COUNT];
@@ -77,6 +83,7 @@ typedef struct
 } WPActionMetadata;
 
 #define WP_INVALID_ACTION (WPAction){WP_ACTION_TYPE_COUNT, 0, 0, 0}
+#define WP_INVALID_GROUPED_ACTION (WPGroupedAction){WP_ACTION_TYPE_COUNT, 0}
 #define WP_INVALID_ACTION_METADATA (WPActionMetadata){WP_ACTION_TYPE_COUNT, 0}
 
 bool equalsWPAction(const WPAction a, const WPAction b)
@@ -84,10 +91,19 @@ bool equalsWPAction(const WPAction a, const WPAction b)
     return a.id == b.id;
 }
 
+bool equalsWPGroupedAction(const WPGroupedAction a, const WPGroupedAction b)
+{
+    return a.type == b.type && a.count == b.count;
+}
+
 shlDeclareList(WPPlan, WPAction)
 shlDefineList(WPPlan, WPAction)
 
+shlDeclareList(WPGroupedPlan, WPGroupedAction)
+shlDefineList(WPGroupedPlan, WPGroupedAction)
+
 #define WPPlanDefaultOptions (WPPlanOptions){WP_INVALID_ACTION, equalsWPAction, NULL}
+#define WPGroupedPlanDefaultOptions (WPGroupedPlanOptions){WP_INVALID_GROUPED_ACTION, equalsWPGroupedAction, NULL}
 
 #define WP_INVALID_PLAN (WPPlan){0};
 
@@ -109,8 +125,12 @@ void wpEndAction(WPGameState* gameState, const WPAction* action);
 bool wpSatisfyGoal(const WPGameState* gameState, const WPGoal* goal);
 void wpExecutePlan(WPGameState* gameState, const WPPlan* plan, s32 index, u32 endTime);
 void wpSchedulePlan(WPPlan* plan, WPGameState gameState);
+void wpGroupPlan(const WPPlan* plan, WPGroupedPlan* groupedPlan);
 void wpMEA(WPGameState* gameState, const WPGoal* goal, WPPlan* plan);
-void wpBestPlan(WPGameState* gameState, const WPGoal* goal, WPPlan* plan);
+void wpBestPlan(
+    WPGameState* gameState, const WPGoal* goal,
+    s32 intermediateGoalsCount, const WPGoal intermediateGoals[],
+    WPPlan* plan);
 
 char* resourceTypeToString(WPResourceType resourceType);
 char* actionTypeToString(WPActionType actionType);

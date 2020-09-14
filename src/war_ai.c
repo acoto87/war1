@@ -48,65 +48,6 @@ void initAIPlayers(WarContext* context)
     }
 }
 
-// static s32 idleWorkersCompare(const WarEntity* e1, const WarEntity* e2)
-// {
-//     assert(isUnit(e1));
-//     assert(isUnit(e2));
-
-//     s32 idle1 = isIdle((WarEntity*)e1);
-//     s32 idle2 = isIdle((WarEntity*)e2);
-
-//     // NOTE: should this consider distance, because if a idle worker is to far
-//     // maybe the AI could prefer to change one busy worker over a far idle one
-//     return idle2 - idle1;
-// }
-
-// static bool findPlaceToBuild(WarContext* context, WarUnitType unitType, vec2 startPosition, vec2* finalPosition)
-// {
-//     const s32 dirC = 8;
-//     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
-//     const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
-
-//     bool result = false;
-
-//     vec2List positions;
-//     vec2ListInit(&positions, vec2ListDefaultOptions);
-
-//     vec2ListAdd(&positions, startPosition);
-
-//     for (s32 i = 0; i < positions.count; i++)
-//     {
-//         vec2 position = positions.items[i];
-
-//         if (canBuildingBeBuilt(context, unitType, position.x, position.y))
-//         {
-//             *finalPosition = position;
-//             result = true;
-//             break;
-//         }
-
-//         for (s32 d = 0; d < dirC; d++)
-//         {
-//             vec2 newPosition = vec2Addv(position, vec2i(dirX[d], dirY[d]));
-
-//             // NOTE: this can be optimized if we don't test for containment in the list
-//             // all the time, maybe having a 64x64 array with bools could be faster since
-//             // I only need to access the corresponding tile? or should I use a hash set?
-
-//             if (inRange(newPosition.x, 0, MAP_TILES_WIDTH) &&
-//                 inRange(newPosition.y, 0, MAP_TILES_HEIGHT) &&
-//                 !vec2ListContains(&positions, newPosition))
-//             {
-//                 vec2ListAdd(&positions, newPosition);
-//             }
-//         }
-//     }
-
-//     vec2ListFree(&positions);
-
-//     return result;
-// }
-
 // static bool findMineForWorker(WarContext* context, WarEntity* worker)
 // {
 //     WarRace workerRace = getUnitRace(worker);
@@ -584,126 +525,113 @@ WarCommandStatus executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, 
     return WAR_COMMAND_STATUS_FAILED;
 }
 
-// static bool checkRunningCommands(WarContext* context, WarPlayerInfo* aiPlayer)
-// {
-//     WarAI* ai = aiPlayer->ai;
-//     assert(ai);
+bool checkRunningCommands(WarContext* context, WarPlayerInfo* aiPlayer)
+{
+    WarAI* ai = aiPlayer->ai;
+    assert(ai);
 
-//     WarCommandList* commands = &ai->commands;
+    WarCommandList* commands = &aiPlayer->commands;
 
-//     bool wait = false;
+    bool wait = false;
 
-//     for (s32 i = 0; i < commands->count; i++)
-//     {
-//         WarCommand* command = commands->items[i];
-//         assert(command);
+    for (s32 i = 0; i < commands->count; i++)
+    {
+        WarCommand* command = commands->items[i];
+        assert(command);
 
-//         WarCommandResult* commandResult = command->result;
-//         if (commandResult && commandResult->status == WAR_AI_COMMAND_STATUS_RUNNING)
-//         {
-//             WarCommandStatus status = WAR_AI_COMMAND_STATUS_RUNNING;
+        if (command->status == WAR_COMMAND_STATUS_RUNNING)
+        {
+            WarCommandStatus status = WAR_COMMAND_STATUS_RUNNING;
 
-//             if (command->type == WAR_AI_COMMAND_REQUEST_UNIT)
-//             {
-//                 WarUnitType unitType = commandResult->requestUnit.unitType;
-//                 WarEntityId buildingId = commandResult->requestUnit.buildingId;
-//                 WarEntityId workerId = commandResult->requestUnit.workerId;
+            if (command->type == WAR_COMMAND_TRAIN)
+            {
+                WarEntityId buildingId = command->train.buildingId;
+                WarEntity* building = findEntity(context, buildingId);
+                if (building)
+                {
+                    if (!isTraining(building) && !isGoingToTrain(building))
+                    {
+                        status = WAR_COMMAND_STATUS_DONE;
+                    }
+                }
+                else
+                {
+                    // mark the command failed if the building no longer exists
+                    status = WAR_COMMAND_STATUS_FAILED;
+                }
+            }
+            else if (command->type == WAR_COMMAND_BUILD)
+            {
+                WarEntityId buildingId = command->build.buildingId;
+                WarEntity* building = findEntity(context, buildingId);
 
-//                 if (isDudeUnitType(unitType))
-//                 {
-//                     WarEntity* building = findEntity(context, buildingId);
-//                     if (building)
-//                     {
-//                         if (!isTraining(building) && !isGoingToTrain(building))
-//                         {
-//                             status = WAR_AI_COMMAND_STATUS_DONE;
-//                         }
-//                     }
-//                     else
-//                     {
-//                         // mark the command failed if the building no longer exists
-//                         status = WAR_AI_COMMAND_STATUS_FAILED;
-//                     }
-//                 }
-//                 else if (isBuildingUnitType(unitType))
-//                 {
-//                     WarEntity* building = findEntity(context, buildingId);
-//                     WarEntity* worker = findEntity(context, workerId);
-//                     if (building && worker)
-//                     {
-//                         if (!isBuilding(building) && !isGoingToBuild(building) &&
-//                             !isRepairing2(worker) && !isGoingToRepair2(worker))
-//                         {
-//                             status = WAR_AI_COMMAND_STATUS_DONE;
-//                         }
-//                     }
-//                     else
-//                     {
-//                         // if the building no longer exists, then mark the command failed
-//                         status = WAR_AI_COMMAND_STATUS_FAILED;
-//                     }
-//                 }
-//             }
-//             else if (command->type == WAR_AI_COMMAND_RESOURCE)
-//             {
-//                 // do nothing here? maybe I need to check if there are workers
-//                 // that couldn't be sent to the resource
-//             }
-//             else if (command->type == WAR_AI_COMMAND_WAIT)
-//             {
-//                 if (command->wait.commandId)
-//                 {
-//                     WarCommand* commandToWaitFor = NULL;
-//                     for (s32 k = i - 1; k >= 0; k--)
-//                     {
-//                         WarCommand* prevCommand = commands->items[k];
-//                         if (prevCommand && prevCommand->id == command->wait.commandId)
-//                         {
-//                             commandToWaitFor = prevCommand;
-//                             break;
-//                         }
-//                     }
+                WarEntityId workerId = command->build.workerId;
+                WarEntity* worker = findEntity(context, workerId);
+                if (building && worker)
+                {
+                    if (!isBuilding(building) && !isGoingToBuild(building) &&
+                        !isRepairing2(worker) && !isGoingToRepair2(worker))
+                    {
+                        status = WAR_COMMAND_STATUS_DONE;
+                    }
+                }
+                else
+                {
+                    // if the building no longer exists, then mark the command failed
+                    status = WAR_COMMAND_STATUS_FAILED;
+                }
+            }
+            else if (command->type == WAR_COMMAND_GATHER)
+            {
+                // do nothing here? maybe I need to check if there are workers
+                // that couldn't be sent to the resource
+            }
+            else if (command->type == WAR_COMMAND_WAIT)
+            {
+                if (command->wait.commandId)
+                {
+                    WarCommand* commandToWaitFor = NULL;
+                    for (s32 k = i - 1; k >= 0; k--)
+                    {
+                        WarCommand* prevCommand = commands->items[k];
+                        if (prevCommand && prevCommand->id == command->wait.commandId)
+                        {
+                            commandToWaitFor = prevCommand;
+                            break;
+                        }
+                    }
 
-//                     if (commandToWaitFor && commandToWaitFor->result)
-//                     {
-//                         if (commandToWaitFor->result->status != WAR_AI_COMMAND_STATUS_RUNNING)
-//                         {
-//                             status = WAR_AI_COMMAND_STATUS_DONE;
-//                         }
-//                     }
-//                     else
-//                     {
-//                         status = WAR_AI_COMMAND_STATUS_FAILED;
-//                     }
-//                 }
-//                 else if (command->wait.resource != WAR_RESOURCE_NONE)
-//                 {
-//                     s32 resourceAmount = getPlayerResourceAmount(aiPlayer, command->wait.resource);
-//                     if (resourceAmount >= command->wait.amount)
-//                     {
-//                         status = WAR_AI_COMMAND_STATUS_DONE;
-//                     }
+                    status = commandToWaitFor && commandToWaitFor->status != WAR_COMMAND_STATUS_RUNNING
+                        ? WAR_COMMAND_STATUS_DONE : WAR_COMMAND_STATUS_FAILED;
+                }
+                else if (command->wait.resource != WAR_RESOURCE_NONE)
+                {
+                    s32 resourceAmount = getPlayerResourceAmount(aiPlayer, command->wait.resource);
+                    if (resourceAmount >= command->wait.amount)
+                    {
+                        status = WAR_COMMAND_STATUS_DONE;
+                    }
 
-//                     // what if the AI is waiting for a particular resource and there is no
-//                     // worker gathering it, maybe fail this command? put some workers to gather the resource?
-//                 }
-//                 else
-//                 {
-//                     status = WAR_AI_COMMAND_STATUS_DONE;
-//                 }
+                    // what if the AI is waiting for a particular resource and there is no
+                    // worker gathering it, maybe fail this command? put some workers to gather the resource?
+                }
+                else
+                {
+                    status = WAR_COMMAND_STATUS_DONE;
+                }
 
-//                 if (status == WAR_AI_COMMAND_STATUS_RUNNING)
-//                 {
-//                     wait = true;
-//                 }
-//             }
+                if (status == WAR_COMMAND_STATUS_RUNNING)
+                {
+                    wait = true;
+                }
+            }
 
-//             commandResult->status = status;
-//         }
-//     }
+            command->status = status;
+        }
+    }
 
-//     return !wait;
-// }
+    return !wait;
+}
 
 void updateAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
 {
@@ -724,17 +652,18 @@ void updateAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
         ai->sleepTime = 0.0f;
     }
 
-    // if at least one wait command is still running,
-    // don't call the ai get command func
-    // if (!checkRunningCommands(context, aiPlayer))
-    // {
-    //     return;
-    // }
+    // if at least one wait command is still running, don't call the ai get command func
+    if (!checkRunningCommands(context, aiPlayer))
+    {
+        return;
+    }
 
     WarCommand* command = ai->getCommandFunc(context, aiPlayer);
-    if (command /* && command->type != WAR_AI_COMMAND_NONE */)
+    if (command && command->type != WAR_COMMAND_NONE)
     {
-        command->status = executeAICommand(context, aiPlayer, command);
+        logInfo("Executing command of type: %d\n", command->type);
+
+        command->status = executeCommand(context, aiPlayer, command);
 
         WarCommandListAdd(&aiPlayer->commands, command);
     }
