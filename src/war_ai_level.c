@@ -45,16 +45,6 @@ void levelInitAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAISystemsMapSet(&ai->systems, WAR_AI_SYSTEM_PLANNING, createAIPlanningSystem());
     WarAISystemsMapSet(&ai->systems, WAR_AI_SYSTEM_RESOURCE, createAIResourceSystem());
 
-    // // How would look like a system that does something like:
-    // //
-    // // planningSystem.update()
-    // // resourceSystem.update()
-    // // researchSystem.update()
-    // // trainSystem.update()
-    // // buildSystem.update()
-    // // squadSystem.update()
-    // // scriptSystem.update()
-
     // WarAICustomData* customData = (WarAICustomData*)xmalloc(sizeof(WarAICustomData));
     // WarCommandQueueInit(&customData->commands, WarCommandQueueNonFreeOptions);
     // ai->customData = customData;
@@ -302,15 +292,21 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     if (plan->count == 0)
     {
         WPGoal goal = wpCreateGoalFromArgs(
-            1,
-            WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 1
+            4,
+            WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 5,
+            WP_RESOURCE_TYPE_ARCHER_SPEARMAN, 3,
+            WP_RESOURCE_TYPE_KNIGHT_RAIDER, 3,
+            WP_RESOURCE_TYPE_CATAPULT, 2
+
+            // WP_RESOURCE_TYPE_CONJURER_WARLOCK,
+            // WP_RESOURCE_TYPE_CLERIC_NECROLYTE,
         );
 
         WPGoal intermediateGoals[] =
         {
             wpCreateGoalFromArgs(
                 1,
-                WP_RESOURCE_TYPE_PEASANT_PEON, 2
+                WP_RESOURCE_TYPE_PEASANT_PEON, 5
             )
         };
 
@@ -381,7 +377,7 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
                 }
 
                 resourceSystem->enabled = true;
-                resourceSystem->resource.waitForGold = waitForWood;
+                resourceSystem->resource.waitForWood = waitForWood;
                 break;
             }
             case WP_ACTION_TYPE_BUILD_SUPPLY:
@@ -512,6 +508,11 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     {
         s32 waitForGold = aiPlayer->gold + system->resource.waitForGold;
 
+        //
+        // Would be best to ignore the collect gold and wood actions of the plans
+        // and always ensure that the all workers are busy at all times?
+        //
+
         WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
         WarEntityList* workers = getUnitsOfTypeOfPlayer(context, workerType, aiPlayer->index);
 
@@ -522,6 +523,12 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
 
         for (s32 i = 0; i < workers->count; i++)
         {
+            if (unitCount >= MAX_UNIT_SELECTION_COUNT)
+            {
+                unitCount--;
+                break;
+            }
+
             WarEntity* worker = workers->items[i];
             if (worker && !isWorkerBusy(worker) && !isGatheringGold(worker))
             {
@@ -570,8 +577,14 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
 
         for (s32 i = 0; i < workers->count; i++)
         {
+            if (unitCount >= MAX_UNIT_SELECTION_COUNT)
+            {
+                unitCount--;
+                break;
+            }
+
             WarEntity* worker = workers->items[i];
-            if (worker && !isWorkerBusy(worker) && !isGatheringGold(worker))
+            if (worker && !isWorkerBusy(worker) && !isGatheringWood(worker))
             {
                 unitIds[unitCount++] = worker->id;
             }
@@ -603,7 +616,7 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
         WarCommand* gatherCommand = createGatherWoodCommand(context, aiPlayer, unitGroup, forest->id, treeTile);
         WarCommandQueuePush(&ai->commands, gatherCommand);
 
-        WarCommand* waitCommand = createWaitResourceCommand(context, aiPlayer, WAR_RESOURCE_GOLD, waitForWood);
+        WarCommand* waitCommand = createWaitResourceCommand(context, aiPlayer, WAR_RESOURCE_WOOD, waitForWood);
         WarCommandQueuePush(&ai->commands, waitCommand);
 
         WarEntityListFree(townHalls);
@@ -688,18 +701,16 @@ WarCommand* levelGetAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    updatePlanningSystem(context, aiPlayer);
-    updateResourceSystem(context, aiPlayer);
-    updateBuildSystem(context, aiPlayer);
-    updateTrainSystem(context, aiPlayer);
+    if (ai->commands.count == 0)
+    {
+        updatePlanningSystem(context, aiPlayer);
+        updateResourceSystem(context, aiPlayer);
+        updateBuildSystem(context, aiPlayer);
+        updateTrainSystem(context, aiPlayer);
 
-    // command = updateUpgradesSystem(context, aiPlayer);
-    // if (command)
-    //     return command;
-
-    // command = updateSquadsSystem(context, aiPlayer);
-    // if (command)
-    //     return command;
+        // updateUpgradesSystem(context, aiPlayer);
+        // updateSquadsSystem(context, aiPlayer);
+    }
 
     return ai->commands.count > 0
         ? WarCommandQueuePop(&ai->commands)

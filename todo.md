@@ -113,6 +113,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] When the AI is harvesting gold or lumber, it's reflected on the player numbers in the top bar.
 * [ ] Click on an AI building, the player can see that is training or building something, that shouldn't be. However is useful for debugging, so I could wait a little bit to fix this, or have an option that activates that debug visibility for the player.
 * [ ] When the AI try to select a place to build it's considering the FoW, so if will only build on visible parts of the maps. FoW should only be considered for player commands.
+* [ ] The commands of the player need to check whether the selected units are friendly, this was removed from the command system and now needs to be done in the input layer before the commands.
 
 ## General
 
