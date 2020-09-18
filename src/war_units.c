@@ -1216,8 +1216,26 @@ bool isCarryingResources(WarEntity* entity)
 
     switch (entity->unit.resourceKind)
     {
-        case WAR_RESOURCE_GOLD: return entity->unit.amount == UNIT_MAX_CARRY_WOOD;
-        case WAR_RESOURCE_WOOD: return entity->unit.amount == UNIT_MAX_CARRY_GOLD;
+        case WAR_RESOURCE_GOLD: return entity->unit.amount == UNIT_MAX_CARRY_GOLD;
+        case WAR_RESOURCE_WOOD: return entity->unit.amount == UNIT_MAX_CARRY_WOOD;
+        default: return false;
+    }
+}
+
+bool isCarryingResource(WarEntity* entity, WarResourceKind resourceKind)
+{
+    assert(entity);
+    assert(isUnit(entity));
+
+    if (entity->unit.resourceKind != resourceKind)
+    {
+        return false;
+    }
+
+    switch (entity->unit.resourceKind)
+    {
+        case WAR_RESOURCE_GOLD: return entity->unit.amount == UNIT_MAX_CARRY_GOLD;
+        case WAR_RESOURCE_WOOD: return entity->unit.amount == UNIT_MAX_CARRY_WOOD;
         default: return false;
     }
 }

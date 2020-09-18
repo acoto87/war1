@@ -661,7 +661,7 @@ void updateAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
     WarCommand* command = ai->getCommandFunc(context, aiPlayer);
     if (command && command->type != WAR_COMMAND_NONE)
     {
-        logInfo("Executing command of type: %d\n", command->type);
+        logInfo("Executing command of type: %s\n", commandTypeToString(command->type));
 
         command->status = executeCommand(context, aiPlayer, command);
 

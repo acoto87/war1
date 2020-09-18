@@ -1224,6 +1224,8 @@ WarUnitType getTownHallOfRace(WarRace race);
 #define isTrainingUnit(entity) (isTraining(entity) || isGoingToTrain(entity))
 #define isUpgradingUnit(entity) (isUpgrading(entity) || isGoingToUpgrade(entity))
 #define isBeingBuiltUnit(entity) (isBuilding(entity) || isGoingToBuild(entity))
+#define isDeliveringGold(entity) (isDelivering(entity) && isCarryingResource(entity, WAR_RESOURCE_GOLD))
+#define isDeliveringWood(entity) (isDelivering(entity) && isCarryingResource(entity, WAR_RESOURCE_WOOD))
 
 WarProjectileType getProjectileType(WarUnitType type);
 

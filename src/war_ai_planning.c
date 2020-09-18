@@ -551,6 +551,19 @@ void wpGroupPlan(const WPPlan* plan, WPGroupedPlan* groupedPlan)
     }
 }
 
+void wpSimplifyPlan(const WPPlan* plan, WPPlan* simplifiedPlan)
+{
+    for (s32 i = 0; i < plan->count; i++)
+    {
+        WPAction action = plan->items[i];
+        if (action.type != WP_ACTION_TYPE_COLLECT_GOLD &&
+            action.type != WP_ACTION_TYPE_COLLECT_WOOD)
+        {
+            WPPlanAdd(simplifiedPlan, action);
+        }
+    }
+}
+
 void wpMEA(WPGameState* gameState, const WPGoal* goal, WPPlan* plan)
 {
     if (wpSatisfyGoal(gameState, goal))

@@ -30,3 +30,5 @@ WarCommand* createCancelCommand(WarContext* context, WarPlayerInfo* player, WarE
 
 WarCommandStatus canExecuteCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command);
 WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command);
+
+char* commandTypeToString(WarCommandType type);

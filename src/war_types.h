@@ -2211,7 +2211,7 @@ typedef struct
         struct
         {
             s32 index;
-            WPPlan plan;
+            WPPlan simplifiedPlan;
         } planning;
 
         struct

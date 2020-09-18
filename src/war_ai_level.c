@@ -22,7 +22,7 @@ WarAISystem* createAIPlanningSystem()
 {
     WarAISystem* system = createAISystem(WAR_AI_SYSTEM_PLANNING);
     system->planning.index = 0;
-    WPPlanInit(&system->planning.plan, WPPlanDefaultOptions);
+    WPPlanInit(&system->planning.simplifiedPlan, WPPlanDefaultOptions);
     return system;
 }
 
@@ -155,7 +155,6 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAISystem* planningSystem = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_PLANNING);
     WarAISystem* trainSystem = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_TRAIN);
     WarAISystem* buildSystem = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_BUILD);
-    WarAISystem* resourceSystem = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_RESOURCE);
 
     u32 resources[WP_RESOURCE_TYPE_COUNT] = {0};
     resources[WP_RESOURCE_TYPE_GOLD] = aiPlayer->gold;
@@ -288,8 +287,8 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     WPGameState gameState = wpCreateGameState(0, resources);
 
     s32 index = planningSystem->planning.index;
-    WPPlan* plan = &planningSystem->planning.plan;
-    if (plan->count == 0)
+    WPPlan* simplifiedPlan = &planningSystem->planning.simplifiedPlan;
+    if (simplifiedPlan->count == 0)
     {
         WPGoal goal = wpCreateGoalFromArgs(
             4,
@@ -312,74 +311,33 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
 
         index = 0;
 
-        wpBestPlan(&gameState, &goal, arrayLength(intermediateGoals), intermediateGoals, plan);
-        if (plan->count == 0)
+        WPPlan plan;
+        WPPlanInit(&plan, WPPlanDefaultOptions);
+
+        wpBestPlan(&gameState, &goal, arrayLength(intermediateGoals), intermediateGoals, &plan);
+        wpSimplifyPlan(&plan, simplifiedPlan);
+        if (simplifiedPlan->count == 0)
         {
             logWarning("The planning system couldn't find any suitable actions for the current state.\n");
             return;
         }
 
         logInfo("The plan was calculated as:\n");
-        printPlan(plan);
+        printPlan(simplifiedPlan);
+
+        WPPlanFree(&plan);
     }
 
-    if (index >= plan->count)
+    if (index >= simplifiedPlan->count)
         return;
 
-// [BuildSupply] (0, 600)
-// [CollectGold] (600, 900)
-// [CollectGold] (900, 1200)
-// [CollectGold] (1200, 1500)
-// [CollectGold] (1500, 1800)
-// [CollectGold] (1800, 2100)
-// [CollectGold] (2100, 2400)
-// [CollectWood] (2400, 3600)
-// [CollectWood] (3600, 4800)
-// [CollectWood] (4800, 6000)
-// [BuildBarracks] (6000, 7200)
-// [CollectGold] (7200, 7500)
-// [CollectGold] (7500, 7800)
-// [CollectGold] (7800, 8100)
-// [CollectGold] (8100, 8400)
-// [CollectGold] (8400, 8700)
-// [CollectGold] (8700, 9000)
-// [TrainFootman] (9000, 9200)
-
-    WPAction* action = &plan->items[index];
+    WPAction* action = &simplifiedPlan->items[index];
     if (wpCanExecuteAction(&gameState, action))
     {
+        logInfo("Executing action of type: %s, %d\n", actionTypeToString(action->type), index);
+
         switch (action->type)
         {
-            case WP_ACTION_TYPE_COLLECT_GOLD:
-            {
-                s32 waitForGold = 0;
-                while (action->type == WP_ACTION_TYPE_COLLECT_GOLD)
-                {
-                    waitForGold += 100;
-
-                    index++;
-                    action = &plan->items[index];
-                }
-
-                resourceSystem->enabled = true;
-                resourceSystem->resource.waitForGold = waitForGold;
-                break;
-            }
-            case WP_ACTION_TYPE_COLLECT_WOOD:
-            {
-                s32 waitForWood = 0;
-                while (action->type == WP_ACTION_TYPE_COLLECT_WOOD)
-                {
-                    waitForWood += 100;
-
-                    index++;
-                    action = &plan->items[index];
-                }
-
-                resourceSystem->enabled = true;
-                resourceSystem->resource.waitForWood = waitForWood;
-                break;
-            }
             case WP_ACTION_TYPE_BUILD_SUPPLY:
             {
                 index++;
@@ -501,46 +459,69 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAISystem* system = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_RESOURCE);
     assert(system);
 
-    if (!system->enabled)
-        return;
+    // if (!system->enabled)
+    //     return;
 
-    if (system->resource.waitForGold > 0)
+    WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
+    WarEntityList* workers = getUnitsOfTypeOfPlayer(context, workerType, aiPlayer->index);
+
+    WarEntityListSort(workers, idleWorkersCompare);
+
+    s32 gatheringGold = 0;
+    s32 gatheringWood = 0;
+    s32 idle = 0;
+
+    WarEntityIdList idleIds;
+    WarEntityIdListInit(&idleIds, WarEntityIdListDefaultOptions);
+
+    for (s32 i = 0; i < workers->count; i++)
     {
-        s32 waitForGold = aiPlayer->gold + system->resource.waitForGold;
+        WarEntity* worker = workers->items[i];
+        if (!worker || isDeadUnit(worker))
+            continue;
 
-        //
-        // Would be best to ignore the collect gold and wood actions of the plans
-        // and always ensure that the all workers are busy at all times?
-        //
-
-        WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-        WarEntityList* workers = getUnitsOfTypeOfPlayer(context, workerType, aiPlayer->index);
-
-        WarEntityListSort(workers, idleWorkersCompare);
-
-        s32 unitCount = 0;
-        WarEntityId unitIds[MAX_UNIT_SELECTION_COUNT];
-
-        for (s32 i = 0; i < workers->count; i++)
+        if (isGatheringGold(worker) || isMining(worker) || isDeliveringGold(worker))
+            gatheringGold++;
+        else if (isGatheringWood(worker) || isChopping(worker) || isDeliveringWood(worker))
+            gatheringWood++;
+        else if (isIdle(worker))
         {
-            if (unitCount >= MAX_UNIT_SELECTION_COUNT)
-            {
-                unitCount--;
-                break;
-            }
+            idle++;
+            WarEntityIdListAdd(&idleIds, worker->id);
+        }
+    }
 
-            WarEntity* worker = workers->items[i];
-            if (worker && !isWorkerBusy(worker) && !isGatheringGold(worker))
-            {
-                unitIds[unitCount++] = worker->id;
-            }
+    if (idle > 0)
+    {
+        // 1 worker(s) -> 1 worker(s) to gold
+        // 2 worker(s) -> 2 worker(s) to gold
+        // 3 worker(s) -> 3 worker(s) to gold
+        // 4 worker(s) -> 3 worker(s) to gold, 1 worker(s) to wood
+        // 5 worker(s) -> 3 worker(s) to gold, 2 worker(s) to wood
+        // 6 worker(s) -> 4 worker(s) to gold, 2 worker(s) to wood
+        // 7 worker(s) -> 4 worker(s) to gold, 3 worker(s) to wood
+        // 8 worker(s) -> 5 worker(s) to gold, 3 worker(s) to wood
+        //
+        static s32 toGatherGoldTable[9] = { 0, 1, 2, 3, 3, 3, 4, 4, 5 };
+        static s32 toGatherWoodTable[9] = { 0, 0, 0, 0, 1, 2, 2, 3, 3 };
+
+        s32 toGatherGold = 0;
+        s32 toGatherWood = 0;
+
+        if (workers->count > 8)
+        {
+            toGatherWood += idle;
+        }
+        else
+        {
+            toGatherGold = min(idle, toGatherGoldTable[workers->count] - gatheringGold);
+            idle -= toGatherGold;
+
+            toGatherWood = min(idle, toGatherWoodTable[workers->count] - gatheringWood);
+            idle -= toGatherWood;
         }
 
-        WarEntityListFree(workers);
-
-        assert(unitCount > 0);
-
-        WarUnitGroup unitGroup = createUnitGroup(unitCount, unitIds);
+        assert(idle == 0);
 
         WarEntityType townHallType = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
         WarEntityList* townHalls = getUnitsOfTypeOfPlayer(context, townHallType, aiPlayer->index);
@@ -549,81 +530,52 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
         WarEntity* townHall = townHalls->items[0];
         assert(townHall);
 
-        WarEntity* goldmine = findClosestUnitOfType(context, townHall, WAR_UNIT_GOLDMINE);
-        assert(goldmine);
-
-        WarCommand* gatherCommand = createGatherGoldCommand(context, aiPlayer, unitGroup, goldmine->id);
-        WarCommandQueuePush(&ai->commands, gatherCommand);
-
-        WarCommand* waitCommand = createWaitResourceCommand(context, aiPlayer, WAR_RESOURCE_GOLD, waitForGold);
-        WarCommandQueuePush(&ai->commands, waitCommand);
-
-        WarEntityListFree(townHalls);
-
-        system->enabled = false;
-        system->resource.waitForGold = 0;
-    }
-    else if (system->resource.waitForWood > 0)
-    {
-        s32 waitForWood = aiPlayer->wood + system->resource.waitForWood;
-
-        WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-        WarEntityList* workers = getUnitsOfTypeOfPlayer(context, workerType, aiPlayer->index);
-
-        WarEntityListSort(workers, idleWorkersCompare);
-
-        s32 unitCount = 0;
-        WarEntityId unitIds[MAX_UNIT_SELECTION_COUNT];
-
-        for (s32 i = 0; i < workers->count; i++)
+        if (toGatherGold > 0)
         {
-            if (unitCount >= MAX_UNIT_SELECTION_COUNT)
-            {
-                unitCount--;
-                break;
-            }
+            WarEntity* goldmine = findClosestUnitOfType(context, townHall, WAR_UNIT_GOLDMINE);
+            assert(goldmine);
 
-            WarEntity* worker = workers->items[i];
-            if (worker && !isWorkerBusy(worker) && !isGatheringWood(worker))
+            while (toGatherGold > 0)
             {
-                unitIds[unitCount++] = worker->id;
+                s32 unitCount = min(toGatherGold, MAX_UNIT_SELECTION_COUNT);
+                WarUnitGroup unitGroup = createUnitGroup(unitCount, idleIds.items);
+
+                WarCommand* gatherCommand = createGatherGoldCommand(context, aiPlayer, unitGroup, goldmine->id);
+                WarCommandQueuePush(&ai->commands, gatherCommand);
+
+                WarEntityIdListRemoveAtRange(&idleIds, 0, unitCount);
+                toGatherGold -= unitCount;
             }
         }
 
-        WarEntityListFree(workers);
+        if (toGatherWood > 0)
+        {
+            vec2 townHallPosition = getUnitCenterPosition(townHall, true);
 
-        assert(unitCount > 0);
+            WarEntity* forest = findClosestForest(context, townHall);
+            assert(forest);
 
-        WarUnitGroup unitGroup = createUnitGroup(unitCount, unitIds);
+            WarTree* tree = findAccesibleTree(context, aiPlayer, forest, townHallPosition);
+            assert(tree);
 
-        WarEntityType townHallType = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
-        WarEntityList* townHalls = getUnitsOfTypeOfPlayer(context, townHallType, aiPlayer->index);
-        assert(townHalls->count > 0);
+            vec2 treeTile = vec2i(tree->tilex, tree->tiley);
 
-        WarEntity* townHall = townHalls->items[0];
-        assert(townHall);
+            while (toGatherWood > 0)
+            {
+                s32 unitCount = min(toGatherWood, MAX_UNIT_SELECTION_COUNT);
+                WarUnitGroup unitGroup = createUnitGroup(unitCount, idleIds.items);
 
-        vec2 townHallPosition = getUnitCenterPosition(townHall, true);
+                WarCommand* gatherCommand = createGatherWoodCommand(context, aiPlayer, unitGroup, forest->id, treeTile);
+                WarCommandQueuePush(&ai->commands, gatherCommand);
 
-        WarEntity* forest = findClosestForest(context, townHall);
-        assert(forest);
-
-        WarTree* tree = findAccesibleTree(context, aiPlayer, forest, townHallPosition);
-        assert(tree);
-
-        vec2 treeTile = vec2i(tree->tilex, tree->tiley);
-
-        WarCommand* gatherCommand = createGatherWoodCommand(context, aiPlayer, unitGroup, forest->id, treeTile);
-        WarCommandQueuePush(&ai->commands, gatherCommand);
-
-        WarCommand* waitCommand = createWaitResourceCommand(context, aiPlayer, WAR_RESOURCE_WOOD, waitForWood);
-        WarCommandQueuePush(&ai->commands, waitCommand);
-
-        WarEntityListFree(townHalls);
-
-        system->enabled = false;
-        system->resource.waitForWood = 0;
+                WarEntityIdListRemoveAtRange(&idleIds, 0, unitCount);
+                toGatherWood -= unitCount;
+            }
+        }
     }
+
+    WarEntityIdListFree(&idleIds);
+    WarEntityListFree(workers);
 }
 
 void updateBuildSystem(WarContext* context, WarPlayerInfo* aiPlayer)
@@ -661,7 +613,6 @@ void updateBuildSystem(WarContext* context, WarPlayerInfo* aiPlayer)
         }
     }
 
-    // FIX: I need to free the lists when doing this call
     WarEntityListFree(workers);
 }
 
@@ -704,11 +655,11 @@ WarCommand* levelGetAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
     if (ai->commands.count == 0)
     {
         updatePlanningSystem(context, aiPlayer);
-        updateResourceSystem(context, aiPlayer);
         updateBuildSystem(context, aiPlayer);
         updateTrainSystem(context, aiPlayer);
-
         // updateUpgradesSystem(context, aiPlayer);
+        updateResourceSystem(context, aiPlayer);
+
         // updateSquadsSystem(context, aiPlayer);
     }
 

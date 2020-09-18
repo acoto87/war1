@@ -126,6 +126,7 @@ bool wpSatisfyGoal(const WPGameState* gameState, const WPGoal* goal);
 void wpExecutePlan(WPGameState* gameState, const WPPlan* plan, s32 index, u32 endTime);
 void wpSchedulePlan(WPPlan* plan, WPGameState gameState);
 void wpGroupPlan(const WPPlan* plan, WPGroupedPlan* groupedPlan);
+void wpSimplifyPlan(const WPPlan* plan, WPPlan* simplifiedPlan);
 void wpMEA(WPGameState* gameState, const WPGoal* goal, WPPlan* plan);
 void wpBestPlan(
     WPGameState* gameState, const WPGoal* goal,

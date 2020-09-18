@@ -1772,3 +1772,29 @@ WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarC
     command->status = executeFunc(context, player, command);
     return command->status;
 }
+
+char* commandTypeToString(WarCommandType type)
+{
+    switch (type)
+    {
+        case WAR_COMMAND_NONE: return "None";
+        case WAR_COMMAND_TRAIN: return "Train";
+        case WAR_COMMAND_BUILD: return "Build";
+        case WAR_COMMAND_BUILD_WALL: return "Build wall";
+        case WAR_COMMAND_BUILD_ROAD: return "Build road";
+        case WAR_COMMAND_UPGRADE: return "Upgrade";
+        case WAR_COMMAND_MOVE: return "Move";
+        case WAR_COMMAND_FOLLOW: return "Follow";
+        case WAR_COMMAND_ATTACK: return "Attack";
+        case WAR_COMMAND_STOP: return "Stop";
+        case WAR_COMMAND_GATHER: return "Gather";
+        case WAR_COMMAND_DELIVER: return "Deliver";
+        case WAR_COMMAND_REPAIR: return "Repair";
+        case WAR_COMMAND_CAST: return "Cast";
+        case WAR_COMMAND_SQUAD: return "Squad";
+        case WAR_COMMAND_WAIT: return "Wait";
+        case WAR_COMMAND_SLEEP: return "Sleep";
+        case WAR_COMMAND_CANCEL: return "Cancel";
+        default: return NULL;
+    }
+}
