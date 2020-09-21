@@ -168,7 +168,7 @@ void freeSprite(WarContext* context, WarSprite sprite)
 {
     if (!sprite.image)
     {
-        logWarning("Trying to free a sprite with image: %d\n", sprite.image);
+        // logWarning("Trying to free a sprite with image: %d\n", sprite.image);
         return;
     }
 

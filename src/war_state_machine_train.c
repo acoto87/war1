@@ -50,7 +50,6 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 
     f32 trainSpeed = getMapScaledSpeed(context, context->deltaTime);
 
-    // if hurry up cheat is enabled, speed up the train time by 5000%
     if (map->hurryUp)
     {
         trainSpeed *= CHEAT_SPEED_UP_FACTOR;
@@ -58,15 +57,12 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 
     state->train.buildTime += trainSpeed;
 
-    // if the building is finished...
     if (state->train.buildTime >= state->train.totalBuildTime)
     {
         unit->buildPercent = 1;
 
-        // ...create the unit
         WarEntity* unitToBuild = createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
 
-        // ...find an empty position to put it
         vec2 position = getUnitCenterPosition(entity, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
         setUnitCenterPosition(unitToBuild, spawnPosition, true);

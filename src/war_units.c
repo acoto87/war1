@@ -89,6 +89,19 @@ bool isWorkerBusy(WarEntity* entity)
     return isRepairing(entity) || isInsideBuilding(entity);
 }
 
+bool isUnitAccessible(WarContext* context, WarEntity* entity1, WarEntity* entity2)
+{
+    assert(isUnit(entity1));
+    assert(isUnit(entity2));
+
+    WarMap* map = context->map;
+    assert(map);
+
+    vec2 from = unitPointOnTarget(entity2, entity1);
+    vec2 to = unitPointOnTarget(entity1, entity2);
+    return pathExists(map->finder, (s32)from.x, (s32)from.y, (s32)to.x, (s32)to.y);
+}
+
 bool displayUnitOnMinimap(WarEntity* entity)
 {
     assert(isUnit(entity));

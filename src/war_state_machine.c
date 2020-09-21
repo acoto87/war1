@@ -34,6 +34,14 @@ WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
+
+    if (stateMachine->nextState)
+    {
+        logWarning(
+            "Setting next state when there is already one. Entity: %d, NextState type: %d, State type: %d\n",
+            entity->id, stateMachine->nextState->type, state->type);
+    }
+
     stateMachine->nextState = state;
     stateMachine->leaveState = leaveState;
     stateMachine->enterState = enterState;

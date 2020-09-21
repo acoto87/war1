@@ -120,7 +120,7 @@ WarEntity* createDude(WarContext* context, WarUnitType type, s32 x, s32 y, u8 pl
 WarEntity* createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToBuild);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findEntityAt(WarContext* context, vec2 targetTile);
-WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
+WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type, bool isAccessible);
 WarEntity* findClosestForest(WarContext* context, WarEntity* entity);
 WarEntity* findUIEntity(WarContext* context, const char* name);
 WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool includeWalls);

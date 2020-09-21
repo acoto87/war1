@@ -515,7 +515,7 @@ WarEntity* findEntityAt(WarContext* context, vec2 targetTile)
     return findEntity(context, targetEntityId);
 }
 
-WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
+WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type, bool isAccessible)
 {
     WarEntity* result = NULL;
     f32 minDst = INT32_MAX;
@@ -528,12 +528,16 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
         WarEntity* target = units->items[i];
         if (isUnitOfType(target, type))
         {
-            s32 dst = unitDistanceInTilesToUnit(entity, target);
-            if (dst < minDst)
+            if (!isAccessible || isUnitAccessible(context, entity, target))
             {
-                result = target;
-                minDst = dst;
+                s32 dst = unitDistanceInTilesToUnit(entity, target);
+                if (dst < minDst)
+                {
+                    result = target;
+                    minDst = dst;
+                }
             }
+
         }
     }
 
@@ -734,7 +738,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarEntityManager* manager = getEntityManager(context);
 
-    logDebug("trying to remove entity with id: %d\n", id);
+    // logDebug("trying to remove entity with id: %d\n", id);
 
     WarEntity* entity = findEntity(context, id);
     if (entity)
@@ -761,7 +765,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
 
         pthread_mutex_unlock(&context->__mutex);
 
-        logDebug("removed entity with id: %d\n", id);
+        // logDebug("removed entity with id: %d\n", id);
     }
 }
 
@@ -875,6 +879,24 @@ WarEntityList* getUnitsOfType(WarContext* context, WarUnitType type)
 {
     WarEntityManager* manager = getEntityManager(context);
     return WarUnitMapGet(&manager->unitsByType, type);
+}
+
+WarEntityList* getUnitsOfPlayer(WarContext* context, u8 player)
+{
+    WarEntityList* unitsOfPlayer = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+    WarEntityListInit(unitsOfPlayer, WarEntityListNonFreeOptions);
+
+    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* unit = units->items[i];
+        if (unit && unit->unit.player == player)
+        {
+            WarEntityListAdd(unitsOfPlayer, unit);
+        }
+    }
+
+    return unitsOfPlayer;
 }
 
 WarEntityList* getUnitsOfTypeOfPlayer(WarContext* context, WarUnitType type, u8 player)
@@ -2357,7 +2379,7 @@ bool sendWorkerToMine(WarContext* context, WarEntity* worker, WarEntity* goldmin
         {
             WarRace race = getUnitRace(worker);
             WarUnitType townHallType = getTownHallOfRace(race);
-            townHall = findClosestUnitOfType(context, worker, townHallType);
+            townHall = findClosestUnitOfType(context, worker, townHallType, false);
             if (!townHall)
                 return false;
         }
@@ -2380,7 +2402,7 @@ bool sendWorkerToChop(WarContext* context, WarEntity* worker, WarEntity* forest,
         {
             WarRace race = getUnitRace(worker);
             WarUnitType townHallType = getTownHallOfRace(race);
-            townHall = findClosestUnitOfType(context, worker, townHallType);
+            townHall = findClosestUnitOfType(context, worker, townHallType, false);
             if (!townHall)
                 return false;
         }

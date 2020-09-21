@@ -67,7 +67,7 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
         // find the closest town hall to deliver the gold
         WarRace race = getUnitRace(entity);
         WarUnitType townHallType = getTownHallOfRace(race);
-        WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+        WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType, false);
 
         // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
         if (!townHall)

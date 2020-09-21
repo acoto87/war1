@@ -29,6 +29,7 @@ WarAISystem* createAIPlanningSystem()
 WarAISystem* createAIResourceSystem()
 {
     WarAISystem* system = createAISystem(WAR_AI_SYSTEM_RESOURCE);
+    system->enabled = true;
     return system;
 }
 
@@ -44,48 +45,6 @@ void levelInitAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAISystemsMapSet(&ai->systems, WAR_AI_SYSTEM_BUILD, createAITrainSystem());
     WarAISystemsMapSet(&ai->systems, WAR_AI_SYSTEM_PLANNING, createAIPlanningSystem());
     WarAISystemsMapSet(&ai->systems, WAR_AI_SYSTEM_RESOURCE, createAIResourceSystem());
-
-    // WarAICustomData* customData = (WarAICustomData*)xmalloc(sizeof(WarAICustomData));
-    // WarCommandQueueInit(&customData->commands, WarCommandQueueNonFreeOptions);
-    // ai->customData = customData;
-
-    // requestTownHall(context, aiPlayer, true, true);
-
-    // requestPeasantOrPeon(context, aiPlayer);
-    // waitForUnit(context, aiPlayer, -1);
-    // sendToGatherGold(context, aiPlayer, 1, true);
-    // requestPeasantOrPeon(context, aiPlayer);
-    // waitForUnit(context, aiPlayer, -1);
-    // sendToGatherWood(context, aiPlayer, 1, true);
-    // waitForGold(context, aiPlayer, 500);
-    // waitForWood(context, aiPlayer, 300);
-    // requestFarm(context, aiPlayer, false, false);
-    // waitForUnit(context, aiPlayer, -1);
-    // sendToGatherGold(context, aiPlayer, 1, true);
-    // waitForGold(context, aiPlayer, 400);
-    // requestPeasantOrPeon(context, aiPlayer);
-    // waitForUnit(context, aiPlayer, -1);
-    // sendToGatherWood(context, aiPlayer, 1, true);
-    // waitForGold(context, aiPlayer, 600);
-    // waitForWood(context, aiPlayer, 500);
-    // requestBarracks(context, aiPlayer, false, false);
-    // waitForUnit(context, aiPlayer, -1);
-    // sendToGatherGold(context, aiPlayer, 1, true);
-
-    // waitForGold(context, aiPlayer, 400);
-    // requestFootmanOrGrunt(context, aiPlayer);
-    // waitForUnit(context, aiPlayer, -1);
-
-    // waitForGold(context, aiPlayer, 400);
-    // requestFootmanOrGrunt(context, aiPlayer);
-    // waitForUnit(context, aiPlayer, -1);
-
-    // waitForGold(context, aiPlayer, 400);
-    // requestFootmanOrGrunt(context, aiPlayer);
-    // waitForUnit(context, aiPlayer, -1);
-
-    // requestSquad(context, aiPlayer, 1, 1, arrayArg(WarSquadUnitRequest, squadFootmanOrGruntRequest(aiPlayer, 3)));
-    // attackWithSquad(context, aiPlayer, 1);
 }
 
 s32 idleWorkersCompare(const WarEntity* e1, const WarEntity* e2)
@@ -147,6 +106,119 @@ bool findPlaceToBuild(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType 
     return result;
 }
 
+WPGameState getGameState(WarContext* context, WarPlayerInfo* player)
+{
+    const WPResourceType unitTypeToResourceType[] =
+    {
+        WP_RESOURCE_TYPE_FOOTMAN_GRUNT,     // WAR_UNIT_FOOTMAN,
+        WP_RESOURCE_TYPE_FOOTMAN_GRUNT,     // WAR_UNIT_GRUNT,
+        WP_RESOURCE_TYPE_PEASANT_PEON,      // WAR_UNIT_PEASANT,
+        WP_RESOURCE_TYPE_PEASANT_PEON,      // WAR_UNIT_PEON,
+        WP_RESOURCE_TYPE_CATAPULT,          // WAR_UNIT_CATAPULT_HUMANS,
+        WP_RESOURCE_TYPE_CATAPULT,          // WAR_UNIT_CATAPULT_ORCS,
+        WP_RESOURCE_TYPE_KNIGHT_RAIDER,     // WAR_UNIT_KNIGHT,
+        WP_RESOURCE_TYPE_KNIGHT_RAIDER,     // WAR_UNIT_RAIDER,
+        WP_RESOURCE_TYPE_ARCHER_SPEARMAN,   // WAR_UNIT_ARCHER,
+        WP_RESOURCE_TYPE_ARCHER_SPEARMAN,   // WAR_UNIT_SPEARMAN,
+        WP_RESOURCE_TYPE_CONJURER_WARLOCK,  // WAR_UNIT_CONJURER,
+        WP_RESOURCE_TYPE_CONJURER_WARLOCK,  // WAR_UNIT_WARLOCK,
+        WP_RESOURCE_TYPE_CLERIC_NECROLYTE,  // WAR_UNIT_CLERIC,
+        WP_RESOURCE_TYPE_CLERIC_NECROLYTE,  // WAR_UNIT_NECROLYTE,
+        -1,                                 // WAR_UNIT_MEDIVH,
+        -1,                                 // WAR_UNIT_LOTHAR,
+        -1,                                 // WAR_UNIT_WOUNDED,
+        -1,                                 // WAR_UNIT_GRIZELDA,
+        -1,                                 // WAR_UNIT_GARONA,
+        -1,                                 // WAR_UNIT_OGRE,
+        -1,                                 // WAR_UNIT_SPIDER,
+        -1,                                 // WAR_UNIT_SLIME,
+        -1,                                 // WAR_UNIT_FIRE_ELEMENTAL,
+        -1,                                 // WAR_UNIT_SCORPION,
+        -1,                                 // WAR_UNIT_BRIGAND,
+        -1,                                 // WAR_UNIT_THE_DEAD,
+        -1,                                 // WAR_UNIT_SKELETON,
+        -1,                                 // WAR_UNIT_DAEMON,
+        -1,                                 // WAR_UNIT_WATER_ELEMENTAL,
+        -1,                                 // WAR_UNIT_DRAGON_CYCLOPS_GIANT,
+        -1,                                 // WAR_UNIT_26,
+        -1,                                 // WAR_UNIT_30,
+        WP_RESOURCE_TYPE_SUPPLY,            // WAR_UNIT_FARM_HUMANS,
+        WP_RESOURCE_TYPE_SUPPLY,            // WAR_UNIT_FARM_ORCS,
+        WP_RESOURCE_TYPE_BARRACKS,          // WAR_UNIT_BARRACKS_HUMANS,
+        WP_RESOURCE_TYPE_BARRACKS,          // WAR_UNIT_BARRACKS_ORCS,
+        WP_RESOURCE_TYPE_CHURCH_TEMPLE,     // WAR_UNIT_CHURCH,
+        WP_RESOURCE_TYPE_CHURCH_TEMPLE,     // WAR_UNIT_TEMPLE,
+        WP_RESOURCE_TYPE_TOWER,             // WAR_UNIT_TOWER_HUMANS,
+        WP_RESOURCE_TYPE_TOWER,             // WAR_UNIT_TOWER_ORCS,
+        WP_RESOURCE_TYPE_TOWNHALL,          // WAR_UNIT_TOWNHALL_HUMANS,
+        WP_RESOURCE_TYPE_TOWNHALL,          // WAR_UNIT_TOWNHALL_ORCS,
+        WP_RESOURCE_TYPE_LUMBERMILL,        // WAR_UNIT_LUMBERMILL_HUMANS,
+        WP_RESOURCE_TYPE_LUMBERMILL,        // WAR_UNIT_LUMBERMILL_ORCS,
+        WP_RESOURCE_TYPE_STABLE_KENNEL,     // WAR_UNIT_STABLE,
+        WP_RESOURCE_TYPE_STABLE_KENNEL,     // WAR_UNIT_KENNEL,
+        WP_RESOURCE_TYPE_BLACKSMITH,        // WAR_UNIT_BLACKSMITH_HUMANS,
+        WP_RESOURCE_TYPE_BLACKSMITH,        // WAR_UNIT_BLACKSMITH_ORCS,
+        -1,                                 // WAR_UNIT_STORMWIND,
+        -1,                                 // WAR_UNIT_BLACKROCK,
+        -1,                                 // WAR_UNIT_GOLDMINE,
+        -1,                                 // WAR_UNIT_51,
+        -1,                                 // WAR_UNIT_HUMAN_CORPSE,
+        -1,                                 // WAR_UNIT_ORC_CORPSE,
+    };
+
+    u32 resources[WP_RESOURCE_TYPE_COUNT] = {0};
+    resources[WP_RESOURCE_TYPE_GOLD] = player->gold;
+    resources[WP_RESOURCE_TYPE_WOOD] = player->wood;
+
+    WarEntityList* units = getUnitsOfPlayer(context, player->index);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (!entity)
+            continue;
+
+        if (isDeadUnit(entity) || isCollapsedUnit(entity))
+            continue;
+
+        if (isWorkerUnit(entity) && isWorkerBusy(entity))
+            continue;
+
+        if (isBuildingUnit(entity) && (isBeingBuiltUnit(entity) || isBuildingBusy(entity)))
+            continue;
+
+        switch (entity->unit.type)
+        {
+            case WAR_UNIT_FARM_HUMANS:
+            case WAR_UNIT_FARM_ORCS:
+            {
+                resources[WP_RESOURCE_TYPE_SUPPLY] += 4;
+                break;
+            }
+            case WAR_UNIT_TOWNHALL_HUMANS:
+            case WAR_UNIT_TOWNHALL_ORCS:
+            {
+                resources[WP_RESOURCE_TYPE_TOWNHALL]++;
+                resources[WP_RESOURCE_TYPE_SUPPLY]++;
+                break;
+            }
+            default:
+            {
+                if (unitTypeToResourceType[entity->unit.type] >= 0)
+                    resources[unitTypeToResourceType[entity->unit.type]]++;
+                else
+                    logWarning("Trying to include a unit type that isn't supported: %d\n", entity->unit.type);
+            }
+        }
+    }
+    WarEntityListFree(units);
+
+    // Remove the supplies that are currently being consumed
+    for (s32 i = WP_RESOURCE_TYPE_PEASANT_PEON; i < WP_RESOURCE_TYPE_COUNT; i++)
+        resources[WP_RESOURCE_TYPE_SUPPLY] -= resources[i];
+
+    return wpCreateGameState(0, resources);
+}
+
 void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
 {
     WarAI* ai = aiPlayer->ai;
@@ -156,149 +228,20 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAISystem* trainSystem = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_TRAIN);
     WarAISystem* buildSystem = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_BUILD);
 
-    u32 resources[WP_RESOURCE_TYPE_COUNT] = {0};
-    resources[WP_RESOURCE_TYPE_GOLD] = aiPlayer->gold;
-    resources[WP_RESOURCE_TYPE_WOOD] = aiPlayer->wood;
-
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-    for (s32 i = 0; i < units->count; i++)
-    {
-        WarEntity* entity = units->items[i];
-        if (entity)
-        {
-            WarUnitComponent* unit = &entity->unit;
-            if (unit->player != aiPlayer->index)
-                continue;
-
-            if (isDeadUnit(entity) || isCollapsedUnit(entity))
-                continue;
-
-            if (isWorkerUnit(entity) && isWorkerBusy(entity))
-                continue;
-
-            if (isBuildingUnit(entity) && (isBeingBuiltUnit(entity) || isTrainingUnit(entity) || isUpgradingUnit(entity)))
-                continue;
-
-            switch (unit->type)
-            {
-                case WAR_UNIT_FOOTMAN:
-                case WAR_UNIT_GRUNT:
-                {
-                    resources[WP_RESOURCE_TYPE_FOOTMAN_GRUNT]++;
-                    break;
-                }
-                case WAR_UNIT_PEASANT:
-                case WAR_UNIT_PEON:
-                {
-                    resources[WP_RESOURCE_TYPE_PEASANT_PEON]++;
-                    break;
-                }
-                case WAR_UNIT_CATAPULT_HUMANS:
-                case WAR_UNIT_CATAPULT_ORCS:
-                {
-                    resources[WP_RESOURCE_TYPE_CATAPULT]++;
-                    break;
-                }
-                case WAR_UNIT_KNIGHT:
-                case WAR_UNIT_RAIDER:
-                {
-                    resources[WP_RESOURCE_TYPE_KNIGHT_RAIDER]++;
-                    break;
-                }
-                case WAR_UNIT_ARCHER:
-                case WAR_UNIT_SPEARMAN:
-                {
-                    resources[WP_RESOURCE_TYPE_ARCHER_SPEARMAN]++;
-                    break;
-                }
-                case WAR_UNIT_CONJURER:
-                case WAR_UNIT_WARLOCK:
-                {
-                    resources[WP_RESOURCE_TYPE_CONJURER_WARLOCK]++;
-                    break;
-                }
-                case WAR_UNIT_CLERIC:
-                case WAR_UNIT_NECROLYTE:
-                {
-                    resources[WP_RESOURCE_TYPE_CLERIC_NECROLYTE]++;
-                    break;
-                }
-
-                // buildings
-                case WAR_UNIT_FARM_HUMANS:
-                case WAR_UNIT_FARM_ORCS:
-                {
-                    resources[WP_RESOURCE_TYPE_SUPPLY] += 4;
-                    break;
-                }
-                case WAR_UNIT_BARRACKS_HUMANS:
-                case WAR_UNIT_BARRACKS_ORCS:
-                {
-                    resources[WP_RESOURCE_TYPE_BARRACKS]++;
-                    break;
-                }
-                case WAR_UNIT_CHURCH:
-                case WAR_UNIT_TEMPLE:
-                {
-                    resources[WP_RESOURCE_TYPE_CHURCH_TEMPLE]++;
-                    break;
-                }
-                case WAR_UNIT_TOWER_HUMANS:
-                case WAR_UNIT_TOWER_ORCS:
-                {
-                    resources[WP_RESOURCE_TYPE_TOWER]++;
-                    break;
-                }
-                case WAR_UNIT_TOWNHALL_HUMANS:
-                case WAR_UNIT_TOWNHALL_ORCS:
-                {
-                    resources[WP_RESOURCE_TYPE_TOWNHALL]++;
-                    resources[WP_RESOURCE_TYPE_SUPPLY]++;
-                    break;
-                }
-                case WAR_UNIT_LUMBERMILL_HUMANS:
-                case WAR_UNIT_LUMBERMILL_ORCS:
-                {
-                    resources[WP_RESOURCE_TYPE_LUMBERMILL]++;
-                    break;
-                }
-                case WAR_UNIT_STABLE:
-                case WAR_UNIT_KENNEL:
-                {
-                    resources[WP_RESOURCE_TYPE_STABLE_KENNEL]++;
-                    break;
-                }
-                case WAR_UNIT_BLACKSMITH_HUMANS:
-                case WAR_UNIT_BLACKSMITH_ORCS:
-                {
-                    resources[WP_RESOURCE_TYPE_BLACKSMITH]++;
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-    }
-
-    // Remove the supplies that are currently being consumed
-    for (s32 i = WP_RESOURCE_TYPE_PEASANT_PEON; i < WP_RESOURCE_TYPE_COUNT; i++)
-        resources[WP_RESOURCE_TYPE_SUPPLY] -= resources[i];
-
-    WPGameState gameState = wpCreateGameState(0, resources);
+    WPGameState gameState = getGameState(context, aiPlayer);
 
     s32 index = planningSystem->planning.index;
     WPPlan* simplifiedPlan = &planningSystem->planning.simplifiedPlan;
     if (simplifiedPlan->count == 0)
     {
         WPGoal goal = wpCreateGoalFromArgs(
-            4,
-            WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 5,
-            WP_RESOURCE_TYPE_ARCHER_SPEARMAN, 3,
-            WP_RESOURCE_TYPE_KNIGHT_RAIDER, 3,
-            WP_RESOURCE_TYPE_CATAPULT, 2
-
-            // WP_RESOURCE_TYPE_CONJURER_WARLOCK,
-            // WP_RESOURCE_TYPE_CLERIC_NECROLYTE,
+            6,
+            WP_RESOURCE_TYPE_FOOTMAN_GRUNT, 6,
+            WP_RESOURCE_TYPE_ARCHER_SPEARMAN, 4,
+            WP_RESOURCE_TYPE_KNIGHT_RAIDER, 4,
+            WP_RESOURCE_TYPE_CATAPULT, 3,
+            WP_RESOURCE_TYPE_CONJURER_WARLOCK, 2,
+            WP_RESOURCE_TYPE_CLERIC_NECROLYTE, 2
         );
 
         WPGoal intermediateGoals[] =
@@ -306,6 +249,11 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
             wpCreateGoalFromArgs(
                 1,
                 WP_RESOURCE_TYPE_PEASANT_PEON, 5
+            ),
+            wpCreateGoalFromArgs(
+                2,
+                WP_RESOURCE_TYPE_PEASANT_PEON, 5,
+                WP_RESOURCE_TYPE_BARRACKS, 2
             )
         };
 
@@ -322,7 +270,7 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
             return;
         }
 
-        logInfo("The plan was calculated as:\n");
+        logDebug("The plan was calculated as:\n");
         printPlan(simplifiedPlan);
 
         WPPlanFree(&plan);
@@ -334,117 +282,44 @@ void updatePlanningSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     WPAction* action = &simplifiedPlan->items[index];
     if (wpCanExecuteAction(&gameState, action))
     {
-        logInfo("Executing action of type: %s, %d\n", actionTypeToString(action->type), index);
+        logDebug("Executing action of type '%s' at index %d\n", actionTypeToString(action->type), index);
 
-        switch (action->type)
+        const WarUnitType actionTypeToUnitType[] =
         {
-            case WP_ACTION_TYPE_BUILD_SUPPLY:
-            {
-                index++;
-                buildSystem->enabled = true;
-                buildSystem->build.unitToBuild = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_BUILD_TOWNHALL:
-            {
-                index++;
-                buildSystem->enabled = true;
-                buildSystem->build.unitToBuild = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_BUILD_BARRACKS:
-            {
-                index++;
-                buildSystem->enabled = true;
-                buildSystem->build.unitToBuild = getUnitTypeForRace(WAR_UNIT_BARRACKS_HUMANS, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_BUILD_CHURCH_TEMPLE:
-            {
-                index++;
-                buildSystem->enabled = true;
-                buildSystem->build.unitToBuild = getUnitTypeForRace(WAR_UNIT_CHURCH, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_BUILD_TOWER:
-            {
-                index++;
-                buildSystem->enabled = true;
-                buildSystem->build.unitToBuild = getUnitTypeForRace(WAR_UNIT_TOWER_HUMANS, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_BUILD_STABLE_KENNEL:
-            {
-                index++;
-                buildSystem->enabled = true;
-                buildSystem->build.unitToBuild = getUnitTypeForRace(WAR_UNIT_STABLE, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_BUILD_LUMBERMILL:
-            {
-                index++;
-                buildSystem->enabled = true;
-                buildSystem->build.unitToBuild = getUnitTypeForRace(WAR_UNIT_LUMBERMILL_HUMANS, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_BUILD_BLACKSMITH:
-            {
-                index++;
-                buildSystem->enabled = true;
-                buildSystem->build.unitToBuild = getUnitTypeForRace(WAR_UNIT_BLACKSMITH_HUMANS, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_TRAIN_PEASANT_PEON:
-            {
-                index++;
-                trainSystem->enabled = true;
-                trainSystem->train.unitToTrain = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_TRAIN_FOOTMAN_GRUNT:
-            {
-                index++;
-                trainSystem->enabled = true;
-                trainSystem->train.unitToTrain = getUnitTypeForRace(WAR_UNIT_FOOTMAN, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_TRAIN_ARCHER_SPEARMAN:
-            {
-                index++;
-                trainSystem->enabled = true;
-                trainSystem->train.unitToTrain = getUnitTypeForRace(WAR_UNIT_ARCHER, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_TRAIN_KNIGHT_RAIDER:
-            {
-                index++;
-                trainSystem->enabled = true;
-                trainSystem->train.unitToTrain = getUnitTypeForRace(WAR_UNIT_KNIGHT, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_TRAIN_CATAPULT:
-            {
-                index++;
-                trainSystem->enabled = true;
-                trainSystem->train.unitToTrain = getUnitTypeForRace(WAR_UNIT_CATAPULT_HUMANS, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_TRAIN_CONJURER_WARLOCK:
-            {
-                index++;
-                trainSystem->enabled = true;
-                trainSystem->train.unitToTrain = getUnitTypeForRace(WAR_UNIT_CONJURER, aiPlayer->race);
-                break;
-            }
-            case WP_ACTION_TYPE_TRAIN_CLERIC_NECROLYTE:
-            {
-                index++;
-                trainSystem->enabled = true;
-                trainSystem->train.unitToTrain = getUnitTypeForRace(WAR_UNIT_CLERIC, aiPlayer->race);
-                break;
-            }
-            default:
-                break;
+            -1,                         // WP_ACTION_TYPE_COLLECT_GOLD
+            -1,                         // WP_ACTION_TYPE_COLLECT_WOOD
+            WAR_UNIT_FARM_HUMANS,       // WP_ACTION_TYPE_BUILD_SUPPLY
+            WAR_UNIT_TOWNHALL_HUMANS,   // WP_ACTION_TYPE_BUILD_TOWNHALL
+            WAR_UNIT_BARRACKS_HUMANS,   // WP_ACTION_TYPE_BUILD_BARRACKS
+            WAR_UNIT_CHURCH,            // WP_ACTION_TYPE_BUILD_CHURCH_TEMPLE
+            WAR_UNIT_TOWER_HUMANS,      // WP_ACTION_TYPE_BUILD_TOWER
+            WAR_UNIT_STABLE,            // WP_ACTION_TYPE_BUILD_STABLE_KENNEL
+            WAR_UNIT_LUMBERMILL_HUMANS, // WP_ACTION_TYPE_BUILD_LUMBERMILL
+            WAR_UNIT_BLACKSMITH_HUMANS, // WP_ACTION_TYPE_BUILD_BLACKSMITH
+            WAR_UNIT_PEASANT,           // WP_ACTION_TYPE_TRAIN_PEASANT_PEON
+            WAR_UNIT_FOOTMAN,           // WP_ACTION_TYPE_TRAIN_FOOTMAN_GRUNT
+            WAR_UNIT_ARCHER,            // WP_ACTION_TYPE_TRAIN_ARCHER_SPEARMAN
+            WAR_UNIT_KNIGHT,            // WP_ACTION_TYPE_TRAIN_KNIGHT_RAIDER
+            WAR_UNIT_CATAPULT_HUMANS,   // WP_ACTION_TYPE_TRAIN_CATAPULT
+            WAR_UNIT_CONJURER,          // WP_ACTION_TYPE_TRAIN_CONJURER_WARLOCK
+            WAR_UNIT_CLERIC,            // WP_ACTION_TYPE_TRAIN_CLERIC_NECROLYTE
+        };
+
+        if (isBuildingUnitType(actionTypeToUnitType[action->type]))
+        {
+            buildSystem->enabled = true;
+            buildSystem->build.unitToBuild = getUnitTypeForRace(actionTypeToUnitType[action->type], aiPlayer->race);
+            index++;
+        }
+        else if (isDudeUnitType(actionTypeToUnitType[action->type]))
+        {
+            trainSystem->enabled = true;
+            trainSystem->train.unitToTrain = getUnitTypeForRace(actionTypeToUnitType[action->type], aiPlayer->race);
+            index++;
+        }
+        else
+        {
+            logWarning("Trying to execute an action for a type that isn't supported: %d\n", action->type);
         }
 
         planningSystem->planning.index = index;
@@ -459,8 +334,8 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAISystem* system = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_RESOURCE);
     assert(system);
 
-    // if (!system->enabled)
-    //     return;
+    if (!system->enabled)
+        return;
 
     WarUnitType workerType = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
     WarEntityList* workers = getUnitsOfTypeOfPlayer(context, workerType, aiPlayer->index);
@@ -481,9 +356,13 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
             continue;
 
         if (isGatheringGold(worker) || isMining(worker) || isDeliveringGold(worker))
+        {
             gatheringGold++;
+        }
         else if (isGatheringWood(worker) || isChopping(worker) || isDeliveringWood(worker))
+        {
             gatheringWood++;
+        }
         else if (isIdle(worker))
         {
             idle++;
@@ -502,8 +381,8 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
         // 7 worker(s) -> 4 worker(s) to gold, 3 worker(s) to wood
         // 8 worker(s) -> 5 worker(s) to gold, 3 worker(s) to wood
         //
-        static s32 toGatherGoldTable[9] = { 0, 1, 2, 3, 3, 3, 4, 4, 5 };
-        static s32 toGatherWoodTable[9] = { 0, 0, 0, 0, 1, 2, 2, 3, 3 };
+        static s32 toGatherGoldTable[9] = { 0, 1, 2, 2, 2, 3, 3, 4, 4 };
+        static s32 toGatherWoodTable[9] = { 0, 0, 0, 1, 2, 2, 3, 3, 4 };
 
         s32 toGatherGold = 0;
         s32 toGatherWood = 0;
@@ -532,44 +411,47 @@ void updateResourceSystem(WarContext* context, WarPlayerInfo* aiPlayer)
 
         if (toGatherGold > 0)
         {
-            WarEntity* goldmine = findClosestUnitOfType(context, townHall, WAR_UNIT_GOLDMINE);
-            assert(goldmine);
-
-            while (toGatherGold > 0)
+            WarEntity* goldmine = findClosestUnitOfType(context, townHall, WAR_UNIT_GOLDMINE, true);
+            if (goldmine)
             {
-                s32 unitCount = min(toGatherGold, MAX_UNIT_SELECTION_COUNT);
-                WarUnitGroup unitGroup = createUnitGroup(unitCount, idleIds.items);
+                while (toGatherGold > 0)
+                {
+                    s32 unitCount = min(toGatherGold, MAX_UNIT_SELECTION_COUNT);
+                    WarUnitGroup unitGroup = createUnitGroup(unitCount, idleIds.items);
 
-                WarCommand* gatherCommand = createGatherGoldCommand(context, aiPlayer, unitGroup, goldmine->id);
-                WarCommandQueuePush(&ai->commands, gatherCommand);
+                    WarCommand* gatherCommand = createGatherGoldCommand(context, aiPlayer, unitGroup, goldmine->id);
+                    WarCommandQueuePush(&ai->commands, gatherCommand);
 
-                WarEntityIdListRemoveAtRange(&idleIds, 0, unitCount);
-                toGatherGold -= unitCount;
+                    WarEntityIdListRemoveAtRange(&idleIds, 0, unitCount);
+                    toGatherGold -= unitCount;
+                }
             }
         }
 
         if (toGatherWood > 0)
         {
-            vec2 townHallPosition = getUnitCenterPosition(townHall, true);
-
             WarEntity* forest = findClosestForest(context, townHall);
-            assert(forest);
-
-            WarTree* tree = findAccesibleTree(context, aiPlayer, forest, townHallPosition);
-            assert(tree);
-
-            vec2 treeTile = vec2i(tree->tilex, tree->tiley);
-
-            while (toGatherWood > 0)
+            if (forest)
             {
-                s32 unitCount = min(toGatherWood, MAX_UNIT_SELECTION_COUNT);
-                WarUnitGroup unitGroup = createUnitGroup(unitCount, idleIds.items);
+                vec2 townHallPosition = getUnitCenterPosition(townHall, true);
 
-                WarCommand* gatherCommand = createGatherWoodCommand(context, aiPlayer, unitGroup, forest->id, treeTile);
-                WarCommandQueuePush(&ai->commands, gatherCommand);
+                WarTree* tree = findAccesibleTree(context, aiPlayer, forest, townHallPosition);
+                if (tree)
+                {
+                    vec2 treeTile = vec2i(tree->tilex, tree->tiley);
 
-                WarEntityIdListRemoveAtRange(&idleIds, 0, unitCount);
-                toGatherWood -= unitCount;
+                    while (toGatherWood > 0)
+                    {
+                        s32 unitCount = min(toGatherWood, MAX_UNIT_SELECTION_COUNT);
+                        WarUnitGroup unitGroup = createUnitGroup(unitCount, idleIds.items);
+
+                        WarCommand* gatherCommand = createGatherWoodCommand(context, aiPlayer, unitGroup, forest->id, treeTile);
+                        WarCommandQueuePush(&ai->commands, gatherCommand);
+
+                        WarEntityIdListRemoveAtRange(&idleIds, 0, unitCount);
+                        toGatherWood -= unitCount;
+                    }
+                }
             }
         }
     }
@@ -599,17 +481,17 @@ void updateBuildSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     for (s32 i = 0; i < workers->count; i++)
     {
         WarEntity* worker = workers->items[i];
-        if (worker)
-        {
-            vec2 position = getUnitCenterPosition(worker, true);
-            if (findPlaceToBuild(context, aiPlayer, unitType, position, &position))
-            {
-                WarCommand* command = createBuildCommand(context, aiPlayer, unitType, worker->id, position);
-                WarCommandQueuePush(&ai->commands, command);
+        if (!worker || isDeadUnit(worker) || isWorkerBusy(worker))
+            continue;
 
-                system->enabled = false;
-                break;
-            }
+        vec2 position = getUnitCenterPosition(worker, true);
+        if (findPlaceToBuild(context, aiPlayer, unitType, position, &position))
+        {
+            WarCommand* command = createBuildCommand(context, aiPlayer, unitType, worker->id, position);
+            WarCommandQueuePush(&ai->commands, command);
+
+            system->enabled = false;
+            break;
         }
     }
 
@@ -624,7 +506,6 @@ void updateTrainSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAISystem* system = WarAISystemsMapGet(&ai->systems, WAR_AI_SYSTEM_TRAIN);
     assert(system);
 
-
     if (!system->enabled)
         return;
 
@@ -635,14 +516,14 @@ void updateTrainSystem(WarContext* context, WarPlayerInfo* aiPlayer)
     for (s32 k = 0; k < producers->count; k++)
     {
         WarEntity* producer = producers->items[k];
-        if (producer)
-        {
-            WarCommand* command = createTrainCommand(context, aiPlayer, unitType, producer->id);
-            WarCommandQueuePush(&ai->commands, command);
+        if (!producer || isCollapsedUnit(producer) || isBeingBuiltUnit(producer) || isBuildingBusy(producer))
+            continue;
 
-            system->enabled = false;
-            break;
-        }
+        WarCommand* command = createTrainCommand(context, aiPlayer, unitType, producer->id);
+        WarCommandQueuePush(&ai->commands, command);
+
+        system->enabled = false;
+        break;
     }
     WarEntityListFree(producers);
 }

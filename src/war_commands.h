@@ -32,3 +32,4 @@ WarCommandStatus canExecuteCommand(WarContext* context, WarPlayerInfo* player, W
 WarCommandStatus executeCommand(WarContext* context, WarPlayerInfo* player, WarCommand* command);
 
 char* commandTypeToString(WarCommandType type);
+char* commandStatusToString(WarCommandStatus status);

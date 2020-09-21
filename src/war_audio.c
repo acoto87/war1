@@ -384,9 +384,9 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
                                 // when the audios gets out of viewport
                                 // distance             vol
                                 // < 120            ->  1
-                                // > 120 && < 200   ->  interpolate range 120-200 to range 0.75-0
+                                // >= 120 && < 200  ->  interpolate range 120-200 to range 0.75-0
                                 // >= 200           ->  0
-                                volume = 0.75 * (1 - ((distance - 120) / 80));
+                                volume *= 0.75 * (1 - ((distance - 120) / 80));
                                 volume = max(volume, 0);
                             }
                         }
@@ -458,8 +458,8 @@ bool initAudio(WarContext* context)
 
     context->musicEnabled = true;
     context->soundEnabled = true;
-    // context->musicVolume = 1.0f;
-    // context->soundVolume = 1.0f;
+    context->musicVolume = 1.0f;
+    context->soundVolume = 1.0f;
 
     return true;
 }

@@ -25,12 +25,20 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     if (state->follow.targetEntityId)
     {
         WarEntity* targetEntity = findEntity(context, state->follow.targetEntityId);
+        if (!targetEntity)
+        {
+            if (!changeStateNextState(context, entity, state))
+            {
+                sendToIdleState(context, entity, true);
+            }
+
+            return;
+        }
 
         if (isUnit(targetEntity))
         {
-            // if the target entity is an unit the instead of using the tile where
-            // the player click, use a point on the target unit that is closer to
-            // the following unit
+            // if the target entity is an unit then instead of using the tile where
+            // the player click, use a point on the target unit that is closer to the following unit
             end = unitPointOnTarget(entity, targetEntity);
         }
         else
@@ -40,8 +48,6 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     f32 distance = vec2DistanceInTiles(start, end);
-
-    // if the unit is already in distance, go to idle
     if (distance <= state->follow.distance)
     {
         if (!changeStateNextState(context, entity, state))
@@ -53,8 +59,6 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     WarMapPath path = findPath(map->finder, start.x, start.y, end.x, end.y);
-
-    // if there is no path to the target, go to idle
     if (path.nodes.count <= 1)
     {
         if (!changeStateNextState(context, entity, state))

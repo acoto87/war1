@@ -684,7 +684,7 @@ char* actionTypeToString(WPActionType actionType)
         case WP_ACTION_TYPE_TRAIN_KNIGHT_RAIDER: return "Train Knight/Rider";
         case WP_ACTION_TYPE_TRAIN_CATAPULT: return "Train Captapult";
         case WP_ACTION_TYPE_TRAIN_CONJURER_WARLOCK: return "Train Conjurer/Warlock";
-        case WP_ACTION_TYPE_TRAIN_CLERIC_NECROLYTE: return "Train Clerci/Necrolyte";
+        case WP_ACTION_TYPE_TRAIN_CLERIC_NECROLYTE: return "Train Cleric/Necrolyte";
         default: return "<error>";
     }
 }

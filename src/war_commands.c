@@ -1545,7 +1545,7 @@ WarCommandStatus executeDeliverCommand(WarContext* context, WarPlayerInfo* playe
             {
                 WarRace race = getUnitRace(unit);
                 WarUnitType townHallType = getTownHallOfRace(race);
-                townHall = findClosestUnitOfType(context, unit, townHallType);
+                townHall = findClosestUnitOfType(context, unit, townHallType, false);
                 if (!townHall)
                     continue;
             }
@@ -1795,6 +1795,44 @@ char* commandTypeToString(WarCommandType type)
         case WAR_COMMAND_WAIT: return "Wait";
         case WAR_COMMAND_SLEEP: return "Sleep";
         case WAR_COMMAND_CANCEL: return "Cancel";
+        default: return NULL;
+    }
+}
+
+char* commandStatusToString(WarCommandStatus status)
+{
+    switch (status)
+    {
+        case WAR_COMMAND_STATUS_NONE: return "None";
+        case WAR_COMMAND_STATUS_RUNNING: return "Running";
+        case WAR_COMMAND_STATUS_DONE: return "Done";
+        case WAR_COMMAND_STATUS_FAILED: return "Failed";
+        case WAR_COMMAND_STATUS_INVALID_UNIT_TYPE: return "Invalid unit type";
+        case WAR_COMMAND_STATUS_INVALID_UNIT_RACE: return "Invalid unit race";
+        case WAR_COMMAND_STATUS_INVALID_PRODUCER: return "Invalid producer";
+        case WAR_COMMAND_STATUS_INVALID_WORKER: return "Invalid worker";
+        case WAR_COMMAND_STATUS_INVALID_POSITION: return "Invalid position";
+        case WAR_COMMAND_STATUS_INVALID_UPGRADE_TYPE: return "Invalid upgrade type";
+        case WAR_COMMAND_STATUS_INVALID_UPGRADE_RACE: return "Invalid upgrade race";
+        case WAR_COMMAND_STATUS_INVALID_RESOURCE: return "Invalid resource";
+        case WAR_COMMAND_STATUS_INVALID_GOLDMINE: return "Invalid goldmine";
+        case WAR_COMMAND_STATUS_INVALID_FOREST: return "Invalid forest";
+        case WAR_COMMAND_STATUS_INVALID_TREE: return "Invalid tree";
+        case WAR_COMMAND_STATUS_INVALID_TARGET: return "Invalid target";
+        case WAR_COMMAND_STATUS_INVALID_SQUAD: return "Invalid squad";
+        case WAR_COMMAND_STATUS_INVALID_MOVE_TARGET: return "Invalid move target";
+        case WAR_COMMAND_STATUS_INVALID_FOLLOW_TARGET: return "Invalid follow target";
+        case WAR_COMMAND_STATUS_INVALID_ATTACK_TARGET: return "Invalid attack target";
+        case WAR_COMMAND_STATUS_INVALID_CANCEL_TARGET: return "Invalid cancel target";
+        case WAR_COMMAND_STATUS_PRODUCER_NOT_READY: return "Producer not ready";
+        case WAR_COMMAND_STATUS_PRODUCER_BUSY: return "Producer busy";
+        case WAR_COMMAND_STATUS_NOT_ENOUGH_FOOD: return "Not enough food";
+        case WAR_COMMAND_STATUS_NOT_ENOUGH_GOLD: return "Not enough gold";
+        case WAR_COMMAND_STATUS_NOT_ENOUGH_WOOD: return "Not enough wood";
+        case WAR_COMMAND_STATUS_WORKER_BUSY: return "Worker busy";
+        case WAR_COMMAND_STATUS_NOT_MORE_UPGRADE: return "Not more upgrade";
+        case WAR_COMMAND_STATUS_NO_UNITS: return "Not units";
+        case WAR_COMMAND_STATUS_TOO_MANY_UNITS: return "Too many units";
         default: return NULL;
     }
 }

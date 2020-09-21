@@ -125,7 +125,7 @@ internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     WarMapNode endNode = createNode(finder, endX, endY);
 
     WarMapNodeListAdd(&nodes, startNode);
-    
+
     s32 i;
     for(i = 0; i < nodes.count; i++)
     {
@@ -160,7 +160,7 @@ internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     {
         WarMapNode node = nodes.items[i];
         vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
-        
+
         while (node.parent >= 0)
         {
             node = nodes.items[node.parent];
@@ -199,7 +199,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
 
     // For the last node, the fScore is 0
     endNode.fScore = 0;
-    
+
     // Initially, only the start node is known.
     WarMapNodeHeapPush(&openSet, startNode);
 
@@ -218,7 +218,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
             s32 yy = current.y + dirY[d];
             if (isInside(finder, xx, yy))
             {
-                // if the neighbor position is occupied by a static entity, 
+                // if the neighbor position is occupied by a static entity,
                 // don't consider it so that the unit is able to surround it
                 if (isStatic(finder, xx, yy))
                     continue;
@@ -277,13 +277,13 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
     {
         WarMapNode node;
 
-        // if the last node is not in the collection of processed nodes, 
+        // if the last node is not in the collection of processed nodes,
         // then the node is unreachable, look for the closest one and go there
         if (!WarMapNodeMapContains(&closedSet, endNode.id))
         {
             s32 minDistanceToEnd = INT32_MAX;
             s32 minDistanceFromStart = INT32_MAX;
-            
+
             for(s32 k = 0; k < closedSet.capacity; k++)
             {
                 if (closedSet.entries[k].active)
@@ -394,7 +394,7 @@ bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIn
         s32 minIndex = min(fromIndex, toIndex);
         s32 maxIndex = max(fromIndex, toIndex);
 
-        // remove the nodes in the range [fromIndex, toIndex] or [toIndex, fromIndex] from current to last remaining nodes of the current path 
+        // remove the nodes in the range [fromIndex, toIndex] or [toIndex, fromIndex] from current to last remaining nodes of the current path
         vec2ListRemoveAtRange(&path->nodes, minIndex, maxIndex - minIndex + 1);
 
         // if a path was found subsitute the portion of the path with the new one
@@ -428,7 +428,7 @@ vec2 findEmptyPosition(WarPathFinder finder, vec2 position)
     vec2List positions;
     vec2ListInit(&positions, vec2ListDefaultOptions);
     vec2ListAdd(&positions, position);
-    
+
     for(s32 i = 0; i < positions.count; i++)
     {
         vec2 currentPosition = positions.items[i];
@@ -442,7 +442,7 @@ vec2 findEmptyPosition(WarPathFinder finder, vec2 position)
         {
             s32 xx = currentPosition.x + dirX[d];
             s32 yy = currentPosition.y + dirY[d];
-            if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
+            if (isInside(finder, xx, yy))
             {
                 vec2 newPosition = vec2i(xx, yy);
                 if (!vec2ListContains(&positions, newPosition))
@@ -462,10 +462,9 @@ bool isPositionAccesible(WarPathFinder finder, vec2 position)
     {
         s32 xx = (s32)position.x + dirX[d];
         s32 yy = (s32)position.y + dirY[d];
-        if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
+        if (isInside(finder, xx, yy) && isEmpty(finder, xx, yy))
         {
-            if (isEmpty(finder, xx, yy))
-                return true;
+            return true;
         }
     }
 

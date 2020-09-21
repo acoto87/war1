@@ -1224,6 +1224,7 @@ WarUnitType getTownHallOfRace(WarRace race);
 #define isTrainingUnit(entity) (isTraining(entity) || isGoingToTrain(entity))
 #define isUpgradingUnit(entity) (isUpgrading(entity) || isGoingToUpgrade(entity))
 #define isBeingBuiltUnit(entity) (isBuilding(entity) || isGoingToBuild(entity))
+#define isBuildingBusy(entity) (isTrainingUnit(entity) || isUpgradingUnit(entity))
 #define isDeliveringGold(entity) (isDelivering(entity) && isCarryingResource(entity, WAR_RESOURCE_GOLD))
 #define isDeliveringWood(entity) (isDelivering(entity) && isCarryingResource(entity, WAR_RESOURCE_WOOD))
 
@@ -1271,6 +1272,8 @@ s32 getUnitSightRange(WarEntity* entity);
 bool isCarryingResources(WarEntity* entity);
 bool isInsideBuilding(WarEntity* entity);
 bool isWorkerBusy(WarEntity* entity);
+
+bool isUnitAccessible(WarContext* context, WarEntity* entity1, WarEntity* entity2);
 
 bool displayUnitOnMinimap(WarEntity* entity);
 u8Color getUnitColorOnMinimap(WarEntity* entity);
