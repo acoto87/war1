@@ -14,15 +14,24 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <stdarg.h>
 #include <time.h>
 #include <math.h>
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <io.h>
+#ifndef F_OK
+#define F_OK 0
+#endif
+#define access _access
+#else
 #include <unistd.h>
+#endif
 #include <errno.h>
 
 #if __DEBUG__
+#if !defined(_MSC_VER) && !defined(__clang__)
 #include <execinfo.h>
+#endif
 #endif
 
 // #define NDEBUG // define this to deactivate assertions

@@ -1,0 +1,47 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - gcc
+          - clang
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Install clang
+        if: matrix.compiler == 'clang'
+        run: sudo apt-get update && sudo apt-get install -y clang
+
+      - name: Compile nob bootstrap
+        run: ${{ matrix.compiler }} -std=c99 -Wall -Wextra -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L -o nob nob.c
+
+      - name: Build project
+        run: ./nob build --cc ${{ matrix.compiler }} --target linux64
+
+  windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Set up MSVC developer command prompt
+        uses: ilammy/msvc-dev-cmd@v1.13.0
+
+      - name: Compile nob bootstrap
+        shell: cmd
+        run: cl /nologo /std:c11 /W4 /D_CRT_SECURE_NO_WARNINGS /Fenob.exe nob.c
+
+      - name: Compile-check project with MSVC
+        shell: cmd
+        run: nob.exe build --cc msvc --target win64 --check

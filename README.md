@@ -31,18 +31,56 @@ You can check videos of gameplay and features as they are built [here](https://w
 ## How to build
 
 1. Clone the repository `git clone https://github.com/acoto87/war1`
+2. Get the `DATA.WAR` file and place it in the `assets` folder.
+3. Bootstrap the `nob` build entry point with your C compiler of choice:
+
+### Bootstrap with GCC
+
+```sh
+gcc -std=c99 -Wall -Wextra -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L -o nob nob.c
+```
+
+### Bootstrap with Clang
+
+```sh
+clang -std=c99 -Wall -Wextra -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L -o nob nob.c
+```
+
+### Bootstrap with MSVC
+
+```bat
+cl /nologo /std:c11 /W4 /D_CRT_SECURE_NO_WARNINGS /Fenob.exe nob.c
+```
+
+4. Build the project with `nob`:
+
+### Linux 64-bit
+
+```sh
+./nob build --cc gcc --target linux64
+./nob build --cc clang --target linux64
+```
 
 ### Windows
 
-2. Download and install [MinGW](http://www.mingw.org/) (or [MinGW-w64](http://mingw-w64.org) for 64 bits builds).
-3. Get the DATA.WAR file and place it in the `assets` folder.
-4. Run `build-gcc-win32.bat` (or `build-gcc-win64.bat` for 64 bits builds).
+```bat
+nob.exe build --cc gcc --target win32
+nob.exe build --cc gcc --target win64
+```
 
-### Raspberry PI
+MSVC currently supports compile validation with `--check`:
 
-2. Install `gcc` (usually comes with the `build-essential` package).
-3. Install `libx11-dev` package.
-4. Run `build-gcc-linux.sh`.
+```bat
+nob.exe build --cc msvc --target win64 --check
+```
+
+### Raspberry Pi
+
+```sh
+./nob build --cc gcc --target arm32
+```
+
+The legacy `build-gcc-*.sh` and `build-gcc-*.bat` scripts are still available, but `nob.c` is now the main build entry point.
 
 ## How to run
 
