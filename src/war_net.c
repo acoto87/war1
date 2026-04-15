@@ -1,5 +1,5 @@
-#define REQUEST_MESSAGE_MAX_SIZE 2048
-#define URL_BUFFER_MAX_SIZE 1024
+#define WAR_REQUEST_MESSAGE_MAX_SIZE 2048
+#define WAR_URL_BUFFER_MAX_SIZE 1024
 
 #if _WIN32
 #define closeSocket closesocket
@@ -90,6 +90,8 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
 {
     size32 resourcelen = strlen(resource);
     size32 hostlen = strlen(host);
+    size32 requestLength;
+    size32 hostRequestLength;
 
     if (resourcelen > 0 && resource[0] == '/')
     {
@@ -97,14 +99,17 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
         resourcelen--;
     }
 
-    if (resourcelen + 20 >= REQUEST_MESSAGE_MAX_SIZE ||
-        hostlen + 11 >= REQUEST_MESSAGE_MAX_SIZE)
+    requestLength = (sizeof("GET / HTTP/1.1\r\n") - 1) + resourcelen + 1;
+    hostRequestLength = (sizeof("Host: \r\n\r\n") - 1) + hostlen + 1;
+
+    if (requestLength > WAR_REQUEST_MESSAGE_MAX_SIZE ||
+        hostRequestLength > WAR_REQUEST_MESSAGE_MAX_SIZE)
     {
         logError("The host or resource are too long to build the HTTP request.\n");
         return false;
     }
 
-    char message[REQUEST_MESSAGE_MAX_SIZE];
+    char message[WAR_REQUEST_MESSAGE_MAX_SIZE];
     snprintf(message, sizeof(message), "GET /%s HTTP/1.1\r\n", resource);
     s32 status = send(sck, message, strlen(message), 0);
     if (status == SOCKET_ERROR)
@@ -242,14 +247,21 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         shift += strlen("www.");
     }
 
-    size32 cutLength = strlen(url) - shift + 1;
-    if (cutLength > URL_BUFFER_MAX_SIZE)
+    size32 urlLength = strlen(url);
+    if (shift > urlLength)
+    {
+        logError("The url has an invalid prefix offset: %s\n", url);
+        return false;
+    }
+
+    size32 cutLength = urlLength - shift + 1;
+    if (cutLength > WAR_URL_BUFFER_MAX_SIZE)
     {
         logError("The url is too long to parse: %s\n", url);
         return false;
     }
 
-    char cut[URL_BUFFER_MAX_SIZE];
+    char cut[WAR_URL_BUFFER_MAX_SIZE];
     strcpy(cut, url + shift);
 
     const char* host = strtok(cut, "/");

@@ -416,7 +416,7 @@ static bool build_with_msvc(const Build_Options *options)
     }
 
     if (!options->check_only) {
-        nob_log(NOB_ERROR, "full msvc linking is not configured because the repository only vendors glfw3.dll and not a glfw3.lib import library. Use --check for compile validation.");
+        nob_log(NOB_ERROR, "full MSVC linking is not supported because glfw3.lib import library is not included in the repository. Use --check for compile validation only.");
         return false;
     }
 
