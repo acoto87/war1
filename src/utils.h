@@ -1,5 +1,11 @@
 #pragma once
 
+#if defined(_WIN32) && defined(_MSC_VER) && !defined(__clang__)
+#include <windows.h>
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#endif
+
 typedef int8_t s8;
 typedef int16_t s16;
 typedef int32_t s32;
@@ -212,7 +218,7 @@ void msleep(s32 milliseconds) // cross-platform sleep function
     if (milliseconds <= 0)
         return;
 
-#ifdef WIN32
+#ifdef _WIN32
     // windows.h need to be include for this
     Sleep(milliseconds);
 #elif _POSIX_C_SOURCE >= 199309L
@@ -227,7 +233,7 @@ void msleep(s32 milliseconds) // cross-platform sleep function
 #endif
 }
 
-#if __DEBUG__
+#if __DEBUG__ && !defined(_MSC_VER) && !defined(__clang__)
 /* Obtain a backtrace and print it to stdout. */
 void printTrace()
 {

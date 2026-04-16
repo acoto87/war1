@@ -1,3 +1,12 @@
+#define WAR_REQUEST_MESSAGE_MAX_SIZE 2048
+#define WAR_URL_BUFFER_MAX_SIZE 1024
+
+#if _WIN32
+#define closeSocket closesocket
+#else
+#define closeSocket close
+#endif
+
 bool initNetwork()
 {
 #if _WIN32
@@ -29,7 +38,7 @@ bool cleanNetwork()
     return true;
 }
 
-u32 connectToHost(const char* host)
+WarSocket connectToHost(const char* host)
 {
     struct hostent* hostEntry = gethostbyname(host);
     if(!hostEntry)
@@ -43,7 +52,7 @@ u32 connectToHost(const char* host)
         return 0;
     }
 
-    u32 sck = socket(AF_INET, SOCK_STREAM, 0);
+    WarSocket sck = socket(AF_INET, SOCK_STREAM, 0);
     if(sck == INVALID_SOCKET)
     {
 #if _WIN32
@@ -69,7 +78,7 @@ u32 connectToHost(const char* host)
         logError("Couldn't connect socket to host %s. Last error: %d\n", host, errno);
 #endif
 
-        close(sck);
+        closeSocket(sck);
 
         return 0;
     }
@@ -77,19 +86,31 @@ u32 connectToHost(const char* host)
     return sck;
 }
 
-bool requestResource(u32 sck, const char* resource, const char* host)
+bool requestResource(WarSocket sck, const char* resource, const char* host)
 {
-    s32 resourcelen = strlen(resource);
-    s32 hostlen = strlen(host);
-    s32 len = max(resourcelen, hostlen);
+    size32 resourcelen = strlen(resource);
+    size32 hostlen = strlen(host);
+    size32 requestLength;
+    size32 hostRequestLength;
 
     if (resourcelen > 0 && resource[0] == '/')
     {
         resource++;
+        resourcelen--;
     }
 
-    char message[20 + len];
-    sprintf(message, "GET /%s HTTP/1.1\r\n", resource);
+    requestLength = (sizeof("GET / HTTP/1.1\r\n") - 1) + resourcelen + 1;
+    hostRequestLength = (sizeof("Host: \r\n\r\n") - 1) + hostlen + 1;
+
+    if (requestLength > WAR_REQUEST_MESSAGE_MAX_SIZE ||
+        hostRequestLength > WAR_REQUEST_MESSAGE_MAX_SIZE)
+    {
+        logError("The host or resource are too long to build the HTTP request.\n");
+        return false;
+    }
+
+    char message[WAR_REQUEST_MESSAGE_MAX_SIZE];
+    snprintf(message, sizeof(message), "GET /%s HTTP/1.1\r\n", resource);
     s32 status = send(sck, message, strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
@@ -103,7 +124,7 @@ bool requestResource(u32 sck, const char* resource, const char* host)
     }
 
     memset(message, 0, sizeof(message));
-    sprintf(message, "Host: %s\r\n\r\n", host);
+    snprintf(message, sizeof(message), "Host: %s\r\n\r\n", host);
     status = send(sck, message, strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
@@ -138,6 +159,7 @@ s32 parseHeadersFromResponse(const char* response, s32 responseLength, SSMap* he
     // parse status line
     const char* line = response;
     size32 lineLength = strcspn(line, "\r\n");
+    NOT_USED(responseLength);
 
     size32 httpVersionLength = strcspn(line, " ");
     char* httpVersion = (char*)xcalloc(httpVersionLength + 1, sizeof(char));
@@ -175,7 +197,7 @@ s32 parseHeadersFromResponse(const char* response, s32 responseLength, SSMap* he
     return advance;
 }
 
-s32 readResponse(u32 sck, char responseBuffer[], s32 responseBufferLength)
+s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
 {
     char* responsePtr = responseBuffer;
     s32 responseLength = 0;
@@ -191,7 +213,7 @@ s32 readResponse(u32 sck, char responseBuffer[], s32 responseBufferLength)
         if (readFromSocket == SOCKET_ERROR)
         {
 #if _WIN32
-        logError("Couldn't receive the response from socket %d. Errno: %d\n", sck, WSAGetLastError());
+        logError("Couldn't receive the response from socket %d. Errno: %d\n", (int)sck, WSAGetLastError());
 #else
         logError("Couldn't receive the response from socket %d. Errno: %d\n", sck, errno);
 #endif
@@ -225,7 +247,21 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         shift += strlen("www.");
     }
 
-    char cut[strlen(url) - shift + 1];
+    size32 urlLength = strlen(url);
+    if (shift > urlLength)
+    {
+        logError("The url has an invalid prefix offset: %s\n", url);
+        return false;
+    }
+
+    size32 cutLength = urlLength - shift + 1;
+    if (cutLength > WAR_URL_BUFFER_MAX_SIZE)
+    {
+        logError("The url is too long to parse: %s\n", url);
+        return false;
+    }
+
+    char cut[WAR_URL_BUFFER_MAX_SIZE];
     strcpy(cut, url + shift);
 
     const char* host = strtok(cut, "/");
@@ -238,7 +274,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    u32 sck = connectToHost(host);
+    WarSocket sck = connectToHost(host);
     if (!sck)
     {
         logError("Couldn't connect to host: %s\n", host);
@@ -252,7 +288,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     {
         logError("Couldn't download file from url %s\n", url);
 
-        close(sck);
+        closeSocket(sck);
         cleanNetwork();
 
         return false;
@@ -267,7 +303,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     {
         logError("Couldn't receive response.\n");
 
-        close(sck);
+        closeSocket(sck);
         cleanNetwork();
         free(response);
 
@@ -279,7 +315,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     {
         logError("Couldn't create a new file at: %s\n", filePath);
 
-        close(sck);
+        closeSocket(sck);
         cleanNetwork();
         free(response);
 
@@ -290,7 +326,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     {
         logError("The response was empty from %s\n", url);
 
-        close(sck);
+        closeSocket(sck);
         cleanNetwork();
         free(response);
         fclose(fd);
@@ -319,7 +355,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
         SSMapFree(&headers);
 
-        close(sck);
+        closeSocket(sck);
         cleanNetwork();
         free(response);
         fclose(fd);
@@ -334,7 +370,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
         SSMapFree(&headers);
 
-        close(sck);
+        closeSocket(sck);
         cleanNetwork();
         free(response);
         fclose(fd);
@@ -349,7 +385,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
         SSMapFree(&headers);
 
-        close(sck);
+        closeSocket(sck);
         cleanNetwork();
         free(response);
         fclose(fd);
@@ -389,7 +425,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     SSMapFree(&headers);
 
-    close(sck);
+    closeSocket(sck);
     cleanNetwork();
     free(response);
     fclose(fd);
