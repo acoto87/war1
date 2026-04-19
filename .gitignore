@@ -11,3 +11,5 @@ callgrind*
 assets/*.WAR
 .vscode-ctags
 .markdownlint.json
+nob.exe
+nob.obj
