@@ -96,9 +96,7 @@ If you want to check were that file comes from, it's from here: https://archive.
 
 ## Libraries used
 
-* [GLFW](https://www.glfw.org/): An Open Source, multi-platform library for OpenGL, OpenGL ES and Vulkan development on the desktop. It provides a simple API for creating windows, contexts and surfaces, receiving input and events.
-* [nanovg](https://github.com/memononen/nanovg): NanoVG is small antialiased vector graphics rendering library for OpenGL. It has lean API modeled after HTML5 canvas API. It is aimed to be a practical and fun toolset for building scalable user interfaces and visualizations.
-* [Miniaudio](https://github.com/dr-soft/miniaudio) Audio playback and capture library.
+* [SDL3](https://libsdl.org/): A cross-platform development library designed to provide low-level access to audio, keyboard, mouse, joystick, and graphics hardware.
 * [TinySoundFont](https://github.com/schellingb/TinySoundFont) SoundFont2 synthesizer.
 * [shl](https://github.com/acoto87/shl): Single header libraries with commonly used data structures.
 * [stb](https://github.com/nothings/stb) Single-file public domain libraries for C/C++
