@@ -1179,71 +1179,85 @@ void trainUnit(WarContext* context, WarUnitCommandType commandType, WarUnitType 
 
 void trainFootman(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_FOOTMAN, WAR_UNIT_FOOTMAN, WAR_UNIT_BARRACKS_HUMANS);
 }
 
 void trainGrunt(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_GRUNT, WAR_UNIT_GRUNT, WAR_UNIT_BARRACKS_ORCS);
 }
 
 void trainPeasant(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_PEASANT, WAR_UNIT_PEASANT, WAR_UNIT_TOWNHALL_HUMANS);
 }
 
 void trainPeon(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_PEON, WAR_UNIT_PEON, WAR_UNIT_TOWNHALL_ORCS);
 }
 
 void trainHumanCatapult(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_CATAPULT_HUMANS, WAR_UNIT_CATAPULT_HUMANS, WAR_UNIT_BARRACKS_HUMANS);
 }
 
 void trainOrcCatapult(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_CATAPULT_ORCS, WAR_UNIT_CATAPULT_ORCS, WAR_UNIT_BARRACKS_ORCS);
 }
 
 void trainKnight(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_KNIGHT, WAR_UNIT_KNIGHT, WAR_UNIT_BARRACKS_HUMANS);
 }
 
 void trainRaider(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_RAIDER, WAR_UNIT_KNIGHT, WAR_UNIT_BARRACKS_ORCS);
 }
 
 void trainArcher(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_ARCHER, WAR_UNIT_ARCHER, WAR_UNIT_BARRACKS_HUMANS);
 }
 
 void trainSpearman(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_SPEARMAN, WAR_UNIT_SPEARMAN, WAR_UNIT_BARRACKS_ORCS);
 }
 
 void trainConjurer(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_CONJURER, WAR_UNIT_CONJURER, WAR_UNIT_TOWER_HUMANS);
 }
 
 void trainWarlock(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_WARLOCK, WAR_UNIT_WARLOCK, WAR_UNIT_TOWER_ORCS);
 }
 
 void trainCleric(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_CLERIC, WAR_UNIT_CLERIC, WAR_UNIT_CHURCH);
 }
 
 void trainNecrolyte(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     trainUnit(context, WAR_COMMAND_TRAIN_NECROLYTE, WAR_UNIT_NECROLYTE, WAR_UNIT_TEMPLE);
 }
 
@@ -1259,101 +1273,121 @@ void upgradeUpgrade(WarContext* context, WarUnitCommandType commandType, WarUpgr
 
 void upgradeSwords(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SWORDS, WAR_UPGRADE_SWORDS, WAR_UNIT_BLACKSMITH_HUMANS);
 }
 
 void upgradeAxes(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_AXES, WAR_UPGRADE_AXES, WAR_UNIT_BLACKSMITH_ORCS);
 }
 
 void upgradeHumanShields(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SHIELD_HUMANS, WAR_UPGRADE_SHIELD, WAR_UNIT_BLACKSMITH_HUMANS);
 }
 
 void upgradeOrcsShields(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SHIELD_ORCS, WAR_UPGRADE_SHIELD, WAR_UNIT_BLACKSMITH_ORCS);
 }
 
 void upgradeArrows(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_ARROWS, WAR_UPGRADE_ARROWS, WAR_UNIT_LUMBERMILL_HUMANS);
 }
 
 void upgradeSpears(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SPEARS, WAR_UPGRADE_SPEARS, WAR_UNIT_LUMBERMILL_ORCS);
 }
 
 void upgradeHorses(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_HORSES, WAR_UPGRADE_HORSES, WAR_UNIT_STABLE);
 }
 
 void upgradeWolves(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_WOLVES, WAR_UPGRADE_WOLVES, WAR_UNIT_KENNEL);
 }
 
 void upgradeScorpions(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SCORPION, WAR_UPGRADE_SCORPIONS, WAR_UNIT_TOWER_HUMANS);
 }
 
 void upgradeSpiders(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SPIDER, WAR_UPGRADE_SPIDERS, WAR_UNIT_TOWER_ORCS);
 }
 
 void upgradeRainOfFire(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_RAIN_OF_FIRE, WAR_UPGRADE_RAIN_OF_FIRE, WAR_UNIT_TOWER_HUMANS);
 }
 
 void upgradePoisonCloud(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_POISON_CLOUD, WAR_UPGRADE_POISON_CLOUD, WAR_UNIT_TOWER_ORCS);
 }
 
 void upgradeWaterElemental(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_WATER_ELEMENTAL, WAR_UPGRADE_WATER_ELEMENTAL, WAR_UNIT_TOWER_HUMANS);
 }
 
 void upgradeDaemon(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_DAEMON, WAR_UPGRADE_DAEMON, WAR_UNIT_TOWER_ORCS);
 }
 
 void upgradeHealing(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_HEALING, WAR_UPGRADE_HEALING, WAR_UNIT_CHURCH);
 }
 
 void upgradeRaiseDead(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_RAISE_DEAD, WAR_UPGRADE_RAISE_DEAD, WAR_UNIT_TEMPLE);
 }
 
 void upgradeFarSight(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_FAR_SIGHT, WAR_UPGRADE_FAR_SIGHT, WAR_UNIT_CHURCH);
 }
 
 void upgradeDarkVision(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_DARK_VISION, WAR_UPGRADE_DARK_VISION, WAR_UNIT_TEMPLE);
 }
 
 void upgradeInvisibility(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_INVISIBILITY, WAR_UPGRADE_INVISIBILITY, WAR_UNIT_CHURCH);
 }
 
 void upgradeUnholyArmor(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     upgradeUpgrade(context, WAR_COMMAND_UPGRADE_UNHOLY_ARMOR, WAR_UPGRADE_UNHOLY_ARMOR, WAR_UNIT_TEMPLE);
 }
 
@@ -1413,6 +1447,7 @@ void cancel(WarContext* context, WarEntity* entity)
 // basic
 void move(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_MOVE;
@@ -1420,6 +1455,7 @@ void move(WarContext* context, WarEntity* entity)
 
 void stop(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_STOP;
@@ -1427,6 +1463,7 @@ void stop(WarContext* context, WarEntity* entity)
 
 void harvest(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_HARVEST;
@@ -1434,6 +1471,7 @@ void harvest(WarContext* context, WarEntity* entity)
 
 void deliver(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_DELIVER;
@@ -1441,6 +1479,7 @@ void deliver(WarContext* context, WarEntity* entity)
 
 void repair(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_REPAIR;
@@ -1448,6 +1487,7 @@ void repair(WarContext* context, WarEntity* entity)
 
 void attack(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_ATTACK;
@@ -1455,6 +1495,7 @@ void attack(WarContext* context, WarEntity* entity)
 
 void buildBasic(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_BUILD_BASIC;
@@ -1462,6 +1503,7 @@ void buildBasic(WarContext* context, WarEntity* entity)
 
 void buildAdvanced(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_BUILD_ADVANCED;
@@ -1477,86 +1519,103 @@ void buildBuilding(WarContext* context, WarUnitCommandType commandType, WarUnitT
 
 void buildFarmHumans(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_FARM_HUMANS, WAR_UNIT_FARM_HUMANS);
 }
 
 void buildFarmOrcs(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_FARM_ORCS, WAR_UNIT_FARM_ORCS);
 }
 
 void buildBarracksHumans(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_BARRACKS_HUMANS, WAR_UNIT_BARRACKS_HUMANS);
 }
 
 void buildBarracksOrcs(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_BARRACKS_ORCS, WAR_UNIT_BARRACKS_ORCS);
 }
 
 void buildChurch(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_CHURCH, WAR_UNIT_CHURCH);
 }
 
 void buildTemple(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_TEMPLE, WAR_UNIT_TEMPLE);
 }
 
 void buildTowerHumans(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_TOWER_HUMANS, WAR_UNIT_TOWER_HUMANS);
 }
 
 void buildTowerOrcs(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_TOWER_ORCS, WAR_UNIT_TOWER_ORCS);
 }
 
 void buildTownHallHumans(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_TOWNHALL_HUMANS, WAR_UNIT_TOWNHALL_HUMANS);
 }
 
 void buildTownHallOrcs(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_TOWNHALL_ORCS, WAR_UNIT_TOWNHALL_ORCS);
 }
 
 void buildLumbermillHumans(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_LUMBERMILL_HUMANS, WAR_UNIT_LUMBERMILL_HUMANS);
 }
 
 void buildLumbermillOrcs(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_LUMBERMILL_ORCS, WAR_UNIT_LUMBERMILL_ORCS);
 }
 
 void buildStable(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_STABLE, WAR_UNIT_STABLE);
 }
 
 void buildKennel(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_KENNEL, WAR_UNIT_KENNEL);
 }
 
 void buildBlacksmithHumans(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_HUMANS, WAR_UNIT_BLACKSMITH_HUMANS);
 }
 
 void buildBlacksmithOrcs(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_ORCS, WAR_UNIT_BLACKSMITH_HUMANS);
 }
 
 void buildWall(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_BUILD_WALL;
@@ -1564,6 +1623,7 @@ void buildWall(WarContext* context, WarEntity* entity)
 
 void buildRoad(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_BUILD_ROAD;
@@ -1572,6 +1632,7 @@ void buildRoad(WarContext* context, WarEntity* entity)
 // spells
 void castRainOfFire(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
@@ -1579,6 +1640,7 @@ void castRainOfFire(WarContext* context, WarEntity* entity)
 
 void castPoisonCloud(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_POISON_CLOUD;
@@ -1586,6 +1648,7 @@ void castPoisonCloud(WarContext* context, WarEntity* entity)
 
 void castHeal(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_HEALING;
@@ -1593,6 +1656,7 @@ void castHeal(WarContext* context, WarEntity* entity)
 
 void castFarSight(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_FAR_SIGHT;
@@ -1600,6 +1664,7 @@ void castFarSight(WarContext* context, WarEntity* entity)
 
 void castDarkVision(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_DARK_VISION;
@@ -1607,6 +1672,7 @@ void castDarkVision(WarContext* context, WarEntity* entity)
 
 void castInvisibility(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_INVISIBILITY;
@@ -1614,6 +1680,7 @@ void castInvisibility(WarContext* context, WarEntity* entity)
 
 void castUnHolyArmor(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
@@ -1621,6 +1688,7 @@ void castUnHolyArmor(WarContext* context, WarEntity* entity)
 
 void castRaiseDead(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SPELL_RAISE_DEAD;
@@ -1629,6 +1697,7 @@ void castRaiseDead(WarContext* context, WarEntity* entity)
 // summons
 void summonSpider(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SUMMON_SPIDER;
@@ -1636,6 +1705,7 @@ void summonSpider(WarContext* context, WarEntity* entity)
 
 void summonScorpion(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SUMMON_SCORPION;
@@ -1643,6 +1713,7 @@ void summonScorpion(WarContext* context, WarEntity* entity)
 
 void summonDaemon(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SUMMON_DAEMON;
@@ -1650,6 +1721,7 @@ void summonDaemon(WarContext* context, WarEntity* entity)
 
 void summonWaterElemental(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
     WarMap* map = context->map;
 
     map->command.type = WAR_COMMAND_SUMMON_WATER_ELEMENTAL;

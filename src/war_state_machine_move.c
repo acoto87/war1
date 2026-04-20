@@ -29,7 +29,7 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 start = state->move.positions.items[state->move.positionIndex];
     vec2 end = state->move.positions.items[state->move.positionIndex + 1];
 
-    WarMapPath path = state->move.path = findPath(map->finder, start.x, start.y, end.x, end.y);
+    WarMapPath path = state->move.path = findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
 
     // if the is no path to the next position, go to idle
     if (path.nodes.count <= 1)
@@ -44,10 +44,10 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     vec2 currentNode = path.nodes.items[state->move.pathNodeIndex];
-    setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y, entity->id);
+    setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
-    setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
+    setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     setAction(context, entity, WAR_ACTION_TYPE_WALK, false, getUnitActionScale(entity));
@@ -214,7 +214,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
         }
 
         currentNode = path->nodes.items[state->move.pathNodeIndex];
-        setDynamicEntity(map->finder, currentNode.x, currentNode.y, unitSize.x, unitSize.y, entity->id);
+        setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
         nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
 
@@ -242,7 +242,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             return;
         }
 
-        setDynamicEntity(map->finder, nextNode.x, nextNode.y, unitSize.x, unitSize.y, entity->id);
+        setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
 }

@@ -50,6 +50,8 @@ void addUnitComponent(WarContext* context,
                       WarResourceKind resourceKind,
                       u32 amount)
 {
+    NOT_USED(context);
+
     WarUnitData unitData = getUnitData(type);
 
     entity->unit = (WarUnitComponent){0};
@@ -81,6 +83,8 @@ void addUnitComponent(WarContext* context,
 
 void removeUnitComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     WarUnitActionListFree(&entity->unit.actions);
     entity->unit = (WarUnitComponent){0};
 }
@@ -94,12 +98,16 @@ void addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList p
 
 void removeRoadComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     WarRoadPieceListFree(&entity->road.pieces);
     entity->road = (WarRoadComponent){0};
 }
 
 void addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList pieces)
 {
+    NOT_USED(context);
+
     entity->wall = (WarWallComponent){0};
     entity->wall.enabled = true;
     entity->wall.pieces = pieces;
@@ -107,12 +115,16 @@ void addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList p
 
 void removeWallComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     WarWallPieceListFree(&entity->wall.pieces);
     entity->wall = (WarWallComponent){0};
 }
 
 void addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces)
 {
+    NOT_USED(context);
+
     entity->ruin = (WarRuinComponent){0};
     entity->ruin.enabled = true;
     entity->ruin.pieces = pieces;
@@ -120,12 +132,16 @@ void addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList p
 
 void removeRuinComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     WarRuinPieceListFree(&entity->ruin.pieces);
     entity->ruin = (WarRuinComponent){0};
 }
 
 void addForestComponent(WarContext* context, WarEntity* entity, WarTreeList trees)
 {
+    NOT_USED(context);
+
     entity->forest = (WarForestComponent){0};
     entity->forest.enabled = true;
     entity->forest.trees = trees;
@@ -133,12 +149,16 @@ void addForestComponent(WarContext* context, WarEntity* entity, WarTreeList tree
 
 void removeForestComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     WarTreeListFree(&entity->forest.trees);
     entity->forest = (WarForestComponent){0};
 }
 
 void addStateMachineComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->stateMachine = (WarStateMachineComponent){0};
     entity->stateMachine.enabled = true;
     entity->stateMachine.currentState = NULL;
@@ -160,6 +180,8 @@ void removeStateMachineComponent(WarContext* context, WarEntity* entity)
 
 void addAnimationsComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->animations = (WarAnimationsComponent){0};
     entity->animations.enabled = true;
     WarSpriteAnimationListInit(&entity->animations.animations, WarSpriteAnimationListDefaultOptions);
@@ -167,12 +189,16 @@ void addAnimationsComponent(WarContext* context, WarEntity* entity)
 
 void removeAnimationsComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     WarSpriteAnimationListFree(&entity->animations.animations);
     entity->animations = (WarAnimationsComponent){0};
 }
 
 void addUIComponent(WarContext* context, WarEntity* entity, char* name)
 {
+    NOT_USED(context);
+
     entity->ui = (WarUIComponent){0};
     entity->ui.enabled = true;
     entity->ui.name = name;
@@ -180,11 +206,15 @@ void addUIComponent(WarContext* context, WarEntity* entity, char* name)
 
 void removeUIComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->ui = (WarUIComponent){0};
 }
 
 void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, const char* text)
 {
+    NOT_USED(context);
+
     entity->text = (WarTextComponent){0};
     entity->text.enabled = true;
     entity->text.fontIndex = fontIndex;
@@ -206,12 +236,16 @@ void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32
 
 void removeTextComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     clearUIText(entity);
     entity->text = (WarTextComponent){0};
 }
 
 void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color)
 {
+    NOT_USED(context);
+
     entity->rect = (WarRectComponent){0};
     entity->rect.enabled = true;
     entity->rect.size = size;
@@ -220,11 +254,15 @@ void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color
 
 void removeRectComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->rect = (WarRectComponent){0};
 }
 
 void addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normalSprite, WarSprite pressedSprite)
 {
+    NOT_USED(context);
+
     entity->button = (WarButtonComponent){0};
     entity->button.enabled = true;
     entity->button.interactive = true;
@@ -292,6 +330,8 @@ void addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType type
 
 void removeAudioComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     if (entity->audio.firstMessage)
     {
         // this will deallocate the whole list of message
@@ -309,6 +349,8 @@ void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectil
                             WarEntityId sourceEntityId, WarEntityId targetEntityId,
                             vec2 origin, vec2 target, s32 speed)
 {
+    NOT_USED(context);
+
     entity->projectile = (WarProjectileComponent){0};
     entity->projectile.enabled = true;
     entity->projectile.type = type;
@@ -321,11 +363,15 @@ void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectil
 
 void removeProjectileComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->projectile = (WarProjectileComponent){0};
 }
 
 void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType type, vec2 hot)
 {
+    NOT_USED(context);
+
     entity->cursor = (WarCursorComponent){0};
     entity->cursor.enabled = true;
     entity->cursor.type = type;
@@ -334,11 +380,15 @@ void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType ty
 
 void removeCursorComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->cursor = (WarCursorComponent){0};
 }
 
 void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
 {
+    NOT_USED(context);
+
     entity->poisonCloud = (WarPoisonCloudComponent){0};
     entity->poisonCloud.enabled = true;
     entity->poisonCloud.position = position;
@@ -348,11 +398,15 @@ void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 positi
 
 void removePoisonCloudComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->poisonCloud = (WarPoisonCloudComponent){0};
 }
 
 void addSightComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
 {
+    NOT_USED(context);
+
     entity->sight = (WarSightComponent){0};
     entity->sight.enabled = true;
     entity->sight.position = position;
@@ -361,6 +415,8 @@ void addSightComponent(WarContext* context, WarEntity* entity, vec2 position, f3
 
 void removeSightComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->sight = (WarSightComponent){0};
 }
 

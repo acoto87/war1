@@ -1,6 +1,8 @@
 WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
 {
     WarSprite sprite = (WarSprite){0};
+    assert(width <= UINT16_MAX);
+    assert(height <= UINT16_MAX);
     sprite.frameWidth = width;
     sprite.frameHeight = height;
     sprite.framesCount = 1;
@@ -20,8 +22,8 @@ WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
 
     sprite.frames[0].dx = 0;
     sprite.frames[0].dy = 0;
-    sprite.frames[0].w = width;
-    sprite.frames[0].h = height;
+    sprite.frames[0].w = (u16)width;
+    sprite.frames[0].h = (u16)height;
     sprite.frames[0].off = 0;
     sprite.frames[0].data = (u8*)xmalloc(width * height * 4);
 
@@ -47,7 +49,7 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
         SDL_SetTextureScaleMode(sprite.texture, SDL_SCALEMODE_NEAREST);
     }
 
-    for(s32 i = 0; i < frameCount; i++)
+    for(u32 i = 0; i < frameCount; i++)
     {
         sprite.frames[i].dx = frames[i].dx;
         sprite.frames[i].dy = frames[i].dy;
@@ -67,7 +69,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
 {
     assert(resource);
 
-    WarSprite sprite;
+    WarSprite sprite = (WarSprite){0};
 
     switch(resource->type)
     {
@@ -95,7 +97,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
                 for (s32 i = 0; i < frameIndicesCount; i++)
                 {
                     s32 frameIndex = frameIndices[i];
-                    assert(frameIndex >= 0 && frameIndex < framesCount);
+                    assert(frameIndex >= 0 && frameIndex < (s32)framesCount);
 
                     frames[i] = allFrames[frameIndex];
                 }
@@ -177,13 +179,17 @@ void renderSprite(WarContext *context, WarSprite sprite, vec2 pos, vec2 scale)
 
 WarSpriteFrame getSpriteFrame(WarContext* context, WarSprite sprite, s32 frameIndex)
 {
+    NOT_USED(context);
+
     assert(sprite.texture);
-    assert(frameIndex >= 0 && frameIndex < sprite.framesCount);
+    assert(frameIndex >= 0 && frameIndex < (s32)sprite.framesCount);
     return sprite.frames[frameIndex];
 }
 
 void freeSprite(WarContext* context, WarSprite sprite)
 {
+    NOT_USED(context);
+
     if (!sprite.texture)
     {
         logWarning("Trying to free a sprite with no texture\n");

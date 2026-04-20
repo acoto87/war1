@@ -59,6 +59,8 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
 
 void leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
 
     vec2 unitSize = getUnitSize(entity);
@@ -144,5 +146,6 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
 
 void freeRepairingState(WarState* state)
 {
+    NOT_USED(state);
 }
 

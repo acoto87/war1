@@ -126,7 +126,8 @@ bool shlWaveWrite(shlWaveFile *waveFile, const shl_sample_t *in, long count, int
             *p++ = (unsigned char) (s >> 8);
         }
 
-        waveFile->_bufferPos = p - waveFile->_buffer;
+        assert(p - waveFile->_buffer <= LONG_MAX);
+        waveFile->_bufferPos = (long)(p - waveFile->_buffer);
     }
 
     return true;

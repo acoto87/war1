@@ -1,4 +1,4 @@
-/*  
+/*
     map.h - acoto87 (acoto87@gmail.com)
 
     MIT License
@@ -23,7 +23,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    This is a single header file with macros to declare and define a strongly typed list of objects that can be accessed by index. 
+    This is a single header file with macros to declare and define a strongly typed list of objects that can be accessed by index.
     Provides methods to search, sort, and manipulate lists.
 */
 
@@ -32,8 +32,8 @@
  * to make a closed implementation of the map data structure, where each collision is resolved
  * by keeping the index of the next element in the array of cells, and not by merely iterate
  * until we find an empty cell.
- * 
- * A detailed explanation of the hash function can be found here: 
+ *
+ * A detailed explanation of the hash function can be found here:
  * https://probablydance.com/2018/06/16/fibonacci-hashing-the-optimization-that-the-world-forgot-or-a-better-alternative-to-integer-modulo/
  *
  * The specific constant was found here:
@@ -52,8 +52,8 @@
     typedef struct \
     { \
         valueType defaultValue; \
-        uint32_t (*hashFn)(const keyType key); \
-        bool (*equalsFn)(const keyType item1, const keyType item2); \
+        uint32_t (*hashFn)(keyType key); \
+        bool (*equalsFn)(keyType item1, keyType item2); \
         void (*freeFn)(valueType item); \
     } typeName ## Options; \
     \
@@ -70,8 +70,8 @@
         int32_t capacity; \
         int32_t loadFactor; \
         int32_t shift; \
-        uint32_t (*hashFn)(const keyType key); \
-        bool (*equalsFn)(const keyType item1, const keyType item2); \
+        uint32_t (*hashFn)(keyType key); \
+        bool (*equalsFn)(keyType item1, keyType item2); \
         void (*freeFn)(valueType item); \
         valueType defaultValue; \
         typeName ## __Entry__* entries; \

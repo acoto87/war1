@@ -10,6 +10,8 @@ WarState* createTrainState(WarContext* context, WarEntity* entity, WarUnitType u
 
 void enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
@@ -23,6 +25,8 @@ void enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
@@ -89,4 +93,5 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeTrainState(WarState* state)
 {
+    NOT_USED(state);
 }

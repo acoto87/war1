@@ -210,6 +210,7 @@ void createSinglePlayerMenu(WarContext* context)
 
 void createLoadMenu(WarContext* context)
 {
+    NOT_USED(context);
 }
 
 void createCustomGameMenu(WarContext* context)
@@ -407,6 +408,8 @@ void showOrHideCustomGame(WarContext* context, bool status)
 // menu button handlers
 void handleMenuSinglePlayer(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     showOrHideMainMenu(context, false);
     showOrHideSinglePlayer(context, true);
     showOrHideCustomGame(context, false);
@@ -414,11 +417,16 @@ void handleMenuSinglePlayer(WarContext* context, WarEntity* entity)
 
 void handleMenuQuit(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+
     SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
 }
 
 void handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
     scene->briefing.race = WAR_RACE_ORCS;
     scene->briefing.mapType = WAR_CAMPAIGN_ORCS_01;
@@ -427,6 +435,8 @@ void handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
 
 void handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
     scene->briefing.race = WAR_RACE_HUMANS;
     scene->briefing.mapType = WAR_CAMPAIGN_HUMANS_01;
@@ -435,6 +445,8 @@ void handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
 
 void handleCustomGame(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     showOrHideMainMenu(context, false);
     showOrHideSinglePlayer(context, false);
     showOrHideCustomGame(context, true);
@@ -442,6 +454,8 @@ void handleCustomGame(WarContext* context, WarEntity* entity)
 
 void handleSinglePlayerCancel(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     showOrHideMainMenu(context, true);
     showOrHideSinglePlayer(context, false);
     showOrHideCustomGame(context, false);
@@ -449,6 +463,8 @@ void handleSinglePlayerCancel(WarContext* context, WarEntity* entity)
 
 void handleYourRaceLeft(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = context->scene;
 
     if (scene->menu.yourRace > WAR_RACE_NEUTRAL)
@@ -460,6 +476,8 @@ void handleYourRaceLeft(WarContext* context, WarEntity* entity)
 
 void handleYourRaceRight(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = context->scene;
 
     if (scene->menu.yourRace < WAR_RACE_ORCS)
@@ -471,6 +489,8 @@ void handleYourRaceRight(WarContext* context, WarEntity* entity)
 
 void handleEnemyRaceLeft(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = context->scene;
 
     if (scene->menu.enemyRace > WAR_RACE_NEUTRAL)
@@ -482,6 +502,8 @@ void handleEnemyRaceLeft(WarContext* context, WarEntity* entity)
 
 void handleEnemyRaceRight(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = context->scene;
 
     if (scene->menu.enemyRace < WAR_RACE_ORCS)
@@ -493,6 +515,8 @@ void handleEnemyRaceRight(WarContext* context, WarEntity* entity)
 
 void handleMapLeft(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = context->scene;
 
     if (scene->menu.customMap > 147)
@@ -504,6 +528,8 @@ void handleMapLeft(WarContext* context, WarEntity* entity)
 
 void handleMapRight(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = context->scene;
 
     if (scene->menu.customMap < 188)
@@ -515,6 +541,8 @@ void handleMapRight(WarContext* context, WarEntity* entity)
 
 void handleCustomGameOk(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = context->scene;
 
     WarMap* map = createCustomMap(context, scene->menu.customMap, scene->menu.yourRace, scene->menu.enemyRace);

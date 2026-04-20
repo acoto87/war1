@@ -17,7 +17,7 @@ void enterSceneDownload(WarContext* context)
     WarEntity* downloadText = createUIText(context, "txtDownload", 1, 10, text, vec2i(10, 10));
     setUITextColor(downloadText, u8RgbColor(255, 215, 138));
     setUITextMultiline(downloadText, true);
-    setUITextBoundings(downloadText, vec2f(context->originalWindowWidth-20, context->originalWindowHeight-20));
+    setUITextBoundings(downloadText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
     setUITextHorizontalAlign(downloadText, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(downloadText, WAR_TEXT_ALIGN_TOP);
     setUITextLineAlign(downloadText, WAR_TEXT_ALIGN_LEFT);
@@ -27,7 +27,7 @@ void enterSceneDownload(WarContext* context)
     WarEntity* downloadingText = createUIText(context, "txtDownloading", 1, 10, "Downloading...", vec2i(10, 10));
     setUITextColor(downloadingText, u8RgbColor(255, 215, 138));
     setUITextMultiline(downloadingText, false);
-    setUITextBoundings(downloadingText, vec2f(context->originalWindowWidth-20, context->originalWindowHeight-20));
+    setUITextBoundings(downloadingText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
     setUITextHorizontalAlign(downloadingText, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(downloadingText, WAR_TEXT_ALIGN_BOTTOM);
     setUITextLineAlign(downloadingText, WAR_TEXT_ALIGN_LEFT);
@@ -106,7 +106,7 @@ void updateSceneDownload(WarContext* context)
                 }
                 else
                 {
-                    logError("Could not load DATA.WAR file\n");
+                    logError("Could not load file: %s\n", DATAWAR_FILE_PATH);
                 }
             }
 
@@ -114,8 +114,8 @@ void updateSceneDownload(WarContext* context)
         }
         case WAR_SCENE_DOWNLOAD_FILE_LOADED:
         {
-            WarScene* scene = createScene(context, WAR_SCENE_BLIZZARD);
-            setNextScene(context, scene, 0.0f);
+            WarScene* nextScene = createScene(context, WAR_SCENE_BLIZZARD);
+            setNextScene(context, nextScene, 0.0f);
 
             break;
         }

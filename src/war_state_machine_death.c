@@ -19,6 +19,9 @@ void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
@@ -47,4 +50,5 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeDeathState(WarState* state)
 {
+    NOT_USED(state);
 }

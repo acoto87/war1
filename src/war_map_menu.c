@@ -787,6 +787,8 @@ void showDemoEndMenu(WarContext* context, bool status)
 // menu button handlers
 void handleMenu(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     enableOrDisableCommandButtons(context, false);
@@ -797,6 +799,8 @@ void handleMenu(WarContext* context, WarEntity* entity)
 
 void handleOptions(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     showOrHideMenu(context, false);
@@ -807,6 +811,8 @@ void handleOptions(WarContext* context, WarEntity* entity)
 
 void handleObjectives(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     showOrHideMenu(context, false);
@@ -817,6 +823,8 @@ void handleObjectives(WarContext* context, WarEntity* entity)
 
 void handleRestart(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     showOrHideMenu(context, false);
@@ -827,6 +835,8 @@ void handleRestart(WarContext* context, WarEntity* entity)
 
 void handleContinue(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     enableOrDisableCommandButtons(context, true);
@@ -837,6 +847,8 @@ void handleContinue(WarContext* context, WarEntity* entity)
 
 void handleQuit(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     showOrHideMenu(context, false);
@@ -847,6 +859,8 @@ void handleQuit(WarContext* context, WarEntity* entity)
 
 void handleGameSpeedDec(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     if (map->settings2.gameSpeed > WAR_SPEED_SLOWEST)
@@ -858,6 +872,8 @@ void handleGameSpeedDec(WarContext* context, WarEntity* entity)
 
 void handleGameSpeedInc(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     if (map->settings2.gameSpeed < WAR_SPEED_FASTEST)
@@ -869,6 +885,8 @@ void handleGameSpeedInc(WarContext* context, WarEntity* entity)
 
 void handleMusicVolDec(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     map->settings2.musicVol = clamp(map->settings2.musicVol - 5, 0, 100);
@@ -877,6 +895,8 @@ void handleMusicVolDec(WarContext* context, WarEntity* entity)
 
 void handleMusicVolInc(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     map->settings2.musicVol = clamp(map->settings2.musicVol + 5, 0, 100);
@@ -885,6 +905,8 @@ void handleMusicVolInc(WarContext* context, WarEntity* entity)
 
 void handleSfxVolDec(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     map->settings2.sfxVol = clamp(map->settings2.sfxVol - 5, 0, 100);
@@ -893,6 +915,8 @@ void handleSfxVolDec(WarContext* context, WarEntity* entity)
 
 void handleSfxVolInc(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     map->settings2.sfxVol = clamp(map->settings2.sfxVol + 5, 0, 100);
@@ -901,6 +925,8 @@ void handleSfxVolInc(WarContext* context, WarEntity* entity)
 
 void handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     if (map->settings2.mouseScrollSpeed > WAR_SPEED_SLOWEST)
@@ -912,6 +938,8 @@ void handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
 
 void handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     if (map->settings2.mouseScrollSpeed < WAR_SPEED_FASTEST)
@@ -923,6 +951,8 @@ void handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity)
 
 void handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     if (map->settings2.keyScrollSpeed > WAR_SPEED_SLOWEST)
@@ -934,6 +964,8 @@ void handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity)
 
 void handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     if (map->settings2.keyScrollSpeed < WAR_SPEED_FASTEST)
@@ -945,6 +977,8 @@ void handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
 
 void handleOptionsOk(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     // persist the changes
@@ -960,6 +994,8 @@ void handleOptionsOk(WarContext* context, WarEntity* entity)
 
 void handleOptionsCancel(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     showOrHideOptionsMenu(context, false);
@@ -970,6 +1006,8 @@ void handleOptionsCancel(WarContext* context, WarEntity* entity)
 
 void handleObjectivesMenu(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     showOrHideObjectivesMenu(context, false);
@@ -980,6 +1018,8 @@ void handleObjectivesMenu(WarContext* context, WarEntity* entity)
 
 void handleRestartRestart(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     s32 levelInfoIndex = context->map->levelInfoIndex;
 
     WarMap* map = createMap(context, levelInfoIndex);
@@ -988,6 +1028,8 @@ void handleRestartRestart(WarContext* context, WarEntity* entity)
 
 void handleRestartCancel(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     showOrHideRestartMenu(context, false);
@@ -998,6 +1040,9 @@ void handleRestartCancel(WarContext* context, WarEntity* entity)
 
 void handleGameOverSave(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+
     NOT_IMPLEMENTED();
 }
 
@@ -1022,24 +1067,31 @@ void handleGameOverContinue(WarContext* context, WarEntity* entity)
     }
     else
     {
-        logError("It shouldn't reach here!");
+        logError("It shouldn't reach here! Map result: %d\n", map->result);
         assert(false);
     }
 }
 
 void handleQuitQuit(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+
     SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
 }
 
 void handleQuitMenu(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = createScene(context, WAR_SCENE_MAIN_MENU);
     setNextScene(context, scene, 1.0f);
 }
 
 void handleQuitCancel(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
 
     showOrHideQuitMenu(context, false);
@@ -1050,6 +1102,8 @@ void handleQuitCancel(WarContext* context, WarEntity* entity)
 
 void handleDemoEndMenu(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarScene* scene = createScene(context, WAR_SCENE_MAIN_MENU);
     setNextScene(context, scene, 1.0f);
 }

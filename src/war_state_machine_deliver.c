@@ -7,10 +7,16 @@ WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId
 
 void enterDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
@@ -19,7 +25,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = getUnitStats(unit->type);
 
-    WarEntity* townHall = findEntity(context, state->deliver.townHallId);
+    WarEntity* townHall = findEntity(context, (WarEntityId)state->deliver.townHallId);
 
     // if the town hall doesn't exists (or other units attacking it), go idle
     if (!townHall)
@@ -88,5 +94,6 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeDeliverState(WarState* state)
 {
+    NOT_USED(state);
 }
 

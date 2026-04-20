@@ -535,6 +535,10 @@ void enterMap(WarContext* context)
 
     map->finder = initPathFinder(PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
 
+    const s32 dirC = 8;
+    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
+    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
+
     // create the black sprite
     {
         u8 data[MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT * 4];

@@ -501,6 +501,8 @@ vec2 measureSingleSpriteText(const char* text, s32 length, WarFontParams params)
 
 vec2 measureMultiSpriteText(const char* text, f32 width, WarFontParams params)
 {
+    NOT_USED(width);
+
     f32 scale = params.fontSize / params.fontData.lineHeight;
     f32 lineHeight = params.lineHeight > 0 ? params.lineHeight : params.fontData.lineHeight;
 
@@ -589,7 +591,7 @@ void renderSingleSpriteText(WarContext* context, const char* text, f32 x, f32 y,
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
     vec2 textSize = measureSingleSpriteText(text, -1, params);
-    s32 length = strlen(text);
+    s32 length = (s32)strlen(text);
 
     renderSave(context);
     renderTranslate(context, x, y);

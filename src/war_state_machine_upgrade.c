@@ -10,6 +10,8 @@ WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeT
 
 void enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
@@ -23,6 +25,8 @@ void enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
@@ -83,4 +87,5 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeUpgradeState(WarState* state)
 {
+    NOT_USED(state);
 }

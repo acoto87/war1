@@ -9,10 +9,16 @@ WarState* createCastState(WarContext* context, WarEntity* entity, WarSpellType s
 
 void enterCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void leaveCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
@@ -268,4 +274,5 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeCastState(WarState* state)
 {
+    NOT_USED(state);
 }

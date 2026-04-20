@@ -23,6 +23,8 @@ WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
 
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
+    NOT_USED(context);
+
     WarState* state = (WarState*)xcalloc(1, sizeof(WarState));
     state->type = type;
     state->entityId = entity->id;
@@ -33,6 +35,8 @@ WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 
 void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState)
 {
+    NOT_USED(context);
+
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
     stateMachine->nextState = state;
     stateMachine->leaveState = leaveState;

@@ -65,7 +65,7 @@ bool initGame(WarContext* context)
         // load DATA.WAR file
         if (!loadDataFile(context))
         {
-            logError("Could not load DATA.WAR file\n");
+            logError("Could not load file: %s\n", DATAWAR_FILE_PATH);
             return false;
         }
 

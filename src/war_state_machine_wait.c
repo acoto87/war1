@@ -7,6 +7,8 @@ WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 
 void enterWaitState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     vec2 unitSize = getUnitSize(entity);
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
@@ -38,4 +40,5 @@ void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeWaitState(WarState* state)
 {
+    NOT_USED(state);
 }

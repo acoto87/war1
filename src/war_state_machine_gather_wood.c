@@ -8,10 +8,16 @@ WarState* createGatherWoodState(WarContext* context, WarEntity* entity, WarEntit
 
 void enterGatherWoodState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void leaveGatherWoodState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* state)
@@ -67,4 +73,5 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
 
 void freeGatherWoodState(WarState* state)
 {
+    NOT_USED(state);
 }

@@ -638,7 +638,7 @@ typedef struct
     s32 frameIndices[2];
 } WarUpgradeData;
 
-const WarUpgradeData upgradeData[] =
+const WarUpgradeData upgradesData[] =
 {
     { WAR_UPGRADE_ARROWS,           2, { WAR_PORTRAIT_ARROW_2,          WAR_PORTRAIT_ARROW_3         } },
     { WAR_UPGRADE_SPEARS,           2, { WAR_PORTRAIT_SPEAR_2,          WAR_PORTRAIT_SPEAR_3         } },
@@ -769,7 +769,7 @@ typedef struct
     char tooltip2[100];
 } WarUnitCommandBaseData;
 
-const WarUnitCommandBaseData commandBaseData[] =
+const WarUnitCommandBaseData commandsBaseData[] =
 {
     { WAR_COMMAND_NONE,                     NULL,                   WAR_KEY_NONE,      -1, 1, "",                             "" },
 
@@ -1035,12 +1035,12 @@ WarTreeData getTreeData(WarTreeTileType type)
 WarUpgradeData getUpgradeData(WarUpgradeType type)
 {
     s32 index = 0;
-    s32 length = arrayLength(upgradeData);
-    while (index < length && upgradeData[index].type != type)
+    s32 length = arrayLength(upgradesData);
+    while (index < length && upgradesData[index].type != type)
         index++;
 
     assert(index < length);
-    return upgradeData[index];
+    return upgradesData[index];
 }
 
 WarSpellData getSpellData(WarSpellType type)
@@ -1112,12 +1112,12 @@ WarSpellMapping getSpellMapping(WarSpellType type)
 WarUnitCommandBaseData getCommandBaseData(WarUnitCommandType type)
 {
     s32 index = 0;
-    s32 length = arrayLength(commandBaseData);
-    while (index < length && commandBaseData[index].type != type)
+    s32 length = arrayLength(commandsBaseData);
+    while (index < length && commandsBaseData[index].type != type)
         index++;
 
     assert(index < length);
-    return commandBaseData[index];
+    return commandsBaseData[index];
 }
 
 WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)

@@ -180,7 +180,11 @@ bool mbSkip(MemoryBuffer* buffer, int32_t distance)
             return false;
     }
 
-    return mbSeek(buffer, mbPosition(buffer) + distance);
+    int64_t position = mbPosition(buffer) + distance;
+    if (position < 0 || position > UINT32_MAX)
+        return false;
+
+    return mbSeek(buffer, (uint32_t)position);
 }
 
 bool mbScanTo(MemoryBuffer* buffer, const void* data, size_t length)

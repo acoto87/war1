@@ -1002,6 +1002,8 @@ void resetAction(WarUnitAction* action)
 
 void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale)
 {
+    NOT_USED(context);
+
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
@@ -1120,7 +1122,7 @@ void updateAction(WarContext* context, WarEntity* entity)
 
                     frameIndex += (4 - abs(4 - (s32)unit->direction));
 
-                    transform->scale.x = inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT) ? -1 : 1;
+                    transform->scale.x = inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT) ? -1.0f : 1.0f;
                 }
 
                 sprite->frameIndex = frameIndex;

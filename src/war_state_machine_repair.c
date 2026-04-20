@@ -7,10 +7,16 @@ WarState* createRepairState(WarContext* context, WarEntity* entity, WarEntityId 
 
 void enterRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void leaveRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
@@ -46,5 +52,6 @@ void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeRepairState(WarState* state)
 {
+    NOT_USED(state);
 }
 

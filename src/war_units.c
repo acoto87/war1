@@ -40,6 +40,8 @@ bool areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 
 bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
+    NOT_USED(context);
+
     if (isWarriorUnit(entity) && !isDead(entity) && !isGoingToDie(entity))
     {
         if (isUnit(targetEntity))
@@ -1213,9 +1215,9 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_SPELL_POISON_CLOUD:
         {
             WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
-            WarSpellData spellData = getSpellData(commandMapping.mappedType);
+            WarSpellData spell = getSpellData(commandMapping.mappedType);
 
-            data.frameIndex = spellData.portraitFrameIndex;
+            data.frameIndex = spell.portraitFrameIndex;
             break;
         }
 

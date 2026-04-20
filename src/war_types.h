@@ -407,10 +407,8 @@ typedef enum
 
 typedef struct
 {
-    u8 dx;
-    u8 dy;
-    u8 w;
-    u8 h;
+    u16 dx, dy;
+    u16 w, h;
     u32 off;
     u8* data;
 } WarSpriteFrame;
@@ -954,7 +952,7 @@ typedef struct
 } WarRoadPiece;
 
 #define WarRoadPieceEmpty (WarRoadPiece){0}
-#define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (player)})
+#define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (u8)(player)})
 
 bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
 {
@@ -996,7 +994,7 @@ typedef struct
 } WarWallPiece;
 
 #define WarWallPieceEmpty (WarWallPiece){0}
-#define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (player)})
+#define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (u8)(player)})
 
 bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
 {

@@ -58,12 +58,12 @@ void __logInternal(LogSeverity severity, const char* file, const int32_t line, c
 
     switch (severity)
     {
-        case LOG_SEVERITY_CRITICAL:     severityStr = "CRIT";   break;
-        case LOG_SEVERITY_ERROR:        severityStr = "ERR";      break;
-        case LOG_SEVERITY_WARNING:      severityStr = "WRN";    break;
-        case LOG_SEVERITY_INFO:         severityStr = "INF";       break;
-        case LOG_SEVERITY_DEBUG:        severityStr = "DBG";      break;
-        default:                        severityStr = "UNK";     break;
+        case LOG_SEVERITY_CRITICAL: severityStr = "CRIT";   break;
+        case LOG_SEVERITY_ERROR:    severityStr = "ERR";      break;
+        case LOG_SEVERITY_WARNING:  severityStr = "WRN";    break;
+        case LOG_SEVERITY_INFO:     severityStr = "INF";       break;
+        case LOG_SEVERITY_DEBUG:    severityStr = "DBG";      break;
+        default:                    severityStr = "UNK";     break;
     }
 
     int32_t fileNameIndex = __getFileNameIndex(file);

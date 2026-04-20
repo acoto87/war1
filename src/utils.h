@@ -1,6 +1,7 @@
 #pragma once
 
 #if defined(_WIN32) && defined(_MSC_VER) && !defined(__clang__)
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
@@ -103,14 +104,14 @@ void strFree(char* str)
 
 void strInsertAt(char* str, s32 index, char c)
 {
-    s32 length = strlen(str) + 1; // count the \0
+    s32 length = (s32)strlen(str) + 1; // count the \0
     memmove(str + index + 1, str + index, length - index);
     str[index] = c;
 }
 
 void strRemoveAt(char* str, s32 index)
 {
-    s32 length = strlen(str) + 1; // count the \0
+    s32 length = (s32)strlen(str) + 1; // count the \0
     memmove(str + index, str + index + 1, length - index - 1);
 }
 

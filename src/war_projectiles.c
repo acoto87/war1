@@ -46,7 +46,7 @@ void doProjectileTargetDamage(WarContext* context, WarEntity* entity)
     {
         if (isWall(targetEntity))
         {
-            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, position.x, position.y);
+            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, (s32)position.x, (s32)position.y);
             if (piece)
             {
                 meleeWallAttack(context, sourceEntity, targetEntity, piece);
@@ -143,7 +143,7 @@ bool updateProjectilePosition(WarContext* context, WarEntity* entity)
     vec2 position = transform->position;
     vec2 target = projectile->target;
 
-    f32 speed = projectile->speed;
+    f32 speed = (f32)projectile->speed;
     speed = getMapScaledSpeed(context, speed);
 
     vec2 direction = vec2Subv(target, position);
@@ -167,6 +167,8 @@ bool updateProjectilePosition(WarContext* context, WarEntity* entity)
 
 void updateProjectileSprite(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarProjectileComponent* projectile = &entity->projectile;
@@ -183,7 +185,7 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
     f32 directionLength = vec2Length(direction);
 
     f32 travelDistance = totalDistance - directionLength;
-    f32 travelPercent = percentabi(travelDistance, totalDistance);
+    f32 travelPercent = percentabf(travelDistance, totalDistance);
 
     f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
 
@@ -242,6 +244,8 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
 
 void updateRainOfFireProjectileSprite(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
     WarProjectileComponent* projectile = &entity->projectile;
@@ -259,7 +263,7 @@ void updateRainOfFireProjectileSprite(WarContext* context, WarEntity* entity)
     f32 directionLength = vec2Length(direction);
 
     f32 travelDistance = totalDistance - directionLength;
-    f32 travelPercent = percentabi(travelDistance, totalDistance);
+    f32 travelPercent = percentabf(travelDistance, totalDistance);
 
     // the new frame index have to be changed for some projectiles
     // based on the travel percent of the projectile

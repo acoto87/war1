@@ -267,6 +267,57 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
     return true;
 }
 
+static bool nob_read_entire_dir_recursively(const char* parent, Nob_File_Paths* file_paths, int idx)
+{
+    // NOTE: This library to deal with files and directories seems nice: https://github.com/cxong/tinydir
+
+    if (!nob_read_entire_dir(parent, file_paths)) {
+        return false;
+    }
+
+    int count = file_paths->count;
+
+    for (int i = idx; i < count; i++) {
+        if (strcmp(file_paths->items[i], ".") == 0) continue;
+        if (strcmp(file_paths->items[i], "..") == 0) continue;
+
+        // NOTE: Here I'm leaking the allocation for each file name on the nob_read_entire_dir call
+        // but I'm don't care that much because that alloc is done on the temp static arena
+        file_paths->items[i] = nob_temp_sprintf("%s/%s", parent, file_paths->items[i]);
+
+        Nob_File_Type file_type = nob_get_file_type(file_paths->items[i]);
+        if (file_type == NOB_FILE_DIRECTORY) {
+            if (!nob_read_entire_dir_recursively(file_paths->items[i], file_paths, file_paths->count)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+static bool clear_folder(const char* parent)
+{
+    Nob_File_Paths file_paths = {0};
+
+    if (!nob_read_entire_dir_recursively(parent, &file_paths, 0)) {
+        return false;
+    }
+
+    for (int i = 0; i < file_paths.count; i++) {
+        Nob_File_Type file_type = nob_get_file_type(file_paths.items[i]);
+        if (file_type == NOB_FILE_REGULAR) {
+            if (!nob_delete_file(file_paths.items[i])) {
+                return false;
+            }
+        }
+    }
+
+    file_paths.count = 0;
+
+    return true;
+}
+
 static bool ensure_output_dirs(Target target)
 {
     return nob_mkdir_if_not_exists("build") &&
@@ -277,9 +328,10 @@ static bool append_gnu_common_flags(Nob_Cmd *cmd, const Build_Options *options)
 {
     nob_cmd_append(cmd,
                    toolchain_program(options->toolchain),
-                   "-std=c99",
+                   "-std=c11",
                    "-Wall",
                    "-Wno-misleading-indentation",
+                   "-Wpedantic",
                    "-x",
                    "c",
                    "-Ideps/include");
@@ -354,6 +406,12 @@ static bool build_with_gnu_like(const Build_Options *options)
     const char *binary_path = target_binary_path(options->target);
 
     if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    if (!clear_folder(target_output_dir(options->target))) {
+        nob_log(NOB_ERROR, "Could not clear output directory");
         return false;
     }
 
@@ -407,6 +465,12 @@ static bool build_with_msvc(const Build_Options *options)
     }
 
     if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    if (!clear_folder(target_output_dir(options->target))) {
+        nob_log(NOB_ERROR, "Could not clear output directory");
         return false;
     }
 

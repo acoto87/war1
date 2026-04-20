@@ -7,24 +7,28 @@ WarState* createIdleState(WarContext* context, WarEntity* entity, bool lookAroun
 
 void enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     if (isUnit(entity))
     {
         WarMap* map = context->map;
         vec2 unitSize = getUnitSize(entity);
         vec2 position = getUnitPosition(entity, true);
-        setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+        setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
 }
 
 void leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     if (isUnit(entity))
     {
         WarMap* map = context->map;
         vec2 unitSize = getUnitSize(entity);
         vec2 position = getUnitPosition(entity, true);
-        setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
+        setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     }
 }
 
@@ -79,4 +83,5 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeIdleState(WarState* state)
 {
+    NOT_USED(state);
 }

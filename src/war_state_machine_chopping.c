@@ -21,13 +21,16 @@ void enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarUnitComponent* unit = &entity->unit;
 
-    WarEntity* forest = findEntity(context, state->chop.forestId);
+    WarEntity* forest = findEntity(context, (WarEntityId)state->chop.forestId);
 
     // if the forest doesn't exists, go idle
     if (!forest)
@@ -95,4 +98,5 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
 
 void freeChoppingState(WarState* state)
 {
+    NOT_USED(state);
 }

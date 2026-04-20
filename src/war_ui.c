@@ -66,7 +66,7 @@ void setUIImage(WarEntity* uiImage, s32 frameIndex)
 
 void setUIRectWidth(WarEntity* uiRect, s32 width)
 {
-    uiRect->rect.size.x = width;
+    uiRect->rect.size.x = (f32)width;
     uiRect->rect.enabled = width > 0;
 }
 

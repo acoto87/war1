@@ -138,7 +138,7 @@
 
 int main()
 {
-    srand(time(NULL));
+    srand((unsigned int)time(NULL));
 
     initLog(LOG_SEVERITY_DEBUG);
 

@@ -289,8 +289,8 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
 
         u8* waveData = &resource->audio.data[audio->sampleIndex];
 
-        u32 sampleBlock = min(sampleCount, waveLength - audio->sampleIndex);
-        for (s32 i = 0; i < sampleBlock; i++)
+        u32 sampleBlock = min(sampleCount, (u32)(waveLength - audio->sampleIndex));
+        for (u32 i = 0; i < sampleBlock; i++)
         {
             s32 value = *waveData;
             value = value - 128;
@@ -442,7 +442,7 @@ bool initAudio(WarContext* context)
     context->soundFont = tsf_load_filename("GMGeneric.SF2");
     if (!context->soundFont)
     {
-        logError("Could not load SoundFont\n");
+        logError("Could not load SoundFont at %s\n", "GMGeneric.SF2");
         return false;
     }
 
@@ -893,7 +893,7 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
         mbFree(&bufOutput);
         return NULL;
     }
-    if (!mbWriteUInt16BE(&bufOutput, (tempo * 3) / 25000))
+    if (!mbWriteUInt16BE(&bufOutput, (u16)((tempo * 3) / 25000)))
     {
         mbFree(&bufOutput);
         return NULL;
@@ -985,8 +985,9 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
     }
 
     size32 length = mbPosition(&bufOutput) - 22;
+    assert(length <= UINT32_MAX);
     assert(mbSeek(&bufOutput, 18));
-    assert(mbWriteUInt32BE(&bufOutput, length));
+    assert(mbWriteUInt32BE(&bufOutput, (u32)length));
 
     u8* midData = mbGetData(&bufOutput, midLength);
 
@@ -1008,11 +1009,11 @@ u8* changeSampleRate(u8* samplesIn, s32 length, s32 factor)
         u8 a = samplesIn[i - 1];
         u8 b = samplesIn[i];
 
-        f32 dt = 1 / factor;
+        f32 dt = 1.0f / (f32)factor;
         for (s32 k = 0; k < factor - 1; k++)
         {
             // linear interpolation: a + (b - a) * t
-            f32 t = dt * (k + 1);
+            f32 t = dt * (f32)(k + 1);
             samplesOut[j++] = (u8)(a + (b - a) * t);
         }
 

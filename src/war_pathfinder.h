@@ -3,14 +3,10 @@
 #include "war_types.h"
 
 // this value is the distance squared to avoid dynamic units
-// so if the dynamic entity at a distance squared less than this value, 
+// so if the dynamic entity at a distance squared less than this value,
 // treat it like a static one, so the unit can get around it and the risk of
 // overlapping units is less
 #define DISTANCE_SQR_AVOID_DYNAMIC_POSITIONS 2.0f
-
-const s32 dirC = 8;
-const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
-const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
 
 u16 getTileValue(WarPathFinder finder, s32 x, s32 y);
 void setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, u16 value);

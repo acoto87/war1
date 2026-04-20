@@ -10,6 +10,8 @@ WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime
 
 void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
@@ -33,6 +35,8 @@ void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
@@ -77,7 +81,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
     state->build.buildTime += buildSpeed;
 
     // if the building is finished...
-    if (state->upgrade.buildTime >= state->upgrade.totalBuildTime)
+    if (state->build.buildTime >= state->build.totalBuildTime)
     {
         unit->buildPercent = 1;
 
@@ -109,7 +113,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    unit->buildPercent = percentabf01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
+    unit->buildPercent = percentabf01(state->build.buildTime, state->build.totalBuildTime);
 
     // update the sprite of the building to show the construction steps
     //
@@ -132,4 +136,5 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeBuildState(WarState* state)
 {
+    NOT_USED(state);
 }

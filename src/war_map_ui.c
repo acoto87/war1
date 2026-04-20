@@ -226,8 +226,8 @@ void updateSelectedUnitsInfo(WarContext* context)
             if (selectedEntity && isUnit(selectedEntity))
             {
                 WarUnitComponent* unit = &selectedEntity->unit;
-                WarUnitData unitsData = getUnitData(unit->type);
-                setUIImage(imgUnitPortraits[i], unitsData.portraitFrameIndex);
+                WarUnitData unitData = getUnitData(unit->type);
+                setUIImage(imgUnitPortraits[i], unitData.portraitFrameIndex);
                 setLifeBar(rectLifeBars[i], unit);
             }
         }
@@ -265,9 +265,9 @@ void updateSelectedUnitsInfo(WarContext* context)
                 }
             }
 
-            WarUnitData unitsData = getUnitData(unit->type);
-            setUIImage(imgUnitPortraits[0], unitsData.portraitFrameIndex);
-            setUIText(txtUnitName, unitsData.name);
+            WarUnitData unitData = getUnitData(unit->type);
+            setUIImage(imgUnitPortraits[0], unitData.portraitFrameIndex);
+            setUIText(txtUnitName, unitData.name);
             setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
             setLifeBar(rectLifeBars[0], unit);
         }
@@ -414,7 +414,7 @@ void renderCommand(WarContext* context)
             WarUnitType buildingToBuild = command->build.buildingToBuild;
             WarUnitData data = getUnitData(buildingToBuild);
 
-            u8Color fillColor = checkRectToBuild(context, position.x, position.y, data.sizex, data.sizey)
+            u8Color fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);
@@ -432,7 +432,7 @@ void renderCommand(WarContext* context)
             vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
             position = vec2MapToTileCoordinates(position);
 
-            u8Color fillColor = checkRectToBuild(context, position.x, position.y, 1, 1)
+            u8Color fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, 1, 1)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);

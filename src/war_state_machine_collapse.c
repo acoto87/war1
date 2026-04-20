@@ -30,6 +30,9 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateCollapseState(WarContext* context, WarEntity* entity, WarState* state)
@@ -39,4 +42,5 @@ void updateCollapseState(WarContext* context, WarEntity* entity, WarState* state
 
 void freeCollapseState(WarState* state)
 {
+    NOT_USED(state);
 }
