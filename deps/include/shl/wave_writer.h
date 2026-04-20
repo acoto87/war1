@@ -71,13 +71,16 @@ static bool __shlWaveFlush(shlWaveFile *waveFile)
 
 bool shlWaveInit(shlWaveFile *waveFile, long sampleRate, const char* filename)
 {
-    waveFile->_buffer = (unsigned char*) malloc(SHL_WAVE_BUFFER_SIZE);	
+    waveFile->_buffer = (unsigned char*) calloc(SHL_WAVE_BUFFER_SIZE, sizeof(unsigned char));	
     if (!waveFile->_buffer) {
         return false;
     }
 
+    waveFile->_file = NULL;
     waveFile->_file = fopen(filename, "wb");
     if (!waveFile->_file) {
+        free(waveFile->_buffer);
+        waveFile->_buffer = NULL;
         return false;
     }
 
@@ -179,6 +182,8 @@ bool shlWaveFlush(shlWaveFile *waveFile, bool closeFile)
         }
 
         free(waveFile->_buffer);
+        waveFile->_buffer = NULL;
+        waveFile->_file = NULL;
     }
 
     return true;

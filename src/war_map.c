@@ -1592,12 +1592,12 @@ void updateStatus(WarContext* context)
             strcpy(statusText + strlen("MSG: "), cheatStatus->text);
             setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
 
-            NVGfontParams params;
+            WarFontParams params = {0};
             params.fontSize = statusTextUI->text.fontSize;
             params.fontData = fontsData[statusTextUI->text.fontIndex];
 
-            vec2 prefixSize = nvgMeasureSingleSpriteText("MSG: ", strlen("MSG: "), params);
-            vec2 textSize = nvgMeasureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
+            vec2 prefixSize = measureSingleSpriteText("MSG: ", strlen("MSG: "), params);
+            vec2 textSize = measureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
             statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
 
             setUIEntityStatus(statusCursor, true);
@@ -2474,15 +2474,11 @@ void renderTerrain(WarContext* context)
 {
     WarMap *map = context->map;
 
-    NVGcontext* gfx = context->gfx;
-
     WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
     WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
     assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-
-    NVGimageBatch* batch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
 
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
@@ -2500,19 +2496,17 @@ void renderTerrain(WarContext* context)
                 s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
                 s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                nvgSave(gfx);
-                nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+                renderSave(context);
+                renderTranslate(context, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
                 rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+                renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
 
-                nvgRestore(gfx);
+                renderRestore(context);
             }
         }
     }
-
-    nvgEndImageBatch(gfx, batch);
 }
 
 void renderFoW(WarContext* context)
@@ -2522,68 +2516,70 @@ void renderFoW(WarContext* context)
     if (!map->fowEnabled)
         return;
 
-    NVGcontext* gfx = context->gfx;
-
-    NVGimageBatch* unkownBatch = nvgBeginImageBatch(gfx, map->blackSprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-    NVGimageBatch* fogBatch = nvgBeginImageBatch(gfx, map->blackSprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-    NVGimageBatch* unkownBoundaryBatch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-    NVGimageBatch* fogBoundaryBatch = nvgBeginImageBatch(gfx, map->sprite.image, MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-
+    // Pass 1: render unknown boundary and unknown tiles at full opacity
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
             WarMapTile* tile = getMapTileState(map, x, y);
-            if (tile->type != WAR_FOG_PIECE_NONE)
+
+            if (tile->type != WAR_FOG_PIECE_NONE && tile->boundary == WAR_FOG_BOUNDARY_UNKOWN)
             {
                 s32 tileIndex = (s32)tile->type;
-
-                // coordinates in pixels of the terrain tile
                 s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
                 s32 tilePixelY = (tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT;
 
                 rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-
-                if (tile->state == MAP_TILE_STATE_VISIBLE && tile->boundary == WAR_FOG_BOUNDARY_FOG)
-                {
-                    nvgRenderBatchImage(gfx, fogBoundaryBatch, rs, rd, VEC2_ONE);
-                }
-                else if (tile->boundary == WAR_FOG_BOUNDARY_UNKOWN)
-                {
-                    nvgRenderBatchImage(gfx, unkownBoundaryBatch, rs, rd, VEC2_ONE);
-                }
+                renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
             }
 
             if (tile->state == MAP_TILE_STATE_UNKOWN)
             {
                 rect rs = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, unkownBatch, rs, rd, VEC2_ONE);
-            }
-            else if (tile->state == MAP_TILE_STATE_FOG)
-            {
-                rect rs = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgRenderBatchImage(gfx, fogBatch, rs, rd, VEC2_ONE);
+                renderSubImage(context, map->blackSprite.texture, rs, rd, VEC2_ONE);
             }
         }
     }
 
-    nvgEndImageBatch(gfx, unkownBoundaryBatch);
-    nvgEndImageBatch(gfx, unkownBatch);
+    // Pass 2: render fog boundary and fog tiles at half opacity
+    renderSave(context);
+    renderGlobalAlpha(context, 0.5f);
 
-    nvgSave(gfx);
-    nvgGlobalAlpha(gfx, 0.5f);
-    nvgEndImageBatch(gfx, fogBoundaryBatch);
-    nvgEndImageBatch(gfx, fogBatch);
-    nvgRestore(gfx);
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    {
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        {
+            WarMapTile* tile = getMapTileState(map, x, y);
+
+            if (tile->type != WAR_FOG_PIECE_NONE &&
+                tile->state == MAP_TILE_STATE_VISIBLE &&
+                tile->boundary == WAR_FOG_BOUNDARY_FOG)
+            {
+                s32 tileIndex = (s32)tile->type;
+                s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
+                s32 tilePixelY = (tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT;
+
+                rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
+            }
+
+            if (tile->state == MAP_TILE_STATE_FOG)
+            {
+                rect rs = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
+                renderSubImage(context, map->blackSprite.texture, rs, rd, VEC2_ONE);
+            }
+        }
+    }
+
+    renderRestore(context);
 }
 
 void renderUnitPaths(WarContext* context)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
@@ -2598,7 +2594,7 @@ void renderUnitPaths(WarContext* context)
                 {
                     vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
                     pos = vec2Subv(pos, vec2i(2, 2));
-                    nvgFillRect(gfx, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
+                    renderFillRect(context, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
                 }
 
                 s32 index = moveState->move.pathNodeIndex;
@@ -2612,9 +2608,9 @@ void renderUnitPaths(WarContext* context)
                         vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
 
                         if (k > 0)
-                            nvgStrokeLine(gfx, prevPos, pos, getColorFromList(entity->id), 0.5f);
+                            renderStrokeLine(context, prevPos, pos, getColorFromList(entity->id), 0.5f);
 
-                        nvgFillRect(gfx, rectv(pos, VEC2_ONE), k == index ? nvgRGB(255, 0, 255) : nvgRGB(255, 255, 0));
+                        renderFillRect(context, rectv(pos, VEC2_ONE), k == index ? u8RgbColor(255, 0, 255) : u8RgbColor(255, 255, 0));
 
                         prevPos = pos;
                     }
@@ -2628,8 +2624,6 @@ void renderPassableInfo(WarContext* context)
 {
     WarMap *map = context->map;
 
-    NVGcontext* gfx = context->gfx;
-
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
@@ -2638,13 +2632,13 @@ void renderPassableInfo(WarContext* context)
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 0, 0, 100));
+                renderFillRect(context, rectv(pos, size), u8RgbaColor(255, 0, 0, 100));
             }
             else if(isDynamic(map->finder, x, y))
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                nvgFillRect(gfx, rectv(pos, size), nvgRGBA(255, 150, 100, 100));
+                renderFillRect(context, rectv(pos, size), u8RgbaColor(255, 150, 100, 100));
             }
         }
     }
@@ -2652,20 +2646,18 @@ void renderPassableInfo(WarContext* context)
 
 void renderMapGrid(WarContext* context)
 {
-    NVGcontext* gfx = context->gfx;
-
     for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
     {
         vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
         vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
-        nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
+        renderStrokeLine(context, p1, p2, WAR_COLOR_WHITE, 0.25f);
     }
 
     for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
     {
         vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
         vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
-        nvgStrokeLine(gfx, p1, p2, NVG_WHITE, 0.25f);
+        renderStrokeLine(context, p1, p2, WAR_COLOR_WHITE, 0.25f);
     }
 }
 
@@ -2673,12 +2665,10 @@ void renderMapPanel(WarContext *context)
 {
     WarMap *map = context->map;
 
-    NVGcontext* gfx = context->gfx;
+    renderSave(context);
 
-    nvgSave(gfx);
-
-    nvgTranslate(gfx, map->mapPanel.x, map->mapPanel.y);
-    nvgTranslate(gfx, -map->viewport.x, -map->viewport.y);
+    renderTranslate(context, map->mapPanel.x, map->mapPanel.y);
+    renderTranslate(context, -map->viewport.x, -map->viewport.y);
 
     renderTerrain(context);
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_RUIN);
@@ -2705,21 +2695,14 @@ void renderMapPanel(WarContext *context)
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
     renderFoW(context);
 
-    nvgRestore(gfx);
+    renderRestore(context);
 }
 
 void renderMap(WarContext *context)
 {
-    NVGcontext* gfx = context->gfx;
-
-    nvgSave(gfx);
-    nvgScale(gfx, context->globalScale, context->globalScale);
-
     // render map
     renderMapPanel(context);
 
     // render ui
     renderMapUI(context);
-
-    nvgRestore(gfx);
 }

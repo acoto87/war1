@@ -338,8 +338,8 @@ static bool copy_runtime_files(const Build_Options *options)
     }
 
     if (target_is_windows(options->target) && !options->check_only) {
-        const char *dll_path = nob_temp_sprintf("%s/glfw3.dll", target_library_dir(options->target));
-        const char *dll_copy_path = nob_temp_sprintf("%s/glfw3.dll", output_dir);
+        const char *dll_path = nob_temp_sprintf("%s/SDL3.dll", target_library_dir(options->target));
+        const char *dll_copy_path = nob_temp_sprintf("%s/SDL3.dll", output_dir);
 
         if (!nob_copy_file(dll_path, dll_copy_path)) {
             return false;
@@ -362,10 +362,6 @@ static bool build_with_gnu_like(const Build_Options *options)
             return false;
         }
 
-        if (!compile_gnu_source(options, "deps/include/glad/glad.c", nob_temp_sprintf("%s/glad.o", target_output_dir(options->target)))) {
-            return false;
-        }
-
         return true;
     }
 
@@ -373,19 +369,18 @@ static bool build_with_gnu_like(const Build_Options *options)
     append_gnu_common_flags(&cmd, options);
     nob_cmd_append(&cmd,
                    "src/war1.c",
-                   "deps/include/glad/glad.c",
                    "-o",
                    binary_path,
                    nob_temp_sprintf("-L%s", target_library_dir(options->target)));
 
     if (target_is_windows(options->target)) {
-        nob_cmd_append(&cmd, "-lglfw3", "-lopengl32", "-lws2_32");
+        nob_cmd_append(&cmd, "-lSDL3", "-lws2_32");
 
         if (options->toolchain == TOOLCHAIN_GCC) {
             nob_cmd_append(&cmd, "-static-libgcc");
         }
     } else {
-        nob_cmd_append(&cmd, "-lglfw", "-lpthread", "-lm", "-ldl");
+        nob_cmd_append(&cmd, "-lSDL3", "-lpthread", "-lm", "-ldl");
 
         if (options->target == TARGET_LINUX64) {
             nob_cmd_append(&cmd, "-no-pie");
@@ -415,20 +410,35 @@ static bool build_with_msvc(const Build_Options *options)
         return false;
     }
 
-    if (!options->check_only) {
-        nob_log(NOB_ERROR, "full MSVC linking is not supported because glfw3.lib import library is not included in the repository. Use --check for compile validation only.");
+    const char *output_dir = target_output_dir(options->target);
+    const char *lib_dir = target_library_dir(options->target);
+
+    if (options->check_only) {
+        if (!compile_msvc_source(options, "src/war1.c", nob_temp_sprintf("%s/war1.obj", output_dir))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Full build: compile + link
+    Nob_Cmd cmd = {0};
+    append_msvc_common_flags(&cmd, options);
+    nob_cmd_append(&cmd,
+                   "src/war1.c",
+                   nob_temp_sprintf("/Fe:%s", target_binary_path(options->target)),
+                   nob_temp_sprintf("/Fo:%s/", output_dir),
+                   "/link",
+                   nob_temp_sprintf("/LIBPATH:%s", lib_dir),
+                   "SDL3.lib",
+                   "shell32.lib",
+                   "ws2_32.lib");
+
+    if (!nob_cmd_run(&cmd)) {
         return false;
     }
 
-    if (!compile_msvc_source(options, "src/war1.c", nob_temp_sprintf("%s/war1.obj", target_output_dir(options->target)))) {
-        return false;
-    }
-
-    if (!compile_msvc_source(options, "deps/include/glad/glad.c", nob_temp_sprintf("%s/glad.obj", target_output_dir(options->target)))) {
-        return false;
-    }
-
-    return true;
+    return copy_runtime_files(options);
 }
 
 static bool build_project(const Build_Options *options)

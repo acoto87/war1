@@ -368,18 +368,16 @@ void setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUni
 
 void renderSelectionRect(WarContext* context)
 {
-    NVGcontext* gfx = context->gfx;
-
-    nvgSave(gfx);
+    renderSave(context);
 
     WarInput* input = &context->input;
     if (input->isDragging)
     {
         rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
-        nvgStrokeRect(gfx, pointerRect, NVG_GREEN_SELECTION, 1.0f);
+        renderStrokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
     }
 
-    nvgRestore(gfx);
+    renderRestore(context);
 }
 
 void renderCommand(WarContext* context)
@@ -389,9 +387,7 @@ void renderCommand(WarContext* context)
 
     WarInput* input = &context->input;
 
-    NVGcontext* gfx = context->gfx;
-
-    nvgSave(gfx);
+    renderSave(context);
 
     switch (command->type)
     {
@@ -418,14 +414,14 @@ void renderCommand(WarContext* context)
             WarUnitType buildingToBuild = command->build.buildingToBuild;
             WarUnitData data = getUnitData(buildingToBuild);
 
-            NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, data.sizex, data.sizey)
-                ? NVG_GRAY_TRANSPARENT : NVG_RED_TRANSPARENT;
+            u8Color fillColor = checkRectToBuild(context, position.x, position.y, data.sizex, data.sizey)
+                ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);
             position = vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(data.sizex * MEGA_TILE_WIDTH, data.sizey * MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
-            nvgFillRect(gfx, buildingRect, fillColor);
+            renderFillRect(context, buildingRect, fillColor);
 
             break;
         }
@@ -436,14 +432,14 @@ void renderCommand(WarContext* context)
             vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
             position = vec2MapToTileCoordinates(position);
 
-            NVGcolor fillColor = checkRectToBuild(context, position.x, position.y, 1, 1)
-                ? NVG_GRAY_TRANSPARENT : NVG_RED_TRANSPARENT;
+            u8Color fillColor = checkRectToBuild(context, position.x, position.y, 1, 1)
+                ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);
             position = vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
-            nvgFillRect(gfx, buildingRect, fillColor);
+            renderFillRect(context, buildingRect, fillColor);
 
             break;
         }
@@ -455,18 +451,16 @@ void renderCommand(WarContext* context)
         }
     }
 
-    nvgRestore(gfx);
+    renderRestore(context);
 }
 
 void renderMapUI(WarContext* context)
 {
-    NVGcontext* gfx = context->gfx;
-
-    nvgSave(gfx);
+    renderSave(context);
 
     renderSelectionRect(context);
     renderCommand(context);
     renderUIEntities(context);
 
-    nvgRestore(gfx);
+    renderRestore(context);
 }

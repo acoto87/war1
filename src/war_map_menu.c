@@ -1029,7 +1029,7 @@ void handleGameOverContinue(WarContext* context, WarEntity* entity)
 
 void handleQuitQuit(WarContext* context, WarEntity* entity)
 {
-    glfwSetWindowShouldClose(context->window, true);
+    SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
 }
 
 void handleQuitMenu(WarContext* context, WarEntity* entity)

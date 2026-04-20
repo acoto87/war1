@@ -93,11 +93,6 @@ void leaveScene(WarContext* context)
 
 void renderScene(WarContext* context)
 {
-    NVGcontext* gfx = context->gfx;
-
-    nvgSave(gfx);
-    nvgScale(gfx, context->globalScale, context->globalScale);
-
     WarEntityList* uiEntities = getEntities(context);
     for (s32 i = 0; i < uiEntities->count; i++)
     {
@@ -107,6 +102,4 @@ void renderScene(WarContext* context)
             renderEntity(context, entity);
         }
     }
-
-    nvgRestore(gfx);
 }

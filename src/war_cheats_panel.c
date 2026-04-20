@@ -10,6 +10,15 @@ void setCheatsPanelVisible(WarContext* context, bool visible)
     memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
     cheatStatus->position = 0;
     cheatStatus->visible = visible;
+
+    if (visible)
+    {
+        SDL_StartTextInput(context->window);
+    }
+    else
+    {
+        SDL_StopTextInput(context->window);
+    }
 }
 
 void setCheatsFeedback(WarContext* context, const char* feedbackText)
@@ -210,12 +219,12 @@ void updateCheatsPanel(WarContext* context)
         strcpy(statusText + strlen("MSG: "), cheatStatus->text);
         setCheatText(context, statusText);
 
-        NVGfontParams params;
+        WarFontParams params = {0};
         params.fontSize = cheatText->text.fontSize;
         params.fontData = fontsData[cheatText->text.fontIndex];
 
-        vec2 prefixSize = nvgMeasureSingleSpriteText("MSG: ", strlen("MSG: "), params);
-        vec2 textSize = nvgMeasureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
+        vec2 prefixSize = measureSingleSpriteText("MSG: ", strlen("MSG: "), params);
+        vec2 textSize = measureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
         cheatCursor->transform.position.x = prefixSize.x + textSize.x;
 
         setUIEntityStatus(cheatPanel, true);

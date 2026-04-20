@@ -694,7 +694,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
     WarEntity* entity = findEntity(context, id);
     if (entity)
     {
-        pthread_mutex_lock(&context->__mutex);
+        SDL_LockMutex(context->__mutex);
 
         removeEntity(context, entity);
 
@@ -714,7 +714,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
         WarEntityIdMapRemove(&manager->entitiesById, entity->id);
         WarEntityListRemove(&manager->entities, entity);
 
-        pthread_mutex_unlock(&context->__mutex);
+        SDL_UnlockMutex(context->__mutex);
 
         logDebug("removed entity with id: %d\n", id);
     }
@@ -871,34 +871,30 @@ s32 renderCompareProjectiles(const WarEntity* e1, const WarEntity* e2)
 
 void renderImage(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarTransformComponent transform = entity->transform;
     WarUIComponent* ui = &entity->ui;
     WarSpriteComponent* sprite = &entity->sprite;
 
     if (ui->enabled && sprite->enabled && sprite->frameIndex >= 0)
     {
-        nvgSave(gfx);
+        renderSave(context);
 
         if (sprite->sprite.framesCount > 1)
         {
             WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
             updateSpriteImage(context, sprite->sprite, frame.data);
 
-            nvgTranslate(gfx, -frame.dx, -frame.dy);
+            renderTranslate(context, -frame.dx, -frame.dy);
         }
 
-        nvgTranslate(gfx, transform.position.x, transform.position.y);
+        renderTranslate(context, transform.position.x, transform.position.y);
         renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
-        nvgRestore(gfx);
+        renderRestore(context);
     }
 }
 
 void renderRoad(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarSpriteComponent* sprite = &entity->sprite;
     WarRoadComponent* road = &entity->road;
 
@@ -909,8 +905,6 @@ void renderRoad(WarContext* context, WarEntity* entity)
     if (sprite->enabled && road->enabled)
     {
         WarRoadPieceList* pieces = &road->pieces;
-
-        NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, road->pieces.count);
 
         for (s32 i = 0; i < pieces->count; i++)
         {
@@ -929,24 +923,20 @@ void renderRoad(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            nvgSave(gfx);
-            nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            renderSave(context);
+            renderTranslate(context, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+            renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            nvgRestore(gfx);
+            renderRestore(context);
         }
-
-        nvgEndImageBatch(gfx, batch);
     }
 }
 
 void renderWall(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarSpriteComponent* sprite = &entity->sprite;
     WarWallComponent* wall = &entity->wall;
 
@@ -957,8 +947,6 @@ void renderWall(WarContext* context, WarEntity* entity)
     if (sprite->enabled && wall->enabled)
     {
         WarWallPieceList* pieces = &wall->pieces;
-
-        NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, wall->pieces.count);
 
         for (s32 i = 0; i < pieces->count; i++)
         {
@@ -995,24 +983,20 @@ void renderWall(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            nvgSave(gfx);
-            nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            renderSave(context);
+            renderTranslate(context, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+            renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            nvgRestore(gfx);
+            renderRestore(context);
         }
-
-        nvgEndImageBatch(gfx, batch);
     }
 }
 
 void renderRuin(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarSpriteComponent* sprite = &entity->sprite;
     WarRuinComponent* ruin = &entity->ruin;
 
@@ -1023,8 +1007,6 @@ void renderRuin(WarContext* context, WarEntity* entity)
     if (sprite->enabled && ruin->enabled)
     {
         WarRuinPieceList* pieces = &ruin->pieces;
-
-        NVGimageBatch* batch = nvgBeginImageBatch(gfx, sprite->sprite.image, ruin->pieces.count);
 
         for (s32 i = 0; i < ruin->pieces.count; i++)
         {
@@ -1047,17 +1029,15 @@ void renderRuin(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            nvgSave(gfx);
-            nvgTranslate(gfx, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            renderSave(context);
+            renderTranslate(context, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+            renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            nvgRestore(gfx);
+            renderRestore(context);
         }
-
-        nvgEndImageBatch(gfx, batch);
     }
 }
 
@@ -1100,8 +1080,6 @@ void renderUnit(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
 
-    NVGcontext* gfx = context->gfx;
-
     WarUnitComponent* unit = &entity->unit;
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
@@ -1123,36 +1101,24 @@ void renderUnit(WarContext* context, WarEntity* entity)
     // the unit is visible if it's partially on the clear areas of the fog
     bool isVisible = isUnitPartiallyVisible(map, entity);
 
-    nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
-    nvgTranslate(gfx, halff(unitSize.x), halff(unitSize.y));
-    nvgTranslate(gfx, position.x, position.y);
+    renderTranslate(context, -halff(frameSize.x), -halff(frameSize.y));
+    renderTranslate(context, halff(unitSize.x), halff(unitSize.y));
+    renderTranslate(context, position.x, position.y);
 
 #ifdef DEBUG_RENDER_UNIT_INFO
-    nvgFillRect(gfx, getUnitFrameRect(entity), nvgRGBA(0, 0, 128, 128));
-    nvgFillRect(gfx, getUnitSpriteRect(entity), NVG_GRAY_TRANSPARENT);
-    nvgFillRect(gfx, rectv(getUnitSpriteCenter(entity), VEC2_ONE), nvgRGB(255, 0, 0));
+    renderFillRect(context, getUnitFrameRect(entity), u8RgbaColor(0, 0, 128, 128));
+    renderFillRect(context, getUnitSpriteRect(entity), WAR_COLOR_GRAY_TRANSPARENT);
+    renderFillRect(context, rectv(getUnitSpriteCenter(entity), VEC2_ONE), u8RgbColor(255, 0, 0));
 #endif
 
 #ifdef DEBUG_RENDER_UNIT_STATS
-    rect spriteRect = getUnitSpriteRect(entity);
-
-    char debugText[50];
-
-    if (unit->hp == 0)
-        sprintf(debugText, "hp: dead");
-    else
-        sprintf(debugText, "hp: %d", percentabi(unit->hp, unit->maxhp));
-
-    nvgFontSize(gfx, 5.0f);
-    nvgFontFace(gfx, "roboto-r");
-    nvgFillColor(gfx, nvgRGBA(200, 200, 200, 255));
-    nvgTextAlign(gfx, NVG_ALIGN_LEFT);
-    nvgText(gfx, spriteRect.x, spriteRect.y, debugText, NULL);
+    // NOTE: TTF text rendering not available in SDL_Renderer path.
+    // Use sprite text if needed in the future.
 #endif
 
     if (sprite->enabled && (isVisible || unit->hasBeenSeen))
     {
-        nvgSave(gfx);
+        renderSave(context);
 
         if (isDudeUnit(entity))
         {
@@ -1160,14 +1126,14 @@ void renderUnit(WarContext* context, WarEntity* entity)
 
             if (unit->invisible)
             {
-                nvgGlobalAlpha(gfx, 0.5f);
+                renderGlobalAlpha(context, 0.5f);
             }
 
             if (unit->invulnerable)
             {
                 rect unitRect = getUnitSpriteRect(entity);
                 unitRect = rectExpand(unitRect, -1, -1);
-                nvgStrokeRect(gfx, unitRect, NVG_BLUE_INVULNERABLE, 1);
+                renderStrokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
             }
         }
 
@@ -1175,7 +1141,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
         updateSpriteImage(context, sprite->sprite, frame.data);
         renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
 
-        nvgRestore(gfx);
+        renderRestore(context);
     }
 
     if (animations->enabled && isVisible)
@@ -1185,16 +1151,16 @@ void renderUnit(WarContext* context, WarEntity* entity)
             WarSpriteAnimation* anim = animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
-                nvgSave(gfx);
+                renderSave(context);
 
-                nvgTranslate(gfx, anim->offset.x, anim->offset.y);
-                nvgScale(gfx, anim->scale.x, anim->scale.y);
+                renderTranslate(context, anim->offset.x, anim->offset.y);
+                renderScale(context, anim->scale.x, anim->scale.y);
 
 #ifdef DEBUG_RENDER_UNIT_ANIMATIONS
                 // size of the original sprite
                 vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
 
-                nvgFillRect(gfx, rectv(VEC2_ZERO, animFrameSize), NVG_GRAY_TRANSPARENT);
+                renderFillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
 #endif
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
@@ -1206,7 +1172,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
                 updateSpriteImage(context, anim->sprite, frame.data);
                 renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
-                nvgRestore(gfx);
+                renderRestore(context);
             }
         }
     }
@@ -1214,69 +1180,62 @@ void renderUnit(WarContext* context, WarEntity* entity)
 
 void renderText(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarTransformComponent* transform = &entity->transform;
     WarUIComponent* ui = &entity->ui;
     WarTextComponent* text = &entity->text;
 
     if (ui->enabled && text->enabled && text->text)
     {
-        nvgSave(gfx);
-        nvgTranslate(gfx, transform->position.x, transform->position.y);
-        nvgScale(gfx, transform->scale.x, transform->scale.y);
+        renderSave(context);
+        renderTranslate(context, transform->position.x, transform->position.y);
+        renderScale(context, transform->scale.x, transform->scale.y);
 
-        NVGfontParams params;
+        WarFontParams params;
         params.fontIndex = text->fontIndex;
         params.fontSize = text->fontSize;
         params.lineHeight = text->lineHeight;
-        params.fontColor = u8ColorToNVGcolor(text->fontColor);
-        params.highlightColor = u8ColorToNVGcolor(text->highlightColor);
+        params.fontColor = text->fontColor;
+        params.highlightColor = text->highlightColor;
         params.highlightIndex = text->highlightIndex;
         params.highlightCount = text->highlightCount;
         params.boundings = text->boundings;
-        params.horizontalAlign = textAlignToNVGalign(text->horizontalAlign);
-        params.verticalAlign = textAlignToNVGalign(text->verticalAlign);
-        params.lineAlign = textAlignToNVGalign(text->lineAlign);
-        params.wrapping = textWrappingToNVGwrap(text->wrapping);
-        params.trimming = textTrimmingToNVGtrim(text->trimming);
+        params.horizontalAlign = text->horizontalAlign;
+        params.verticalAlign = text->verticalAlign;
+        params.lineAlign = text->lineAlign;
+        params.wrapping = text->wrapping;
+        params.trimming = text->trimming;
         params.fontSprite = context->fontSprites[text->fontIndex];
         params.fontData = fontsData[text->fontIndex];
 
         if (entity->text.multiline)
-            nvgMultiSpriteText(gfx, text->text, 0, 0, params);
+            renderMultiSpriteText(context, text->text, 0, 0, params);
         else
-            nvgSingleSpriteText(gfx, text->text, 0, 0, params);
+            renderSingleSpriteText(context, text->text, 0, 0, params);
 
-        nvgRestore(gfx);
+        renderRestore(context);
     }
 }
 
 void renderRect(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarTransformComponent* transform = &entity->transform;
     WarUIComponent* ui = &entity->ui;
     WarRectComponent* rect = &entity->rect;
 
     if (ui->enabled && rect->enabled)
     {
-        nvgSave(gfx);
-        nvgTranslate(gfx, transform->position.x, transform->position.y);
-        nvgScale(gfx, transform->scale.x, transform->scale.y);
+        renderSave(context);
+        renderTranslate(context, transform->position.x, transform->position.y);
+        renderScale(context, transform->scale.x, transform->scale.y);
 
-        NVGcolor color = nvgRGBA(rect->color.r, rect->color.g, rect->color.b, rect->color.a);
-        nvgFillRect(gfx, rectf(0.0f, 0.0f, rect->size.x, rect->size.y), color);
+        renderFillRect(context, rectf(0.0f, 0.0f, rect->size.x, rect->size.y), rect->color);
 
-        nvgRestore(gfx);
+        renderRestore(context);
     }
 }
 
 void renderButton(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarTransformComponent* transform = &entity->transform;
     WarUIComponent* ui = &entity->ui;
     WarButtonComponent* button = &entity->button;
@@ -1285,9 +1244,9 @@ void renderButton(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && button->enabled)
     {
-        nvgSave(gfx);
-        nvgTranslate(gfx, transform->position.x, transform->position.y);
-        nvgScale(gfx, transform->scale.x, transform->scale.y);
+        renderSave(context);
+        renderTranslate(context, transform->position.x, transform->position.y);
+        renderScale(context, transform->scale.x, transform->scale.y);
 
         // render background
         {
@@ -1306,7 +1265,7 @@ void renderButton(WarContext* context, WarEntity* entity)
                 if (button->active)
                     offset = vec2Addv(offset, vec2i(0, 1));
 
-                nvgTranslate(gfx, offset.x, offset.y);
+                renderTranslate(context, offset.x, offset.y);
 
                 WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
                 updateSpriteImage(context, sprite->sprite, frame.data);
@@ -1318,33 +1277,31 @@ void renderButton(WarContext* context, WarEntity* entity)
         {
             if (text->enabled)
             {
-                NVGfontParams params;
+                WarFontParams params;
                 params.fontIndex = text->fontIndex;
                 params.fontSize = text->fontSize;
-                params.fontColor = u8ColorToNVGcolor(text->fontColor);
-                params.highlightColor = u8ColorToNVGcolor(text->highlightColor);
+                params.fontColor = text->fontColor;
+                params.highlightColor = text->highlightColor;
                 params.highlightIndex = button->hot ? ALL_HIGHLIGHT : text->highlightIndex;
                 params.highlightCount = text->highlightCount;
                 params.boundings = text->boundings;
-                params.horizontalAlign = textAlignToNVGalign(text->horizontalAlign);
-                params.verticalAlign = textAlignToNVGalign(text->verticalAlign);
-                params.lineAlign = textAlignToNVGalign(text->lineAlign);
-                params.wrapping = textWrappingToNVGwrap(text->wrapping);
+                params.horizontalAlign = text->horizontalAlign;
+                params.verticalAlign = text->verticalAlign;
+                params.lineAlign = text->lineAlign;
+                params.wrapping = text->wrapping;
                 params.fontSprite = context->fontSprites[text->fontIndex];
                 params.fontData = fontsData[text->fontIndex];
 
-                nvgSingleSpriteText(gfx, text->text, 0, 0, params);
+                renderSingleSpriteText(context, text->text, 0, 0, params);
             }
         }
 
-        nvgRestore(gfx);
+        renderRestore(context);
     }
 }
 
 void renderProjectile(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
 
@@ -1357,45 +1314,45 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 
 #ifdef DEBUG_RENDER_PROJECTILES
         {
-            nvgSave(gfx);
+            renderSave(context);
 
-            nvgTranslate(gfx, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
-            nvgTranslate(gfx, position.x, position.y);
+            renderTranslate(context, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
+            renderTranslate(context, position.x, position.y);
 
             rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-            nvgFillRect(gfx, r, NVG_GRAY_TRANSPARENT);
+            renderFillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
 
-            nvgRestore(gfx);
+            renderRestore(context);
         }
 
         {
-            nvgSave(gfx);
+            renderSave(context);
 
-            nvgTranslate(gfx, -halfi(frame.w),-halfi(frame.h));
-            nvgTranslate(gfx, position.x, position.y);
+            renderTranslate(context, -halfi(frame.w),-halfi(frame.h));
+            renderTranslate(context, position.x, position.y);
 
             rect r = rectf(0, 0, frame.w, frame.h);
-            nvgFillRect(gfx, r, NVG_RED_TRANSPARENT);
+            renderFillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
 
-            nvgRestore(gfx);
+            renderRestore(context);
         }
 
         {
             WarProjectileComponent* projectile = &entity->projectile;
 
-            nvgSave(gfx);
+            renderSave(context);
 
-            nvgStrokeLine(gfx, projectile->origin, projectile->target, getColorFromList(entity->id), 0.5f);
-            nvgFillRect(gfx, rectv(projectile->origin, VEC2_ONE), nvgRGB(255, 0, 255));
-            nvgFillRect(gfx, rectv(projectile->target, VEC2_ONE), nvgRGB(255, 0, 255));
+            renderStrokeLine(context, projectile->origin, projectile->target, getColorFromList(entity->id), 0.5f);
+            renderFillRect(context, rectv(projectile->origin, VEC2_ONE), u8RgbColor(255, 0, 255));
+            renderFillRect(context, rectv(projectile->target, VEC2_ONE), u8RgbColor(255, 0, 255));
 
-            nvgRestore(gfx);
+            renderRestore(context);
         }
 #endif
 
-        nvgTranslate(gfx, -frame.dx, -frame.dy);
-        nvgTranslate(gfx, -halff(frame.w), -halff(frame.h));
-        nvgTranslate(gfx, position.x, position.y);
+        renderTranslate(context, -frame.dx, -frame.dy);
+        renderTranslate(context, -halff(frame.w), -halff(frame.h));
+        renderTranslate(context, position.x, position.y);
 
         updateSpriteImage(context, sprite->sprite, frame.data);
         renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
@@ -1405,8 +1362,6 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 void renderMinimap(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
-
-    NVGcontext* gfx = context->gfx;
 
     vec2 position = entity->transform.position;
 
@@ -1471,29 +1426,27 @@ void renderMinimap(WarContext* context, WarEntity* entity)
         }
     }
 
-    nvgSave(gfx);
-    nvgTranslate(gfx, position.x, position.y);
+    renderSave(context);
+    renderTranslate(context, position.x, position.y);
 
     // render base
     updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
     renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
     // render viewport
-    nvgTranslate(gfx, map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
-    nvgStrokeRect(gfx, recti(0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT), NVG_WHITE, 1.0f/context->globalScale);
+    renderTranslate(context, map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
+    renderStrokeRect(context, recti(0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
 
-    nvgRestore(gfx);
+    renderRestore(context);
 }
 
 void renderAnimation(WarContext* context, WarEntity* entity)
 {
-    NVGcontext* gfx = context->gfx;
-
     WarTransformComponent* transform = &entity->transform;
     WarAnimationsComponent* animations = &entity->animations;
 
     vec2 position = transform->position;
-    nvgTranslate(gfx, position.x, position.y);
+    renderTranslate(context, position.x, position.y);
 
     if (animations->enabled)
     {
@@ -1502,10 +1455,10 @@ void renderAnimation(WarContext* context, WarEntity* entity)
             WarSpriteAnimation* anim = animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
-                nvgSave(gfx);
+                renderSave(context);
 
-                nvgTranslate(gfx, anim->offset.x, anim->offset.y);
-                nvgScale(gfx, anim->scale.x, anim->scale.y);
+                renderTranslate(context, anim->offset.x, anim->offset.y);
+                renderScale(context, anim->scale.x, anim->scale.y);
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
                 animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
@@ -1516,7 +1469,7 @@ void renderAnimation(WarContext* context, WarEntity* entity)
                 updateSpriteImage(context, anim->sprite, frame.data);
                 renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
-                nvgRestore(gfx);
+                renderRestore(context);
             }
         }
     }
@@ -1546,8 +1499,6 @@ void renderEntity(WarContext* context, WarEntity* entity)
         renderAnimation,    // WAR_ENTITY_TYPE_ANIMATION
     };
 
-    NVGcontext* gfx = context->gfx;
-
     if (entity->id && entity->enabled)
     {
         WarRenderFunc renderFunc = renderFuncs[(s32)entity->type];
@@ -1557,9 +1508,9 @@ void renderEntity(WarContext* context, WarEntity* entity)
             return;
         }
 
-        nvgSave(gfx);
+        renderSave(context);
         renderFunc(context, entity);
-        nvgRestore(gfx);
+        renderRestore(context);
     }
 }
 
@@ -1618,8 +1569,6 @@ void renderUnitSelection(WarContext* context)
 {
     WarMap* map = context->map;
 
-    NVGcontext* gfx = context->gfx;
-
     WarEntityIdList* selectedEntities = &map->selectedEntities;
     for (s32 i = 0; i < selectedEntities->count; i++)
     {
@@ -1641,20 +1590,20 @@ void renderUnitSelection(WarContext* context)
                 // position of the unit in the map
                 vec2 position = transform->position;
 
-                nvgSave(gfx);
-                nvgTranslate(gfx, -halff(frameSize.x), -halff(frameSize.y));
-                nvgTranslate(gfx, halff(unitSize.x), halff(unitSize.y));
-                nvgTranslate(gfx, position.x, position.y);
+                renderSave(context);
+                renderTranslate(context, -halff(frameSize.x), -halff(frameSize.y));
+                renderTranslate(context, halff(unitSize.x), halff(unitSize.y));
+                renderTranslate(context, position.x, position.y);
 
                 rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
-                NVGcolor color = NVG_WHITE_SELECTION;
+                u8Color color = WAR_COLOR_WHITE_SELECTION;
                 if (isFriendlyUnit(context, entity))
-                    color = NVG_GREEN_SELECTION;
+                    color = WAR_COLOR_GREEN_SELECTION;
                 else if (isEnemyUnit(context, entity))
-                    color = NVG_RED_SELECTION;
-                nvgStrokeRect(gfx, selr, color, 1.0f);
+                    color = WAR_COLOR_RED_SELECTION;
+                renderStrokeRect(context, selr, color, 1.0f);
 
-                nvgRestore(gfx);
+                renderRestore(context);
             }
         }
     }

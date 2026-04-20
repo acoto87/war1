@@ -213,26 +213,6 @@ void* xrealloc(void *ptr, size32 size, char *file, s32 line)
 #define xcalloc(count, size) xcalloc(count, size, __FILE__, __LINE__)
 #define xrealloc(ptr, size) xrealloc(ptr, size, __FILE__, __LINE__)
 
-void msleep(s32 milliseconds) // cross-platform sleep function
-{
-    if (milliseconds <= 0)
-        return;
-
-#ifdef _WIN32
-    // windows.h need to be include for this
-    Sleep(milliseconds);
-#elif _POSIX_C_SOURCE >= 199309L
-    // this is the posix call, _POSIX_C_SOURCE need to be defined
-    struct timespec ts;
-    ts.tv_sec = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
-#else
-    // unistd.h need to be include for this
-    usleep(milliseconds * 1000);
-#endif
-}
-
 #if __DEBUG__ && !defined(_MSC_VER) && !defined(__clang__)
 /* Obtain a backtrace and print it to stdout. */
 void printTrace()

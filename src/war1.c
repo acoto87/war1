@@ -2,11 +2,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#ifdef __GNUC__
-// this is to silence GCC about this warning since nanovg is full of them
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
-#endif
-
 #define _DEFAULT_SOURCE
 
 #include <stdio.h>
@@ -36,20 +31,7 @@
 
 // #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
-
-// Guide to predefined macros in C compilers gcc, clang, msvc, etc.
-// https://blog.kowalczyk.info/article/j/guide-to-predefined-macros-in-c-compilers-gcc-clang-msvc-etc..html
-#include <glad/glad.h>
-
-#define GLFW_DLL
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-
-#include "nanovg/nanovg.c"
-#define NVG_DISABLE_CULL_FACE
-#define NANOVG_GLES2_IMPLEMENTATION
-#include "nanovg/nanovg_gl.h"
-#include "nanovg/nanovg_gl_utils.h"
+#include "SDL3/SDL.h"
 
 // https://github.com/schellingb/TinySoundFont
 #define TSF_IMPLEMENTATION
@@ -59,9 +41,8 @@
 #define TML_WARN(msg) printf("WARNING: %s\n", msg)
 #include "TinySoundFont/tml.h"
 
-// https://github.com/dr-soft/miniaudio
-#define MINIAUDIO_IMPLEMENTATION
-#include "miniaudio/miniaudio.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
@@ -80,12 +61,10 @@
 #define SHL_WAVE_WRITER_IMPLEMENTATION
 #include "shl/wave_writer.h"
 
-#include "mutex.h"
 #include "log.h"
 #include "utils.h"
 #include "war_math.h"
 #include "io.h"
-#include "glutils.h"
 #include "war_types.h"
 #include "war.h"
 #include "war_net.h"
@@ -103,6 +82,7 @@
 #include "war_scenes.h"
 #include "war_ui.h"
 #include "war_ai.h"
+
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_net.c"
@@ -156,22 +136,15 @@
 #include "war_ai.c"
 #include "war_game.c"
 
-void glfwErrorCallback(int error, const char* description)
-{
-    logError("Error: %d, %s\n", error, description);
-}
-
 int main()
 {
     srand(time(NULL));
 
     initLog(LOG_SEVERITY_DEBUG);
 
-    glfwSetErrorCallback(glfwErrorCallback);
-
-    if (!glfwInit())
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
-        logError("Error initializing GLFW!\n");
+        logError("Error initializing SDL: %s\n", SDL_GetError());
         return -1;
     }
 
@@ -182,23 +155,31 @@ int main()
         return -1;
     }
 
-    glfwSetWindowUserPointer(context.window, &context);
-    glfwSetCharCallback(context.window, inputCharCallback);
+    bool running = true;
 
-    while (!glfwWindowShouldClose(context.window))
+    while (running)
     {
-        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
-        glfwSetWindowTitle(context.window, context.windowTitle);
+        beginInputFrame(&context);
 
-        inputGame(&context);
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            processGameEvent(&context, &event);
+
+            if (event.type == SDL_EVENT_QUIT)
+            {
+                running = false;
+            }
+        }
+
+        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
+        SDL_SetWindowTitle(context.window, context.windowTitle);
+
         updateGame(&context);
         renderGame(&context);
         presentGame(&context);
     }
 
-    ma_device_uninit(&context.sfx);
-    nvgDeleteGLES2(context.gfx);
-    glfwDestroyWindow(context.window);
-    glfwTerminate();
+    quitGame(&context);
 	return 0;
 }

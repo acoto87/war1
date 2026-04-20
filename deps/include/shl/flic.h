@@ -91,26 +91,26 @@ static inline void flic__write8(FILE* file, uint8_t value)
 
 static inline uint16_t flic__read16(FILE* file)
 {
-    uint8_t b1 = flic__read8(file);
-    if (b1 == EOF) return 0;
-    uint8_t b2 = flic__read8(file);
-    if (b2 == EOF) return 0;
+    int c1 = fgetc(file);
+    if (c1 == EOF) return 0;
+    int c2 = fgetc(file);
+    if (c2 == EOF) return 0;
 
-    return (b2 << 8) | b1;
+    return (uint16_t)((unsigned char)c2 << 8 | (unsigned char)c1);
 }
 
 static inline uint32_t flic__read32(FILE* file)
 {
-    uint8_t b1 = flic__read8(file);
-    if (b1 == EOF) return 0;
-    uint8_t b2 = flic__read8(file);
-    if (b2 == EOF) return 0;
-    uint8_t b3 = flic__read8(file);
-    if (b3 == EOF) return 0;
-    uint8_t b4 = flic__read8(file);
-    if (b4 == EOF) return 0;
+    int c1 = fgetc(file);
+    if (c1 == EOF) return 0;
+    int c2 = fgetc(file);
+    if (c2 == EOF) return 0;
+    int c3 = fgetc(file);
+    if (c3 == EOF) return 0;
+    int c4 = fgetc(file);
+    if (c4 == EOF) return 0;
 
-    return (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
+    return ((uint32_t)(unsigned char)c4 << 24) | ((uint32_t)(unsigned char)c3 << 16) | ((uint32_t)(unsigned char)c2 << 8) | (uint32_t)(unsigned char)c1;
 }
 
 static inline size_t flic__tell(FILE* file)
@@ -359,7 +359,11 @@ bool flicOpen(Flic* flic, const char* filename)
 
     uint16_t magic = flic__read16(flic->file);
     if (magic != FLI_MAGIC_NUMBER && magic != FLC_MAGIC_NUMBER)
+    {
+        fclose(flic->file);
+        flic->file = NULL;
         return false;
+    }
 
     flic->frames = flic__read16(flic->file);
     flic->width  = flic__read16(flic->file);
@@ -388,7 +392,7 @@ bool flicOpen(Flic* flic, const char* filename)
     }
 
     if (flic->width == 0) flic->width = 320;
-    if (flic->height == 0) flic->width = 200;
+    if (flic->height == 0) flic->height = 200;
 
     // Skip padding
     flic__seek(flic->file, 128);
@@ -397,7 +401,11 @@ bool flicOpen(Flic* flic, const char* filename)
 
 void flicClose(Flic* flic)
 {
-    fclose(flic->file);
+    if (flic->file)
+    {
+        fclose(flic->file);
+        flic->file = NULL;
+    }
 }
 
 bool flicReadFrame(Flic* flic, FlicFrame* frame)

@@ -414,7 +414,7 @@ void handleMenuSinglePlayer(WarContext* context, WarEntity* entity)
 
 void handleMenuQuit(WarContext* context, WarEntity* entity)
 {
-    glfwSetWindowShouldClose(context->window, true);
+    SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
 }
 
 void handleSinglePlayerOrc(WarContext* context, WarEntity* entity)

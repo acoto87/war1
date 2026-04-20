@@ -1,10 +1,5 @@
 bool initGame(WarContext* context)
 {
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-
     context->globalScale = 3;
     context->globalSpeed = 1;
     context->originalWindowWidth = 320;
@@ -12,53 +7,45 @@ bool initGame(WarContext* context)
     context->windowWidth = (s32)(context->originalWindowWidth * context->globalScale);
     context->windowHeight = (s32)(context->originalWindowHeight * context->globalScale);
     strcpy(context->windowTitle, "War 1");
-    context->window = glfwCreateWindow(context->windowWidth, context->windowHeight, context->windowTitle, NULL, NULL);
-    context->transitionDelay = 0.0f;
-    context->cheatsEnabled = true;
-
-    pthread_mutex_init(&context->__mutex, NULL);
-
+    context->window = SDL_CreateWindow(context->windowTitle, context->windowWidth, context->windowHeight, 0);
     if (!context->window)
     {
-        logError("GLFW window could not be created!\n");
-        glfwTerminate();
+        logError("Error creating SDL window: %s\n", SDL_GetError());
+        SDL_Quit();
         return false;
     }
 
-    glfwGetWindowSize(context->window, &context->windowWidth, &context->windowHeight);
-    glfwGetFramebufferSize(context->window, &context->framebufferWidth, &context->framebufferHeight);
-    context->devicePixelRatio = (f32)context->framebufferWidth / (f32)context->windowWidth;
-
-    glfwMakeContextCurrent(context->window);
-
-    glfwSetInputMode(context->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
-    gladLoadGLES2Loader((GLADloadproc) glfwGetProcAddress);
-
-    glCheckOpenGLVersion();
-
-    // init graphics
-    context->gfx = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_DEBUG);
-    if (!context->gfx)
+    context->renderer = SDL_CreateRenderer(context->window, NULL);
+    if (!context->renderer)
     {
-        logError("Could not init nanovg.\n");
-        glfwDestroyWindow(context->window);
-        glfwTerminate();
-		return false;
-	}
+        logError("Error creating SDL renderer: %s\n", SDL_GetError());
+        SDL_DestroyWindow(context->window);
+        SDL_Quit();
+        return false;
+    }
 
-    // context->fb = nvgluCreateFramebuffer(context->gfx,
-    //                                      context->framebufferWidth,
-    //                                      context->framebufferHeight,
-    //                                      NVG_IMAGE_NEAREST);
+    // Set logical presentation so all rendering is in 320x200 space.
+    // SDL handles upscaling to the actual window size.
+    if (!SDL_SetRenderLogicalPresentation(context->renderer,
+            context->originalWindowWidth, context->originalWindowHeight,
+            SDL_LOGICAL_PRESENTATION_INTEGER_SCALE))
+    {
+        logError("Error setting logical presentation: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(context->renderer);
+        SDL_DestroyWindow(context->window);
+        SDL_Quit();
+        return false;
+    }
 
-    // if (!context->fb)
-    // {
-    //     logError("Could not create FBO.\n");
-    //     glfwDestroyWindow(context->window);
-    //     glfwTerminate();
-    //     return false;
-    // }
+    // Initialize render state stack
+    renderInit(context);
+
+    context->transitionDelay = 0.0f;
+    context->cheatsEnabled = true;
+
+    context->__mutex = SDL_CreateMutex();
+
+    SDL_HideCursor();
 
     // init audio
     if (!initAudio(context))
@@ -70,9 +57,6 @@ bool initGame(WarContext* context)
     // load fonts
     context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
     context->fontSprites[1] = loadFontSprite(context, "./war1_font_2.png");
-
-    glViewport(0, 0, context->framebufferWidth, context->framebufferHeight);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // check if the DATA.WAR file exists
     bool dataFileExists = access(DATAWAR_FILE_PATH, F_OK) == 0;
@@ -94,8 +78,44 @@ bool initGame(WarContext* context)
         setNextScene(context, scene, 0.0f);
     }
 
-    context->time = (f32)glfwGetTime();
+    context->time = SDL_GetTicks() / 1000.0f;
     return true;
+}
+
+void quitGame(WarContext* context)
+{
+    // Destroy audio stream (this also closes the audio device)
+    if (context->audioStream)
+    {
+        SDL_DestroyAudioStream(context->audioStream);
+        context->audioStream = NULL;
+    }
+
+    if (context->soundFont)
+    {
+        tsf_close(context->soundFont);
+        context->soundFont = NULL;
+    }
+
+    if (context->__mutex)
+    {
+        SDL_DestroyMutex(context->__mutex);
+        context->__mutex = NULL;
+    }
+
+    if (context->renderer)
+    {
+        SDL_DestroyRenderer(context->renderer);
+        context->renderer = NULL;
+    }
+
+    if (context->window)
+    {
+        SDL_DestroyWindow(context->window);
+        context->window = NULL;
+    }
+
+    SDL_Quit();
 }
 
 bool loadDataFile(WarContext* context)
@@ -119,15 +139,7 @@ void setWindowSize(WarContext* context, s32 width, s32 height)
 {
     context->windowWidth = width;
     context->windowHeight = height;
-    glfwSetWindowSize(context->window, context->windowWidth, context->windowHeight);
-    glfwGetFramebufferSize(context->window, &context->framebufferWidth, &context->framebufferHeight);
-    context->devicePixelRatio = (f32)context->framebufferWidth / (f32)context->windowWidth;
-
-    // nvgluDeleteFramebuffer(context->fb);
-    // context->fb = nvgluCreateFramebuffer(context->gfx,
-    //                                      context->framebufferWidth,
-    //                                      context->framebufferHeight,
-    //                                      NVG_IMAGE_NEAREST);
+    SDL_SetWindowSize(context->window, context->windowWidth, context->windowHeight);
 }
 
 void setGlobalScale(WarContext* context, f32 scale)
@@ -206,135 +218,130 @@ void setInputKey(WarContext* context, s32 key, bool pressed)
     input->keys[key].pressed = pressed;
 }
 
-void inputGame(WarContext *context)
+void beginInputFrame(WarContext* context)
 {
-    // mouse position
-    f64 xpos, ypos;
-    glfwGetCursorPos(context->window, &xpos, &ypos);
+    WarInput* input = &context->input;
 
-    vec2 pos = vec2f((f32)floor(xpos), (f32)floor(ypos));
-    pos = vec2Scalef(pos, 1/context->globalScale);
-    context->input.pos = pos;
+    for (s32 i = 0; i < WAR_MOUSE_COUNT; ++i)
+    {
+        input->buttons[i].wasPressed = false;
+    }
 
-    // mouse buttons
-    setInputButton(context, WAR_MOUSE_LEFT, glfwGetMouseButton(context->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
-    setInputButton(context, WAR_MOUSE_RIGHT, glfwGetMouseButton(context->window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+    for (s32 i = 0; i < WAR_KEY_COUNT; ++i)
+    {
+        input->keys[i].wasPressed = false;
+    }
 
-    // keyboard keys
-    setInputKey(context, WAR_KEY_SPACE, glfwGetKey(context->window, GLFW_KEY_SPACE) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_APOSTROPHE, glfwGetKey(context->window, GLFW_KEY_APOSTROPHE) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_COMMA, glfwGetKey(context->window, GLFW_KEY_COMMA) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_MINUS, glfwGetKey(context->window, GLFW_KEY_MINUS) == GLFW_PRESS ||
-                                        glfwGetKey(context->window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_PERIOD, glfwGetKey(context->window, GLFW_KEY_PERIOD) == GLFW_PRESS ||
-                                         glfwGetKey(context->window, GLFW_KEY_KP_DECIMAL) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_SLASH, glfwGetKey(context->window, GLFW_KEY_SLASH) == GLFW_PRESS ||
-                                        glfwGetKey(context->window, GLFW_KEY_KP_DIVIDE) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_0, glfwGetKey(context->window, GLFW_KEY_0) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_0) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_1, glfwGetKey(context->window, GLFW_KEY_1) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_1) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_2, glfwGetKey(context->window, GLFW_KEY_2) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_2) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_3, glfwGetKey(context->window, GLFW_KEY_3) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_3) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_4, glfwGetKey(context->window, GLFW_KEY_4) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_4) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_5, glfwGetKey(context->window, GLFW_KEY_5) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_5) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_6, glfwGetKey(context->window, GLFW_KEY_6) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_6) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_7, glfwGetKey(context->window, GLFW_KEY_7) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_7) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_8, glfwGetKey(context->window, GLFW_KEY_8) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_8) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_9, glfwGetKey(context->window, GLFW_KEY_9) == GLFW_PRESS ||
-                                    glfwGetKey(context->window, GLFW_KEY_KP_9) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_SEMICOLON, glfwGetKey(context->window, GLFW_KEY_SEMICOLON) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_EQUAL, glfwGetKey(context->window, GLFW_KEY_EQUAL) == GLFW_PRESS ||
-                                        glfwGetKey(context->window, GLFW_KEY_KP_EQUAL) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_A, glfwGetKey(context->window, GLFW_KEY_A) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_B, glfwGetKey(context->window, GLFW_KEY_B) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_C, glfwGetKey(context->window, GLFW_KEY_C) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_D, glfwGetKey(context->window, GLFW_KEY_D) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_E, glfwGetKey(context->window, GLFW_KEY_E) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F, glfwGetKey(context->window, GLFW_KEY_F) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_G, glfwGetKey(context->window, GLFW_KEY_G) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_H, glfwGetKey(context->window, GLFW_KEY_H) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_I, glfwGetKey(context->window, GLFW_KEY_I) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_J, glfwGetKey(context->window, GLFW_KEY_J) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_K, glfwGetKey(context->window, GLFW_KEY_K) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_L, glfwGetKey(context->window, GLFW_KEY_L) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_M, glfwGetKey(context->window, GLFW_KEY_M) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_N, glfwGetKey(context->window, GLFW_KEY_N) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_O, glfwGetKey(context->window, GLFW_KEY_O) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_P, glfwGetKey(context->window, GLFW_KEY_P) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_Q, glfwGetKey(context->window, GLFW_KEY_Q) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_R, glfwGetKey(context->window, GLFW_KEY_R) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_S, glfwGetKey(context->window, GLFW_KEY_S) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_T, glfwGetKey(context->window, GLFW_KEY_T) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_U, glfwGetKey(context->window, GLFW_KEY_U) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_V, glfwGetKey(context->window, GLFW_KEY_V) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_W, glfwGetKey(context->window, GLFW_KEY_W) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_X, glfwGetKey(context->window, GLFW_KEY_X) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_Y, glfwGetKey(context->window, GLFW_KEY_Y) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_Z, glfwGetKey(context->window, GLFW_KEY_Z) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_LEFT_BRACKET, glfwGetKey(context->window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_BACKSLASH, glfwGetKey(context->window, GLFW_KEY_BACKSLASH) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_RIGHT_BRACKET, glfwGetKey(context->window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_GRAVE_ACCENT, glfwGetKey(context->window, GLFW_KEY_GRAVE_ACCENT) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_ESC, glfwGetKey(context->window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_ENTER, glfwGetKey(context->window, GLFW_KEY_ENTER) == GLFW_PRESS ||
-                                        glfwGetKey(context->window, GLFW_KEY_KP_ENTER) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_TAB, glfwGetKey(context->window, GLFW_KEY_TAB) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_BACKSPACE, glfwGetKey(context->window, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_INSERT, glfwGetKey(context->window, GLFW_KEY_INSERT) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_DELETE, glfwGetKey(context->window, GLFW_KEY_DELETE) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_RIGHT, glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_LEFT, glfwGetKey(context->window, GLFW_KEY_LEFT) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_DOWN, glfwGetKey(context->window, GLFW_KEY_DOWN) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_UP, glfwGetKey(context->window, GLFW_KEY_UP) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_PAGE_UP, glfwGetKey(context->window, GLFW_KEY_PAGE_UP) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_PAGE_DOWN, glfwGetKey(context->window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_HOME, glfwGetKey(context->window, GLFW_KEY_HOME) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_END, glfwGetKey(context->window, GLFW_KEY_END) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_F1, glfwGetKey(context->window, GLFW_KEY_F1) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F2, glfwGetKey(context->window, GLFW_KEY_F2) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F3, glfwGetKey(context->window, GLFW_KEY_F3) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F4, glfwGetKey(context->window, GLFW_KEY_F4) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F5, glfwGetKey(context->window, GLFW_KEY_F5) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F6, glfwGetKey(context->window, GLFW_KEY_F6) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F7, glfwGetKey(context->window, GLFW_KEY_F7) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F8, glfwGetKey(context->window, GLFW_KEY_F8) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F9, glfwGetKey(context->window, GLFW_KEY_F9) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F10, glfwGetKey(context->window, GLFW_KEY_F10) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F11, glfwGetKey(context->window, GLFW_KEY_F11) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_F12, glfwGetKey(context->window, GLFW_KEY_F12) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_ASTERISK, glfwGetKey(context->window, GLFW_KEY_KP_MULTIPLY) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_PLUS, glfwGetKey(context->window, GLFW_KEY_KP_ADD) == GLFW_PRESS);
-
-    setInputKey(context, WAR_KEY_SHIFT, glfwGetKey(context->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-                                        glfwGetKey(context->window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_CTRL, glfwGetKey(context->window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-                                       glfwGetKey(context->window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
-    setInputKey(context, WAR_KEY_ALT, glfwGetKey(context->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
-                                      glfwGetKey(context->window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS);
+    input->wasDragging = false;
 }
 
-void inputCharCallback(GLFWwindow* window, u32 codepoint)
+static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
 {
-    WarContext* context = glfwGetWindowUserPointer(window);
-    assert(context);
+    switch (key)
+    {
+        case SDLK_SPACE: return WAR_KEY_SPACE;
+        case SDLK_APOSTROPHE: return WAR_KEY_APOSTROPHE;
+        case SDLK_COMMA: return WAR_KEY_COMMA;
+        case SDLK_MINUS: return WAR_KEY_MINUS;
+        case SDLK_PERIOD: return WAR_KEY_PERIOD;
+        case SDLK_SLASH: return WAR_KEY_SLASH;
+        case SDLK_0: return WAR_KEY_0;
+        case SDLK_1: return WAR_KEY_1;
+        case SDLK_2: return WAR_KEY_2;
+        case SDLK_3: return WAR_KEY_3;
+        case SDLK_4: return WAR_KEY_4;
+        case SDLK_5: return WAR_KEY_5;
+        case SDLK_6: return WAR_KEY_6;
+        case SDLK_7: return WAR_KEY_7;
+        case SDLK_8: return WAR_KEY_8;
+        case SDLK_9: return WAR_KEY_9;
+        case SDLK_SEMICOLON: return WAR_KEY_SEMICOLON;
+        case SDLK_EQUALS: return WAR_KEY_EQUAL;
+        case SDLK_A: return WAR_KEY_A;
+        case SDLK_B: return WAR_KEY_B;
+        case SDLK_C: return WAR_KEY_C;
+        case SDLK_D: return WAR_KEY_D;
+        case SDLK_E: return WAR_KEY_E;
+        case SDLK_F: return WAR_KEY_F;
+        case SDLK_G: return WAR_KEY_G;
+        case SDLK_H: return WAR_KEY_H;
+        case SDLK_I: return WAR_KEY_I;
+        case SDLK_J: return WAR_KEY_J;
+        case SDLK_K: return WAR_KEY_K;
+        case SDLK_L: return WAR_KEY_L;
+        case SDLK_M: return WAR_KEY_M;
+        case SDLK_N: return WAR_KEY_N;
+        case SDLK_O: return WAR_KEY_O;
+        case SDLK_P: return WAR_KEY_P;
+        case SDLK_Q: return WAR_KEY_Q;
+        case SDLK_R: return WAR_KEY_R;
+        case SDLK_S: return WAR_KEY_S;
+        case SDLK_T: return WAR_KEY_T;
+        case SDLK_U: return WAR_KEY_U;
+        case SDLK_V: return WAR_KEY_V;
+        case SDLK_W: return WAR_KEY_W;
+        case SDLK_X: return WAR_KEY_X;
+        case SDLK_Y: return WAR_KEY_Y;
+        case SDLK_Z: return WAR_KEY_Z;
+        case SDLK_LEFTBRACKET: return WAR_KEY_LEFT_BRACKET;
+        case SDLK_BACKSLASH: return WAR_KEY_BACKSLASH;
+        case SDLK_RIGHTBRACKET: return WAR_KEY_RIGHT_BRACKET;
+        case SDLK_GRAVE: return WAR_KEY_GRAVE_ACCENT;
+        case SDLK_ESCAPE: return WAR_KEY_ESC;
+        case SDLK_RETURN: return WAR_KEY_ENTER;
+        case SDLK_KP_ENTER: return WAR_KEY_ENTER;
+        case SDLK_TAB: return WAR_KEY_TAB;
+        case SDLK_BACKSPACE: return WAR_KEY_BACKSPACE;
+        case SDLK_INSERT: return WAR_KEY_INSERT;
+        case SDLK_DELETE: return WAR_KEY_DELETE;
+        case SDLK_RIGHT: return WAR_KEY_RIGHT;
+        case SDLK_LEFT: return WAR_KEY_LEFT;
+        case SDLK_DOWN: return WAR_KEY_DOWN;
+        case SDLK_UP: return WAR_KEY_UP;
+        case SDLK_PAGEUP: return WAR_KEY_PAGE_UP;
+        case SDLK_PAGEDOWN: return WAR_KEY_PAGE_DOWN;
+        case SDLK_HOME: return WAR_KEY_HOME;
+        case SDLK_END: return WAR_KEY_END;
+        case SDLK_F1: return WAR_KEY_F1;
+        case SDLK_F2: return WAR_KEY_F2;
+        case SDLK_F3: return WAR_KEY_F3;
+        case SDLK_F4: return WAR_KEY_F4;
+        case SDLK_F5: return WAR_KEY_F5;
+        case SDLK_F6: return WAR_KEY_F6;
+        case SDLK_F7: return WAR_KEY_F7;
+        case SDLK_F8: return WAR_KEY_F8;
+        case SDLK_F9: return WAR_KEY_F9;
+        case SDLK_F10: return WAR_KEY_F10;
+        case SDLK_F11: return WAR_KEY_F11;
+        case SDLK_F12: return WAR_KEY_F12;
+        case SDLK_KP_MULTIPLY: return WAR_KEY_ASTERISK;
+        case SDLK_KP_PLUS: return WAR_KEY_PLUS;
+        case SDLK_KP_0: return WAR_KEY_0;
+        case SDLK_KP_1: return WAR_KEY_1;
+        case SDLK_KP_2: return WAR_KEY_2;
+        case SDLK_KP_3: return WAR_KEY_3;
+        case SDLK_KP_4: return WAR_KEY_4;
+        case SDLK_KP_5: return WAR_KEY_5;
+        case SDLK_KP_6: return WAR_KEY_6;
+        case SDLK_KP_7: return WAR_KEY_7;
+        case SDLK_KP_8: return WAR_KEY_8;
+        case SDLK_KP_9: return WAR_KEY_9;
+        case SDLK_KP_MINUS: return WAR_KEY_MINUS;
+        case SDLK_KP_PERIOD: return WAR_KEY_PERIOD;
+        case SDLK_KP_DIVIDE: return WAR_KEY_SLASH;
+        case SDLK_KP_EQUALS: return WAR_KEY_EQUAL;
+        case SDLK_LSHIFT:
+        case SDLK_RSHIFT: return WAR_KEY_SHIFT;
+        case SDLK_LCTRL:
+        case SDLK_RCTRL: return WAR_KEY_CTRL;
+        case SDLK_LALT:
+        case SDLK_RALT: return WAR_KEY_ALT;
+        default: return WAR_KEY_NONE;
+    }
+}
 
+static void appendCheatTextInput(WarContext* context, const char* text)
+{
     WarScene* scene = context->scene;
     WarMap* map = context->map;
     assert(scene || map);
@@ -342,14 +349,116 @@ void inputCharCallback(GLFWwindow* window, u32 codepoint)
     WarCheatStatus* cheatStatus = scene
         ? &scene->cheatStatus : &map->cheatStatus;
 
-    if (cheatStatus->enabled && cheatStatus->visible)
+    if (!cheatStatus->enabled || !cheatStatus->visible)
     {
-        s32 length = strlen(cheatStatus->text);
-        if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
+        return;
+    }
+
+    const char* cursor = text;
+    size_t remaining = strlen(text);
+    while (remaining > 0)
+    {
+        Uint32 codepoint = SDL_StepUTF8(&cursor, &remaining);
+        if (codepoint >= 32 && codepoint <= 126)
         {
-            strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
-            cheatStatus->position++;
+            s32 length = (s32)strlen(cheatStatus->text);
+            if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
+            {
+                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+                cheatStatus->position++;
+            }
         }
+    }
+}
+
+void processGameEvent(WarContext* context, const SDL_Event* event)
+{
+    switch (event->type)
+    {
+        case SDL_EVENT_MOUSE_MOTION:
+        {
+            vec2 pos = vec2f((f32)floorf(event->motion.x), (f32)floorf(event->motion.y));
+            context->input.pos = pos;
+            break;
+        }
+
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        {
+            vec2 pos = vec2f((f32)floorf(event->button.x), (f32)floorf(event->button.y));
+            context->input.pos = pos;
+
+            bool pressed = event->button.down;
+            if (event->button.button == SDL_BUTTON_LEFT)
+            {
+                setInputButton(context, WAR_MOUSE_LEFT, pressed);
+            }
+            else if (event->button.button == SDL_BUTTON_RIGHT)
+            {
+                setInputButton(context, WAR_MOUSE_RIGHT, pressed);
+            }
+            break;
+        }
+
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
+        {
+            WarKeys key = getWarKeyFromSDLKey(event->key.key);
+            if (key != WAR_KEY_NONE)
+            {
+                bool pressed = event->type == SDL_EVENT_KEY_DOWN;
+
+                if (key == WAR_KEY_SHIFT)
+                {
+                    setInputKey(context, key, (event->key.mod & SDL_KMOD_SHIFT) != 0);
+                }
+                else if (key == WAR_KEY_CTRL)
+                {
+                    setInputKey(context, key, (event->key.mod & SDL_KMOD_CTRL) != 0);
+                }
+                else if (key == WAR_KEY_ALT)
+                {
+                    setInputKey(context, key, (event->key.mod & SDL_KMOD_ALT) != 0);
+                }
+                else
+                {
+                    setInputKey(context, key, pressed);
+                }
+            }
+            break;
+        }
+
+        case SDL_EVENT_TEXT_INPUT:
+            appendCheatTextInput(context, event->text.text);
+            break;
+
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        case SDL_EVENT_WINDOW_HIDDEN:
+        {
+            WarInput* input = &context->input;
+
+            for (s32 i = 0; i < WAR_MOUSE_COUNT; ++i)
+            {
+                input->buttons[i].pressed = false;
+                input->buttons[i].wasPressed = false;
+            }
+
+            for (s32 i = 0; i < WAR_KEY_COUNT; ++i)
+            {
+                input->keys[i].pressed = false;
+                input->keys[i].wasPressed = false;
+            }
+
+            input->isDragging = false;
+            input->wasDragging = false;
+            input->dragPos = VEC2_ZERO;
+            input->dragRect = RECT_EMPTY;
+            break;
+        }
+
+        default:
+            break;
     }
 }
 
@@ -423,29 +532,9 @@ void updateGame(WarContext* context)
 
 void renderGame(WarContext *context)
 {
-    NVGcontext* gfx = context->gfx;
-
-    s32 framebufferWidth = context->framebufferWidth;
-    s32 framebufferHeight = context->framebufferHeight;
-
-    s32 windowWidth = context->windowWidth;
-    s32 windowHeight = context->windowHeight;
-
-    f32 devicePixelRatio = context->devicePixelRatio;
-
-    // render the whole scene to the FBO
-    //
-    // NOTE: This framebuffer stuff is to be able to make post-processing
-    // (generating gifs, or other kind of techniques like old TV effects).
-    // I'm commenting it out the framebuffer stuff because there is performance
-    // reasons with OpenGL ES `glReadPixels`, since is the way to read back
-    // pixels from the framebuffer (there is PBO on OpenGL ES 2.0).
-    //
-    // NVGLUframebuffer* fb = context->fb;
-    // nvgluBindFramebuffer(fb);
-
-    glViewport(0, 0, framebufferWidth, framebufferHeight);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    // Clear the screen (black)
+    SDL_SetRenderDrawColor(context->renderer, 0, 0, 0, 255);
+    SDL_RenderClear(context->renderer);
 
     // don't render anything if it's transitioning
     if (context->transitionDelay > 0)
@@ -453,7 +542,8 @@ void renderGame(WarContext *context)
         return;
     }
 
-    nvgBeginFrame(gfx, windowWidth, windowHeight, devicePixelRatio);
+    // Reset render state for this frame
+    renderInit(context);
 
     if (context->scene)
     {
@@ -463,34 +553,13 @@ void renderGame(WarContext *context)
     {
         renderMap(context);
     }
-
-    nvgEndFrame(gfx);
-
-    // nvgluBindFramebuffer(NULL);
-
-    // then render a quad with the texture geneate with the FBO
-    // glViewport(0, 0, framebufferWidth, framebufferHeight);
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    // nvgBeginFrame(gfx, windowWidth, windowHeight, devicePixelRatio);
-    // nvgSave(gfx);
-
-    // NVGpaint img = nvgImagePattern(gfx, 0, 0, windowWidth, windowHeight, 0, fb->image, 1.0f);
-    // nvgBeginPath(gfx);
-    // nvgRect(gfx, 0, 0, windowWidth, windowHeight);
-    // nvgFillPaint(gfx, img);
-    // nvgFill(gfx);
-
-    // nvgRestore(gfx);
-    // nvgEndFrame(gfx);
 }
 
 void presentGame(WarContext *context)
 {
-    glfwSwapBuffers(context->window);
-    glfwPollEvents();
+    SDL_RenderPresent(context->renderer);
 
-    f32 currentTime = glfwGetTime();
+    f32 currentTime = SDL_GetTicks() / 1000.0f;
     context->deltaTime = (currentTime - context->time);
 
     // This code is good in theory, but the sleep resolution on different OSes
@@ -499,8 +568,8 @@ void presentGame(WarContext *context)
     // On Linux I should do a do {..} while (); using the nanosleep function
     // and check for interrutions that wake up the thread before.
     //
-    // msleep((s32)((SECONDS_PER_FRAME - context->deltaTime) * 1000));
-    // currentTime = (f32)glfwGetTime();
+    // SDL_Delay((s32)((SECONDS_PER_FRAME - context->deltaTime) * 1000));
+    // currentTime = SDL_GetTicks() / 1000.0f;
     // context->deltaTime = (currentTime - context->time);
 
     // This was the previous code that wait until the end of the frame
@@ -510,7 +579,7 @@ void presentGame(WarContext *context)
     // Going back to this code for now, until we get a consistent game loop with sleep.
     while (context->deltaTime <= SECONDS_PER_FRAME)
     {
-        currentTime = (f32)glfwGetTime();
+        currentTime = SDL_GetTicks() / 1000.0f;
         context->deltaTime = (currentTime - context->time);
     }
 

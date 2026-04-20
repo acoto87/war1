@@ -1,3 +1,32 @@
+/*  
+    map.h - acoto87 (acoto87@gmail.com)
+
+    MIT License
+
+    Copyright (c) 2018 Alejandro Coto Gutiérrez
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    This is a single header file with macros to declare and define a strongly typed list of objects that can be accessed by index. 
+    Provides methods to search, sort, and manipulate lists.
+*/
+
 /*
  * This implementation of the macro is a variant of: https://github.com/mystborn/GenericMap
  * to make a closed implementation of the map data structure, where each collision is resolved
@@ -37,10 +66,10 @@
     } typeName ## __Entry__; \
     \
     typedef struct { \
-        uint32_t count; \
-        uint32_t capacity; \
-        uint32_t loadFactor; \
-        uint32_t shift; \
+        int32_t count; \
+        int32_t capacity; \
+        int32_t loadFactor; \
+        int32_t shift; \
         uint32_t (*hashFn)(const keyType key); \
         bool (*equalsFn)(const keyType item1, const keyType item2); \
         void (*freeFn)(valueType item); \
@@ -57,13 +86,15 @@
     void typeName ## Clear(typeName* map);
 
 #define shlDefineMap(typeName, keyType, valueType) \
-    static uint32_t typeName ## __fibHash(uint32_t hash, uint32_t shift) \
+    static int32_t typeName ## __fibHash(uint32_t hash, int32_t shift) \
     { \
         const uint32_t hashConstant = 2654435769u; \
-        return (hash * hashConstant) >> shift; \
+        return (int32_t)((hash * hashConstant) >> shift); \
     } \
     \
-    static uint32_t typeName ## __findEmptyBucket(typeName* map, uint32_t index) \
+    static void typeName ## __resize(typeName* map); \
+    \
+    static int32_t typeName ## __findEmptyBucket(typeName* map, int32_t index) \
     { \
         for(int32_t i = 0; i < map->capacity; i++) \
         { \
@@ -76,7 +107,9 @@
     \
     static void typeName ## __insert(typeName* map, keyType key, valueType value) \
     { \
-        uint32_t hash, index, next; \
+        uint32_t hash; \
+        int32_t index; \
+        int32_t next; \
         hash = index = typeName ## __fibHash(map->hashFn(key), map->shift); \
         \
         while (map->entries[index].active && map->entries[index].next >= 0) \
@@ -110,6 +143,12 @@
         } \
         \
         next = typeName ## __findEmptyBucket(map, index); \
+        if (next < 0) \
+        { \
+            typeName ## __resize(map); \
+            typeName ## __insert(map, key, value); \
+            return; \
+        } \
         if (index != next) \
             map->entries[index].next = next; \
         \
@@ -123,12 +162,12 @@
     \
     static void typeName ## __resize(typeName* map) \
     { \
-        uint32_t oldCapacity = map->capacity; \
+        int32_t oldCapacity = map->capacity; \
         typeName ## __Entry__* old = map->entries; \
         \
         map->loadFactor = oldCapacity; \
         map->capacity = 1 << (32 - (--map->shift)); \
-        map->entries = calloc(map->capacity, sizeof(typeName ## __Entry__)); \
+        map->entries = (typeName ## __Entry__*)calloc(map->capacity, sizeof(typeName ## __Entry__)); \
         map->count = 0; \
         \
         for(int32_t i = 0; i < oldCapacity; i++) \
@@ -168,7 +207,8 @@
         if (!map->entries) \
             return false; \
         \
-        uint32_t index, hash; \
+        int32_t index; \
+        uint32_t hash; \
         hash = index = typeName ## __fibHash(map->hashFn(key), map->shift); \
         \
         bool found = false; \
@@ -197,7 +237,8 @@
         if (!map->entries) \
             return map->defaultValue; \
         \
-        uint32_t index, hash; \
+        int32_t index; \
+        uint32_t hash; \
         hash = index = typeName ## __fibHash(map->hashFn(key), map->shift); \
         \
         valueType value = map->defaultValue; \
@@ -237,8 +278,8 @@
         if (!map->entries) \
             return; \
         \
-        uint32_t prevIndex, index, hash; \
-        \
+        int32_t prevIndex, index; \
+        uint32_t hash; \
         hash = prevIndex = index = typeName ## __fibHash(map->hashFn(key), map->shift); \
         \
         while (map->entries[index].active) \
@@ -246,13 +287,27 @@
             if(map->entries[index].hash == hash && map->equalsFn(map->entries[index].key, key)) \
             { \
                 valueType value = map->entries[index].value; \
-                \
-                map->entries[prevIndex].next = map->entries[index].next; \
-                map->entries[index].value = map->defaultValue; \
-                map->entries[index].active = false; \
+                int32_t nextIndex = map->entries[index].next; \
+                if (nextIndex >= 0) \
+                { \
+                    map->entries[index] = map->entries[nextIndex]; \
+                    map->entries[nextIndex].value = map->defaultValue; \
+                    map->entries[nextIndex].next = -1; \
+                    map->entries[nextIndex].active = false; \
+                } \
+                else \
+                { \
+                    if (prevIndex != index) \
+                        map->entries[prevIndex].next = -1; \
+                    map->entries[index].value = map->defaultValue; \
+                    map->entries[index].next = -1; \
+                    map->entries[index].active = false; \
+                } \
                 \
                 if (map->freeFn) \
                     map->freeFn(value); \
+                \
+                map->count--; \
                 \
                 break; \
             } \
@@ -265,7 +320,6 @@
             prevIndex = index; \
             index = map->entries[index].next; \
         } \
-        map->count--; \
     } \
     \
     void typeName ## Clear(typeName* map) \
@@ -273,15 +327,16 @@
         if (!map->entries) \
             return; \
         \
-        if (map->freeFn) \
+        for(int32_t i = 0; i < map->capacity; i++) \
         { \
-            for(int32_t i = 0; i < map->count; i++) \
+            if (map->entries[i].active) \
             { \
-                if (map->entries[i].active) \
-                { \
+                if (map->freeFn) \
                     map->freeFn(map->entries[i].value); \
-                    map->entries[i].active = false; \
-                } \
+                \
+                map->entries[i].value = map->defaultValue; \
+                map->entries[i].next = -1; \
+                map->entries[i].active = false; \
             } \
         } \
         \

@@ -1,3 +1,5 @@
+#pragma once
+
 #define sign(x) \
   ({ __typeof__(x) _x = (x); \
      (__typeof__(x))(_x < 0 ? -1 : 1); })

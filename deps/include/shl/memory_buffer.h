@@ -120,7 +120,7 @@ static bool mb__realloc(MemoryBuffer* buffer, size_t newLength)
     size_t count = newLength > buffer->length ? buffer->length : newLength;
     memcpy(newData, buffer->data, count);
 
-    buffer->_pointer = newData + mbPosition(buffer); 
+    buffer->_pointer = newData + mbPosition(buffer);
     buffer->data = newData;
     buffer->length = newLength;
 
@@ -443,7 +443,7 @@ bool mbWriteInt24LE(MemoryBuffer* buffer, int32_t value)
             (uint8_t)(value >> 8),
             (uint8_t)(value >> 16)
         }, 
-        sizeof(int32_t));
+        3);
 }
 
 bool mbWriteInt24BE(MemoryBuffer* buffer, int32_t value)
@@ -456,7 +456,7 @@ bool mbWriteInt24BE(MemoryBuffer* buffer, int32_t value)
             (uint8_t)(value >> 8),
             (uint8_t)value
         }, 
-        sizeof(int32_t));
+        3);
 }
 
 bool mbWriteUInt24LE(MemoryBuffer* buffer, uint32_t value)
@@ -469,7 +469,7 @@ bool mbWriteUInt24LE(MemoryBuffer* buffer, uint32_t value)
             (uint8_t)(value >> 8),
             (uint8_t)(value >> 16)
         }, 
-        sizeof(uint32_t));
+        3);
 }
 
 bool mbWriteUInt24BE(MemoryBuffer* buffer, uint32_t value)
@@ -482,7 +482,7 @@ bool mbWriteUInt24BE(MemoryBuffer* buffer, uint32_t value)
             (uint8_t)(value >> 8),
             (uint8_t)value
         }, 
-        sizeof(uint32_t));
+        3);
 }
 
 bool mbWriteInt32LE(MemoryBuffer* buffer, int32_t value)

@@ -43,8 +43,8 @@
     \
     typedef struct \
     { \
-        uint32_t count; \
-        uint32_t capacity; \
+        int32_t count; \
+        int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
         void (*freeFn)(itemType item); \
         itemType defaultValue; \
@@ -62,7 +62,7 @@
 #define shlDefineStack(typeName, itemType) \
     void typeName ## __resize(typeName *stack) \
     { \
-        uint32_t oldCapacity = stack->capacity; \
+        int32_t oldCapacity = stack->capacity; \
         \
         stack->capacity = oldCapacity << 1; \
         stack->items = (itemType *)realloc(stack->items, stack->capacity * sizeof(itemType)); \

@@ -123,7 +123,7 @@ void updateSceneDownload(WarContext* context)
         {
             if (wasKeyPressed(input, WAR_KEY_ENTER))
             {
-                glfwSetWindowShouldClose(context->window, true);
+                SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
             }
 
             break;

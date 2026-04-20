@@ -15,14 +15,14 @@ typedef struct
 } Log;
 
 Log __log__;
-pthread_mutex_t __logMutex__;
+SDL_Mutex* __logMutex__;
 
 void initLog(LogSeverity severity)
 {
     __log__ = (Log){0};
     __log__.severity = severity;
 
-    pthread_mutex_init(&__logMutex__, NULL);
+    __logMutex__ = SDL_CreateMutex();
 }
 
 static int32_t __getFileNameIndex(const char* file)
@@ -46,7 +46,7 @@ void __logInternal(LogSeverity severity, const char* file, const int32_t line, c
         return;
     }
 
-    pthread_mutex_lock(&__logMutex__);
+    SDL_LockMutex(__logMutex__);
 
     time_t t = time(NULL);
     struct tm* timeInfo = localtime(&t);
@@ -58,12 +58,12 @@ void __logInternal(LogSeverity severity, const char* file, const int32_t line, c
 
     switch (severity)
     {
-        case LOG_SEVERITY_CRITICAL:     severityStr = "CRITICAL";   break;
-        case LOG_SEVERITY_ERROR:        severityStr = "ERROR";      break;
-        case LOG_SEVERITY_WARNING:      severityStr = "WARNING";    break;
-        case LOG_SEVERITY_INFO:         severityStr = "INFO";       break;
-        case LOG_SEVERITY_DEBUG:        severityStr = "DEBUG";      break;
-        default:                        severityStr = "UNKOWN";     break;
+        case LOG_SEVERITY_CRITICAL:     severityStr = "CRIT";   break;
+        case LOG_SEVERITY_ERROR:        severityStr = "ERR";      break;
+        case LOG_SEVERITY_WARNING:      severityStr = "WRN";    break;
+        case LOG_SEVERITY_INFO:         severityStr = "INF";       break;
+        case LOG_SEVERITY_DEBUG:        severityStr = "DBG";      break;
+        default:                        severityStr = "UNK";     break;
     }
 
     int32_t fileNameIndex = __getFileNameIndex(file);
@@ -74,7 +74,7 @@ void __logInternal(LogSeverity severity, const char* file, const int32_t line, c
     vprintf(message, args);
     va_end(args);
 
-    pthread_mutex_unlock(&__logMutex__);
+    SDL_UnlockMutex(__logMutex__);
 }
 
 #define log(severity, message, ...) __logInternal(severity, __FILE__, __LINE__, message, ##__VA_ARGS__)
