@@ -379,7 +379,7 @@ WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 
         case PATH_FINDING_ASTAR: return astar(finder, startX, startY, endX, endY);
         default:
         {
-            logWarning("Unkown path finding type %d, defaulting to %d\n", finder.type, PATH_FINDING_ASTAR);
+            logWarning("Unkown path finding type %d, defaulting to %d", finder.type, PATH_FINDING_ASTAR);
             return astar(finder, startX, startY, endX, endY);
         }
     }

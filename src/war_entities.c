@@ -43,7 +43,7 @@ void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarS
 {
     if (spriteResourceRef.resourceIndex < 0)
     {
-        logWarning("Trying to create a sprite component with invalid resource index: %d\n", spriteResourceRef.resourceIndex);
+        logWarning("Trying to create a sprite component with invalid resource index: %d", spriteResourceRef.resourceIndex);
         return;
     }
 
@@ -302,13 +302,13 @@ void addButtonComponentFromResource(WarContext* context,
 {
     if (normalRef.resourceIndex < 0)
     {
-        logWarning("Trying to create a button component with invalid resource index: %d\n", normalRef.resourceIndex);
+        logWarning("Trying to create a button component with invalid resource index: %d", normalRef.resourceIndex);
         return;
     }
 
     if (pressedRef.resourceIndex < 0)
     {
-        logWarning("Trying to create a button component with invalid resource index: %d\n", pressedRef.resourceIndex);
+        logWarning("Trying to create a button component with invalid resource index: %d", pressedRef.resourceIndex);
         return;
     }
 
@@ -343,7 +343,7 @@ void addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType type
         entity->audio.currentMessage = entity->audio.firstMessage;
         if (!entity->audio.firstMessage)
         {
-            logError("Could not load MIDI from resource: %d\n", resourceIndex);
+            logError("Could not load MIDI from resource: %d", resourceIndex);
         }
     }
 }
@@ -499,7 +499,7 @@ WarEntity* createUnit(WarContext* context,
     s32 spriteIndex = unitData.resourceIndex;
     if (spriteIndex == 0)
     {
-        logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.\n", type);
+        logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
         spriteIndex = 279;
     }
     addSpriteComponentFromResource(context, entity, imageResourceRef(spriteIndex));
@@ -767,7 +767,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarEntityManager* manager = getEntityManager(context);
 
-    logDebug("trying to remove entity with id: %d\n", id);
+    logDebug("trying to remove entity with id: %d", id);
 
     WarEntity* entity = findEntity(context, id);
     if (entity)
@@ -794,7 +794,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
 
         SDL_UnlockMutex(context->__mutex);
 
-        logDebug("removed entity with id: %d\n", id);
+        logDebug("removed entity with id: %d", id);
     }
 }
 
@@ -890,7 +890,7 @@ WarEntityManager* getEntityManager(WarContext* context)
     if (context->map)
         return &context->map->entityManager;
 
-    logError("There is no map or scene active.\n", NO_ARG_STR);
+    logError("There is no map or scene active.");
     return NULL;
 }
 
@@ -1147,7 +1147,7 @@ void renderForest(WarContext* context, WarEntity* entity)
             s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
 
             if (prevTileIndex != newTileIndex)
-                logDebug("different tile index for tree (%d, %d), prev: %d, new: %d\n", x, y, prevTileIndex, newTileIndex);
+                logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", x, y, prevTileIndex, newTileIndex);
 
             setMapTileIndex(context, x, y, newTileIndex);
         }
@@ -1582,7 +1582,7 @@ void renderEntity(WarContext* context, WarEntity* entity)
         WarRenderFunc renderFunc = renderFuncs[(s32)entity->type];
         if (!renderFunc)
         {
-            logError("Entity of type %d can't be render. renderFunc = NULL\n", entity->type);
+            logError("Entity of type %d can't be render. renderFunc = NULL", entity->type);
             return;
         }
 
@@ -1789,7 +1789,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
 
         default:
         {
-            logInfo("This upgrade type %d doesn't increase any value of the units\n", upgrade);
+            logInfo("This upgrade type %d doesn't increase any value of the units", upgrade);
             break;
         }
     }

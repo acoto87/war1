@@ -1,7 +1,7 @@
 #include "war_file.h"
 
 #include "alloc.h"
-#include "log.h"
+#include "war_log.h"
 
 WarFile* loadWarFile(WarContext* context, const char* filePath)
 {
@@ -10,7 +10,7 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
     SDL_IOStream *stream = SDL_IOFromFile(filePath, "rb");
     if (!stream)
     {
-        logError("Couldn't process the DATA.WAR file. The file doesn't exists at %s.\n", filePath);
+        logError("Couldn't process the DATA.WAR file. The file doesn't exists at %s.", filePath);
         return NULL;
     }
 
@@ -44,7 +44,7 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
 
     if (warFile->type == WAR_FILE_TYPE_UNKNOWN)
     {
-        logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.\n", warFile->archiveID);
+        logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.", warFile->archiveID);
         return NULL;
     }
 

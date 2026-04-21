@@ -949,7 +949,7 @@ void addUnitActions(WarEntity* entity)
 
         default:
         {
-            logError("Type doesn't have any defined actions: %d\n", unit->type);
+            logError("Type doesn't have any defined actions: %d", unit->type);
             break;
         }
     }
@@ -987,7 +987,7 @@ s32 getActionDuration(WarEntity* entity, WarUnitActionType type)
     s32 actionIndex = findActionIndex(entity, type);
     if (actionIndex < 0)
     {
-        logError("Entity of type %d doesn't have a %d action\n", entity->type, type);
+        logError("Entity of type %d doesn't have a %d action", entity->type, type);
         return 0;
     }
 
@@ -1028,7 +1028,7 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
 
     if (unit->actionIndex < 0)
     {
-        logError("Entity of type %d doesn't have a %d action\n", entity->type, type);
+        logError("Entity of type %d doesn't have a %d action", entity->type, type);
         return;
     }
 

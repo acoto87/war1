@@ -239,7 +239,7 @@ WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race)
             case WAR_UNIT_ORC_CORPSE: return WAR_UNIT_HUMAN_CORPSE;
             default:
             {
-                logInfo("Trying to get type %d for race %d, returning %d\n", type, race, type);
+                logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
                 return type;
             }
         }
@@ -267,13 +267,13 @@ WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race)
             case WAR_UNIT_HUMAN_CORPSE: return WAR_UNIT_ORC_CORPSE;
             default:
             {
-                logInfo("Trying to get type %d for race %d, returning %d\n", type, race, type);
+                logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
                 return type;
             }
         }
     }
 
-    logInfo("Trying to get type %d for race %d, returning %d\n", type, race, type);
+    logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
     return type;
 }
 
@@ -897,7 +897,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
 
         default:
         {
-            logWarning("Commands for unit type %d not handled yet.\n", unit->type);
+            logWarning("Commands for unit type %d not handled yet.", unit->type);
             break;
         }
     }
@@ -1067,7 +1067,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
 
                     default:
                     {
-                        logWarning("Trying to get an attack command for unit of type: %d\n", unit->type);
+                        logWarning("Trying to get an attack command for unit of type: %d", unit->type);
                         break;
                     }
                 }
@@ -1095,7 +1095,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
                 }
                 else
                 {
-                    logWarning("Trying to get a frame index for player race: %d\n", player->race);
+                    logWarning("Trying to get a frame index for player race: %d", player->race);
                     assert(false);
                 }
             }
@@ -1232,7 +1232,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
 
         default:
         {
-            logWarning("Unkown command type: %d\n", commandType);
+            logWarning("Unkown command type: %d", commandType);
             break;
         }
     }

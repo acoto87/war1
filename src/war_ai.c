@@ -175,7 +175,7 @@ bool tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType uni
         return true;
     }
 
-    logWarning("Unkown unit type %d to be built by player %d\n", unitType, aiPlayer->index);
+    logWarning("Unkown unit type %d to be built by player %d", unitType, aiPlayer->index);
     return false;
 }
 
@@ -252,7 +252,7 @@ bool executeAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand
 
         default:
         {
-            logWarning("AI commands of type %d are NOT handled yet\n", command->type);
+            logWarning("AI commands of type %d are NOT handled yet", command->type);
             return true;
         }
     }

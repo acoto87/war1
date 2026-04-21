@@ -67,7 +67,7 @@ void applyCheat(WarContext* context, const char* text)
     }
 
     // if we reach here no cheat was applied
-    logInfo("Unknown cheat: %s\n", text);
+    logInfo("Unknown cheat: %s", text);
 }
 
 void applyGoldCheat(WarContext* context, const char* argument)

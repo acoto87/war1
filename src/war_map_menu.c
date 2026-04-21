@@ -1081,7 +1081,7 @@ void handleGameOverContinue(WarContext* context, WarEntity* entity)
     }
     else
     {
-        logError("It shouldn't reach here! Map result: %d\n", map->result);
+        logError("It shouldn't reach here! Map result: %d", map->result);
         assert(false);
     }
 }
