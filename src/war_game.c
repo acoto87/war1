@@ -50,7 +50,7 @@ bool initGame(WarContext* context)
     // init audio
     if (!initAudio(context))
     {
-        logError("Could not initialize audio.\n");
+        logError("Could not initialize audio.\n", NO_ARG_STR);
         return false;
     }
 
@@ -526,7 +526,7 @@ void updateGame(WarContext* context)
     }
     else
     {
-        logError("There is no map or scene active.\n");
+        logError("There is no map or scene active.\n", NO_ARG_STR);
     }
 }
 

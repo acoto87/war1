@@ -1,5 +1,7 @@
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
+    NOT_USED(context);
+
     entity->transform = (WarTransformComponent){0};
     entity->transform.enabled = true;
     entity->transform.position = position;
@@ -9,11 +11,15 @@ void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position
 
 void removeTransformComponent(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(context);
+
     entity->transform = (WarTransformComponent){0};
 }
 
 void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite)
 {
+    NOT_USED(context);
+
     entity->sprite = (WarSpriteComponent){0};
     entity->sprite.enabled = true;
     entity->sprite.frameIndex = 0;
@@ -91,6 +97,8 @@ void removeUnitComponent(WarContext* context, WarEntity* entity)
 
 void addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces)
 {
+    NOT_USED(context);
+
     entity->road = (WarRoadComponent){0};
     entity->road.enabled = true;
     entity->road.pieces = pieces;
@@ -426,7 +434,9 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene
     WarEntityManager* manager = getEntityManager(context);
 
     WarEntity* entity = (WarEntity *)xcalloc(1, sizeof(WarEntity));
-    entity->id = ++manager->staticEntityId;
+    manager->staticEntityId++;
+    assert(manager->staticEntityId <= UINT16_MAX);
+    entity->id = (WarEntityId)manager->staticEntityId;
     entity->type = type;
     entity->enabled = true;
 
@@ -488,26 +498,26 @@ WarEntity* createUnit(WarContext* context,
 
     if (isDudeUnit(entity))
     {
-        WarUnitStats unitStats = getUnitStats(type);
+        WarUnitStats stats = getUnitStats(type);
 
-        entity->unit.maxhp = unitStats.hp;
-        entity->unit.hp = unitStats.hp;
-        entity->unit.maxMana = unitStats.mana;
-        entity->unit.mana = isSummonUnit(entity) ? unitStats.mana : 100;
-        entity->unit.armor = unitStats.armor;
-        entity->unit.range = unitStats.range;
-        entity->unit.minDamage = unitStats.minDamage;
-        entity->unit.rndDamage = unitStats.rndDamage;
-        entity->unit.decay = unitStats.decay;
+        entity->unit.maxhp = stats.hp;
+        entity->unit.hp = stats.hp;
+        entity->unit.maxMana = stats.mana;
+        entity->unit.mana = isSummonUnit(entity) ? stats.mana : 100;
+        entity->unit.armor = stats.armor;
+        entity->unit.range = stats.range;
+        entity->unit.minDamage = stats.minDamage;
+        entity->unit.rndDamage = stats.rndDamage;
+        entity->unit.decay = stats.decay;
         entity->unit.manaTime = 1;
     }
     else if(isBuildingUnit(entity))
     {
-        WarBuildingStats buildingStats = getBuildingStats(type);
+        WarBuildingStats stats = getBuildingStats(type);
 
-        entity->unit.maxhp = buildingStats.hp;
-        entity->unit.hp = buildingStats.hp;
-        entity->unit.armor = buildingStats.armor;
+        entity->unit.maxhp = stats.hp;
+        entity->unit.hp = stats.hp;
+        entity->unit.armor = stats.armor;
     }
 
     WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
@@ -549,7 +559,7 @@ WarEntity* createBuilding(WarContext* context,
     if (isGoingToBuild)
     {
         WarBuildingStats stats = getBuildingStats(type);
-        WarState* buildState = createBuildState(context, entity, stats.buildTime);
+        WarState* buildState = createBuildState(context, entity, (f32)stats.buildTime);
         changeNextState(context, entity, buildState, true, true);
     }
 
@@ -565,7 +575,7 @@ WarEntity* findEntity(WarContext* context, WarEntityId id)
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
 {
     WarEntity* result = NULL;
-    f32 minDst = INT32_MAX;
+    s32 minDst = INT32_MAX;
 
     WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     assert(units);
@@ -868,7 +878,7 @@ WarEntityManager* getEntityManager(WarContext* context)
     if (context->map)
         return &context->map->entityManager;
 
-    logError("There is no map or scene active.\n");
+    logError("There is no map or scene active.\n", NO_ARG_STR);
     return NULL;
 }
 
@@ -914,7 +924,7 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
     vec2 p1 = getUnitPosition((WarEntity*)e1, false);
     vec2 p2 = getUnitPosition((WarEntity*)e2, false);
 
-    return p1.y - p2.y;
+    return (s32)(p1.y - p2.y);
 }
 
 s32 renderCompareProjectiles(const WarEntity* e1, const WarEntity* e2)
@@ -922,7 +932,7 @@ s32 renderCompareProjectiles(const WarEntity* e1, const WarEntity* e2)
     vec2 p1 = e1->transform.position;
     vec2 p2 = e2->transform.position;
 
-    return p1.y - p2.y;
+    return (s32)(p1.y - p2.y);
 }
 
 void renderImage(WarContext* context, WarEntity* entity)
@@ -940,7 +950,7 @@ void renderImage(WarContext* context, WarEntity* entity)
             WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
             updateSpriteImage(context, sprite->sprite, frame.data);
 
-            renderTranslate(context, -frame.dx, -frame.dy);
+            renderTranslate(context, -(f32)frame.dx, -(f32)frame.dy);
         }
 
         renderTranslate(context, transform.position.x, transform.position.y);
@@ -966,10 +976,10 @@ void renderRoad(WarContext* context, WarEntity* entity)
         {
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRoadData roadsData = getRoadData(pieces->items[i].type);
+            WarRoadData roadData = getRoadData(pieces->items[i].type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                ? roadsData.tileIndexForest : roadsData.tileIndexSwamp;
+                ? roadData.tileIndexForest : roadData.tileIndexSwamp;
 
             // the position in the world of the road piece tile
             s32 x = pieces->items[i].tilex;
@@ -980,7 +990,7 @@ void renderRoad(WarContext* context, WarEntity* entity)
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
             renderSave(context);
-            renderTranslate(context, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
@@ -1010,7 +1020,7 @@ void renderWall(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarWallData wallsData = getWallData(piece->type);
+            WarWallData wallData = getWallData(piece->type);
 
             s32 tileIndex = 0;
 
@@ -1018,17 +1028,17 @@ void renderWall(WarContext* context, WarEntity* entity)
             if (hpPercent <= 0)
             {
                 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                    ? wallsData.tileDestroyedForest : wallsData.tileDestroyedSwamp;
+                    ? wallData.tileDestroyedForest : wallData.tileDestroyedSwamp;
             }
             else if(hpPercent < 50)
             {
                 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                    ? wallsData.tileDamagedForest : wallsData.tileDamagedSwamp;
+                    ? wallData.tileDamagedForest : wallData.tileDamagedSwamp;
             }
             else
             {
                 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                    ? wallsData.tileForest : wallsData.tileSwamp;
+                    ? wallData.tileForest : wallData.tileSwamp;
             }
 
             // the position in the world of the wall piece tile
@@ -1040,7 +1050,7 @@ void renderWall(WarContext* context, WarEntity* entity)
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
             renderSave(context);
-            renderTranslate(context, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
@@ -1072,10 +1082,10 @@ void renderRuin(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRuinData ruinsData = getRuinData(piece->type);
+            WarRuinData ruinData = getRuinData(piece->type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                ? ruinsData.tileIndexForest : ruinsData.tileIndexSwamp;
+                ? ruinData.tileIndexForest : ruinData.tileIndexSwamp;
 
             // the position in the world of the road piece tile
             s32 x = piece->tilex;
@@ -1086,7 +1096,7 @@ void renderRuin(WarContext* context, WarEntity* entity)
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
             renderSave(context);
-            renderTranslate(context, x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
+            renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
@@ -1178,14 +1188,14 @@ void renderUnit(WarContext* context, WarEntity* entity)
 
         if (isDudeUnit(entity))
         {
-            WarUnitComponent* unit = &entity->unit;
+            WarUnitComponent* unitComponent = &entity->unit;
 
-            if (unit->invisible)
+            if (unitComponent->invisible)
             {
                 renderGlobalAlpha(context, 0.5f);
             }
 
-            if (unit->invulnerable)
+            if (unitComponent->invulnerable)
             {
                 rect unitRect = getUnitSpriteRect(entity);
                 unitRect = rectExpand(unitRect, -1, -1);
@@ -1406,7 +1416,7 @@ void renderProjectile(WarContext* context, WarEntity* entity)
         }
 #endif
 
-        renderTranslate(context, -frame.dx, -frame.dy);
+        renderTranslate(context, -(f32)frame.dx, -(f32)frame.dy);
         renderTranslate(context, -halff(frame.w), -halff(frame.h));
         renderTranslate(context, position.x, position.y);
 
@@ -1455,18 +1465,18 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
-        WarEntity* entity = units->items[i];
-        if (entity)
+        WarEntity* unitEntity = units->items[i];
+        if (unitEntity)
         {
-            WarUnitComponent* unit = &entity->unit;
-            WarTransformComponent* transform = &entity->transform;
+            WarUnitComponent* unit = &unitEntity->unit;
+            WarTransformComponent* transform = &unitEntity->transform;
 
-            if (displayUnitOnMinimap(entity) && (isUnitPartiallyVisible(map, entity) || entity->unit.hasBeenSeen))
+            if (displayUnitOnMinimap(unitEntity) && (isUnitPartiallyVisible(map, unitEntity) || unitEntity->unit.hasBeenSeen))
             {
                 s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                 s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
 
-                u8Color color = getUnitColorOnMinimap(entity);
+                u8Color color = getUnitColorOnMinimap(unitEntity);
 
                 for(s32 y = 0; y < unit->sizey; y++)
                 {
@@ -1490,8 +1500,8 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
     // render viewport
-    renderTranslate(context, map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
-    renderStrokeRect(context, recti(0, 0, MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
+    renderTranslate(context, (f32)map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
+    renderStrokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
 
     renderRestore(context);
 }
@@ -1775,6 +1785,8 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
 
 bool enoughPlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
 {
+    NOT_USED(context);
+
     return player->gold >= gold && player->wood >= wood;
 }
 
@@ -1799,12 +1811,16 @@ bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
 
 void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
 {
+    NOT_USED(context);
+
     player->gold += gold;
     player->wood += wood;
 }
 
 bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 {
+    NOT_USED(context);
+
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
@@ -1817,6 +1833,8 @@ bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 
 bool decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 {
+    NOT_USED(context);
+
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
@@ -1844,6 +1862,8 @@ bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 
 void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 {
+    NOT_USED(context);
+
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
@@ -2014,7 +2034,7 @@ WarEntity* getAttackTarget(WarContext* context, WarEntity* entity)
         WarState* attackState = getAttackState(entity);
         if (attackState)
         {
-            WarEntityId targetEntityId = attackState->attack.targetEntityId;
+            WarEntityId targetEntityId = (WarEntityId)attackState->attack.targetEntityId;
             return findEntity(context, targetEntityId);
         }
     }
@@ -2101,6 +2121,8 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
 
 void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage)
 {
+    NOT_USED(context);
+
     assert(isWall(entity));
 
     // Minimal damage + [Random damage - Enemy's Armor]
@@ -2155,7 +2177,7 @@ void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
         if (decreaseUnitMana(context, entity, 2))
         {
             vec2 origin = getUnitCenterPosition(entity, false);
-            vec2 target = vec2TileToMapCoordinates(vec2f(piece->tilex, piece->tiley), true);
+            vec2 target = vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
             WarProjectileType projectileType = getProjectileType(unit->type);
             createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }

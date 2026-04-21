@@ -239,7 +239,7 @@ internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX
                 // because when that position is close enough, the risk of overlaping units is greater
                 if (isDynamic(finder, xx, yy))
                 {
-                    f32 distance = nodeDistanceSqr(startNode, neighbor);
+                    s32 distance = nodeDistanceSqr(startNode, neighbor);
                     if (distance < DISTANCE_SQR_AVOID_DYNAMIC_POSITIONS)
                         continue;
                 }
@@ -452,8 +452,8 @@ vec2 findEmptyPosition(WarPathFinder finder, vec2 position)
 
         for(s32 d = 0; d < dirC; d++)
         {
-            s32 xx = currentPosition.x + dirX[d];
-            s32 yy = currentPosition.y + dirY[d];
+            s32 xx = (s32)currentPosition.x + dirX[d];
+            s32 yy = (s32)currentPosition.y + dirY[d];
             if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
                 vec2 newPosition = vec2i(xx, yy);

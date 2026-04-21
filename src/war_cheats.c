@@ -317,6 +317,8 @@ void applySkipOrcCheat(WarContext* context, const char* argument)
 
 void applySpeedCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -458,7 +460,7 @@ void applyGlobalScaleCheat(WarContext* context, const char* argument)
     if (strTryParseS32(argument, &scale))
     {
         scale = clamp(scale, 1, 5);
-        setGlobalScale(context, scale);
+        setGlobalScale(context, (f32)scale);
         setCheatsFeedbackFormat(context, "Global scale set to %d", scale);
     }
 }
@@ -472,7 +474,7 @@ void applyGlobalSpeedCheat(WarContext* context, const char* argument)
     if (strTryParseS32(argument, &speed))
     {
         speed = clamp(speed, 1, 5);
-        setGlobalSpeed(context, speed);
+        setGlobalSpeed(context, (f32)speed);
         setCheatsFeedbackFormat(context, "Global speed set to %d", speed);
     }
 }

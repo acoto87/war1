@@ -21,10 +21,10 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     setDelay(state, getMapScaledTime(context, getAnimationDuration(collapseAnim)));
 
     WarEntity* ruins = map->ruin;
-    addRuinsPieces(context, ruins, position.x, position.y, unitSize.x);
+    addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
     determineRuinTypes(context, ruins);
 
-    setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
+    setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     removeEntityFromSelection(context, entity->id);
 }
 
@@ -37,6 +37,8 @@ void leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 
 void updateCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     removeEntityById(context, entity->id);
 }
 

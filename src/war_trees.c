@@ -112,7 +112,7 @@ WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position
     {
         position = positions.items[i];
 
-        WarTree* tree = getTreeAtPosition(forest, position.x, position.y);
+        WarTree* tree = getTreeAtPosition(forest, (s32)position.x, (s32)position.y);
         if (tree)
         {
             bool isTreeAccessible = isPositionAccesible(map->finder, position);
@@ -184,6 +184,8 @@ void plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
 
 bool validTree(WarContext* context, WarEntity* forest, WarTree* tree)
 {
+    NOT_USED(context);
+
     WarTreeList* trees = &forest->forest.trees;
     for (s32 i = 0; i < trees->count; i++)
     {

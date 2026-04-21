@@ -141,7 +141,7 @@ bool tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType uni
                     {
                         if (decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
                         {
-                            WarState* trainState = createTrainState(context, entity, unitType, stats.buildTime);
+                            WarState* trainState = createTrainState(context, entity, unitType, (f32)stats.buildTime);
                             changeNextState(context, entity, trainState, true, true);
                         }
 

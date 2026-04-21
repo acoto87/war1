@@ -1048,6 +1048,8 @@ void handleGameOverSave(WarContext* context, WarEntity* entity)
 
 void handleGameOverContinue(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
     s32 levelInfoIndex = map->levelInfoIndex;
 

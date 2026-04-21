@@ -267,7 +267,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (!initNetwork())
     {
-        logError("Couldn't initialize the network.\n");
+        logError("Couldn't initialize the network.\n", NO_ARG_STR);
         return false;
     }
 

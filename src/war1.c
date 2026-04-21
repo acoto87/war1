@@ -23,12 +23,6 @@
 #endif
 #include <errno.h>
 
-#if __DEBUG__
-#if !defined(_MSC_VER) && !defined(__clang__)
-#include <execinfo.h>
-#endif
-#endif
-
 // #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
 #include "SDL3/SDL.h"
@@ -151,7 +145,7 @@ int main()
     WarContext context = {0};
     if (!initGame(&context))
     {
-        logError("Can't initialize the game!\n");
+        logError("Can't initialize the game!\n", NO_ARG_STR);
         return -1;
     }
 

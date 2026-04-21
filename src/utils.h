@@ -29,6 +29,8 @@ typedef union {
     struct { u8 r, g, b, a; };
 } u8Color;
 
+#define NO_ARG_STR ""
+
 #define U8COLOR_TRANSPARENT ((u8Color){{0, 0, 0, 0}})
 #define U8COLOR_WHITE ((u8Color){{255, 255, 255, 255}})
 #define U8COLOR_BLACK ((u8Color){{0, 0, 0, 255}})
@@ -214,22 +216,3 @@ void* xrealloc(void *ptr, size32 size, char *file, s32 line)
 #define xcalloc(count, size) xcalloc(count, size, __FILE__, __LINE__)
 #define xrealloc(ptr, size) xrealloc(ptr, size, __FILE__, __LINE__)
 
-#if __DEBUG__ && !defined(_MSC_VER) && !defined(__clang__)
-/* Obtain a backtrace and print it to stdout. */
-void printTrace()
-{
-#define MAX_STACKTRACE 50
-
-  void *buffer[MAX_STACKTRACE];
-  size32 size = backtrace(buffer, MAX_STACKTRACE);
-  char** strings = backtrace_symbols(buffer, size);
-
-  printf("Obtained %zd stack frames.\n", size);
-
-  for (s32 i = 0; i < size; i++)
-     printf ("%s\n", strings[i]);
-
-  free (strings);
-}
-
-#endif

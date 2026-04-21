@@ -345,11 +345,12 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
                 vec2 spawnPosition = findEmptyPosition(map->finder, position);
 
                 WarEntity* summonedUnit = createUnit(context, spellMapping.mappedType,
-                                                     spawnPosition.x, spawnPosition.y,
+                                                     (s32)spawnPosition.x, (s32)spawnPosition.y,
                                                      unit->player, WAR_RESOURCE_NONE, 0, true);
 
                 vec2 unitSize = getUnitSize(summonedUnit);
-                setStaticEntity(map->finder, spawnPosition.x, spawnPosition.y, unitSize.x, unitSize.y, summonedUnit->id);
+                setStaticEntity(map->finder, (s32)spawnPosition.x, (s32)spawnPosition.y,
+                                (s32)unitSize.x, (s32)unitSize.y, summonedUnit->id);
 
                 WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                 createSpellAnimation(context, animEntity, vec2TileToMapCoordinates(spawnPosition, true));
@@ -621,7 +622,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
@@ -681,7 +682,7 @@ bool executeCommand(WarContext* context)
                     if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
                         isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                        WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                         WarEntity* targetEntity = findEntity(context, targetEntityId);
                         if (targetEntity && isBuildingUnit(targetEntity))
                         {
@@ -706,7 +707,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
@@ -770,7 +771,7 @@ bool executeCommand(WarContext* context)
             if (checkFarmFood(context, player) &&
                 decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
             {
-                WarState* trainState = createTrainState(context, selectedEntity, unitToTrain, stats.buildTime);
+                WarState* trainState = createTrainState(context, selectedEntity, unitToTrain, (f32)stats.buildTime);
                 changeNextState(context, selectedEntity, trainState, true, true);
             }
 
@@ -814,7 +815,7 @@ bool executeCommand(WarContext* context)
             s32 level = getUpgradeLevel(player, upgradeToBuild);
             if (decreasePlayerResources(context, player, stats.goldCost[level], 0))
             {
-                WarState* upgradeState = createUpgradeState(context, selectedEntity, upgradeToBuild, stats.buildTime);
+                WarState* upgradeState = createUpgradeState(context, selectedEntity, upgradeToBuild, (f32)stats.buildTime);
                 changeNextState(context, selectedEntity, upgradeState, true, true);
             }
 
@@ -855,11 +856,11 @@ bool executeCommand(WarContext* context)
                     WarUnitType buildingToBuild = command->build.buildingToBuild;
 
                     WarBuildingStats stats = getBuildingStats(buildingToBuild);
-                    if (checkTileToBuild(context, buildingToBuild, targetTile.x, targetTile.y))
+                    if (checkTileToBuild(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y))
                     {
                         if (decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
                         {
-                            WarEntity* building = createBuilding(context, buildingToBuild, targetTile.x, targetTile.y, 0, true);
+                            WarEntity* building = createBuilding(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y, 0, true);
                             WarState* repairState = createRepairState(context, worker, building->id);
                             changeNextState(context, worker, repairState, true, true);
 
@@ -895,12 +896,12 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y))
+                    if (checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
                     {
                         if (decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
                         {
                             WarEntity* wall = map->wall;
-                            WarWallPiece* piece = addWallPiece(wall, targetTile.x, targetTile.y, 0);
+                            WarWallPiece* piece = addWallPiece(wall, (s32)targetTile.x, (s32)targetTile.y, 0);
                             piece->hp = WAR_WALL_MAX_HP;
                             piece->maxhp = WAR_WALL_MAX_HP;
 
@@ -943,12 +944,12 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    if (checkTileToBuildRoadOrWall(context, targetTile.x, targetTile.y))
+                    if (checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
                     {
                         if (decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
                         {
                             WarEntity* road = map->road;
-                            addRoadPiece(road, targetTile.x, targetTile.y, 0);
+                            addRoadPiece(road, (s32)targetTile.x, (s32)targetTile.y, 0);
 
                             determineRoadTypes(context, road);
 
@@ -1046,7 +1047,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
                     executeHealingCommand(context, targetEntity, targetTile);
@@ -1068,7 +1069,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
                     executeInvisiblityCommand(context, targetEntity, targetTile);
@@ -1090,7 +1091,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, targetTile.x, targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
                     executeUnholyArmorCommand(context, targetEntity, targetTile);

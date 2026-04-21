@@ -28,7 +28,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
     WarUnitStats stats = getUnitStats(unit->type);
     vec2 position = getUnitCenterPosition(entity, true);
 
-    WarEntity* forest = findEntity(context, state->wood.forestId);
+    WarEntity* forest = findEntity(context, (WarEntityId)state->wood.forestId);
 
     // if the forest doesn't exists, go idle
     if (!forest)
@@ -39,7 +39,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     vec2 treePosition = state->wood.position;
-    WarTree* tree = getTreeAtPosition(forest, treePosition.x, treePosition.y);
+    WarTree* tree = getTreeAtPosition(forest, (s32)treePosition.x, (s32)treePosition.y);
 
     if (!tree || tree->amount == 0 || !isPositionAccesible(map->finder, treePosition))
     {
@@ -52,7 +52,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
             changeNextState(context, entity, idleState, true, true);
             return;
         }
-        
+
         treePosition = vec2i(tree->tilex, tree->tiley);
         state->wood.position = treePosition;
     }
