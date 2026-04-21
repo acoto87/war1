@@ -1,3 +1,13 @@
+#pragma once
+
+#include <assert.h>
+
+#include "log.h"
+#include "war_color.h"
+#include "war_types.h"
+#include "war.h"
+#include "war_commands.h"
+
 const char* features[MAX_FEATURES_COUNT * 2] = {
 	// Units. 0 - 6
 	"unit-footman",             "unit-grunt",
@@ -1931,7 +1941,7 @@ s32 getUnitSightRange(WarEntity* entity)
 }
 
 bool displayUnitOnMinimap(WarEntity* entity);
-u8Color getUnitColorOnMinimap(WarEntity* entity);
+WarColor getUnitColorOnMinimap(WarEntity* entity);
 
 s32 getTotalNumberOfDudes(WarContext* context, u8 player);
 s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt);

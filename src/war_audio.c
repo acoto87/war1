@@ -1,3 +1,16 @@
+#include "war_audio.h"
+
+#include <assert.h>
+#include <string.h>
+
+#include "SDL3/SDL.h"
+
+#include "alloc.h"
+#include "log.h"
+#include "shl/memory_buffer.h"
+#include "war_entities.h"
+#include "war_units.h"
+
 typedef struct
 {
     WarAudioId id;

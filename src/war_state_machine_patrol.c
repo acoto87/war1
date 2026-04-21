@@ -1,3 +1,5 @@
+#include "war_state_machine.h"
+
 WarState* createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
     WarState* state = createState(context, entity, WAR_STATE_PATROL);

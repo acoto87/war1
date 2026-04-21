@@ -1,3 +1,15 @@
+#include "war_map_menu.h"
+
+#include <string.h>
+
+#include "SDL3/SDL.h"
+
+#include "war_campaigns.h"
+#include "war_game.h"
+#include "war_map.h"
+#include "war_resources.h"
+#include "war_ui.h"
+
 static void setSpeedStr(WarMapSpeed value, char buffer[])
 {
     switch (value)
@@ -50,7 +62,7 @@ void createMenu(WarContext* context)
     uiEntity = createUIRect(
         context, "rectMenuBackdrop",
         VEC2_ZERO, vec2i(context->windowWidth, context->windowHeight),
-        u8RgbaColor(0, 0, 0, 150));
+        WAR_COLOR_RGBA(0, 0, 0, 150));
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIImage(context, "imgMenuBackground", imageResourceRefFromPlayer(player, 233, 234), menuPanel);

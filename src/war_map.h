@@ -1,5 +1,7 @@
 #pragma once
 
+#include "war_types.h"
+
 WarMap* createMap(WarContext *context, s32 levelInfoIndex);
 void freeMap(WarContext* context, WarMap* map);
 
@@ -20,7 +22,7 @@ vec2 vec2MapToTileCoordinates(vec2 v);
 vec2 vec2TileToMapCoordinates(vec2 v, bool centeredInTile);
 vec2 vec2MinimapToViewportCoordinates(WarContext* context, vec2 v);
 
-u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y);
+WarColor getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y);
 void updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResource* tileset, s32 x, s32 y);
 s32 getMapTileIndex(WarContext* context, s32 x, s32 y);
 void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile);

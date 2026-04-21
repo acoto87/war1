@@ -1,3 +1,10 @@
+#include "war_state_machine.h"
+
+#include "war_actions.h"
+#include "war_animations.h"
+#include "war_audio.h"
+#include "war_projectiles.h"
+
 WarState* createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile)
 {
     WarState* state = createState(context, entity, WAR_STATE_CAST);

@@ -1,5 +1,7 @@
 #include "war_pathfinder.h"
 
+#include <assert.h>
+
 typedef struct
 {
     // id of the node
@@ -23,12 +25,12 @@ typedef struct
 
 #define WarMapNodeEmpty (WarMapNode){0}
 
-internal bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
+static bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
 {
     return node1.x == node2.x && node1.y == node2.y;
 }
 
-internal s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
+static s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
 {
     return node1.fScore - node2.fScore;
 }
@@ -38,7 +40,7 @@ internal s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif
-internal s32 compareGScore(const WarMapNode node1, const WarMapNode node2)
+static s32 compareGScore(const WarMapNode node1, const WarMapNode node2)
 {
     return node1.gScore - node2.gScore;
 }
@@ -46,24 +48,24 @@ internal s32 compareGScore(const WarMapNode node1, const WarMapNode node2)
 #pragma GCC diagnostic pop
 #endif
 
-internal s32 manhattanDistance(const WarMapNode node1, const WarMapNode node2)
+static s32 manhattanDistance(const WarMapNode node1, const WarMapNode node2)
 {
     return abs(node1.x - node2.x) + abs(node1.y - node2.y);
 }
 
-internal s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
+static s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
 {
     s32 xx = node1.x - node2.x;
     s32 yy = node1.y - node2.y;
     return xx * xx + yy * yy;
 }
 
-internal u32 hashMapNode(const s32 key)
+static u32 hashMapNode(const s32 key)
 {
     return (u32)key;
 }
 
-internal bool equalsMapNodeId(const s32 key1, const s32 key2)
+static bool equalsMapNodeId(const s32 key1, const s32 key2)
 {
     return key1 == key2;
 }
@@ -81,7 +83,7 @@ shlDefineMap(WarMapNodeMap, s32, WarMapNode)
 #define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareFScore, NULL}
 #define WarMapNodeMapDefaultOptions (WarMapNodeMapOptions){WarMapNodeEmpty, hashMapNode, equalsMapNodeId, NULL}
 
-internal WarMapNode createNode(WarPathFinder finder, s32 x, s32 y)
+static WarMapNode createNode(WarPathFinder finder, s32 x, s32 y)
 {
     return (WarMapNode){y * finder.width + x, x, y, 0, -1, INT32_MAX, INT32_MAX};
 }
@@ -116,7 +118,7 @@ void setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 
     }
 }
 
-internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
+static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
     WarMapNodeList nodes;
     WarMapNodeListInit(&nodes, WarMapNodeListDefaultOptions);
@@ -179,7 +181,7 @@ internal WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     return path;
 }
 
-internal WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
+static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
     // The set of currently discovered nodes that are not evaluated yet.
     WarMapNodeHeap openSet;

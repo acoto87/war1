@@ -1,5 +1,25 @@
 #pragma once
 
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "SDL3/SDL.h"
+#include "shl/array.h"
+#include "shl/list.h"
+#include "shl/queue.h"
+#include "shl/binary_heap.h"
+#include "shl/map.h"
+#include "shl/set.h"
+
+#include "common.h"
+#include "str.h"
+#include "war_color.h"
+#include "war_math.h"
+
+typedef struct tsf tsf;
+typedef struct tml_message tml_message;
+
 #define MAX_RESOURCES_COUNT 583
 #define MAX_TEXTURES_COUNT 583
 #define MAX_ENTITIES_COUNT 100
@@ -1510,8 +1530,8 @@ typedef struct
     s32 fontIndex;
     f32 fontSize;
     f32 lineHeight;
-    u8Color fontColor;
-    u8Color highlightColor;
+    WarColor fontColor;
+    WarColor highlightColor;
     s32 highlightIndex;
     s32 highlightCount;
     vec2 boundings;
@@ -1527,7 +1547,7 @@ typedef struct
 {
     bool enabled;
     vec2 size;
-    u8Color color;
+    WarColor color;
 } WarRectComponent;
 
 typedef void (*WarClickHandler)(struct _WarContext* context, struct _WarEntity* entity);

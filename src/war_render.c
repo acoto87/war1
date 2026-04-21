@@ -1,15 +1,6 @@
-// ---------------------------------------------------------------------------
-// Color constants (u8Color replacements for NVG_* colors)
-// ---------------------------------------------------------------------------
-#define WAR_COLOR_WHITE u8RgbaColor(255, 255, 255, 255)
-#define WAR_COLOR_BLACK u8RgbaColor(0, 0, 0, 255)
-#define WAR_COLOR_FOG u8RgbaColor(0, 0, 0, 128)
-#define WAR_COLOR_GRAY_TRANSPARENT u8RgbaColor(128, 128, 128, 128)
-#define WAR_COLOR_RED_TRANSPARENT u8RgbaColor(128, 0, 0, 128)
-#define WAR_COLOR_GREEN_SELECTION u8RgbaColor(0, 199, 0, 255)
-#define WAR_COLOR_RED_SELECTION u8RgbaColor(199, 0, 0, 255)
-#define WAR_COLOR_WHITE_SELECTION u8RgbaColor(199, 199, 199, 255)
-#define WAR_COLOR_BLUE_INVULNERABLE u8RgbaColor(0, 0, 199, 255)
+#include "war_render.h"
+
+#include <assert.h>
 
 // ---------------------------------------------------------------------------
 // Render state stack (replaces nvgSave/nvgRestore/nvgTranslate/nvgScale/nvgGlobalAlpha)
@@ -93,14 +84,14 @@ static void renderTransformPoint(WarContext* context, f32 lx, f32 ly, f32* ox, f
 // ---------------------------------------------------------------------------
 // Primitive rendering (replaces nvgFillRect, nvgStrokeRect, nvgStrokeLine, etc.)
 // ---------------------------------------------------------------------------
-static void renderSetDrawColor(WarContext* context, u8Color color)
+static void renderSetDrawColor(WarContext* context, WarColor color)
 {
     WarRenderState* s = renderGetState(context);
     u8 a = (u8)(color.a * s->alpha);
     SDL_SetRenderDrawColor(context->renderer, color.r, color.g, color.b, a);
 }
 
-void renderFillRect(WarContext* context, rect r, u8Color color)
+void renderFillRect(WarContext* context, rect r, WarColor color)
 {
     SDL_FRect dr = renderTransformRect(context, r);
     renderSetDrawColor(context, color);
@@ -108,13 +99,13 @@ void renderFillRect(WarContext* context, rect r, u8Color color)
     SDL_RenderFillRect(context->renderer, &dr);
 }
 
-void renderFillRects(WarContext* context, s32 count, rect r[], u8Color color)
+void renderFillRects(WarContext* context, s32 count, rect r[], WarColor color)
 {
     for (s32 i = 0; i < count; i++)
         renderFillRect(context, r[i], color);
 }
 
-void renderStrokeRect(WarContext* context, rect r, u8Color color, f32 width)
+void renderStrokeRect(WarContext* context, rect r, WarColor color, f32 width)
 {
     NOT_USED(width); // SDL_RenderRect always draws 1px lines; good enough at 320x200
     SDL_FRect dr = renderTransformRect(context, r);
@@ -123,7 +114,7 @@ void renderStrokeRect(WarContext* context, rect r, u8Color color, f32 width)
     SDL_RenderRect(context->renderer, &dr);
 }
 
-void renderStrokeLine(WarContext* context, vec2 p1, vec2 p2, u8Color color, f32 width)
+void renderStrokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, f32 width)
 {
     NOT_USED(width);
     f32 x1, y1, x2, y2;
@@ -185,7 +176,7 @@ void renderSubImage(WarContext* context, SDL_Texture* texture, rect rs, rect rd,
 // ---------------------------------------------------------------------------
 // Color helper (replaces getColorFromList which returned NVGcolor)
 // ---------------------------------------------------------------------------
-u8Color getColorFromList(s32 index)
+WarColor getColorFromList(s32 index)
 {
     const u32 colors[] =
     {
@@ -278,7 +269,7 @@ u8Color getColorFromList(s32 index)
 
     u32 rgb = colors[index % sizeof(colors)];
 
-    u8Color color;
+    WarColor color;
     color.r = (rgb >> 16) & 0xFF;
     color.g = (rgb >>  8) & 0xFF;
     color.b = (rgb >>  0) & 0xFF;

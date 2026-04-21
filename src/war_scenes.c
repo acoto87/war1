@@ -1,3 +1,11 @@
+#include "war_scenes.h"
+
+#include "war_animations.h"
+#include "war_cheats.h"
+#include "war_scene_blizzard.h"
+#include "war_scene_briefing.h"
+#include "war_scene_download.h"
+
 WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 {
     { WAR_SCENE_DOWNLOAD,   enterSceneDownload, NULL, updateSceneDownload },

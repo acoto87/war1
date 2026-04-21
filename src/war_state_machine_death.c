@@ -1,3 +1,7 @@
+#include "war_state_machine.h"
+
+#include "war_actions.h"
+
 WarState* createDeathState(WarContext* context, WarEntity* entity)
 {
     WarState* state = createState(context, entity, WAR_STATE_DEATH);

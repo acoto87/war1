@@ -1,3 +1,7 @@
+#pragma once
+
+#include "war_types.h"
+
 void createMapUI(WarContext* context);
 
 WarEntity* createUIMinimap(WarContext* context, char* name, vec2 position);

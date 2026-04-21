@@ -1,3 +1,13 @@
+#include "war_actions.h"
+
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "alloc.h"
+#include "war.h"
+#include "war_units.h"
+
 #define MAX_ACTIONS 6
 #define MAX_ACTION_STEPS 32
 

@@ -1,3 +1,12 @@
+#include "war_resources.h"
+
+#include <assert.h>
+#include <string.h>
+
+#include "alloc.h"
+#include "log.h"
+#include "war_audio.h"
+
 #define WAR_BUILDING_DAMAGE_1_RESOURCE 352
 #define WAR_BUILDING_DAMAGE_2_RESOURCE 353
 #define WAR_BUILDING_COLLAPSE_RESOURCE 356
@@ -5,6 +14,12 @@
 #define WAR_RAIN_OF_FIRE_EXPLOSION_RESOURCE 351
 #define WAR_SPELL_RESOURCE 355
 #define WAR_POISON_CLOUD_RESOURCE 350
+
+#define readu8(arr, index) (arr[index])
+#define reads16(arr, index) (*(s16*)((arr) + (index)))
+#define readu16(arr, index) (*(u16*)((arr) + (index)))
+#define reads32(arr, index) (*(s32*)((arr) + (index)))
+#define readu32(arr, index) (*(u32*)((arr) + (index)))
 
 WarResource* getOrCreateResource(WarContext* context, s32 index)
 {
@@ -713,7 +728,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
                 bool flipY = (offset & 0x01);
                 offset = (u16)((offset & 0xFFFC) << 1);
 
-                local const s32 flip[] = {
+                static const s32 flip[] = {
                     7, 6, 5, 4, 3, 2, 1, 0, 8
                 };
 

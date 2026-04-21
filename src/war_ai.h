@@ -1,3 +1,7 @@
+#pragma once
+
+#include "war_types.h"
+
 WarAI* createAI(WarContext* context);
 WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandType type);
 

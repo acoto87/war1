@@ -1,3 +1,8 @@
+#include "war_state_machine.h"
+
+#include "war_actions.h"
+#include "war_units.h"
+
 WarState* createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
     WarState* state = createState(context, entity, WAR_STATE_MOVE);

@@ -1,3 +1,13 @@
+#include "war_ui.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "alloc.h"
+#include "war_audio.h"
+#include "war_entities.h"
+#include "war_resources.h"
+
 bool isUIEntity(WarEntity* entity)
 {
     switch (entity->type)
@@ -133,7 +143,7 @@ WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 font
     return entity;
 }
 
-WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, u8Color color)
+WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, WarColor color)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_RECT, true);
     addTransformComponent(context, entity, position);

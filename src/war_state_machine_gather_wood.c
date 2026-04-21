@@ -1,3 +1,5 @@
+#include "war_state_machine.h"
+
 WarState* createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
 {
     WarState* state = createState(context, entity, WAR_STATE_WOOD);

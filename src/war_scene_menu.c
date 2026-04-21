@@ -1,3 +1,12 @@
+#include "war_scene_menu.h"
+
+#include <string.h>
+
+#include "war_audio.h"
+#include "war_game.h"
+#include "war_map.h"
+#include "war_ui.h"
+
 static void setCustomGameRaceStr(WarRace value, char buffer[])
 {
     switch (value)

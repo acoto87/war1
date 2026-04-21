@@ -1,3 +1,11 @@
+#include "war_scene_briefing.h"
+
+#include "war_animations.h"
+#include "war_audio.h"
+#include "war_campaigns.h"
+#include "war_entities.h"
+#include "war_ui.h"
+
 void enterSceneBriefingHumans(WarContext* context)
 {
     WarScene* scene = context->scene;
@@ -35,7 +43,7 @@ void enterSceneBriefingHumans(WarContext* context)
     addAnimation(animEntity, anim4);
 
     WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 160));
-    setUITextColor(briefingText, u8RgbColor(255, 215, 138));
+    setUITextColor(briefingText, WAR_COLOR_RGB(255, 215, 138));
     setUITextMultiline(briefingText, true);
     setUITextBoundings(briefingText, vec2f((f32)(context->originalWindowWidth - 40), 200.0f));
     setUITextHorizontalAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
@@ -84,7 +92,7 @@ void enterSceneBriefingOrcs(WarContext* context)
     }
 
     WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 160));
-    setUITextColor(briefingText, u8RgbColor(255, 215, 138));
+    setUITextColor(briefingText, WAR_COLOR_RGB(255, 215, 138));
     setUITextMultiline(briefingText, true);
     setUITextBoundings(briefingText, vec2f((f32)(context->originalWindowWidth - 40), 200.0f));
     setUITextHorizontalAlign(briefingText, WAR_TEXT_ALIGN_LEFT);

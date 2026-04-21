@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #if _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -16,6 +18,8 @@ typedef int WarSocket;
 
 #define RESPONSE_READ_SIZE 2048
 #define RESPONSE_MAX_SIZE (5 * 1024 * 1024) // 5MB
+
+#include "war_types.h"
 
 bool initNetwork();
 bool cleanNetwork();

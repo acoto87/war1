@@ -1,3 +1,7 @@
+#include "war_state_machine.h"
+
+#include "alloc.h"
+
 WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] = 
 {
     { WAR_STATE_IDLE,       enterIdleState,       leaveIdleState,       updateIdleState,       freeIdleState       },

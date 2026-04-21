@@ -1,3 +1,11 @@
+#include "war_scene_download.h"
+
+#include "SDL3/SDL.h"
+
+#include "war_game.h"
+#include "war_net.h"
+#include "war_ui.h"
+
 void enterSceneDownload(WarContext* context)
 {
     WarScene* scene = context->scene;
@@ -15,7 +23,7 @@ void enterSceneDownload(WarContext* context)
                                "Enjoy the game!";
 
     WarEntity* downloadText = createUIText(context, "txtDownload", 1, 10, text, vec2i(10, 10));
-    setUITextColor(downloadText, u8RgbColor(255, 215, 138));
+    setUITextColor(downloadText, WAR_COLOR_RGB(255, 215, 138));
     setUITextMultiline(downloadText, true);
     setUITextBoundings(downloadText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
     setUITextHorizontalAlign(downloadText, WAR_TEXT_ALIGN_LEFT);
@@ -25,7 +33,7 @@ void enterSceneDownload(WarContext* context)
     setUITextLineHeight(downloadText, 120);
 
     WarEntity* downloadingText = createUIText(context, "txtDownloading", 1, 10, "Downloading...", vec2i(10, 10));
-    setUITextColor(downloadingText, u8RgbColor(255, 215, 138));
+    setUITextColor(downloadingText, WAR_COLOR_RGB(255, 215, 138));
     setUITextMultiline(downloadingText, false);
     setUITextBoundings(downloadingText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
     setUITextHorizontalAlign(downloadingText, WAR_TEXT_ALIGN_LEFT);

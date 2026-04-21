@@ -1,3 +1,7 @@
+#pragma once
+
+#include "war_types.h"
+
 bool executeCommand(WarContext* context);
 
 // train units

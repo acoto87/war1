@@ -1,3 +1,11 @@
+#include "war_animations.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "alloc.h"
+#include "war_sprites.h"
+
 #define ANIM_NAME_MAX_LENGTH 50
 
 WarSpriteAnimation* createAnimation(const char* name, WarSprite sprite, f32 frameDelay, bool loop)

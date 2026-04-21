@@ -1,5 +1,11 @@
 #pragma once
 
+#include <stdbool.h>
+#include <math.h>
+
+#include "common.h"
+#include "log.h"
+
 #ifdef min
 #undef min
 #endif

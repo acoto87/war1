@@ -1,3 +1,7 @@
+#pragma once
+
+#include "war_types.h"
+
 #define isEntityOfType(entity, entityType) ((entity)->type == (entityType))
 
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);
@@ -41,7 +45,7 @@ void removeUIComponent(WarContext* context, WarEntity* entity);
 void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, const char* text);
 void removeTextComponent(WarContext* context, WarEntity* entity);
 
-void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color);
+void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarColor color);
 void removeRectComponent(WarContext* context, WarEntity* entity);
 
 void addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normalSprite, WarSprite pressedSprite);

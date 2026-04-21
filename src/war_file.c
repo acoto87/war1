@@ -1,3 +1,11 @@
+#include "war_file.h"
+
+#include <stdio.h>
+
+#include "alloc.h"
+#include "io.h"
+#include "log.h"
+
 WarFile* loadWarFile(WarContext* context, const char* filePath)
 {
     NOT_USED(context);

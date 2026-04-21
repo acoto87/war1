@@ -23,6 +23,13 @@
 #endif
 #include <errno.h>
 
+#if defined(_WIN32) && defined(_MSC_VER) && !defined(__clang__)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#endif
+
 // #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
 #include "SDL3/SDL.h"
@@ -56,9 +63,12 @@
 #include "shl/wave_writer.h"
 
 #include "log.h"
-#include "utils.h"
-#include "war_math.h"
+#include "str.h"
+#include "alloc.h"
 #include "io.h"
+#include "common.h"
+#include "war_color.h"
+#include "war_math.h"
 #include "war_types.h"
 #include "war.h"
 #include "war_net.h"
@@ -76,7 +86,60 @@
 #include "war_scenes.h"
 #include "war_ui.h"
 #include "war_ai.h"
+#include "war_game.h"
 
+int main()
+{
+    srand((unsigned int)time(NULL));
+
+    initLog(LOG_SEVERITY_DEBUG);
+
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
+    {
+        logError("Error initializing SDL: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    WarContext context = {0};
+    if (!initGame(&context))
+    {
+        logError("Can't initialize the game!\n", NO_ARG_STR);
+        return -1;
+    }
+
+    bool running = true;
+
+    while (running)
+    {
+        beginInputFrame(&context);
+
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            processGameEvent(&context, &event);
+
+            if (event.type == SDL_EVENT_QUIT)
+            {
+                running = false;
+            }
+        }
+
+        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
+        SDL_SetWindowTitle(context.window, context.windowTitle);
+
+        updateGame(&context);
+        renderGame(&context);
+        presentGame(&context);
+    }
+
+    quitGame(&context);
+	return 0;
+}
+
+#include "log.c"
+#include "str.c"
+#include "alloc.c"
+#include "io.c"
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_net.c"
@@ -129,51 +192,3 @@
 #include "war_ui.c"
 #include "war_ai.c"
 #include "war_game.c"
-
-int main()
-{
-    srand((unsigned int)time(NULL));
-
-    initLog(LOG_SEVERITY_DEBUG);
-
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
-    {
-        logError("Error initializing SDL: %s\n", SDL_GetError());
-        return -1;
-    }
-
-    WarContext context = {0};
-    if (!initGame(&context))
-    {
-        logError("Can't initialize the game!\n", NO_ARG_STR);
-        return -1;
-    }
-
-    bool running = true;
-
-    while (running)
-    {
-        beginInputFrame(&context);
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            processGameEvent(&context, &event);
-
-            if (event.type == SDL_EVENT_QUIT)
-            {
-                running = false;
-            }
-        }
-
-        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
-        SDL_SetWindowTitle(context.window, context.windowTitle);
-
-        updateGame(&context);
-        renderGame(&context);
-        presentGame(&context);
-    }
-
-    quitGame(&context);
-	return 0;
-}

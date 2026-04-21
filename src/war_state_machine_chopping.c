@@ -1,3 +1,8 @@
+#include "war_state_machine.h"
+
+#include "war_actions.h"
+#include "war_audio.h"
+
 WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
 {
     WarState* state = createState(context, entity, WAR_STATE_CHOPPING);
