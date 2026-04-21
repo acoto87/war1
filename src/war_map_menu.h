@@ -1,3 +1,7 @@
+#pragma once
+
+#include "war_types.h"
+
 void createMenu(WarContext* context);
 void createOptionsMenu(WarContext* context);
 void createGameOverMenu(WarContext* context);

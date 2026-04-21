@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 typedef enum
 {
     LOG_SEVERITY_CRITICAL,

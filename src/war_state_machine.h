@@ -1,3 +1,7 @@
+#pragma once
+
+#include "war_types.h"
+
 typedef struct
 {
     WarStateType type;

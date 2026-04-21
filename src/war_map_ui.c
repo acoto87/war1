@@ -1,3 +1,12 @@
+#include "war_map_ui.h"
+
+#include <string.h>
+
+#include "war_entities.h"
+#include "war_map.h"
+#include "war_ui.h"
+#include "war_units.h"
+
 void createMapUI(WarContext* context)
 {
     WarMap* map = context->map;

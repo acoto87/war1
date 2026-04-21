@@ -1,3 +1,9 @@
+#include "war_font.h"
+
+#include <string.h>
+
+#include "war_sprites.h"
+
 // the fonts was created in a 64x64 (64x96 for the second font)
 // sprite but for the actual game a 512x512 (512x768) was used,
 // so the original dimensions of this array are actually multiplied by 8
@@ -210,33 +216,8 @@ WarFontData fontsData[2] =
 
 #define FONT_NORMAL_COLOR WAR_COLOR_RGBA(239, 255, 219, 255)
 #define FONT_HIGHLIGHT_COLOR WAR_COLOR_RGBA(255, 227, 73, 255)
-#define NO_HIGHLIGHT -1
-#define ALL_HIGHLIGHT -2
 #define MAX_LINES 48
 #define TAB_WIDTH 2
-
-// ---------------------------------------------------------------------------
-// WarFontParams — replaces NVGfontParams, uses WarColor and WarTextAlignment directly
-// ---------------------------------------------------------------------------
-typedef struct
-{
-    s32 fontIndex;
-    f32 fontSize;
-    f32 lineHeight;
-    WarColor fontColor;
-    WarColor highlightColor;
-    s32 highlightIndex;
-    s32 highlightCount;
-    vec2 boundings;
-    WarTextAlignment horizontalAlign;
-    WarTextAlignment verticalAlign;
-    WarTextAlignment lineAlign;
-    WarTextWrapping wrapping;
-    WarTextTrimming trimming;
-
-    WarSprite fontSprite;
-    WarFontData fontData;
-} WarFontParams;
 
 #define getCharIndex(c) ((s32)((c) > 0 ? (c) - 32 : 0))
 

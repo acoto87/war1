@@ -1,3 +1,14 @@
+#include "war_net.h"
+
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "alloc.h"
+#include "log.h"
+#include "str.h"
+
 #define WAR_REQUEST_MESSAGE_MAX_SIZE 2048
 #define WAR_URL_BUFFER_MAX_SIZE 1024
 

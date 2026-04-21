@@ -1,3 +1,7 @@
+#include "war_state_machine.h"
+
+#include "war_units.h"
+
 WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
 {
     WarState* state = createState(context, entity, WAR_STATE_FOLLOW);

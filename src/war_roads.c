@@ -1,3 +1,5 @@
+#include "war_entities.h"
+
 bool hasRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
 {
     WarRoadPieceList* pieces = &road->road.pieces;

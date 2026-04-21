@@ -1,3 +1,5 @@
+#include "war_units.h"
+
 bool isFriendlyUnit(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;

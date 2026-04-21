@@ -1,3 +1,11 @@
+#include "war_scene_download.h"
+
+#include "SDL3/SDL.h"
+
+#include "war_game.h"
+#include "war_net.h"
+#include "war_ui.h"
+
 void enterSceneDownload(WarContext* context)
 {
     WarScene* scene = context->scene;

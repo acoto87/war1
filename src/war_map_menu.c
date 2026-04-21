@@ -1,3 +1,15 @@
+#include "war_map_menu.h"
+
+#include <string.h>
+
+#include "SDL3/SDL.h"
+
+#include "war_campaigns.h"
+#include "war_game.h"
+#include "war_map.h"
+#include "war_resources.h"
+#include "war_ui.h"
+
 static void setSpeedStr(WarMapSpeed value, char buffer[])
 {
     switch (value)

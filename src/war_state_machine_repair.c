@@ -1,3 +1,5 @@
+#include "war_state_machine.h"
+
 WarState* createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
 {
     WarState* state = createState(context, entity, WAR_STATE_REPAIR);

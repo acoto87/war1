@@ -1,7 +1,10 @@
-#include "common.h"
-#include "war_color.h"
-#include "war_math.h"
-#include "war_types.h"
+#include "war_scene_briefing.h"
+
+#include "war_animations.h"
+#include "war_audio.h"
+#include "war_campaigns.h"
+#include "war_entities.h"
+#include "war_ui.h"
 
 void enterSceneBriefingHumans(WarContext* context)
 {

@@ -1,3 +1,9 @@
+#include "war_state_machine.h"
+
+#include "war_actions.h"
+#include "war_map.h"
+#include "war_units.h"
+
 WarState* createIdleState(WarContext* context, WarEntity* entity, bool lookAround)
 {
     WarState* state = createState(context, entity, WAR_STATE_IDLE);

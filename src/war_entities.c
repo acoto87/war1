@@ -1,3 +1,15 @@
+#include "war_entities.h"
+
+#include <assert.h>
+#include <stdlib.h>
+
+#include "war_animations.h"
+#include "war_audio.h"
+#include "war_font.h"
+#include "war_render.h"
+#include "war_sprites.h"
+#include "war_units.h"
+
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
     NOT_USED(context);

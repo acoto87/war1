@@ -1,3 +1,13 @@
+#include "war_ui.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "alloc.h"
+#include "war_audio.h"
+#include "war_entities.h"
+#include "war_resources.h"
+
 bool isUIEntity(WarEntity* entity)
 {
     switch (entity->type)

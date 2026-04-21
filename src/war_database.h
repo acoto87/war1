@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.h"
+
 typedef enum
 {
     DB_ENTRY_TYPE_UNKNOWN,

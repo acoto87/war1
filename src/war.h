@@ -1,3 +1,7 @@
+#pragma once
+
+#include "war_types.h"
+
 #define FRAMES_PER_SECONDS 60
 #define SECONDS_PER_FRAME (1.0f/FRAMES_PER_SECONDS)
 

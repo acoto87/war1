@@ -1,3 +1,15 @@
+#include "war_commands.h"
+
+#include <assert.h>
+#include <stdlib.h>
+
+#include "war_audio.h"
+#include "war_entities.h"
+#include "war_projectiles.h"
+#include "war_state_machine.h"
+#include "war_ui.h"
+#include "war_units.h"
+
 void executeMoveCommand(WarContext* context, vec2 targetPoint)
 {
     WarMap* map = context->map;

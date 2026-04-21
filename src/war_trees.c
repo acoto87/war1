@@ -1,3 +1,5 @@
+#include "war_entities.h"
+
 bool hasTreeAtPosition(WarEntity* forest, s32 x, s32 y)
 {
     WarTreeList* trees = &forest->forest.trees;

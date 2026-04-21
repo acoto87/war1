@@ -1,3 +1,23 @@
+#include "war_map.h"
+
+#include <assert.h>
+#include <string.h>
+
+#include "war_actions.h"
+#include "war_animations.h"
+#include "war_audio.h"
+#include "war_campaigns.h"
+#include "war_entities.h"
+#include "war_font.h"
+#include "war_map_menu.h"
+#include "war_map_ui.h"
+#include "war_projectiles.h"
+#include "war_render.h"
+#include "war_resources.h"
+#include "war_sprites.h"
+#include "war_state_machine.h"
+#include "war_units.h"
+
 void addEntityToSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;

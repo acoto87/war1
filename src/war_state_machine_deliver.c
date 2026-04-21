@@ -1,3 +1,5 @@
+#include "war_state_machine.h"
+
 WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId)
 {
     WarState* state = createState(context, entity, WAR_STATE_DELIVER);

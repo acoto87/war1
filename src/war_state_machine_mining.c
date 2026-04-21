@@ -1,3 +1,5 @@
+#include "war_state_machine.h"
+
 WarState* createMiningState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
 {
     WarState* state = createState(context, entity, WAR_STATE_MINING);

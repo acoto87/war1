@@ -1,5 +1,11 @@
-#include "SDL3/SDL_mutex.h"
 #include "log.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
+#include "SDL3/SDL_mutex.h"
 
 static Log __log__;
 static SDL_Mutex* __logMutex__;

@@ -1,5 +1,7 @@
 #include "war_pathfinder.h"
 
+#include <assert.h>
+
 typedef struct
 {
     // id of the node

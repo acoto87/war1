@@ -1,3 +1,9 @@
+#include "war_state_machine.h"
+
+#include "war_actions.h"
+#include "war_audio.h"
+#include "war_units.h"
+
 WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
 {
     WarState* state = createState(context, entity, WAR_STATE_ATTACK);

@@ -1,5 +1,28 @@
 #include "war_game.h"
 
+#include <assert.h>
+#include <math.h>
+#include <string.h>
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <io.h>
+#ifndef F_OK
+#define F_OK 0
+#endif
+#define access _access
+#else
+#include <unistd.h>
+#endif
+
+#include "str.h"
+#include "war_audio.h"
+#include "war_file.h"
+#include "war_font.h"
+#include "war.h"
+#include "war_map_render.h"
+#include "war_resources.h"
+#include "war_scenes.h"
+
 static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
 {
     switch (key)

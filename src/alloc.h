@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 void* __xmalloc(size_t size, char *file, int32_t line);

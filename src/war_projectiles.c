@@ -1,3 +1,13 @@
+#include "war_projectiles.h"
+
+#include <assert.h>
+
+#include "war_animations.h"
+#include "war_audio.h"
+#include "war_entities.h"
+#include "war_map.h"
+#include "war_units.h"
+
 typedef struct
 {
     WarProjectileType type;

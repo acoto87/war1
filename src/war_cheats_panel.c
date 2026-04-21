@@ -1,3 +1,14 @@
+#include "war_cheats.h"
+
+#include <assert.h>
+#include <stdarg.h>
+#include <string.h>
+
+#include "SDL3/SDL.h"
+
+#include "war_font.h"
+#include "war_ui.h"
+
 void setCheatsPanelVisible(WarContext* context, bool visible)
 {
     WarScene* scene = context->scene;

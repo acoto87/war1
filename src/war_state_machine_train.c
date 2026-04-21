@@ -1,3 +1,7 @@
+#include "war_state_machine.h"
+
+#include "war_audio.h"
+
 WarState* createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_TRAIN);

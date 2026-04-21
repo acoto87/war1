@@ -1,3 +1,13 @@
+#pragma once
+
+#include <assert.h>
+
+#include "log.h"
+#include "war_color.h"
+#include "war_types.h"
+#include "war.h"
+#include "war_commands.h"
+
 const char* features[MAX_FEATURES_COUNT * 2] = {
 	// Units. 0 - 6
 	"unit-footman",             "unit-grunt",

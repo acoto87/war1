@@ -1,3 +1,12 @@
+#include "war_resources.h"
+
+#include <assert.h>
+#include <string.h>
+
+#include "alloc.h"
+#include "log.h"
+#include "war_audio.h"
+
 #define WAR_BUILDING_DAMAGE_1_RESOURCE 352
 #define WAR_BUILDING_DAMAGE_2_RESOURCE 353
 #define WAR_BUILDING_COLLAPSE_RESOURCE 356

@@ -1,3 +1,9 @@
+#pragma once
+
+#include <stdarg.h>
+
+#include "war_types.h"
+
 bool isUIEntity(WarEntity* entity);
 
 void clearUIText(WarEntity* uiText);

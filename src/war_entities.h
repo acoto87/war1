@@ -1,3 +1,7 @@
+#pragma once
+
+#include "war_types.h"
+
 #define isEntityOfType(entity, entityType) ((entity)->type == (entityType))
 
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);

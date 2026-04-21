@@ -1,5 +1,7 @@
 #pragma once
 
+#include "war_types.h"
+
 WarMap* createMap(WarContext *context, s32 levelInfoIndex);
 void freeMap(WarContext* context, WarMap* map);
 

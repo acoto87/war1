@@ -1,3 +1,5 @@
+#include "war_entities.h"
+
 bool hasWallPieceAtPosition(WarEntity* wall, s32 x, s32 y)
 {
     WarWallPieceList* pieces = &wall->wall.pieces;

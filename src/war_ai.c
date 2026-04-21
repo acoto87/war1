@@ -1,3 +1,9 @@
+#include "war_ai.h"
+
+#include <assert.h>
+
+#include "alloc.h"
+
 WarAI* createAI(WarContext* context)
 {
     NOT_USED(context);

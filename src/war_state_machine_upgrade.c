@@ -1,3 +1,5 @@
+#include "war_state_machine.h"
+
 WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_UPGRADE);

@@ -1,3 +1,5 @@
+#include "war_entities.h"
+
 bool hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
 {
     WarRuinPieceList* pieces = &ruins->ruin.pieces;

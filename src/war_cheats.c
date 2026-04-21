@@ -1,3 +1,14 @@
+#include "war_cheats.h"
+
+#include <string.h>
+
+#include "str.h"
+#include "war_audio.h"
+#include "war_entities.h"
+#include "war_game.h"
+#include "war_scenes.h"
+#include "war_units.h"
+
 const WarCheatDescriptor cheatDescriptors[] =
 {
     // original cheats

@@ -1,3 +1,7 @@
+#include "war_render.h"
+
+#include <assert.h>
+
 // ---------------------------------------------------------------------------
 // Render state stack (replaces nvgSave/nvgRestore/nvgTranslate/nvgScale/nvgGlobalAlpha)
 // ---------------------------------------------------------------------------

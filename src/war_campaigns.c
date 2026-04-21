@@ -1,16 +1,13 @@
+#include "war_campaigns.h"
+
+#include <assert.h>
+
+#include "war_entities.h"
+#include "war_units.h"
+
 WarLevelResult checkMap01Objectives(WarContext* context);
 WarLevelResult checkMap02Objectives(WarContext* context);
 WarLevelResult checkCustomMapObjectives(WarContext* context);
-
-typedef struct
-{
-    WarCampaignMapType type;
-    WarCheckObjectivesFunc checkObjectivesFunc;
-    const char* objectives;
-    WarAudioId briefingAudioId;
-    const char* briefingText;
-    f32 briefingDuration;
-} WarCampaignMapData;
 
 const WarCampaignMapData campaignsData[] =
 {

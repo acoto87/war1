@@ -1,3 +1,14 @@
+#include "war_sprites.h"
+
+#include <assert.h>
+#include <string.h>
+
+#include "SDL3/SDL.h"
+
+#include "alloc.h"
+#include "war_render.h"
+#include "war_resources.h"
+
 WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
 {
     WarSprite sprite = (WarSprite){0};

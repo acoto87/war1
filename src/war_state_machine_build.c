@@ -1,3 +1,9 @@
+#include "war_state_machine.h"
+
+#include "war_actions.h"
+#include "war_audio.h"
+#include "war_units.h"
+
 WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
 {
     WarState* state = createState(context, entity, WAR_STATE_BUILD);

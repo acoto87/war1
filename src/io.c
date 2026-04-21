@@ -1,5 +1,9 @@
-#include "alloc.h"
 #include "io.h"
+
+#include <string.h>
+
+#include "alloc.h"
+#include "war_math.h"
 
 uint32_t flength(FILE *file)
 {
