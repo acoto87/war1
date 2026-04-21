@@ -137,7 +137,6 @@ int main()
 
 #include "war_log.c"
 #include "str.c"
-#include "war_string.c"
 #include "alloc.c"
 #include "war_file.c"
 #include "war_audio.c"
