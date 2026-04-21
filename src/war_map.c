@@ -292,7 +292,7 @@ bool areAllUnitTilesInState(WarMap* map, WarEntity* entity, WarMapTileState stat
     return areAllTilesInState(map, (s32)position.x, (s32)position.y, unit->sizex, unit->sizey, state);
 }
 
-u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
+WarColor getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
 {
     s32 index = y * MAP_TILES_WIDTH + x;
     u16 tileIndex = levelVisual->levelVisual.data[index];
@@ -317,7 +317,7 @@ u8Color getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x,
     g /= 256;
     b /= 256;
 
-    u8Color color = {0};
+    WarColor color = {0};
     color.r = (u8)r;
     color.g = (u8)g;
     color.b = (u8)b;
@@ -330,7 +330,7 @@ void updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResourc
     WarMap* map = context->map;
     WarSpriteFrame* minimapFrame = &map->minimapSprite.frames[1];
 
-    u8Color color = U8COLOR_BLACK;
+    WarColor color = WAR_COLOR_BLACK;
 
     s32 index = y * MAP_TILES_WIDTH + x;
     WarMapTile* tile = &map->tiles[index];
@@ -614,7 +614,7 @@ void enterMap(WarContext* context)
         {
             for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
             {
-                u8Color color = getMapTileAverage(levelVisual, tileset, x, y);
+                WarColor color = getMapTileAverage(levelVisual, tileset, x, y);
                 s32 index = y * MAP_TILES_WIDTH + x;
                 minimapFrames[1].data[index * 4 + 0] = color.r;
                 minimapFrames[1].data[index * 4 + 1] = color.g;
@@ -2617,7 +2617,7 @@ void renderUnitPaths(WarContext* context)
                         if (k > 0)
                             renderStrokeLine(context, prevPos, pos, getColorFromList(entity->id), 0.5f);
 
-                        renderFillRect(context, rectv(pos, VEC2_ONE), k == index ? u8RgbColor(255, 0, 255) : u8RgbColor(255, 255, 0));
+                        renderFillRect(context, rectv(pos, VEC2_ONE), k == index ? WAR_COLOR_RGB(255, 0, 255) : WAR_COLOR_RGB(255, 255, 0));
 
                         prevPos = pos;
                     }
@@ -2639,13 +2639,13 @@ void renderPassableInfo(WarContext* context)
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderFillRect(context, rectv(pos, size), u8RgbaColor(255, 0, 0, 100));
+                renderFillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 0, 0, 100));
             }
             else if(isDynamic(map->finder, x, y))
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderFillRect(context, rectv(pos, size), u8RgbaColor(255, 150, 100, 100));
+                renderFillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 150, 100, 100));
             }
         }
     }

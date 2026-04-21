@@ -1,3 +1,141 @@
+#include "war_game.h"
+
+static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
+{
+    switch (key)
+    {
+        case SDLK_SPACE: return WAR_KEY_SPACE;
+        case SDLK_APOSTROPHE: return WAR_KEY_APOSTROPHE;
+        case SDLK_COMMA: return WAR_KEY_COMMA;
+        case SDLK_MINUS: return WAR_KEY_MINUS;
+        case SDLK_PERIOD: return WAR_KEY_PERIOD;
+        case SDLK_SLASH: return WAR_KEY_SLASH;
+        case SDLK_0: return WAR_KEY_0;
+        case SDLK_1: return WAR_KEY_1;
+        case SDLK_2: return WAR_KEY_2;
+        case SDLK_3: return WAR_KEY_3;
+        case SDLK_4: return WAR_KEY_4;
+        case SDLK_5: return WAR_KEY_5;
+        case SDLK_6: return WAR_KEY_6;
+        case SDLK_7: return WAR_KEY_7;
+        case SDLK_8: return WAR_KEY_8;
+        case SDLK_9: return WAR_KEY_9;
+        case SDLK_SEMICOLON: return WAR_KEY_SEMICOLON;
+        case SDLK_EQUALS: return WAR_KEY_EQUAL;
+        case SDLK_A: return WAR_KEY_A;
+        case SDLK_B: return WAR_KEY_B;
+        case SDLK_C: return WAR_KEY_C;
+        case SDLK_D: return WAR_KEY_D;
+        case SDLK_E: return WAR_KEY_E;
+        case SDLK_F: return WAR_KEY_F;
+        case SDLK_G: return WAR_KEY_G;
+        case SDLK_H: return WAR_KEY_H;
+        case SDLK_I: return WAR_KEY_I;
+        case SDLK_J: return WAR_KEY_J;
+        case SDLK_K: return WAR_KEY_K;
+        case SDLK_L: return WAR_KEY_L;
+        case SDLK_M: return WAR_KEY_M;
+        case SDLK_N: return WAR_KEY_N;
+        case SDLK_O: return WAR_KEY_O;
+        case SDLK_P: return WAR_KEY_P;
+        case SDLK_Q: return WAR_KEY_Q;
+        case SDLK_R: return WAR_KEY_R;
+        case SDLK_S: return WAR_KEY_S;
+        case SDLK_T: return WAR_KEY_T;
+        case SDLK_U: return WAR_KEY_U;
+        case SDLK_V: return WAR_KEY_V;
+        case SDLK_W: return WAR_KEY_W;
+        case SDLK_X: return WAR_KEY_X;
+        case SDLK_Y: return WAR_KEY_Y;
+        case SDLK_Z: return WAR_KEY_Z;
+        case SDLK_LEFTBRACKET: return WAR_KEY_LEFT_BRACKET;
+        case SDLK_BACKSLASH: return WAR_KEY_BACKSLASH;
+        case SDLK_RIGHTBRACKET: return WAR_KEY_RIGHT_BRACKET;
+        case SDLK_GRAVE: return WAR_KEY_GRAVE_ACCENT;
+        case SDLK_ESCAPE: return WAR_KEY_ESC;
+        case SDLK_RETURN: return WAR_KEY_ENTER;
+        case SDLK_KP_ENTER: return WAR_KEY_ENTER;
+        case SDLK_TAB: return WAR_KEY_TAB;
+        case SDLK_BACKSPACE: return WAR_KEY_BACKSPACE;
+        case SDLK_INSERT: return WAR_KEY_INSERT;
+        case SDLK_DELETE: return WAR_KEY_DELETE;
+        case SDLK_RIGHT: return WAR_KEY_RIGHT;
+        case SDLK_LEFT: return WAR_KEY_LEFT;
+        case SDLK_DOWN: return WAR_KEY_DOWN;
+        case SDLK_UP: return WAR_KEY_UP;
+        case SDLK_PAGEUP: return WAR_KEY_PAGE_UP;
+        case SDLK_PAGEDOWN: return WAR_KEY_PAGE_DOWN;
+        case SDLK_HOME: return WAR_KEY_HOME;
+        case SDLK_END: return WAR_KEY_END;
+        case SDLK_F1: return WAR_KEY_F1;
+        case SDLK_F2: return WAR_KEY_F2;
+        case SDLK_F3: return WAR_KEY_F3;
+        case SDLK_F4: return WAR_KEY_F4;
+        case SDLK_F5: return WAR_KEY_F5;
+        case SDLK_F6: return WAR_KEY_F6;
+        case SDLK_F7: return WAR_KEY_F7;
+        case SDLK_F8: return WAR_KEY_F8;
+        case SDLK_F9: return WAR_KEY_F9;
+        case SDLK_F10: return WAR_KEY_F10;
+        case SDLK_F11: return WAR_KEY_F11;
+        case SDLK_F12: return WAR_KEY_F12;
+        case SDLK_KP_MULTIPLY: return WAR_KEY_ASTERISK;
+        case SDLK_KP_PLUS: return WAR_KEY_PLUS;
+        case SDLK_KP_0: return WAR_KEY_0;
+        case SDLK_KP_1: return WAR_KEY_1;
+        case SDLK_KP_2: return WAR_KEY_2;
+        case SDLK_KP_3: return WAR_KEY_3;
+        case SDLK_KP_4: return WAR_KEY_4;
+        case SDLK_KP_5: return WAR_KEY_5;
+        case SDLK_KP_6: return WAR_KEY_6;
+        case SDLK_KP_7: return WAR_KEY_7;
+        case SDLK_KP_8: return WAR_KEY_8;
+        case SDLK_KP_9: return WAR_KEY_9;
+        case SDLK_KP_MINUS: return WAR_KEY_MINUS;
+        case SDLK_KP_PERIOD: return WAR_KEY_PERIOD;
+        case SDLK_KP_DIVIDE: return WAR_KEY_SLASH;
+        case SDLK_KP_EQUALS: return WAR_KEY_EQUAL;
+        case SDLK_LSHIFT:
+        case SDLK_RSHIFT: return WAR_KEY_SHIFT;
+        case SDLK_LCTRL:
+        case SDLK_RCTRL: return WAR_KEY_CTRL;
+        case SDLK_LALT:
+        case SDLK_RALT: return WAR_KEY_ALT;
+        default: return WAR_KEY_NONE;
+    }
+}
+
+static void appendCheatTextInput(WarContext* context, const char* text)
+{
+    WarScene* scene = context->scene;
+    WarMap* map = context->map;
+    assert(scene || map);
+
+    WarCheatStatus* cheatStatus = scene
+        ? &scene->cheatStatus : &map->cheatStatus;
+
+    if (!cheatStatus->enabled || !cheatStatus->visible)
+    {
+        return;
+    }
+
+    const char* cursor = text;
+    size_t remaining = strlen(text);
+    while (remaining > 0)
+    {
+        Uint32 codepoint = SDL_StepUTF8(&cursor, &remaining);
+        if (codepoint >= 32 && codepoint <= 126)
+        {
+            s32 length = (s32)strlen(cheatStatus->text);
+            if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
+            {
+                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+                cheatStatus->position++;
+            }
+        }
+    }
+}
+
 bool initGame(WarContext* context)
 {
     context->globalScale = 3;
@@ -233,142 +371,6 @@ void beginInputFrame(WarContext* context)
     }
 
     input->wasDragging = false;
-}
-
-static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
-{
-    switch (key)
-    {
-        case SDLK_SPACE: return WAR_KEY_SPACE;
-        case SDLK_APOSTROPHE: return WAR_KEY_APOSTROPHE;
-        case SDLK_COMMA: return WAR_KEY_COMMA;
-        case SDLK_MINUS: return WAR_KEY_MINUS;
-        case SDLK_PERIOD: return WAR_KEY_PERIOD;
-        case SDLK_SLASH: return WAR_KEY_SLASH;
-        case SDLK_0: return WAR_KEY_0;
-        case SDLK_1: return WAR_KEY_1;
-        case SDLK_2: return WAR_KEY_2;
-        case SDLK_3: return WAR_KEY_3;
-        case SDLK_4: return WAR_KEY_4;
-        case SDLK_5: return WAR_KEY_5;
-        case SDLK_6: return WAR_KEY_6;
-        case SDLK_7: return WAR_KEY_7;
-        case SDLK_8: return WAR_KEY_8;
-        case SDLK_9: return WAR_KEY_9;
-        case SDLK_SEMICOLON: return WAR_KEY_SEMICOLON;
-        case SDLK_EQUALS: return WAR_KEY_EQUAL;
-        case SDLK_A: return WAR_KEY_A;
-        case SDLK_B: return WAR_KEY_B;
-        case SDLK_C: return WAR_KEY_C;
-        case SDLK_D: return WAR_KEY_D;
-        case SDLK_E: return WAR_KEY_E;
-        case SDLK_F: return WAR_KEY_F;
-        case SDLK_G: return WAR_KEY_G;
-        case SDLK_H: return WAR_KEY_H;
-        case SDLK_I: return WAR_KEY_I;
-        case SDLK_J: return WAR_KEY_J;
-        case SDLK_K: return WAR_KEY_K;
-        case SDLK_L: return WAR_KEY_L;
-        case SDLK_M: return WAR_KEY_M;
-        case SDLK_N: return WAR_KEY_N;
-        case SDLK_O: return WAR_KEY_O;
-        case SDLK_P: return WAR_KEY_P;
-        case SDLK_Q: return WAR_KEY_Q;
-        case SDLK_R: return WAR_KEY_R;
-        case SDLK_S: return WAR_KEY_S;
-        case SDLK_T: return WAR_KEY_T;
-        case SDLK_U: return WAR_KEY_U;
-        case SDLK_V: return WAR_KEY_V;
-        case SDLK_W: return WAR_KEY_W;
-        case SDLK_X: return WAR_KEY_X;
-        case SDLK_Y: return WAR_KEY_Y;
-        case SDLK_Z: return WAR_KEY_Z;
-        case SDLK_LEFTBRACKET: return WAR_KEY_LEFT_BRACKET;
-        case SDLK_BACKSLASH: return WAR_KEY_BACKSLASH;
-        case SDLK_RIGHTBRACKET: return WAR_KEY_RIGHT_BRACKET;
-        case SDLK_GRAVE: return WAR_KEY_GRAVE_ACCENT;
-        case SDLK_ESCAPE: return WAR_KEY_ESC;
-        case SDLK_RETURN: return WAR_KEY_ENTER;
-        case SDLK_KP_ENTER: return WAR_KEY_ENTER;
-        case SDLK_TAB: return WAR_KEY_TAB;
-        case SDLK_BACKSPACE: return WAR_KEY_BACKSPACE;
-        case SDLK_INSERT: return WAR_KEY_INSERT;
-        case SDLK_DELETE: return WAR_KEY_DELETE;
-        case SDLK_RIGHT: return WAR_KEY_RIGHT;
-        case SDLK_LEFT: return WAR_KEY_LEFT;
-        case SDLK_DOWN: return WAR_KEY_DOWN;
-        case SDLK_UP: return WAR_KEY_UP;
-        case SDLK_PAGEUP: return WAR_KEY_PAGE_UP;
-        case SDLK_PAGEDOWN: return WAR_KEY_PAGE_DOWN;
-        case SDLK_HOME: return WAR_KEY_HOME;
-        case SDLK_END: return WAR_KEY_END;
-        case SDLK_F1: return WAR_KEY_F1;
-        case SDLK_F2: return WAR_KEY_F2;
-        case SDLK_F3: return WAR_KEY_F3;
-        case SDLK_F4: return WAR_KEY_F4;
-        case SDLK_F5: return WAR_KEY_F5;
-        case SDLK_F6: return WAR_KEY_F6;
-        case SDLK_F7: return WAR_KEY_F7;
-        case SDLK_F8: return WAR_KEY_F8;
-        case SDLK_F9: return WAR_KEY_F9;
-        case SDLK_F10: return WAR_KEY_F10;
-        case SDLK_F11: return WAR_KEY_F11;
-        case SDLK_F12: return WAR_KEY_F12;
-        case SDLK_KP_MULTIPLY: return WAR_KEY_ASTERISK;
-        case SDLK_KP_PLUS: return WAR_KEY_PLUS;
-        case SDLK_KP_0: return WAR_KEY_0;
-        case SDLK_KP_1: return WAR_KEY_1;
-        case SDLK_KP_2: return WAR_KEY_2;
-        case SDLK_KP_3: return WAR_KEY_3;
-        case SDLK_KP_4: return WAR_KEY_4;
-        case SDLK_KP_5: return WAR_KEY_5;
-        case SDLK_KP_6: return WAR_KEY_6;
-        case SDLK_KP_7: return WAR_KEY_7;
-        case SDLK_KP_8: return WAR_KEY_8;
-        case SDLK_KP_9: return WAR_KEY_9;
-        case SDLK_KP_MINUS: return WAR_KEY_MINUS;
-        case SDLK_KP_PERIOD: return WAR_KEY_PERIOD;
-        case SDLK_KP_DIVIDE: return WAR_KEY_SLASH;
-        case SDLK_KP_EQUALS: return WAR_KEY_EQUAL;
-        case SDLK_LSHIFT:
-        case SDLK_RSHIFT: return WAR_KEY_SHIFT;
-        case SDLK_LCTRL:
-        case SDLK_RCTRL: return WAR_KEY_CTRL;
-        case SDLK_LALT:
-        case SDLK_RALT: return WAR_KEY_ALT;
-        default: return WAR_KEY_NONE;
-    }
-}
-
-static void appendCheatTextInput(WarContext* context, const char* text)
-{
-    WarScene* scene = context->scene;
-    WarMap* map = context->map;
-    assert(scene || map);
-
-    WarCheatStatus* cheatStatus = scene
-        ? &scene->cheatStatus : &map->cheatStatus;
-
-    if (!cheatStatus->enabled || !cheatStatus->visible)
-    {
-        return;
-    }
-
-    const char* cursor = text;
-    size_t remaining = strlen(text);
-    while (remaining > 0)
-    {
-        Uint32 codepoint = SDL_StepUTF8(&cursor, &remaining);
-        if (codepoint >= 32 && codepoint <= 126)
-        {
-            s32 length = (s32)strlen(cheatStatus->text);
-            if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
-            {
-                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
-                cheatStatus->position++;
-            }
-        }
-    }
 }
 
 void processGameEvent(WarContext* context, const SDL_Event* event)

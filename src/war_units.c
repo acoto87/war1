@@ -78,7 +78,7 @@ bool displayUnitOnMinimap(WarEntity* entity)
     return true;
 }
 
-u8Color getUnitColorOnMinimap(WarEntity* entity)
+WarColor getUnitColorOnMinimap(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -100,7 +100,7 @@ u8Color getUnitColorOnMinimap(WarEntity* entity)
         r = 199; g = 0; b = 0;
     }
 
-    return u8RgbColor(r, g, b);
+    return WAR_COLOR_RGB(r, g, b);
 }
 
 s32 getTotalNumberOfUnits(WarContext* context, u8 player)

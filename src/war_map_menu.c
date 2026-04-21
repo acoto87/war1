@@ -50,7 +50,7 @@ void createMenu(WarContext* context)
     uiEntity = createUIRect(
         context, "rectMenuBackdrop",
         VEC2_ZERO, vec2i(context->windowWidth, context->windowHeight),
-        u8RgbaColor(0, 0, 0, 150));
+        WAR_COLOR_RGBA(0, 0, 0, 150));
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIImage(context, "imgMenuBackground", imageResourceRefFromPlayer(player, 233, 234), menuPanel);

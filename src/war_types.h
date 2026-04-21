@@ -1510,8 +1510,8 @@ typedef struct
     s32 fontIndex;
     f32 fontSize;
     f32 lineHeight;
-    u8Color fontColor;
-    u8Color highlightColor;
+    WarColor fontColor;
+    WarColor highlightColor;
     s32 highlightIndex;
     s32 highlightCount;
     vec2 boundings;
@@ -1527,7 +1527,7 @@ typedef struct
 {
     bool enabled;
     vec2 size;
-    u8Color color;
+    WarColor color;
 } WarRectComponent;
 
 typedef void (*WarClickHandler)(struct _WarContext* context, struct _WarEntity* entity);

@@ -38,7 +38,7 @@ void setUIButtonHotKeyByName(WarContext* context, const char* name, WarKeys key)
 void setUIEntityStatusByName(WarContext* context, const char* name, bool enabled);
 
 WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 fontSize, const char* text, vec2 position);
-WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, u8Color color);
+WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, WarColor color);
 WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef spriteResourceRef, vec2 position);
 WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, vec2 position);
 WarEntity* createUITextButton(WarContext* context,

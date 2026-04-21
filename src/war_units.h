@@ -1931,7 +1931,7 @@ s32 getUnitSightRange(WarEntity* entity)
 }
 
 bool displayUnitOnMinimap(WarEntity* entity);
-u8Color getUnitColorOnMinimap(WarEntity* entity);
+WarColor getUnitColorOnMinimap(WarEntity* entity);
 
 s32 getTotalNumberOfDudes(WarContext* context, u8 player);
 s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt);

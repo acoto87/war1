@@ -84,18 +84,18 @@ void createCheatsPanel(WarContext* context)
     WarEntity* uiEntity;
 
     vec2 cheatSize = vec2f((f32)context->originalWindowWidth, 12.0f);
-    u8Color cheatBackgroundColor = u8RgbaColor(100, 100, 100, 160);
+    WarColor cheatBackgroundColor = WAR_COLOR_RGBA(100, 100, 100, 160);
     uiEntity = createUIRect(context, "panelCheat", VEC2_ZERO, cheatSize, cheatBackgroundColor);
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIText(context, "txtCheat", 0, 6, NULL, vec2i(2, 4));
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIRect(context, "cursorCheat", vec2i(2, 3), vec2i(1, 7), U8COLOR_WHITE);
+    uiEntity = createUIRect(context, "cursorCheat", vec2i(2, 3), vec2i(1, 7), WAR_COLOR_WHITE);
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIText(context, "txtCheatFeedbackText", 1, 8, NULL, vec2i(10, 20));
-    setUITextColor(uiEntity, U8COLOR_YELLOW);
+    setUITextColor(uiEntity, WAR_COLOR_YELLOW);
     setUIEntityStatus(uiEntity, false);
 }
 

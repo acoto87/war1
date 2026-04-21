@@ -47,10 +47,10 @@ void createMapUI(WarContext* context)
     createUIImage(context, "imgStatusGold", imageResourceRef(406), vec2Addv(bottomPanel, vec2i(200, 5)));
     createUIText(context, "txtStatusWood", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(179, 5)));
     createUIText(context, "txtStatusGold", 0, 6, NULL, vec2Addv(bottomPanel, vec2i(218, 5)));
-    createUIRect(context, "txtStatusCursor", vec2Addv(bottomPanel, vec2i(2, 4)), vec2i(1, 7), U8COLOR_WHITE);
+    createUIRect(context, "txtStatusCursor", vec2Addv(bottomPanel, vec2i(2, 4)), vec2i(1, 7), WAR_COLOR_WHITE);
 
     uiEntity = createUIText(context, "txtCheatFeedbackText", 1, 8, NULL, vec2Addv(bottomPanel, vec2i(15, -20)));
-    setUITextColor(uiEntity, U8COLOR_YELLOW);
+    setUITextColor(uiEntity, WAR_COLOR_YELLOW);
     setUIEntityStatus(uiEntity, false);
 
     // selected unit(s) info
@@ -62,13 +62,13 @@ void createMapUI(WarContext* context)
     createUIImage(context, "imgUnitPortrait4", portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 23)));
     createUIImage(context, "imgUnitInfoLife", imageResourceRefFromPlayer(player, 360, 359), vec2Addv(leftBottomPanel, vec2i(3, 16)));
     createUIText(context, "txtUnitName", 0, 6, NULL, vec2Addv(leftBottomPanel, vec2i(6, 26)));
-    createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), U8COLOR_GREEN);
-    createUIRect(context, "rectLifeBar1", vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), U8COLOR_GREEN);
-    createUIRect(context, "rectLifeBar2", vec2Addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), U8COLOR_GREEN);
-    createUIRect(context, "rectLifeBar3", vec2Addv(leftBottomPanel, vec2i(4, 39)), vec2i(27, 3), U8COLOR_GREEN);
-    createUIRect(context, "rectLifeBar4", vec2Addv(leftBottomPanel, vec2i(38, 39)), vec2i(27, 3), U8COLOR_GREEN);
-    createUIRect(context, "rectMagicBar", vec2Addv(leftBottomPanel, vec2i(37, 9)), vec2i(27, 3), U8COLOR_GREEN);
-    createUIRect(context, "rectPercentBar", vec2Addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), U8COLOR_GREEN);
+    createUIRect(context, "rectLifeBar0", vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), WAR_COLOR_GREEN);
+    createUIRect(context, "rectLifeBar1", vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), WAR_COLOR_GREEN);
+    createUIRect(context, "rectLifeBar2", vec2Addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), WAR_COLOR_GREEN);
+    createUIRect(context, "rectLifeBar3", vec2Addv(leftBottomPanel, vec2i(4, 39)), vec2i(27, 3), WAR_COLOR_GREEN);
+    createUIRect(context, "rectLifeBar4", vec2Addv(leftBottomPanel, vec2i(38, 39)), vec2i(27, 3), WAR_COLOR_GREEN);
+    createUIRect(context, "rectMagicBar", vec2Addv(leftBottomPanel, vec2i(37, 9)), vec2i(27, 3), WAR_COLOR_GREEN);
+    createUIRect(context, "rectPercentBar", vec2Addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), WAR_COLOR_GREEN);
     createUIImage(context, "rectPercentText", imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
 
     // texts in the command area
@@ -339,11 +339,11 @@ void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
     f32 hpPercent = percentabf01(unit->hp, unit->maxhp);
 
     if (hpPercent <= LIFE_BAR_RED_THRESHOLD)
-        rectLifeBar->rect.color = U8COLOR_RED;
+        rectLifeBar->rect.color = WAR_COLOR_RED;
     else if (hpPercent <= LIFE_BAR_YELLOW_THRESHOLD)
-        rectLifeBar->rect.color = U8COLOR_YELLOW;
+        rectLifeBar->rect.color = WAR_COLOR_YELLOW;
     else
-        rectLifeBar->rect.color = U8COLOR_GREEN;
+        rectLifeBar->rect.color = WAR_COLOR_GREEN;
 
     setUIRectWidth(rectLifeBar, (s32)(hpPercent * LIFE_BAR_WIDTH_PX));
 }
@@ -414,7 +414,7 @@ void renderCommand(WarContext* context)
             WarUnitType buildingToBuild = command->build.buildingToBuild;
             WarUnitData data = getUnitData(buildingToBuild);
 
-            u8Color fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
+            WarColor fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);
@@ -432,7 +432,7 @@ void renderCommand(WarContext* context)
             vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
             position = vec2MapToTileCoordinates(position);
 
-            u8Color fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, 1, 1)
+            WarColor fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, 1, 1)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = vec2TileToMapCoordinates(position, false);

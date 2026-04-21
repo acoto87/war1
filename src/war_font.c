@@ -208,23 +208,23 @@ WarFontData fontsData[2] =
     }
 };
 
-#define FONT_NORMAL_COLOR u8RgbaColor(239, 255, 219, 255)
-#define FONT_HIGHLIGHT_COLOR u8RgbaColor(255, 227, 73, 255)
+#define FONT_NORMAL_COLOR WAR_COLOR_RGBA(239, 255, 219, 255)
+#define FONT_HIGHLIGHT_COLOR WAR_COLOR_RGBA(255, 227, 73, 255)
 #define NO_HIGHLIGHT -1
 #define ALL_HIGHLIGHT -2
 #define MAX_LINES 48
 #define TAB_WIDTH 2
 
 // ---------------------------------------------------------------------------
-// WarFontParams — replaces NVGfontParams, uses u8Color and WarTextAlignment directly
+// WarFontParams — replaces NVGfontParams, uses WarColor and WarTextAlignment directly
 // ---------------------------------------------------------------------------
 typedef struct
 {
     s32 fontIndex;
     f32 fontSize;
     f32 lineHeight;
-    u8Color fontColor;
-    u8Color highlightColor;
+    WarColor fontColor;
+    WarColor highlightColor;
     s32 highlightIndex;
     s32 highlightCount;
     vec2 boundings;
@@ -525,7 +525,7 @@ vec2 measureMultiSpriteText(const char* text, f32 width, WarFontParams params)
 f32 renderSingleSpriteTextSpan(WarContext* context, const char* text,
                                s32 index, s32 count,
                                f32 x, f32 y,
-                               u8Color fontColor,
+                               WarColor fontColor,
                                WarSprite fontSprite,
                                WarFontData fontData,
                                vec2 boundings,
@@ -643,7 +643,7 @@ void renderSingleSpriteText(WarContext* context, const char* text, f32 x, f32 y,
     {
         // No highlight, highlightIndex = -1
         // All highlight, highlightIndex = -2
-        u8Color fontColor = params.highlightIndex == ALL_HIGHLIGHT
+        WarColor fontColor = params.highlightIndex == ALL_HIGHLIGHT
             ? params.highlightColor : params.fontColor;
 
         renderSingleSpriteTextSpan(context, text,
@@ -762,7 +762,7 @@ void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, 
         {
             // No highlight, highlightIndex = -1
             // All highlight, highlightIndex = -2
-            u8Color fontColor = params.highlightIndex == ALL_HIGHLIGHT
+            WarColor fontColor = params.highlightIndex == ALL_HIGHLIGHT
                 ? params.highlightColor : params.fontColor;
 
             renderSingleSpriteTextSpan(context, lines[i].start,

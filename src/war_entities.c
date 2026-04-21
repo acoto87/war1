@@ -250,7 +250,7 @@ void removeTextComponent(WarContext* context, WarEntity* entity)
     entity->text = (WarTextComponent){0};
 }
 
-void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, u8Color color)
+void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarColor color)
 {
     NOT_USED(context);
 
@@ -1172,9 +1172,9 @@ void renderUnit(WarContext* context, WarEntity* entity)
     renderTranslate(context, position.x, position.y);
 
 #ifdef DEBUG_RENDER_UNIT_INFO
-    renderFillRect(context, getUnitFrameRect(entity), u8RgbaColor(0, 0, 128, 128));
+    renderFillRect(context, getUnitFrameRect(entity), WAR_COLOR_RGBA(0, 0, 128, 128));
     renderFillRect(context, getUnitSpriteRect(entity), WAR_COLOR_GRAY_TRANSPARENT);
-    renderFillRect(context, rectv(getUnitSpriteCenter(entity), VEC2_ONE), u8RgbColor(255, 0, 0));
+    renderFillRect(context, rectv(getUnitSpriteCenter(entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
 #endif
 
 #ifdef DEBUG_RENDER_UNIT_STATS
@@ -1409,8 +1409,8 @@ void renderProjectile(WarContext* context, WarEntity* entity)
             renderSave(context);
 
             renderStrokeLine(context, projectile->origin, projectile->target, getColorFromList(entity->id), 0.5f);
-            renderFillRect(context, rectv(projectile->origin, VEC2_ONE), u8RgbColor(255, 0, 255));
-            renderFillRect(context, rectv(projectile->target, VEC2_ONE), u8RgbColor(255, 0, 255));
+            renderFillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+            renderFillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
 
             renderRestore(context);
         }
@@ -1476,7 +1476,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
                 s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                 s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
 
-                u8Color color = getUnitColorOnMinimap(unitEntity);
+                WarColor color = getUnitColorOnMinimap(unitEntity);
 
                 for(s32 y = 0; y < unit->sizey; y++)
                 {
@@ -1662,7 +1662,7 @@ void renderUnitSelection(WarContext* context)
                 renderTranslate(context, position.x, position.y);
 
                 rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
-                u8Color color = WAR_COLOR_WHITE_SELECTION;
+                WarColor color = WAR_COLOR_WHITE_SELECTION;
                 if (isFriendlyUnit(context, entity))
                     color = WAR_COLOR_GREEN_SELECTION;
                 else if (isEnemyUnit(context, entity))
