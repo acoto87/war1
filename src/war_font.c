@@ -91,7 +91,7 @@ WarFontData fontsData[2] =
             { 136, 288, 40, 48 }, // p
             { 176, 288, 40, 48 }, // q
             { 216, 288, 40, 48 }, // r
-            { 256, 288, 40, 48 }, // sFONT_HORIZONTAL_GAP_PX
+            { 256, 288, 40, 48 }, // s
             { 296, 288, 32, 48 }, // t
             { 328, 288, 40, 48 }, // u
             { 360, 288, 48, 48 }, // v
@@ -215,54 +215,28 @@ WarFontData fontsData[2] =
 #define MAX_LINES 48
 #define TAB_WIDTH 2
 
-#define u8ColorToNVGcolor(color) nvgRGBA((color).r, (color).g, (color).b, (color).a)
-
-enum NVGalign textAlignToNVGalign(WarTextAlignment align)
+// ---------------------------------------------------------------------------
+// WarFontParams — replaces NVGfontParams, uses u8Color and WarTextAlignment directly
+// ---------------------------------------------------------------------------
+typedef struct
 {
-    switch (align)
-    {
-        case WAR_TEXT_ALIGN_LEFT:   return NVG_ALIGN_LEFT;
-        case WAR_TEXT_ALIGN_CENTER: return NVG_ALIGN_CENTER;
-        case WAR_TEXT_ALIGN_RIGHT:  return NVG_ALIGN_RIGHT;
-        case WAR_TEXT_ALIGN_TOP:    return NVG_ALIGN_TOP;
-        case WAR_TEXT_ALIGN_MIDDLE: return NVG_ALIGN_MIDDLE;
-        case WAR_TEXT_ALIGN_BOTTOM: return NVG_ALIGN_BOTTOM;
-        default:
-        {
-            logError("Invalid alignment value: %d. Defaulting to %d\n", align, NVG_ALIGN_LEFT);
-            return NVG_ALIGN_LEFT;
-        }
-    }
-}
+    s32 fontIndex;
+    f32 fontSize;
+    f32 lineHeight;
+    u8Color fontColor;
+    u8Color highlightColor;
+    s32 highlightIndex;
+    s32 highlightCount;
+    vec2 boundings;
+    WarTextAlignment horizontalAlign;
+    WarTextAlignment verticalAlign;
+    WarTextAlignment lineAlign;
+    WarTextWrapping wrapping;
+    WarTextTrimming trimming;
 
-enum NVGwrap textWrappingToNVGwrap(WarTextWrapping wrap)
-{
-    switch (wrap)
-    {
-        case WAR_TEXT_WRAP_NONE: return NVG_WRAP_NONE;
-        case WAR_TEXT_WRAP_CHAR: return NVG_WRAP_WORD;
-        default:
-        {
-            logError("Invalid wrapping value: %d. Defaulting to %d\n", wrap, NVG_WRAP_NONE);
-            return NVG_WRAP_NONE;
-        }
-    }
-}
-
-enum NVGtrim textTrimmingToNVGtrim(WarTextTrimming trim)
-{
-    switch (trim)
-    {
-        case WAR_TEXT_TRIM_NONE: return NVG_TRIM_NONE;
-        case WAR_TEXT_TRIM_SPACES: return NVG_TRIM_SPACES;
-        case WAR_TEXT_TRIM_ALL: return NVG_TRIM_ALL;
-        default:
-        {
-            logError("Invalid trimming value: %d. Defaulting to %d\n", trim, NVG_TRIM_NONE);
-            return NVG_TRIM_NONE;
-        }
-    }
-}
+    WarSprite fontSprite;
+    WarFontData fontData;
+} WarFontParams;
 
 #define getCharIndex(c) ((s32)((c) > 0 ? (c) - 32 : 0))
 
@@ -281,23 +255,23 @@ WarSprite loadFontSprite(WarContext* context, const char* fontPath)
     return sprite;
 }
 
-vec2 getAlignmentOffset(enum NVGalign horizontalAlign, enum NVGalign verticalAlign, vec2 boundings, vec2 textSize)
+vec2 getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment verticalAlign, vec2 boundings, vec2 textSize)
 {
     vec2 offset = VEC2_ZERO;
 
     switch (horizontalAlign)
     {
-        case NVG_ALIGN_LEFT:
+        case WAR_TEXT_ALIGN_LEFT:
         {
             // nothing here
             break;
         }
-        case NVG_ALIGN_CENTER:
+        case WAR_TEXT_ALIGN_CENTER:
         {
             offset.x = ceilf(halff(boundings.x - textSize.x));
             break;
         }
-        case NVG_ALIGN_RIGHT:
+        case WAR_TEXT_ALIGN_RIGHT:
         {
             offset.x = ceilf(boundings.x - textSize.x);
             break;
@@ -311,17 +285,17 @@ vec2 getAlignmentOffset(enum NVGalign horizontalAlign, enum NVGalign verticalAli
 
     switch (verticalAlign)
     {
-        case NVG_ALIGN_TOP:
+        case WAR_TEXT_ALIGN_TOP:
         {
             // nothing here
             break;
         }
-        case NVG_ALIGN_MIDDLE:
+        case WAR_TEXT_ALIGN_MIDDLE:
         {
             offset.y = ceilf(halff(boundings.y) - halff(textSize.y));
             break;
         }
-        case NVG_ALIGN_BOTTOM:
+        case WAR_TEXT_ALIGN_BOTTOM:
         {
             offset.y = ceilf(boundings.y - textSize.y);
             break;
@@ -336,23 +310,23 @@ vec2 getAlignmentOffset(enum NVGalign horizontalAlign, enum NVGalign verticalAli
     return offset;
 }
 
-f32 getLineAlignmentOffset(enum NVGalign lineAlign, f32 width, f32 lineWidth)
+f32 getLineAlignmentOffset(WarTextAlignment lineAlign, f32 width, f32 lineWidth)
 {
     f32 offset = 0;
 
     switch (lineAlign)
     {
-        case NVG_ALIGN_LEFT:
+        case WAR_TEXT_ALIGN_LEFT:
         {
             // nothing here
             break;
         }
-        case NVG_ALIGN_CENTER:
+        case WAR_TEXT_ALIGN_CENTER:
         {
             offset = ceilf(halff(width - lineWidth));
             break;
         }
-        case NVG_ALIGN_RIGHT:
+        case WAR_TEXT_ALIGN_RIGHT:
         {
             offset = ceilf(width - lineWidth);
             break;
@@ -372,12 +346,12 @@ typedef struct
     const char* start;
     const char* end;
     f32 width;
-} NVGTextSpan;
+} WarTextSpan;
 
-s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f32 width, NVGfontParams params)
+s32 splitTextIntoLines(const char* text, s32 maxLines, WarTextSpan lines[], f32 width, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
-    bool wrap = params.wrapping == NVG_WRAP_WORD;
+    bool wrap = params.wrapping == WAR_TEXT_WRAP_CHAR;
     f32 x = 0;
     s32 k = 0;
 
@@ -447,7 +421,7 @@ s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f
     }
 
     // trim start and end spaces on lines
-    if (params.trimming != NVG_TRIM_NONE)
+    if (params.trimming != WAR_TEXT_TRIM_NONE)
     {
         rect whiteSpaceData = params.fontData.data[getCharIndex(' ')];
         f32 whiteSpaceWidth = (whiteSpaceData.width + params.fontData.advance) * scale;
@@ -456,12 +430,12 @@ s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f
         {
             while (true)
             {
-                if (lines[i].start[0] == ' ' && params.trimming >= NVG_TRIM_SPACES)
+                if (lines[i].start[0] == ' ' && params.trimming >= WAR_TEXT_TRIM_SPACES)
                 {
                     lines[i].width -= whiteSpaceWidth;
                     lines[i].start++;
                 }
-                else if (lines[i].start[i] == '\t' && params.trimming >= NVG_TRIM_ALL)
+                else if (lines[i].start[i] == '\t' && params.trimming >= WAR_TEXT_TRIM_ALL)
                 {
                     lines[i].width -= TAB_WIDTH * whiteSpaceWidth;
                     lines[i].start++;
@@ -472,12 +446,12 @@ s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f
 
             while (true)
             {
-                if (lines[i].end[-1] == ' ' && params.trimming >= NVG_TRIM_SPACES)
+                if (lines[i].end[-1] == ' ' && params.trimming >= WAR_TEXT_TRIM_SPACES)
                 {
                     lines[i].width -= whiteSpaceWidth;
                     lines[i].end--;
                 }
-                else if (lines[i].end[-1] == '\t' && params.trimming >= NVG_TRIM_ALL)
+                else if (lines[i].end[-1] == '\t' && params.trimming >= WAR_TEXT_TRIM_ALL)
                 {
                     lines[i].width -= TAB_WIDTH * whiteSpaceWidth;
                     lines[i].end--;
@@ -491,7 +465,7 @@ s32 nvgSplitTextIntoLines(const char* text, s32 maxLines, NVGTextSpan lines[], f
     return k;
 }
 
-vec2 nvgMeasureSingleSpriteText(const char* text, s32 length, NVGfontParams params)
+vec2 measureSingleSpriteText(const char* text, s32 length, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
 
@@ -525,13 +499,15 @@ vec2 nvgMeasureSingleSpriteText(const char* text, s32 length, NVGfontParams para
     return size;
 }
 
-vec2 nvgMeasureMultiSpriteText(const char* text, f32 width, NVGfontParams params)
+vec2 measureMultiSpriteText(const char* text, f32 width, WarFontParams params)
 {
+    NOT_USED(width);
+
     f32 scale = params.fontSize / params.fontData.lineHeight;
     f32 lineHeight = params.lineHeight > 0 ? params.lineHeight : params.fontData.lineHeight;
 
-    NVGTextSpan lines[MAX_LINES];
-    s32 linesCount = nvgSplitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
+    WarTextSpan lines[MAX_LINES];
+    s32 linesCount = splitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
 
     vec2 size = VEC2_ZERO;
 
@@ -544,21 +520,24 @@ vec2 nvgMeasureMultiSpriteText(const char* text, f32 width, NVGfontParams params
     return size;
 }
 
-f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text,
-                            s32 index, s32 count,
-                            f32 x, f32 y,
-                            NVGcolor fontColor,
-                            WarSprite fontSprite,
-                            WarFontData fontData,
-                            vec2 boundings,
-                            f32 scale)
+// Render a span of characters from the font sprite.
+// Uses SDL_SetTextureColorMod for tinting instead of nvgFillColor.
+f32 renderSingleSpriteTextSpan(WarContext* context, const char* text,
+                               s32 index, s32 count,
+                               f32 x, f32 y,
+                               u8Color fontColor,
+                               WarSprite fontSprite,
+                               WarFontData fontData,
+                               vec2 boundings,
+                               f32 scale)
 {
     if (count > 0)
     {
-        nvgSave(gfx);
-        nvgFillColor(gfx, fontColor);
+        renderSave(context);
 
-        NVGimageBatch* batch = nvgBeginImageBatch(gfx, fontSprite.image, count);
+        // Apply font color tint to the texture
+        SDL_SetTextureColorMod(fontSprite.texture, fontColor.r, fontColor.g, fontColor.b);
+        SDL_SetTextureAlphaMod(fontSprite.texture, fontColor.a);
 
         for (s32 i = 0; i < count; i++)
         {
@@ -586,50 +565,53 @@ f32 nvgSingleSpriteTextSpan(NVGcontext* gfx, const char* text,
                 rect rd = rectf(x, y, rs.width, rs.height);
 
 #ifdef DEBUG_RENDER_FONT
-                nvgFillRect(gfx, rd, NVG_GREEN_SELECTION);
+                renderFillRect(context, rd, WAR_COLOR_GREEN_SELECTION);
 #endif
 
                 if (c != ' ')
                 {
-                    nvgRenderBatchImage(gfx, batch, rs, rd, VEC2_ONE);
+                    renderSubImage(context, fontSprite.texture, rs, rd, VEC2_ONE);
                 }
 
                 x += rs.width + fontData.advance;
             }
         }
 
-        nvgEndImageBatch(gfx, batch);
-        nvgRestore(gfx);
+        // Reset texture color mod to white
+        SDL_SetTextureColorMod(fontSprite.texture, 255, 255, 255);
+        SDL_SetTextureAlphaMod(fontSprite.texture, 255);
+
+        renderRestore(context);
     }
 
     return x;
 }
 
-void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
+void renderSingleSpriteText(WarContext* context, const char* text, f32 x, f32 y, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
-    vec2 textSize = nvgMeasureSingleSpriteText(text, -1, params);
-    s32 length = strlen(text);
+    vec2 textSize = measureSingleSpriteText(text, -1, params);
+    s32 length = (s32)strlen(text);
 
-    nvgSave(gfx);
-    nvgTranslate(gfx, x, y);
+    renderSave(context);
+    renderTranslate(context, x, y);
 
     if (!vec2IsZero(params.boundings))
     {
         vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
-        nvgTranslate(gfx, textOffset.x, textOffset.y);
+        renderTranslate(context, textOffset.x, textOffset.y);
     }
 
-    nvgScale(gfx, scale, scale);
+    renderScale(context, scale, scale);
 
 #ifdef DEBUG_RENDER_FONT
     rect outline = rectf(0, 0, textSize.x / scale, 1.5f);
-    nvgStrokeRect(gfx, outline, NVG_GREEN_SELECTION, 3);
+    renderStrokeRect(context, outline, WAR_COLOR_GREEN_SELECTION, 3);
 #endif
 
     if (params.highlightIndex >= 0)
     {
-        x = nvgSingleSpriteTextSpan(gfx, text,
+        x = renderSingleSpriteTextSpan(context, text,
                                     0, params.highlightIndex,
                                     0, 0,
                                     params.fontColor,
@@ -638,7 +620,7 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
                                     params.boundings,
                                     scale);
 
-        x = nvgSingleSpriteTextSpan(gfx, text,
+        x = renderSingleSpriteTextSpan(context, text,
                                     params.highlightIndex, params.highlightCount,
                                     x, 0,
                                     params.highlightColor,
@@ -647,7 +629,7 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
                                     params.boundings,
                                     scale);
 
-        x = nvgSingleSpriteTextSpan(gfx, text,
+        x = renderSingleSpriteTextSpan(context, text,
                                     params.highlightIndex + params.highlightCount,
                                     length - params.highlightIndex - params.highlightCount,
                                     x, 0,
@@ -661,10 +643,10 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
     {
         // No highlight, highlightIndex = -1
         // All highlight, highlightIndex = -2
-        NVGcolor fontColor = params.highlightIndex == ALL_HIGHLIGHT
+        u8Color fontColor = params.highlightIndex == ALL_HIGHLIGHT
             ? params.highlightColor : params.fontColor;
 
-        nvgSingleSpriteTextSpan(gfx, text,
+        renderSingleSpriteTextSpan(context, text,
                                 0, length,
                                 0, 0,
                                 fontColor,
@@ -674,28 +656,28 @@ void nvgSingleSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfon
                                 scale);
     }
 
-    nvgRestore(gfx);
+    renderRestore(context);
 }
 
-void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfontParams params)
+void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
     f32 lineHeight = params.lineHeight > 0 ? params.lineHeight : params.fontData.lineHeight;
 
-    NVGTextSpan lines[MAX_LINES];
-    s32 linesCount = nvgSplitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
+    WarTextSpan lines[MAX_LINES];
+    s32 linesCount = splitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
 
-    nvgSave(gfx);
-    nvgTranslate(gfx, x, y);
+    renderSave(context);
+    renderTranslate(context, x, y);
 
-    vec2 textSize = nvgMeasureMultiSpriteText(text, params.boundings.x, params);
+    vec2 textSize = measureMultiSpriteText(text, params.boundings.x, params);
 
     vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
-    nvgTranslate(gfx, textOffset.x, textOffset.y);
+    renderTranslate(context, textOffset.x, textOffset.y);
 
 #ifdef DEBUG_RENDER_FONT
     rect outline = rectf(0, 0, textSize.x, textSize.y);
-    nvgStrokeRect(gfx, outline, NVG_RED_SELECTION, 1);
+    renderStrokeRect(context, outline, WAR_COLOR_RED_SELECTION, 1);
 #endif
 
     s32 lineStartIndex = 0;
@@ -709,14 +691,14 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
         if (lineOffset.y * scale > params.boundings.y)
             break;
 
-        nvgSave(gfx);
-        nvgTranslate(gfx, lineOffset.x, 0);
-        nvgScale(gfx, scale, scale);
-        nvgTranslate(gfx, 0, lineOffset.y);
+        renderSave(context);
+        renderTranslate(context, lineOffset.x, 0);
+        renderScale(context, scale, scale);
+        renderTranslate(context, 0, lineOffset.y);
 
 #ifdef DEBUG_RENDER_FONT
         rect outline = rectf(0, 0, lines[i].width / scale, lineHeight);
-        nvgStrokeRect(gfx, outline, NVG_GREEN_SELECTION, 1);
+        renderStrokeRect(context, outline, WAR_COLOR_GREEN_SELECTION, 1);
 #endif
 
         if (params.highlightIndex >= lineStartIndex && params.highlightIndex < lineStartIndex + lineLength)
@@ -724,7 +706,7 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
             s32 highlightIndex = params.highlightIndex - lineStartIndex;
             s32 highlightCount = min(params.highlightCount, lineLength - highlightIndex);
 
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lines[i].start,
                                         0, highlightIndex,
                                         0, 0,
                                         params.fontColor,
@@ -733,7 +715,7 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
                                         params.boundings,
                                         scale);
 
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lines[i].start,
                                         highlightIndex, highlightCount,
                                         x, 0,
                                         params.highlightColor,
@@ -742,7 +724,7 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
                                         params.boundings,
                                         scale);
 
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lines[i].start,
                                         highlightIndex + highlightCount,
                                         lineLength - highlightIndex - highlightCount,
                                         x, 0,
@@ -757,7 +739,7 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
         {
             s32 highlightCount = min(params.highlightIndex + params.highlightCount - lineStartIndex, lineLength);
 
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lines[i].start,
                                         0, highlightCount,
                                         0, 0,
                                         params.highlightColor,
@@ -766,7 +748,7 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
                                         params.boundings,
                                         scale);
 
-            x = nvgSingleSpriteTextSpan(gfx, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lines[i].start,
                                         highlightCount,
                                         lineLength - highlightCount,
                                         x, 0,
@@ -780,10 +762,10 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
         {
             // No highlight, highlightIndex = -1
             // All highlight, highlightIndex = -2
-            NVGcolor fontColor = params.highlightIndex == ALL_HIGHLIGHT
+            u8Color fontColor = params.highlightIndex == ALL_HIGHLIGHT
                 ? params.highlightColor : params.fontColor;
 
-            nvgSingleSpriteTextSpan(gfx, lines[i].start,
+            renderSingleSpriteTextSpan(context, lines[i].start,
                                     0, lineLength,
                                     0, 0,
                                     fontColor,
@@ -793,10 +775,10 @@ void nvgMultiSpriteText(NVGcontext* gfx, const char* text, f32 x, f32 y, NVGfont
                                     scale);
         }
 
-        nvgRestore(gfx);
+        renderRestore(context);
 
         lineStartIndex += lineLength;
     }
 
-    nvgRestore(gfx);
+    renderRestore(context);
 }

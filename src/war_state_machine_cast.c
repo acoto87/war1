@@ -9,10 +9,16 @@ WarState* createCastState(WarContext* context, WarEntity* entity, WarSpellType s
 
 void enterCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void leaveCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
@@ -41,7 +47,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
         }
     }
 
-    setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+    setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
@@ -180,7 +186,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         if (decreaseUnitMana(context, entity, stats.manaCost))
                         {
                             vec2 targetPosition = getUnitCenterPosition(targetEntity, true);
-                            createUnit(context, WAR_UNIT_SKELETON, targetPosition.x, targetPosition.y,
+                            createUnit(context, WAR_UNIT_SKELETON, (s32)targetPosition.x, (s32)targetPosition.y,
                                        unit->player, WAR_RESOURCE_NONE, 0, true);
 
                             targetPosition = getUnitCenterPosition(targetEntity, false);
@@ -268,4 +274,5 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeCastState(WarState* state)
 {
+    NOT_USED(state);
 }

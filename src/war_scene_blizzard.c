@@ -15,7 +15,7 @@ void updateSceneBlizzard(WarContext* context)
 
     if (scene->blizzard.time <= 0)
     {
-        WarScene* scene = createScene(context, WAR_SCENE_MAIN_MENU);
-        setNextScene(context, scene, 0.3f);
+        WarScene* nextScene = createScene(context, WAR_SCENE_MAIN_MENU);
+        setNextScene(context, nextScene, 0.3f);
     }
 }

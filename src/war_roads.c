@@ -81,7 +81,7 @@ void addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
 
     s32 dy = y2 - y1;
     dy = sign(dy);
-    
+
     s32 x = x1;
     s32 y = y1;
 

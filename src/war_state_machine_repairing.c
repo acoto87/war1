@@ -51,7 +51,7 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
         vec2 position = getUnitCenterPosition(entity, true);
         vec2 targetPosition = getUnitCenterPosition(building, true);
 
-        setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+        setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
         setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
@@ -59,11 +59,13 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
 
 void leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
 
     vec2 unitSize = getUnitSize(entity);
     vec2 position = getUnitCenterPosition(entity, true);
-    setFreeTiles(map->finder, position.x, position.y, unitSize.x, unitSize.y);
+    setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 }
 
 void updateRepairingState(WarContext* context, WarEntity* entity, WarState* state)
@@ -107,9 +109,9 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
                 return;
             }
 
-            // to calculate the amount of wood and gold needed to repair a 
+            // to calculate the amount of wood and gold needed to repair a
             // building I'm taking the 12% of the damage of the building,
-            // so for the a FARM if it has a damage of 200, the amount of 
+            // so for the a FARM if it has a damage of 200, the amount of
             // wood and gold would be 200 * 0.12 = 24.
             //
             // when repairing each second the amount of wood and gold decrease
@@ -144,5 +146,6 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
 
 void freeRepairingState(WarState* state)
 {
+    NOT_USED(state);
 }
 

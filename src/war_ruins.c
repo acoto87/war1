@@ -85,6 +85,8 @@ WarEntity* createRuins(WarContext* context)
 
 void addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim)
 {
+    NOT_USED(context);
+
     assert(entity);
     assert(entity->type == WAR_ENTITY_TYPE_RUIN);
 

@@ -20,8 +20,8 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, c
 #define setUITextWrapping(uiEntity, value) ((uiEntity)->text.wrapping = (value))
 #define setUITextColor(uiEntity, value) ((uiEntity)->text.fontColor = (value))
 #define setUITextHighlight(uiEntity, index, count) \
-    ({ ((uiEntity)->text.highlightIndex = (index)); \
-       ((uiEntity)->text.highlightCount = (count)); })
+    do { ((uiEntity)->text.highlightIndex = (index)); \
+       ((uiEntity)->text.highlightCount = (count)); } while (0)
 #define setUITextHighlightColor(uiEntity, color) ((uiEntity)->text.highlightColor = (color))
 #define setUITextMultiline(uiEntity, value) ((uiEntity)->text.multiline = (value))
 #define setUITextLineHeight(uiEntity, value) ((uiEntity)->text.lineHeight = (value))

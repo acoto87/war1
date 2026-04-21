@@ -10,6 +10,15 @@ void setCheatsPanelVisible(WarContext* context, bool visible)
     memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
     cheatStatus->position = 0;
     cheatStatus->visible = visible;
+
+    if (visible)
+    {
+        SDL_StartTextInput(context->window);
+    }
+    else
+    {
+        SDL_StopTextInput(context->window);
+    }
 }
 
 void setCheatsFeedback(WarContext* context, const char* feedbackText)
@@ -74,7 +83,7 @@ void createCheatsPanel(WarContext* context)
 
     WarEntity* uiEntity;
 
-    vec2 cheatSize = vec2f(context->originalWindowWidth, 12);
+    vec2 cheatSize = vec2f((f32)context->originalWindowWidth, 12.0f);
     u8Color cheatBackgroundColor = u8RgbaColor(100, 100, 100, 160);
     uiEntity = createUIRect(context, "panelCheat", VEC2_ZERO, cheatSize, cheatBackgroundColor);
     setUIEntityStatus(uiEntity, false);
@@ -156,7 +165,7 @@ void updateCheatsPanel(WarContext* context)
 
         if (wasKeyPressed(input, WAR_KEY_TAB))
         {
-            s32 length = strlen(cheatStatus->text);
+            s32 length = (s32)strlen(cheatStatus->text);
             if (TAB_WIDTH <= STATUS_TEXT_MAX_LENGTH - length)
             {
                 strInsertAt(cheatStatus->text, cheatStatus->position, '\t');
@@ -173,7 +182,7 @@ void updateCheatsPanel(WarContext* context)
         }
         else if (wasKeyPressed(input, WAR_KEY_DELETE))
         {
-            s32 length = strlen(cheatStatus->text);
+            s32 length = (s32)strlen(cheatStatus->text);
             if (cheatStatus->position < length)
             {
                 strRemoveAt(cheatStatus->text, cheatStatus->position);
@@ -181,7 +190,7 @@ void updateCheatsPanel(WarContext* context)
         }
         else if (wasKeyPressed(input, WAR_KEY_RIGHT))
         {
-            s32 length = strlen(cheatStatus->text);
+            s32 length = (s32)strlen(cheatStatus->text);
             if (cheatStatus->position < length)
             {
                 cheatStatus->position++;
@@ -200,7 +209,7 @@ void updateCheatsPanel(WarContext* context)
         }
         else if (wasKeyPressed(input, WAR_KEY_END))
         {
-            s32 length = strlen(cheatStatus->text);
+            s32 length = (s32)strlen(cheatStatus->text);
             cheatStatus->position = length;
         }
 
@@ -210,12 +219,12 @@ void updateCheatsPanel(WarContext* context)
         strcpy(statusText + strlen("MSG: "), cheatStatus->text);
         setCheatText(context, statusText);
 
-        NVGfontParams params;
+        WarFontParams params = {0};
         params.fontSize = cheatText->text.fontSize;
         params.fontData = fontsData[cheatText->text.fontIndex];
 
-        vec2 prefixSize = nvgMeasureSingleSpriteText("MSG: ", strlen("MSG: "), params);
-        vec2 textSize = nvgMeasureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
+        vec2 prefixSize = measureSingleSpriteText("MSG: ", (s32)strlen("MSG: "), params);
+        vec2 textSize = measureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
         cheatCursor->transform.position.x = prefixSize.x + textSize.x;
 
         setUIEntityStatus(cheatPanel, true);

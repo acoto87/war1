@@ -104,11 +104,15 @@ WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position
     vec2ListInit(&positions, vec2ListDefaultOptions);
     vec2ListAdd(&positions, position);
 
+    const s32 dirC = 8;
+    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
+    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
+
     for (s32 i = 0; i < positions.count; i++)
     {
         position = positions.items[i];
 
-        WarTree* tree = getTreeAtPosition(forest, position.x, position.y);
+        WarTree* tree = getTreeAtPosition(forest, (s32)position.x, (s32)position.y);
         if (tree)
         {
             bool isTreeAccessible = isPositionAccesible(map->finder, position);
@@ -180,6 +184,8 @@ void plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
 
 bool validTree(WarContext* context, WarEntity* forest, WarTree* tree)
 {
+    NOT_USED(context);
+
     WarTreeList* trees = &forest->forest.trees;
     for (s32 i = 0; i < trees->count; i++)
     {

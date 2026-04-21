@@ -44,8 +44,8 @@
     \
     typedef struct \
     { \
-        uint32_t count; \
-        uint32_t capacity; \
+        int32_t count; \
+        int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
         int32_t (*compareFn)(const itemType item1, const itemType item2); \
         void (*freeFn)(itemType item); \

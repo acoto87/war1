@@ -1,9 +1,11 @@
 WarFile* loadWarFile(WarContext* context, const char* filePath)
 {
+    NOT_USED(context);
+
     FILE *file = fopen(filePath, "rb");
     if (!file)
     {
-        logError("Couldn't process the DATA.WAR file. The file doesn't exists.\n");
+        logError("Couldn't process the DATA.WAR file. The file doesn't exists at %s.\n", filePath);
         return NULL;
     }
 
@@ -37,13 +39,13 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
 
     if (warFile->type == WAR_FILE_TYPE_UNKNOWN)
     {
-        logError("Couldn't process the DATA.WAR file. The file is not the RETAIL or DEMO version of the game.\n");
+        logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.\n", warFile->archiveID);
         return NULL;
     }
 
     fileReadBytes((u8*)warFile->offsets, warFile->numberOfEntries * sizeof(u32), file);
 
-    for (s32 i = 0; i < warFile->numberOfEntries; ++i)
+    for (s32 i = 0; i < (s32)warFile->numberOfEntries; ++i)
     {
         // placeholders in demo versions
         if (warFile->offsets[i] == 0xFFFFFFFF ||
@@ -55,7 +57,7 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
 
         u32 compressedLength;
 
-        if (i == warFile->numberOfEntries - 1)
+        if (i == (s32)warFile->numberOfEntries - 1)
         {
             compressedLength = (u32)fileLength - warFile->offsets[i];
         }
@@ -65,7 +67,7 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
             u32 nextOffset = warFile->offsets[j];
             while (nextOffset == 0xFFFFFFFF || nextOffset == 0x00000000)
             {
-                if (j + 1 >= warFile->numberOfEntries)
+                if (j + 1 >= (s32)warFile->numberOfEntries)
                 {
                     nextOffset = (u32)fileLength;
                     break;
@@ -139,12 +141,12 @@ tmp.size := finalsize; // Crop the file, just in case
             s32 b = 0;
             s32 bufwinPos = 0;
 
-            while (b < compressedLength)
+            while (b < (s32)compressedLength)
             {
                 u8 cmask = fileReadU8(file);
                 b++;
 
-                for (s32 a = 0; a < 8 && bufwinPos < length; ++a)
+                for (s32 a = 0; a < 8 && bufwinPos < (s32)length; ++a)
                 {
                     if (cmask % 2 == 1) // uncompressed byte
                     {
@@ -162,7 +164,7 @@ tmp.size := finalsize; // Crop the file, just in case
                         offset = offset % BUFWIN_SIZE;
                         b += 2;
 
-                        for (s32 m = 0; m <= numbytes + 2 && bufwinPos < length; ++m)
+                        for (s32 m = 0; m <= numbytes + 2 && bufwinPos < (s32)length; ++m)
                         {
                             u8 bufbyte = bufwin[(offset + m) % BUFWIN_SIZE];
 

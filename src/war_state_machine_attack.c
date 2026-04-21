@@ -8,10 +8,16 @@ WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId 
 
 void enterAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
@@ -25,7 +31,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 
     WarUnitStats stats = getUnitStats(unit->type);
 
-    WarEntityId targetEntityId = state->attack.targetEntityId;
+    WarEntityId targetEntityId = (WarEntityId)state->attack.targetEntityId;
     WarEntity* targetEntity = findEntity(context, targetEntityId);
 
     vec2 targetTile = state->attack.targetTile;
@@ -85,7 +91,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+    setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
@@ -125,7 +131,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         }
         else if(isWall(targetEntity))
         {
-            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, targetTile.x, targetTile.y);
+                WarWallPiece* piece = getWallPieceAtPosition(targetEntity, (s32)targetTile.x, (s32)targetTile.y);
             if (piece)
             {
                 // if the piece of the wall the unit is attacking has no more hit points, go to idle.
@@ -161,4 +167,5 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeAttackState(WarState* state)
 {
+    NOT_USED(state);
 }

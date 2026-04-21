@@ -44,7 +44,7 @@ void applyCheat(WarContext* context, const char* text)
             if (strCaseStartsWith(text, desc.text, true))
             {
                 // skip the command text and the whitespace characters
-                s32 skip = strlen(desc.text);
+                s32 skip = (s32)strlen(desc.text);
                 while (text[skip] == ' ' || text[skip] == '\t')
                     skip++;
 
@@ -61,6 +61,8 @@ void applyCheat(WarContext* context, const char* text)
 
 void applyGoldCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -74,6 +76,8 @@ void applyGoldCheat(WarContext* context, const char* argument)
 
 void applySpellsCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -83,7 +87,7 @@ void applySpellsCheat(WarContext* context, const char* argument)
 
     WarPlayerInfo* player = &map->players[0];
 
-    WarFeatureType features[] =
+    WarFeatureType spellFeatures[] =
     {
         WAR_FEATURE_SPELL_HEALING,
         WAR_FEATURE_SPELL_RAISE_DEAD,
@@ -99,12 +103,12 @@ void applySpellsCheat(WarContext* context, const char* argument)
         WAR_FEATURE_SPELL_DAEMON,
     };
 
-    for (s32 i = 0; i < arrayLength(features); i++)
+    for (s32 i = 0; i < arrayLength(spellFeatures); i++)
     {
-        setFeatureAllowed(player, features[i], true);
+        setFeatureAllowed(player, spellFeatures[i], true);
     }
 
-    WarUpgradeType spells[] =
+    WarUpgradeType upgradeFeatures[] =
     {
         WAR_UPGRADE_SCORPIONS,
         WAR_UPGRADE_SPIDERS,
@@ -120,13 +124,13 @@ void applySpellsCheat(WarContext* context, const char* argument)
         WAR_UPGRADE_UNHOLY_ARMOR
     };
 
-    for (s32 i = 0; i < arrayLength(spells); i++)
+    for (s32 i = 0; i < arrayLength(upgradeFeatures); i++)
     {
-        WarUpgradeData upgradeData = getUpgradeData(spells[i]);
-        setUpgradeAllowed(player, spells[i], upgradeData.maxLevelAllowed);
-        while (hasRemainingUpgrade(player, spells[i]))
+        WarUpgradeData upgradeData = getUpgradeData(upgradeFeatures[i]);
+        setUpgradeAllowed(player, upgradeFeatures[i], upgradeData.maxLevelAllowed);
+        while (hasRemainingUpgrade(player, upgradeFeatures[i]))
         {
-            increaseUpgradeLevel(context, player, spells[i]);
+            increaseUpgradeLevel(context, player, upgradeFeatures[i]);
         }
     }
 
@@ -135,6 +139,8 @@ void applySpellsCheat(WarContext* context, const char* argument)
 
 void applyUpgradesCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -168,6 +174,8 @@ void applyUpgradesCheat(WarContext* context, const char* argument)
 
 void applyEndCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -182,6 +190,8 @@ void applyEndCheat(WarContext* context, const char* argument)
 
 void applyEnableCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
     {
         context->cheatsEnabled = true;
@@ -196,6 +206,8 @@ void applyEnableCheat(WarContext* context, const char* argument)
 
 void applyGodModeCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -211,6 +223,8 @@ void applyGodModeCheat(WarContext* context, const char* argument)
 
 void applyWinCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -225,6 +239,8 @@ void applyWinCheat(WarContext* context, const char* argument)
 
 void applyLossCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -239,6 +255,8 @@ void applyLossCheat(WarContext* context, const char* argument)
 
 void applyFogOfWarCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -299,6 +317,8 @@ void applySkipOrcCheat(WarContext* context, const char* argument)
 
 void applySpeedCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 
@@ -394,7 +414,7 @@ void applyMusicVolCheat(WarContext* context, const char* argument)
         context->audioEnabled = true;
         context->musicEnabled = true;
 
-        setMusicVolume(context, (f32)musicVol / 100);
+        setMusicVolume(context, (f32)musicVol / 100.0f);
         setCheatsFeedbackFormat(context, "Music volume set to %d", musicVol);
     }
 }
@@ -426,7 +446,7 @@ void applySoundVolCheat(WarContext* context, const char* argument)
         context->audioEnabled = true;
         context->soundEnabled = true;
 
-        setSoundVolume(context, (f32)sfxVol / 100);
+        setSoundVolume(context, (f32)sfxVol / 100.0f);
         setCheatsFeedbackFormat(context, "Sounds volume set to %d", sfxVol);
     }
 }
@@ -440,7 +460,7 @@ void applyGlobalScaleCheat(WarContext* context, const char* argument)
     if (strTryParseS32(argument, &scale))
     {
         scale = clamp(scale, 1, 5);
-        setGlobalScale(context, scale);
+        setGlobalScale(context, (f32)scale);
         setCheatsFeedbackFormat(context, "Global scale set to %d", scale);
     }
 }
@@ -454,7 +474,7 @@ void applyGlobalSpeedCheat(WarContext* context, const char* argument)
     if (strTryParseS32(argument, &speed))
     {
         speed = clamp(speed, 1, 5);
-        setGlobalSpeed(context, speed);
+        setGlobalSpeed(context, (f32)speed);
         setCheatsFeedbackFormat(context, "Global speed set to %d", speed);
     }
 }
@@ -505,6 +525,8 @@ void applyEditCheat(WarContext* context, const char* argument)
 
 void applyRainOfFireCheat(WarContext* context, const char* argument)
 {
+    NOT_USED(argument);
+
     if (!context->cheatsEnabled)
         return;
 

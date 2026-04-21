@@ -8,6 +8,8 @@ WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 
 WarScene* createScene(WarContext* context, WarSceneType type)
 {
+    NOT_USED(context);
+
     WarScene* scene = (WarScene*)xcalloc(1, sizeof(WarScene));
     scene->type = type;
 
@@ -93,11 +95,6 @@ void leaveScene(WarContext* context)
 
 void renderScene(WarContext* context)
 {
-    NVGcontext* gfx = context->gfx;
-
-    nvgSave(gfx);
-    nvgScale(gfx, context->globalScale, context->globalScale);
-
     WarEntityList* uiEntities = getEntities(context);
     for (s32 i = 0; i < uiEntities->count; i++)
     {
@@ -107,6 +104,4 @@ void renderScene(WarContext* context)
             renderEntity(context, entity);
         }
     }
-
-    nvgRestore(gfx);
 }

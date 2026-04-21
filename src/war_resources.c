@@ -276,7 +276,7 @@ s32 loadStartEntities(WarResource* resource, WarRawResource* rawResource, s32 of
 {
     resource->levelInfo.startEntitiesCount = 0;
 
-    while (offset < rawResource->length)
+    while (offset < (s32)rawResource->length)
     {
         u16 val = readu16(rawResource->data, offset);
         if (val == 0xFFFF)
@@ -309,7 +309,7 @@ s32 loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 offse
 {
     resource->levelInfo.startRoadsCount = 0;
 
-    while (offset < rawResource->length)
+    while (offset < (s32)rawResource->length)
     {
         u16 val = readu16(rawResource->data, offset);
         if (val == 0xFFFF)
@@ -337,7 +337,7 @@ s32 loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 offse
 {
     resource->levelInfo.startWallsCount = 0;
 
-    while (offset < rawResource->length)
+    while (offset < (s32)rawResource->length)
     {
         u16 val = readu16(rawResource->data, offset);
         if (val == 0xFFFF)
@@ -365,7 +365,7 @@ s32 loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource,
 {
     resource->levelInfo.startGoldminesCount = 0;
 
-    while (offset < rawResource->length)
+    while (offset < (s32)rawResource->length)
     {
         u16 val = readu16(rawResource->data, offset);
         if (val == 0xFFFF)
@@ -389,7 +389,9 @@ s32 loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource,
 
 s32 loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset, WarCustomMapConfiguration* configuration, u8 player)
 {
-    while (offset < rawResource->length)
+    NOT_USED(resource);
+
+    while (offset < (s32)rawResource->length)
     {
         u16 val = readu16(rawResource->data, offset);
         if (val == 0xFFFF)
@@ -700,7 +702,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
 
     u8 *data = (u8*)xcalloc(TILESET_WIDTH * TILESET_HEIGHT, sizeof(u8));
     u32 tilesCount = rawResource.length / 8;
-    for(s32 i = 0; i < tilesCount; i++)
+    for(u32 i = 0; i < tilesCount; i++)
     {
         for(s32 my = 0; my < 2; my++)
         {
@@ -822,7 +824,8 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
     WarResource* resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_XMID;
     resource->audio.data = midData;
-    resource->audio.length = midLength;
+    assert(midLength <= INT32_MAX);
+    resource->audio.length = (s32)midLength;
 }
 
 void loadWave(WarContext *context, DatabaseEntry *entry)

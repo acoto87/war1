@@ -267,6 +267,57 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
     return true;
 }
 
+static bool nob_read_entire_dir_recursively(const char* parent, Nob_File_Paths* file_paths, int idx)
+{
+    // NOTE: This library to deal with files and directories seems nice: https://github.com/cxong/tinydir
+
+    if (!nob_read_entire_dir(parent, file_paths)) {
+        return false;
+    }
+
+    int count = file_paths->count;
+
+    for (int i = idx; i < count; i++) {
+        if (strcmp(file_paths->items[i], ".") == 0) continue;
+        if (strcmp(file_paths->items[i], "..") == 0) continue;
+
+        // NOTE: Here I'm leaking the allocation for each file name on the nob_read_entire_dir call
+        // but I'm don't care that much because that alloc is done on the temp static arena
+        file_paths->items[i] = nob_temp_sprintf("%s/%s", parent, file_paths->items[i]);
+
+        Nob_File_Type file_type = nob_get_file_type(file_paths->items[i]);
+        if (file_type == NOB_FILE_DIRECTORY) {
+            if (!nob_read_entire_dir_recursively(file_paths->items[i], file_paths, file_paths->count)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+static bool clear_folder(const char* parent)
+{
+    Nob_File_Paths file_paths = {0};
+
+    if (!nob_read_entire_dir_recursively(parent, &file_paths, 0)) {
+        return false;
+    }
+
+    for (int i = 0; i < file_paths.count; i++) {
+        Nob_File_Type file_type = nob_get_file_type(file_paths.items[i]);
+        if (file_type == NOB_FILE_REGULAR) {
+            if (!nob_delete_file(file_paths.items[i])) {
+                return false;
+            }
+        }
+    }
+
+    file_paths.count = 0;
+
+    return true;
+}
+
 static bool ensure_output_dirs(Target target)
 {
     return nob_mkdir_if_not_exists("build") &&
@@ -277,9 +328,10 @@ static bool append_gnu_common_flags(Nob_Cmd *cmd, const Build_Options *options)
 {
     nob_cmd_append(cmd,
                    toolchain_program(options->toolchain),
-                   "-std=c99",
+                   "-std=c11",
                    "-Wall",
                    "-Wno-misleading-indentation",
+                   "-Wpedantic",
                    "-x",
                    "c",
                    "-Ideps/include");
@@ -338,8 +390,8 @@ static bool copy_runtime_files(const Build_Options *options)
     }
 
     if (target_is_windows(options->target) && !options->check_only) {
-        const char *dll_path = nob_temp_sprintf("%s/glfw3.dll", target_library_dir(options->target));
-        const char *dll_copy_path = nob_temp_sprintf("%s/glfw3.dll", output_dir);
+        const char *dll_path = nob_temp_sprintf("%s/SDL3.dll", target_library_dir(options->target));
+        const char *dll_copy_path = nob_temp_sprintf("%s/SDL3.dll", output_dir);
 
         if (!nob_copy_file(dll_path, dll_copy_path)) {
             return false;
@@ -354,15 +406,17 @@ static bool build_with_gnu_like(const Build_Options *options)
     const char *binary_path = target_binary_path(options->target);
 
     if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    if (!clear_folder(target_output_dir(options->target))) {
+        nob_log(NOB_ERROR, "Could not clear output directory");
         return false;
     }
 
     if (options->check_only) {
         if (!compile_gnu_source(options, "src/war1.c", nob_temp_sprintf("%s/war1.o", target_output_dir(options->target)))) {
-            return false;
-        }
-
-        if (!compile_gnu_source(options, "deps/include/glad/glad.c", nob_temp_sprintf("%s/glad.o", target_output_dir(options->target)))) {
             return false;
         }
 
@@ -373,19 +427,18 @@ static bool build_with_gnu_like(const Build_Options *options)
     append_gnu_common_flags(&cmd, options);
     nob_cmd_append(&cmd,
                    "src/war1.c",
-                   "deps/include/glad/glad.c",
                    "-o",
                    binary_path,
                    nob_temp_sprintf("-L%s", target_library_dir(options->target)));
 
     if (target_is_windows(options->target)) {
-        nob_cmd_append(&cmd, "-lglfw3", "-lopengl32", "-lws2_32");
+        nob_cmd_append(&cmd, "-lSDL3", "-lws2_32");
 
         if (options->toolchain == TOOLCHAIN_GCC) {
             nob_cmd_append(&cmd, "-static-libgcc");
         }
     } else {
-        nob_cmd_append(&cmd, "-lglfw", "-lpthread", "-lm", "-ldl");
+        nob_cmd_append(&cmd, "-lSDL3", "-lpthread", "-lm", "-ldl");
 
         if (options->target == TARGET_LINUX64) {
             nob_cmd_append(&cmd, "-no-pie");
@@ -412,23 +465,44 @@ static bool build_with_msvc(const Build_Options *options)
     }
 
     if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
         return false;
     }
 
-    if (!options->check_only) {
-        nob_log(NOB_ERROR, "full MSVC linking is not supported because glfw3.lib import library is not included in the repository. Use --check for compile validation only.");
+    if (!clear_folder(target_output_dir(options->target))) {
+        nob_log(NOB_ERROR, "Could not clear output directory");
         return false;
     }
 
-    if (!compile_msvc_source(options, "src/war1.c", nob_temp_sprintf("%s/war1.obj", target_output_dir(options->target)))) {
+    const char *output_dir = target_output_dir(options->target);
+    const char *lib_dir = target_library_dir(options->target);
+
+    if (options->check_only) {
+        if (!compile_msvc_source(options, "src/war1.c", nob_temp_sprintf("%s/war1.obj", output_dir))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Full build: compile + link
+    Nob_Cmd cmd = {0};
+    append_msvc_common_flags(&cmd, options);
+    nob_cmd_append(&cmd,
+                   "src/war1.c",
+                   nob_temp_sprintf("/Fe:%s", target_binary_path(options->target)),
+                   nob_temp_sprintf("/Fo:%s/", output_dir),
+                   "/link",
+                   nob_temp_sprintf("/LIBPATH:%s", lib_dir),
+                   "SDL3.lib",
+                   "shell32.lib",
+                   "ws2_32.lib");
+
+    if (!nob_cmd_run(&cmd)) {
         return false;
     }
 
-    if (!compile_msvc_source(options, "deps/include/glad/glad.c", nob_temp_sprintf("%s/glad.obj", target_output_dir(options->target)))) {
-        return false;
-    }
-
-    return true;
+    return copy_runtime_files(options);
 }
 
 static bool build_project(const Build_Options *options)

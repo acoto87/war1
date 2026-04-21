@@ -15,7 +15,6 @@ bool initNetwork()
     if (status != 0)
     {
         logError("Couldn't initialize Websock. Errno: %d\n", status);
-
         return false;
     }
 #endif
@@ -30,7 +29,6 @@ bool cleanNetwork()
     if (status == SOCKET_ERROR)
     {
         logError("Couldn't cleanup Websock. Errno: %d\n", WSAGetLastError());
-
         return false;
     }
 #endif
@@ -105,13 +103,13 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     if (requestLength > WAR_REQUEST_MESSAGE_MAX_SIZE ||
         hostRequestLength > WAR_REQUEST_MESSAGE_MAX_SIZE)
     {
-        logError("The host or resource are too long to build the HTTP request.\n");
+        logError("The host or resource are too long to build the HTTP request: host=%s, resource=%s.\n", host, resource);
         return false;
     }
 
     char message[WAR_REQUEST_MESSAGE_MAX_SIZE];
     snprintf(message, sizeof(message), "GET /%s HTTP/1.1\r\n", resource);
-    s32 status = send(sck, message, strlen(message), 0);
+    s32 status = send(sck, message, (s32)strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
 #if _WIN32
@@ -125,7 +123,7 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
 
     memset(message, 0, sizeof(message));
     snprintf(message, sizeof(message), "Host: %s\r\n\r\n", host);
-    status = send(sck, message, strlen(message), 0);
+    status = send(sck, message, (s32)strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
 #if _WIN32
@@ -209,7 +207,7 @@ s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
         if (sizeToRead <= 0)
             break;
 
-        readFromSocket = recv(sck, responsePtr, sizeToRead, 0);
+        readFromSocket = recv(sck, responsePtr, (s32)sizeToRead, 0);
         if (readFromSocket == SOCKET_ERROR)
         {
 #if _WIN32
@@ -239,12 +237,12 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     u16 shift = 0;
     if(strncasecmp(url, "http://", strlen("http://")) == 0)
     {
-        shift = strlen("http://");
+        shift = (u16)strlen("http://");
     }
 
     if (strncasecmp(url + shift, "www.", strlen("www.")) == 0)
     {
-        shift += strlen("www.");
+        shift += (u16)strlen("www.");
     }
 
     size32 urlLength = strlen(url);
@@ -269,8 +267,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (!initNetwork())
     {
-        logError("Couldn't initialize the network.\n");
-
+        logError("Couldn't initialize the network.\n", NO_ARG_STR);
         return false;
     }
 
@@ -278,19 +275,15 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     if (!sck)
     {
         logError("Couldn't connect to host: %s\n", host);
-
         cleanNetwork();
-
         return false;
     }
 
     if (!requestResource(sck, resource, host))
     {
         logError("Couldn't download file from url %s\n", url);
-
         closeSocket(sck);
         cleanNetwork();
-
         return false;
     }
 
@@ -301,7 +294,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (responseLength < 0)
     {
-        logError("Couldn't receive response.\n");
+        logError("Couldn't receive response from url %s\n", url);
 
         closeSocket(sck);
         cleanNetwork();
@@ -401,7 +394,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
             s32 chunkSize = strtol(responsePtr, NULL, 16);
 
             // advance the characters of the chunk size and the \r\n
-            s32 lengthToSkip = strcspn(responsePtr, "\r");
+            s32 lengthToSkip = (s32)strcspn(responsePtr, "\r");
             responsePtr += lengthToSkip + 2;
             responseLength -= lengthToSkip + 2;
 

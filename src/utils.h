@@ -1,6 +1,7 @@
 #pragma once
 
 #if defined(_WIN32) && defined(_MSC_VER) && !defined(__clang__)
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
@@ -27,6 +28,8 @@ typedef union {
     u8 rgba[4];
     struct { u8 r, g, b, a; };
 } u8Color;
+
+#define NO_ARG_STR ""
 
 #define U8COLOR_TRANSPARENT ((u8Color){{0, 0, 0, 0}})
 #define U8COLOR_WHITE ((u8Color){{255, 255, 255, 255}})
@@ -103,14 +106,14 @@ void strFree(char* str)
 
 void strInsertAt(char* str, s32 index, char c)
 {
-    s32 length = strlen(str) + 1; // count the \0
+    s32 length = (s32)strlen(str) + 1; // count the \0
     memmove(str + index + 1, str + index, length - index);
     str[index] = c;
 }
 
 void strRemoveAt(char* str, s32 index)
 {
-    s32 length = strlen(str) + 1; // count the \0
+    s32 length = (s32)strlen(str) + 1; // count the \0
     memmove(str + index, str + index + 1, length - index - 1);
 }
 
@@ -213,42 +216,3 @@ void* xrealloc(void *ptr, size32 size, char *file, s32 line)
 #define xcalloc(count, size) xcalloc(count, size, __FILE__, __LINE__)
 #define xrealloc(ptr, size) xrealloc(ptr, size, __FILE__, __LINE__)
 
-void msleep(s32 milliseconds) // cross-platform sleep function
-{
-    if (milliseconds <= 0)
-        return;
-
-#ifdef _WIN32
-    // windows.h need to be include for this
-    Sleep(milliseconds);
-#elif _POSIX_C_SOURCE >= 199309L
-    // this is the posix call, _POSIX_C_SOURCE need to be defined
-    struct timespec ts;
-    ts.tv_sec = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
-#else
-    // unistd.h need to be include for this
-    usleep(milliseconds * 1000);
-#endif
-}
-
-#if __DEBUG__ && !defined(_MSC_VER) && !defined(__clang__)
-/* Obtain a backtrace and print it to stdout. */
-void printTrace()
-{
-#define MAX_STACKTRACE 50
-
-  void *buffer[MAX_STACKTRACE];
-  size32 size = backtrace(buffer, MAX_STACKTRACE);
-  char** strings = backtrace_symbols(buffer, size);
-
-  printf("Obtained %zd stack frames.\n", size);
-
-  for (s32 i = 0; i < size; i++)
-     printf ("%s\n", strings[i]);
-
-  free (strings);
-}
-
-#endif

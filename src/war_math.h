@@ -1,23 +1,18 @@
-#define sign(x) \
-  ({ __typeof__(x) _x = (x); \
-     (__typeof__(x))(_x < 0 ? -1 : 1); })
+#pragma once
 
-#define min(a, b) \
-  ({ __typeof__(a) _a = (a); \
-     __typeof__(b) _b = (b); \
-     _a < _b ? _a : _b; })
+#ifdef min
+#undef min
+#endif
 
-#define max(a, b) \
-  ({ __typeof__(a) _a = (a); \
-     __typeof__(b) _b = (b); \
-     _a > _b ? _a : _b; })
+#ifdef max
+#undef max
+#endif
 
-#define clamp(x, a, b) \
-    max(min(x, b), a)
-
-#define abs(x) \
-	({ __typeof__(x) _x = (x); \
-       _x < 0 ? -_x : _x; })
+#define sign(x) ((x) < 0 ? -1 : 1)
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define clamp(x, a, b) (max(min(x, b), a))
+#define abs(x) ((x) < 0 ? -(x) : (x))
 
 #define halfi(x) ((x) / 2)
 #define halff(x) ((x) * 0.5f)

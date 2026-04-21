@@ -7,10 +7,16 @@ WarState* createGatherGoldState(WarContext* context, WarEntity* entity, WarEntit
 
 void enterGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
@@ -18,7 +24,7 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = getUnitStats(unit->type);
 
-    WarEntity* goldmine = findEntity(context, state->gold.goldmineId);
+    WarEntity* goldmine = findEntity(context, (WarEntityId)state->gold.goldmineId);
 
     // if the goldmine doesn't exists (it could ran out of gold, or other units attacking it), go idle
     // if the unit was already mining, and the gold mine ran out of gold, then another unit previouly got all the remaining gold
@@ -46,5 +52,6 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
 
 void freeGatherGoldState(WarState* state)
 {
+    NOT_USED(state);
 }
 

@@ -289,8 +289,8 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
 
         u8* waveData = &resource->audio.data[audio->sampleIndex];
 
-        u32 sampleBlock = min(sampleCount, waveLength - audio->sampleIndex);
-        for (s32 i = 0; i < sampleBlock; i++)
+        u32 sampleBlock = min(sampleCount, (u32)(waveLength - audio->sampleIndex));
+        for (u32 i = 0; i < sampleBlock; i++)
         {
             s32 value = *waveData;
             value = value - 128;
@@ -313,12 +313,12 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     return audio->sampleIndex >= waveLength && !audio->loop;
 }
 
-void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 sampleCount)
+void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int additionalAmount, int totalAmount)
 {
-    NOT_USED(input);
+    NOT_USED(totalAmount);
 
-    WarContext* context = (WarContext*)sfx->pUserData;
-    if (!context)
+    WarContext* context = (WarContext*)userdata;
+    if (!context || additionalAmount <= 0)
     {
         return;
     }
@@ -329,13 +329,27 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
         return;
     }
 
+    // additionalAmount is in bytes, format is S16 mono (2 bytes per sample)
+    u32 sampleCount = (u32)(additionalAmount / sizeof(s16));
+    if (sampleCount == 0)
+    {
+        return;
+    }
+
+    // allocate a zeroed buffer to mix into
+    s16* outputBuffer = (s16*)calloc(sampleCount, sizeof(s16));
+    if (!outputBuffer)
+    {
+        return;
+    }
+
     f32 musicVolume = context->musicEnabled ? context->musicVolume : 0;
     f32 soundVolume = context->soundEnabled ? context->soundVolume : 0;
 
     WarEntityIdList toRemove;
     WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
 
-    s16* outputStream = (s16*)output;
+    s16* outputStream = outputBuffer;
 
     WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
     for (s32 i = 0; i < audios->count; i++)
@@ -386,7 +400,7 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
                                 // < 120            ->  1
                                 // > 120 && < 200   ->  interpolate range 120-200 to range 0.75-0
                                 // >= 200           ->  0
-                                volume = 0.75 * (1 - ((distance - 120) / 80));
+                                volume = 0.75f * (1 - ((distance - 120) / 80));
                                 volume = max(volume, 0);
                             }
                         }
@@ -417,6 +431,10 @@ void audioDataCallback(ma_device* sfx, void* output, const void* input, u32 samp
     }
 
     WarEntityIdListFree(&toRemove);
+
+    // push the mixed audio data into the stream
+    SDL_PutAudioStreamData(stream, outputBuffer, (int)(sampleCount * sizeof(s16)));
+    free(outputBuffer);
 }
 
 bool initAudio(WarContext* context)
@@ -424,35 +442,41 @@ bool initAudio(WarContext* context)
     context->soundFont = tsf_load_filename("GMGeneric.SF2");
     if (!context->soundFont)
     {
-        logError("Could not load SoundFont\n");
+        logError("Could not load SoundFont at %s\n", "GMGeneric.SF2");
         return false;
     }
 
-   //Initialize preset on special 10th MIDI channel to use percussion sound bank (128) if available
+    //Initialize preset on special 10th MIDI channel to use percussion sound bank (128) if available
     tsf_channel_set_bank_preset(context->soundFont, 9, 128, 0);
 
     // Set the SoundFont rendering output mode
     tsf_set_output(context->soundFont, TSF_MONO, PLAYBACK_FREQ, 0.0f);
 
-    ma_device_config sfxConfig;
-    sfxConfig = ma_device_config_init(ma_device_type_playback);
-    sfxConfig.playback.format = ma_format_s16;
-    sfxConfig.playback.channels = 1;
-    sfxConfig.playback.shareMode = ma_share_mode_shared;
-    sfxConfig.sampleRate = PLAYBACK_FREQ;
-    sfxConfig.dataCallback = audioDataCallback;
-    sfxConfig.pUserData = context;
+    // Open an SDL3 audio device stream with S16 mono at PLAYBACK_FREQ
+    SDL_AudioSpec spec;
+    spec.format = SDL_AUDIO_S16;
+    spec.channels = 1;
+    spec.freq = PLAYBACK_FREQ;
 
-    if (ma_device_init(NULL, &sfxConfig, &context->sfx) != MA_SUCCESS)
+    context->audioStream = SDL_OpenAudioDeviceStream(
+        SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+        &spec,
+        audioDataCallback,
+        context
+    );
+
+    if (!context->audioStream)
     {
-        logError("Failed to open playback device.\n");
+        logError("Failed to open audio device stream: %s\n", SDL_GetError());
         return false;
     }
 
-    if (ma_device_start(&context->sfx) != MA_SUCCESS)
+    // SDL_OpenAudioDeviceStream opens paused; resume to start playback
+    if (!SDL_ResumeAudioStreamDevice(context->audioStream))
     {
-        logError("Failed to start playback device.\n");
-        ma_device_uninit(&context->sfx);
+        logError("Failed to resume audio stream device: %s\n", SDL_GetError());
+        SDL_DestroyAudioStream(context->audioStream);
+        context->audioStream = NULL;
         return false;
     }
 
@@ -869,7 +893,7 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
         mbFree(&bufOutput);
         return NULL;
     }
-    if (!mbWriteUInt16BE(&bufOutput, (tempo * 3) / 25000))
+    if (!mbWriteUInt16BE(&bufOutput, (u16)((tempo * 3) / 25000)))
     {
         mbFree(&bufOutput);
         return NULL;
@@ -961,8 +985,9 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
     }
 
     size32 length = mbPosition(&bufOutput) - 22;
+    assert(length <= UINT32_MAX);
     assert(mbSeek(&bufOutput, 18));
-    assert(mbWriteUInt32BE(&bufOutput, length));
+    assert(mbWriteUInt32BE(&bufOutput, (u32)length));
 
     u8* midData = mbGetData(&bufOutput, midLength);
 
@@ -984,11 +1009,11 @@ u8* changeSampleRate(u8* samplesIn, s32 length, s32 factor)
         u8 a = samplesIn[i - 1];
         u8 b = samplesIn[i];
 
-        f32 dt = 1 / factor;
+        f32 dt = 1.0f / (f32)factor;
         for (s32 k = 0; k < factor - 1; k++)
         {
             // linear interpolation: a + (b - a) * t
-            f32 t = dt * (k + 1);
+            f32 t = dt * (f32)(k + 1);
             samplesOut[j++] = (u8)(a + (b - a) * t);
         }
 

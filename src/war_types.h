@@ -407,17 +407,15 @@ typedef enum
 
 typedef struct
 {
-    u8 dx;
-    u8 dy;
-    u8 w;
-    u8 h;
+    u16 dx, dy;
+    u16 w, h;
     u32 off;
     u8* data;
 } WarSpriteFrame;
 
 typedef struct
 {
-    s32 image;
+    SDL_Texture* texture;
     s32 frameWidth;
     s32 frameHeight;
     s32 framesCount;
@@ -954,7 +952,7 @@ typedef struct
 } WarRoadPiece;
 
 #define WarRoadPieceEmpty (WarRoadPiece){0}
-#define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (player)})
+#define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (u8)(player)})
 
 bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
 {
@@ -996,7 +994,7 @@ typedef struct
 } WarWallPiece;
 
 #define WarWallPieceEmpty (WarWallPiece){0}
-#define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (player)})
+#define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (u8)(player)})
 
 bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
 {
@@ -2235,6 +2233,15 @@ typedef struct
     };
 } WarScene;
 
+#define MAX_RENDER_STATE_STACK 32
+
+typedef struct
+{
+    f32 offsetX, offsetY;
+    f32 scaleX, scaleY;
+    f32 alpha;
+} WarRenderState;
+
 typedef struct _WarContext
 {
     f32 time;
@@ -2250,20 +2257,19 @@ typedef struct _WarContext
     s32 originalWindowHeight;
     s32 windowWidth;
     s32 windowHeight;
-    s32 framebufferWidth;
-    s32 framebufferHeight;
-    f32 devicePixelRatio;
     char windowTitle[256];
-    GLFWwindow* window;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+
+    // render state stack for save/restore/translate/scale/alpha
+    WarRenderState renderState[MAX_RENDER_STATE_STACK];
+    s32 renderStateTop;
 
     WarFile* warFile;
     WarResource* resources[MAX_RESOURCES_COUNT];
     WarSprite fontSprites[2];
 
-    NVGcontext* gfx;
-    // NVGLUframebuffer* fb;
-
-    ma_device sfx;
+    SDL_AudioStream* audioStream;
     tsf* soundFont;
     // this is shortcut to disable all audios in the map
     // to avoid crashes when freeing the map and the audio thread
@@ -2280,7 +2286,7 @@ typedef struct _WarContext
     // since the audio thread will delete audio entities, that could lead
     // to inconsistent states in the internal lists when the game try to also
     // delete other entities.
-    pthread_mutex_t __mutex;
+    SDL_Mutex* __mutex;
 
     WarInput input;
 

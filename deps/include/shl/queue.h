@@ -43,10 +43,10 @@
     \
     typedef struct \
     { \
-        uint32_t head; \
-        uint32_t tail; \
-        uint32_t count; \
-        uint32_t capacity; \
+        int32_t head; \
+        int32_t tail; \
+        int32_t count; \
+        int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
         void (*freeFn)(itemType item); \
         itemType defaultValue; \
@@ -64,13 +64,13 @@
 #define shlDefineQueue(typeName, itemType) \
     void typeName ## __resize(typeName *queue) \
     { \
-        uint32_t oldCapacity = queue->capacity; \
+        int32_t oldCapacity = queue->capacity; \
         itemType* old = queue->items; \
         \
         queue->capacity = oldCapacity << 1; \
         queue->items = (itemType *)calloc(queue->capacity, sizeof(itemType)); \
         \
-        if (queue->head > queue->tail) \
+        if (queue->head >= queue->tail && queue->count > 0) \
         { \
             memcpy(queue->items, old + queue->head, (oldCapacity - queue->head) * sizeof(itemType)); \
             memcpy(queue->items + oldCapacity - queue->head, old, ((queue->head + queue->count) % oldCapacity) * sizeof(itemType)); \
@@ -82,6 +82,7 @@
         \
         queue->head = 0; \
         queue->tail = queue->count; \
+        free(old); \
     } \
     \
     void typeName ## Init(typeName *queue, typeName ## Options options) \
@@ -145,6 +146,9 @@
         if (!queue->items) \
             return false; \
         \
+        if (!queue->equalsFn) \
+            return false; \
+        \
         for(int32_t i = 0; i < queue->count; i++) \
         { \
             if (queue->equalsFn(queue->items[(queue->head + i) % queue->capacity], value)) \
@@ -161,10 +165,16 @@
         if (queue->freeFn) \
         { \
             for(int32_t i = 0; i < queue->count; i++) \
-                queue->freeFn(queue->items[i]); \
+            { \
+                int32_t index = (queue->head + i) % queue->capacity; \
+                queue->freeFn(queue->items[index]); \
+                queue->items[index] = queue->defaultValue; \
+            } \
         } \
         \
         queue->count = 0; \
+        queue->head = 0; \
+        queue->tail = 0; \
     }
 
 #endif // SHL_QUEUE_H

@@ -1,5 +1,7 @@
 WarAI* createAI(WarContext* context)
 {
+    NOT_USED(context);
+
     WarAI* ai = (WarAI*)xmalloc(sizeof(WarAI));
     ai->staticCommandId = 0;
     ai->customData = NULL;
@@ -12,6 +14,8 @@ WarAI* createAI(WarContext* context)
 
 WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandType type)
 {
+    NOT_USED(context);
+
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
@@ -89,7 +93,7 @@ WarAICommand* getNextAICommand(WarContext* context, WarPlayerInfo* aiPlayer)
         return customData->commands.items[customData->index++];
     }
 
-    return createSleepForTime(context, aiPlayer, 10);
+    return createSleepForTime(context, aiPlayer, 10.0f);
 }
 
 void initAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
@@ -137,7 +141,7 @@ bool tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType uni
                     {
                         if (decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
                         {
-                            WarState* trainState = createTrainState(context, entity, unitType, stats.buildTime);
+                            WarState* trainState = createTrainState(context, entity, unitType, (f32)stats.buildTime);
                             changeNextState(context, entity, trainState, true, true);
                         }
 
@@ -202,6 +206,8 @@ bool executeWaitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICom
 
 bool executeSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
 {
+    NOT_USED(aiPlayer);
+
     command->status = WAR_AI_COMMAND_STATUS_STARTED;
     command->sleep.time -= context->deltaTime;
 
@@ -268,6 +274,8 @@ bool updateAICurrentCommands(WarContext* context, WarPlayerInfo* aiPlayer)
 
 void updateAINextCommands(WarContext* context, WarPlayerInfo* aiPlayer)
 {
+    NOT_USED(context);
+
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
@@ -290,6 +298,8 @@ void updateAINextCommands(WarContext* context, WarPlayerInfo* aiPlayer)
 
 void removeCompletedAICommands(WarContext* context, WarPlayerInfo* aiPlayer)
 {
+    NOT_USED(context);
+
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 

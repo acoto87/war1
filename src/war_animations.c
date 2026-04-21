@@ -92,6 +92,8 @@ void freeAnimation(WarSpriteAnimation* animation)
 
 s32 findAnimationIndex(WarContext* context, WarEntity* entity, const char* name)
 {
+    NOT_USED(context);
+
     s32 index = -1;
 
     WarAnimationsComponent* animations = &entity->animations;
@@ -181,9 +183,9 @@ void updateAnimations(WarContext* context)
             WarAnimationsComponent* animations = &entity->animations;
             if (animations->enabled)
             {
-                for(s32 i = 0; i < animations->animations.count; i++)
+                for(s32 k = 0; k < animations->animations.count; k++)
                 {
-                    WarSpriteAnimation* anim = animations->animations.items[i];
+                    WarSpriteAnimation* anim = animations->animations.items[k];
                     updateAnimation(context, entity, anim);
                 }
             }
@@ -193,6 +195,8 @@ void updateAnimations(WarContext* context)
 
 WarSpriteAnimation* findAnimation(WarContext* context, WarEntity* entity, const char* name)
 {
+    NOT_USED(context);
+
     WarAnimationsComponent* animations = &entity->animations;
     for(s32 i = 0; i < animations->animations.count; i++)
     {

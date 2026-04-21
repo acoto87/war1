@@ -10,12 +10,14 @@ WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeT
 
 void enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = getUnitSize(entity);
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-    setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+    setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
     unit->buildPercent = 0;
@@ -23,6 +25,8 @@ void enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
@@ -83,4 +87,5 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeUpgradeState(WarState* state)
 {
+    NOT_USED(state);
 }

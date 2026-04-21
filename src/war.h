@@ -103,19 +103,3 @@ vec2 getDirFromMousePos(WarContext* context)
     dir = vec2Normalize(dir);
     return dir;
 }
-
-void printDirection(WarUnitDirection direction)
-{
-    switch (direction)
-    {
-        case WAR_DIRECTION_NORTH:      logDebug("DIRECTION_NORTH\n");      break;
-        case WAR_DIRECTION_NORTH_EAST: logDebug("DIRECTION_NORTH_EAST\n"); break;
-        case WAR_DIRECTION_EAST:       logDebug("DIRECTION_EAST\n");       break;
-        case WAR_DIRECTION_SOUTH_EAST: logDebug("DIRECTION_SOUTH_EAST\n"); break;
-        case WAR_DIRECTION_SOUTH:      logDebug("DIRECTION_SOUTH\n");      break;
-        case WAR_DIRECTION_SOUTH_WEST: logDebug("DIRECTION_SOUTH_WEST\n"); break;
-        case WAR_DIRECTION_WEST:       logDebug("DIRECTION_WEST\n");       break;
-        case WAR_DIRECTION_NORTH_WEST: logDebug("DIRECTION_NORTH_WEST\n"); break;
-        default:                       logError("Unkown direction\n");     break;
-    }
-}

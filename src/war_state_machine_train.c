@@ -10,12 +10,14 @@ WarState* createTrainState(WarContext* context, WarEntity* entity, WarUnitType u
 
 void enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = getUnitSize(entity);
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
-    setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+    setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
     unit->buildPercent = 0;
@@ -23,6 +25,8 @@ void enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leaveTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(state);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
@@ -89,4 +93,5 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeTrainState(WarState* state)
 {
+    NOT_USED(state);
 }

@@ -37,7 +37,7 @@ void enterSceneBriefingHumans(WarContext* context)
     WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 160));
     setUITextColor(briefingText, u8RgbColor(255, 215, 138));
     setUITextMultiline(briefingText, true);
-    setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 200));
+    setUITextBoundings(briefingText, vec2f((f32)(context->originalWindowWidth - 40), 200.0f));
     setUITextHorizontalAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(briefingText, WAR_TEXT_ALIGN_TOP);
     setUITextLineAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
@@ -86,7 +86,7 @@ void enterSceneBriefingOrcs(WarContext* context)
     WarEntity* briefingText = createUIText(context, "txtBriefing", 1, 10, data.briefingText, vec2i(20, 160));
     setUITextColor(briefingText, u8RgbColor(255, 215, 138));
     setUITextMultiline(briefingText, true);
-    setUITextBoundings(briefingText, vec2f(context->originalWindowWidth - 40, 200));
+    setUITextBoundings(briefingText, vec2f((f32)(context->originalWindowWidth - 40), 200.0f));
     setUITextHorizontalAlign(briefingText, WAR_TEXT_ALIGN_LEFT);
     setUITextVerticalAlign(briefingText, WAR_TEXT_ALIGN_TOP);
     setUITextLineAlign(briefingText, WAR_TEXT_ALIGN_LEFT);

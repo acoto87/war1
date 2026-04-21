@@ -9,10 +9,16 @@ WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId 
 
 void enterFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
@@ -24,7 +30,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (state->follow.targetEntityId)
     {
-        WarEntity* targetEntity = findEntity(context, state->follow.targetEntityId);
+        WarEntity* targetEntity = findEntity(context, (WarEntityId)state->follow.targetEntityId);
 
         if (isUnit(targetEntity))
         {
@@ -54,7 +60,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    WarMapPath path = findPath(map->finder, start.x, start.y, end.x, end.y);
+    WarMapPath path = findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
 
     // if there is no path to the target, go to idle
     if (path.nodes.count <= 1)
@@ -78,4 +84,5 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 
 void freeFollowState(WarState* state)
 {
+    NOT_USED(state);
 }

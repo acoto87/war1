@@ -14,20 +14,23 @@ void enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 position = getUnitCenterPosition(entity, true);
     vec2 treePosition = state->chop.position;
 
-    setStaticEntity(map->finder, position.x, position.y, unitSize.x, unitSize.y, entity->id);
+    setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     setUnitDirectionFromDiff(entity, treePosition.x - position.x, treePosition.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 }
 
 void leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarUnitComponent* unit = &entity->unit;
 
-    WarEntity* forest = findEntity(context, state->chop.forestId);
+    WarEntity* forest = findEntity(context, (WarEntityId)state->chop.forestId);
 
     // if the forest doesn't exists, go idle
     if (!forest)
@@ -38,7 +41,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     }
 
     vec2 treePosition = state->chop.position;
-    WarTree* tree = getTreeAtPosition(forest, treePosition.x, treePosition.y);
+    WarTree* tree = getTreeAtPosition(forest, (s32)treePosition.x, (s32)treePosition.y);
 
     if (!tree || tree->amount == 0)
     {
@@ -95,4 +98,5 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
 
 void freeChoppingState(WarState* state)
 {
+    NOT_USED(state);
 }

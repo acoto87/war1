@@ -27,6 +27,9 @@ void enterPatrolState(WarContext* context, WarEntity* entity, WarState* state)
 
 void leavePatrolState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 }
 
 void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
