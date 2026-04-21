@@ -17,11 +17,11 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
         return NULL;
     }
 
-    u64 fileLength = flength(file);
+    u64 fileLength = wio_flength(file);
 
     WarFile *warFile = (WarFile*)xcalloc(1, sizeof(WarFile));
-    warFile->archiveID = fileReadU32(file);
-    warFile->numberOfEntries = fileReadU32(file);
+    warFile->archiveID = wio_fileReadU32(file);
+    warFile->numberOfEntries = wio_fileReadU32(file);
 
     switch (warFile->archiveID)
     {
@@ -51,7 +51,7 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
         return NULL;
     }
 
-    fileReadBytes((u8*)warFile->offsets, warFile->numberOfEntries * sizeof(u32), file);
+    wio_fileReadBytes((u8*)warFile->offsets, warFile->numberOfEntries * sizeof(u32), file);
 
     for (s32 i = 0; i < (s32)warFile->numberOfEntries; ++i)
     {
@@ -89,14 +89,14 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
 
         fseek(file, warFile->offsets[i], SEEK_SET);
 
-        u32 size = fileReadU32(file);
+        u32 size = wio_fileReadU32(file);
         u32 length = (size & 0x1FFFFFFF);
         bool compressed = (size & 0xE0000000) != 0;
 
         u8 *data = (u8*)xcalloc(length, sizeof(u8));
         if (!compressed)
         {
-            fileReadBytes(data, length, file);
+            wio_fileReadBytes(data, length, file);
         }
         else
         {
@@ -151,14 +151,14 @@ tmp.size := finalsize; // Crop the file, just in case
 
             while (b < (s32)compressedLength)
             {
-                u8 cmask = fileReadU8(file);
+                u8 cmask = wio_fileReadU8(file);
                 b++;
 
                 for (s32 a = 0; a < 8 && bufwinPos < (s32)length; ++a)
                 {
                     if (cmask % 2 == 1) // uncompressed byte
                     {
-                        u8 bufbyte = fileReadU8(file);
+                        u8 bufbyte = wio_fileReadU8(file);
                         b++;
 
                         bufwin[bufwinPos % BUFWIN_SIZE] = bufbyte;
@@ -167,7 +167,7 @@ tmp.size := finalsize; // Crop the file, just in case
                     }
                     else // compressed block begin
                     {
-                        u16 offset = fileReadU16(file);
+                        u16 offset = wio_fileReadU16(file);
                         u16 numbytes = offset / BUFWIN_SIZE;
                         offset = offset % BUFWIN_SIZE;
                         b += 2;

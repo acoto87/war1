@@ -5,7 +5,7 @@
 #include "alloc.h"
 #include "war_math.h"
 
-uint32_t flength(FILE *file)
+uint32_t wio_flength(FILE *file)
 {
     uint32_t pos = ftell(file);
     fseek(file, 0, SEEK_END);
@@ -14,7 +14,7 @@ uint32_t flength(FILE *file)
     return length;
 }
 
-void fileReadBytes(uint8_t *bytes, uint32_t length, FILE *file)
+void wio_fileReadBytes(uint8_t *bytes, uint32_t length, FILE *file)
 {
     uint8_t buffer[DEFAULT_BUFFER_SIZE];
 
@@ -31,21 +31,21 @@ void fileReadBytes(uint8_t *bytes, uint32_t length, FILE *file)
     }
 }
 
-uint8_t fileReadU8(FILE *file)
+uint8_t wio_fileReadU8(FILE *file)
 {
     uint8_t value;
     fread(&value, sizeof(uint8_t), 1, file);
     return value;
 }
 
-uint16_t fileReadU16(FILE *file)
+uint16_t wio_fileReadU16(FILE *file)
 {
     uint16_t value;
     fread(&value, sizeof(uint16_t), 1, file);
     return value;
 }
 
-uint32_t fileReadU32(FILE *file)
+uint32_t wio_fileReadU32(FILE *file)
 {
     uint32_t value;
     fread(&value, sizeof(uint32_t), 1, file);
@@ -63,7 +63,7 @@ TextFile* fileReadAllText(char *filePath)
         return NULL;
     }
 
-    uint32_t fileLength = flength(file);
+    uint32_t fileLength = wio_flength(file);
     fclose(file);
 
     file = fopen(filePath, "r");
@@ -77,14 +77,14 @@ TextFile* fileReadAllText(char *filePath)
     if (textFile->length > 0)
     {
         textFile->contents = (uint8_t*)xcalloc(textFile->length, 1);
-        fileReadBytes(textFile->contents, textFile->length, file);
+        wio_fileReadBytes(textFile->contents, textFile->length, file);
     }
 
     fclose(file);
     return textFile;
 }
 
-void fileDispose(TextFile *file)
+void wio_fileDispose(TextFile *file)
 {
     if (file->contents)
     {

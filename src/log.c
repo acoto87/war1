@@ -27,14 +27,14 @@ static const char* __getFileName(const char* file)
     return file + index + 1;
 }
 
-void initLog(LogSeverity severity)
+void wlog_init(LogSeverity severity)
 {
     __log__ = (Log){0};
     __log__.severity = severity;
     __logMutex__ = SDL_CreateMutex();
 }
 
-void __log(LogSeverity severity, const char* file, int32_t line, const char* message, ...)
+void wlog_log(LogSeverity severity, const char* file, int32_t line, const char* message, ...)
 {
     if (severity > __log__.severity)
     {

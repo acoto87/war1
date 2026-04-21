@@ -11,10 +11,10 @@ typedef struct
     uint8_t *contents;
 } TextFile;
 
-uint32_t flength(FILE *file);
-void fileReadBytes(uint8_t *bytes, uint32_t length, FILE *file);
-uint8_t fileReadU8(FILE *file);
-uint16_t fileReadU16(FILE *file);
-uint32_t fileReadU32(FILE *file);
+uint32_t wio_flength(FILE *file);
+void wio_fileReadBytes(uint8_t *bytes, uint32_t length, FILE *file);
+uint8_t wio_fileReadU8(FILE *file);
+uint16_t wio_fileReadU16(FILE *file);
+uint32_t wio_fileReadU32(FILE *file);
 TextFile* fileReadAllText(char *filePath);
-void fileDispose(TextFile *file);
+void wio_fileDispose(TextFile *file);

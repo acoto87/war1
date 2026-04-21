@@ -152,7 +152,7 @@ static void appendCheatTextInput(WarContext* context, const char* text)
             s32 length = (s32)strlen(cheatStatus->text);
             if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
             {
-                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+                wutil_strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
                 cheatStatus->position++;
             }
         }

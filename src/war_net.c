@@ -341,8 +341,8 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     SSMapOptions options = (SSMapOptions){0};
     options.defaultValue = NULL;
     options.hashFn = strHashFNV32;
-    options.equalsFn = strEquals;
-    options.freeFn = strFree;
+    options.equalsFn = wutil_strEquals;
+    options.freeFn = wutil_strFree;
 
     SSMap headers;
     SSMapInit(&headers, options);
@@ -353,7 +353,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     responseLength -= readFromResponse;
 
     const char* responseStatus = SSMapGet(&headers, "ResponseStatus");
-    if (!strEquals(responseStatus, "200 OK"))
+    if (!wutil_strEquals(responseStatus, "200 OK"))
     {
         logError("The response status is not successful, received %s\n", responseStatus);
 
@@ -368,7 +368,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     }
 
     const char* contentType = SSMapGet(&headers, "Content-Type");
-    if (!strEquals(contentType, "application/octet-stream"))
+    if (!wutil_strEquals(contentType, "application/octet-stream"))
     {
         logError("The content type of the response should be binary, received: %s\n", contentType);
 
@@ -398,7 +398,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     }
 
     const char* transferEncoding = SSMapGet(&headers, "Transfer-Encoding");
-    if (transferEncoding && strEquals(transferEncoding, "chunked"))
+    if (transferEncoding && wutil_strEquals(transferEncoding, "chunked"))
     {
         while (responseLength > 0)
         {

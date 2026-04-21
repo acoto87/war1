@@ -92,7 +92,7 @@ int main()
 {
     srand((unsigned int)time(NULL));
 
-    initLog(LOG_SEVERITY_DEBUG);
+    wlog_init(LOG_SEVERITY_DEBUG);
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
