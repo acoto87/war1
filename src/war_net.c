@@ -1,7 +1,6 @@
 #include "war_net.h"
 
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -314,8 +313,8 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    FILE* fd = fopen(filePath, "wb");
-    if (!fd)
+    SDL_IOStream *stream = SDL_IOFromFile(filePath, "wb");
+    if (!stream)
     {
         logError("Couldn't create a new file at: %s\n", filePath);
 
@@ -333,7 +332,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         closeSocket(sck);
         cleanNetwork();
         free(response);
-        fclose(fd);
+        SDL_CloseIO(stream);
 
         return true;
     }
@@ -362,7 +361,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         closeSocket(sck);
         cleanNetwork();
         free(response);
-        fclose(fd);
+        SDL_CloseIO(stream);
 
         return false;
     }
@@ -377,7 +376,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         closeSocket(sck);
         cleanNetwork();
         free(response);
-        fclose(fd);
+        SDL_CloseIO(stream);
 
         return false;
     }
@@ -392,7 +391,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         closeSocket(sck);
         cleanNetwork();
         free(response);
-        fclose(fd);
+        SDL_CloseIO(stream);
 
         return false;
     }
@@ -415,7 +414,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
             }
 
             s32 sizeToWrite = min(chunkSize, responseLength);
-            fwrite(responsePtr, sizeof(char), sizeToWrite, fd);
+            SDL_WriteIO(stream, responsePtr, sizeToWrite);
 
             responsePtr += sizeToWrite + 2;
             responseLength -= sizeToWrite + 2;
@@ -424,7 +423,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     else
     {
         // assume Transfer-Encoding: identity
-        fwrite(responsePtr, sizeof(char), responseLength, fd);
+        SDL_WriteIO(stream, responsePtr, responseLength);
     }
 
     SSMapFree(&headers);
@@ -432,7 +431,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     closeSocket(sck);
     cleanNetwork();
     free(response);
-    fclose(fd);
+    SDL_CloseIO(stream);
 
     return true;
 }
