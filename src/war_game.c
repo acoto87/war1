@@ -152,7 +152,7 @@ static void appendCheatTextInput(WarContext* context, const char* text)
             s32 length = (s32)strlen(cheatStatus->text);
             if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
             {
-                strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+                wutil_strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
                 cheatStatus->position++;
             }
         }
@@ -171,7 +171,7 @@ bool initGame(WarContext* context)
     context->window = SDL_CreateWindow(context->windowTitle, context->windowWidth, context->windowHeight, 0);
     if (!context->window)
     {
-        logError("Error creating SDL window: %s\n", SDL_GetError());
+        logError("Error creating SDL window: %s", SDL_GetError());
         SDL_Quit();
         return false;
     }
@@ -179,7 +179,7 @@ bool initGame(WarContext* context)
     context->renderer = SDL_CreateRenderer(context->window, NULL);
     if (!context->renderer)
     {
-        logError("Error creating SDL renderer: %s\n", SDL_GetError());
+        logError("Error creating SDL renderer: %s", SDL_GetError());
         SDL_DestroyWindow(context->window);
         SDL_Quit();
         return false;
@@ -191,7 +191,7 @@ bool initGame(WarContext* context)
             context->originalWindowWidth, context->originalWindowHeight,
             SDL_LOGICAL_PRESENTATION_INTEGER_SCALE))
     {
-        logError("Error setting logical presentation: %s\n", SDL_GetError());
+        logError("Error setting logical presentation: %s", SDL_GetError());
         SDL_DestroyRenderer(context->renderer);
         SDL_DestroyWindow(context->window);
         SDL_Quit();
@@ -211,7 +211,7 @@ bool initGame(WarContext* context)
     // init audio
     if (!initAudio(context))
     {
-        logError("Could not initialize audio.\n", NO_ARG_STR);
+        logError("Could not initialize audio.");
         return false;
     }
 
@@ -226,7 +226,7 @@ bool initGame(WarContext* context)
         // load DATA.WAR file
         if (!loadDataFile(context))
         {
-            logError("Could not load file: %s\n", DATAWAR_FILE_PATH);
+            logError("Could not load file: %s", DATAWAR_FILE_PATH);
             return false;
         }
 
@@ -306,7 +306,7 @@ void setWindowSize(WarContext* context, s32 width, s32 height)
 void setGlobalScale(WarContext* context, f32 scale)
 {
     context->globalScale = max(scale, 1.0f);
-    logDebug("set global scale to: %.2f\n", context->globalScale);
+    logDebug("set global scale to: %.2f", context->globalScale);
 
     s32 newWidth = (s32)(context->originalWindowWidth * context->globalScale);
     s32 newHeight = (s32)(context->originalWindowHeight * context->globalScale);
@@ -321,7 +321,7 @@ void changeGlobalScale(WarContext* context, f32 deltaScale)
 void setGlobalSpeed(WarContext* context, f32 speed)
 {
     context->globalSpeed = max(speed, 1.0f);
-    logDebug("set global speed to: %.2f\n", context->globalSpeed);
+    logDebug("set global speed to: %.2f", context->globalSpeed);
 }
 
 void changeGlobalSpeed(WarContext* context, f32 deltaSpeed)
@@ -332,7 +332,7 @@ void changeGlobalSpeed(WarContext* context, f32 deltaSpeed)
 void setMusicVolume(WarContext* context, f32 volume)
 {
     context->musicVolume = clamp(volume, 0.0f, 1.0f);
-    logDebug("set music volume to: %.2f\n", context->musicVolume);
+    logDebug("set music volume to: %.2f", context->musicVolume);
 }
 
 void changeMusicVolume(WarContext* context, f32 deltaVolume)
@@ -343,7 +343,7 @@ void changeMusicVolume(WarContext* context, f32 deltaVolume)
 void setSoundVolume(WarContext* context, f32 volume)
 {
     context->soundVolume = clamp(volume, 0.0f, 1.0f);
-    logDebug("set sound volume to: %.2f\n", context->soundVolume);
+    logDebug("set sound volume to: %.2f", context->soundVolume);
 }
 
 void changeSoundVolume(WarContext* context, f32 deltaVolume)
@@ -551,7 +551,7 @@ void updateGame(WarContext* context)
     }
     else
     {
-        logError("There is no map or scene active.\n", NO_ARG_STR);
+        logError("There is no map or scene active.");
     }
 }
 

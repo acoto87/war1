@@ -179,7 +179,7 @@ void updateCheatsPanel(WarContext* context)
             s32 length = (s32)strlen(cheatStatus->text);
             if (TAB_WIDTH <= STATUS_TEXT_MAX_LENGTH - length)
             {
-                strInsertAt(cheatStatus->text, cheatStatus->position, '\t');
+                wutil_strInsertAt(cheatStatus->text, cheatStatus->position, '\t');
                 cheatStatus->position++;
             }
         }
@@ -187,7 +187,7 @@ void updateCheatsPanel(WarContext* context)
         {
             if (cheatStatus->position > 0)
             {
-                strRemoveAt(cheatStatus->text, cheatStatus->position - 1);
+                wutil_strRemoveAt(cheatStatus->text, cheatStatus->position - 1);
                 cheatStatus->position--;
             }
         }
@@ -196,7 +196,7 @@ void updateCheatsPanel(WarContext* context)
             s32 length = (s32)strlen(cheatStatus->text);
             if (cheatStatus->position < length)
             {
-                strRemoveAt(cheatStatus->text, cheatStatus->position);
+                wutil_strRemoveAt(cheatStatus->text, cheatStatus->position);
             }
         }
         else if (wasKeyPressed(input, WAR_KEY_RIGHT))

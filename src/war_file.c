@@ -1,27 +1,24 @@
 #include "war_file.h"
 
-#include <stdio.h>
-
 #include "alloc.h"
-#include "io.h"
-#include "log.h"
+#include "war_log.h"
 
 WarFile* loadWarFile(WarContext* context, const char* filePath)
 {
     NOT_USED(context);
 
-    FILE *file = fopen(filePath, "rb");
-    if (!file)
+    SDL_IOStream *stream = SDL_IOFromFile(filePath, "rb");
+    if (!stream)
     {
-        logError("Couldn't process the DATA.WAR file. The file doesn't exists at %s.\n", filePath);
+        logError("Couldn't process the DATA.WAR file. The file doesn't exists at %s.", filePath);
         return NULL;
     }
 
-    u64 fileLength = flength(file);
+    Sint64 fileLength = SDL_GetIOSize(stream);
 
     WarFile *warFile = (WarFile*)xcalloc(1, sizeof(WarFile));
-    warFile->archiveID = fileReadU32(file);
-    warFile->numberOfEntries = fileReadU32(file);
+    SDL_ReadU32LE(stream, &warFile->archiveID);
+    SDL_ReadU32LE(stream, &warFile->numberOfEntries);
 
     switch (warFile->archiveID)
     {
@@ -47,11 +44,11 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
 
     if (warFile->type == WAR_FILE_TYPE_UNKNOWN)
     {
-        logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.\n", warFile->archiveID);
+        logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.", warFile->archiveID);
         return NULL;
     }
 
-    fileReadBytes((u8*)warFile->offsets, warFile->numberOfEntries * sizeof(u32), file);
+    SDL_ReadIO(stream, warFile->offsets, warFile->numberOfEntries * sizeof(u32));
 
     for (s32 i = 0; i < (s32)warFile->numberOfEntries; ++i)
     {
@@ -87,16 +84,17 @@ WarFile* loadWarFile(WarContext* context, const char* filePath)
             compressedLength = nextOffset - warFile->offsets[i];
         }
 
-        fseek(file, warFile->offsets[i], SEEK_SET);
+        SDL_SeekIO(stream, warFile->offsets[i], SDL_IO_SEEK_SET);
 
-        u32 size = fileReadU32(file);
+        u32 size;
+        SDL_ReadU32LE(stream, &size);
         u32 length = (size & 0x1FFFFFFF);
         bool compressed = (size & 0xE0000000) != 0;
 
         u8 *data = (u8*)xcalloc(length, sizeof(u8));
         if (!compressed)
         {
-            fileReadBytes(data, length, file);
+            SDL_ReadIO(stream, data, length);
         }
         else
         {
@@ -151,14 +149,16 @@ tmp.size := finalsize; // Crop the file, just in case
 
             while (b < (s32)compressedLength)
             {
-                u8 cmask = fileReadU8(file);
+                u8 cmask;
+                SDL_ReadU8(stream, &cmask);
                 b++;
 
                 for (s32 a = 0; a < 8 && bufwinPos < (s32)length; ++a)
                 {
                     if (cmask % 2 == 1) // uncompressed byte
                     {
-                        u8 bufbyte = fileReadU8(file);
+                        u8 bufbyte;
+                        SDL_ReadU8(stream, &bufbyte);
                         b++;
 
                         bufwin[bufwinPos % BUFWIN_SIZE] = bufbyte;
@@ -167,7 +167,8 @@ tmp.size := finalsize; // Crop the file, just in case
                     }
                     else // compressed block begin
                     {
-                        u16 offset = fileReadU16(file);
+                        u16 offset;
+                        SDL_ReadU16LE(stream, &offset);
                         u16 numbytes = offset / BUFWIN_SIZE;
                         offset = offset % BUFWIN_SIZE;
                         b += 2;
@@ -196,7 +197,6 @@ tmp.size := finalsize; // Crop the file, just in case
         warFile->resources[i].data = data;
     }
 
-    fclose(file);
+    SDL_CloseIO(stream);
     return warFile;
 }
-

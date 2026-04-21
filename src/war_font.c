@@ -259,7 +259,7 @@ vec2 getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment verti
         }
         default:
         {
-            logError("Invalid horizontal alignment value: %d\n", horizontalAlign);
+            logError("Invalid horizontal alignment value: %d", horizontalAlign);
             break;
         }
     }
@@ -283,7 +283,7 @@ vec2 getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment verti
         }
         default:
         {
-            logError("Invalid vertical alignment value: %d\n", verticalAlign);
+            logError("Invalid vertical alignment value: %d", verticalAlign);
             break;
         }
     }
@@ -314,7 +314,7 @@ f32 getLineAlignmentOffset(WarTextAlignment lineAlign, f32 width, f32 lineWidth)
         }
         default:
         {
-            logError("Invalid horizontal alignment value: %d\n", lineAlign);
+            logError("Invalid horizontal alignment value: %d", lineAlign);
             break;
         }
     }

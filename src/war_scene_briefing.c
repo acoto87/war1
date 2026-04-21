@@ -125,7 +125,7 @@ void enterSceneBriefing(WarContext* context)
 
         default:
         {
-            logError("Not allowed briefing scenes for race: %d\n", scene->briefing.race);
+            logError("Not allowed briefing scenes for race: %d", scene->briefing.race);
             break;
         }
     }

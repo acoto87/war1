@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "common.h"
-#include "log.h"
+#include "war_log.h"
 
 #ifdef min
 #undef min
@@ -255,7 +255,7 @@ vec2 vec2Round(vec2 v)
 
 void vec2Print(vec2 v)
 {
-    logDebug("(%f, %f)\n", v.x, v.y);
+    logDebug("(%f, %f)", v.x, v.y);
 }
 
 /*
@@ -386,5 +386,5 @@ vec2 getClosestPointOnRect(vec2 p, rect r)
 
 void rectPrint(rect r)
 {
-    logDebug("(%f, %f, %f, %f)\n", r.x, r.y, r.width, r.height);
+    logDebug("(%f, %f, %f, %f)", r.x, r.y, r.width, r.height);
 }

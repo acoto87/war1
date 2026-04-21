@@ -44,7 +44,7 @@ void applyCheat(WarContext* context, const char* text)
         WarCheatDescriptor desc = cheatDescriptors[i];
         if (!desc.argument)
         {
-            if (strCaseEquals(text, desc.text, true))
+            if (wutil_strCaseEquals(text, desc.text, true))
             {
                 desc.cheatFunc(context, NULL);
                 return;
@@ -52,7 +52,7 @@ void applyCheat(WarContext* context, const char* text)
         }
         else
         {
-            if (strCaseStartsWith(text, desc.text, true))
+            if (wutil_strCaseStartsWith(text, desc.text, true))
             {
                 // skip the command text and the whitespace characters
                 s32 skip = (s32)strlen(desc.text);
@@ -67,7 +67,7 @@ void applyCheat(WarContext* context, const char* text)
     }
 
     // if we reach here no cheat was applied
-    logInfo("Unknown cheat: %s\n", text);
+    logInfo("Unknown cheat: %s", text);
 }
 
 void applyGoldCheat(WarContext* context, const char* argument)
@@ -290,7 +290,7 @@ void applySkipHumanCheat(WarContext* context, const char* argument)
         return;
 
     s32 level;
-    if (strTryParseS32(argument, &level))
+    if (wutil_strTryParseS32(argument, &level))
     {
         // TODO: remove this check when more levels are allowed
         if (level <= 0 || level > 2)
@@ -313,7 +313,7 @@ void applySkipOrcCheat(WarContext* context, const char* argument)
         return;
 
     s32 level;
-    if (strTryParseS32(argument, &level))
+    if (wutil_strTryParseS32(argument, &level))
     {
         // TODO: remove this check when more levels are allowed
         if (level <= 0 || level > 2)
@@ -347,12 +347,12 @@ void applyMusicCheat(WarContext* context, const char* argument)
     if (!context->cheatsEnabled)
         return;
 
-    if (strCaseEquals(argument, "on", true))
+    if (wutil_strCaseEquals(argument, "on", true))
     {
         context->musicEnabled = true;
         setCheatsFeedback(context, "Music on");
     }
-    else if (strCaseEquals(argument, "off", true))
+    else if (wutil_strCaseEquals(argument, "off", true))
     {
         context->musicEnabled = false;
         setCheatsFeedback(context, "Music off");
@@ -360,7 +360,7 @@ void applyMusicCheat(WarContext* context, const char* argument)
     else if (!isDemo(context))
     {
         s32 musicId;
-        if (strTryParseS32(argument, &musicId))
+        if (wutil_strTryParseS32(argument, &musicId))
         {
             // argument is expected in the range 1-45, so convert it to the range 0-44
             musicId--;
@@ -386,12 +386,12 @@ void applySoundCheat(WarContext* context, const char* argument)
     if (!context->cheatsEnabled)
         return;
 
-    if (strCaseEquals(argument, "on", true))
+    if (wutil_strCaseEquals(argument, "on", true))
     {
         context->soundEnabled = true;
         setCheatsFeedback(context, "Sounds on");
     }
-    else if (strCaseEquals(argument, "off", true))
+    else if (wutil_strCaseEquals(argument, "off", true))
     {
         context->soundEnabled = false;
         setCheatsFeedback(context, "Sounds off");
@@ -404,7 +404,7 @@ void applyMusicVolCheat(WarContext* context, const char* argument)
         return;
 
     s32 musicVol;
-    if (strTryParseS32(argument, &musicVol))
+    if (wutil_strTryParseS32(argument, &musicVol))
     {
         musicVol = clamp(musicVol, 0, 100);
 
@@ -436,7 +436,7 @@ void applySoundVolCheat(WarContext* context, const char* argument)
         return;
 
     s32 sfxVol;
-    if (strTryParseS32(argument, &sfxVol))
+    if (wutil_strTryParseS32(argument, &sfxVol))
     {
         sfxVol = clamp(sfxVol, 0, 100);
 
@@ -468,7 +468,7 @@ void applyGlobalScaleCheat(WarContext* context, const char* argument)
         return;
 
     s32 scale;
-    if (strTryParseS32(argument, &scale))
+    if (wutil_strTryParseS32(argument, &scale))
     {
         scale = clamp(scale, 1, 5);
         setGlobalScale(context, (f32)scale);
@@ -482,7 +482,7 @@ void applyGlobalSpeedCheat(WarContext* context, const char* argument)
         return;
 
     s32 speed;
-    if (strTryParseS32(argument, &speed))
+    if (wutil_strTryParseS32(argument, &speed))
     {
         speed = clamp(speed, 1, 5);
         setGlobalSpeed(context, (f32)speed);
@@ -506,28 +506,28 @@ void applyEditCheat(WarContext* context, const char* argument)
     map->editingRainOfFire = false;
     map->addingUnit = false;
 
-    if (strCaseEquals(argument, "off", true))
+    if (wutil_strCaseEquals(argument, "off", true))
     {
         setCheatsFeedback(context, "Edit off");
         return;
     }
 
-    if (strCaseEquals(argument, "trees", true))
+    if (wutil_strCaseEquals(argument, "trees", true))
     {
         map->editingTrees = true;
         setCheatsFeedback(context, "Edit trees on");
     }
-    else if (strCaseEquals(argument, "walls", true))
+    else if (wutil_strCaseEquals(argument, "walls", true))
     {
         map->editingWalls = true;
         setCheatsFeedback(context, "Edit walls on");
     }
-    else if (strCaseEquals(argument, "roads", true))
+    else if (wutil_strCaseEquals(argument, "roads", true))
     {
         map->editingRoads = true;
         setCheatsFeedback(context, "Edit roads on");
     }
-    else if (strCaseEquals(argument, "ruins", true))
+    else if (wutil_strCaseEquals(argument, "ruins", true))
     {
         map->editingRuins = true;
         setCheatsFeedback(context, "Edit ruins on");
@@ -575,119 +575,119 @@ void applyAddUnitCheat(WarContext* context, const char* argument)
 
     map->addingUnit = false;
 
-    if (strCaseStartsWith(argument, "off", true))
+    if (wutil_strCaseStartsWith(argument, "off", true))
     {
         setCheatsFeedback(context, "Add unit off");
         return;
     }
 
-    if (strCaseStartsWith(argument, "CATAPULT", true))
+    if (wutil_strCaseStartsWith(argument, "CATAPULT", true))
     {
-        const char* part2 = strSkipUntil(argument + strlen("CATAPULT"), " ");
-        if (strCaseStartsWith(part2, "HUMANS", true))
+        const char* part2 = wutil_strSkipUntil(argument + strlen("CATAPULT"), " ");
+        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_CATAPULT_HUMANS;
         }
-        else if (strCaseStartsWith(part2, "ORCS", true))
+        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_CATAPULT_ORCS;
         }
     }
-    else if (strCaseStartsWith(argument, "FARM", true))
+    else if (wutil_strCaseStartsWith(argument, "FARM", true))
     {
-        const char* part2 = strSkipUntil(argument + strlen("FARM"), " ");
-        if (strCaseStartsWith(part2, "HUMANS", true))
+        const char* part2 = wutil_strSkipUntil(argument + strlen("FARM"), " ");
+        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_FARM_HUMANS;
         }
-        else if (strCaseStartsWith(part2, "ORCS", true))
+        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_FARM_ORCS;
         }
     }
-    else if (strCaseStartsWith(argument, "BARRACkS", true))
+    else if (wutil_strCaseStartsWith(argument, "BARRACkS", true))
     {
-        const char* part2 = strSkipUntil(argument + strlen("BARRACkS"), " ");
-        if (strCaseStartsWith(part2, "HUMANS", true))
+        const char* part2 = wutil_strSkipUntil(argument + strlen("BARRACkS"), " ");
+        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_BARRACKS_HUMANS;
         }
-        else if (strCaseStartsWith(part2, "ORCS", true))
+        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_BARRACKS_ORCS;
         }
     }
-    else if (strCaseStartsWith(argument, "TOWER", true))
+    else if (wutil_strCaseStartsWith(argument, "TOWER", true))
     {
-        const char* part2 = strSkipUntil(argument + strlen("TOWER"), " ");
-        if (strCaseStartsWith(part2, "HUMANS", true))
+        const char* part2 = wutil_strSkipUntil(argument + strlen("TOWER"), " ");
+        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_TOWER_HUMANS;
         }
-        else if (strCaseStartsWith(part2, "ORCS", true))
+        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_TOWER_ORCS;
         }
     }
-    else if (strCaseStartsWith(argument, "TOWN HALL", true))
+    else if (wutil_strCaseStartsWith(argument, "TOWN HALL", true))
     {
-        const char* part2 = strSkipUntil(argument + strlen("TOWN HALL"), " ");
-        if (strCaseStartsWith(part2, "HUMANS", true))
+        const char* part2 = wutil_strSkipUntil(argument + strlen("TOWN HALL"), " ");
+        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_TOWNHALL_HUMANS;
         }
-        else if (strCaseStartsWith(part2, "ORCS", true))
+        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_TOWNHALL_ORCS;
         }
     }
-    else if (strCaseStartsWith(argument, "MILL", true))
+    else if (wutil_strCaseStartsWith(argument, "MILL", true))
     {
-        const char* part2 = strSkipUntil(argument + strlen("MILL"), " ");
-        if (strCaseStartsWith(part2, "HUMANS", true))
+        const char* part2 = wutil_strSkipUntil(argument + strlen("MILL"), " ");
+        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_LUMBERMILL_HUMANS;
         }
-        else if (strCaseStartsWith(part2, "ORCS", true))
+        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_LUMBERMILL_ORCS;
         }
     }
-    else if (strCaseStartsWith(argument, "BLACKSMITH", true))
+    else if (wutil_strCaseStartsWith(argument, "BLACKSMITH", true))
     {
-        const char* part2 = strSkipUntil(argument + strlen("BLACKSMITH"), " ");
-        if (strCaseStartsWith(part2, "HUMANS", true))
+        const char* part2 = wutil_strSkipUntil(argument + strlen("BLACKSMITH"), " ");
+        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_BLACKSMITH_HUMANS;
         }
-        else if (strCaseStartsWith(part2, "ORCS", true))
+        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_BLACKSMITH_ORCS;
         }
     }
-    else if (strCaseStartsWith(argument, "CORPSE", true))
+    else if (wutil_strCaseStartsWith(argument, "CORPSE", true))
     {
-        const char* part2 = strSkipUntil(argument + strlen("CORPSE"), " ");
-        if (strCaseStartsWith(part2, "HUMANS", true))
+        const char* part2 = wutil_strSkipUntil(argument + strlen("CORPSE"), " ");
+        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_HUMAN_CORPSE;
         }
-        else if (strCaseStartsWith(part2, "ORCS", true))
+        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_ORC_CORPSE;
@@ -697,7 +697,7 @@ void applyAddUnitCheat(WarContext* context, const char* argument)
     {
         for (s32 i = 0; i < arrayLength(unitsData); i++)
         {
-            if (strCaseEquals(argument, unitsData[i].name, true))
+            if (wutil_strCaseEquals(argument, unitsData[i].name, true))
             {
                 map->addingUnit = true;
                 map->addingUnitType = unitsData[i].type;

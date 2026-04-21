@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "alloc.h"
-#include "log.h"
+#include "war_log.h"
 #include "war_audio.h"
 
 #define WAR_BUILDING_DAMAGE_1_RESOURCE 352
@@ -26,7 +26,7 @@ WarResource* getOrCreateResource(WarContext* context, s32 index)
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
     if (!context->resources[index])
     {
-        logInfo("Creating resource: %d\n", index);
+        logInfo("Creating resource: %d", index);
         context->resources[index] = (WarResource*)xcalloc(1, sizeof(WarResource));
     }
     return context->resources[index];
@@ -82,7 +82,7 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -176,7 +176,7 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -218,7 +218,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -437,7 +437,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -672,7 +672,7 @@ void loadLevelVisual(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -690,7 +690,7 @@ void loadLevelPassable(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -709,7 +709,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -786,7 +786,7 @@ void loadTiles(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -804,7 +804,7 @@ void loadText(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -821,7 +821,7 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -832,7 +832,7 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
     uint8_t* midData = transcodeXmiToMid(xmiData, xmiLength, &midLength);
     if (!midData)
     {
-        logError("Can't convert XMI file of resource %d\n", index);
+        logError("Can't convert XMI file of resource %d", index);
         return;
     }
 
@@ -849,7 +849,7 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -907,7 +907,7 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -969,7 +969,7 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
-        logInfo("Placeholder resource found at: %d\n", index);
+        logInfo("Placeholder resource found at: %d", index);
         return;
     }
 
@@ -1090,7 +1090,7 @@ void loadResource(WarContext *context, DatabaseEntry *entry)
 
         default:
         {
-            logInfo("DB entries of type %d aren't handled yet.\n", entry->type);
+            logInfo("DB entries of type %d aren't handled yet.", entry->type);
             break;
         }
     }

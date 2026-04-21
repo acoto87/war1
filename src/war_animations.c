@@ -85,7 +85,7 @@ f32 getAnimationDuration(WarSpriteAnimation* animation)
 
 void freeAnimation(WarSpriteAnimation* animation)
 {
-    logInfo("Freeing animation: %s\n", animation->name);
+    logInfo("Freeing animation: %s", animation->name);
 
     free(animation->name);
 
@@ -108,7 +108,7 @@ s32 findAnimationIndex(WarContext* context, WarEntity* entity, const char* name)
     for(s32 i = 0; i < animations->animations.count; i++)
     {
         WarSpriteAnimation* anim = animations->animations.items[i];
-        if (strEquals(anim->name, name))
+        if (wutil_strEquals(anim->name, name))
         {
             index = i;
             break;
@@ -120,7 +120,7 @@ s32 findAnimationIndex(WarContext* context, WarEntity* entity, const char* name)
 
 void removeAnimation(WarContext* context, WarEntity* entity, const char* name)
 {
-    logInfo("Trying to remove animation: %s\n", name);
+    logInfo("Trying to remove animation: %s", name);
 
     s32 index = findAnimationIndex(context, entity, name);
     if (index >= 0)
@@ -209,7 +209,7 @@ WarSpriteAnimation* findAnimation(WarContext* context, WarEntity* entity, const 
     for(s32 i = 0; i < animations->animations.count; i++)
     {
         WarSpriteAnimation* anim = animations->animations.items[i];
-        if (strEquals(anim->name, name))
+        if (wutil_strEquals(anim->name, name))
         {
             return anim;
         }

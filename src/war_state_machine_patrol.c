@@ -18,7 +18,7 @@ void enterPatrolState(WarContext* context, WarEntity* entity, WarState* state)
             WarState* idleState = createIdleState(context, entity, true);
             changeNextState(context, entity, idleState, true, true);
         }
-        
+
         return;
     }
 

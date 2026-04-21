@@ -137,7 +137,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
 
         default:
         {
-            logWarning("Trying to load the resource of type %d as a sprite.\n", resource->type);
+            logWarning("Trying to load the resource of type %d as a sprite.", resource->type);
             assert(false);
             break;
         }
@@ -158,7 +158,7 @@ void updateSpriteImage(WarContext *context, WarSprite sprite, u8 data[])
 
     if (!sprite.texture)
     {
-        logWarning("Trying to update a sprite with no texture\n", NO_ARG_STR);
+        logWarning("Trying to update a sprite with no texture");
         return;
     }
 
@@ -169,7 +169,7 @@ void renderSubSprite(WarContext *context, WarSprite sprite, rect rs, rect rd, ve
 {
     if (!sprite.texture)
     {
-        logWarning("Trying to render a sprite with no texture\n", NO_ARG_STR);
+        logWarning("Trying to render a sprite with no texture");
         return;
     }
 
@@ -180,7 +180,7 @@ void renderSprite(WarContext *context, WarSprite sprite, vec2 pos, vec2 scale)
 {
     if (!sprite.texture)
     {
-        logWarning("Trying to render a sprite with no texture\n", NO_ARG_STR);
+        logWarning("Trying to render a sprite with no texture");
         return;
     }
 
@@ -205,7 +205,7 @@ void freeSprite(WarContext* context, WarSprite sprite)
 
     if (!sprite.texture)
     {
-        logWarning("Trying to free a sprite with no texture\n", NO_ARG_STR);
+        logWarning("Trying to free a sprite with no texture");
         return;
     }
 

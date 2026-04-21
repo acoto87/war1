@@ -114,7 +114,7 @@ void updateSceneDownload(WarContext* context)
                 }
                 else
                 {
-                    logError("Could not load file: %s\n", DATAWAR_FILE_PATH);
+                    logError("Could not load file: %s", DATAWAR_FILE_PATH);
                 }
             }
 

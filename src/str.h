@@ -3,17 +3,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-bool strEquals(const char* str1, const char* str2);
-bool strCaseEquals(const char* str1, const char* str2, bool ignoreCase);
+bool wutil_strEquals(const char* str1, const char* str2);
+bool wutil_strCaseEquals(const char* str1, const char* str2, bool ignoreCase);
 uint32_t strHashFNV32(const char* data);
-void strFree(char* str);
+void wutil_strFree(char* str);
 
-void strInsertAt(char* str, int32_t index, char c);
-void strRemoveAt(char* str, int32_t index);
-bool strStartsWith(const char* str1, const char* str2);
-bool strCaseStartsWith(const char* str1, const char* str2, bool ignoreCase);
-const char* strSkipUntil(const char* str1, const char* str2);
-int32_t strParseS32(const char* str);
-bool strTryParseS32(const char* str, int32_t* value);
-int64_t strParseS64(const char* str);
-bool strTryParseS64(const char* str, int64_t* value);
+void wutil_strInsertAt(char* str, int32_t index, char c);
+void wutil_strRemoveAt(char* str, int32_t index);
+bool wutil_strStartsWith(const char* str1, const char* str2);
+bool wutil_strCaseStartsWith(const char* str1, const char* str2, bool ignoreCase);
+const char* wutil_strSkipUntil(const char* str1, const char* str2);
+int32_t wutil_strParseS32(const char* str);
+bool wutil_strTryParseS32(const char* str, int32_t* value);
+int64_t wutil_strParseS64(const char* str);
+bool wutil_strTryParseS64(const char* str, int64_t* value);

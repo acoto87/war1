@@ -42,7 +42,7 @@ void enterScene(WarContext* context)
 
     if (!inRange(scene->type, WAR_SCENE_DOWNLOAD, WAR_SCENE_COUNT))
     {
-        logError("Unkown scene type: %d\n", scene->type);
+        logError("Unkown scene type: %d", scene->type);
         return;
     }
 
@@ -59,7 +59,7 @@ void updateScene(WarContext* context)
 
     if (!inRange(scene->type, WAR_SCENE_DOWNLOAD, WAR_SCENE_COUNT))
     {
-        logError("Unkown scene type: %d\n", scene->type);
+        logError("Unkown scene type: %d", scene->type);
         return;
     }
 
@@ -85,7 +85,7 @@ void leaveScene(WarContext* context)
 
     if (!inRange(scene->type, WAR_SCENE_DOWNLOAD, WAR_SCENE_COUNT))
     {
-        logError("Unkown scene type: %d\n", scene->type);
+        logError("Unkown scene type: %d", scene->type);
         return;
     }
 

@@ -268,7 +268,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
             default:
             {
-                logWarning("Trying to cast wrong spell: %d\n", spellType);
+                logWarning("Trying to cast wrong spell: %d", spellType);
                 break;
             }
         }

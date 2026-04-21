@@ -62,10 +62,9 @@
 #define SHL_WAVE_WRITER_IMPLEMENTATION
 #include "shl/wave_writer.h"
 
-#include "log.h"
+#include "war_log.h"
 #include "str.h"
 #include "alloc.h"
-#include "io.h"
 #include "common.h"
 #include "war_color.h"
 #include "war_math.h"
@@ -92,18 +91,18 @@ int main()
 {
     srand((unsigned int)time(NULL));
 
-    initLog(LOG_SEVERITY_DEBUG);
+    SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
-        logError("Error initializing SDL: %s\n", SDL_GetError());
+        logError("Error initializing SDL: %s", SDL_GetError());
         return -1;
     }
 
     WarContext context = {0};
     if (!initGame(&context))
     {
-        logError("Can't initialize the game!\n", NO_ARG_STR);
+        logError("Can't initialize the game!");
         return -1;
     }
 
@@ -136,10 +135,9 @@ int main()
 	return 0;
 }
 
-#include "log.c"
+#include "war_log.c"
 #include "str.c"
 #include "alloc.c"
-#include "io.c"
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_net.c"

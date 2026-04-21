@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include "log.h"
+#include "war_log.h"
 #include "war_color.h"
 #include "war_types.h"
 #include "war.h"
@@ -1650,7 +1650,7 @@ WarProjectileType getProjectileType(WarUnitType type)
         default:
         {
             // unreachable
-            logWarning("Invalid unit firing a projectile: %d\n", type);
+            logWarning("Invalid unit firing a projectile: %d", type);
             return WAR_PROJECTILE_ARROW;
         }
     }
@@ -1703,7 +1703,7 @@ WarUnitType getProducerUnitOfType(WarUnitType type)
 
         default:
         {
-            logWarning("There is not producer unit for unit type %d\n", type);
+            logWarning("There is not producer unit for unit type %d", type);
             return -1;
         }
     }

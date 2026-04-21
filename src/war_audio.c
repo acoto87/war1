@@ -6,7 +6,7 @@
 #include "SDL3/SDL.h"
 
 #include "alloc.h"
-#include "log.h"
+#include "war_log.h"
 #include "shl/memory_buffer.h"
 #include "war_entities.h"
 #include "war_units.h"
@@ -286,7 +286,7 @@ bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     WarResource* resource = context->resources[audio->resourceIndex];
     if (!resource)
     {
-        logError("Can't play audio %d, resource: %d\n", entity->id, audio->resourceIndex);
+        logError("Can't play audio %d, resource: %d", entity->id, audio->resourceIndex);
         return false;
     }
 
@@ -429,7 +429,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
 
                     default:
                     {
-                        logWarning("Unkown audio type: %d\n", audio->type);
+                        logWarning("Unkown audio type: %d", audio->type);
                         break;
                     }
                 }
@@ -455,7 +455,7 @@ bool initAudio(WarContext* context)
     context->soundFont = tsf_load_filename("GMGeneric.SF2");
     if (!context->soundFont)
     {
-        logError("Could not load SoundFont at %s\n", "GMGeneric.SF2");
+        logError("Could not load SoundFont at %s", "GMGeneric.SF2");
         return false;
     }
 
@@ -480,14 +480,14 @@ bool initAudio(WarContext* context)
 
     if (!context->audioStream)
     {
-        logError("Failed to open audio device stream: %s\n", SDL_GetError());
+        logError("Failed to open audio device stream: %s", SDL_GetError());
         return false;
     }
 
     // SDL_OpenAudioDeviceStream opens paused; resume to start playback
     if (!SDL_ResumeAudioStreamDevice(context->audioStream))
     {
-        logError("Failed to resume audio stream device: %s\n", SDL_GetError());
+        logError("Failed to resume audio stream device: %s", SDL_GetError());
         SDL_DestroyAudioStream(context->audioStream);
         context->audioStream = NULL;
         return false;
@@ -588,7 +588,7 @@ WarEntity* playAttackSound(WarContext* context, vec2 position, WarUnitActionStep
         case WAR_ACTION_STEP_SOUND_ARROW:
             return createAudioWithPosition(context, WAR_ARROW_SPEAR, position, false);
         default:
-            logWarning("Trying to play sound with step: %d\n", soundStep);
+            logWarning("Trying to play sound with step: %d", soundStep);
             return NULL;
     }
 }

@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool strEquals(const char* str1, const char* str2)
+bool wutil_strEquals(const char* str1, const char* str2)
 {
     return strcmp(str1, str2) == 0;
 }
 
-bool strCaseEquals(const char* str1, const char* str2, bool ignoreCase)
+bool wutil_strCaseEquals(const char* str1, const char* str2, bool ignoreCase)
 {
     return ignoreCase
         ? strcasecmp(str1, str2) == 0
@@ -27,37 +27,37 @@ uint32_t strHashFNV32(const char* data)
     return hash;
 }
 
-void strFree(char* str)
+void wutil_strFree(char* str)
 {
     free((void*)str);
 }
 
-void strInsertAt(char* str, int32_t index, char c)
+void wutil_strInsertAt(char* str, int32_t index, char c)
 {
     int32_t length = (int32_t)strlen(str) + 1; // count the \0
     memmove(str + index + 1, str + index, length - index);
     str[index] = c;
 }
 
-void strRemoveAt(char* str, int32_t index)
+void wutil_strRemoveAt(char* str, int32_t index)
 {
     int32_t length = (int32_t)strlen(str) + 1; // count the \0
     memmove(str + index, str + index + 1, length - index - 1);
 }
 
-bool strStartsWith(const char* str1, const char* str2)
+bool wutil_strStartsWith(const char* str1, const char* str2)
 {
     return strncmp(str1, str2, strlen(str2)) == 0;
 }
 
-bool strCaseStartsWith(const char* str1, const char* str2, bool ignoreCase)
+bool wutil_strCaseStartsWith(const char* str1, const char* str2, bool ignoreCase)
 {
     return ignoreCase
         ? strncasecmp(str1, str2, strlen(str2)) == 0
         : strncmp(str1, str2, strlen(str2)) == 0;
 }
 
-const char* strSkipUntil(const char* str1, const char* str2)
+const char* wutil_strSkipUntil(const char* str1, const char* str2)
 {
     char* str = (char*)str1;
     while (strchr(str2, *str))
@@ -68,24 +68,24 @@ const char* strSkipUntil(const char* str1, const char* str2)
     return str;
 }
 
-int32_t strParseS32(const char* str)
+int32_t wutil_strParseS32(const char* str)
 {
     return strtol(str, NULL, 0);
 }
 
-bool strTryParseS32(const char* str, int32_t* value)
+bool wutil_strTryParseS32(const char* str, int32_t* value)
 {
     char* following;
     *value = strtol(str, &following, 0);
     return following > str;
 }
 
-int64_t strParseS64(const char* str)
+int64_t wutil_strParseS64(const char* str)
 {
     return strtoll(str, NULL, 0);
 }
 
-bool strTryParseS64(const char* str, int64_t* value)
+bool wutil_strTryParseS64(const char* str, int64_t* value)
 {
     char* following;
     *value = strtoll(str, &following, 0);

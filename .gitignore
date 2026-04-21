@@ -5,6 +5,7 @@ ctime.exe
 nob.exe
 nob.exe.old
 nob.obj
+nob
 flic-file-format
 output_189.png
 output_192.png
@@ -14,5 +15,4 @@ callgrind*
 assets/*.WAR
 .vscode-ctags
 .markdownlint.json
-nob.exe
-nob.obj
+*.pdb

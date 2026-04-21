@@ -80,12 +80,12 @@ typedef struct tml_message tml_message;
 shlDefineCreateArray(s32, s32)
 shlDefineFreeArray(s32, s32)
 
-bool equalsS32(const s32 a, const s32 b)
+bool wtype_equalsS32(const s32 a, const s32 b)
 {
     return a == b;
 }
 
-bool compareS32(const s32 a, const s32 b)
+bool wtype_compareS32(const s32 a, const s32 b)
 {
     return a - b;
 }
@@ -93,9 +93,9 @@ bool compareS32(const s32 a, const s32 b)
 shlDeclareList(s32List, s32)
 shlDefineList(s32List, s32)
 
-#define s32ListDefaultOptions (s32ListOptions){0, equalsS32, NULL}
+#define s32ListDefaultOptions (s32ListOptions){0, wtype_equalsS32, NULL}
 
-bool equalsVec2(const vec2 v1, const vec2 v2)
+bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
 {
     return v1.x == v2.x && v1.y == v2.y;
 }
@@ -103,9 +103,9 @@ bool equalsVec2(const vec2 v1, const vec2 v2)
 shlDeclareList(vec2List, vec2)
 shlDefineList(vec2List, vec2)
 
-#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, equalsVec2, NULL}
+#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wtype_equalsVec2, NULL}
 
-bool equalsRect(const rect r1, const rect r2)
+bool wtype_equalsRect(const rect r1, const rect r2)
 {
     return r1.x == r2.x && r1.y == r2.y &&
            r1.width == r2.width && r1.height == r2.height;
@@ -114,12 +114,12 @@ bool equalsRect(const rect r1, const rect r2)
 shlDeclareList(rectList, rect)
 shlDefineList(rectList, rect)
 
-#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, equalsRect, NULL}
+#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wtype_equalsRect, NULL}
 
 shlDeclareMap(SSMap, const char*, char*)
 shlDefineMap(SSMap, const char*, char*)
 
-#define SSMapDefaultOptions (SSMapOptions){NULL, strHashFNV32, strEquals, NULL}
+#define SSMapDefaultOptions (SSMapOptions){NULL, strHashFNV32, wutil_strEquals, NULL}
 
 //
 // Forward references to other structs that need a reference to these ones.

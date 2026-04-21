@@ -1172,7 +1172,7 @@ bool executeCommand(WarContext* context)
 
         default:
         {
-            logError("Not implemented command: %d\n", command->type);
+            logError("Not implemented command: %d", command->type);
             return false;
         }
     }

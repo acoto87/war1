@@ -1,12 +1,11 @@
 #include "war_net.h"
 
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "alloc.h"
-#include "log.h"
+#include "war_log.h"
 #include "str.h"
 
 #define WAR_REQUEST_MESSAGE_MAX_SIZE 2048
@@ -25,7 +24,7 @@ bool initNetwork()
     s32 status = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (status != 0)
     {
-        logError("Couldn't initialize Websock. Errno: %d\n", status);
+        logError("Couldn't initialize Websock. Errno: %d", status);
         return false;
     }
 #endif
@@ -39,7 +38,7 @@ bool cleanNetwork()
     s32 status = WSACleanup();
     if (status == SOCKET_ERROR)
     {
-        logError("Couldn't cleanup Websock. Errno: %d\n", WSAGetLastError());
+        logError("Couldn't cleanup Websock. Errno: %d", WSAGetLastError());
         return false;
     }
 #endif
@@ -53,9 +52,9 @@ WarSocket connectToHost(const char* host)
     if(!hostEntry)
     {
 #if _WIN32
-        logError("Couldn't create socket to host %s. Errno: %d\n", host, WSAGetLastError());
+        logError("Couldn't create socket to host %s. Errno: %d", host, WSAGetLastError());
 #else
-        logError("Couldn't create socket to host %s. Errno: %d\n", host, h_errno);
+        logError("Couldn't create socket to host %s. Errno: %d", host, h_errno);
 #endif
 
         return 0;
@@ -65,9 +64,9 @@ WarSocket connectToHost(const char* host)
     if(sck == INVALID_SOCKET)
     {
 #if _WIN32
-        logError("Couldn't create socket to host %s. Last error: %d\n", host, WSAGetLastError());
+        logError("Couldn't create socket to host %s. Last error: %d", host, WSAGetLastError());
 #else
-        logError("Couldn't create socket to host %s. Last error: %d\n", host, errno);
+        logError("Couldn't create socket to host %s. Last error: %d", host, errno);
 #endif
 
         return 0;
@@ -82,9 +81,9 @@ WarSocket connectToHost(const char* host)
     if(status == SOCKET_ERROR)
     {
 #if _WIN32
-        logError("Couldn't connect socket to host %s. Last error: %d\n", host, WSAGetLastError());
+        logError("Couldn't connect socket to host %s. Last error: %d", host, WSAGetLastError());
 #else
-        logError("Couldn't connect socket to host %s. Last error: %d\n", host, errno);
+        logError("Couldn't connect socket to host %s. Last error: %d", host, errno);
 #endif
 
         closeSocket(sck);
@@ -114,7 +113,7 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     if (requestLength > WAR_REQUEST_MESSAGE_MAX_SIZE ||
         hostRequestLength > WAR_REQUEST_MESSAGE_MAX_SIZE)
     {
-        logError("The host or resource are too long to build the HTTP request: host=%s, resource=%s.\n", host, resource);
+        logError("The host or resource are too long to build the HTTP request: host=%s, resource=%s.", host, resource);
         return false;
     }
 
@@ -124,9 +123,9 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     if (status == SOCKET_ERROR)
     {
 #if _WIN32
-        logError("Couldn't send request with message: %s. Errno: %d\n", message, WSAGetLastError());
+        logError("Couldn't send request with message: %s. Errno: %d", message, WSAGetLastError());
 #else
-        logError("Couldn't send request with message: %s. Errno: %d\n", message, errno);
+        logError("Couldn't send request with message: %s. Errno: %d", message, errno);
 #endif
 
         return false;
@@ -138,9 +137,9 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     if (status == SOCKET_ERROR)
     {
 #if _WIN32
-        logError("Couldn't send request with message: %s. Errno: %d\n", message, WSAGetLastError());
+        logError("Couldn't send request with message: %s. Errno: %d", message, WSAGetLastError());
 #else
-        logError("Couldn't send request with message: %s. Errno: %d\n", message, errno);
+        logError("Couldn't send request with message: %s. Errno: %d", message, errno);
 #endif
 
         return false;
@@ -222,9 +221,9 @@ s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
         if (readFromSocket == SOCKET_ERROR)
         {
 #if _WIN32
-        logError("Couldn't receive the response from socket %d. Errno: %d\n", (int)sck, WSAGetLastError());
+        logError("Couldn't receive the response from socket %d. Errno: %d", (int)sck, WSAGetLastError());
 #else
-        logError("Couldn't receive the response from socket %d. Errno: %d\n", sck, errno);
+        logError("Couldn't receive the response from socket %d. Errno: %d", sck, errno);
 #endif
 
             responseLength = -1;
@@ -259,14 +258,14 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     size32 urlLength = strlen(url);
     if (shift > urlLength)
     {
-        logError("The url has an invalid prefix offset: %s\n", url);
+        logError("The url has an invalid prefix offset: %s", url);
         return false;
     }
 
     size32 cutLength = urlLength - shift + 1;
     if (cutLength > WAR_URL_BUFFER_MAX_SIZE)
     {
-        logError("The url is too long to parse: %s\n", url);
+        logError("The url is too long to parse: %s", url);
         return false;
     }
 
@@ -278,21 +277,21 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (!initNetwork())
     {
-        logError("Couldn't initialize the network.\n", NO_ARG_STR);
+        logError("Couldn't initialize the network.");
         return false;
     }
 
     WarSocket sck = connectToHost(host);
     if (!sck)
     {
-        logError("Couldn't connect to host: %s\n", host);
+        logError("Couldn't connect to host: %s", host);
         cleanNetwork();
         return false;
     }
 
     if (!requestResource(sck, resource, host))
     {
-        logError("Couldn't download file from url %s\n", url);
+        logError("Couldn't download file from url %s", url);
         closeSocket(sck);
         cleanNetwork();
         return false;
@@ -305,7 +304,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (responseLength < 0)
     {
-        logError("Couldn't receive response from url %s\n", url);
+        logError("Couldn't receive response from url %s", url);
 
         closeSocket(sck);
         cleanNetwork();
@@ -314,10 +313,10 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    FILE* fd = fopen(filePath, "wb");
-    if (!fd)
+    SDL_IOStream *stream = SDL_IOFromFile(filePath, "wb");
+    if (!stream)
     {
-        logError("Couldn't create a new file at: %s\n", filePath);
+        logError("Couldn't create a new file at: %s", filePath);
 
         closeSocket(sck);
         cleanNetwork();
@@ -328,12 +327,12 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (responseLength == 0)
     {
-        logError("The response was empty from %s\n", url);
+        logError("The response was empty from %s", url);
 
         closeSocket(sck);
         cleanNetwork();
         free(response);
-        fclose(fd);
+        SDL_CloseIO(stream);
 
         return true;
     }
@@ -341,8 +340,8 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     SSMapOptions options = (SSMapOptions){0};
     options.defaultValue = NULL;
     options.hashFn = strHashFNV32;
-    options.equalsFn = strEquals;
-    options.freeFn = strFree;
+    options.equalsFn = wutil_strEquals;
+    options.freeFn = wutil_strFree;
 
     SSMap headers;
     SSMapInit(&headers, options);
@@ -353,31 +352,31 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     responseLength -= readFromResponse;
 
     const char* responseStatus = SSMapGet(&headers, "ResponseStatus");
-    if (!strEquals(responseStatus, "200 OK"))
+    if (!wutil_strEquals(responseStatus, "200 OK"))
     {
-        logError("The response status is not successful, received %s\n", responseStatus);
+        logError("The response status is not successful, received %s", responseStatus);
 
         SSMapFree(&headers);
 
         closeSocket(sck);
         cleanNetwork();
         free(response);
-        fclose(fd);
+        SDL_CloseIO(stream);
 
         return false;
     }
 
     const char* contentType = SSMapGet(&headers, "Content-Type");
-    if (!strEquals(contentType, "application/octet-stream"))
+    if (!wutil_strEquals(contentType, "application/octet-stream"))
     {
-        logError("The content type of the response should be binary, received: %s\n", contentType);
+        logError("The content type of the response should be binary, received: %s", contentType);
 
         SSMapFree(&headers);
 
         closeSocket(sck);
         cleanNetwork();
         free(response);
-        fclose(fd);
+        SDL_CloseIO(stream);
 
         return false;
     }
@@ -385,20 +384,20 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     const char* contentDisposition = SSMapGet(&headers, "Content-Disposition");
     if (!strstr(contentDisposition, "attachment"))
     {
-        logError("The content disposition of the response should be 'attachment', received: %s\n", contentDisposition);
+        logError("The content disposition of the response should be 'attachment', received: %s", contentDisposition);
 
         SSMapFree(&headers);
 
         closeSocket(sck);
         cleanNetwork();
         free(response);
-        fclose(fd);
+        SDL_CloseIO(stream);
 
         return false;
     }
 
     const char* transferEncoding = SSMapGet(&headers, "Transfer-Encoding");
-    if (transferEncoding && strEquals(transferEncoding, "chunked"))
+    if (transferEncoding && wutil_strEquals(transferEncoding, "chunked"))
     {
         while (responseLength > 0)
         {
@@ -415,7 +414,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
             }
 
             s32 sizeToWrite = min(chunkSize, responseLength);
-            fwrite(responsePtr, sizeof(char), sizeToWrite, fd);
+            SDL_WriteIO(stream, responsePtr, sizeToWrite);
 
             responsePtr += sizeToWrite + 2;
             responseLength -= sizeToWrite + 2;
@@ -424,7 +423,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     else
     {
         // assume Transfer-Encoding: identity
-        fwrite(responsePtr, sizeof(char), responseLength, fd);
+        SDL_WriteIO(stream, responsePtr, responseLength);
     }
 
     SSMapFree(&headers);
@@ -432,7 +431,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     closeSocket(sck);
     cleanNetwork();
     free(response);
-    fclose(fd);
+    SDL_CloseIO(stream);
 
     return true;
 }
