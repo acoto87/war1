@@ -215,7 +215,7 @@ void removeAnimationsComponent(WarContext* context, WarEntity* entity)
     entity->animations = (WarAnimationsComponent){0};
 }
 
-void addUIComponent(WarContext* context, WarEntity* entity, char* name)
+void addUIComponent(WarContext* context, WarEntity* entity, String name)
 {
     NOT_USED(context);
 
@@ -609,7 +609,7 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
-WarEntity* findUIEntity(WarContext* context, const char* name)
+WarEntity* findUIEntity(WarContext* context, StringView name)
 {
     WarEntityList* entities = getUIEntities(context);
     for (s32 i = 0; i < entities->count; i++)
@@ -617,7 +617,7 @@ WarEntity* findUIEntity(WarContext* context, const char* name)
         WarEntity* entity = entities->items[i];
         if (entity &&
             isUIEntity(entity) &&
-            wsv_equals(wsv_fromCString(entity->ui.name), wsv_fromCString(name)))
+            wsv_equals(wsv_fromString(&entity->ui.name), name))
         {
             return entity;
         }
@@ -1262,7 +1262,7 @@ void renderText(WarContext* context, WarEntity* entity)
     WarUIComponent* ui = &entity->ui;
     WarTextComponent* text = &entity->text;
 
-    if (ui->enabled && text->enabled && text->text)
+    if (ui->enabled && text->enabled && text->text.data)
     {
         renderSave(context);
         renderTranslate(context, transform->position.x, transform->position.y);
@@ -1286,9 +1286,9 @@ void renderText(WarContext* context, WarEntity* entity)
         params.fontData = fontsData[text->fontIndex];
 
         if (entity->text.multiline)
-            renderMultiSpriteText(context, text->text, 0, 0, params);
+            renderMultiSpriteText(context, wstr_cstr(&text->text), 0, 0, params);
         else
-            renderSingleSpriteText(context, text->text, 0, 0, params);
+            renderSingleSpriteText(context, wstr_cstr(&text->text), 0, 0, params);
 
         renderRestore(context);
     }
@@ -1370,7 +1370,7 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.fontSprite = context->fontSprites[text->fontIndex];
                 params.fontData = fontsData[text->fontIndex];
 
-                renderSingleSpriteText(context, text->text, 0, 0, params);
+                renderSingleSpriteText(context, wstr_cstr(&text->text), 0, 0, params);
             }
         }
 
@@ -2115,17 +2115,17 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
         s32 hpPercent = percentabi(unit->hp, unit->maxhp);
         if(hpPercent <= 33)
         {
-            if (!containsAnimation(context, entity, "hugeDamage"))
+            if (!containsAnimation(context, entity, wsv_fromCString("hugeDamage")))
             {
-                removeAnimation(context, entity, "littleDamage");
-                createDamageAnimation(context, entity, "hugeDamage", 2);
+                removeAnimation(context, entity, wsv_fromCString("littleDamage"));
+                createDamageAnimation(context, entity, wstr_fromCString("hugeDamage"), 2);
             }
         }
         else if(hpPercent <= 66)
         {
-            if (!containsAnimation(context, entity, "littleDamage"))
+            if (!containsAnimation(context, entity, wsv_fromCString("littleDamage")))
             {
-                createDamageAnimation(context, entity, "littleDamage", 1);
+                createDamageAnimation(context, entity, wstr_fromCString("littleDamage"), 1);
             }
         }
     }

@@ -18,7 +18,7 @@ typedef struct
     WarCheatFunc cheatFunc;
 } WarCheatDescriptor;
 
-void applyCheat(WarContext* context, const char* text);
+void applyCheat(WarContext* context, StringView text);
 
 #define cheatsEnabledAndVisible(mapOrScene) ((mapOrScene)->cheatStatus.enabled && (mapOrScene)->cheatStatus.visible)
 
@@ -49,8 +49,7 @@ void applyAddUnitCheat(WarContext* context, StringView argument);
 
 // ui
 void setCheatsPanelVisible(WarContext* context, bool visible);
-void setCheatsFeedback(WarContext* context, const char* feedbackText);
-void setCheatsFeedbackFormat(WarContext* context, const char* feedbackTextFormat, ...);
+void setCheatsFeedback(WarContext* context, String feedbackText);
 void createCheatsPanel(WarContext* context);
 void setCheatText(WarContext* context, char* text, ...);
 void updateCheatsPanel(WarContext* context);

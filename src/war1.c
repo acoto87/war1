@@ -128,8 +128,8 @@ int main(void)
             }
         }
 
-        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
-        SDL_SetWindowTitle(context.window, context.windowTitle);
+        wstr_setFormat(&context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
+        SDL_SetWindowTitle(context.window, wstr_cstr(&context.windowTitle));
 
         updateGame(&context);
         renderGame(&context);

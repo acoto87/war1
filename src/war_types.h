@@ -473,7 +473,7 @@ typedef enum
 
 typedef struct
 {
-    char* name;
+    String name;
     bool loop;
     f32 loopDelay;
 
@@ -491,7 +491,7 @@ typedef struct
 
 bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
 {
-    return strcmp(anim1->name, anim2->name) == 0;
+    return wsv_equals(wstr_view(&anim1->name), wstr_view(&anim2->name));
 }
 
 shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
@@ -1492,7 +1492,7 @@ typedef struct
 typedef struct
 {
     bool enabled;
-    char* name;
+    String name;
 } WarUIComponent;
 
 typedef enum
@@ -1523,7 +1523,7 @@ typedef enum
 typedef struct
 {
     bool enabled;
-    char* text;
+    String text;
     s32 fontIndex;
     f32 fontSize;
     f32 lineHeight;
@@ -1558,7 +1558,7 @@ typedef struct
     WarKeys hotKey;
     s32 highlightIndex;
     s32 highlightCount;
-    char tooltip[100];
+    String tooltip;
     s32 gold;
     s32 wood;
     WarSprite normalSprite;
@@ -1798,7 +1798,7 @@ typedef struct
     vec2 position;
     f32 time; // time in seconds left of the spell
     f32 damageTime; // time in seconds left to inflict damage
-    char animName[30];
+    String animName;
 } WarPoisonCloudComponent;
 
 typedef struct
@@ -2274,7 +2274,7 @@ typedef struct _WarContext
     s32 originalWindowHeight;
     s32 windowWidth;
     s32 windowHeight;
-    char windowTitle[256];
+    String windowTitle;
     SDL_Window* window;
     SDL_Renderer* renderer;
 

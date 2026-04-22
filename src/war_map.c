@@ -804,7 +804,7 @@ void enterMap(WarContext* context)
     createGameOverMenu(context);
     createQuitMenu(context);
     createDemoEndMenu(context);
-    createUICursor(context, "cursor", WAR_CURSOR_ARROW, VEC2_ZERO);
+    createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
 
     if (!isDemo(context))
         createAudio(context, WAR_MUSIC_00, true);
@@ -1299,20 +1299,20 @@ void updateCommandButtons(WarContext* context)
 
     WarEntity* commandButtons[6] =
     {
-        findUIEntity(context, "btnCommand0"),
-        findUIEntity(context, "btnCommand1"),
-        findUIEntity(context, "btnCommand2"),
-        findUIEntity(context, "btnCommand3"),
-        findUIEntity(context, "btnCommand4"),
-        findUIEntity(context, "btnCommand5")
+        findUIEntity(context, wsv_fromCString("btnCommand0")),
+        findUIEntity(context, wsv_fromCString("btnCommand1")),
+        findUIEntity(context, wsv_fromCString("btnCommand2")),
+        findUIEntity(context, wsv_fromCString("btnCommand3")),
+        findUIEntity(context, wsv_fromCString("btnCommand4")),
+        findUIEntity(context, wsv_fromCString("btnCommand5"))
     };
 
     WarEntity* commandTexts[4] =
     {
-        findUIEntity(context, "txtCommand0"),
-        findUIEntity(context, "txtCommand1"),
-        findUIEntity(context, "txtCommand2"),
-        findUIEntity(context, "txtCommand3")
+        findUIEntity(context, wsv_fromCString("txtCommand0")),
+        findUIEntity(context, wsv_fromCString("txtCommand1")),
+        findUIEntity(context, wsv_fromCString("txtCommand2")),
+        findUIEntity(context, wsv_fromCString("txtCommand3"))
     };
 
     for (s32 i = 0; i < arrayLength(commandButtons); i++)
@@ -1521,13 +1521,13 @@ void updateStatus(WarContext* context)
     WarCheatStatus* cheatStatus = &map->cheatStatus;
     WarFlashStatus* flashStatus = &map->flashStatus;
 
-    WarEntity* statusCursor = findUIEntity(context, "txtStatusCursor");
+    WarEntity* statusCursor = findUIEntity(context, wsv_fromCString("txtStatusCursor"));
     assert(statusCursor);
 
-    WarEntity* statusTextUI = findUIEntity(context, "txtStatus");
+    WarEntity* statusTextUI = findUIEntity(context, wsv_fromCString("txtStatus"));
     assert(statusTextUI);
 
-    WarEntity* cheatFeedbackText = findUIEntity(context, "txtCheatFeedbackText");
+    WarEntity* cheatFeedbackText = findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
     assert(cheatFeedbackText);
 
     if (cheatStatus->enabled)
@@ -1556,7 +1556,7 @@ void updateStatus(WarContext* context)
             {
                 if (wasKeyPressed(input, WAR_KEY_ENTER))
                 {
-                    applyCheat(context, wstr_cstr(&cheatStatus->text));
+                    applyCheat(context, wsv_fromString(&cheatStatus->text));
                 }
 
                 setCheatsPanelVisible(context, false);
@@ -1645,7 +1645,7 @@ void updateStatus(WarContext* context)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, (char*)wstr_cstr(&flashStatus->text));
+            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, wstr_cstr(&flashStatus->text));
             return;
         }
 
@@ -1732,7 +1732,7 @@ void updateStatus(WarContext* context)
                 WarButtonComponent* button = &entity->button;
                 if (button->enabled && button->interactive && button->hot)
                 {
-                    strcpy(statusText, button->tooltip);
+                    strcpy(statusText, wstr_cstr(&button->tooltip));
                     goldCost = button->gold;
                     woodCost = button->wood;
                     highlightIndex = button->highlightIndex;
@@ -1751,7 +1751,7 @@ void updateMapCursor(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    WarEntity* entity = findUIEntity(context, "cursor");
+    WarEntity* entity = findUIEntity(context, wsv_fromCString("cursor"));
     if (entity)
     {
         entity->transform.position = vec2Subv(input->pos, entity->cursor.hot);

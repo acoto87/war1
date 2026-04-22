@@ -9,7 +9,7 @@ void enterSceneBlizzard(WarContext* context)
     WarScene* scene = context->scene;
     scene->blizzard.time = 3.0f;
 
-    createUIImage(context, "imgBackground", imageResourceRef(216), VEC2_ZERO);
+    createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(216), VEC2_ZERO);
     createAudio(context, WAR_LOGO, true);
 }
 

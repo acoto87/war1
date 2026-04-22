@@ -38,17 +38,17 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, c
 #define setUIButtonHotKey(uiEntity, key) ((uiEntity)->button.hotKey = (key))
 #define setUIButtonClickHandler(uiEntity, handler) ((uiEntity)->button.clickHandler = (handler))
 
-void setUIButtonStatusByName(WarContext* context, const char* name, bool enabled);
-void setUIButtonInteractiveByName(WarContext* context, const char* name, bool interactive);
-void setUIButtonHotKeyByName(WarContext* context, const char* name, WarKeys key);
-void setUIEntityStatusByName(WarContext* context, const char* name, bool enabled);
+void setUIButtonStatusByName(WarContext* context, StringView name, bool enabled);
+void setUIButtonInteractiveByName(WarContext* context, StringView name, bool interactive);
+void setUIButtonHotKeyByName(WarContext* context, StringView name, WarKeys key);
+void setUIEntityStatusByName(WarContext* context, StringView name, bool enabled);
 
-WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 fontSize, const char* text, vec2 position);
-WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, WarColor color);
-WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef spriteResourceRef, vec2 position);
-WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, vec2 position);
+WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, const char* text, vec2 position);
+WarEntity* createUIRect(WarContext* context, String name, vec2 position, vec2 size, WarColor color);
+WarEntity* createUIImage(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, vec2 position);
+WarEntity* createUICursor(WarContext* context, String name, WarCursorType type, vec2 position);
 WarEntity* createUITextButton(WarContext* context,
-                              char* name,
+                              String name,
                               s32 fontIndex,
                               f32 fontSize,
                               const char* text,
@@ -57,7 +57,7 @@ WarEntity* createUITextButton(WarContext* context,
                               WarSpriteResourceRef foregroundRef,
                               vec2 position);
 WarEntity* createUIImageButton(WarContext* context,
-                               char* name,
+                               String name,
                                WarSpriteResourceRef backgroundNormalRef,
                                WarSpriteResourceRef backgroundPressedRef,
                                WarSpriteResourceRef foregroundRef,

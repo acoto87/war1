@@ -167,8 +167,8 @@ bool initGame(WarContext* context)
     context->originalWindowHeight = 200;
     context->windowWidth = (s32)(context->originalWindowWidth * context->globalScale);
     context->windowHeight = (s32)(context->originalWindowHeight * context->globalScale);
-    strcpy(context->windowTitle, "War 1");
-    context->window = SDL_CreateWindow(context->windowTitle, context->windowWidth, context->windowHeight, 0);
+    wstr_assignCString(&context->windowTitle, "War 1");
+    context->window = SDL_CreateWindow(wstr_cstr(&context->windowTitle), context->windowWidth, context->windowHeight, 0);
     if (!context->window)
     {
         logError("Error creating SDL window: %s", SDL_GetError());
@@ -275,6 +275,8 @@ void quitGame(WarContext* context)
         SDL_DestroyWindow(context->window);
         context->window = NULL;
     }
+
+    wstr_free(context->windowTitle);
 
     SDL_Quit();
 }

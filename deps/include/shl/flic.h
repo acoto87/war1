@@ -31,6 +31,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,6 +79,8 @@ void flicClose(Flic* flic);
 #endif
 
 #ifdef SHL_FLIC_IMPLEMENTATION
+
+#include <string.h>
 
 static inline uint8_t flic__read8(FILE* file)
 {

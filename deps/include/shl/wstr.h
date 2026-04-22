@@ -138,9 +138,11 @@ String     wsv_toString(StringView view);
 String     wstr_make(void);
 String     wstr_withCapacity(size_t capacity);
 String     wstr_fromCString(const char* text);
+String     wstr_fromCStringFormat(const char* textFormat, ...);
+String     wstr_fromCStringFormatv(const char* textFormat, va_list args);
 String     wstr_fromView(StringView view);
 String     wstr_adopt(char* buffer, size_t length, size_t capacity);
-void       wstr_free_ptr(String* string);
+void       wstr_freePtr(String* string);
 void       wstr_free(String string);
 void       wstr_clear(String* string);
 StringView wstr_view(const String* string);
@@ -836,6 +838,25 @@ String wstr_fromCString(const char* text)
     return wstr_fromView(wsv_fromCString(text));
 }
 
+String wstr_fromCStringFormat(const char* textFormat, ...)
+{
+    va_list args;
+    va_start(args, textFormat);
+    String string = wstr_fromCStringFormatv(textFormat, args);
+    va_end(args);
+    return string;
+}
+
+String wstr_fromCStringFormatv(const char* textFormat, va_list args)
+{
+    String string = wstr_make();
+    if (!wstr_setFormatv(&string, textFormat, args))
+    {
+        wstr_freePtr(&string);
+    }
+    return string;
+}
+
 String wstr_fromView(StringView view)
 {
     String string = wstr_make();
@@ -859,7 +880,7 @@ String wstr_adopt(char* buffer, size_t length, size_t capacity)
     return (String){buffer, length, capacity};
 }
 
-void wstr_free_ptr(String* string)
+void wstr_freePtr(String* string)
 {
     if (string == NULL)
     {
