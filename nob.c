@@ -33,6 +33,7 @@ typedef struct {
     Target target;
     bool debug;
     bool check_only;
+    bool build_before_run;  // set when build flags are passed alongside 'run'
 } Build_Options;
 
 static const char *toolchain_name(Toolchain toolchain)
@@ -155,6 +156,7 @@ static void usage(const char *program)
     printf("  %s build --cc msvc --target win64 --check\n", program);
     printf("  %s build --cc gcc --target arm64\n", program);
     printf("  %s run --target linux64\n", program);
+    printf("  %s run --cc gcc --target linux64 --debug\n", program);
 }
 
 static bool parse_toolchain(const char *value, Toolchain *toolchain)
@@ -237,6 +239,7 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
                 return false;
             }
 
+            if (options->command == COMMAND_RUN) options->build_before_run = true;
             continue;
         }
 
@@ -253,16 +256,19 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
                 return false;
             }
 
+            if (options->command == COMMAND_RUN) options->build_before_run = true;
             continue;
         }
 
         if (strcmp(arg, "--debug") == 0) {
             options->debug = true;
+            if (options->command == COMMAND_RUN) options->build_before_run = true;
             continue;
         }
 
         if (strcmp(arg, "--release") == 0) {
             options->debug = false;
+            if (options->command == COMMAND_RUN) options->build_before_run = true;
             continue;
         }
 
@@ -586,11 +592,12 @@ int main(int argc, char **argv)
     NOB_GO_REBUILD_URSELF(argc, argv);
 
     Build_Options options = {
-        .command  = COMMAND_BUILD,
-        .toolchain = default_toolchain(),
-        .target = default_target(),
-        .debug = false,
-        .check_only = false,
+        .command        = COMMAND_BUILD,
+        .toolchain      = default_toolchain(),
+        .target         = default_target(),
+        .debug          = false,
+        .check_only     = false,
+        .build_before_run = false,
     };
 
     if (!parse_args(argc, argv, &options)) {
@@ -602,6 +609,9 @@ int main(int argc, char **argv)
             if (!build_project(&options)) return 1;
             break;
         case COMMAND_RUN:
+            if (options.build_before_run) {
+                if (!build_project(&options)) return 1;
+            }
             if (!run_project(&options)) return 1;
             break;
         default:
