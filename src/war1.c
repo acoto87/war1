@@ -61,14 +61,14 @@
 #include "shl/memory_buffer.h"
 #define SHL_WAVE_WRITER_IMPLEMENTATION
 #include "shl/wave_writer.h"
+#include "alloc.h"
 #define WSTR_MALLOC(sz)       xmalloc(sz)
 #define WSTR_REALLOC(p, sz)   xrealloc(p, sz)
-#define WSTR_FREE(p)          xfree(p)
+#define WSTR_FREE(p)          free(p)
 #define SHL_WSTR_IMPLEMENTATION
 #include "shl/wstr.h"
 
 #include "war_log.h"
-#include "str.h"
 #include "alloc.h"
 #include "common.h"
 #include "war_color.h"
@@ -92,7 +92,7 @@
 #include "war_ai.h"
 #include "war_game.h"
 
-int main()
+int main(void)
 {
     srand((unsigned int)time(NULL));
 
@@ -141,7 +141,6 @@ int main()
 }
 
 #include "war_log.c"
-#include "str.c"
 #include "alloc.c"
 #include "war_file.c"
 #include "war_audio.c"

@@ -11,9 +11,6 @@
 #include "shl/binary_heap.h"
 #include "shl/map.h"
 #include "shl/set.h"
-
-#include "common.h"
-#include "str.h"
 #include "war_color.h"
 #include "war_math.h"
 
@@ -116,10 +113,10 @@ shlDefineList(rectList, rect)
 
 #define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wtype_equalsRect, NULL}
 
-shlDeclareMap(SSMap, const char*, char*)
-shlDefineMap(SSMap, const char*, char*)
+shlDeclareMap(StringViewMap, StringView, String)
+shlDefineMap(StringViewMap, StringView, String)
 
-#define SSMapDefaultOptions (SSMapOptions){NULL, strHashFNV32, wutil_strEquals, NULL}
+#define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free}
 
 //
 // Forward references to other structs that need a reference to these ones.
@@ -2090,7 +2087,7 @@ typedef struct
     bool enabled;
     f32 startTime;
     f32 duration;
-    char text[STATUS_TEXT_MAX_LENGTH];
+    String text;
 } WarFlashStatus;
 
 typedef struct
@@ -2098,10 +2095,10 @@ typedef struct
     bool enabled;
     bool visible;
     s32 position;
-    char text[CHEAT_TEXT_MAX_LENGTH];
+    String text;
     bool feedback;
     f32 feedbackTime;
-    char feedbackText[CHEAT_FEEDBACK_TEXT_MAX_LENGTH];
+    String feedbackText;
 } WarCheatStatus;
 
 typedef enum

@@ -1535,7 +1535,7 @@ void updateStatus(WarContext* context)
         if (cheatStatus->feedback)
         {
             setUIEntityStatus(cheatFeedbackText, true);
-            setUIText(cheatFeedbackText, cheatStatus->feedbackText);
+            setUIText(cheatFeedbackText, wstr_cstr(&cheatStatus->feedbackText));
 
             cheatStatus->feedbackTime -= context->deltaTime;
             if (cheatStatus->feedbackTime <= 0)
@@ -1556,7 +1556,7 @@ void updateStatus(WarContext* context)
             {
                 if (wasKeyPressed(input, WAR_KEY_ENTER))
                 {
-                    applyCheat(context, cheatStatus->text);
+                    applyCheat(context, wstr_cstr(&cheatStatus->text));
                 }
 
                 setCheatsPanelVisible(context, false);
@@ -1565,10 +1565,10 @@ void updateStatus(WarContext* context)
 
             if (wasKeyPressed(input, WAR_KEY_TAB))
             {
-                s32 length = (s32)strlen(cheatStatus->text);
+                s32 length = (s32)cheatStatus->text.length;
                 if (TAB_WIDTH <= STATUS_TEXT_MAX_LENGTH - length)
                 {
-                    wutil_strInsertAt(cheatStatus->text, cheatStatus->position, '\t');
+                    wstr_insert(&cheatStatus->text, cheatStatus->position, wsv_fromCString("\t"));
                     cheatStatus->position++;
                 }
             }
@@ -1576,21 +1576,21 @@ void updateStatus(WarContext* context)
             {
                 if (cheatStatus->position > 0)
                 {
-                    wutil_strRemoveAt(cheatStatus->text, cheatStatus->position - 1);
+                    wstr_removeRange(&cheatStatus->text, cheatStatus->position - 1, 1);
                     cheatStatus->position--;
                 }
             }
             else if (wasKeyPressed(input, WAR_KEY_DELETE))
             {
-                s32 length = (s32)strlen(cheatStatus->text);
+                s32 length = (s32)cheatStatus->text.length;
                 if (cheatStatus->position < length)
                 {
-                    wutil_strRemoveAt(cheatStatus->text, cheatStatus->position);
+                    wstr_removeRange(&cheatStatus->text, cheatStatus->position, 1);
                 }
             }
             else if (wasKeyPressed(input, WAR_KEY_RIGHT))
             {
-                s32 length = (s32)strlen(cheatStatus->text);
+                s32 length = (s32)cheatStatus->text.length;
                 if (cheatStatus->position < length)
                 {
                     cheatStatus->position++;
@@ -1609,14 +1609,14 @@ void updateStatus(WarContext* context)
             }
             else if (wasKeyPressed(input, WAR_KEY_END))
             {
-                s32 length = (s32)strlen(cheatStatus->text);
+                s32 length = (s32)cheatStatus->text.length;
                 cheatStatus->position = length;
             }
 
             char statusText[STATUS_TEXT_MAX_LENGTH];
             memset(statusText, 0, sizeof(statusText));
             strcpy(statusText, "MSG: ");
-            strcpy(statusText + strlen("MSG: "), cheatStatus->text);
+            strcpy(statusText + strlen("MSG: "), wstr_cstr(&cheatStatus->text));
             setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
 
             WarFontParams params = {0};
@@ -1624,7 +1624,7 @@ void updateStatus(WarContext* context)
             params.fontData = fontsData[statusTextUI->text.fontIndex];
 
             vec2 prefixSize = measureSingleSpriteText("MSG: ", (s32)strlen("MSG: "), params);
-            vec2 textSize = measureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
+            vec2 textSize = measureSingleSpriteText(wstr_cstr(&cheatStatus->text), cheatStatus->position, params);
             statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
 
             setUIEntityStatus(statusCursor, true);
@@ -1645,7 +1645,7 @@ void updateStatus(WarContext* context)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, flashStatus->text);
+            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, (char*)wstr_cstr(&flashStatus->text));
             return;
         }
 

@@ -28,7 +28,7 @@ void createMapUI(WarContext* context)
     cheatStatus->enabled = true;
     cheatStatus->visible = false;
     cheatStatus->position = 0;
-    memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
+    wstr_clear(&cheatStatus->text);
 
     WarEntity* uiEntity;
 
@@ -336,7 +336,7 @@ void setFlashStatus(WarContext* context, f32 duration, char* text)
     flashStatus->enabled = true;
     flashStatus->startTime = context->time;
     flashStatus->duration = duration;
-    strcpy(flashStatus->text, text);
+    wstr_assignCString(&flashStatus->text, text);
 }
 
 void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)

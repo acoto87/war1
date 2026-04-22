@@ -1,4 +1,4 @@
-/*  
+/*
     binary_heap.h - acoto87 (acoto87@gmail.com)
 
     MIT License

@@ -108,7 +108,7 @@ s32 findAnimationIndex(WarContext* context, WarEntity* entity, const char* name)
     for(s32 i = 0; i < animations->animations.count; i++)
     {
         WarSpriteAnimation* anim = animations->animations.items[i];
-        if (wutil_strEquals(anim->name, name))
+        if (wsv_equals(wsv_fromCString(anim->name), wsv_fromCString(name)))
         {
             index = i;
             break;
@@ -209,7 +209,7 @@ WarSpriteAnimation* findAnimation(WarContext* context, WarEntity* entity, const 
     for(s32 i = 0; i < animations->animations.count; i++)
     {
         WarSpriteAnimation* anim = animations->animations.items[i];
-        if (wutil_strEquals(anim->name, name))
+        if (wsv_equals(wsv_fromCString(anim->name), wsv_fromCString(name)))
         {
             return anim;
         }

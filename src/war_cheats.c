@@ -2,7 +2,6 @@
 
 #include <string.h>
 
-#include "str.h"
 #include "war_audio.h"
 #include "war_entities.h"
 #include "war_game.h"
@@ -39,27 +38,28 @@ const WarCheatDescriptor cheatDescriptors[] =
 
 void applyCheat(WarContext* context, const char* text)
 {
+    StringView view = wsv_fromCString(text);
+
     for (s32 i = 0; i < arrayLength(cheatDescriptors); i++)
     {
         WarCheatDescriptor desc = cheatDescriptors[i];
+        StringView descText = wsv_fromCString(desc.text);
+
         if (!desc.argument)
         {
-            if (wutil_strCaseEquals(text, desc.text, true))
+            if (wsv_equalsIgnoreCase(view, descText))
             {
-                desc.cheatFunc(context, NULL);
+                desc.cheatFunc(context, wsv_empty());
                 return;
             }
         }
         else
         {
-            if (wutil_strCaseStartsWith(text, desc.text, true))
+            if (wsv_startsWithIgnoreCase(view, descText))
             {
-                // skip the command text and the whitespace characters
-                s32 skip = (s32)strlen(desc.text);
-                while (text[skip] == ' ' || text[skip] == '\t')
-                    skip++;
+                StringView argument = wsv_subview(view, descText.length);
+                argument = wsv_trimLeft(argument); // skip whitespace characters
 
-                const char* argument = text + skip;
                 desc.cheatFunc(context, argument);
                 return;
             }
@@ -70,7 +70,7 @@ void applyCheat(WarContext* context, const char* text)
     logInfo("Unknown cheat: %s", text);
 }
 
-void applyGoldCheat(WarContext* context, const char* argument)
+void applyGoldCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -85,7 +85,7 @@ void applyGoldCheat(WarContext* context, const char* argument)
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
-void applySpellsCheat(WarContext* context, const char* argument)
+void applySpellsCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -148,7 +148,7 @@ void applySpellsCheat(WarContext* context, const char* argument)
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
-void applyUpgradesCheat(WarContext* context, const char* argument)
+void applyUpgradesCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -183,7 +183,7 @@ void applyUpgradesCheat(WarContext* context, const char* argument)
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
-void applyEndCheat(WarContext* context, const char* argument)
+void applyEndCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -199,7 +199,7 @@ void applyEndCheat(WarContext* context, const char* argument)
     showDemoEndMenu(context, true);
 }
 
-void applyEnableCheat(WarContext* context, const char* argument)
+void applyEnableCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -215,7 +215,7 @@ void applyEnableCheat(WarContext* context, const char* argument)
     }
 }
 
-void applyGodModeCheat(WarContext* context, const char* argument)
+void applyGodModeCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -232,7 +232,7 @@ void applyGodModeCheat(WarContext* context, const char* argument)
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
-void applyWinCheat(WarContext* context, const char* argument)
+void applyWinCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -248,7 +248,7 @@ void applyWinCheat(WarContext* context, const char* argument)
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
-void applyLossCheat(WarContext* context, const char* argument)
+void applyLossCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -264,7 +264,7 @@ void applyLossCheat(WarContext* context, const char* argument)
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
-void applyFogOfWarCheat(WarContext* context, const char* argument)
+void applyFogOfWarCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -280,7 +280,7 @@ void applyFogOfWarCheat(WarContext* context, const char* argument)
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
-void applySkipHumanCheat(WarContext* context, const char* argument)
+void applySkipHumanCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -290,7 +290,7 @@ void applySkipHumanCheat(WarContext* context, const char* argument)
         return;
 
     s32 level;
-    if (wutil_strTryParseS32(argument, &level))
+    if (wsv_tryParseS32(argument, &level))
     {
         // TODO: remove this check when more levels are allowed
         if (level <= 0 || level > 2)
@@ -303,7 +303,7 @@ void applySkipHumanCheat(WarContext* context, const char* argument)
     }
 }
 
-void applySkipOrcCheat(WarContext* context, const char* argument)
+void applySkipOrcCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -313,7 +313,7 @@ void applySkipOrcCheat(WarContext* context, const char* argument)
         return;
 
     s32 level;
-    if (wutil_strTryParseS32(argument, &level))
+    if (wsv_tryParseS32(argument, &level))
     {
         // TODO: remove this check when more levels are allowed
         if (level <= 0 || level > 2)
@@ -326,7 +326,7 @@ void applySkipOrcCheat(WarContext* context, const char* argument)
     }
 }
 
-void applySpeedCheat(WarContext* context, const char* argument)
+void applySpeedCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -342,17 +342,17 @@ void applySpeedCheat(WarContext* context, const char* argument)
     setCheatsFeedback(context, CHEAT_FEEDBACK_WASCALLY_WABBIT);
 }
 
-void applyMusicCheat(WarContext* context, const char* argument)
+void applyMusicCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
 
-    if (wutil_strCaseEquals(argument, "on", true))
+    if (wsv_equalsIgnoreCase(argument, wsv_fromCString("on")))
     {
         context->musicEnabled = true;
         setCheatsFeedback(context, "Music on");
     }
-    else if (wutil_strCaseEquals(argument, "off", true))
+    else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("off")))
     {
         context->musicEnabled = false;
         setCheatsFeedback(context, "Music off");
@@ -360,7 +360,7 @@ void applyMusicCheat(WarContext* context, const char* argument)
     else if (!isDemo(context))
     {
         s32 musicId;
-        if (wutil_strTryParseS32(argument, &musicId))
+        if (wsv_tryParseS32(argument, &musicId))
         {
             // argument is expected in the range 1-45, so convert it to the range 0-44
             musicId--;
@@ -381,30 +381,30 @@ void applyMusicCheat(WarContext* context, const char* argument)
     }
 }
 
-void applySoundCheat(WarContext* context, const char* argument)
+void applySoundCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
 
-    if (wutil_strCaseEquals(argument, "on", true))
+    if (wsv_equalsIgnoreCase(argument, wsv_fromCString("on")))
     {
         context->soundEnabled = true;
         setCheatsFeedback(context, "Sounds on");
     }
-    else if (wutil_strCaseEquals(argument, "off", true))
+    else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("off")))
     {
         context->soundEnabled = false;
         setCheatsFeedback(context, "Sounds off");
     }
 }
 
-void applyMusicVolCheat(WarContext* context, const char* argument)
+void applyMusicVolCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
 
     s32 musicVol;
-    if (wutil_strTryParseS32(argument, &musicVol))
+    if (wsv_tryParseS32(argument, &musicVol))
     {
         musicVol = clamp(musicVol, 0, 100);
 
@@ -430,13 +430,13 @@ void applyMusicVolCheat(WarContext* context, const char* argument)
     }
 }
 
-void applySoundVolCheat(WarContext* context, const char* argument)
+void applySoundVolCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
 
     s32 sfxVol;
-    if (wutil_strTryParseS32(argument, &sfxVol))
+    if (wsv_tryParseS32(argument, &sfxVol))
     {
         sfxVol = clamp(sfxVol, 0, 100);
 
@@ -462,13 +462,13 @@ void applySoundVolCheat(WarContext* context, const char* argument)
     }
 }
 
-void applyGlobalScaleCheat(WarContext* context, const char* argument)
+void applyGlobalScaleCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
 
     s32 scale;
-    if (wutil_strTryParseS32(argument, &scale))
+    if (wsv_tryParseS32(argument, &scale))
     {
         scale = clamp(scale, 1, 5);
         setGlobalScale(context, (f32)scale);
@@ -476,13 +476,13 @@ void applyGlobalScaleCheat(WarContext* context, const char* argument)
     }
 }
 
-void applyGlobalSpeedCheat(WarContext* context, const char* argument)
+void applyGlobalSpeedCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
 
     s32 speed;
-    if (wutil_strTryParseS32(argument, &speed))
+    if (wsv_tryParseS32(argument, &speed))
     {
         speed = clamp(speed, 1, 5);
         setGlobalSpeed(context, (f32)speed);
@@ -490,7 +490,7 @@ void applyGlobalSpeedCheat(WarContext* context, const char* argument)
     }
 }
 
-void applyEditCheat(WarContext* context, const char* argument)
+void applyEditCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -506,35 +506,35 @@ void applyEditCheat(WarContext* context, const char* argument)
     map->editingRainOfFire = false;
     map->addingUnit = false;
 
-    if (wutil_strCaseEquals(argument, "off", true))
+    if (wsv_equalsIgnoreCase(argument, wsv_fromCString("off")))
     {
         setCheatsFeedback(context, "Edit off");
         return;
     }
 
-    if (wutil_strCaseEquals(argument, "trees", true))
+    if (wsv_equalsIgnoreCase(argument, wsv_fromCString("trees")))
     {
         map->editingTrees = true;
         setCheatsFeedback(context, "Edit trees on");
     }
-    else if (wutil_strCaseEquals(argument, "walls", true))
+    else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("walls")))
     {
         map->editingWalls = true;
         setCheatsFeedback(context, "Edit walls on");
     }
-    else if (wutil_strCaseEquals(argument, "roads", true))
+    else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("roads")))
     {
         map->editingRoads = true;
         setCheatsFeedback(context, "Edit roads on");
     }
-    else if (wutil_strCaseEquals(argument, "ruins", true))
+    else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("ruins")))
     {
         map->editingRuins = true;
         setCheatsFeedback(context, "Edit ruins on");
     }
 }
 
-void applyRainOfFireCheat(WarContext* context, const char* argument)
+void applyRainOfFireCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -558,7 +558,7 @@ void applyRainOfFireCheat(WarContext* context, const char* argument)
         setCheatsFeedback(context, "Rain of fire off");
 }
 
-void applyAddUnitCheat(WarContext* context, const char* argument)
+void applyAddUnitCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -575,119 +575,121 @@ void applyAddUnitCheat(WarContext* context, const char* argument)
 
     map->addingUnit = false;
 
-    if (wutil_strCaseStartsWith(argument, "off", true))
+    if (wsv_startsWithIgnoreCase(argument, wsv_fromCString("off")))
     {
         setCheatsFeedback(context, "Add unit off");
         return;
     }
 
-    if (wutil_strCaseStartsWith(argument, "CATAPULT", true))
+    StringView part1, part2;
+    if (!wsv_nextToken(&argument, wsv_fromCString(" "), &part1))
     {
-        const char* part2 = wutil_strSkipUntil(argument + strlen("CATAPULT"), " ");
-        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
+        part1 = argument;
+    }
+    wsv_nextToken(&argument, wsv_fromCString(" "), &part2);
+
+    if (wsv_equalsIgnoreCase(part1, wsv_fromCString("CATAPULT")))
+    {
+        if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_CATAPULT_HUMANS;
         }
-        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
+        else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_CATAPULT_ORCS;
         }
     }
-    else if (wutil_strCaseStartsWith(argument, "FARM", true))
+    else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("FARM")))
     {
-        const char* part2 = wutil_strSkipUntil(argument + strlen("FARM"), " ");
-        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
+        if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_FARM_HUMANS;
         }
-        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
+        else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_FARM_ORCS;
         }
     }
-    else if (wutil_strCaseStartsWith(argument, "BARRACkS", true))
+    else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("BARRACKS")))
     {
-        const char* part2 = wutil_strSkipUntil(argument + strlen("BARRACkS"), " ");
-        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
+        if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_BARRACKS_HUMANS;
         }
-        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
+        else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_BARRACKS_ORCS;
         }
     }
-    else if (wutil_strCaseStartsWith(argument, "TOWER", true))
+    else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("TOWER")))
     {
-        const char* part2 = wutil_strSkipUntil(argument + strlen("TOWER"), " ");
-        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
+        if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_TOWER_HUMANS;
         }
-        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
+        else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_TOWER_ORCS;
         }
     }
-    else if (wutil_strCaseStartsWith(argument, "TOWN HALL", true))
+    else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("TOWN")) && wsv_equalsIgnoreCase(part2, wsv_fromCString("HALL")))
     {
-        const char* part2 = wutil_strSkipUntil(argument + strlen("TOWN HALL"), " ");
-        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
+        StringView part3;
+        wsv_nextToken(&argument, wsv_fromCString(" "), &part3);
+
+        if (wsv_startsWithIgnoreCase(part3, wsv_fromCString("HUMANS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_TOWNHALL_HUMANS;
         }
-        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
+        else if (wsv_startsWithIgnoreCase(part3, wsv_fromCString("ORCS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_TOWNHALL_ORCS;
         }
     }
-    else if (wutil_strCaseStartsWith(argument, "MILL", true))
+    else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("MILL")))
     {
-        const char* part2 = wutil_strSkipUntil(argument + strlen("MILL"), " ");
-        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
+        if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_LUMBERMILL_HUMANS;
         }
-        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
+        else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_LUMBERMILL_ORCS;
         }
     }
-    else if (wutil_strCaseStartsWith(argument, "BLACKSMITH", true))
+    else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("BLACKSMITH")))
     {
-        const char* part2 = wutil_strSkipUntil(argument + strlen("BLACKSMITH"), " ");
-        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
+        if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_BLACKSMITH_HUMANS;
         }
-        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
+        else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_BLACKSMITH_ORCS;
         }
     }
-    else if (wutil_strCaseStartsWith(argument, "CORPSE", true))
+    else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("CORPSE")))
     {
-        const char* part2 = wutil_strSkipUntil(argument + strlen("CORPSE"), " ");
-        if (wutil_strCaseStartsWith(part2, "HUMANS", true))
+        if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_HUMAN_CORPSE;
         }
-        else if (wutil_strCaseStartsWith(part2, "ORCS", true))
+        else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
             map->addingUnit = true;
             map->addingUnitType = WAR_UNIT_ORC_CORPSE;
@@ -697,10 +699,10 @@ void applyAddUnitCheat(WarContext* context, const char* argument)
     {
         for (s32 i = 0; i < arrayLength(unitsData); i++)
         {
-            if (wutil_strCaseEquals(argument, unitsData[i].name, true))
+            if (wsv_equalsIgnoreCase(part1, wsv_fromCString(unitsData[i].name)))
             {
                 map->addingUnit = true;
-                map->addingUnitType = unitsData[i].type;
+                map->addingUnitType = (WarUnitType)i;
                 break;
             }
         }
@@ -708,6 +710,6 @@ void applyAddUnitCheat(WarContext* context, const char* argument)
 
     if (map->addingUnit)
     {
-        setCheatsFeedbackFormat(context, "Add unit %s", argument);
+        setCheatsFeedbackFormat(context, "Add unit %.*s", (int)argument.length, argument.data);
     }
 }

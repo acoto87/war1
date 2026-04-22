@@ -617,7 +617,7 @@ WarEntity* findUIEntity(WarContext* context, const char* name)
         WarEntity* entity = entities->items[i];
         if (entity &&
             isUIEntity(entity) &&
-            wutil_strEquals(entity->ui.name, name))
+            wsv_equals(wsv_fromCString(entity->ui.name), wsv_fromCString(name)))
         {
             return entity;
         }

@@ -14,7 +14,6 @@
 #include <unistd.h>
 #endif
 
-#include "str.h"
 #include "war_audio.h"
 #include "war_file.h"
 #include "war_font.h"
@@ -149,10 +148,11 @@ static void appendCheatTextInput(WarContext* context, const char* text)
         Uint32 codepoint = SDL_StepUTF8(&cursor, &remaining);
         if (codepoint >= 32 && codepoint <= 126)
         {
-            s32 length = (s32)strlen(cheatStatus->text);
+            s32 length = (s32)cheatStatus->text.length;
             if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
             {
-                wutil_strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+                char c = (char)codepoint;
+                wstr_insert(&cheatStatus->text, cheatStatus->position, wsv_fromParts(&c, 1));
                 cheatStatus->position++;
             }
         }
