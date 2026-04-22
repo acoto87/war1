@@ -17,12 +17,18 @@ typedef enum {
 
 typedef enum {
     TARGET_LINUX64,
-    TARGET_ARM32,
+    TARGET_ARM64,  // Raspberry Pi 4/5 (64-bit OS)
     TARGET_WIN32,
     TARGET_WIN64,
 } Target;
 
+typedef enum {
+    COMMAND_BUILD,
+    COMMAND_RUN,
+} Command;
+
 typedef struct {
+    Command command;
     Toolchain toolchain;
     Target target;
     bool debug;
@@ -53,7 +59,7 @@ static const char *target_name(Target target)
 {
     switch (target) {
         case TARGET_LINUX64: return "linux64";
-        case TARGET_ARM32:   return "arm32";
+        case TARGET_ARM64:   return "arm64";
         case TARGET_WIN32:   return "win32";
         case TARGET_WIN64:   return "win64";
         default:             return "unknown";
@@ -64,7 +70,7 @@ static const char *target_output_dir(Target target)
 {
     switch (target) {
         case TARGET_LINUX64: return "build/linux64";
-        case TARGET_ARM32:   return "build/arm32";
+        case TARGET_ARM64:   return "build/arm64";
         case TARGET_WIN32:   return "build/win32";
         case TARGET_WIN64:   return "build/win64";
         default:             return NULL;
@@ -75,7 +81,7 @@ static const char *target_library_dir(Target target)
 {
     switch (target) {
         case TARGET_LINUX64: return "deps/lib/linux64";
-        case TARGET_ARM32:   return "deps/lib/arm32";
+        case TARGET_ARM64:   return "deps/lib/arm64";
         case TARGET_WIN32:   return "deps/lib/win32";
         case TARGET_WIN64:   return "deps/lib/win64";
         default:             return NULL;
@@ -91,7 +97,7 @@ static const char *target_binary_path(Target target)
             return nob_temp_sprintf("%s/war1.exe", output_dir);
 
         case TARGET_LINUX64:
-        case TARGET_ARM32:
+        case TARGET_ARM64:
             return nob_temp_sprintf("%s/war1", output_dir);
 
         default:
@@ -121,6 +127,8 @@ static Target default_target(void)
 #  else
     return TARGET_WIN32;
 #  endif
+#elif defined(__aarch64__)
+    return TARGET_ARM64;
 #else
     return TARGET_LINUX64;
 #endif
@@ -139,12 +147,14 @@ static Toolchain default_toolchain(void)
 
 static void usage(const char *program)
 {
-    printf("Usage: %s [build] [--cc <gcc|clang|msvc>] [--target <linux64|arm32|win32|win64>] [--debug|--release] [--check]\n", program);
+    printf("Usage: %s [build|run] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check]\n", program);
     printf("\n");
     printf("Examples:\n");
     printf("  %s build --cc gcc --target linux64\n", program);
     printf("  %s build --cc clang --target linux64\n", program);
     printf("  %s build --cc msvc --target win64 --check\n", program);
+    printf("  %s build --cc gcc --target arm64\n", program);
+    printf("  %s run --target linux64\n", program);
 }
 
 static bool parse_toolchain(const char *value, Toolchain *toolchain)
@@ -174,8 +184,8 @@ static bool parse_target(const char *value, Target *target)
         return true;
     }
 
-    if (strcmp(value, "arm32") == 0 || strcmp(value, "rpi") == 0) {
-        *target = TARGET_ARM32;
+    if (strcmp(value, "arm64") == 0 || strcmp(value, "rpi4") == 0 || strcmp(value, "rpi5") == 0) {
+        *target = TARGET_ARM64;
         return true;
     }
 
@@ -201,6 +211,13 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
         const char *arg = nob_shift_args(&argc, &argv);
 
         if (!command_consumed && strcmp(arg, "build") == 0) {
+            options->command = COMMAND_BUILD;
+            command_consumed = true;
+            continue;
+        }
+
+        if (!command_consumed && strcmp(arg, "run") == 0) {
+            options->command = COMMAND_RUN;
             command_consumed = true;
             continue;
         }
@@ -389,12 +406,25 @@ static bool copy_runtime_files(const Build_Options *options)
         return false;
     }
 
-    if (target_is_windows(options->target) && !options->check_only) {
-        const char *dll_path = nob_temp_sprintf("%s/SDL3.dll", target_library_dir(options->target));
-        const char *dll_copy_path = nob_temp_sprintf("%s/SDL3.dll", output_dir);
+    if (!options->check_only) {
+        if (target_is_windows(options->target)) {
+            const char *dll_path = nob_temp_sprintf("%s/SDL3.dll", target_library_dir(options->target));
+            const char *dll_copy_path = nob_temp_sprintf("%s/SDL3.dll", output_dir);
 
-        if (!nob_copy_file(dll_path, dll_copy_path)) {
-            return false;
+            if (!nob_copy_file(dll_path, dll_copy_path)) {
+                return false;
+            }
+        } else {
+            // Copy SDL3 shared libraries so the binary can find them via $ORIGIN rpath
+            const char *lib_dir = target_library_dir(options->target);
+            const char *so_names[] = { "libSDL3.so.0.5.0", "libSDL3.so.0", "libSDL3.so" };
+            for (size_t i = 0; i < NOB_ARRAY_LEN(so_names); i++) {
+                const char *src = nob_temp_sprintf("%s/%s", lib_dir, so_names[i]);
+                const char *dst = nob_temp_sprintf("%s/%s", output_dir, so_names[i]);
+                if (!nob_copy_file(src, dst)) {
+                    return false;
+                }
+            }
         }
     }
 
@@ -438,7 +468,7 @@ static bool build_with_gnu_like(const Build_Options *options)
             nob_cmd_append(&cmd, "-static-libgcc");
         }
     } else {
-        nob_cmd_append(&cmd, "-lSDL3", "-lpthread", "-lm", "-ldl");
+        nob_cmd_append(&cmd, "-lSDL3", "-lpthread", "-lm", "-ldl", "-Wl,-rpath,$ORIGIN");
 
         if (options->target == TARGET_LINUX64) {
             nob_cmd_append(&cmd, "-no-pie");
@@ -527,11 +557,36 @@ static bool build_project(const Build_Options *options)
     }
 }
 
+static bool run_project(const Build_Options *options)
+{
+    if (target_is_windows(options->target) && !host_is_windows()) {
+        nob_log(NOB_ERROR, "Cannot run a Windows binary on a non-Windows host");
+        return false;
+    }
+
+    const char *output_dir = target_output_dir(options->target);
+    const char *binary = target_is_windows(options->target) ? "war1.exe" : "./war1";
+
+    nob_log(NOB_INFO, "Changing directory to: %s", output_dir);
+
+    if (!nob_set_current_dir(output_dir)) {
+        nob_log(NOB_ERROR, "Could not change to directory: %s", output_dir);
+        return false;
+    }
+
+    nob_log(NOB_INFO, "Running: %s", binary);
+
+    Nob_Cmd cmd = {0};
+    nob_cmd_append(&cmd, binary);
+    return nob_cmd_run(&cmd);
+}
+
 int main(int argc, char **argv)
 {
     NOB_GO_REBUILD_URSELF(argc, argv);
 
     Build_Options options = {
+        .command  = COMMAND_BUILD,
         .toolchain = default_toolchain(),
         .target = default_target(),
         .debug = false,
@@ -542,8 +597,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (!build_project(&options)) {
-        return 1;
+    switch (options.command) {
+        case COMMAND_BUILD:
+            if (!build_project(&options)) return 1;
+            break;
+        case COMMAND_RUN:
+            if (!run_project(&options)) return 1;
+            break;
+        default:
+            nob_log(NOB_ERROR, "unknown command");
+            return 1;
     }
 
     return 0;

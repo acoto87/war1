@@ -61,6 +61,11 @@
 #include "shl/memory_buffer.h"
 #define SHL_WAVE_WRITER_IMPLEMENTATION
 #include "shl/wave_writer.h"
+#define WSTR_MALLOC(sz)       xmalloc(sz)
+#define WSTR_REALLOC(p, sz)   xrealloc(p, sz)
+#define WSTR_FREE(p)          xfree(p)
+#define SHL_WSTR_IMPLEMENTATION
+#include "shl/wstr.h"
 
 #include "war_log.h"
 #include "str.h"
