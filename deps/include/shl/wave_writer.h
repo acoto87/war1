@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef __cplusplus
@@ -58,6 +59,9 @@ bool shlWaveFlush(shlWaveFile *waveFile, bool closeFile);
 #endif
 
 #ifdef SHL_WAVE_WRITER_IMPLEMENTATION
+
+#include <assert.h>
+#include <limits.h>
 
 static bool __shlWaveFlush(shlWaveFile *waveFile)
 {
