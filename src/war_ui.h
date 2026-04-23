@@ -7,15 +7,13 @@
 bool isUIEntity(WarEntity* entity);
 
 void clearUIText(WarEntity* uiText);
-void setUIText(WarEntity* uiText, const char* text);
-void setUITextFormatv(WarEntity* uiText, const char* format, va_list args);
-void setUITextFormat(WarEntity* uiText, const char* format, ...);
+void setUIText(WarEntity* uiText, String text);
 
 void setUIImage(WarEntity* uiImage, s32 frameIndex);
 void setUIRectWidth(WarEntity* uiRect, s32 width);
 
 void clearUITooltip(WarEntity* uiButton);
-void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, char* text);
+void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text);
 
 #define setUIEntityStatus(uiEntity, value) ((uiEntity)->ui.enabled = (value))
 
@@ -43,7 +41,7 @@ void setUIButtonInteractiveByName(WarContext* context, StringView name, bool int
 void setUIButtonHotKeyByName(WarContext* context, StringView name, WarKeys key);
 void setUIEntityStatusByName(WarContext* context, StringView name, bool enabled);
 
-WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, const char* text, vec2 position);
+WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, String text, vec2 position);
 WarEntity* createUIRect(WarContext* context, String name, vec2 position, vec2 size, WarColor color);
 WarEntity* createUIImage(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, vec2 position);
 WarEntity* createUICursor(WarContext* context, String name, WarCursorType type, vec2 position);
@@ -51,7 +49,7 @@ WarEntity* createUITextButton(WarContext* context,
                               String name,
                               s32 fontIndex,
                               f32 fontSize,
-                              const char* text,
+                              String text,
                               WarSpriteResourceRef backgroundNormalRef,
                               WarSpriteResourceRef backgroundPressedRef,
                               WarSpriteResourceRef foregroundRef,

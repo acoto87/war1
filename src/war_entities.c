@@ -231,7 +231,7 @@ void removeUIComponent(WarContext* context, WarEntity* entity)
     entity->ui = (WarUIComponent){0};
 }
 
-void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, const char* text)
+void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, String text)
 {
     NOT_USED(context);
 
@@ -1286,9 +1286,9 @@ void renderText(WarContext* context, WarEntity* entity)
         params.fontData = fontsData[text->fontIndex];
 
         if (entity->text.multiline)
-            renderMultiSpriteText(context, wstr_cstr(&text->text), 0, 0, params);
+            renderMultiSpriteText(context, wstr_view(&text->text), 0, 0, params);
         else
-            renderSingleSpriteText(context, wstr_cstr(&text->text), 0, 0, params);
+            renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
 
         renderRestore(context);
     }
@@ -1370,7 +1370,7 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.fontSprite = context->fontSprites[text->fontIndex];
                 params.fontData = fontsData[text->fontIndex];
 
-                renderSingleSpriteText(context, wstr_cstr(&text->text), 0, 0, params);
+                renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
             }
         }
 
@@ -1806,13 +1806,13 @@ bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
 {
     if (player->gold < gold)
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH GOLD... MINE MORE GOLD");
+        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH GOLD... MINE MORE GOLD"));
         return false;
     }
 
     if (player->wood < wood)
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH LUMBER... CHOP MORE TREES");
+        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH LUMBER... CHOP MORE TREES"));
         return false;
     }
 
@@ -1864,7 +1864,7 @@ bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     WarUnitComponent* unit = &entity->unit;
     if (unit->mana < mana)
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH MANA");
+        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH MANA"));
         return false;
     }
 
@@ -1896,7 +1896,7 @@ bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
 {
     if (!enoughFarmFood(context, player))
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH FOOD... BUILD MORE FARMS");
+        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH FOOD... BUILD MORE FARMS"));
         return false;
     }
 
@@ -1932,7 +1932,7 @@ bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s
 
     if (!checkRectToBuild(context, x, y, data.sizex, data.sizey))
     {
-        setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
+        setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
     }
 
@@ -1943,7 +1943,7 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 {
     if (!checkRectToBuild(context, x, y, 1, 1))
     {
-        setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
+        setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
     }
 

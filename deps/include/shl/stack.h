@@ -1,4 +1,4 @@
-/*  
+/*
     stack.h - acoto87 (acoto87@gmail.com)
 
     MIT License
@@ -23,8 +23,24 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    This is a single header file with macros to declare and define a strongly typed stack with push, pop and peek operations.
+    Single-header macro library to declare and define strongly typed stacks
+    backed by dynamically resized arrays.
+
+    USAGE
+    Declare a stack type with shlDeclareStack(name, type), then define it once
+    with shlDefineStack(name, type) in a C source file.
+
+    CUSTOMISATION
+    Provide a default value for empty reads, an equality function for
+    Contains, and a free function if stored values own resources. Values are
+    stored by copy in a dynamically resized array.
+
+    NOTES
+    Push appends to the top of the stack, Pop removes the most recent item,
+    and Peek reads without removing. Call Free when the stack is no longer
+    needed.
 */
+
 #ifndef SHL_STACK_H
 #define SHL_STACK_H
 

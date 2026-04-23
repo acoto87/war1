@@ -127,7 +127,7 @@ static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
     }
 }
 
-static void appendCheatTextInput(WarContext* context, const char* text)
+static void appendCheatTextInput(WarContext* context, StringView text)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -141,8 +141,8 @@ static void appendCheatTextInput(WarContext* context, const char* text)
         return;
     }
 
-    const char* cursor = text;
-    size_t remaining = strlen(text);
+    const char* cursor = wsv_data(text);
+    size_t remaining = text.length;
     while (remaining > 0)
     {
         Uint32 codepoint = SDL_StepUTF8(&cursor, &remaining);
@@ -216,8 +216,8 @@ bool initGame(WarContext* context)
     }
 
     // load fonts
-    context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
-    context->fontSprites[1] = loadFontSprite(context, "./war1_font_2.png");
+    context->fontSprites[0] = loadFontSprite(context, wsv_fromCString("./war1_font_1.png"));
+    context->fontSprites[1] = loadFontSprite(context, wsv_fromCString("./war1_font_2.png"));
 
     // check if the DATA.WAR file exists
     bool dataFileExists = access(DATAWAR_FILE_PATH, F_OK) == 0;
@@ -283,7 +283,7 @@ void quitGame(WarContext* context)
 
 bool loadDataFile(WarContext* context)
 {
-    context->warFile = loadWarFile(context, DATAWAR_FILE_PATH);
+    context->warFile = loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
     if (!context->warFile)
     {
         return false;
@@ -456,7 +456,7 @@ void processGameEvent(WarContext* context, const SDL_Event* event)
         }
 
         case SDL_EVENT_TEXT_INPUT:
-            appendCheatTextInput(context, event->text.text);
+            appendCheatTextInput(context, wsv_fromCString(event->text.text));
             break;
 
         case SDL_EVENT_WINDOW_FOCUS_LOST:

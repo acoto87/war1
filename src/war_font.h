@@ -25,8 +25,8 @@ typedef struct
     WarFontData fontData;
 } WarFontParams;
 
-WarSprite loadFontSprite(WarContext* context, const char* fontPath);
-vec2 measureSingleSpriteText(const char* text, s32 length, WarFontParams params);
-vec2 measureMultiSpriteText(const char* text, f32 width, WarFontParams params);
-void renderSingleSpriteText(WarContext* context, const char* text, f32 x, f32 y, WarFontParams params);
-void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, WarFontParams params);
+WarSprite loadFontSprite(WarContext* context, StringView fontPath);
+vec2 measureSingleSpriteText(StringView text, s32 length, WarFontParams params);
+vec2 measureMultiSpriteText(StringView text, f32 width, WarFontParams params);
+void renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params);
+void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params);

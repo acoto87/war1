@@ -23,8 +23,8 @@ typedef int WarSocket;
 
 bool initNetwork(void);
 bool cleanNetwork(void);
-WarSocket connectToHost(const char* host);
-bool requestResource(WarSocket sck, const char* resource, const char* host);
+WarSocket connectToHost(StringView host);
+bool requestResource(WarSocket sck, StringView resource, StringView host);
 s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength);
-s32 parseHeadersFromResponse(const char* response, s32 responseLength, StringViewMap* headers);
-bool downloadFileFromUrl(const char* url, const char* filePath);
+s32 parseHeadersFromResponse(StringView response, s32 responseLength, StringViewMap* headers);
+bool downloadFileFromUrl(StringView url, StringView filePath);

@@ -182,6 +182,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Units like raised skeletons have a decay, that's that after a certain time, the unit dies. Check if summoned units have the same behavior.
 * [ ] Check behavior of invisible units when are under attack (it maybe work with workers, to stop the attack on it)
 * [ ] Zoom feature
+* [ ] Rewrite `downloadFileFromUrl` to use more String/StringView friendly implementation.
 
 ## Gameplay
 

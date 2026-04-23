@@ -27,44 +27,20 @@ bool isUIEntity(WarEntity* entity)
 
 void clearUIText(WarEntity* uiText)
 {
-    if (uiText->text.text.data)
-    {
-        wstr_free(uiText->text.text);
-        uiText->text.text = wstr_make();
-        uiText->text.enabled = false;
-    }
+    wstr_free(uiText->text.text);
+    uiText->text.text = wstr_make();
+    uiText->text.enabled = false;
 }
 
-void setUIText(WarEntity* uiText, const char* text)
+void setUIText(WarEntity* uiText, String text)
 {
     clearUIText(uiText);
 
-    if (text)
+    if (text.data)
     {
-        uiText->text.text = wstr_fromCString(text);
+        uiText->text.text = text;
         uiText->text.enabled = true;
     }
-}
-
-void setUITextFormatv(WarEntity* uiText, const char* format, va_list args)
-{
-    if (!format)
-    {
-        setUIText(uiText, NULL);
-        return;
-    }
-
-	char buffer[256];
-    vsprintf(buffer, format, args);
-    setUIText(uiText, buffer);
-}
-
-void setUITextFormat(WarEntity* uiText, const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    setUITextFormatv(uiText, format, args);
-    va_end(args);
 }
 
 void setUIImage(WarEntity* uiImage, s32 frameIndex)
@@ -85,15 +61,15 @@ void clearUITooltip(WarEntity* uiButton)
     uiButton->button.tooltip = wstr_make();
 }
 
-void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, char* text)
+void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text)
 {
     clearUITooltip(uiButton);
 
-    if (text)
+    if (text.data)
     {
         uiButton->button.highlightIndex = highlightIndex;
         uiButton->button.highlightCount = highlightCount;
-        uiButton->button.tooltip = wstr_fromCString(text);
+        uiButton->button.tooltip = text;
     }
 }
 
@@ -133,7 +109,7 @@ void setUIEntityStatusByName(WarContext* context, StringView name, bool enabled)
     }
 }
 
-WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, const char* text, vec2 position)
+WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, String text, vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
     addTransformComponent(context, entity, position);
@@ -181,7 +157,7 @@ WarEntity* createUITextButton(WarContext* context,
                               String name,
                               s32 fontIndex,
                               f32 fontSize,
-                              const char* text,
+                              String text,
                               WarSpriteResourceRef backgroundNormalRef,
                               WarSpriteResourceRef backgroundPressedRef,
                               WarSpriteResourceRef foregroundRef,

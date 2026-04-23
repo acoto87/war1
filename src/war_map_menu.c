@@ -10,16 +10,19 @@
 #include "war_resources.h"
 #include "war_ui.h"
 
-static void setSpeedStr(WarMapSpeed value, char buffer[])
+static String getSpeedStr(WarMapSpeed value)
 {
+    const char* str = "";
     switch (value)
     {
-        case WAR_SPEED_SLOWEST: strcpy(buffer, "Slowest");  break;
-        case WAR_SPEED_SLOW:    strcpy(buffer, "Slow");     break;
-        case WAR_SPEED_NORMAL:  strcpy(buffer, "Normal");   break;
-        case WAR_SPEED_FASTER:  strcpy(buffer, "Faster");   break;
-        case WAR_SPEED_FASTEST: strcpy(buffer, "Fastest");  break;
+        case WAR_SPEED_SLOWEST: str = "Slowest";  break;
+        case WAR_SPEED_SLOW:    str = "Slow";     break;
+        case WAR_SPEED_NORMAL:  str = "Normal";   break;
+        case WAR_SPEED_FASTER:  str = "Faster";   break;
+        case WAR_SPEED_FASTEST: str = "Fastest";  break;
+        default: str = ""; break;
     }
+    return wstr_fromCString(str);
 }
 
 static void setUITextSpeedValueByName(WarContext* context, StringView name, WarMapSpeed value)
@@ -27,9 +30,7 @@ static void setUITextSpeedValueByName(WarContext* context, StringView name, WarM
     WarEntity* entity = findUIEntity(context, name);
     if (entity)
     {
-        char speedStr[10];
-        setSpeedStr(value, speedStr);
-        setUIText(entity, speedStr);
+        setUIText(entity, getSpeedStr(value));
         setUITextHighlight(entity, NO_HIGHLIGHT, 0);
     }
 }
@@ -39,7 +40,7 @@ static void setUITextS32ValueByName(WarContext* context, StringView name, s32 va
     WarEntity* entity = findUIEntity(context, name);
     if (entity)
     {
-        setUITextFormat(entity, "%d", value);
+        setUIText(entity, wstr_fromCStringFormat("%d", value));
         setUITextHighlight(entity, NO_HIGHLIGHT, 0);
     }
 }
@@ -69,7 +70,7 @@ void createMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIText(
-        context, wstr_fromCString("txtMenuHeader"), 1, 10, "Warcraft",
+        context, wstr_fromCString("txtMenuHeader"), 1, 10, wstr_fromCString("Warcraft"),
         vec2Addv(menuPanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(map->menuPanel.width, 12));
@@ -78,7 +79,7 @@ void createMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnMenuSave"),
-        1, 10, "Save",
+        1, 10, wstr_fromCString("Save"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -89,7 +90,7 @@ void createMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnMenuLoad"),
-        1, 10, "Load",
+        1, 10, wstr_fromCString("Load"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -100,7 +101,7 @@ void createMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnMenuOptions"),
-        1, 10, "Options",
+        1, 10, wstr_fromCString("Options"),
         mediumNormalRef,
         mediumPressedRef,
         invalidRef,
@@ -112,7 +113,7 @@ void createMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnMenuObjectives"),
-        1, 10, "Objectives",
+        1, 10, wstr_fromCString("Objectives"),
         mediumNormalRef,
         mediumPressedRef,
         invalidRef,
@@ -124,7 +125,7 @@ void createMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnMenuRestart"),
-        1, 10, "Restart scenario",
+        1, 10, wstr_fromCString("Restart scenario"),
         mediumNormalRef,
         mediumPressedRef,
         invalidRef,
@@ -136,7 +137,7 @@ void createMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnMenuContinue"),
-        1, 10, "Continue",
+        1, 10, wstr_fromCString("Continue"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -148,7 +149,7 @@ void createMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnMenuQuit"),
-        1, 10, "Quit",
+        1, 10, wstr_fromCString("Quit"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -176,77 +177,77 @@ void createOptionsMenu(WarContext* context)
     WarEntity* uiEntity;
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsHeader"),
-        1, 10, "Options", vec2Addv(menuPanel, vec2i(0, 10)));
+        1, 10, wstr_fromCString("Options"), vec2Addv(menuPanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(map->menuPanel.width, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsGameSpeedLabel"),
-        1, 10, "Game Speed", vec2Addv(menuPanel, vec2i(0, 25)));
+        1, 10, wstr_fromCString("Game Speed"), vec2Addv(menuPanel, vec2i(0, 25)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(75, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsMusicVolLabel"),
-        1, 10, "Music Vol", vec2Addv(menuPanel, vec2i(0, 42)));
+        1, 10, wstr_fromCString("Music Vol"), vec2Addv(menuPanel, vec2i(0, 42)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(75, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsSFXVolLabel"),
-        1, 10, "SFX Vol", vec2Addv(menuPanel, vec2i(0, 59)));
+        1, 10, wstr_fromCString("SFX Vol"), vec2Addv(menuPanel, vec2i(0, 59)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(75, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsMouseScrollLabel"),
-        1, 10, "Mouse Scroll", vec2Addv(menuPanel, vec2i(0, 76)));
+        1, 10, wstr_fromCString("Mouse Scroll"), vec2Addv(menuPanel, vec2i(0, 76)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(75, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsKeyScrollLabel"),
-        1, 10, "Key Scroll", vec2Addv(menuPanel, vec2i(0, 93)));
+        1, 10, wstr_fromCString("Key Scroll"), vec2Addv(menuPanel, vec2i(0, 93)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(75, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_RIGHT);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsGameSpeedValue"),
-        1, 10, "Fastest", vec2Addv(menuPanel, vec2i(92, 25)));
+        1, 10, wstr_fromCString("Fastest"), vec2Addv(menuPanel, vec2i(92, 25)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(42, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsMusicVolValue"),
-        1, 10, "100", vec2Addv(menuPanel, vec2i(92, 42)));
+        1, 10, wstr_fromCString("100"), vec2Addv(menuPanel, vec2i(92, 42)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(42, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsSFXVolValue"),
-        1, 10, "82", vec2Addv(menuPanel, vec2i(92, 59)));
+        1, 10, wstr_fromCString("82"), vec2Addv(menuPanel, vec2i(92, 59)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(42, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsMouseScrollValue"),
-        1, 10, "Slowest", vec2Addv(menuPanel, vec2i(92, 76)));
+        1, 10, wstr_fromCString("Slowest"), vec2Addv(menuPanel, vec2i(92, 76)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(42, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
     setUITextVerticalAlign(uiEntity, WAR_TEXT_ALIGN_MIDDLE);
 
     uiEntity = createUIText(context, wstr_fromCString("txtOptionsKeyScrollValue"),
-        1, 10, "Normal", vec2Addv(menuPanel, vec2i(92, 93)));
+        1, 10, wstr_fromCString("Normal"), vec2Addv(menuPanel, vec2i(92, 93)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(42, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
@@ -344,7 +345,7 @@ void createOptionsMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnOptionsOk"),
-        1, 10, "Ok",
+        1, 10, wstr_fromCString("Ok"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -356,7 +357,7 @@ void createOptionsMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnOptionsCancel"),
-        1, 10, "Cancel",
+        1, 10, wstr_fromCString("Cancel"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -385,7 +386,7 @@ void createObjectivesMenu(WarContext* context)
     WarEntity* uiEntity;
 
     uiEntity = createUIText(context, wstr_fromCString("txtObjectivesHeader"),
-        1, 10, "Objectives", vec2Addv(menuPanel, vec2i(0, 10)));
+        1, 10, wstr_fromCString("Objectives"), vec2Addv(menuPanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(map->menuPanel.width, 12));
     setUITextHorizontalAlign(uiEntity, WAR_TEXT_ALIGN_CENTER);
@@ -404,7 +405,7 @@ void createObjectivesMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnObjectivesMenu"),
-        1, 10, "Menu",
+        1, 10, wstr_fromCString("Menu"),
         mediumNormalRef,
         mediumPressedRef,
         invalidRef,
@@ -432,7 +433,7 @@ void createRestartMenu(WarContext* context)
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIText(context, wstr_fromCString("txtRestartText"),
-        1, 10, "Are you sure you want to restart?",
+        1, 10, wstr_fromCString("Are you sure you want to restart?"),
         vec2Addv(messagePanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(map->messagePanel.width, 12));
@@ -441,7 +442,7 @@ void createRestartMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnRestartRestart"),
-        1, 10, "Restart",
+        1, 10, wstr_fromCString("Restart"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -453,7 +454,7 @@ void createRestartMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnRestartCancel"),
-        1, 10, "Cancel",
+        1, 10, wstr_fromCString("Cancel"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -477,7 +478,7 @@ void createGameOverMenu(WarContext* context)
     WarEntity* uiEntity;
 
     uiEntity = createUIText(context, wstr_fromCString("txtGameOverText"),
-        1, 10, "You are victorious!",
+        1, 10, wstr_fromCString("You are victorious!"),
         vec2Addv(messagePanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(map->messagePanel.width, 12));
@@ -486,7 +487,7 @@ void createGameOverMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnGameOverSave"),
-        1, 10, "Save",
+        1, 10, wstr_fromCString("Save"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -498,7 +499,7 @@ void createGameOverMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnGameOverContinue"),
-        1, 10, "Continue",
+        1, 10, wstr_fromCString("Continue"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -510,7 +511,7 @@ void createGameOverMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnGameOverOk"),
-        1, 10, "Ok",
+        1, 10, wstr_fromCString("Ok"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -534,7 +535,7 @@ void createQuitMenu(WarContext* context)
     WarEntity* uiEntity;
 
     uiEntity = createUIText(context, wstr_fromCString("txtQuitText"),
-        1, 10, "Are you sure you want to quit?",
+        1, 10, wstr_fromCString("Are you sure you want to quit?"),
         vec2Addv(messagePanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(map->messagePanel.width, 12));
@@ -543,7 +544,7 @@ void createQuitMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnQuitQuit"),
-        1, 10, "Quit",
+        1, 10, wstr_fromCString("Quit"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -555,7 +556,7 @@ void createQuitMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnQuitMenu"),
-        1, 10, "Menu",
+        1, 10, wstr_fromCString("Menu"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -567,7 +568,7 @@ void createQuitMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnQuitCancel"),
-        1, 10, "Cancel",
+        1, 10, wstr_fromCString("Cancel"),
         smallNormalRef,
         smallPressedRef,
         invalidRef,
@@ -593,7 +594,7 @@ void createDemoEndMenu(WarContext* context)
     uiEntity = createUIText(
         context, wstr_fromCString("txtDemoEndHeader"),
         1, 10,
-        "Thanks for playing!",
+        wstr_fromCString("Thanks for playing!"),
         vec2Addv(menuPanel, vec2i(0, 10)));
     setUIEntityStatus(uiEntity, false);
     setUITextBoundings(uiEntity, vec2f(map->menuPanel.width, 12));
@@ -603,7 +604,7 @@ void createDemoEndMenu(WarContext* context)
     uiEntity = createUIText(
         context, wstr_fromCString("txtDemoEndText"),
         1, 7,
-        "This is a non-profit project with\n"
+        wstr_fromCString("This is a non-profit project with\n"
         "the personal goal of learning to\n"
         "do RTS engines\n"
         "\n"
@@ -612,7 +613,7 @@ void createDemoEndMenu(WarContext* context)
         "you see are registered trademarks\n"
         "of Blizzard Entertainment.\n"
         "\n"
-        "Made by @acoto87",
+        "Made by @acoto87"),
         vec2Addv(menuPanel, vec2i(8, 26)));
     setUIEntityStatus(uiEntity, false);
     setUITextMultiline(uiEntity, true);
@@ -624,7 +625,7 @@ void createDemoEndMenu(WarContext* context)
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnDemoEndMenu"),
-        1, 10, "Menu",
+        1, 10, wstr_fromCString("Menu"),
         mediumNormalRef,
         mediumPressedRef,
         invalidRef,
@@ -747,7 +748,7 @@ void showOrHideGameOverMenu(WarContext* context, bool status)
         if (map->result == WAR_LEVEL_RESULT_WIN)
         {
             WarEntity* gameOverText = findUIEntity(context, wsv_fromCString("txtGameOverText"));
-            setUIText(gameOverText, "You are victorious!");
+            setUIText(gameOverText, wstr_fromCString("You are victorious!"));
 
             WarEntity* saveBtn = findUIEntity(context, wsv_fromCString("btnGameOverSave"));
             setUIEntityStatus(saveBtn, true);
@@ -761,7 +762,7 @@ void showOrHideGameOverMenu(WarContext* context, bool status)
         else if (map->result == WAR_LEVEL_RESULT_LOSE)
         {
             WarEntity* gameOverText = findUIEntity(context, wsv_fromCString("txtGameOverText"));
-            setUIText(gameOverText, "You failed to archieve victory...");
+            setUIText(gameOverText, wstr_fromCString("You failed to archieve victory..."));
 
             WarEntity* saveBtn = findUIEntity(context, wsv_fromCString("btnGameOverSave"));
             setUIEntityStatus(saveBtn, false);

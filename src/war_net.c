@@ -45,15 +45,16 @@ bool cleanNetwork(void)
     return true;
 }
 
-WarSocket connectToHost(const char* host)
+WarSocket connectToHost(StringView host)
 {
-    struct hostent* hostEntry = gethostbyname(host);
+    const char* hostStr = wsv_data(host);
+    struct hostent* hostEntry = gethostbyname(hostStr);
     if(!hostEntry)
     {
 #if _WIN32
-        logError("Couldn't create socket to host %s. Errno: %d", host, WSAGetLastError());
+        logError("Couldn't create socket to host %s. Errno: %d", hostStr, WSAGetLastError());
 #else
-        logError("Couldn't create socket to host %s. Errno: %d", host, h_errno);
+        logError("Couldn't create socket to host %s. Errno: %d", hostStr, h_errno);
 #endif
 
         return 0;
@@ -63,9 +64,9 @@ WarSocket connectToHost(const char* host)
     if(sck == INVALID_SOCKET)
     {
 #if _WIN32
-        logError("Couldn't create socket to host %s. Last error: %d", host, WSAGetLastError());
+        logError("Couldn't create socket to host %s. Last error: %d", hostStr, WSAGetLastError());
 #else
-        logError("Couldn't create socket to host %s. Last error: %d", host, errno);
+        logError("Couldn't create socket to host %s. Last error: %d", hostStr, errno);
 #endif
 
         return 0;
@@ -80,9 +81,9 @@ WarSocket connectToHost(const char* host)
     if(status == SOCKET_ERROR)
     {
 #if _WIN32
-        logError("Couldn't connect socket to host %s. Last error: %d", host, WSAGetLastError());
+        logError("Couldn't connect socket to host %s. Last error: %d", hostStr, WSAGetLastError());
 #else
-        logError("Couldn't connect socket to host %s. Last error: %d", host, errno);
+        logError("Couldn't connect socket to host %s. Last error: %d", hostStr, errno);
 #endif
 
         closeSocket(sck);
@@ -93,16 +94,18 @@ WarSocket connectToHost(const char* host)
     return sck;
 }
 
-bool requestResource(WarSocket sck, const char* resource, const char* host)
+bool requestResource(WarSocket sck, StringView resource, StringView host)
 {
-    size32 resourcelen = strlen(resource);
-    size32 hostlen = strlen(host);
+    const char* resourceStr = wsv_data(resource);
+    const char* hostStr = wsv_data(host);
+    size32 resourcelen = strlen(resourceStr);
+    size32 hostlen = strlen(hostStr);
     size32 requestLength;
     size32 hostRequestLength;
 
-    if (resourcelen > 0 && resource[0] == '/')
+    if (resourcelen > 0 && resourceStr[0] == '/')
     {
-        resource++;
+        resourceStr++;
         resourcelen--;
     }
 
@@ -112,12 +115,12 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     if (requestLength > WAR_REQUEST_MESSAGE_MAX_SIZE ||
         hostRequestLength > WAR_REQUEST_MESSAGE_MAX_SIZE)
     {
-        logError("The host or resource are too long to build the HTTP request: host=%s, resource=%s.", host, resource);
+        logError("The host or resource are too long to build the HTTP request: host=%s, resource=%s.", hostStr, resourceStr);
         return false;
     }
 
     char message[WAR_REQUEST_MESSAGE_MAX_SIZE];
-    snprintf(message, sizeof(message), "GET /%s HTTP/1.1\r\n", resource);
+    snprintf(message, sizeof(message), "GET /%s HTTP/1.1\r\n", resourceStr);
     s32 status = send(sck, message, (s32)strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
@@ -131,7 +134,7 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     }
 
     memset(message, 0, sizeof(message));
-    snprintf(message, sizeof(message), "Host: %s\r\n\r\n", host);
+    snprintf(message, sizeof(message), "Host: %s\r\n\r\n", hostStr);
     status = send(sck, message, (s32)strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
@@ -147,9 +150,10 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     return true;
 }
 
-s32 parseHeadersFromResponse(const char* response, s32 responseLength, StringViewMap* headers)
+s32 parseHeadersFromResponse(StringView response, s32 responseLength, StringViewMap* headers)
 {
-    StringView view = wsv_fromParts(response, responseLength);
+    NOT_USED(responseLength);
+    StringView view = response;
 
     size_t headersEnd = wsv_find(view, wsv_fromCString("\r\n\r\n"));
     if (headersEnd == WSV_NPOS)
@@ -227,43 +231,46 @@ s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
     return responseLength;
 }
 
-bool downloadFileFromUrl(const char* url, const char* filePath)
+bool downloadFileFromUrl(StringView url, StringView filePath)
 {
-    if(!url || !filePath)
+    const char* urlStr = wsv_data(url);
+    const char* filePathStr = wsv_data(filePath);
+
+    if(!urlStr || !filePathStr)
     {
         return false;
     }
 
     u16 shift = 0;
-    if(strncasecmp(url, "http://", strlen("http://")) == 0)
+    if(strncasecmp(urlStr, "http://", strlen("http://")) == 0)
     {
         shift = (u16)strlen("http://");
     }
 
-    if (strncasecmp(url + shift, "www.", strlen("www.")) == 0)
+    if (strncasecmp(urlStr + shift, "www.", strlen("www.")) == 0)
     {
         shift += (u16)strlen("www.");
     }
 
-    size32 urlLength = strlen(url);
+    size32 urlLength = strlen(urlStr);
     if (shift > urlLength)
     {
-        logError("The url has an invalid prefix offset: %s", url);
+        logError("The url has an invalid prefix offset: %s", urlStr);
         return false;
     }
 
     size32 cutLength = urlLength - shift + 1;
     if (cutLength > WAR_URL_BUFFER_MAX_SIZE)
     {
-        logError("The url is too long to parse: %s", url);
+        logError("The url is too long to parse: %s", urlStr);
         return false;
     }
 
     char cut[WAR_URL_BUFFER_MAX_SIZE];
-    strcpy(cut, url + shift);
+    strcpy(cut, urlStr + shift);
 
     const char* host = strtok(cut, "/");
-    const char* resource = url + shift + strlen(host);
+    const char* resource = urlStr + shift + strlen(host);
 
     if (!initNetwork())
     {
@@ -271,7 +278,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    WarSocket sck = connectToHost(host);
+    WarSocket sck = connectToHost(wsv_fromCString(host));
     if (!sck)
     {
         logError("Couldn't connect to host: %s", host);
@@ -279,9 +286,9 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    if (!requestResource(sck, resource, host))
+    if (!requestResource(sck, wsv_fromCString(resource), wsv_fromCString(host)))
     {
-        logError("Couldn't download file from url %s", url);
+        logError("Couldn't download file from url %s", urlStr);
         closeSocket(sck);
         cleanNetwork();
         return false;
@@ -294,7 +301,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (responseLength < 0)
     {
-        logError("Couldn't receive response from url %s", url);
+        logError("Couldn't receive response from url %s", urlStr);
 
         closeSocket(sck);
         cleanNetwork();
@@ -303,10 +310,10 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    SDL_IOStream *stream = SDL_IOFromFile(filePath, "wb");
+    SDL_IOStream *stream = SDL_IOFromFile(filePathStr, "wb");
     if (!stream)
     {
-        logError("Couldn't create a new file at: %s", filePath);
+        logError("Couldn't create a new file at: %s", filePathStr);
 
         closeSocket(sck);
         cleanNetwork();
@@ -317,7 +324,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (responseLength == 0)
     {
-        logError("The response was empty from %s", url);
+        logError("The response was empty from %s", urlStr);
 
         closeSocket(sck);
         cleanNetwork();
@@ -332,7 +339,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
     StringViewMap headers;
     StringViewMapInit(&headers, options);
 
-    s32 readFromResponse = parseHeadersFromResponse(response, responseLength, &headers);
+    s32 readFromResponse = parseHeadersFromResponse(wsv_fromParts(response, responseLength), responseLength, &headers);
 
     responsePtr += readFromResponse;
     responseLength -= readFromResponse;

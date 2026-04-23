@@ -23,8 +23,24 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    This is a single header file with macros to declare and define a strongly typed heap of objects.
+    Single-header macro library to declare and define strongly typed binary
+    heaps backed by a dynamically resized array.
+
+    USAGE
+    Declare a heap type with shlDeclareBinaryHeap(name, type), then define it
+    once with shlDefineBinaryHeap(name, type) in a C source file.
+
+    CUSTOMISATION
+    Provide a compare function that orders items, an equality function for
+    lookups, a default value for empty reads, and an optional free function for
+    owned values. Items are stored by copy.
+
+    NOTES
+    This implementation behaves as a min-heap according to compareFn. Push,
+    Pop, and Update all restore heap order automatically. Call Free to release
+    internal storage and Clear to dispose of retained items.
 */
+
 #ifndef SHL_HEAP_H
 #define SHL_HEAP_H
 

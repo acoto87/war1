@@ -3,14 +3,14 @@
 #include "alloc.h"
 #include "war_log.h"
 
-WarFile* loadWarFile(WarContext* context, const char* filePath)
+WarFile* loadWarFile(WarContext* context, StringView filePath)
 {
     NOT_USED(context);
 
-    SDL_IOStream *stream = SDL_IOFromFile(filePath, "rb");
+    SDL_IOStream *stream = SDL_IOFromFile(wsv_data(filePath), "rb");
     if (!stream)
     {
-        logError("Couldn't process the DATA.WAR file. The file doesn't exists at %s.", filePath);
+        logError("Couldn't process the DATA.WAR file. The file doesn't exists at %s.", wsv_data(filePath));
         return NULL;
     }
 

@@ -51,5 +51,5 @@ void applyAddUnitCheat(WarContext* context, StringView argument);
 void setCheatsPanelVisible(WarContext* context, bool visible);
 void setCheatsFeedback(WarContext* context, String feedbackText);
 void createCheatsPanel(WarContext* context);
-void setCheatText(WarContext* context, char* text, ...);
+void setCheatText(WarContext* context, String text);
 void updateCheatsPanel(WarContext* context);

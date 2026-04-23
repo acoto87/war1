@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "war_sprites.h"
+#include "shl/wstr.h"
 
 // the fonts was created in a 64x64 (64x96 for the second font)
 // sprite but for the actual game a 512x512 (512x768) was used,
@@ -221,12 +222,12 @@ WarFontData fontsData[2] =
 
 #define getCharIndex(c) ((s32)((c) > 0 ? (c) - 32 : 0))
 
-WarSprite loadFontSprite(WarContext* context, const char* fontPath)
+WarSprite loadFontSprite(WarContext* context, StringView fontPath)
 {
     WarSprite sprite = {0};
 
     s32 width, height, bitsPerPixel;
-    u8* data = stbi_load(fontPath, &width, &height, &bitsPerPixel, 0);
+    u8* data = stbi_load(wsv_data(fontPath), &width, &height, &bitsPerPixel, 0);
     if (data)
     {
         sprite = createSprite(context, width, height, data);
@@ -324,34 +325,37 @@ f32 getLineAlignmentOffset(WarTextAlignment lineAlign, f32 width, f32 lineWidth)
 
 typedef struct
 {
-    const char* start;
-    const char* end;
+    s32 start;
+    s32 length;
     f32 width;
 } WarTextSpan;
 
-s32 splitTextIntoLines(const char* text, s32 maxLines, WarTextSpan lines[], f32 width, WarFontParams params)
+static s32 splitTextIntoLines(StringView text, s32 maxLines, WarTextSpan lines[], f32 width, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
     bool wrap = params.wrapping == WAR_TEXT_WRAP_CHAR;
     f32 x = 0;
     s32 k = 0;
 
-    const char* s = text;
-    const char* e = text;
-    while (*e && k < maxLines)
+    s32 s = 0;
+    s32 n = (s32)wsv_length(text);
+
+    for (s32 i = 0; i < n && k < maxLines; i++)
     {
+        char c = text.data[i];
+
         // a new line is generated for each \n
-        if (*e == '\n')
+        if (c == '\n')
         {
-            lines[k].start = s;
-            lines[k].end = e;
-            lines[k].width = x;
+            lines[k].start  = s;
+            lines[k].length = i - s;
+            lines[k].width  = x;
             k++;
 
-            s = e + 1;
+            s = i + 1;
             x = 0;
         }
-        else if (*e == '\t')
+        else if (c == '\t')
         {
             rect rs = params.fontData.data[getCharIndex(' ')];
             f32 dx = (TAB_WIDTH * rs.width + params.fontData.advance) * scale;
@@ -359,12 +363,12 @@ s32 splitTextIntoLines(const char* text, s32 maxLines, WarTextSpan lines[], f32 
             // if the current character doesn't fit in the line generate a new line
             if (x + dx > width && wrap)
             {
-                lines[k].start = s;
-                lines[k].end = e;
-                lines[k].width = x;
+                lines[k].start  = s;
+                lines[k].length = i - s;
+                lines[k].width  = x;
                 k++;
 
-                s = e;
+                s = i;
                 x = 0;
             }
 
@@ -372,32 +376,30 @@ s32 splitTextIntoLines(const char* text, s32 maxLines, WarTextSpan lines[], f32 
         }
         else
         {
-            rect rs = params.fontData.data[getCharIndex(*e)];
+            rect rs = params.fontData.data[getCharIndex(c)];
             f32 dx = (rs.width + params.fontData.advance) * scale;
 
             // if the current character doesn't fit in the line generate a new line
             if (x + dx > width && wrap)
             {
-                lines[k].start = s;
-                lines[k].end = e;
-                lines[k].width = x;
+                lines[k].start  = s;
+                lines[k].length = i - s;
+                lines[k].width  = x;
                 k++;
 
-                s = e;
+                s = i;
                 x = 0;
             }
 
             x += dx;
         }
-
-        e++;
     }
 
-    if (s < e && k < maxLines)
+    if (s < n && k < maxLines)
     {
-        lines[k].start = s;
-        lines[k].end = e;
-        lines[k].width = x;
+        lines[k].start  = s;
+        lines[k].length = n - s;
+        lines[k].width  = x;
         k++;
     }
 
@@ -407,35 +409,39 @@ s32 splitTextIntoLines(const char* text, s32 maxLines, WarTextSpan lines[], f32 
         rect whiteSpaceData = params.fontData.data[getCharIndex(' ')];
         f32 whiteSpaceWidth = (whiteSpaceData.width + params.fontData.advance) * scale;
 
-        for (s32 i = 0; i < k; i++)
+        for (s32 j = 0; j < k; j++)
         {
-            while (true)
+            while (lines[j].length > 0)
             {
-                if (lines[i].start[0] == ' ' && params.trimming >= WAR_TEXT_TRIM_SPACES)
+                char first = text.data[lines[j].start];
+                if (first == ' ' && params.trimming >= WAR_TEXT_TRIM_SPACES)
                 {
-                    lines[i].width -= whiteSpaceWidth;
-                    lines[i].start++;
+                    lines[j].width -= whiteSpaceWidth;
+                    lines[j].start++;
+                    lines[j].length--;
                 }
-                else if (lines[i].start[i] == '\t' && params.trimming >= WAR_TEXT_TRIM_ALL)
+                else if (first == '\t' && params.trimming >= WAR_TEXT_TRIM_ALL)
                 {
-                    lines[i].width -= TAB_WIDTH * whiteSpaceWidth;
-                    lines[i].start++;
+                    lines[j].width -= TAB_WIDTH * whiteSpaceWidth;
+                    lines[j].start++;
+                    lines[j].length--;
                 }
                 else
                     break;
             }
 
-            while (true)
+            while (lines[j].length > 0)
             {
-                if (lines[i].end[-1] == ' ' && params.trimming >= WAR_TEXT_TRIM_SPACES)
+                char last = text.data[lines[j].start + lines[j].length - 1];
+                if (last == ' ' && params.trimming >= WAR_TEXT_TRIM_SPACES)
                 {
-                    lines[i].width -= whiteSpaceWidth;
-                    lines[i].end--;
+                    lines[j].width -= whiteSpaceWidth;
+                    lines[j].length--;
                 }
-                else if (lines[i].end[-1] == '\t' && params.trimming >= WAR_TEXT_TRIM_ALL)
+                else if (last == '\t' && params.trimming >= WAR_TEXT_TRIM_ALL)
                 {
-                    lines[i].width -= TAB_WIDTH * whiteSpaceWidth;
-                    lines[i].end--;
+                    lines[j].width -= TAB_WIDTH * whiteSpaceWidth;
+                    lines[j].length--;
                 }
                 else
                     break;
@@ -446,20 +452,22 @@ s32 splitTextIntoLines(const char* text, s32 maxLines, WarTextSpan lines[], f32 
     return k;
 }
 
-vec2 measureSingleSpriteText(const char* text, s32 length, WarFontParams params)
+vec2 measureSingleSpriteText(StringView text, s32 length, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
 
     vec2 size = VEC2_ZERO;
 
-    const char* e = text;
-    while (length != 0 && *e)
+    StringView sv = wsv_slice(text, 0, (size_t)length);
+
+    for (size_t i = 0; i < sv.length; i++)
     {
-        if (*e == '\n')
+        char c = sv.data[i];
+        if (c == '\n')
         {
             size.x += params.fontData.advance * scale;
         }
-        else if (*e == '\t')
+        else if (c == '\t')
         {
             rect rs = params.fontData.data[getCharIndex(' ')];
 
@@ -467,20 +475,17 @@ vec2 measureSingleSpriteText(const char* text, s32 length, WarFontParams params)
         }
         else
         {
-            rect rs = params.fontData.data[getCharIndex(*e)];
+            rect rs = params.fontData.data[getCharIndex(c)];
 
             size.x += (rs.width + params.fontData.advance) * scale;
             size.y = max(size.y, rs.height * scale);
         }
-
-        length--;
-        e++;
     }
 
     return size;
 }
 
-vec2 measureMultiSpriteText(const char* text, f32 width, WarFontParams params)
+vec2 measureMultiSpriteText(StringView text, f32 width, WarFontParams params)
 {
     NOT_USED(width);
 
@@ -503,7 +508,7 @@ vec2 measureMultiSpriteText(const char* text, f32 width, WarFontParams params)
 
 // Render a span of characters from the font sprite.
 // Uses SDL_SetTextureColorMod for tinting instead of nvgFillColor.
-f32 renderSingleSpriteTextSpan(WarContext* context, const char* text,
+f32 renderSingleSpriteTextSpan(WarContext* context, StringView text,
                                s32 index, s32 count,
                                f32 x, f32 y,
                                WarColor fontColor,
@@ -525,7 +530,7 @@ f32 renderSingleSpriteTextSpan(WarContext* context, const char* text,
             if (boundings.x > 0 && x * scale > boundings.x)
                 break;
 
-            const char c = text[index + i];
+            const char c = text.data[index + i];
 
             if (c == '\n')
             {
@@ -568,11 +573,11 @@ f32 renderSingleSpriteTextSpan(WarContext* context, const char* text,
     return x;
 }
 
-void renderSingleSpriteText(WarContext* context, const char* text, f32 x, f32 y, WarFontParams params)
+void renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
     vec2 textSize = measureSingleSpriteText(text, -1, params);
-    s32 length = (s32)strlen(text);
+    s32 length = (s32)wsv_length(text);
 
     renderSave(context);
     renderTranslate(context, x, y);
@@ -640,7 +645,7 @@ void renderSingleSpriteText(WarContext* context, const char* text, f32 x, f32 y,
     renderRestore(context);
 }
 
-void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, WarFontParams params)
+void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
     f32 lineHeight = params.lineHeight > 0 ? params.lineHeight : params.fontData.lineHeight;
@@ -665,7 +670,8 @@ void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, 
 
     for (s32 i = 0; i < linesCount; i++)
     {
-        s32 lineLength = (s32)(lines[i].end - lines[i].start);
+        s32 lineLength = lines[i].length;
+        StringView lineView = wsv_slice(text, (size_t)lines[i].start, (size_t)lineLength);
         f32 lineAlignOffset = getLineAlignmentOffset(params.lineAlign, textSize.x, lines[i].width);
         vec2 lineOffset = vec2f(lineAlignOffset, i * lineHeight);
 
@@ -687,7 +693,7 @@ void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, 
             s32 highlightIndex = params.highlightIndex - lineStartIndex;
             s32 highlightCount = min(params.highlightCount, lineLength - highlightIndex);
 
-            x = renderSingleSpriteTextSpan(context, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lineView,
                                         0, highlightIndex,
                                         0, 0,
                                         params.fontColor,
@@ -696,7 +702,7 @@ void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, 
                                         params.boundings,
                                         scale);
 
-            x = renderSingleSpriteTextSpan(context, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lineView,
                                         highlightIndex, highlightCount,
                                         x, 0,
                                         params.highlightColor,
@@ -705,7 +711,7 @@ void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, 
                                         params.boundings,
                                         scale);
 
-            x = renderSingleSpriteTextSpan(context, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lineView,
                                         highlightIndex + highlightCount,
                                         lineLength - highlightIndex - highlightCount,
                                         x, 0,
@@ -720,7 +726,7 @@ void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, 
         {
             s32 highlightCount = min(params.highlightIndex + params.highlightCount - lineStartIndex, lineLength);
 
-            x = renderSingleSpriteTextSpan(context, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lineView,
                                         0, highlightCount,
                                         0, 0,
                                         params.highlightColor,
@@ -729,7 +735,7 @@ void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, 
                                         params.boundings,
                                         scale);
 
-            x = renderSingleSpriteTextSpan(context, lines[i].start,
+            x = renderSingleSpriteTextSpan(context, lineView,
                                         highlightCount,
                                         lineLength - highlightCount,
                                         x, 0,
@@ -746,7 +752,7 @@ void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, 
             WarColor fontColor = params.highlightIndex == ALL_HIGHLIGHT
                 ? params.highlightColor : params.fontColor;
 
-            renderSingleSpriteTextSpan(context, lines[i].start,
+            renderSingleSpriteTextSpan(context, lineView,
                                     0, lineLength,
                                     0, 0,
                                     fontColor,

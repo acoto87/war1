@@ -697,7 +697,7 @@ void applyAddUnitCheat(WarContext* context, StringView argument)
     {
         for (s32 i = 0; i < arrayLength(unitsData); i++)
         {
-            if (wsv_equalsIgnoreCase(part1, wsv_fromCString(unitsData[i].name)))
+            if (wsv_equalsIgnoreCase(part1, unitsData[i].name))
             {
                 map->addingUnit = true;
                 map->addingUnitType = (WarUnitType)i;

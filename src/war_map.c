@@ -1340,11 +1340,11 @@ void updateCommandButtons(WarContext* context)
             s32 farmsCount = getNumberOfBuildingsOfType(context, entity->unit.player, entity->unit.type, true);
             s32 dudesCount = getTotalNumberOfDudes(context, entity->unit.player);
 
-            setUIText(commandTexts[0], "FOOD USAGE:");
+            setUIText(commandTexts[0], wstr_fromCString("FOOD USAGE:"));
             setUITextHighlight(commandTexts[0], NO_HIGHLIGHT, 0);
-            setUITextFormat(commandTexts[1], "GROWN %d", farmsCount * 4 + 1);
+            setUIText(commandTexts[1], wstr_fromCStringFormat("GROWN %d", farmsCount * 4 + 1));
             setUITextHighlight(commandTexts[1], NO_HIGHLIGHT, 0);
-            setUITextFormat(commandTexts[2], " USED %d", dudesCount);
+            setUIText(commandTexts[2], wstr_fromCStringFormat(" USED %d", dudesCount));
             setUITextHighlight(commandTexts[2], NO_HIGHLIGHT, 0);
 
             return;
@@ -1357,9 +1357,9 @@ void updateCommandButtons(WarContext* context)
     {
         s32 gold = entity->unit.amount;
 
-        setUIText(commandTexts[0], "GOLD LEFT");
+        setUIText(commandTexts[0], wstr_fromCString("GOLD LEFT"));
         setUITextHighlight(commandTexts[0], NO_HIGHLIGHT, 0);
-        setUITextFormat(commandTexts[3], "%d", gold);
+        setUIText(commandTexts[3], wstr_fromCStringFormat("%d", gold));
         setUITextHighlight(commandTexts[3], NO_HIGHLIGHT, 0);
         return;
     }
@@ -1395,7 +1395,7 @@ void updateCommandButtons(WarContext* context)
         {
             WarUnitCommandData commandData = getUnitCommandData(context, entity, commands[i]);
             setUIImage(commandButtons[i], commandData.frameIndex);
-            setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.highlightCount, commandData.tooltip);
+            setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.highlightCount, wsv_toString(commandData.tooltip));
             commandButtons[i]->button.enabled = true;
             commandButtons[i]->button.gold = commandData.gold;
             commandButtons[i]->button.wood = commandData.wood;
@@ -1535,7 +1535,7 @@ void updateStatus(WarContext* context)
         if (cheatStatus->feedback)
         {
             setUIEntityStatus(cheatFeedbackText, true);
-            setUIText(cheatFeedbackText, wstr_cstr(&cheatStatus->feedbackText));
+            setUIText(cheatFeedbackText, cheatStatus->feedbackText);
 
             cheatStatus->feedbackTime -= context->deltaTime;
             if (cheatStatus->feedbackTime <= 0)
@@ -1613,18 +1613,18 @@ void updateStatus(WarContext* context)
                 cheatStatus->position = length;
             }
 
-            char statusText[STATUS_TEXT_MAX_LENGTH];
-            memset(statusText, 0, sizeof(statusText));
-            strcpy(statusText, "MSG: ");
-            strcpy(statusText + strlen("MSG: "), wstr_cstr(&cheatStatus->text));
+            StringView prefix = wsv_fromCString("MSG: ");
+            StringView cheatText = wstr_view(&cheatStatus->text);
+
+            String statusText = wstr_concat(prefix, cheatText);
             setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
 
             WarFontParams params = {0};
             params.fontSize = statusTextUI->text.fontSize;
             params.fontData = fontsData[statusTextUI->text.fontIndex];
 
-            vec2 prefixSize = measureSingleSpriteText("MSG: ", (s32)strlen("MSG: "), params);
-            vec2 textSize = measureSingleSpriteText(wstr_cstr(&cheatStatus->text), cheatStatus->position, params);
+            vec2 prefixSize = measureSingleSpriteText(prefix, prefix.length, params);
+            vec2 textSize = measureSingleSpriteText(cheatText, cheatStatus->position, params);
             statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
 
             setUIEntityStatus(statusCursor, true);
@@ -1645,7 +1645,7 @@ void updateStatus(WarContext* context)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, wstr_cstr(&flashStatus->text));
+            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, flashStatus->text);
             return;
         }
 
@@ -1653,7 +1653,7 @@ void updateStatus(WarContext* context)
         flashStatus->enabled = false;
     }
 
-    char statusText[STATUS_TEXT_MAX_LENGTH] = {0};
+    String statusText = wstr_make();
     s32 highlightIndex = NO_HIGHLIGHT;
     s32 highlightCount = 0;
     s32 goldCost = 0;
@@ -1676,7 +1676,7 @@ void updateStatus(WarContext* context)
                     WarUnitCommandMapping commandMapping = getCommandMappingFromUnitType(unitToBuild);
                     WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
 
-                    strcpy(statusText, commandData.tooltip2);
+                    wstr_assign(&statusText, commandData.tooltip2);
                 }
                 else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
                 {
@@ -1685,7 +1685,7 @@ void updateStatus(WarContext* context)
                     WarUnitCommandMapping commandMapping = getCommandMappingFromUpgradeType(upgradeToBuild);
                     WarUnitCommandBaseData commandData = getCommandBaseData(commandMapping.type);
 
-                    strcpy(statusText, commandData.tooltip2);
+                    wstr_assign(&statusText, commandData.tooltip2);
                 }
                 else
                 {
@@ -1699,7 +1699,8 @@ void updateStatus(WarContext* context)
                         // wood and gold would be 200 * 0.12 = 24.
                         //
                         s32 repairCost = (s32)ceil((maxhp - hp) * 0.12f);
-                        sprintf(statusText, "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
+                        wstr_assignCString(&statusText, "FULL REPAIRS WILL COST ");
+                        wstr_appendFormat(&statusText, "%d GOLD & LUMBER", repairCost);
                     }
                 }
             }
@@ -1709,11 +1710,11 @@ void updateStatus(WarContext* context)
                 {
                     if (selectedEntity->unit.resourceKind == WAR_RESOURCE_GOLD)
                     {
-                        strcpy(statusText, "CARRYING GOLD");
+                        wstr_assignCString(&statusText, "CARRYING GOLD");
                     }
                     else if (selectedEntity->unit.resourceKind == WAR_RESOURCE_WOOD)
                     {
-                        strcpy(statusText, "CARRYING LUMBER");
+                        wstr_assignCString(&statusText, "CARRYING LUMBER");
                     }
                 }
             }
@@ -1732,7 +1733,7 @@ void updateStatus(WarContext* context)
                 WarButtonComponent* button = &entity->button;
                 if (button->enabled && button->interactive && button->hot)
                 {
-                    strcpy(statusText, wstr_cstr(&button->tooltip));
+                    wstr_assign(&statusText, wstr_view(&button->tooltip));
                     goldCost = button->gold;
                     woodCost = button->wood;
                     highlightIndex = button->highlightIndex;

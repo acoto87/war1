@@ -78,26 +78,23 @@ void createCheatsPanel(WarContext* context)
     uiEntity = createUIRect(context, wstr_fromCString("panelCheat"), VEC2_ZERO, cheatSize, cheatBackgroundColor);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, wstr_fromCString("txtCheat"), 0, 6, NULL, vec2i(2, 4));
+    uiEntity = createUIText(context, wstr_fromCString("txtCheat"), 0, 6, wstr_make(), vec2i(2, 4));
     setUIEntityStatus(uiEntity, false);
 
     uiEntity = createUIRect(context, wstr_fromCString("cursorCheat"), vec2i(2, 3), vec2i(1, 7), WAR_COLOR_WHITE);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, wstr_fromCString("txtCheatFeedbackText"), 1, 8, NULL, vec2i(10, 20));
+    uiEntity = createUIText(context, wstr_fromCString("txtCheatFeedbackText"), 1, 8, wstr_make(), vec2i(10, 20));
     setUITextColor(uiEntity, WAR_COLOR_YELLOW);
     setUIEntityStatus(uiEntity, false);
 }
 
-void setCheatText(WarContext* context, char* text, ...)
+void setCheatText(WarContext* context, String text)
 {
     WarEntity* txtCheat = findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(txtCheat);
 
-    va_list args;
-    va_start (args, text);
-    setUITextFormatv(txtCheat, text, args);
-    va_end (args);
+    setUIText(txtCheat, text);
 }
 
 void updateCheatsPanel(WarContext* context)
@@ -125,7 +122,7 @@ void updateCheatsPanel(WarContext* context)
     if (cheatStatus->feedback)
     {
         setUIEntityStatus(cheatFeedbackText, true);
-        setUIText(cheatFeedbackText, wstr_cstr(&cheatStatus->feedbackText));
+        setUIText(cheatFeedbackText, cheatStatus->feedbackText);
 
         cheatStatus->feedbackTime -= context->deltaTime;
         if (cheatStatus->feedbackTime <= 0)
@@ -203,18 +200,18 @@ void updateCheatsPanel(WarContext* context)
             cheatStatus->position = length;
         }
 
-        char statusText[STATUS_TEXT_MAX_LENGTH];
-        memset(statusText, 0, sizeof(statusText));
-        strcpy(statusText, "MSG: ");
-        strcpy(statusText + strlen("MSG: "), wstr_cstr(&cheatStatus->text));
+        StringView prefix = wsv_fromCString("MSG: ");
+        StringView cheatText = wstr_view(&cheatStatus->text);
+
+        String statusText = wstr_concat(prefix, cheatText);
         setCheatText(context, statusText);
 
         WarFontParams params = {0};
         params.fontSize = cheatText->text.fontSize;
         params.fontData = fontsData[cheatText->text.fontIndex];
 
-        vec2 prefixSize = measureSingleSpriteText("MSG: ", (s32)strlen("MSG: "), params);
-        vec2 textSize = measureSingleSpriteText(wstr_cstr(&cheatStatus->text), cheatStatus->position, params);
+        vec2 prefixSize = measureSingleSpriteText(prefix, (s32)wsv_length(prefix), params);
+        vec2 textSize = measureSingleSpriteText(cheatText, cheatStatus->position, params);
         cheatCursor->transform.position.x = prefixSize.x + textSize.x;
 
         setUIEntityStatus(cheatPanel, true);

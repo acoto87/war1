@@ -22,7 +22,7 @@ void enterSceneDownload(WarContext* context)
                                "\n"
                                "Enjoy the game!";
 
-    WarEntity* downloadText = createUIText(context, wstr_fromCString("txtDownload"), 1, 10, text, vec2i(10, 10));
+    WarEntity* downloadText = createUIText(context, wstr_fromCString("txtDownload"), 1, 10, wstr_fromCString(text), vec2i(10, 10));
     setUITextColor(downloadText, WAR_COLOR_RGB(255, 215, 138));
     setUITextMultiline(downloadText, true);
     setUITextBoundings(downloadText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
@@ -32,7 +32,7 @@ void enterSceneDownload(WarContext* context)
     setUITextWrapping(downloadText, WAR_TEXT_WRAP_CHAR);
     setUITextLineHeight(downloadText, 120);
 
-    WarEntity* downloadingText = createUIText(context, wstr_fromCString("txtDownloading"), 1, 10, "Downloading...", vec2i(10, 10));
+    WarEntity* downloadingText = createUIText(context, wstr_fromCString("txtDownloading"), 1, 10, wstr_fromCString("Downloading..."), vec2i(10, 10));
     setUITextColor(downloadingText, WAR_COLOR_RGB(255, 215, 138));
     setUITextMultiline(downloadingText, false);
     setUITextBoundings(downloadingText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
@@ -64,7 +64,7 @@ void updateSceneDownload(WarContext* context)
                                               "DEMO DATA.WAR file";
 
                 WarEntity* downloadText = findUIEntity(context, wsv_fromCString("txtDownload"));
-                setUIText(downloadText, confirm);
+                setUIText(downloadText, wstr_fromCString(confirm));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_CONFIRM;
             }
@@ -85,18 +85,18 @@ void updateSceneDownload(WarContext* context)
         }
         case WAR_SCENE_DOWNLOAD_DOWNLOADING:
         {
-            bool success = downloadFileFromUrl(ONLINE_DEMO_DATAWAR_FILE_URL, DATAWAR_FILE_PATH);
+            bool success = downloadFileFromUrl(wsv_fromCString(ONLINE_DEMO_DATAWAR_FILE_URL), wsv_fromCString(DATAWAR_FILE_PATH));
             if (success)
             {
                 WarEntity* downloadingText = findUIEntity(context, wsv_fromCString("txtDownloading"));
-                setUIText(downloadingText, "Downloading... Done. Press Enter to start the game.");
+                setUIText(downloadingText, wstr_fromCString("Downloading... Done. Press Enter to start the game."));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_DOWNLOADED;
             }
             else
             {
                 WarEntity* downloadingText = findUIEntity(context, wsv_fromCString("txtDownloading"));
-                setUIText(downloadingText, "Downloading... Failed. Press Enter to quit the game.");
+                setUIText(downloadingText, wstr_fromCString("Downloading... Failed. Press Enter to quit the game."));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_FAILED;
             }

@@ -25,32 +25,38 @@
 
     Single-header string library providing two complementary types:
 
-      StringView  - a non-owning, read-only view into an existing character buffer
-                    (wsv_* functions, prefix stands for "wstr view")
+      StringView  - a non-owning, read-only view into an existing character
+                    buffer (wsv_* functions; prefix stands for "wstr view")
       String      - a heap-allocated, null-terminated, mutable string
                     (wstr_* functions)
 
     USAGE
-    -----
-    In exactly one translation unit, define SHL_WSTR_IMPLEMENTATION before
-    including this header to compile the implementation:
+    Include this header in all translation units that need the declarations.
+    Define SHL_WSTR_IMPLEMENTATION in exactly one translation unit before the
+    include to compile the implementation:
 
         #define SHL_WSTR_IMPLEMENTATION
         #include "wstr.h"
 
-    All other translation units include it without the define:
+    Include the header without that define everywhere else:
 
         #include "wstr.h"
 
     CUSTOMISATION
-    -------------
-    Override the allocator before the implementation include if needed:
+    Override the allocation hooks before the implementation include if you
+    need custom memory management:
 
         #define WSTR_MALLOC(sz)       my_malloc(sz)
         #define WSTR_REALLOC(p, sz)   my_realloc(p, sz)
         #define WSTR_FREE(p)          my_free(p)
         #define SHL_WSTR_IMPLEMENTATION
         #include "wstr.h"
+
+    NOTES
+    StringView never owns memory and always refers to external storage.
+    String owns its buffer, keeps it null-terminated, and must be released with
+    wstr_free or wstr_freePtr when no longer needed. Functions that mutate a
+    String may reallocate its buffer.
 */
 
 #ifndef SHL_WSTR_H
@@ -141,6 +147,7 @@ String     wstr_fromCString(const char* text);
 String     wstr_fromCStringFormat(const char* textFormat, ...);
 String     wstr_fromCStringFormatv(const char* textFormat, va_list args);
 String     wstr_fromView(StringView view);
+String     wstr_concat(StringView left, StringView right);
 String     wstr_adopt(char* buffer, size_t length, size_t capacity);
 void       wstr_freePtr(String* string);
 void       wstr_free(String string);
@@ -152,8 +159,12 @@ bool       wstr_reserve(String* string, size_t capacity);
 bool       wstr_resize(String* string, size_t length);
 bool       wstr_assign(String* string, StringView view);
 bool       wstr_assignCString(String* string, const char* text);
+bool       wstr_assignCStringFormat(String* string, const char* textFormat, ...);
+bool       wstr_assignCStringFormatv(String* string, const char* textFormat, va_list args);
 bool       wstr_append(String* string, StringView view);
 bool       wstr_appendCString(String* string, const char* text);
+bool       wstr_appendCStringFormat(String* string, const char* textFormat, ...);
+bool       wstr_appendCStringFormatv(String* string, const char* textFormat, va_list args);
 bool       wstr_appendChar(String* string, char c);
 bool       wstr_insert(String* string, size_t index, StringView view);
 bool       wstr_removeRange(String* string, size_t index, size_t length);
@@ -864,6 +875,38 @@ String wstr_fromView(StringView view)
     return string;
 }
 
+String wstr_concat(StringView left, StringView right)
+{
+    if (left.length > (size_t)-1 - right.length)
+    {
+        return wstr_make();
+    }
+
+    size_t totalLength = left.length + right.length;
+    String string = wstr_make();
+    if (totalLength == 0)
+    {
+        return string;
+    }
+
+    if (!wstr_resize(&string, totalLength))
+    {
+        return string;
+    }
+
+    if (left.length > 0)
+    {
+        memcpy(string.data, left.data, left.length);
+    }
+
+    if (right.length > 0)
+    {
+        memcpy(string.data + left.length, right.data, right.length);
+    }
+
+    return string;
+}
+
 String wstr_adopt(char* buffer, size_t length, size_t capacity)
 {
     if (buffer == NULL)
@@ -997,6 +1040,20 @@ bool wstr_assignCString(String* string, const char* text)
     return wstr_assign(string, wsv_fromCString(text));
 }
 
+bool wstr_assignCStringFormat(String* string, const char* textFormat, ...)
+{
+    va_list args;
+    va_start(args, textFormat);
+    bool ok = wstr_assignCStringFormatv(string, textFormat, args);
+    va_end(args);
+    return ok;
+}
+
+bool wstr_assignCStringFormatv(String* string, const char* textFormat, va_list args)
+{
+    return wstr_setFormatv(string, textFormat, args);
+}
+
 bool wstr_append(String* string, StringView view)
 {
     if (string == NULL)
@@ -1031,6 +1088,20 @@ bool wstr_append(String* string, StringView view)
 bool wstr_appendCString(String* string, const char* text)
 {
     return wstr_append(string, wsv_fromCString(text));
+}
+
+bool wstr_appendCStringFormat(String* string, const char* textFormat, ...)
+{
+    va_list args;
+    va_start(args, textFormat);
+    bool ok = wstr_appendCStringFormatv(string, textFormat, args);
+    va_end(args);
+    return ok;
+}
+
+bool wstr_appendCStringFormatv(String* string, const char* textFormat, va_list args)
+{
+    return wstr_appendFormatv(string, textFormat, args);
 }
 
 bool wstr_appendChar(String* string, char c)

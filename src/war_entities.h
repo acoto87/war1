@@ -42,7 +42,7 @@ void removeAnimationsComponent(WarContext* context, WarEntity* entity);
 void addUIComponent(WarContext* context, WarEntity* entity, String name);
 void removeUIComponent(WarContext* context, WarEntity* entity);
 
-void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, const char* text);
+void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, String text);
 void removeTextComponent(WarContext* context, WarEntity* entity);
 
 void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarColor color);

@@ -22,6 +22,31 @@
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
+
+    Single-header memory zone allocator with stable pointers, optional aligned
+    allocations, structural validation helpers, and configurable diagnostics.
+
+    USAGE
+    Include this header in all translation units that need the declarations.
+    Define SHL_MEMORY_ZONE_IMPLEMENTATION in exactly one translation unit
+    before the include to compile the implementation:
+
+        #define SHL_MEMORY_ZONE_IMPLEMENTATION
+        #include "memzone.h"
+
+    Include the header without that define everywhere else:
+
+        #include "memzone.h"
+
+    CUSTOMISATION
+    Override MZ_MALLOC and MZ_FREE before the implementation include if you
+    need custom allocation. Optional hooks include MZ_ASSERT, MZ_DEBUG, and
+    MZ_PRIVATE_API for diagnostics and internal-structure exposure.
+
+    NOTES
+    The allocator returns stable pointers until the zone is reset or destroyed.
+    Use mz_setReporter to install custom diagnostics, mz_validate to sanity-
+    check the zone, and mz_free only with pointers that came from the zone.
 */
 #ifndef SHL_MEMORY_ZONE_H
 #define SHL_MEMORY_ZONE_H
