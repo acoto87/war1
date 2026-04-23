@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "SDL3/SDL.h"
+#include "shl/wstr.h"
 
 #include "war_font.h"
 #include "war_ui.h"
@@ -201,9 +202,9 @@ void updateCheatsPanel(WarContext* context)
         }
 
         StringView prefix = wsv_fromCString("MSG: ");
-        StringView cheatText = wstr_view(&cheatStatus->text);
+        StringView cheatStatusText = wstr_view(&cheatStatus->text);
 
-        String statusText = wstr_concat(prefix, cheatText);
+        String statusText = wstr_concat(prefix, cheatStatusText);
         setCheatText(context, statusText);
 
         WarFontParams params = {0};
@@ -211,7 +212,7 @@ void updateCheatsPanel(WarContext* context)
         params.fontData = fontsData[cheatText->text.fontIndex];
 
         vec2 prefixSize = measureSingleSpriteText(prefix, (s32)wsv_length(prefix), params);
-        vec2 textSize = measureSingleSpriteText(cheatText, cheatStatus->position, params);
+        vec2 textSize = measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
         cheatCursor->transform.position.x = prefixSize.x + textSize.x;
 
         setUIEntityStatus(cheatPanel, true);

@@ -2,6 +2,8 @@
 
 #include <stdarg.h>
 
+#include "shl/wstr.h"
+
 #include "war_types.h"
 
 bool isUIEntity(WarEntity* entity);

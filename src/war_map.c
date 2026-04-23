@@ -1614,9 +1614,9 @@ void updateStatus(WarContext* context)
             }
 
             StringView prefix = wsv_fromCString("MSG: ");
-            StringView cheatText = wstr_view(&cheatStatus->text);
+            StringView cheatStatusText = wstr_view(&cheatStatus->text);
 
-            String statusText = wstr_concat(prefix, cheatText);
+            String statusText = wstr_concat(prefix, cheatStatusText);
             setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
 
             WarFontParams params = {0};
@@ -1624,7 +1624,7 @@ void updateStatus(WarContext* context)
             params.fontData = fontsData[statusTextUI->text.fontIndex];
 
             vec2 prefixSize = measureSingleSpriteText(prefix, prefix.length, params);
-            vec2 textSize = measureSingleSpriteText(cheatText, cheatStatus->position, params);
+            vec2 textSize = measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
             statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
 
             setUIEntityStatus(statusCursor, true);

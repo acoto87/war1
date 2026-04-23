@@ -59,8 +59,8 @@
 #include "shl/set.h"
 #define SHL_MEMORY_BUFFER_IMPLEMENTATION
 #include "shl/memory_buffer.h"
-#define SHL_WAVE_WRITER_IMPLEMENTATION
-#include "shl/wave_writer.h"
+#define SHL_WAV_IMPLEMENTATION
+#include "shl/wav.h"
 #include "alloc.h"
 #define WSTR_MALLOC(sz)       xmalloc(sz)
 #define WSTR_REALLOC(p, sz)   xrealloc(p, sz)
