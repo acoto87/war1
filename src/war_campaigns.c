@@ -2,6 +2,8 @@
 
 #include <assert.h>
 
+#include "shl/wstr.h"
+
 #include "war_entities.h"
 #include "war_units.h"
 

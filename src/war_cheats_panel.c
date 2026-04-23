@@ -2,7 +2,6 @@
 
 #include <assert.h>
 #include <stdarg.h>
-#include <string.h>
 
 #include "SDL3/SDL.h"
 #include "shl/wstr.h"
@@ -209,7 +208,7 @@ void updateCheatsPanel(WarContext* context)
 
         WarFontParams params = {0};
         params.fontSize = cheatText->text.fontSize;
-        params.fontData = fontsData[cheatText->text.fontIndex];
+        params.fontData = getFontData(cheatText->text.fontIndex);
 
         vec2 prefixSize = measureSingleSpriteText(prefix, (s32)wsv_length(prefix), params);
         vec2 textSize = measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);

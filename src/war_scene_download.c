@@ -2,6 +2,8 @@
 
 #include "SDL3/SDL.h"
 
+#include "shl/wstr.h"
+
 #include "war_game.h"
 #include "war_net.h"
 #include "war_ui.h"

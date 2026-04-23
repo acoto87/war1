@@ -1,7 +1,6 @@
 #include "war_audio.h"
 
 #include <assert.h>
-#include <string.h>
 
 #include "SDL3/SDL.h"
 

@@ -1,7 +1,6 @@
 #include "war_resources.h"
 
 #include <assert.h>
-#include <string.h>
 
 #include "alloc.h"
 #include "war_log.h"

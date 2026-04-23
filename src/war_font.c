@@ -1,7 +1,5 @@
 #include "war_font.h"
 
-#include <string.h>
-
 #include "war_sprites.h"
 #include "shl/wstr.h"
 
@@ -215,11 +213,6 @@ WarFontData fontsData[2] =
     }
 };
 
-#define FONT_NORMAL_COLOR WAR_COLOR_RGBA(239, 255, 219, 255)
-#define FONT_HIGHLIGHT_COLOR WAR_COLOR_RGBA(255, 227, 73, 255)
-#define MAX_LINES 48
-#define TAB_WIDTH 2
-
 #define getCharIndex(c) ((s32)((c) > 0 ? (c) - 32 : 0))
 
 WarSprite loadFontSprite(WarContext* context, StringView fontPath)
@@ -235,6 +228,17 @@ WarSprite loadFontSprite(WarContext* context, StringView fontPath)
     }
 
     return sprite;
+}
+
+WarFontData getFontData(s32 fontIndex)
+{
+    if (fontIndex < 0 || fontIndex >= arrayLength(fontsData))
+    {
+        logError("Invalid font index: %d", fontIndex);
+        return (WarFontData){0};
+    }
+
+    return fontsData[fontIndex];
 }
 
 vec2 getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment verticalAlign, vec2 boundings, vec2 textSize)

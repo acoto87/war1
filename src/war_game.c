@@ -2,7 +2,6 @@
 
 #include <assert.h>
 #include <math.h>
-#include <string.h>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
@@ -13,6 +12,8 @@
 #else
 #include <unistd.h>
 #endif
+
+#include "shl/wstr.h"
 
 #include "war_audio.h"
 #include "war_file.h"

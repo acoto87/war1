@@ -1,5 +1,7 @@
 #include "war_state_machine.h"
 
+#include "shl/wstr.h"
+
 #include "war_animations.h"
 
 WarState* createCollapseState(WarContext* context, WarEntity* entity)

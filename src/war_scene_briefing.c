@@ -1,5 +1,7 @@
 #include "war_scene_briefing.h"
 
+#include "shl/wstr.h"
+
 #include "war_animations.h"
 #include "war_audio.h"
 #include "war_campaigns.h"

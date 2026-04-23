@@ -2,7 +2,6 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "SDL3/SDL.h"
 #include "shl/array.h"
@@ -11,6 +10,8 @@
 #include "shl/binary_heap.h"
 #include "shl/map.h"
 #include "shl/set.h"
+#include "shl/wstr.h"
+
 #include "war_color.h"
 #include "war_math.h"
 

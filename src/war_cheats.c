@@ -1,6 +1,6 @@
 #include "war_cheats.h"
 
-#include <string.h>
+#include "shl/wstr.h"
 
 #include "war_audio.h"
 #include "war_entities.h"

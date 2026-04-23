@@ -1,8 +1,7 @@
 #include "war_map_menu.h"
 
-#include <string.h>
-
 #include "SDL3/SDL.h"
+#include "shl/wstr.h"
 
 #include "war_campaigns.h"
 #include "war_game.h"

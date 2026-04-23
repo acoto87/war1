@@ -1,7 +1,6 @@
 #include "war_sprites.h"
 
 #include <assert.h>
-#include <string.h>
 
 #include "SDL3/SDL.h"
 

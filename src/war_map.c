@@ -1,7 +1,8 @@
 #include "war_map.h"
 
 #include <assert.h>
-#include <string.h>
+
+#include "shl/wstr.h"
 
 #include "war_actions.h"
 #include "war_animations.h"
@@ -17,6 +18,7 @@
 #include "war_sprites.h"
 #include "war_state_machine.h"
 #include "war_units.h"
+#include "war_pathfinder.h"
 
 void addEntityToSelection(WarContext* context, WarEntityId id)
 {
@@ -1621,9 +1623,9 @@ void updateStatus(WarContext* context)
 
             WarFontParams params = {0};
             params.fontSize = statusTextUI->text.fontSize;
-            params.fontData = fontsData[statusTextUI->text.fontIndex];
+            params.fontData = getFontData(statusTextUI->text.fontIndex);
 
-            vec2 prefixSize = measureSingleSpriteText(prefix, prefix.length, params);
+            vec2 prefixSize = measureSingleSpriteText(prefix, (s32)prefix.length, params);
             vec2 textSize = measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
             statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
 

@@ -2,7 +2,6 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
 
 void wlog_log(SDL_LogPriority priority, const char* file, int line, const char* fmt, ...)
 {

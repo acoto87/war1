@@ -1,6 +1,6 @@
 #include "war_map_ui.h"
 
-#include <string.h>
+#include "shl/wstr.h"
 
 #include "war_entities.h"
 #include "war_map.h"

@@ -2,7 +2,8 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <string.h>
+
+#include "shl/wstr.h"
 
 #include "alloc.h"
 #include "war_log.h"

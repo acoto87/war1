@@ -1,5 +1,7 @@
 #include "war_scene_blizzard.h"
 
+#include "shl/wstr.h"
+
 #include "war_audio.h"
 #include "war_scenes.h"
 #include "war_ui.h"

@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "shl/wstr.h"
+
 #include "war_animations.h"
 #include "war_audio.h"
 #include "war_font.h"
@@ -1283,7 +1285,7 @@ void renderText(WarContext* context, WarEntity* entity)
         params.wrapping = text->wrapping;
         params.trimming = text->trimming;
         params.fontSprite = context->fontSprites[text->fontIndex];
-        params.fontData = fontsData[text->fontIndex];
+        params.fontData = getFontData(text->fontIndex);
 
         if (entity->text.multiline)
             renderMultiSpriteText(context, wstr_view(&text->text), 0, 0, params);
@@ -1368,7 +1370,7 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.lineAlign = text->lineAlign;
                 params.wrapping = text->wrapping;
                 params.fontSprite = context->fontSprites[text->fontIndex];
-                params.fontData = fontsData[text->fontIndex];
+                params.fontData = getFontData(text->fontIndex);
 
                 renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
             }
