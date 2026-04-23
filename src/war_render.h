@@ -15,3 +15,5 @@ void renderFillRects(WarContext* context, s32 count, rect r[], WarColor color);
 void renderStrokeRect(WarContext* context, rect r, WarColor color, f32 width);
 void renderStrokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, f32 width);
 void renderSubImage(WarContext* context, SDL_Texture* texture, rect rs, rect rd, vec2 scale);
+
+WarColor getColorFromList(s32 index);

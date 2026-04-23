@@ -2,6 +2,8 @@
 
 #include <assert.h>
 
+#include "shl/wstr.h"
+
 #include "war_entities.h"
 #include "war_units.h"
 
@@ -9,7 +11,17 @@ WarLevelResult checkMap01Objectives(WarContext* context);
 WarLevelResult checkMap02Objectives(WarContext* context);
 WarLevelResult checkCustomMapObjectives(WarContext* context);
 
-const WarCampaignMapData campaignsData[] =
+typedef struct
+{
+    WarCampaignMapType type;
+    WarCheckObjectivesFunc checkObjectivesFunc;
+    const char* objectives;
+    WarAudioId briefingAudioId;
+    const char* briefingText;
+    f32 briefingDuration;
+} WarCampaignMapRawData;
+
+static const WarCampaignMapRawData campaignsData[] =
 {
     {
         WAR_CAMPAIGN_HUMANS_01,
@@ -357,7 +369,16 @@ WarCampaignMapData getCampaignData(WarCampaignMapType type)
         index++;
 
     assert(index < length);
-    return campaignsData[index];
+
+    WarCampaignMapRawData raw = campaignsData[index];
+    WarCampaignMapData data;
+    data.type = raw.type;
+    data.checkObjectivesFunc = raw.checkObjectivesFunc;
+    data.objectives = wstr_fromCString(raw.objectives);
+    data.briefingAudioId = raw.briefingAudioId;
+    data.briefingText = raw.briefingText ? wstr_fromCString(raw.briefingText) : wstr_make();
+    data.briefingDuration = raw.briefingDuration;
+    return data;
 }
 
 WarLevelResult checkMap01Objectives(WarContext* context)

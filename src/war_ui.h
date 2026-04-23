@@ -2,20 +2,20 @@
 
 #include <stdarg.h>
 
+#include "shl/wstr.h"
+
 #include "war_types.h"
 
 bool isUIEntity(WarEntity* entity);
 
 void clearUIText(WarEntity* uiText);
-void setUIText(WarEntity* uiText, const char* text);
-void setUITextFormatv(WarEntity* uiText, const char* format, va_list args);
-void setUITextFormat(WarEntity* uiText, const char* format, ...);
+void setUIText(WarEntity* uiText, String text);
 
 void setUIImage(WarEntity* uiImage, s32 frameIndex);
 void setUIRectWidth(WarEntity* uiRect, s32 width);
 
 void clearUITooltip(WarEntity* uiButton);
-void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, char* text);
+void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text);
 
 #define setUIEntityStatus(uiEntity, value) ((uiEntity)->ui.enabled = (value))
 
@@ -38,26 +38,26 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, c
 #define setUIButtonHotKey(uiEntity, key) ((uiEntity)->button.hotKey = (key))
 #define setUIButtonClickHandler(uiEntity, handler) ((uiEntity)->button.clickHandler = (handler))
 
-void setUIButtonStatusByName(WarContext* context, const char* name, bool enabled);
-void setUIButtonInteractiveByName(WarContext* context, const char* name, bool interactive);
-void setUIButtonHotKeyByName(WarContext* context, const char* name, WarKeys key);
-void setUIEntityStatusByName(WarContext* context, const char* name, bool enabled);
+void setUIButtonStatusByName(WarContext* context, StringView name, bool enabled);
+void setUIButtonInteractiveByName(WarContext* context, StringView name, bool interactive);
+void setUIButtonHotKeyByName(WarContext* context, StringView name, WarKeys key);
+void setUIEntityStatusByName(WarContext* context, StringView name, bool enabled);
 
-WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 fontSize, const char* text, vec2 position);
-WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, WarColor color);
-WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef spriteResourceRef, vec2 position);
-WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, vec2 position);
+WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, String text, vec2 position);
+WarEntity* createUIRect(WarContext* context, String name, vec2 position, vec2 size, WarColor color);
+WarEntity* createUIImage(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, vec2 position);
+WarEntity* createUICursor(WarContext* context, String name, WarCursorType type, vec2 position);
 WarEntity* createUITextButton(WarContext* context,
-                              char* name,
+                              String name,
                               s32 fontIndex,
                               f32 fontSize,
-                              const char* text,
+                              String text,
                               WarSpriteResourceRef backgroundNormalRef,
                               WarSpriteResourceRef backgroundPressedRef,
                               WarSpriteResourceRef foregroundRef,
                               vec2 position);
 WarEntity* createUIImageButton(WarContext* context,
-                               char* name,
+                               String name,
                                WarSpriteResourceRef backgroundNormalRef,
                                WarSpriteResourceRef backgroundPressedRef,
                                WarSpriteResourceRef foregroundRef,

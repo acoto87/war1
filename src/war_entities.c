@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "shl/wstr.h"
+
 #include "war_animations.h"
 #include "war_audio.h"
 #include "war_font.h"
@@ -215,7 +217,7 @@ void removeAnimationsComponent(WarContext* context, WarEntity* entity)
     entity->animations = (WarAnimationsComponent){0};
 }
 
-void addUIComponent(WarContext* context, WarEntity* entity, char* name)
+void addUIComponent(WarContext* context, WarEntity* entity, String name)
 {
     NOT_USED(context);
 
@@ -231,7 +233,7 @@ void removeUIComponent(WarContext* context, WarEntity* entity)
     entity->ui = (WarUIComponent){0};
 }
 
-void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, const char* text)
+void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, String text)
 {
     NOT_USED(context);
 
@@ -609,7 +611,7 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
-WarEntity* findUIEntity(WarContext* context, const char* name)
+WarEntity* findUIEntity(WarContext* context, StringView name)
 {
     WarEntityList* entities = getUIEntities(context);
     for (s32 i = 0; i < entities->count; i++)
@@ -617,7 +619,7 @@ WarEntity* findUIEntity(WarContext* context, const char* name)
         WarEntity* entity = entities->items[i];
         if (entity &&
             isUIEntity(entity) &&
-            wutil_strEquals(entity->ui.name, name))
+            wsv_equals(wsv_fromString(&entity->ui.name), name))
         {
             return entity;
         }
@@ -1262,7 +1264,7 @@ void renderText(WarContext* context, WarEntity* entity)
     WarUIComponent* ui = &entity->ui;
     WarTextComponent* text = &entity->text;
 
-    if (ui->enabled && text->enabled && text->text)
+    if (ui->enabled && text->enabled && text->text.data)
     {
         renderSave(context);
         renderTranslate(context, transform->position.x, transform->position.y);
@@ -1283,12 +1285,12 @@ void renderText(WarContext* context, WarEntity* entity)
         params.wrapping = text->wrapping;
         params.trimming = text->trimming;
         params.fontSprite = context->fontSprites[text->fontIndex];
-        params.fontData = fontsData[text->fontIndex];
+        params.fontData = getFontData(text->fontIndex);
 
         if (entity->text.multiline)
-            renderMultiSpriteText(context, text->text, 0, 0, params);
+            renderMultiSpriteText(context, wstr_view(&text->text), 0, 0, params);
         else
-            renderSingleSpriteText(context, text->text, 0, 0, params);
+            renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
 
         renderRestore(context);
     }
@@ -1368,9 +1370,9 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.lineAlign = text->lineAlign;
                 params.wrapping = text->wrapping;
                 params.fontSprite = context->fontSprites[text->fontIndex];
-                params.fontData = fontsData[text->fontIndex];
+                params.fontData = getFontData(text->fontIndex);
 
-                renderSingleSpriteText(context, text->text, 0, 0, params);
+                renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
             }
         }
 
@@ -1806,13 +1808,13 @@ bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
 {
     if (player->gold < gold)
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH GOLD... MINE MORE GOLD");
+        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH GOLD... MINE MORE GOLD"));
         return false;
     }
 
     if (player->wood < wood)
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH LUMBER... CHOP MORE TREES");
+        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH LUMBER... CHOP MORE TREES"));
         return false;
     }
 
@@ -1864,7 +1866,7 @@ bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     WarUnitComponent* unit = &entity->unit;
     if (unit->mana < mana)
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH MANA");
+        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH MANA"));
         return false;
     }
 
@@ -1896,7 +1898,7 @@ bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
 {
     if (!enoughFarmFood(context, player))
     {
-        setFlashStatus(context, 1.5f, "NOT ENOUGH FOOD... BUILD MORE FARMS");
+        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH FOOD... BUILD MORE FARMS"));
         return false;
     }
 
@@ -1932,7 +1934,7 @@ bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s
 
     if (!checkRectToBuild(context, x, y, data.sizex, data.sizey))
     {
-        setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
+        setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
     }
 
@@ -1943,7 +1945,7 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 {
     if (!checkRectToBuild(context, x, y, 1, 1))
     {
-        setFlashStatus(context, 1.5f, "CAN'T BUILD THERE");
+        setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
     }
 
@@ -2115,17 +2117,17 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
         s32 hpPercent = percentabi(unit->hp, unit->maxhp);
         if(hpPercent <= 33)
         {
-            if (!containsAnimation(context, entity, "hugeDamage"))
+            if (!containsAnimation(context, entity, wsv_fromCString("hugeDamage")))
             {
-                removeAnimation(context, entity, "littleDamage");
-                createDamageAnimation(context, entity, "hugeDamage", 2);
+                removeAnimation(context, entity, wsv_fromCString("littleDamage"));
+                createDamageAnimation(context, entity, wstr_fromCString("hugeDamage"), 2);
             }
         }
         else if(hpPercent <= 66)
         {
-            if (!containsAnimation(context, entity, "littleDamage"))
+            if (!containsAnimation(context, entity, wsv_fromCString("littleDamage")))
             {
-                createDamageAnimation(context, entity, "littleDamage", 1);
+                createDamageAnimation(context, entity, wstr_fromCString("littleDamage"), 1);
             }
         }
     }

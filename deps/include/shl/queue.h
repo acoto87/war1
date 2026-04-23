@@ -23,8 +23,24 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    This is a single header file with macros to declare and define a strongly typed queue with push, pop and peek operations.
+    Single-header macro library to declare and define strongly typed queues
+    implemented as dynamically resized circular buffers.
+
+    USAGE
+    Declare a queue type with shlDeclareQueue(name, type), then define it once
+    with shlDefineQueue(name, type) in a C source file.
+
+    CUSTOMISATION
+    Provide a default value for empty reads, an equality function for
+    Contains, and a free function if queue elements own resources. Values are
+    stored by copy in a resizable circular buffer.
+
+    NOTES
+    Push appends to the tail, Pop removes from the head, and Peek returns the
+    next item without removing it. Clear releases per-item resources when a
+    free hook is configured.
 */
+
 #ifndef SHL_QUEUE_H
 #define SHL_QUEUE_H
 

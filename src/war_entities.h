@@ -39,10 +39,10 @@ void removeStateMachineComponent(WarContext* context, WarEntity* entity);
 void addAnimationsComponent(WarContext* context, WarEntity* entity);
 void removeAnimationsComponent(WarContext* context, WarEntity* entity);
 
-void addUIComponent(WarContext* context, WarEntity* entity, char* name);
+void addUIComponent(WarContext* context, WarEntity* entity, String name);
 void removeUIComponent(WarContext* context, WarEntity* entity);
 
-void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, const char* text);
+void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, String text);
 void removeTextComponent(WarContext* context, WarEntity* entity);
 
 void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarColor color);
@@ -118,7 +118,7 @@ WarEntity* createDude(WarContext* context, WarUnitType type, s32 x, s32 y, u8 pl
 WarEntity* createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToBuild);
 WarEntity* findEntity(WarContext* context, WarEntityId id);
 WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
-WarEntity* findUIEntity(WarContext* context, const char* name);
+WarEntity* findUIEntity(WarContext* context, StringView name);
 WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool includeWalls);
 void removeEntity(WarContext* context, WarEntity* entity);
 void removeEntityById(WarContext* context, WarEntityId id);

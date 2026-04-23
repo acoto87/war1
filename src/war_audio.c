@@ -1,7 +1,6 @@
 #include "war_audio.h"
 
 #include <assert.h>
-#include <string.h>
 
 #include "SDL3/SDL.h"
 
@@ -652,15 +651,15 @@ WarEntity* playAcknowledgementSound(WarContext* context, WarPlayerInfo* player)
 }
 
 /**
- * Extension function of MemoryBuffer to read variable lengths integer values.
+ * Extension function of memory_buffer_t to read variable lengths integer values.
  */
-bool mbReadUIntVar(MemoryBuffer* buffer, u32* value)
+bool mb_readUIntVar(memory_buffer_t* buffer, u32* value)
 {
     u32 v = 0;
     u8 byte;
     for(s32 i = 0; i < 4; ++i)
     {
-        if(!mbRead(buffer, &byte))
+        if(!mb_read(buffer, &byte))
             return false;
 
         v = (v << 7) | (u32)(byte & 0x7F);
@@ -672,9 +671,9 @@ bool mbReadUIntVar(MemoryBuffer* buffer, u32* value)
 }
 
 /**
- * Extension function of MemoryBuffer to write variable lengths integer values.
+ * Extension function of memory_buffer_t to write variable lengths integer values.
  */
-bool mbWriteUIntVar(MemoryBuffer* buffer, u32 value)
+bool mb_writeUIntVar(memory_buffer_t* buffer, u32 value)
 {
     s32 byteCount = 1;
     u32 v = value & 0x7F;
@@ -689,7 +688,7 @@ bool mbWriteUIntVar(MemoryBuffer* buffer, u32 value)
     for(s32 i = 0; i < byteCount; ++i)
     {
         u8 byte = v & 0xFF;
-        if(!mbWrite(buffer, byte))
+        if(!mb_write(buffer, byte))
             return false;
         v >>= 8;
     }
@@ -734,21 +733,21 @@ static MidiToken* MidiTokenListAppend(MidiTokenList* list, s32 time, u8 type)
  */
 u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
 {
-    MemoryBuffer bufInput = {0};
-    mbInitFromMemory(&bufInput, xmiData, xmiLength);
+    memory_buffer_t bufInput = {0};
+    mb_initFromMemory(&bufInput, xmiData, xmiLength);
 
-    MemoryBuffer bufOutput = {0};
-    mbInitEmpty(&bufOutput);
+    memory_buffer_t bufOutput = {0};
+    mb_initEmpty(&bufOutput);
 
-    if (!mbScanTo(&bufInput, "EVNT", 4))
+    if (!mb_scanTo(&bufInput, "EVNT", 4))
     {
-        mbFree(&bufOutput);
+        mb_free(&bufOutput);
         return NULL;
     }
 
-    if (!mbSkip(&bufInput, 8))
+    if (!mb_skip(&bufInput, 8))
     {
-        mbFree(&bufOutput);
+        mb_free(&bufOutput);
         return NULL;
     }
 
@@ -765,13 +764,13 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
     u8 tokenType, extendedType;
     u32 intVar;
 
-    while (!mbIsEOF(&bufInput) && !end)
+    while (!mb_isEOF(&bufInput) && !end)
     {
         while (true)
         {
-            if (!mbRead(&bufInput, &tokenType))
+            if (!mb_read(&bufInput, &tokenType))
             {
-                mbFree(&bufOutput);
+                mb_free(&bufOutput);
                 return NULL;
             }
 
@@ -789,9 +788,9 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
             case 0xC0:
             case 0xD0:
             {
-                if (!mbRead(&bufInput, &token->data))
+                if (!mb_read(&bufInput, &token->data))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
 
@@ -804,15 +803,15 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
             case 0xB0:
             case 0xE0:
             {
-                if (!mbRead(&bufInput, &token->data))
+                if (!mb_read(&bufInput, &token->data))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
 
-                if (!mbSkip(&bufInput, 1))
+                if (!mb_skip(&bufInput, 1))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
 
@@ -821,21 +820,21 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
 
             case 0x90:
             {
-                if (!mbRead(&bufInput, &extendedType))
+                if (!mb_read(&bufInput, &extendedType))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
 
                 token->data = extendedType;
 
-                if (!mbSkip(&bufInput, 1))
+                if (!mb_skip(&bufInput, 1))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
 
-                assert(mbReadUIntVar(&bufInput, &intVar));
+                assert(mb_readUIntVar(&bufInput, &intVar));
                 token = MidiTokenListAppend(&lstTokens, tokenTime + intVar * 3, tokenType);
                 token->data = extendedType;
                 token->buffer = (u8*)"\0";
@@ -849,9 +848,9 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
 
                 if (tokenType == 0xFF)
                 {
-                    if (!mbRead(&bufInput, &extendedType))
+                    if (!mb_read(&bufInput, &extendedType))
                     {
-                        mbFree(&bufOutput);
+                        mb_free(&bufOutput);
                         return NULL;
                     }
 
@@ -861,19 +860,19 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
                     {
                         if (!tempoSet)
                         {
-                            assert(mbSkip(&bufInput, 1));
-                            assert(mbReadInt24BE(&bufInput, &tempo));
+                            assert(mb_skip(&bufInput, 1));
+                            assert(mb_readInt24BE(&bufInput, &tempo));
                             tempo *= 3;
                             tempoSet = true;
-                            assert(mbSkip(&bufInput, -4));
+                            assert(mb_skip(&bufInput, -4));
                         }
                         else
                         {
                             MidiTokenListRemoveAt(&lstTokens, lstTokens.count - 1);
-                            assert(mbReadUIntVar(&bufInput, &intVar));
-                            if (!mbSkip(&bufInput, intVar))
+                            assert(mb_readUIntVar(&bufInput, &intVar));
+                            if (!mb_skip(&bufInput, intVar))
                             {
-                                mbFree(&bufOutput);
+                                mb_free(&bufOutput);
                                 return NULL;
                             }
                             break;
@@ -882,12 +881,12 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
                 }
 
                 token->data = extendedType;
-                assert(mbReadUIntVar(&bufInput, &token->bufferLength));
+                assert(mb_readUIntVar(&bufInput, &token->bufferLength));
                 token->buffer = bufInput._pointer;
 
-                if (!mbSkip(&bufInput, token->bufferLength))
+                if (!mb_skip(&bufInput, token->bufferLength))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
 
@@ -898,22 +897,22 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
 
     if (lstTokens.count == 0)
     {
-        mbFree(&bufOutput);
+        mb_free(&bufOutput);
         return NULL;
     }
-    if (!mbWriteString(&bufOutput, "MThd\0\0\0\x06\0\0\0\x01", 12))
+    if (!mb_writeString(&bufOutput, "MThd\0\0\0\x06\0\0\0\x01", 12))
     {
-        mbFree(&bufOutput);
+        mb_free(&bufOutput);
         return NULL;
     }
-    if (!mbWriteUInt16BE(&bufOutput, (u16)((tempo * 3) / 25000)))
+    if (!mb_writeUInt16BE(&bufOutput, (u16)((tempo * 3) / 25000)))
     {
-        mbFree(&bufOutput);
+        mb_free(&bufOutput);
         return NULL;
     }
-    if (!mbWriteString(&bufOutput, "MTrk\xBA\xAD\xF0\x0D", 8))
+    if (!mb_writeString(&bufOutput, "MTrk\xBA\xAD\xF0\x0D", 8))
     {
-        mbFree(&bufOutput);
+        mb_free(&bufOutput);
         return NULL;
     }
 
@@ -927,9 +926,9 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
     {
         MidiToken t = lstTokens.items[i];
 
-        if (!mbWriteUIntVar(&bufOutput, t.time - tokenTime))
+        if (!mb_writeUIntVar(&bufOutput, t.time - tokenTime))
         {
-            mbFree(&bufOutput);
+            mb_free(&bufOutput);
             return NULL;
         }
 
@@ -938,17 +937,17 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
         if (t.type >= 0xF0)
         {
             tokenType = t.type;
-            if (!mbWrite(&bufOutput, tokenType))
+            if (!mb_write(&bufOutput, tokenType))
             {
-                mbFree(&bufOutput);
+                mb_free(&bufOutput);
                 return NULL;
             }
 
             if (tokenType == 0xFF)
             {
-                if (!mbWrite(&bufOutput, t.data))
+                if (!mb_write(&bufOutput, t.data))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
 
@@ -956,14 +955,14 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
                     end = true;
             }
 
-            if (!mbWriteUIntVar(&bufOutput, t.bufferLength))
+            if (!mb_writeUIntVar(&bufOutput, t.bufferLength))
             {
-                mbFree(&bufOutput);
+                mb_free(&bufOutput);
                 return NULL;
             }
-            if (!mbWriteBytes(&bufOutput, t.buffer, t.bufferLength))
+            if (!mb_writeBytes(&bufOutput, t.buffer, t.bufferLength))
             {
-                mbFree(&bufOutput);
+                mb_free(&bufOutput);
                 return NULL;
             }
         }
@@ -973,38 +972,38 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
             {
                 tokenType = t.type;
 
-                if (!mbWrite(&bufOutput, tokenType))
+                if (!mb_write(&bufOutput, tokenType))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
             }
 
-            if (!mbWrite(&bufOutput, t.data))
+            if (!mb_write(&bufOutput, t.data))
             {
-                mbFree(&bufOutput);
+                mb_free(&bufOutput);
                 return NULL;
             }
 
             if (t.buffer)
             {
-                if (!mbWriteBytes(&bufOutput, t.buffer, 1))
+                if (!mb_writeBytes(&bufOutput, t.buffer, 1))
                 {
-                    mbFree(&bufOutput);
+                    mb_free(&bufOutput);
                     return NULL;
                 }
             }
         }
     }
 
-    size32 length = mbPosition(&bufOutput) - 22;
+    size32 length = mb_position(&bufOutput) - 22;
     assert(length <= UINT32_MAX);
-    assert(mbSeek(&bufOutput, 18));
-    assert(mbWriteUInt32BE(&bufOutput, (u32)length));
+    assert(mb_seek(&bufOutput, 18));
+    assert(mb_writeUInt32BE(&bufOutput, (u32)length));
 
-    u8* midData = mbGetData(&bufOutput, midLength);
+    u8* midData = mb_data(&bufOutput, midLength);
 
-    mbFree(&bufOutput);
+    mb_free(&bufOutput);
     return midData;
 }
 

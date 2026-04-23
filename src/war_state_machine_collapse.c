@@ -1,5 +1,7 @@
 #include "war_state_machine.h"
 
+#include "shl/wstr.h"
+
 #include "war_animations.h"
 
 WarState* createCollapseState(WarContext* context, WarEntity* entity)
@@ -14,13 +16,13 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 unitSize = getUnitSize(entity);
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
 
-    removeAnimation(context, entity, "littleDamage");
-    removeAnimation(context, entity, "hugeDamage");
+    removeAnimation(context, entity, wsv_fromCString("littleDamage"));
+    removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
 
     // disable the sprite component to just render the animation
     entity->sprite.enabled = false;
 
-    WarSpriteAnimation* collapseAnim = createCollapseAnimation(context, entity, "collapse");
+    WarSpriteAnimation* collapseAnim = createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
 
     setDelay(state, getMapScaledTime(context, getAnimationDuration(collapseAnim)));
 

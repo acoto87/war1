@@ -1,4 +1,4 @@
-/*  
+/*
     set.h - acoto87 (acoto87@gmail.com)
 
     MIT License
@@ -23,8 +23,22 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    This is a single header file with macros to declare and define a strongly typed list of objects that can be accessed by index. 
-    Provides methods to search, sort, and manipulate lists.
+    Single-header macro library to declare and define strongly typed hash sets.
+    Callers provide hash and equality hooks for the generated item type.
+
+    USAGE
+    Declare a set type with shlDeclareSet(name, type), then define it once
+    with shlDefineSet(name, type) in a C source file.
+
+    CUSTOMISATION
+    Provide a hash function and equality function for the item type, plus a
+    default value and optional free function for owned items. Items are stored
+    by copy.
+
+    NOTES
+    This set uses hash buckets with collision chains stored inside the entry
+    array. Add returns false when the item is already present. Call Free to
+    release internal storage.
 */
 
 #ifndef SHL_SET_H

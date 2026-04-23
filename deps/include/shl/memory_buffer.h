@@ -1,4 +1,4 @@
-/*  
+/*
     memory_buffer.h - acoto87 (acoto87@gmail.com)
 
     MIT License
@@ -22,6 +22,31 @@
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
+
+    Single-header in-memory byte buffer with sequential reads, random access
+    seeking, automatic growth on writes, and endian-aware integer helpers.
+
+    USAGE
+    Include this header in all translation units that need the declarations.
+    Define SHL_MEMORY_BUFFER_IMPLEMENTATION in exactly one translation unit
+    before the include to compile the implementation:
+
+        #define SHL_MEMORY_BUFFER_IMPLEMENTATION
+        #include "memory_buffer.h"
+
+    Include the header without that define everywhere else:
+
+        #include "memory_buffer.h"
+
+    CUSTOMISATION
+    The implementation is self-contained and uses the standard C allocator
+    directly. If you need different allocation behavior, adjust the
+    implementation section itself.
+
+    NOTES
+    The buffer tracks a current read/write cursor, can grow automatically when
+    seeking or writing past the current end, and provides helpers for endian-
+    aware primitive reads and writes.
 */
 #ifndef SHL_MEMORY_BUFFER_H
 #define SHL_MEMORY_BUFFER_H
@@ -36,65 +61,60 @@
 extern "C" {
 #endif
 
-typedef struct _MemoryBuffer
-{
-    uint8_t* data;
-    size_t length;
-    uint8_t* _pointer;
-} MemoryBuffer;
+typedef struct _memory_buffer_t memory_buffer_t;
 
-#define mbEnd(buffer) ((buffer)->data + (buffer)->length)
-#define mbPosition(buffer) ((buffer)->_pointer - (buffer)->data)
+#define mb_end(buffer) ((buffer)->data + (buffer)->length)
+#define mb_position(buffer) ((buffer)->_pointer - (buffer)->data)
 
-void mbInitEmpty(MemoryBuffer* buffer);
-void mbInitFromMemory(MemoryBuffer* buffer, uint8_t* data, size_t length);
-void mbFree(MemoryBuffer* buffer);
-uint8_t* mbGetData(MemoryBuffer* buffer, size_t* length);
+void mb_initEmpty(memory_buffer_t* buffer);
+void mb_initFromMemory(memory_buffer_t* buffer, uint8_t* data, size_t length);
+void mb_free(memory_buffer_t* buffer);
+uint8_t* mb_data(memory_buffer_t* buffer, size_t* length);
 
-bool mbSeek(MemoryBuffer* buffer, uint32_t position);
-bool mbSkip(MemoryBuffer* buffer, int32_t distance);
+bool mb_seek(memory_buffer_t* buffer, uint32_t position);
+bool mb_skip(memory_buffer_t* buffer, int32_t distance);
 
-bool mbScanTo(MemoryBuffer* buffer, const void* data, size_t length);
+bool mb_scanTo(memory_buffer_t* buffer, const void* data, size_t length);
 
-bool mbRead(MemoryBuffer* buffer, uint8_t* value);
-bool mbReadBytes(MemoryBuffer* buffer, uint8_t* value, size_t count);
-bool mbReadString(MemoryBuffer* buffer, char* str, size_t count);
+bool mb_read(memory_buffer_t* buffer, uint8_t* value);
+bool mb_readBytes(memory_buffer_t* buffer, uint8_t* value, size_t count);
+bool mb_readString(memory_buffer_t* buffer, char* str, size_t count);
 
-bool mbReadInt16LE(MemoryBuffer* buffer, int16_t* value);
-bool mbReadInt16BE(MemoryBuffer* buffer, int16_t* value);
-bool mbReadUInt16LE(MemoryBuffer* buffer, uint16_t* value);
-bool mbReadUInt16BE(MemoryBuffer* buffer, uint16_t* value);
+bool mb_readInt16LE(memory_buffer_t* buffer, int16_t* value);
+bool mb_readInt16BE(memory_buffer_t* buffer, int16_t* value);
+bool mb_readUInt16LE(memory_buffer_t* buffer, uint16_t* value);
+bool mb_readUInt16BE(memory_buffer_t* buffer, uint16_t* value);
 
-bool mbReadInt24LE(MemoryBuffer* buffer, int32_t* value);
-bool mbReadInt24BE(MemoryBuffer* buffer, int32_t* value);
-bool mbReadUInt24LE(MemoryBuffer* buffer, uint32_t* value);
-bool mbReadUInt24BE(MemoryBuffer* buffer, uint32_t* value);
+bool mb_readInt24LE(memory_buffer_t* buffer, int32_t* value);
+bool mb_readInt24BE(memory_buffer_t* buffer, int32_t* value);
+bool mb_readUInt24LE(memory_buffer_t* buffer, uint32_t* value);
+bool mb_readUInt24BE(memory_buffer_t* buffer, uint32_t* value);
 
-bool mbReadInt32LE(MemoryBuffer* buffer, int32_t* value);
-bool mbReadInt32BE(MemoryBuffer* buffer, int32_t* value);
-bool mbReadUInt32LE(MemoryBuffer* buffer, uint32_t* value);
-bool mbReadUInt32BE(MemoryBuffer* buffer, uint32_t* value);
+bool mb_readInt32LE(memory_buffer_t* buffer, int32_t* value);
+bool mb_readInt32BE(memory_buffer_t* buffer, int32_t* value);
+bool mb_readUInt32LE(memory_buffer_t* buffer, uint32_t* value);
+bool mb_readUInt32BE(memory_buffer_t* buffer, uint32_t* value);
 
-bool mbWrite(MemoryBuffer* buffer, uint8_t value);
-bool mbWriteBytes(MemoryBuffer* buffer, uint8_t values[], size_t count);
-bool mbWriteString(MemoryBuffer* buffer, const char* str, size_t count);
+bool mb_write(memory_buffer_t* buffer, uint8_t value);
+bool mb_writeBytes(memory_buffer_t* buffer, uint8_t values[], size_t count);
+bool mb_writeString(memory_buffer_t* buffer, const char* str, size_t count);
 
-bool mbWriteInt16LE(MemoryBuffer* buffer, int16_t value);
-bool mbWriteInt16BE(MemoryBuffer* buffer, int16_t value);
-bool mbWriteUInt16LE(MemoryBuffer* buffer, uint16_t value);
-bool mbWriteUInt16BE(MemoryBuffer* buffer, uint16_t value);
+bool mb_writeInt16LE(memory_buffer_t* buffer, int16_t value);
+bool mb_writeInt16BE(memory_buffer_t* buffer, int16_t value);
+bool mb_writeUInt16LE(memory_buffer_t* buffer, uint16_t value);
+bool mb_writeUInt16BE(memory_buffer_t* buffer, uint16_t value);
 
-bool mbWriteInt24LE(MemoryBuffer* buffer, int32_t value);
-bool mbWriteInt24BE(MemoryBuffer* buffer, int32_t value);
-bool mbWriteUInt24LE(MemoryBuffer* buffer, uint32_t value);
-bool mbWriteUInt24BE(MemoryBuffer* buffer, uint32_t value);
+bool mb_writeInt24LE(memory_buffer_t* buffer, int32_t value);
+bool mb_writeInt24BE(memory_buffer_t* buffer, int32_t value);
+bool mb_writeUInt24LE(memory_buffer_t* buffer, uint32_t value);
+bool mb_writeUInt24BE(memory_buffer_t* buffer, uint32_t value);
 
-bool mbWriteInt32LE(MemoryBuffer* buffer, int32_t value);
-bool mbWriteInt32BE(MemoryBuffer* buffer, int32_t value);
-bool mbWriteUInt32LE(MemoryBuffer* buffer, uint32_t value);
-bool mbWriteUInt32BE(MemoryBuffer* buffer, uint32_t value);
+bool mb_writeInt32LE(memory_buffer_t* buffer, int32_t value);
+bool mb_writeInt32BE(memory_buffer_t* buffer, int32_t value);
+bool mb_writeUInt32LE(memory_buffer_t* buffer, uint32_t value);
+bool mb_writeUInt32BE(memory_buffer_t* buffer, uint32_t value);
 
-bool mbIsEOF(MemoryBuffer* buffer);
+bool mb_isEOF(memory_buffer_t* buffer);
 
 #ifdef __cplusplus
 }
@@ -102,7 +122,14 @@ bool mbIsEOF(MemoryBuffer* buffer);
 
 #ifdef SHL_MEMORY_BUFFER_IMPLEMENTATION
 
-static bool mb__realloc(MemoryBuffer* buffer, size_t newLength)
+struct _memory_buffer_t
+{
+    uint8_t* data;
+    size_t length;
+    uint8_t* _pointer;
+};
+
+static bool mb__realloc(memory_buffer_t* buffer, size_t newLength)
 {
     if(newLength <= buffer->length)
     {
@@ -120,7 +147,7 @@ static bool mb__realloc(MemoryBuffer* buffer, size_t newLength)
     size_t count = newLength > buffer->length ? buffer->length : newLength;
     memcpy(newData, buffer->data, count);
 
-    buffer->_pointer = newData + mbPosition(buffer);
+    buffer->_pointer = newData + mb_position(buffer);
     buffer->data = newData;
     buffer->length = newLength;
 
@@ -128,21 +155,21 @@ static bool mb__realloc(MemoryBuffer* buffer, size_t newLength)
     return true;
 }
 
-void mbInitEmpty(MemoryBuffer* buffer)
+void mb_initEmpty(memory_buffer_t* buffer)
 {
     buffer->data = (uint8_t*)calloc(0, sizeof(uint8_t));
     buffer->length = 0;
     buffer->_pointer = buffer->data;
 }
 
-void mbInitFromMemory(MemoryBuffer* buffer, uint8_t* data, size_t length)
+void mb_initFromMemory(memory_buffer_t* buffer, uint8_t* data, size_t length)
 {
     buffer->data = data;
     buffer->length = length;
     buffer->_pointer = buffer->data;
 }
 
-void mbFree(MemoryBuffer* buffer)
+void mb_free(memory_buffer_t* buffer)
 {
     if (buffer->data)
         free((void*)buffer->data);
@@ -152,7 +179,7 @@ void mbFree(MemoryBuffer* buffer)
     buffer->_pointer = NULL;
 }
 
-uint8_t* mbGetData(MemoryBuffer* buffer, size_t* length)
+uint8_t* mb_data(memory_buffer_t* buffer, size_t* length)
 {
     uint8_t* data = (uint8_t*)malloc(buffer->length);
     memcpy(data, buffer->data, buffer->length);
@@ -160,9 +187,9 @@ uint8_t* mbGetData(MemoryBuffer* buffer, size_t* length)
     return data;
 }
 
-bool mbSeek(MemoryBuffer* buffer, uint32_t position)
+bool mb_seek(memory_buffer_t* buffer, uint32_t position)
 {
-    if (buffer->data + position > mbEnd(buffer))
+    if (buffer->data + position > mb_end(buffer))
     {
         if (!mb__realloc(buffer, position))
             return false;
@@ -172,7 +199,7 @@ bool mbSeek(MemoryBuffer* buffer, uint32_t position)
     return true;
 }
 
-bool mbSkip(MemoryBuffer* buffer, int32_t distance)
+bool mb_skip(memory_buffer_t* buffer, int32_t distance)
 {
     if (distance < 0)
     {
@@ -180,16 +207,16 @@ bool mbSkip(MemoryBuffer* buffer, int32_t distance)
             return false;
     }
 
-    int64_t position = mbPosition(buffer) + distance;
+    int64_t position = mb_position(buffer) + distance;
     if (position < 0 || position > UINT32_MAX)
         return false;
 
-    return mbSeek(buffer, (uint32_t)position);
+    return mb_seek(buffer, (uint32_t)position);
 }
 
-bool mbScanTo(MemoryBuffer* buffer, const void* data, size_t length)
+bool mb_scanTo(memory_buffer_t* buffer, const void* data, size_t length)
 {
-    while (buffer->_pointer + length <= mbEnd(buffer))
+    while (buffer->_pointer + length <= mb_end(buffer))
     {
         // printf("%s\n", buffer->_pointer);
         if(memcmp(buffer->_pointer, data, length) == 0)
@@ -201,14 +228,14 @@ bool mbScanTo(MemoryBuffer* buffer, const void* data, size_t length)
     return false;
 }
 
-bool mbRead(MemoryBuffer* buffer, uint8_t* value)
+bool mb_read(memory_buffer_t* buffer, uint8_t* value)
 {
-    return mbReadBytes(buffer, value, 1);
+    return mb_readBytes(buffer, value, 1);
 }
 
-bool mbReadBytes(MemoryBuffer* buffer, uint8_t* values, size_t count)
+bool mb_readBytes(memory_buffer_t* buffer, uint8_t* values, size_t count)
 {
-    if (buffer->_pointer + count > mbEnd(buffer))
+    if (buffer->_pointer + count > mb_end(buffer))
         return false;
 
     memcpy(values, buffer->_pointer, count);
@@ -216,165 +243,165 @@ bool mbReadBytes(MemoryBuffer* buffer, uint8_t* values, size_t count)
     return true;
 }
 
-bool mbReadString(MemoryBuffer* buffer, char* str, size_t count)
+bool mb_readString(memory_buffer_t* buffer, char* str, size_t count)
 {
-    return mbReadBytes(buffer, (uint8_t*)str, count);
+    return mb_readBytes(buffer, (uint8_t*)str, count);
 }
 
-bool mbReadInt16LE(MemoryBuffer* buffer, int16_t* value)
+bool mb_readInt16LE(memory_buffer_t* buffer, int16_t* value)
 {
     uint8_t byte0, byte1;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1))
     {
         *value = (byte1 << 8) | byte0;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadInt16BE(MemoryBuffer* buffer, int16_t* value)
+bool mb_readInt16BE(memory_buffer_t* buffer, int16_t* value)
 {
     uint8_t byte0, byte1;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1))
     {
         *value = (byte0 << 8) | byte1;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadUInt16LE(MemoryBuffer* buffer, uint16_t* value)
+bool mb_readUInt16LE(memory_buffer_t* buffer, uint16_t* value)
 {
     uint8_t byte0, byte1;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1))
     {
         *value = (byte1 << 8) | byte0;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadUInt16BE(MemoryBuffer* buffer, uint16_t* value)
+bool mb_readUInt16BE(memory_buffer_t* buffer, uint16_t* value)
 {
     uint8_t byte0, byte1;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1))
     {
         *value = (byte0 << 8) | byte1;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadInt24LE(MemoryBuffer* buffer, int32_t* value)
+bool mb_readInt24LE(memory_buffer_t* buffer, int32_t* value)
 {
     uint8_t byte0, byte1, byte2;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1) && mbRead(buffer, &byte2))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1) && mb_read(buffer, &byte2))
     {
         *value = (byte2 << 16) | (byte1 << 8) | byte0;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadInt24BE(MemoryBuffer* buffer, int32_t* value)
+bool mb_readInt24BE(memory_buffer_t* buffer, int32_t* value)
 {
     uint8_t byte0, byte1, byte2;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1) && mbRead(buffer, &byte2))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1) && mb_read(buffer, &byte2))
     {
         *value = (byte0 << 16) | (byte1 << 8) | byte2;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadUInt24LE(MemoryBuffer* buffer, uint32_t* value)
+bool mb_readUInt24LE(memory_buffer_t* buffer, uint32_t* value)
 {
     uint8_t byte0, byte1, byte2;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1) && mbRead(buffer, &byte2))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1) && mb_read(buffer, &byte2))
     {
         *value = (byte2 << 16) | (byte1 << 8) | byte0;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadUInt24BE(MemoryBuffer* buffer, uint32_t* value)
+bool mb_readUInt24BE(memory_buffer_t* buffer, uint32_t* value)
 {
     uint8_t byte0, byte1, byte2;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1) && mbRead(buffer, &byte2))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1) && mb_read(buffer, &byte2))
     {
         *value = (byte0 << 16) | (byte1 << 8) | byte2;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadInt32LE(MemoryBuffer* buffer, int32_t* value)
+bool mb_readInt32LE(memory_buffer_t* buffer, int32_t* value)
 {
     uint8_t byte0, byte1, byte2, byte3;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1) && mbRead(buffer, &byte2) && mbRead(buffer, &byte3))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1) && mb_read(buffer, &byte2) && mb_read(buffer, &byte3))
     {
         *value = (byte3 << 24) | (byte2 << 16) | (byte1 << 8) | byte0;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadInt32BE(MemoryBuffer* buffer, int32_t* value)
+bool mb_readInt32BE(memory_buffer_t* buffer, int32_t* value)
 {
     uint8_t byte0, byte1, byte2, byte3;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1) && mbRead(buffer, &byte2) && mbRead(buffer, &byte3))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1) && mb_read(buffer, &byte2) && mb_read(buffer, &byte3))
     {
         *value = (byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadUInt32LE(MemoryBuffer* buffer, uint32_t* value)
+bool mb_readUInt32LE(memory_buffer_t* buffer, uint32_t* value)
 {
     uint8_t byte0, byte1, byte2, byte3;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1) && mbRead(buffer, &byte2) && mbRead(buffer, &byte3))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1) && mb_read(buffer, &byte2) && mb_read(buffer, &byte3))
     {
         *value = (byte3 << 24) | (byte2 << 16) | (byte1 << 8) | byte0;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbReadUInt32BE(MemoryBuffer* buffer, uint32_t* value)
+bool mb_readUInt32BE(memory_buffer_t* buffer, uint32_t* value)
 {
     uint8_t byte0, byte1, byte2, byte3;
-    if(mbRead(buffer, &byte0) && mbRead(buffer, &byte1) && mbRead(buffer, &byte2) && mbRead(buffer, &byte3))
+    if(mb_read(buffer, &byte0) && mb_read(buffer, &byte1) && mb_read(buffer, &byte2) && mb_read(buffer, &byte3))
     {
         *value = (byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3;
         return true;
     }
-    
+
     return false;
 }
 
-bool mbWrite(MemoryBuffer* buffer, uint8_t value)
+bool mb_write(memory_buffer_t* buffer, uint8_t value)
 {
-    return mbWriteBytes(buffer, &value, 1);
+    return mb_writeBytes(buffer, &value, 1);
 }
 
-bool mbWriteBytes(MemoryBuffer* buffer, uint8_t values[], size_t count)
+bool mb_writeBytes(memory_buffer_t* buffer, uint8_t values[], size_t count)
 {
-    if (buffer->_pointer + count >= mbEnd(buffer))
+    if (buffer->_pointer + count >= mb_end(buffer))
     {
-        if (!mb__realloc(buffer, mbPosition(buffer) + count))
+        if (!mb__realloc(buffer, mb_position(buffer) + count))
             return false;
     }
 
@@ -384,114 +411,114 @@ bool mbWriteBytes(MemoryBuffer* buffer, uint8_t values[], size_t count)
     return true;
 }
 
-bool mbWriteString(MemoryBuffer* buffer, const char* str, size_t count)
+bool mb_writeString(memory_buffer_t* buffer, const char* str, size_t count)
 {
-    return mbWriteBytes(buffer, (uint8_t*)str, count);
+    return mb_writeBytes(buffer, (uint8_t*)str, count);
 }
 
-bool mbWriteInt16LE(MemoryBuffer* buffer, int16_t value)
+bool mb_writeInt16LE(memory_buffer_t* buffer, int16_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
             (uint8_t)value,
             (uint8_t)(value >> 8)
-        }, 
+        },
         sizeof(int16_t));
 }
 
-bool mbWriteInt16BE(MemoryBuffer* buffer, int16_t value)
+bool mb_writeInt16BE(memory_buffer_t* buffer, int16_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
             (uint8_t)(value >> 8),
             (uint8_t)value
-        }, 
+        },
         sizeof(int16_t));
 }
 
-bool mbWriteUInt16LE(MemoryBuffer* buffer, uint16_t value)
+bool mb_writeUInt16LE(memory_buffer_t* buffer, uint16_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
             (uint8_t)value,
             (uint8_t)(value >> 8)
-        }, 
+        },
         sizeof(uint16_t));
 }
 
-bool mbWriteUInt16BE(MemoryBuffer* buffer, uint16_t value)
+bool mb_writeUInt16BE(memory_buffer_t* buffer, uint16_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
             (uint8_t)(value >> 8),
             (uint8_t)value
-        }, 
+        },
         sizeof(uint16_t));
 }
 
-bool mbWriteInt24LE(MemoryBuffer* buffer, int32_t value)
+bool mb_writeInt24LE(memory_buffer_t* buffer, int32_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
             (uint8_t)value,
             (uint8_t)(value >> 8),
             (uint8_t)(value >> 16)
-        }, 
+        },
         3);
 }
 
-bool mbWriteInt24BE(MemoryBuffer* buffer, int32_t value)
+bool mb_writeInt24BE(memory_buffer_t* buffer, int32_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
             (uint8_t)(value >> 16),
             (uint8_t)(value >> 8),
             (uint8_t)value
-        }, 
+        },
         3);
 }
 
-bool mbWriteUInt24LE(MemoryBuffer* buffer, uint32_t value)
+bool mb_writeUInt24LE(memory_buffer_t* buffer, uint32_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
             (uint8_t)value,
             (uint8_t)(value >> 8),
             (uint8_t)(value >> 16)
-        }, 
+        },
         3);
 }
 
-bool mbWriteUInt24BE(MemoryBuffer* buffer, uint32_t value)
+bool mb_writeUInt24BE(memory_buffer_t* buffer, uint32_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
             (uint8_t)(value >> 16),
             (uint8_t)(value >> 8),
             (uint8_t)value
-        }, 
+        },
         3);
 }
 
-bool mbWriteInt32LE(MemoryBuffer* buffer, int32_t value)
+bool mb_writeInt32LE(memory_buffer_t* buffer, int32_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
@@ -499,13 +526,13 @@ bool mbWriteInt32LE(MemoryBuffer* buffer, int32_t value)
             (uint8_t)(value >> 8),
             (uint8_t)(value >> 16),
             (uint8_t)(value >> 24)
-        }, 
+        },
         sizeof(int32_t));
 }
 
-bool mbWriteInt32BE(MemoryBuffer* buffer, int32_t value)
+bool mb_writeInt32BE(memory_buffer_t* buffer, int32_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
@@ -513,13 +540,13 @@ bool mbWriteInt32BE(MemoryBuffer* buffer, int32_t value)
             (uint8_t)(value >> 16),
             (uint8_t)(value >> 8),
             (uint8_t)value
-        }, 
+        },
         sizeof(int32_t));
 }
 
-bool mbWriteUInt32LE(MemoryBuffer* buffer, uint32_t value)
+bool mb_writeUInt32LE(memory_buffer_t* buffer, uint32_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
@@ -527,13 +554,13 @@ bool mbWriteUInt32LE(MemoryBuffer* buffer, uint32_t value)
             (uint8_t)(value >> 8),
             (uint8_t)(value >> 16),
             (uint8_t)(value >> 24)
-        }, 
+        },
         sizeof(uint32_t));
 }
 
-bool mbWriteUInt32BE(MemoryBuffer* buffer, uint32_t value)
+bool mb_writeUInt32BE(memory_buffer_t* buffer, uint32_t value)
 {
-    return mbWriteBytes(
+    return mb_writeBytes(
         buffer,
         (uint8_t[])
         {
@@ -541,13 +568,13 @@ bool mbWriteUInt32BE(MemoryBuffer* buffer, uint32_t value)
             (uint8_t)(value >> 16),
             (uint8_t)(value >> 8),
             (uint8_t)value
-        }, 
+        },
         sizeof(uint32_t));
 }
 
-bool mbIsEOF(MemoryBuffer* buffer)
+bool mb_isEOF(memory_buffer_t* buffer)
 {
-    return buffer->_pointer == mbEnd(buffer);
+    return buffer->_pointer == mb_end(buffer);
 }
 
 #endif // SHL_MEMORY_BUFFER_IMPLEMENTATION

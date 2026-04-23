@@ -1,7 +1,6 @@
 #include "war_resources.h"
 
 #include <assert.h>
-#include <string.h>
 
 #include "alloc.h"
 #include "war_log.h"
@@ -853,40 +852,40 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    MemoryBuffer bufInput = {0};
-    mbInitFromMemory(&bufInput, rawResource.data, rawResource.length);
+    memory_buffer_t bufInput = {0};
+    mb_initFromMemory(&bufInput, rawResource.data, rawResource.length);
 
     // skip "RIFF"
-    assert(mbSkip(&bufInput, 4));
+    assert(mb_skip(&bufInput, 4));
     // skip file length, always 36 + dataLength
-    assert(mbSkip(&bufInput, sizeof(s32)));
+    assert(mb_skip(&bufInput, sizeof(s32)));
     // skip "WAVE"
-    assert(mbSkip(&bufInput, 4));
+    assert(mb_skip(&bufInput, 4));
     // skip "fmt "
-    assert(mbSkip(&bufInput, 4));
+    assert(mb_skip(&bufInput, 4));
     // skip fmt length, always 10
-    assert(mbSkip(&bufInput, sizeof(s32)));
+    assert(mb_skip(&bufInput, sizeof(s32)));
     // skip uncompressed, always 1
-    assert(mbSkip(&bufInput, sizeof(s16)));
+    assert(mb_skip(&bufInput, sizeof(s16)));
     // skip channel count, always 1
-    assert(mbSkip(&bufInput, sizeof(s16)));
+    assert(mb_skip(&bufInput, sizeof(s16)));
     // skip sample rate, always 11025
-    assert(mbSkip(&bufInput, sizeof(s32)));
+    assert(mb_skip(&bufInput, sizeof(s32)));
     // skip byte rate, always 11025
-    assert(mbSkip(&bufInput, sizeof(s32)));
+    assert(mb_skip(&bufInput, sizeof(s32)));
     // skip block align, always 1
-    assert(mbSkip(&bufInput, sizeof(s16)));
+    assert(mb_skip(&bufInput, sizeof(s16)));
     // skip bits per sample, always 8
-    assert(mbSkip(&bufInput, sizeof(s16)));
+    assert(mb_skip(&bufInput, sizeof(s16)));
     // skip "data"
-    assert(mbSkip(&bufInput, 4));
+    assert(mb_skip(&bufInput, 4));
 
     s32 dataLength;
-    assert(mbReadInt32LE(&bufInput, &dataLength));
+    assert(mb_readInt32LE(&bufInput, &dataLength));
     assert(dataLength > 0);
 
     u8* data = (u8*)xmalloc(dataLength);
-    assert(mbReadBytes(&bufInput, data, dataLength));
+    assert(mb_readBytes(&bufInput, data, dataLength));
 
     // this data is at 11025khz, and for playing it back I needed at 44100khz
     // so I need to upsampling it here by a factor of 4
@@ -911,30 +910,30 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    MemoryBuffer bufInput = {0};
-    mbInitFromMemory(&bufInput, rawResource.data, rawResource.length);
+    memory_buffer_t bufInput = {0};
+    mb_initFromMemory(&bufInput, rawResource.data, rawResource.length);
 
     char vocHeader[19];
-    assert(mbReadString(&bufInput, vocHeader, sizeof(vocHeader)));
+    assert(mb_readString(&bufInput, vocHeader, sizeof(vocHeader)));
     assert(strncmp(vocHeader, "Creative Voice File", sizeof(vocHeader)) == 0);
 
     // skip 0x1A
-    assert(mbSkip(&bufInput, 1));
+    assert(mb_skip(&bufInput, 1));
 
     // skip offset to data, always 26
-    assert(mbSkip(&bufInput, 2));
+    assert(mb_skip(&bufInput, 2));
 
     // skip version, always 266
-    assert(mbSkip(&bufInput, 2));
+    assert(mb_skip(&bufInput, 2));
     // skip 2's comp of version, always 4393
-    assert(mbSkip(&bufInput, 2));
+    assert(mb_skip(&bufInput, 2));
 
     u8 type;
-    assert(mbRead(&bufInput, &type));
+    assert(mb_read(&bufInput, &type));
     assert(type == 1);
 
     s32 dataLength;
-    assert(mbReadInt24LE(&bufInput, &dataLength));
+    assert(mb_readInt24LE(&bufInput, &dataLength));
     assert(dataLength > 0);
 
     // the length of the data is this value - 2
@@ -942,10 +941,10 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     dataLength -= 2;
 
     // skip sample rate and compression type
-    assert(mbSkip(&bufInput, 2));
+    assert(mb_skip(&bufInput, 2));
 
     u8* data = (u8*)xmalloc(dataLength);
-    assert(mbReadBytes(&bufInput, data, dataLength));
+    assert(mb_readBytes(&bufInput, data, dataLength));
 
     // this data is at 11025khz, and for playing it back I needed at 44100khz
     // so I need to upsampling it here by a factor of 4

@@ -1,7 +1,8 @@
 #include "war_ui.h"
 
 #include <stdlib.h>
-#include <string.h>
+
+#include "shl/wstr.h"
 
 #include "alloc.h"
 #include "war_audio.h"
@@ -27,45 +28,20 @@ bool isUIEntity(WarEntity* entity)
 
 void clearUIText(WarEntity* uiText)
 {
-    if (uiText->text.text)
-    {
-        free(uiText->text.text);
-        uiText->text.text = NULL;
-        uiText->text.enabled = false;
-    }
+    wstr_free(uiText->text.text);
+    uiText->text.text = wstr_make();
+    uiText->text.enabled = false;
 }
 
-void setUIText(WarEntity* uiText, const char* text)
+void setUIText(WarEntity* uiText, String text)
 {
     clearUIText(uiText);
 
-    if (text)
+    if (text.data)
     {
-        uiText->text.text = (char*)xmalloc(strlen(text) + 1);
-        strcpy(uiText->text.text, text);
+        uiText->text.text = text;
         uiText->text.enabled = true;
     }
-}
-
-void setUITextFormatv(WarEntity* uiText, const char* format, va_list args)
-{
-    if (!format)
-    {
-        setUIText(uiText, NULL);
-        return;
-    }
-
-	char buffer[256];
-    vsprintf(buffer, format, args);
-    setUIText(uiText, buffer);
-}
-
-void setUITextFormat(WarEntity* uiText, const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    setUITextFormatv(uiText, format, args);
-    va_end(args);
 }
 
 void setUIImage(WarEntity* uiImage, s32 frameIndex)
@@ -82,22 +58,23 @@ void setUIRectWidth(WarEntity* uiRect, s32 width)
 
 void clearUITooltip(WarEntity* uiButton)
 {
-    memset(uiButton->button.tooltip, 0, sizeof(uiButton->button.tooltip));
+    wstr_free(uiButton->button.tooltip);
+    uiButton->button.tooltip = wstr_make();
 }
 
-void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, char* text)
+void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text)
 {
     clearUITooltip(uiButton);
 
-    if (text)
+    if (text.data)
     {
         uiButton->button.highlightIndex = highlightIndex;
         uiButton->button.highlightCount = highlightCount;
-        strcpy(uiButton->button.tooltip, text);
+        uiButton->button.tooltip = text;
     }
 }
 
-void setUIButtonStatusByName(WarContext* context, const char* name, bool enabled)
+void setUIButtonStatusByName(WarContext* context, StringView name, bool enabled)
 {
     WarEntity* entity = findUIEntity(context, name);
     if (entity)
@@ -106,7 +83,7 @@ void setUIButtonStatusByName(WarContext* context, const char* name, bool enabled
     }
 }
 
-void setUIButtonInteractiveByName(WarContext* context, const char* name, bool interactive)
+void setUIButtonInteractiveByName(WarContext* context, StringView name, bool interactive)
 {
     WarEntity* entity = findUIEntity(context, name);
     if (entity)
@@ -115,7 +92,7 @@ void setUIButtonInteractiveByName(WarContext* context, const char* name, bool in
     }
 }
 
-void setUIButtonHotKeyByName(WarContext* context, const char* name, WarKeys key)
+void setUIButtonHotKeyByName(WarContext* context, StringView name, WarKeys key)
 {
     WarEntity* entity = findUIEntity(context, name);
     if (entity)
@@ -124,7 +101,7 @@ void setUIButtonHotKeyByName(WarContext* context, const char* name, WarKeys key)
     }
 }
 
-void setUIEntityStatusByName(WarContext* context, const char* name, bool enabled)
+void setUIEntityStatusByName(WarContext* context, StringView name, bool enabled)
 {
     WarEntity* entity = findUIEntity(context, name);
     if (entity)
@@ -133,7 +110,7 @@ void setUIEntityStatusByName(WarContext* context, const char* name, bool enabled
     }
 }
 
-WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 fontSize, const char* text, vec2 position)
+WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, String text, vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
     addTransformComponent(context, entity, position);
@@ -143,7 +120,7 @@ WarEntity* createUIText(WarContext* context, char* name, s32 fontIndex, f32 font
     return entity;
 }
 
-WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 size, WarColor color)
+WarEntity* createUIRect(WarContext* context, String name, vec2 position, vec2 size, WarColor color)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_RECT, true);
     addTransformComponent(context, entity, position);
@@ -153,7 +130,7 @@ WarEntity* createUIRect(WarContext* context, char* name, vec2 position, vec2 siz
     return entity;
 }
 
-WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef spriteResourceRef, vec2 position)
+WarEntity* createUIImage(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE, true);
     addTransformComponent(context, entity, position);
@@ -163,7 +140,7 @@ WarEntity* createUIImage(WarContext* context, char* name, WarSpriteResourceRef s
     return entity;
 }
 
-WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, vec2 position)
+WarEntity* createUICursor(WarContext* context, String name, WarCursorType type, vec2 position)
 {
     WarResource* resource = getOrCreateResource(context, type);
     assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
@@ -178,10 +155,10 @@ WarEntity* createUICursor(WarContext* context, char* name, WarCursorType type, v
 }
 
 WarEntity* createUITextButton(WarContext* context,
-                              char* name,
+                              String name,
                               s32 fontIndex,
                               f32 fontSize,
-                              const char* text,
+                              String text,
                               WarSpriteResourceRef backgroundNormalRef,
                               WarSpriteResourceRef backgroundPressedRef,
                               WarSpriteResourceRef foregroundRef,
@@ -205,7 +182,7 @@ WarEntity* createUITextButton(WarContext* context,
 }
 
 WarEntity* createUIImageButton(WarContext* context,
-                               char* name,
+                               String name,
                                WarSpriteResourceRef backgroundNormalRef,
                                WarSpriteResourceRef backgroundPressedRef,
                                WarSpriteResourceRef foregroundRef,
@@ -241,7 +218,7 @@ void updateUICursor(WarContext* context)
 {
     WarInput* input = &context->input;
 
-    WarEntity* entity = findUIEntity(context, "cursor");
+    WarEntity* entity = findUIEntity(context, wsv_fromCString("cursor"));
     if (entity)
     {
         entity->transform.position = vec2Subv(input->pos, entity->cursor.hot);

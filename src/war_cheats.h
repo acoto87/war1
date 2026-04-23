@@ -8,7 +8,7 @@
 
 #define CHEAT_FEEDBACK_WASCALLY_WABBIT "cheat enabled you wascally wabbit"
 
-typedef void (*WarCheatFunc)(WarContext* context, const char* argument);
+typedef void (*WarCheatFunc)(WarContext* context, StringView argument);
 
 typedef struct
 {
@@ -18,39 +18,38 @@ typedef struct
     WarCheatFunc cheatFunc;
 } WarCheatDescriptor;
 
-void applyCheat(WarContext* context, const char* text);
+void applyCheat(WarContext* context, StringView text);
 
 #define cheatsEnabledAndVisible(mapOrScene) ((mapOrScene)->cheatStatus.enabled && (mapOrScene)->cheatStatus.visible)
 
 // original cheats
-void applyGoldCheat(WarContext* context, const char* argument);
-void applySpellsCheat(WarContext* context, const char* argument);
-void applyUpgradesCheat(WarContext* context, const char* argument);
-void applyEndCheat(WarContext* context, const char* argument);
-void applyEnableCheat(WarContext* context, const char* argument);
-void applyGodModeCheat(WarContext* context, const char* argument);
-void applyWinCheat(WarContext* context, const char* argument);
-void applyLossCheat(WarContext* context, const char* argument);
-void applyFogOfWarCheat(WarContext* context, const char* argument);
-void applySkipHumanCheat(WarContext* context, const char* argument);
-void applySkipOrcCheat(WarContext* context, const char* argument);
-void applySpeedCheat(WarContext* context, const char* argument);
+void applyGoldCheat(WarContext* context, StringView argument);
+void applySpellsCheat(WarContext* context, StringView argument);
+void applyUpgradesCheat(WarContext* context, StringView argument);
+void applyEndCheat(WarContext* context, StringView argument);
+void applyEnableCheat(WarContext* context, StringView argument);
+void applyGodModeCheat(WarContext* context, StringView argument);
+void applyWinCheat(WarContext* context, StringView argument);
+void applyLossCheat(WarContext* context, StringView argument);
+void applyFogOfWarCheat(WarContext* context, StringView argument);
+void applySkipHumanCheat(WarContext* context, StringView argument);
+void applySkipOrcCheat(WarContext* context, StringView argument);
+void applySpeedCheat(WarContext* context, StringView argument);
 
 // custom cheats
-void applyMusicCheat(WarContext* context, const char* argument);
-void applySoundCheat(WarContext* context, const char* argument);
-void applyMusicVolCheat(WarContext* context, const char* argument);
-void applySoundVolCheat(WarContext* context, const char* argument);
-void applyGlobalScaleCheat(WarContext* context, const char* argument);
-void applyGlobalSpeedCheat(WarContext* context, const char* argument);
-void applyEditCheat(WarContext* context, const char* argument);
-void applyRainOfFireCheat(WarContext* context, const char* argument);
-void applyAddUnitCheat(WarContext* context, const char* argument);
+void applyMusicCheat(WarContext* context, StringView argument);
+void applySoundCheat(WarContext* context, StringView argument);
+void applyMusicVolCheat(WarContext* context, StringView argument);
+void applySoundVolCheat(WarContext* context, StringView argument);
+void applyGlobalScaleCheat(WarContext* context, StringView argument);
+void applyGlobalSpeedCheat(WarContext* context, StringView argument);
+void applyEditCheat(WarContext* context, StringView argument);
+void applyRainOfFireCheat(WarContext* context, StringView argument);
+void applyAddUnitCheat(WarContext* context, StringView argument);
 
 // ui
 void setCheatsPanelVisible(WarContext* context, bool visible);
-void setCheatsFeedback(WarContext* context, const char* feedbackText);
-void setCheatsFeedbackFormat(WarContext* context, const char* feedbackTextFormat, ...);
+void setCheatsFeedback(WarContext* context, String feedbackText);
 void createCheatsPanel(WarContext* context);
-void setCheatText(WarContext* context, char* text, ...);
+void setCheatText(WarContext* context, String text);
 void updateCheatsPanel(WarContext* context);

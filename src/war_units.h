@@ -8,51 +8,56 @@
 #include "war.h"
 #include "war_commands.h"
 
-const char* features[MAX_FEATURES_COUNT * 2] = {
+// Brace-only StringView initializer for use in file-scope const arrays.
+// Unlike WSV_LITERAL, this does not use a compound literal cast so it
+// satisfies -Wpedantic's "initializer element is not constant" requirement.
+#define WSV_INIT(s) { s, sizeof(s) - 1 }
+
+StringView features[MAX_FEATURES_COUNT * 2] = {
 	// Units. 0 - 6
-	"unit-footman",             "unit-grunt",
-	"unit-peasant",             "unit-peon",
-	"unit-human-catapult",      "unit-orc-catapult",
-	"unit-knight",              "unit-raider",
-	"unit-archer",              "unit-spearman",
-	"unit-conjurer",            "unit-warlock",
-	"unit-cleric",              "unit-necrolyte",
+	WSV_INIT("unit-footman"),             WSV_INIT("unit-grunt"),
+	WSV_INIT("unit-peasant"),             WSV_INIT("unit-peon"),
+	WSV_INIT("unit-human-catapult"),      WSV_INIT("unit-orc-catapult"),
+	WSV_INIT("unit-knight"),              WSV_INIT("unit-raider"),
+	WSV_INIT("unit-archer"),              WSV_INIT("unit-spearman"),
+	WSV_INIT("unit-conjurer"),            WSV_INIT("unit-warlock"),
+	WSV_INIT("unit-cleric"),              WSV_INIT("unit-necrolyte"),
 	// Constructing buildings. 7 - 14
-	"unit-human-farm",          "unit-orc-farm",
-	"unit-human-barracks",      "unit-orc-barracks",
-	"unit-human-church",        "unit-orc-temple",
-	"unit-human-tower",         "unit-orc-tower",
-	"unit-human-town-hall",     "unit-orc-town-hall",
-	"unit-human-lumber-mill",   "unit-orc-lumber-mill",
-	"unit-human-stable",        "unit-orc-kennel",
-	"unit-human-blacksmith",    "unit-orc-blacksmith",
+	WSV_INIT("unit-human-farm"),          WSV_INIT("unit-orc-farm"),
+	WSV_INIT("unit-human-barracks"),      WSV_INIT("unit-orc-barracks"),
+	WSV_INIT("unit-human-church"),        WSV_INIT("unit-orc-temple"),
+	WSV_INIT("unit-human-tower"),         WSV_INIT("unit-orc-tower"),
+	WSV_INIT("unit-human-town-hall"),     WSV_INIT("unit-orc-town-hall"),
+	WSV_INIT("unit-human-lumber-mill"),   WSV_INIT("unit-orc-lumber-mill"),
+	WSV_INIT("unit-human-stable"),        WSV_INIT("unit-orc-kennel"),
+	WSV_INIT("unit-human-blacksmith"),    WSV_INIT("unit-orc-blacksmith"),
 	// Cleric/Necrolyte spells. 15 - 17
-	"upgrade-healing",          "upgrade-raise-dead",
-	"upgrade-holy-vision",      "upgrade-dark-vision",
-	"upgrade-invisibility",     "upgrade-unholy-armor",
+	WSV_INIT("upgrade-healing"),          WSV_INIT("upgrade-raise-dead"),
+	WSV_INIT("upgrade-holy-vision"),      WSV_INIT("upgrade-dark-vision"),
+	WSV_INIT("upgrade-invisibility"),     WSV_INIT("upgrade-unholy-armor"),
 	// Conjurer/Warlock spells. 18 - 20
-	"upgrade-scorpion",         "upgrade-spider",
-	"upgrade-rain-of-fire",     "upgrade-poison-cloud",
-	"upgrade-water-elemental",  "upgrade-daemon",
+	WSV_INIT("upgrade-scorpion"),         WSV_INIT("upgrade-spider"),
+	WSV_INIT("upgrade-rain-of-fire"),     WSV_INIT("upgrade-poison-cloud"),
+	WSV_INIT("upgrade-water-elemental"),  WSV_INIT("upgrade-daemon"),
 	// Roads and walls. 21 - 22
-	"unit-road",                "unit-wall"
+	WSV_INIT("unit-road"),                WSV_INIT("unit-wall")
 };
 
-const char* upgradeNames[MAX_UPGRADES_COUNT * 2] =
+StringView upgradeNames[MAX_UPGRADES_COUNT * 2] =
 {
     // Basic upgrades
-    "upgrade-spear",        "upgrade-arrow",
-    "upgrade-axe",          "upgrade-sword",
-    "upgrade-wolves",       "upgrade-horse",
+    WSV_INIT("upgrade-spear"),        WSV_INIT("upgrade-arrow"),
+    WSV_INIT("upgrade-axe"),          WSV_INIT("upgrade-sword"),
+    WSV_INIT("upgrade-wolves"),       WSV_INIT("upgrade-horse"),
     // Spells and summons
-    "upgrade-spider",       "upgrade-scorpion",
-    "upgrade-poison-cloud", "upgrade-rain-of-fire",
-    "upgrade-daemon",       "upgrade-water-elemental",
-    "upgrade-raise-dead",   "upgrade-healing",
-    "upgrade-dark-vision",  "upgrade-far-seeing",
-    "upgrade-unholy-armor", "upgrade-invisibility",
+    WSV_INIT("upgrade-spider"),       WSV_INIT("upgrade-scorpion"),
+    WSV_INIT("upgrade-poison-cloud"), WSV_INIT("upgrade-rain-of-fire"),
+    WSV_INIT("upgrade-daemon"),       WSV_INIT("upgrade-water-elemental"),
+    WSV_INIT("upgrade-raise-dead"),   WSV_INIT("upgrade-healing"),
+    WSV_INIT("upgrade-dark-vision"),  WSV_INIT("upgrade-far-seeing"),
+    WSV_INIT("upgrade-unholy-armor"), WSV_INIT("upgrade-invisibility"),
     // Shield upgrades
-    "upgrade-orc-shield",   "upgrade-human-shield"
+    WSV_INIT("upgrade-orc-shield"),   WSV_INIT("upgrade-human-shield")
 };
 
 typedef enum
@@ -159,68 +164,68 @@ typedef struct
     s32 portraitFrameIndex;
     s32 sizex;
     s32 sizey;
-    char name[50];
+    StringView name;
 } WarUnitData;
 
 const WarUnitData unitsData[] =
 {
     // units
-    { WAR_UNIT_FOOTMAN,             279, WAR_PORTRAIT_FOOTMAN,            1, 1, "FOOTMAN"         },
-    { WAR_UNIT_GRUNT,               280, WAR_PORTRAIT_GRUNT,              1, 1, "GRUNT"           },
-    { WAR_UNIT_PEASANT,             281, WAR_PORTRAIT_PEASANT,            1, 1, "PEASANT"         },
-    { WAR_UNIT_PEON,                282, WAR_PORTRAIT_PEON,               1, 1, "PEON"            },
-    { WAR_UNIT_CATAPULT_HUMANS,     283, WAR_PORTRAIT_CATAPULT_HUMANS,    1, 1, "CATAPULT"        },
-    { WAR_UNIT_CATAPULT_ORCS,       284, WAR_PORTRAIT_CATAPULT_ORCS,      1, 1, "CATAPULT"        },
-    { WAR_UNIT_KNIGHT,              285, WAR_PORTRAIT_KNIGHT,             1, 1, "KNIGHT"          },
-    { WAR_UNIT_RAIDER,              286, WAR_PORTRAIT_RAIDER,             1, 1, "RAIDER"          },
-    { WAR_UNIT_ARCHER,              287, WAR_PORTRAIT_ARCHER,             1, 1, "ARCHER"          },
-    { WAR_UNIT_SPEARMAN,            288, WAR_PORTRAIT_SPEARMAN,           1, 1, "SPEARMAN"        },
-    { WAR_UNIT_CONJURER,            289, WAR_PORTRAIT_CONJURER,           1, 1, "CONJURER"        },
-    { WAR_UNIT_WARLOCK,             290, WAR_PORTRAIT_WARLOCK,            1, 1, "WARLOCK"         },
-    { WAR_UNIT_CLERIC,              291, WAR_PORTRAIT_CLERIC,             1, 1, "CLERIC"          },
-    { WAR_UNIT_NECROLYTE,           292, WAR_PORTRAIT_NECROLYTE,          1, 1, "NECROLYTE"       },
-    { WAR_UNIT_MEDIVH,              293, WAR_PORTRAIT_MEDIVH,             1, 1, "MEDIVH"          },
-    { WAR_UNIT_LOTHAR,              294, WAR_PORTRAIT_LOTHAR,             1, 1, "LOTHAR"          },
-    { WAR_UNIT_WOUNDED,             295, WAR_PORTRAIT_WOUNDED,            1, 1, "WOUNDED"         },
-    { WAR_UNIT_GRIZELDA,            296, WAR_PORTRAIT_GRIZELDA,           1, 1, "GRIZELDA"        },
-    { WAR_UNIT_GARONA,              296, WAR_PORTRAIT_GARONA,             1, 1, "GARONA"          },
-    { WAR_UNIT_OGRE,                297, WAR_PORTRAIT_OGRE,               1, 1, "OGRE"            },
-    { WAR_UNIT_SPIDER,              298, WAR_PORTRAIT_SPIDER,             1, 1, "SPIDER"          },
-    { WAR_UNIT_SLIME,               299, WAR_PORTRAIT_SLIME,              1, 1, "SLIME"           },
-    { WAR_UNIT_FIRE_ELEMENTAL,      300, WAR_PORTRAIT_FIRE_ELEMENTAL,     1, 1, "FIRE ELEM"       },
-    { WAR_UNIT_SCORPION,            301, WAR_PORTRAIT_SCORPION,           1, 1, "SCORPION"        },
-    { WAR_UNIT_BRIGAND,             302, WAR_PORTRAIT_BRIGAND,            1, 1, "BRIGAND"         },
-    { WAR_UNIT_THE_DEAD,            303, WAR_PORTRAIT_DEAD,               1, 1, "THE DEAD"        },
-    { WAR_UNIT_SKELETON,            304, WAR_PORTRAIT_SKELETON,           1, 1, "SKELETON"        },
-    { WAR_UNIT_DAEMON,              305, WAR_PORTRAIT_DAEMON,             1, 1, "DAEMON"          },
-    { WAR_UNIT_WATER_ELEMENTAL,     306, WAR_PORTRAIT_WATER_ELEMENTAL,    1, 1, "WATER ELEM"      },
+    { WAR_UNIT_FOOTMAN,             279, WAR_PORTRAIT_FOOTMAN,            1, 1, WSV_INIT("FOOTMAN")         },
+    { WAR_UNIT_GRUNT,               280, WAR_PORTRAIT_GRUNT,              1, 1, WSV_INIT("GRUNT")           },
+    { WAR_UNIT_PEASANT,             281, WAR_PORTRAIT_PEASANT,            1, 1, WSV_INIT("PEASANT")         },
+    { WAR_UNIT_PEON,                282, WAR_PORTRAIT_PEON,               1, 1, WSV_INIT("PEON")            },
+    { WAR_UNIT_CATAPULT_HUMANS,     283, WAR_PORTRAIT_CATAPULT_HUMANS,    1, 1, WSV_INIT("CATAPULT")        },
+    { WAR_UNIT_CATAPULT_ORCS,       284, WAR_PORTRAIT_CATAPULT_ORCS,      1, 1, WSV_INIT("CATAPULT")        },
+    { WAR_UNIT_KNIGHT,              285, WAR_PORTRAIT_KNIGHT,             1, 1, WSV_INIT("KNIGHT")          },
+    { WAR_UNIT_RAIDER,              286, WAR_PORTRAIT_RAIDER,             1, 1, WSV_INIT("RAIDER")          },
+    { WAR_UNIT_ARCHER,              287, WAR_PORTRAIT_ARCHER,             1, 1, WSV_INIT("ARCHER")          },
+    { WAR_UNIT_SPEARMAN,            288, WAR_PORTRAIT_SPEARMAN,           1, 1, WSV_INIT("SPEARMAN")        },
+    { WAR_UNIT_CONJURER,            289, WAR_PORTRAIT_CONJURER,           1, 1, WSV_INIT("CONJURER")        },
+    { WAR_UNIT_WARLOCK,             290, WAR_PORTRAIT_WARLOCK,            1, 1, WSV_INIT("WARLOCK")         },
+    { WAR_UNIT_CLERIC,              291, WAR_PORTRAIT_CLERIC,             1, 1, WSV_INIT("CLERIC")          },
+    { WAR_UNIT_NECROLYTE,           292, WAR_PORTRAIT_NECROLYTE,          1, 1, WSV_INIT("NECROLYTE")       },
+    { WAR_UNIT_MEDIVH,              293, WAR_PORTRAIT_MEDIVH,             1, 1, WSV_INIT("MEDIVH")          },
+    { WAR_UNIT_LOTHAR,              294, WAR_PORTRAIT_LOTHAR,             1, 1, WSV_INIT("LOTHAR")          },
+    { WAR_UNIT_WOUNDED,             295, WAR_PORTRAIT_WOUNDED,            1, 1, WSV_INIT("WOUNDED")         },
+    { WAR_UNIT_GRIZELDA,            296, WAR_PORTRAIT_GRIZELDA,           1, 1, WSV_INIT("GRIZELDA")        },
+    { WAR_UNIT_GARONA,              296, WAR_PORTRAIT_GARONA,             1, 1, WSV_INIT("GARONA")          },
+    { WAR_UNIT_OGRE,                297, WAR_PORTRAIT_OGRE,               1, 1, WSV_INIT("OGRE")            },
+    { WAR_UNIT_SPIDER,              298, WAR_PORTRAIT_SPIDER,             1, 1, WSV_INIT("SPIDER")          },
+    { WAR_UNIT_SLIME,               299, WAR_PORTRAIT_SLIME,              1, 1, WSV_INIT("SLIME")           },
+    { WAR_UNIT_FIRE_ELEMENTAL,      300, WAR_PORTRAIT_FIRE_ELEMENTAL,     1, 1, WSV_INIT("FIRE ELEM")       },
+    { WAR_UNIT_SCORPION,            301, WAR_PORTRAIT_SCORPION,           1, 1, WSV_INIT("SCORPION")        },
+    { WAR_UNIT_BRIGAND,             302, WAR_PORTRAIT_BRIGAND,            1, 1, WSV_INIT("BRIGAND")         },
+    { WAR_UNIT_THE_DEAD,            303, WAR_PORTRAIT_DEAD,               1, 1, WSV_INIT("THE DEAD")        },
+    { WAR_UNIT_SKELETON,            304, WAR_PORTRAIT_SKELETON,           1, 1, WSV_INIT("SKELETON")        },
+    { WAR_UNIT_DAEMON,              305, WAR_PORTRAIT_DAEMON,             1, 1, WSV_INIT("DAEMON")          },
+    { WAR_UNIT_WATER_ELEMENTAL,     306, WAR_PORTRAIT_WATER_ELEMENTAL,    1, 1, WSV_INIT("WATER ELEM")      },
 
     // buildings
-    { WAR_UNIT_FARM_HUMANS,         307, WAR_PORTRAIT_FARM_HUMANS,        2, 2, "FARM"            },
-    { WAR_UNIT_FARM_ORCS,           308, WAR_PORTRAIT_FARM_ORCS,          2, 2, "FARM"            },
-    { WAR_UNIT_BARRACKS_HUMANS,     309, WAR_PORTRAIT_BARRACKS_HUMANS,    3, 3, "BARRACKS"        },
-    { WAR_UNIT_BARRACKS_ORCS,       310, WAR_PORTRAIT_BARRACKS_ORCS,      3, 3, "BARRACKS"        },
-    { WAR_UNIT_CHURCH,              311, WAR_PORTRAIT_CHURCH,             3, 3, "CHURCH"          },
-    { WAR_UNIT_TEMPLE,              312, WAR_PORTRAIT_TEMPLE,             3, 3, "TEMPLE"          },
-    { WAR_UNIT_TOWER_HUMANS,        313, WAR_PORTRAIT_TOWER_HUMANS,       2, 2, "TOWER"           },
-    { WAR_UNIT_TOWER_ORCS,          314, WAR_PORTRAIT_TOWER_ORCS,         2, 2, "TOWER"           },
-    { WAR_UNIT_TOWNHALL_HUMANS,     315, WAR_PORTRAIT_TOWNHALL_HUMANS,    3, 3, "TOWN HALL"       },
-    { WAR_UNIT_TOWNHALL_ORCS,       316, WAR_PORTRAIT_TOWNHALL_ORCS,      3, 3, "TOWN HALL"       },
-    { WAR_UNIT_LUMBERMILL_HUMANS,   317, WAR_PORTRAIT_LUMBERMILL_HUMANS,  3, 3, "MILL"            },
-    { WAR_UNIT_LUMBERMILL_ORCS,     318, WAR_PORTRAIT_LUMBERMILL_ORCS,    3, 3, "MILL"            },
-    { WAR_UNIT_STABLE,              319, WAR_PORTRAIT_STABLE,             3, 3, "STABLES"         },
-    { WAR_UNIT_KENNEL,              320, WAR_PORTRAIT_KENNEL,             3, 3, "KENNEL"          },
-    { WAR_UNIT_BLACKSMITH_HUMANS,   321, WAR_PORTRAIT_BLACKSMITH_HUMANS,  2, 2, "BLACKSMITH"      },
-    { WAR_UNIT_BLACKSMITH_ORCS,     322, WAR_PORTRAIT_BLACKSMITH_ORCS,    2, 2, "BLACKSMITH"      },
-    { WAR_UNIT_STORMWIND,           323, WAR_PORTRAIT_STORMWIND,          4, 4, "STORMWIND"       },
-    { WAR_UNIT_BLACKROCK,           324, WAR_PORTRAIT_BLACKROCK,          4, 4, "BLACKROCK"       },
+    { WAR_UNIT_FARM_HUMANS,         307, WAR_PORTRAIT_FARM_HUMANS,        2, 2, WSV_INIT("FARM")            },
+    { WAR_UNIT_FARM_ORCS,           308, WAR_PORTRAIT_FARM_ORCS,          2, 2, WSV_INIT("FARM")            },
+    { WAR_UNIT_BARRACKS_HUMANS,     309, WAR_PORTRAIT_BARRACKS_HUMANS,    3, 3, WSV_INIT("BARRACKS")        },
+    { WAR_UNIT_BARRACKS_ORCS,       310, WAR_PORTRAIT_BARRACKS_ORCS,      3, 3, WSV_INIT("BARRACKS")        },
+    { WAR_UNIT_CHURCH,              311, WAR_PORTRAIT_CHURCH,             3, 3, WSV_INIT("CHURCH")          },
+    { WAR_UNIT_TEMPLE,              312, WAR_PORTRAIT_TEMPLE,             3, 3, WSV_INIT("TEMPLE")          },
+    { WAR_UNIT_TOWER_HUMANS,        313, WAR_PORTRAIT_TOWER_HUMANS,       2, 2, WSV_INIT("TOWER")           },
+    { WAR_UNIT_TOWER_ORCS,          314, WAR_PORTRAIT_TOWER_ORCS,         2, 2, WSV_INIT("TOWER")           },
+    { WAR_UNIT_TOWNHALL_HUMANS,     315, WAR_PORTRAIT_TOWNHALL_HUMANS,    3, 3, WSV_INIT("TOWN HALL")       },
+    { WAR_UNIT_TOWNHALL_ORCS,       316, WAR_PORTRAIT_TOWNHALL_ORCS,      3, 3, WSV_INIT("TOWN HALL")       },
+    { WAR_UNIT_LUMBERMILL_HUMANS,   317, WAR_PORTRAIT_LUMBERMILL_HUMANS,  3, 3, WSV_INIT("MILL")            },
+    { WAR_UNIT_LUMBERMILL_ORCS,     318, WAR_PORTRAIT_LUMBERMILL_ORCS,    3, 3, WSV_INIT("MILL")            },
+    { WAR_UNIT_STABLE,              319, WAR_PORTRAIT_STABLE,             3, 3, WSV_INIT("STABLES")         },
+    { WAR_UNIT_KENNEL,              320, WAR_PORTRAIT_KENNEL,             3, 3, WSV_INIT("KENNEL")          },
+    { WAR_UNIT_BLACKSMITH_HUMANS,   321, WAR_PORTRAIT_BLACKSMITH_HUMANS,  2, 2, WSV_INIT("BLACKSMITH")      },
+    { WAR_UNIT_BLACKSMITH_ORCS,     322, WAR_PORTRAIT_BLACKSMITH_ORCS,    2, 2, WSV_INIT("BLACKSMITH")      },
+    { WAR_UNIT_STORMWIND,           323, WAR_PORTRAIT_STORMWIND,          4, 4, WSV_INIT("STORMWIND")       },
+    { WAR_UNIT_BLACKROCK,           324, WAR_PORTRAIT_BLACKROCK,          4, 4, WSV_INIT("BLACKROCK")       },
 
     // neutral
-    { WAR_UNIT_GOLDMINE,            325, WAR_PORTRAIT_GOLDMINE,           3, 3, "GOLD MINE"       },
+    { WAR_UNIT_GOLDMINE,            325, WAR_PORTRAIT_GOLDMINE,           3, 3, WSV_INIT("GOLD MINE")       },
 
     // corpses
-    { WAR_UNIT_HUMAN_CORPSE,        326, 0,                               1, 1, "CORPSE"          },
-    { WAR_UNIT_ORC_CORPSE,          326, 0,                               1, 1, "CORPSE"          }
+    { WAR_UNIT_HUMAN_CORPSE,        326, 0,                               1, 1, WSV_INIT("CORPSE")          },
+    { WAR_UNIT_ORC_CORPSE,          326, 0,                               1, 1, WSV_INIT("CORPSE")          }
 };
 
 typedef struct
@@ -775,100 +780,100 @@ typedef struct
     WarKeys hotKey;
     s32 highlightIndex;
     s32 highlightCount;
-    char tooltip[100];
-    char tooltip2[100];
+    StringView tooltip;
+    StringView tooltip2;
 } WarUnitCommandBaseData;
 
 const WarUnitCommandBaseData commandsBaseData[] =
 {
-    { WAR_COMMAND_NONE,                     NULL,                   WAR_KEY_NONE,      -1, 1, "",                             "" },
+    { WAR_COMMAND_NONE,                     NULL,                   WAR_KEY_NONE,      -1, 1, WSV_INIT(""),                             WSV_INIT("") },
 
     // unit commands
-    { WAR_COMMAND_MOVE,                     move,                   WAR_KEY_M,          0, 1, "MOVE",                         "" },
-    { WAR_COMMAND_STOP,                     stop,                   WAR_KEY_S,          0, 1, "STOP",                         "" },
-    { WAR_COMMAND_HARVEST,                  harvest,                WAR_KEY_H,          0, 1, "HARVEST LUMBER/MINE GOLD",     "" },
-    { WAR_COMMAND_DELIVER,                  deliver,                WAR_KEY_T,         16, 1, "RETURN GOODS TO TOWN HALL",    "" },
-    { WAR_COMMAND_REPAIR,                   repair,                 WAR_KEY_R,          0, 1, "REPAIR",                       "" },
-    { WAR_COMMAND_BUILD_BASIC,              buildBasic,             WAR_KEY_B,          0, 1, "BUILD BASIC STRUCTURE",        "" },
-    { WAR_COMMAND_BUILD_ADVANCED,           buildAdvanced,          WAR_KEY_A,          6, 1, "BUILD ADVANCED STRUCTURE",     "" },
-    { WAR_COMMAND_ATTACK,                   attack,                 WAR_KEY_A,          0, 1, "ATTACK",                       "" },
+    { WAR_COMMAND_MOVE,                     move,                   WAR_KEY_M,          0, 1, WSV_INIT("MOVE"),                         WSV_INIT("") },
+    { WAR_COMMAND_STOP,                     stop,                   WAR_KEY_S,          0, 1, WSV_INIT("STOP"),                         WSV_INIT("") },
+    { WAR_COMMAND_HARVEST,                  harvest,                WAR_KEY_H,          0, 1, WSV_INIT("HARVEST LUMBER/MINE GOLD"),     WSV_INIT("") },
+    { WAR_COMMAND_DELIVER,                  deliver,                WAR_KEY_T,         16, 1, WSV_INIT("RETURN GOODS TO TOWN HALL"),    WSV_INIT("") },
+    { WAR_COMMAND_REPAIR,                   repair,                 WAR_KEY_R,          0, 1, WSV_INIT("REPAIR"),                       WSV_INIT("") },
+    { WAR_COMMAND_BUILD_BASIC,              buildBasic,             WAR_KEY_B,          0, 1, WSV_INIT("BUILD BASIC STRUCTURE"),        WSV_INIT("") },
+    { WAR_COMMAND_BUILD_ADVANCED,           buildAdvanced,          WAR_KEY_A,          6, 1, WSV_INIT("BUILD ADVANCED STRUCTURE"),     WSV_INIT("") },
+    { WAR_COMMAND_ATTACK,                   attack,                 WAR_KEY_A,          0, 1, WSV_INIT("ATTACK"),                       WSV_INIT("") },
 
     // train commands
-    { WAR_COMMAND_TRAIN_FOOTMAN,            trainFootman,           WAR_KEY_F,          6, 1, "TRAIN FOOTMAN",                "TRAINING A FOOTMAN"        },
-    { WAR_COMMAND_TRAIN_GRUNT,              trainGrunt,             WAR_KEY_U,          8, 1, "TRAIN GRUNT",                  "TRAINING A GRUNT"          },
-    { WAR_COMMAND_TRAIN_PEASANT,            trainPeasant,           WAR_KEY_P,          6, 1, "TRAIN PEASANT",                "TRAINING A PEASANT"        },
-    { WAR_COMMAND_TRAIN_PEON,               trainPeon,              WAR_KEY_P,          6, 1, "TRAIN PEON",                   "TRAINING A PEON"           },
-    { WAR_COMMAND_TRAIN_CATAPULT_HUMANS,    trainHumanCatapult,     WAR_KEY_T,          8, 1, "BUILD CATAPULT",               "TRAINING A CATAPULT CREW"  },
-    { WAR_COMMAND_TRAIN_CATAPULT_ORCS,      trainOrcCatapult,       WAR_KEY_T,          8, 1, "BUILD CATAPULT",               "TRAINING A CATAPULT CREW"  },
-    { WAR_COMMAND_TRAIN_KNIGHT,             trainKnight,            WAR_KEY_K,          6, 1, "TRAIN KNIGHT",                 "TRAINING A KNIGHT"         },
-    { WAR_COMMAND_TRAIN_RAIDER,             trainRaider,            WAR_KEY_R,          6, 1, "TRAIN RAIDER",                 "TRAINING A RAIDER"         },
-    { WAR_COMMAND_TRAIN_ARCHER,             trainArcher,            WAR_KEY_A,          6, 1, "TRAIN ARCHER",                 "TRAINING AN ARCHER"        },
-    { WAR_COMMAND_TRAIN_SPEARMAN,           trainSpearman,          WAR_KEY_S,          6, 1, "TRAIN SPEARMAN",               "TRAINING A SPEARMAN"       },
-    { WAR_COMMAND_TRAIN_CONJURER,           trainConjurer,          WAR_KEY_T,          0, 1, "TRAIN CONJURER",               "TRAINING A CONJURER"       },
-    { WAR_COMMAND_TRAIN_WARLOCK,            trainWarlock,           WAR_KEY_T,          0, 1, "TRAIN WARLOCK",                "TRAINING A WARLOCK"        },
-    { WAR_COMMAND_TRAIN_CLERIC,             trainCleric,            WAR_KEY_T,          0, 1, "TRAIN CLERIC",                 "TRAINING A CLERIC"         },
-    { WAR_COMMAND_TRAIN_NECROLYTE,          trainNecrolyte,         WAR_KEY_T,          0, 1, "TRAIN NECROLYTE",              "TRAINING A NECROLYTE"      },
+    { WAR_COMMAND_TRAIN_FOOTMAN,            trainFootman,           WAR_KEY_F,          6, 1, WSV_INIT("TRAIN FOOTMAN"),                WSV_INIT("TRAINING A FOOTMAN")        },
+    { WAR_COMMAND_TRAIN_GRUNT,              trainGrunt,             WAR_KEY_U,          8, 1, WSV_INIT("TRAIN GRUNT"),                  WSV_INIT("TRAINING A GRUNT")          },
+    { WAR_COMMAND_TRAIN_PEASANT,            trainPeasant,           WAR_KEY_P,          6, 1, WSV_INIT("TRAIN PEASANT"),                WSV_INIT("TRAINING A PEASANT")        },
+    { WAR_COMMAND_TRAIN_PEON,               trainPeon,              WAR_KEY_P,          6, 1, WSV_INIT("TRAIN PEON"),                   WSV_INIT("TRAINING A PEON")           },
+    { WAR_COMMAND_TRAIN_CATAPULT_HUMANS,    trainHumanCatapult,     WAR_KEY_T,          8, 1, WSV_INIT("BUILD CATAPULT"),               WSV_INIT("TRAINING A CATAPULT CREW")  },
+    { WAR_COMMAND_TRAIN_CATAPULT_ORCS,      trainOrcCatapult,       WAR_KEY_T,          8, 1, WSV_INIT("BUILD CATAPULT"),               WSV_INIT("TRAINING A CATAPULT CREW")  },
+    { WAR_COMMAND_TRAIN_KNIGHT,             trainKnight,            WAR_KEY_K,          6, 1, WSV_INIT("TRAIN KNIGHT"),                 WSV_INIT("TRAINING A KNIGHT")         },
+    { WAR_COMMAND_TRAIN_RAIDER,             trainRaider,            WAR_KEY_R,          6, 1, WSV_INIT("TRAIN RAIDER"),                 WSV_INIT("TRAINING A RAIDER")         },
+    { WAR_COMMAND_TRAIN_ARCHER,             trainArcher,            WAR_KEY_A,          6, 1, WSV_INIT("TRAIN ARCHER"),                 WSV_INIT("TRAINING AN ARCHER")        },
+    { WAR_COMMAND_TRAIN_SPEARMAN,           trainSpearman,          WAR_KEY_S,          6, 1, WSV_INIT("TRAIN SPEARMAN"),               WSV_INIT("TRAINING A SPEARMAN")       },
+    { WAR_COMMAND_TRAIN_CONJURER,           trainConjurer,          WAR_KEY_T,          0, 1, WSV_INIT("TRAIN CONJURER"),               WSV_INIT("TRAINING A CONJURER")       },
+    { WAR_COMMAND_TRAIN_WARLOCK,            trainWarlock,           WAR_KEY_T,          0, 1, WSV_INIT("TRAIN WARLOCK"),                WSV_INIT("TRAINING A WARLOCK")        },
+    { WAR_COMMAND_TRAIN_CLERIC,             trainCleric,            WAR_KEY_T,          0, 1, WSV_INIT("TRAIN CLERIC"),                 WSV_INIT("TRAINING A CLERIC")         },
+    { WAR_COMMAND_TRAIN_NECROLYTE,          trainNecrolyte,         WAR_KEY_T,          0, 1, WSV_INIT("TRAIN NECROLYTE"),              WSV_INIT("TRAINING A NECROLYTE")      },
 
     // spell commands
-    { WAR_COMMAND_SPELL_HEALING,            castHeal,               WAR_KEY_H,          0, 1, "HEALING",                      ""                          },
-    { WAR_COMMAND_SPELL_POISON_CLOUD,       castPoisonCloud,        WAR_KEY_P,          9, 1, "CLOUD OF POISON",              ""                          },
-    { WAR_COMMAND_SPELL_FAR_SIGHT,          castFarSight,           WAR_KEY_F,          0, 1, "FAR SEEING",                   ""                          },
-    { WAR_COMMAND_SPELL_DARK_VISION,        castDarkVision,         WAR_KEY_D,          0, 1, "DARK VISION",                  ""                          },
-    { WAR_COMMAND_SPELL_INVISIBILITY,       castInvisibility,       WAR_KEY_I,          0, 1, "INVISIBILITY",                 ""                          },
-    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       castUnHolyArmor,        WAR_KEY_U,          0, 1, "UNHOLY ARMOR",                 ""                          },
-    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       castRainOfFire,         WAR_KEY_R,          0, 1, "RAIN OF FIRE",                 ""                          },
-    { WAR_COMMAND_SPELL_RAISE_DEAD,         castRaiseDead,          WAR_KEY_R,          0, 1, "RAISE DEAD",                   ""                          },
+    { WAR_COMMAND_SPELL_HEALING,            castHeal,               WAR_KEY_H,          0, 1, WSV_INIT("HEALING"),                      WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_POISON_CLOUD,       castPoisonCloud,        WAR_KEY_P,          9, 1, WSV_INIT("CLOUD OF POISON"),              WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_FAR_SIGHT,          castFarSight,           WAR_KEY_F,          0, 1, WSV_INIT("FAR SEEING"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_DARK_VISION,        castDarkVision,         WAR_KEY_D,          0, 1, WSV_INIT("DARK VISION"),                  WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_INVISIBILITY,       castInvisibility,       WAR_KEY_I,          0, 1, WSV_INIT("INVISIBILITY"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       castUnHolyArmor,        WAR_KEY_U,          0, 1, WSV_INIT("UNHOLY ARMOR"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       castRainOfFire,         WAR_KEY_R,          0, 1, WSV_INIT("RAIN OF FIRE"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_RAISE_DEAD,         castRaiseDead,          WAR_KEY_R,          0, 1, WSV_INIT("RAISE DEAD"),                   WSV_INIT("")                          },
 
     // summons
-    { WAR_COMMAND_SUMMON_SCORPION,          summonScorpion,         WAR_KEY_O,          9, 1, "SUMMON SCORPIONS",             ""                          },
-    { WAR_COMMAND_SUMMON_SPIDER,            summonSpider,           WAR_KEY_R,         12, 1, "SUMMON SPIDERS",               ""                          },
-    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   summonWaterElemental,   WAR_KEY_W,          7, 1, "SUMMON WATER ELEMENTAL",       ""                          },
-    { WAR_COMMAND_SUMMON_DAEMON,            summonDaemon,           WAR_KEY_D,          7, 1, "SUMMON DAEMON",                ""                          },
+    { WAR_COMMAND_SUMMON_SCORPION,          summonScorpion,         WAR_KEY_O,          9, 1, WSV_INIT("SUMMON SCORPIONS"),             WSV_INIT("")                          },
+    { WAR_COMMAND_SUMMON_SPIDER,            summonSpider,           WAR_KEY_R,         12, 1, WSV_INIT("SUMMON SPIDERS"),               WSV_INIT("")                          },
+    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   summonWaterElemental,   WAR_KEY_W,          7, 1, WSV_INIT("SUMMON WATER ELEMENTAL"),       WSV_INIT("")                          },
+    { WAR_COMMAND_SUMMON_DAEMON,            summonDaemon,           WAR_KEY_D,          7, 1, WSV_INIT("SUMMON DAEMON"),                WSV_INIT("")                          },
 
     // build commands
-    { WAR_COMMAND_BUILD_FARM_HUMANS,        buildFarmHumans,        WAR_KEY_F,          6, 1, "BUILD FARM",                   ""                          },
-    { WAR_COMMAND_BUILD_FARM_ORCS,          buildFarmOrcs,          WAR_KEY_F,          6, 1, "BUILD FARM",                   ""                          },
-    { WAR_COMMAND_BUILD_BARRACKS_HUMANS,    buildBarracksHumans,    WAR_KEY_B,          6, 1, "BUILD BARRACKS",               ""                          },
-    { WAR_COMMAND_BUILD_BARRACKS_ORCS,      buildBarracksOrcs,      WAR_KEY_B,          6, 1, "BUILD BARRACKS",               ""                          },
-    { WAR_COMMAND_BUILD_CHURCH,             buildChurch,            WAR_KEY_U,          8, 1, "BUILD CHURCH",                 ""                          },
-    { WAR_COMMAND_BUILD_TEMPLE,             buildTemple,            WAR_KEY_E,          7, 1, "BUILD TEMPLE",                 ""                          },
-    { WAR_COMMAND_BUILD_TOWER_HUMANS,       buildTowerHumans,       WAR_KEY_T,          6, 1, "BUILD TOWER",                  ""                          },
-    { WAR_COMMAND_BUILD_TOWER_ORCS,         buildTowerOrcs,         WAR_KEY_T,          6, 1, "BUILD TOWER",                  ""                          },
-    { WAR_COMMAND_BUILD_TOWNHALL_HUMANS,    buildTownHallHumans,    WAR_KEY_H,         11, 1, "BUILD TOWN HALL",              ""                          },
-    { WAR_COMMAND_BUILD_TOWNHALL_ORCS,      buildTownHallOrcs,      WAR_KEY_H,         11, 1, "BUILD TOWN HALL",              ""                          },
-    { WAR_COMMAND_BUILD_LUMBERMILL_HUMANS,  buildLumbermillHumans,  WAR_KEY_L,          6, 1, "BUILD LUMBER MILL",            ""                          },
-    { WAR_COMMAND_BUILD_LUMBERMILL_ORCS,    buildLumbermillOrcs,    WAR_KEY_L,          6, 1, "BUILD LUMBER MILL",            ""                          },
-    { WAR_COMMAND_BUILD_STABLE,             buildStable,            WAR_KEY_S,          6, 1, "BUILD STABLES",                ""                          },
-    { WAR_COMMAND_BUILD_KENNEL,             buildKennel,            WAR_KEY_K,          6, 1, "BUILD KENNEL",                 ""                          },
-    { WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,  buildBlacksmithHumans,  WAR_KEY_B,          6, 1, "BUILD BLACKSMITH",             ""                          },
-    { WAR_COMMAND_BUILD_BLACKSMITH_ORCS,    buildBlacksmithOrcs,    WAR_KEY_B,          6, 1, "BUILD BLACKSMITH",             ""                          },
-    { WAR_COMMAND_BUILD_ROAD,               buildRoad,              WAR_KEY_R,          6, 1, "BUILD ROAD",                   ""                          },
-    { WAR_COMMAND_BUILD_WALL,               buildWall,              WAR_KEY_W,          6, 1, "BUILD WALL",                   ""                          },
+    { WAR_COMMAND_BUILD_FARM_HUMANS,        buildFarmHumans,        WAR_KEY_F,          6, 1, WSV_INIT("BUILD FARM"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_FARM_ORCS,          buildFarmOrcs,          WAR_KEY_F,          6, 1, WSV_INIT("BUILD FARM"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_BARRACKS_HUMANS,    buildBarracksHumans,    WAR_KEY_B,          6, 1, WSV_INIT("BUILD BARRACKS"),               WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_BARRACKS_ORCS,      buildBarracksOrcs,      WAR_KEY_B,          6, 1, WSV_INIT("BUILD BARRACKS"),               WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_CHURCH,             buildChurch,            WAR_KEY_U,          8, 1, WSV_INIT("BUILD CHURCH"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TEMPLE,             buildTemple,            WAR_KEY_E,          7, 1, WSV_INIT("BUILD TEMPLE"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TOWER_HUMANS,       buildTowerHumans,       WAR_KEY_T,          6, 1, WSV_INIT("BUILD TOWER"),                  WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TOWER_ORCS,         buildTowerOrcs,         WAR_KEY_T,          6, 1, WSV_INIT("BUILD TOWER"),                  WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TOWNHALL_HUMANS,    buildTownHallHumans,    WAR_KEY_H,         11, 1, WSV_INIT("BUILD TOWN HALL"),              WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TOWNHALL_ORCS,      buildTownHallOrcs,      WAR_KEY_H,         11, 1, WSV_INIT("BUILD TOWN HALL"),              WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_LUMBERMILL_HUMANS,  buildLumbermillHumans,  WAR_KEY_L,          6, 1, WSV_INIT("BUILD LUMBER MILL"),            WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_LUMBERMILL_ORCS,    buildLumbermillOrcs,    WAR_KEY_L,          6, 1, WSV_INIT("BUILD LUMBER MILL"),            WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_STABLE,             buildStable,            WAR_KEY_S,          6, 1, WSV_INIT("BUILD STABLES"),                WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_KENNEL,             buildKennel,            WAR_KEY_K,          6, 1, WSV_INIT("BUILD KENNEL"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,  buildBlacksmithHumans,  WAR_KEY_B,          6, 1, WSV_INIT("BUILD BLACKSMITH"),             WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_BLACKSMITH_ORCS,    buildBlacksmithOrcs,    WAR_KEY_B,          6, 1, WSV_INIT("BUILD BLACKSMITH"),             WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_ROAD,               buildRoad,              WAR_KEY_R,          6, 1, WSV_INIT("BUILD ROAD"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_WALL,               buildWall,              WAR_KEY_W,          6, 1, WSV_INIT("BUILD WALL"),                   WSV_INIT("")                          },
 
     // upgrades
-    { WAR_COMMAND_UPGRADE_SWORDS,           upgradeSwords,          WAR_KEY_W,          9, 1, "UPGRADE SWORD STRENGTH",       "RESEARCHING WEAPONRY"      },
-    { WAR_COMMAND_UPGRADE_AXES,             upgradeAxes,            WAR_KEY_A,          8, 1, "UPGRADE AXE STRENGTH",         "RESEARCHING WEAPONRY"      },
-    { WAR_COMMAND_UPGRADE_SHIELD_HUMANS,    upgradeHumanShields,    WAR_KEY_H,          9, 1, "UPGRADE SHIELD STRENGTH",      "RESEARCHING ARMOR"         },
-    { WAR_COMMAND_UPGRADE_SHIELD_ORCS,      upgradeOrcsShields,     WAR_KEY_H,          9, 1, "UPGRADE SHIELD STRENGTH",      "RESEARCHING ARMOR"         },
-    { WAR_COMMAND_UPGRADE_ARROWS,           upgradeArrows,          WAR_KEY_U,          0, 1, "UPGRADE ARROW STRENGTH",       "RESEARCHING WEAPONRY"      },
-    { WAR_COMMAND_UPGRADE_SPEARS,           upgradeSpears,          WAR_KEY_U,          0, 1, "UPGRADE SPEAR STRENGTH",       "RESEARCHING WEAPONRY"      },
-    { WAR_COMMAND_UPGRADE_HORSES,           upgradeHorses,          WAR_KEY_B,          0, 1, "BREED FASTER HORSES",          "BREADING BETTER STOCK"     },
-    { WAR_COMMAND_UPGRADE_WOLVES,           upgradeWolves,          WAR_KEY_B,          0, 1, "BREED FASTER WOLVES",          "BREADING BETTER STOCK"     },
-    { WAR_COMMAND_UPGRADE_SCORPION,         upgradeScorpions,       WAR_KEY_M,          9, 1, "RESEARCH MINOR SUMMONING",     "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_SPIDER,           upgradeSpiders,         WAR_KEY_M,          9, 1, "RESEARCH MINOR SUMMONING",     "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_RAIN_OF_FIRE,     upgradeRainOfFire,      WAR_KEY_R,          9, 1, "RESEARCH RAIN OF FIRE",        "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_POISON_CLOUD,     upgradePoisonCloud,     WAR_KEY_P,         18, 1, "RESEARCH CLOUD OF POISON",     "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_WATER_ELEMENTAL,  upgradeWaterElemental,  WAR_KEY_A,         10, 1, "RESEARCH MAJOR SUMMONING",     "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_DAEMON,           upgradeDaemon,          WAR_KEY_A,         10, 1, "RESEARCH MAJOR SUMMONING",     "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_HEALING,          upgradeHealing,         WAR_KEY_H,          9, 1, "RESEARCH HEALING",             "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_RAISE_DEAD,       upgradeRaiseDead,       WAR_KEY_R,          9, 1, "RESEARCH RAISING DEAD",        "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_FAR_SIGHT,        upgradeFarSight,        WAR_KEY_F,          9, 1, "RESEARCH FAR SEEING",          "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_DARK_VISION,      upgradeDarkVision,      WAR_KEY_D,          9, 1, "RESEARCH DARK VISION",         "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_INVISIBILITY,     upgradeInvisibility,    WAR_KEY_I,          9, 1, "RESEARCH INVISIBILITY",        "RESEARCHING NEW SPELL"     },
-    { WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,     upgradeUnholyArmor,     WAR_KEY_U,          9, 1, "RESEARCH UNHOLY ARMOR",        "RESEARCHING NEW SPELL"     },
+    { WAR_COMMAND_UPGRADE_SWORDS,           upgradeSwords,          WAR_KEY_W,          9, 1, WSV_INIT("UPGRADE SWORD STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
+    { WAR_COMMAND_UPGRADE_AXES,             upgradeAxes,            WAR_KEY_A,          8, 1, WSV_INIT("UPGRADE AXE STRENGTH"),         WSV_INIT("RESEARCHING WEAPONRY")      },
+    { WAR_COMMAND_UPGRADE_SHIELD_HUMANS,    upgradeHumanShields,    WAR_KEY_H,          9, 1, WSV_INIT("UPGRADE SHIELD STRENGTH"),      WSV_INIT("RESEARCHING ARMOR")         },
+    { WAR_COMMAND_UPGRADE_SHIELD_ORCS,      upgradeOrcsShields,     WAR_KEY_H,          9, 1, WSV_INIT("UPGRADE SHIELD STRENGTH"),      WSV_INIT("RESEARCHING ARMOR")         },
+    { WAR_COMMAND_UPGRADE_ARROWS,           upgradeArrows,          WAR_KEY_U,          0, 1, WSV_INIT("UPGRADE ARROW STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
+    { WAR_COMMAND_UPGRADE_SPEARS,           upgradeSpears,          WAR_KEY_U,          0, 1, WSV_INIT("UPGRADE SPEAR STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
+    { WAR_COMMAND_UPGRADE_HORSES,           upgradeHorses,          WAR_KEY_B,          0, 1, WSV_INIT("BREED FASTER HORSES"),          WSV_INIT("BREADING BETTER STOCK")     },
+    { WAR_COMMAND_UPGRADE_WOLVES,           upgradeWolves,          WAR_KEY_B,          0, 1, WSV_INIT("BREED FASTER WOLVES"),          WSV_INIT("BREADING BETTER STOCK")     },
+    { WAR_COMMAND_UPGRADE_SCORPION,         upgradeScorpions,       WAR_KEY_M,          9, 1, WSV_INIT("RESEARCH MINOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_SPIDER,           upgradeSpiders,         WAR_KEY_M,          9, 1, WSV_INIT("RESEARCH MINOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_RAIN_OF_FIRE,     upgradeRainOfFire,      WAR_KEY_R,          9, 1, WSV_INIT("RESEARCH RAIN OF FIRE"),        WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_POISON_CLOUD,     upgradePoisonCloud,     WAR_KEY_P,         18, 1, WSV_INIT("RESEARCH CLOUD OF POISON"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_WATER_ELEMENTAL,  upgradeWaterElemental,  WAR_KEY_A,         10, 1, WSV_INIT("RESEARCH MAJOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_DAEMON,           upgradeDaemon,          WAR_KEY_A,         10, 1, WSV_INIT("RESEARCH MAJOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_HEALING,          upgradeHealing,         WAR_KEY_H,          9, 1, WSV_INIT("RESEARCH HEALING"),             WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_RAISE_DEAD,       upgradeRaiseDead,       WAR_KEY_R,          9, 1, WSV_INIT("RESEARCH RAISING DEAD"),        WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_FAR_SIGHT,        upgradeFarSight,        WAR_KEY_F,          9, 1, WSV_INIT("RESEARCH FAR SEEING"),          WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_DARK_VISION,      upgradeDarkVision,      WAR_KEY_D,          9, 1, WSV_INIT("RESEARCH DARK VISION"),         WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_INVISIBILITY,     upgradeInvisibility,    WAR_KEY_I,          9, 1, WSV_INIT("RESEARCH INVISIBILITY"),        WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,     upgradeUnholyArmor,     WAR_KEY_U,          9, 1, WSV_INIT("RESEARCH UNHOLY ARMOR"),        WSV_INIT("RESEARCHING NEW SPELL")     },
 
     // cancel
-    { WAR_COMMAND_CANCEL,                   cancel,                 WAR_KEY_ESC,        0, 3, "ESC - CANCEL",                 ""                          }
+    { WAR_COMMAND_CANCEL,                   cancel,                 WAR_KEY_ESC,        0, 3, WSV_INIT("ESC - CANCEL"),                 WSV_INIT("")                          }
 };
 
 typedef struct
@@ -961,7 +966,7 @@ typedef struct
     WarKeys hotKey;
     s32 highlightIndex;
     s32 highlightCount;
-    char tooltip[100];
+    StringView tooltip;
     WarClickHandler clickHandler;
 } WarUnitCommandData;
 

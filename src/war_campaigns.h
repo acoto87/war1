@@ -6,9 +6,9 @@ typedef struct
 {
     WarCampaignMapType type;
     WarCheckObjectivesFunc checkObjectivesFunc;
-    const char* objectives;
+    String objectives;
     WarAudioId briefingAudioId;
-    const char* briefingText;
+    String briefingText;
     f32 briefingDuration;
 } WarCampaignMapData;
 

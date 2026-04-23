@@ -2,11 +2,11 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <string.h>
+
+#include "shl/wstr.h"
 
 #include "alloc.h"
 #include "war_log.h"
-#include "str.h"
 
 #define WAR_REQUEST_MESSAGE_MAX_SIZE 2048
 #define WAR_URL_BUFFER_MAX_SIZE 1024
@@ -17,7 +17,7 @@
 #define closeSocket close
 #endif
 
-bool initNetwork()
+bool initNetwork(void)
 {
 #if _WIN32
     WSADATA wsaData;
@@ -32,7 +32,7 @@ bool initNetwork()
     return true;
 }
 
-bool cleanNetwork()
+bool cleanNetwork(void)
 {
 #if _WIN32
     s32 status = WSACleanup();
@@ -46,15 +46,16 @@ bool cleanNetwork()
     return true;
 }
 
-WarSocket connectToHost(const char* host)
+WarSocket connectToHost(StringView host)
 {
-    struct hostent* hostEntry = gethostbyname(host);
+    const char* hostStr = wsv_data(host);
+    struct hostent* hostEntry = gethostbyname(hostStr);
     if(!hostEntry)
     {
 #if _WIN32
-        logError("Couldn't create socket to host %s. Errno: %d", host, WSAGetLastError());
+        logError("Couldn't create socket to host %s. Errno: %d", hostStr, WSAGetLastError());
 #else
-        logError("Couldn't create socket to host %s. Errno: %d", host, h_errno);
+        logError("Couldn't create socket to host %s. Errno: %d", hostStr, h_errno);
 #endif
 
         return 0;
@@ -64,9 +65,9 @@ WarSocket connectToHost(const char* host)
     if(sck == INVALID_SOCKET)
     {
 #if _WIN32
-        logError("Couldn't create socket to host %s. Last error: %d", host, WSAGetLastError());
+        logError("Couldn't create socket to host %s. Last error: %d", hostStr, WSAGetLastError());
 #else
-        logError("Couldn't create socket to host %s. Last error: %d", host, errno);
+        logError("Couldn't create socket to host %s. Last error: %d", hostStr, errno);
 #endif
 
         return 0;
@@ -81,9 +82,9 @@ WarSocket connectToHost(const char* host)
     if(status == SOCKET_ERROR)
     {
 #if _WIN32
-        logError("Couldn't connect socket to host %s. Last error: %d", host, WSAGetLastError());
+        logError("Couldn't connect socket to host %s. Last error: %d", hostStr, WSAGetLastError());
 #else
-        logError("Couldn't connect socket to host %s. Last error: %d", host, errno);
+        logError("Couldn't connect socket to host %s. Last error: %d", hostStr, errno);
 #endif
 
         closeSocket(sck);
@@ -94,16 +95,18 @@ WarSocket connectToHost(const char* host)
     return sck;
 }
 
-bool requestResource(WarSocket sck, const char* resource, const char* host)
+bool requestResource(WarSocket sck, StringView resource, StringView host)
 {
-    size32 resourcelen = strlen(resource);
-    size32 hostlen = strlen(host);
+    const char* resourceStr = wsv_data(resource);
+    const char* hostStr = wsv_data(host);
+    size32 resourcelen = strlen(resourceStr);
+    size32 hostlen = strlen(hostStr);
     size32 requestLength;
     size32 hostRequestLength;
 
-    if (resourcelen > 0 && resource[0] == '/')
+    if (resourcelen > 0 && resourceStr[0] == '/')
     {
-        resource++;
+        resourceStr++;
         resourcelen--;
     }
 
@@ -113,12 +116,12 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     if (requestLength > WAR_REQUEST_MESSAGE_MAX_SIZE ||
         hostRequestLength > WAR_REQUEST_MESSAGE_MAX_SIZE)
     {
-        logError("The host or resource are too long to build the HTTP request: host=%s, resource=%s.", host, resource);
+        logError("The host or resource are too long to build the HTTP request: host=%s, resource=%s.", hostStr, resourceStr);
         return false;
     }
 
     char message[WAR_REQUEST_MESSAGE_MAX_SIZE];
-    snprintf(message, sizeof(message), "GET /%s HTTP/1.1\r\n", resource);
+    snprintf(message, sizeof(message), "GET /%s HTTP/1.1\r\n", resourceStr);
     s32 status = send(sck, message, (s32)strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
@@ -132,7 +135,7 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     }
 
     memset(message, 0, sizeof(message));
-    snprintf(message, sizeof(message), "Host: %s\r\n\r\n", host);
+    snprintf(message, sizeof(message), "Host: %s\r\n\r\n", hostStr);
     status = send(sck, message, (s32)strlen(message), 0);
     if (status == SOCKET_ERROR)
     {
@@ -148,61 +151,53 @@ bool requestResource(WarSocket sck, const char* resource, const char* host)
     return true;
 }
 
-s32 parseHeadersFromResponse(const char* response, s32 responseLength, SSMap* headers)
+s32 parseHeadersFromResponse(StringView response, s32 responseLength, StringViewMap* headers)
 {
-    // Example of headers in a HTTP response
-    //
-    // HTTP/1.1 200 OK
-    // Server: nginx/1.14.0 (Ubuntu)
-    // Date: Mon, 06 Jan 2020.00:52:11 GMT
-    // Content-Type: application/octet-stream
-    // Transfer-Encoding: chunked
-    // Connection: keep-alive
-    // Cache-Control: public, max-age=10800
-    // Content-Disposition: attachment; filename="DATA.WAR"
-    // Strict-Transport-Security: max-age=15724800
-    // ..
-    // ff3a..
-
-    // parse status line
-    const char* line = response;
-    size32 lineLength = strcspn(line, "\r\n");
     NOT_USED(responseLength);
+    StringView view = response;
 
-    size32 httpVersionLength = strcspn(line, " ");
-    char* httpVersion = (char*)xcalloc(httpVersionLength + 1, sizeof(char));
-    strncpy(httpVersion, line, httpVersionLength);
-    SSMapSet(headers, "HttpVersion", httpVersion);
-
-    line += httpVersionLength + 1;
-
-    size32 responseStatusLength = lineLength - (httpVersionLength + 1);
-    char* responseStatus = (char*)xcalloc(responseStatusLength + 1, sizeof(char));
-    strncpy(responseStatus, line, responseStatusLength);
-    SSMapSet(headers, "ResponseStatus", responseStatus);
-
-    line += responseStatusLength + 2;
-
-    // parse headers until there is a line that only have \r\n
-    lineLength = strcspn(line, "\r\n");
-    while (lineLength > 0)
+    size_t headersEnd = wsv_find(view, wsv_fromCString("\r\n\r\n"));
+    if (headersEnd == WSV_NPOS)
     {
-        size32 headerNameLength = strcspn(line, ":");
-        char* headerName = (char*)xcalloc(headerNameLength + 1, sizeof(char));
-        strncpy(headerName, line, headerNameLength);
-
-        size32 headerValueLength = lineLength - (headerNameLength + 2);
-        char* headerValue = (char*)xcalloc(headerValueLength + 1, sizeof(char));
-        strncpy(headerValue, line + headerNameLength + 2, headerValueLength);
-
-        SSMapSet(headers, headerName, headerValue);
-
-        line += lineLength + 2;
-        lineLength = strcspn(line, "\r\n");
+        return 0;
     }
 
-    s32 advance = (s32)(line - response) + 2;
-    return advance;
+    StringView headersText = wsv_slice(view, 0, headersEnd);
+
+    // parse status line
+    StringView line = wsv_chopByDelimiter(&headersText, '\n');
+    line = wsv_trimRight(line); // Remove '\r'
+
+    StringView httpVersion;
+    if (wsv_splitOnce(line, wsv_fromCString(" "), &httpVersion, &line))
+    {
+        StringViewMapSet(headers, wsv_fromCString("HttpVersion"), wsv_toString(httpVersion));
+
+        line = wsv_trimLeft(line);
+        StringViewMapSet(headers, wsv_fromCString("ResponseStatus"), wsv_toString(line));
+    }
+
+    // parse headers
+    while (headersText.length > 0)
+    {
+        line = wsv_chopByDelimiter(&headersText, '\n');
+        line = wsv_trimRight(line); // Remove '\r'
+
+        if (wsv_isEmpty(line))
+        {
+            continue;
+        }
+
+        StringView headerName, headerValue;
+        if (wsv_splitOnce(line, wsv_fromCString(":"), &headerName, &headerValue))
+        {
+            headerValue = wsv_trimLeft(headerValue);
+            StringViewMapSet(headers, headerName, wsv_toString(headerValue));
+        }
+    }
+
+    // Return the number of bytes consumed including the \r\n\r\n
+    return (s32)(headersEnd + 4);
 }
 
 s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
@@ -237,43 +232,46 @@ s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
     return responseLength;
 }
 
-bool downloadFileFromUrl(const char* url, const char* filePath)
+bool downloadFileFromUrl(StringView url, StringView filePath)
 {
-    if(!url || !filePath)
+    const char* urlStr = wsv_data(url);
+    const char* filePathStr = wsv_data(filePath);
+
+    if(!urlStr || !filePathStr)
     {
         return false;
     }
 
     u16 shift = 0;
-    if(strncasecmp(url, "http://", strlen("http://")) == 0)
+    if(strncasecmp(urlStr, "http://", strlen("http://")) == 0)
     {
         shift = (u16)strlen("http://");
     }
 
-    if (strncasecmp(url + shift, "www.", strlen("www.")) == 0)
+    if (strncasecmp(urlStr + shift, "www.", strlen("www.")) == 0)
     {
         shift += (u16)strlen("www.");
     }
 
-    size32 urlLength = strlen(url);
+    size32 urlLength = strlen(urlStr);
     if (shift > urlLength)
     {
-        logError("The url has an invalid prefix offset: %s", url);
+        logError("The url has an invalid prefix offset: %s", urlStr);
         return false;
     }
 
     size32 cutLength = urlLength - shift + 1;
     if (cutLength > WAR_URL_BUFFER_MAX_SIZE)
     {
-        logError("The url is too long to parse: %s", url);
+        logError("The url is too long to parse: %s", urlStr);
         return false;
     }
 
     char cut[WAR_URL_BUFFER_MAX_SIZE];
-    strcpy(cut, url + shift);
+    strcpy(cut, urlStr + shift);
 
     const char* host = strtok(cut, "/");
-    const char* resource = url + shift + strlen(host);
+    const char* resource = urlStr + shift + strlen(host);
 
     if (!initNetwork())
     {
@@ -281,7 +279,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    WarSocket sck = connectToHost(host);
+    WarSocket sck = connectToHost(wsv_fromCString(host));
     if (!sck)
     {
         logError("Couldn't connect to host: %s", host);
@@ -289,9 +287,9 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    if (!requestResource(sck, resource, host))
+    if (!requestResource(sck, wsv_fromCString(resource), wsv_fromCString(host)))
     {
-        logError("Couldn't download file from url %s", url);
+        logError("Couldn't download file from url %s", urlStr);
         closeSocket(sck);
         cleanNetwork();
         return false;
@@ -304,7 +302,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (responseLength < 0)
     {
-        logError("Couldn't receive response from url %s", url);
+        logError("Couldn't receive response from url %s", urlStr);
 
         closeSocket(sck);
         cleanNetwork();
@@ -313,10 +311,10 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    SDL_IOStream *stream = SDL_IOFromFile(filePath, "wb");
+    SDL_IOStream *stream = SDL_IOFromFile(filePathStr, "wb");
     if (!stream)
     {
-        logError("Couldn't create a new file at: %s", filePath);
+        logError("Couldn't create a new file at: %s", filePathStr);
 
         closeSocket(sck);
         cleanNetwork();
@@ -327,7 +325,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
 
     if (responseLength == 0)
     {
-        logError("The response was empty from %s", url);
+        logError("The response was empty from %s", urlStr);
 
         closeSocket(sck);
         cleanNetwork();
@@ -337,26 +335,22 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return true;
     }
 
-    SSMapOptions options = (SSMapOptions){0};
-    options.defaultValue = NULL;
-    options.hashFn = strHashFNV32;
-    options.equalsFn = wutil_strEquals;
-    options.freeFn = wutil_strFree;
+    StringViewMapOptions options = StringViewMapDefaultOptions;
 
-    SSMap headers;
-    SSMapInit(&headers, options);
+    StringViewMap headers;
+    StringViewMapInit(&headers, options);
 
-    s32 readFromResponse = parseHeadersFromResponse(response, responseLength, &headers);
+    s32 readFromResponse = parseHeadersFromResponse(wsv_fromParts(response, responseLength), responseLength, &headers);
 
     responsePtr += readFromResponse;
     responseLength -= readFromResponse;
 
-    const char* responseStatus = SSMapGet(&headers, "ResponseStatus");
-    if (!wutil_strEquals(responseStatus, "200 OK"))
+    String responseStatus = StringViewMapGet(&headers, wsv_fromCString("ResponseStatus"));
+    if (!responseStatus.data || !wsv_equals(wstr_view(&responseStatus), wsv_fromCString("200 OK")))
     {
-        logError("The response status is not successful, received %s", responseStatus);
+        logError("The response status is not successful, received %s", responseStatus.data ? wstr_cstr(&responseStatus) : "NULL");
 
-        SSMapFree(&headers);
+        StringViewMapFree(&headers);
 
         closeSocket(sck);
         cleanNetwork();
@@ -366,12 +360,12 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    const char* contentType = SSMapGet(&headers, "Content-Type");
-    if (!wutil_strEquals(contentType, "application/octet-stream"))
+    String contentType = StringViewMapGet(&headers, wsv_fromCString("Content-Type"));
+    if (!contentType.data || !wsv_equals(wstr_view(&contentType), wsv_fromCString("application/octet-stream")))
     {
-        logError("The content type of the response should be binary, received: %s", contentType);
+        logError("The content type of the response should be binary, received: %s", contentType.data ? wstr_cstr(&contentType) : "NULL");
 
-        SSMapFree(&headers);
+        StringViewMapFree(&headers);
 
         closeSocket(sck);
         cleanNetwork();
@@ -381,12 +375,12 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    const char* contentDisposition = SSMapGet(&headers, "Content-Disposition");
-    if (!strstr(contentDisposition, "attachment"))
+    String contentDisposition = StringViewMapGet(&headers, wsv_fromCString("Content-Disposition"));
+    if (!contentDisposition.data || wsv_find(wstr_view(&contentDisposition), wsv_fromCString("attachment")) == WSV_NPOS)
     {
-        logError("The content disposition of the response should be 'attachment', received: %s", contentDisposition);
+        logError("The content disposition of the response should be 'attachment', received: %s", contentDisposition.data ? wstr_cstr(&contentDisposition) : "NULL");
 
-        SSMapFree(&headers);
+        StringViewMapFree(&headers);
 
         closeSocket(sck);
         cleanNetwork();
@@ -396,8 +390,8 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         return false;
     }
 
-    const char* transferEncoding = SSMapGet(&headers, "Transfer-Encoding");
-    if (transferEncoding && wutil_strEquals(transferEncoding, "chunked"))
+    String transferEncoding = StringViewMapGet(&headers, wsv_fromCString("Transfer-Encoding"));
+    if (transferEncoding.data && wsv_equals(wstr_view(&transferEncoding), wsv_fromCString("chunked")))
     {
         while (responseLength > 0)
         {
@@ -426,7 +420,7 @@ bool downloadFileFromUrl(const char* url, const char* filePath)
         SDL_WriteIO(stream, responsePtr, responseLength);
     }
 
-    SSMapFree(&headers);
+    StringViewMapFree(&headers);
 
     closeSocket(sck);
     cleanNetwork();

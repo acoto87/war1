@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdarg.h>
 #include <time.h>
 #include <math.h>
@@ -59,16 +58,16 @@
 #include "shl/set.h"
 #define SHL_MEMORY_BUFFER_IMPLEMENTATION
 #include "shl/memory_buffer.h"
-#define SHL_WAVE_WRITER_IMPLEMENTATION
-#include "shl/wave_writer.h"
+#define SHL_WAV_IMPLEMENTATION
+#include "shl/wav.h"
+#include "alloc.h"
 #define WSTR_MALLOC(sz)       xmalloc(sz)
 #define WSTR_REALLOC(p, sz)   xrealloc(p, sz)
-#define WSTR_FREE(p)          xfree(p)
+#define WSTR_FREE(p)          free(p)
 #define SHL_WSTR_IMPLEMENTATION
 #include "shl/wstr.h"
 
 #include "war_log.h"
-#include "str.h"
 #include "alloc.h"
 #include "common.h"
 #include "war_color.h"
@@ -92,7 +91,7 @@
 #include "war_ai.h"
 #include "war_game.h"
 
-int main()
+int main(void)
 {
     srand((unsigned int)time(NULL));
 
@@ -128,8 +127,8 @@ int main()
             }
         }
 
-        sprintf(context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
-        SDL_SetWindowTitle(context.window, context.windowTitle);
+        wstr_setFormat(&context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
+        SDL_SetWindowTitle(context.window, wstr_cstr(&context.windowTitle));
 
         updateGame(&context);
         renderGame(&context);
@@ -141,7 +140,6 @@ int main()
 }
 
 #include "war_log.c"
-#include "str.c"
 #include "alloc.c"
 #include "war_file.c"
 #include "war_audio.c"

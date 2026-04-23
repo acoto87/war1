@@ -2,9 +2,9 @@
 
 #include <assert.h>
 #include <stdarg.h>
-#include <string.h>
 
 #include "SDL3/SDL.h"
+#include "shl/wstr.h"
 
 #include "war_font.h"
 #include "war_ui.h"
@@ -18,7 +18,7 @@ void setCheatsPanelVisible(WarContext* context, bool visible)
     WarCheatStatus* cheatStatus = scene
         ? &scene->cheatStatus : &map->cheatStatus;
 
-    memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
+    wstr_clear(&cheatStatus->text);
     cheatStatus->position = 0;
     cheatStatus->visible = visible;
 
@@ -32,7 +32,7 @@ void setCheatsPanelVisible(WarContext* context, bool visible)
     }
 }
 
-void setCheatsFeedback(WarContext* context, const char* feedbackText)
+void setCheatsFeedback(WarContext* context, String feedbackText)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -41,43 +41,22 @@ void setCheatsFeedback(WarContext* context, const char* feedbackText)
     WarCheatStatus* cheatStatus = scene
         ? &scene->cheatStatus : &map->cheatStatus;
 
-    if (feedbackText)
+    if (cheatStatus->feedbackText.data)
+    {
+        wstr_free(cheatStatus->feedbackText);
+        cheatStatus->feedbackText = wstr_make();
+    }
+
+    if (feedbackText.data)
     {
         cheatStatus->feedback = true;
         cheatStatus->feedbackTime = 3.0f;
-        memset(cheatStatus->feedbackText, 0, sizeof(cheatStatus->feedbackText));
-        strcpy(cheatStatus->feedbackText, feedbackText);
+        cheatStatus->feedbackText = feedbackText;
     }
     else
     {
         cheatStatus->feedback = false;
-    }
-}
-
-void setCheatsFeedbackFormat(WarContext* context, const char* feedbackTextFormat, ...)
-{
-    WarScene* scene = context->scene;
-    WarMap* map = context->map;
-    assert(scene || map);
-
-    WarCheatStatus* cheatStatus = scene
-        ? &scene->cheatStatus : &map->cheatStatus;
-
-    if (feedbackTextFormat)
-    {
-        cheatStatus->feedback = true;
-        cheatStatus->feedbackTime = 3.0f;
-
-        memset(cheatStatus->feedbackText, 0, sizeof(cheatStatus->feedbackText));
-
-        va_list args;
-        va_start(args, feedbackTextFormat);
-        vsprintf(cheatStatus->feedbackText, feedbackTextFormat, args);
-        va_end(args);
-    }
-    else
-    {
-        cheatStatus->feedback = false;
+        cheatStatus->feedbackTime = 0.0f;
     }
 }
 
@@ -90,35 +69,32 @@ void createCheatsPanel(WarContext* context)
     cheatStatus->enabled = true;
     cheatStatus->visible = false;
     cheatStatus->position = 0;
-    memset(cheatStatus->text, 0, sizeof(cheatStatus->text));
+    wstr_clear(&cheatStatus->text);
 
     WarEntity* uiEntity;
 
     vec2 cheatSize = vec2f((f32)context->originalWindowWidth, 12.0f);
     WarColor cheatBackgroundColor = WAR_COLOR_RGBA(100, 100, 100, 160);
-    uiEntity = createUIRect(context, "panelCheat", VEC2_ZERO, cheatSize, cheatBackgroundColor);
+    uiEntity = createUIRect(context, wstr_fromCString("panelCheat"), VEC2_ZERO, cheatSize, cheatBackgroundColor);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, "txtCheat", 0, 6, NULL, vec2i(2, 4));
+    uiEntity = createUIText(context, wstr_fromCString("txtCheat"), 0, 6, wstr_make(), vec2i(2, 4));
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIRect(context, "cursorCheat", vec2i(2, 3), vec2i(1, 7), WAR_COLOR_WHITE);
+    uiEntity = createUIRect(context, wstr_fromCString("cursorCheat"), vec2i(2, 3), vec2i(1, 7), WAR_COLOR_WHITE);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, "txtCheatFeedbackText", 1, 8, NULL, vec2i(10, 20));
+    uiEntity = createUIText(context, wstr_fromCString("txtCheatFeedbackText"), 1, 8, wstr_make(), vec2i(10, 20));
     setUITextColor(uiEntity, WAR_COLOR_YELLOW);
     setUIEntityStatus(uiEntity, false);
 }
 
-void setCheatText(WarContext* context, char* text, ...)
+void setCheatText(WarContext* context, String text)
 {
-    WarEntity* txtCheat = findUIEntity(context, "txtCheat");
+    WarEntity* txtCheat = findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(txtCheat);
 
-    va_list args;
-    va_start (args, text);
-    setUITextFormatv(txtCheat, text, args);
-    va_end (args);
+    setUIText(txtCheat, text);
 }
 
 void updateCheatsPanel(WarContext* context)
@@ -132,15 +108,15 @@ void updateCheatsPanel(WarContext* context)
     if (!cheatStatus->enabled)
         return;
 
-    WarEntity* cheatPanel = findUIEntity(context, "panelCheat");
+    WarEntity* cheatPanel = findUIEntity(context, wsv_fromCString("panelCheat"));
 
-    WarEntity* cheatCursor = findUIEntity(context, "cursorCheat");
+    WarEntity* cheatCursor = findUIEntity(context, wsv_fromCString("cursorCheat"));
     assert(cheatCursor);
 
-    WarEntity* cheatText = findUIEntity(context, "txtCheat");
+    WarEntity* cheatText = findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(cheatText);
 
-    WarEntity* cheatFeedbackText = findUIEntity(context, "txtCheatFeedbackText");
+    WarEntity* cheatFeedbackText = findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
     assert(cheatFeedbackText);
 
     if (cheatStatus->feedback)
@@ -167,7 +143,7 @@ void updateCheatsPanel(WarContext* context)
         {
             if (wasKeyPressed(input, WAR_KEY_ENTER))
             {
-                applyCheat(context, cheatStatus->text);
+                applyCheat(context, wstr_view(&cheatStatus->text));
             }
 
             setCheatsPanelVisible(context, false);
@@ -176,10 +152,10 @@ void updateCheatsPanel(WarContext* context)
 
         if (wasKeyPressed(input, WAR_KEY_TAB))
         {
-            s32 length = (s32)strlen(cheatStatus->text);
+            s32 length = (s32)cheatStatus->text.length;
             if (TAB_WIDTH <= STATUS_TEXT_MAX_LENGTH - length)
             {
-                wutil_strInsertAt(cheatStatus->text, cheatStatus->position, '\t');
+                wstr_insert(&cheatStatus->text, cheatStatus->position, wsv_fromCString("\t"));
                 cheatStatus->position++;
             }
         }
@@ -187,21 +163,21 @@ void updateCheatsPanel(WarContext* context)
         {
             if (cheatStatus->position > 0)
             {
-                wutil_strRemoveAt(cheatStatus->text, cheatStatus->position - 1);
+                wstr_removeRange(&cheatStatus->text, cheatStatus->position - 1, 1);
                 cheatStatus->position--;
             }
         }
         else if (wasKeyPressed(input, WAR_KEY_DELETE))
         {
-            s32 length = (s32)strlen(cheatStatus->text);
+            s32 length = (s32)cheatStatus->text.length;
             if (cheatStatus->position < length)
             {
-                wutil_strRemoveAt(cheatStatus->text, cheatStatus->position);
+                wstr_removeRange(&cheatStatus->text, cheatStatus->position, 1);
             }
         }
         else if (wasKeyPressed(input, WAR_KEY_RIGHT))
         {
-            s32 length = (s32)strlen(cheatStatus->text);
+            s32 length = (s32)cheatStatus->text.length;
             if (cheatStatus->position < length)
             {
                 cheatStatus->position++;
@@ -220,22 +196,22 @@ void updateCheatsPanel(WarContext* context)
         }
         else if (wasKeyPressed(input, WAR_KEY_END))
         {
-            s32 length = (s32)strlen(cheatStatus->text);
+            s32 length = (s32)cheatStatus->text.length;
             cheatStatus->position = length;
         }
 
-        char statusText[STATUS_TEXT_MAX_LENGTH];
-        memset(statusText, 0, sizeof(statusText));
-        strcpy(statusText, "MSG: ");
-        strcpy(statusText + strlen("MSG: "), cheatStatus->text);
+        StringView prefix = wsv_fromCString("MSG: ");
+        StringView cheatStatusText = wstr_view(&cheatStatus->text);
+
+        String statusText = wstr_concat(prefix, cheatStatusText);
         setCheatText(context, statusText);
 
         WarFontParams params = {0};
         params.fontSize = cheatText->text.fontSize;
-        params.fontData = fontsData[cheatText->text.fontIndex];
+        params.fontData = getFontData(cheatText->text.fontIndex);
 
-        vec2 prefixSize = measureSingleSpriteText("MSG: ", (s32)strlen("MSG: "), params);
-        vec2 textSize = measureSingleSpriteText(cheatStatus->text, cheatStatus->position, params);
+        vec2 prefixSize = measureSingleSpriteText(prefix, (s32)wsv_length(prefix), params);
+        vec2 textSize = measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
         cheatCursor->transform.position.x = prefixSize.x + textSize.x;
 
         setUIEntityStatus(cheatPanel, true);

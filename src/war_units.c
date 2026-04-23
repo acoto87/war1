@@ -915,7 +915,7 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
     data.hotKey = commandBaseData.hotKey;
     data.highlightIndex = commandBaseData.highlightIndex;
     data.highlightCount = commandBaseData.highlightCount;
-    strcpy(data.tooltip, commandBaseData.tooltip);
+    data.tooltip = commandBaseData.tooltip;
     data.clickHandler = commandBaseData.clickHandler;
 
     switch (commandType)

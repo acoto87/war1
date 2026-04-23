@@ -2,7 +2,6 @@
 
 #include <assert.h>
 #include <math.h>
-#include <string.h>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
@@ -14,7 +13,8 @@
 #include <unistd.h>
 #endif
 
-#include "str.h"
+#include "shl/wstr.h"
+
 #include "war_audio.h"
 #include "war_file.h"
 #include "war_font.h"
@@ -128,7 +128,7 @@ static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
     }
 }
 
-static void appendCheatTextInput(WarContext* context, const char* text)
+static void appendCheatTextInput(WarContext* context, StringView text)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -142,17 +142,18 @@ static void appendCheatTextInput(WarContext* context, const char* text)
         return;
     }
 
-    const char* cursor = text;
-    size_t remaining = strlen(text);
+    const char* cursor = wsv_data(text);
+    size_t remaining = text.length;
     while (remaining > 0)
     {
         Uint32 codepoint = SDL_StepUTF8(&cursor, &remaining);
         if (codepoint >= 32 && codepoint <= 126)
         {
-            s32 length = (s32)strlen(cheatStatus->text);
+            s32 length = (s32)cheatStatus->text.length;
             if (length + 1 < CHEAT_TEXT_MAX_LENGTH)
             {
-                wutil_strInsertAt(cheatStatus->text, cheatStatus->position, (char)codepoint);
+                char c = (char)codepoint;
+                wstr_insert(&cheatStatus->text, cheatStatus->position, wsv_fromParts(&c, 1));
                 cheatStatus->position++;
             }
         }
@@ -167,8 +168,8 @@ bool initGame(WarContext* context)
     context->originalWindowHeight = 200;
     context->windowWidth = (s32)(context->originalWindowWidth * context->globalScale);
     context->windowHeight = (s32)(context->originalWindowHeight * context->globalScale);
-    strcpy(context->windowTitle, "War 1");
-    context->window = SDL_CreateWindow(context->windowTitle, context->windowWidth, context->windowHeight, 0);
+    wstr_assignCString(&context->windowTitle, "War 1");
+    context->window = SDL_CreateWindow(wstr_cstr(&context->windowTitle), context->windowWidth, context->windowHeight, 0);
     if (!context->window)
     {
         logError("Error creating SDL window: %s", SDL_GetError());
@@ -216,8 +217,8 @@ bool initGame(WarContext* context)
     }
 
     // load fonts
-    context->fontSprites[0] = loadFontSprite(context, "./war1_font_1.png");
-    context->fontSprites[1] = loadFontSprite(context, "./war1_font_2.png");
+    context->fontSprites[0] = loadFontSprite(context, wsv_fromCString("./war1_font_1.png"));
+    context->fontSprites[1] = loadFontSprite(context, wsv_fromCString("./war1_font_2.png"));
 
     // check if the DATA.WAR file exists
     bool dataFileExists = access(DATAWAR_FILE_PATH, F_OK) == 0;
@@ -276,12 +277,14 @@ void quitGame(WarContext* context)
         context->window = NULL;
     }
 
+    wstr_free(context->windowTitle);
+
     SDL_Quit();
 }
 
 bool loadDataFile(WarContext* context)
 {
-    context->warFile = loadWarFile(context, DATAWAR_FILE_PATH);
+    context->warFile = loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
     if (!context->warFile)
     {
         return false;
@@ -454,7 +457,7 @@ void processGameEvent(WarContext* context, const SDL_Event* event)
         }
 
         case SDL_EVENT_TEXT_INPUT:
-            appendCheatTextInput(context, event->text.text);
+            appendCheatTextInput(context, wsv_fromCString(event->text.text));
             break;
 
         case SDL_EVENT_WINDOW_FOCUS_LOST:

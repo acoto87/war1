@@ -1,4 +1,4 @@
-/*  
+/*
     array.h - acoto87 (acoto87@gmail.com)
 
     MIT License
@@ -23,8 +23,27 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    This is a single header file with macros to declare and define a strongly typed stack with push, pop and peek operations.
+    Single-header macro helpers for creating and freeing strongly typed 2D
+    arrays backed by one contiguous allocation plus row pointers.
+
+    USAGE
+    Include this header wherever the declarations are needed. In exactly one
+    translation unit, use shlDeclareCreateArray(prefix, itemType) and
+    shlDefineCreateArray(prefix, itemType) to generate the creator, and pair
+    shlDeclareFreeArray(prefix, itemType) with shlDefineFreeArray(prefix,
+    itemType) if you also want the matching free helper.
+
+    CUSTOMISATION
+    Choose a unique prefix and the element type you want stored. The generated
+    array uses one contiguous allocation for values plus a separate row-pointer
+    table, so row access stays simple while the data remains cache-friendly.
+
+    NOTES
+    CreateArray allocates both the backing values block and the row table.
+    FreeArray expects the pointer returned by CreateArray and releases both
+    allocations.
 */
+
 #ifndef SHL_ARRAY_H
 #define SHL_ARRAY_H
 

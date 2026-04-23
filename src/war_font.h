@@ -2,8 +2,12 @@
 
 #include "war_types.h"
 
+#define FONT_NORMAL_COLOR WAR_COLOR_RGBA(239, 255, 219, 255)
+#define FONT_HIGHLIGHT_COLOR WAR_COLOR_RGBA(255, 227, 73, 255)
 #define NO_HIGHLIGHT -1
 #define ALL_HIGHLIGHT -2
+#define TAB_WIDTH 2
+#define MAX_LINES 48
 
 typedef struct
 {
@@ -25,8 +29,9 @@ typedef struct
     WarFontData fontData;
 } WarFontParams;
 
-WarSprite loadFontSprite(WarContext* context, const char* fontPath);
-vec2 measureSingleSpriteText(const char* text, s32 length, WarFontParams params);
-vec2 measureMultiSpriteText(const char* text, f32 width, WarFontParams params);
-void renderSingleSpriteText(WarContext* context, const char* text, f32 x, f32 y, WarFontParams params);
-void renderMultiSpriteText(WarContext* context, const char* text, f32 x, f32 y, WarFontParams params);
+WarSprite loadFontSprite(WarContext* context, StringView fontPath);
+WarFontData getFontData(s32 fontIndex);
+vec2 measureSingleSpriteText(StringView text, s32 length, WarFontParams params);
+vec2 measureMultiSpriteText(StringView text, f32 width, WarFontParams params);
+void renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params);
+void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params);

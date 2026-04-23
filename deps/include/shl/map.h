@@ -23,21 +23,33 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    This is a single header file with macros to declare and define a strongly typed list of objects that can be accessed by index.
-    Provides methods to search, sort, and manipulate lists.
-*/
+    Single-header macro library to declare and define strongly typed hash maps.
+    Callers provide hash and equality hooks for the generated key type.
 
-/*
- * This implementation of the macro is a variant of: https://github.com/mystborn/GenericMap
- * to make a closed implementation of the map data structure, where each collision is resolved
- * by keeping the index of the next element in the array of cells, and not by merely iterate
- * until we find an empty cell.
- *
- * A detailed explanation of the hash function can be found here:
- * https://probablydance.com/2018/06/16/fibonacci-hashing-the-optimization-that-the-world-forgot-or-a-better-alternative-to-integer-modulo/
- *
- * The specific constant was found here:
- * http://book.huihoo.com/data-structures-and-algorithms-with-object-oriented-design-patterns-in-c++/html/page214.html
+    USAGE
+    Declare a concrete map type with shlDeclareMap(name, keyType, valueType),
+    then place shlDefineMap(name, keyType, valueType) in exactly one C file.
+
+    CUSTOMISATION
+    Supply a hash function and equality function for the key type, plus a
+    default value for failed lookups and an optional free function for owned
+    values. Keys and values are stored by copy.
+
+    NOTES
+    This map uses open addressing with linked collision chains stored inside
+    the entry array. Call Free to release internal storage. Remove and Clear
+    invoke the value free hook when one is configured.
+
+    This implementation of the macro is a variant of: https://github.com/mystborn/GenericMap
+    to make a closed implementation of the map data structure, where each collision is resolved
+    by keeping the index of the next element in the array of cells, and not by merely iterate
+    until we find an empty cell.
+
+    A detailed explanation of the hash function can be found here:
+    https://probablydance.com/2018/06/16/fibonacci-hashing-the-optimization-that-the-world-forgot-or-a-better-alternative-to-integer-modulo/
+
+    The specific constant was found here:
+    http://book.huihoo.com/data-structures-and-algorithms-with-object-oriented-design-patterns-in-c++/html/page214.html
 */
 
 #ifndef SHL_MAP_H

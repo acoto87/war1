@@ -229,7 +229,7 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
 
     // some projectiles have sequences like: 0 1 0 or 0 1 2 1 0
     // but the FIREBALL and RAIN_OF_FIRE projectiles have linear frame sequences
-    if (projectile->type != WAR_PROJECTILE_FIREBALL ||
+    if (projectile->type != WAR_PROJECTILE_FIREBALL &&
         projectile->type != WAR_PROJECTILE_RAIN_OF_FIRE)
     {
         frameCount = frameCount * 2 - 1;
