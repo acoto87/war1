@@ -22,7 +22,7 @@ void setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 
 #define isDynamic(finder, x,  y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_DYNAMIC)
 #define isDynamicOfEntity(finder, x, y, id) (getTileEntityId(finder, x, y) == id)
 
-WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 data[]);
+WarPathFinder initPathFinder(WarContext* context, PathFindingType type, s32 width, s32 height, u16 data[]);
 bool isInside(WarPathFinder finder, s32 x, s32 y);
 WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY);
 bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIndex);

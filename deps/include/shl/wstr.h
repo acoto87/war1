@@ -157,6 +157,7 @@ const char* wstr_cstr(const String* string);
 bool       wstr_isEmpty(const String* string);
 bool       wstr_reserve(String* string, size_t capacity);
 bool       wstr_resize(String* string, size_t length);
+String     wstr_copy(const String* string);
 bool       wstr_assign(String* string, StringView view);
 bool       wstr_assignCString(String* string, const char* text);
 bool       wstr_assignCStringFormat(String* string, const char* textFormat, ...);
@@ -1004,6 +1005,16 @@ bool wstr_resize(String* string, size_t length)
     }
 
     return true;
+}
+
+String wstr_copy(const String* string)
+{
+    if (string == NULL)
+    {
+        return wstr_make();
+    }
+
+    return wstr_fromView(wsv_fromString(string));
 }
 
 bool wstr_assign(String* string, StringView view)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SDL3/SDL_events.h"
+#include "shl/memzone.h"
 
 #include "common.h"
 #include "war_types.h"

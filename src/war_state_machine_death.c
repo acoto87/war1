@@ -54,7 +54,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
     removeEntityById(context, entity->id);
 }
 
-void freeDeathState(WarState* state)
+void freeDeathState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

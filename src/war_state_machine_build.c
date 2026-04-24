@@ -140,7 +140,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
     entity->sprite.frameIndex = frameIndex;
 }
 
-void freeBuildState(WarState* state)
+void freeBuildState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

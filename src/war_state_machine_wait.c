@@ -44,7 +44,7 @@ void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeWaitState(WarState* state)
+void freeWaitState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

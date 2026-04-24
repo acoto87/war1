@@ -447,7 +447,7 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene
 {
     WarEntityManager* manager = getEntityManager(context);
 
-    WarEntity* entity = (WarEntity *)xcalloc(1, sizeof(WarEntity));
+    WarEntity* entity = (WarEntity *)mz_alloc(context->permanentZone, sizeof(WarEntity));
     manager->staticEntityId++;
     assert(manager->staticEntityId <= UINT16_MAX);
     entity->id = (WarEntityId)manager->staticEntityId;
@@ -838,7 +838,7 @@ bool isStaticEntity(WarEntity* entity)
     return false;
 }
 
-void initEntityManager(WarEntityManager* manager)
+void initEntityManager(WarContext* context, WarEntityManager* manager)
 {
     manager->staticEntityId = 0;
 
@@ -854,7 +854,7 @@ void initEntityManager(WarEntityManager* manager)
     WarEntityMapInit(&manager->entitiesByType, entitiesByTypeOptions);
     for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
     {
-        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+        WarEntityList* list = (WarEntityList*)mz_alloc(context->permanentZone, sizeof(WarEntityList));
         WarEntityListInit(list, WarEntityListNonFreeOptions);
         WarEntityMapSet(&manager->entitiesByType, type, list);
     }
@@ -868,7 +868,7 @@ void initEntityManager(WarEntityManager* manager)
     WarUnitMapInit(&manager->unitsByType, unitsByTypeOptions);
     for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
     {
-        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+        WarEntityList* list = (WarEntityList*)mz_alloc(context->permanentZone, sizeof(WarEntityList));
         WarEntityListInit(list, WarEntityListNonFreeOptions);
         WarUnitMapSet(&manager->unitsByType, type, list);
     }
@@ -1954,7 +1954,7 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 
 WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
 {
-    WarEntityList* nearUnits = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+    WarEntityList* nearUnits = (WarEntityList*)mz_alloc(context->permanentZone, sizeof(WarEntityList));
     WarEntityListInit(nearUnits, WarEntityListNonFreeOptions);
 
     WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);

@@ -2,6 +2,7 @@
 
 #include <assert.h>
 
+#include "shl/memzone.h"
 #include "shl/wstr.h"
 
 #include "war_actions.h"
@@ -435,12 +436,10 @@ f32 getMapScaledTime(WarContext* context, f32 t)
 
 WarMap* createMap(WarContext* context, s32 levelInfoIndex)
 {
-    NOT_USED(context);
-
-    WarMap *map = (WarMap*)xcalloc(1, sizeof(WarMap));
+    WarMap *map = (WarMap*)mz_alloc(context->permanentZone, sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
 
-    initEntityManager(&map->entityManager);
+    initEntityManager(context, &map->entityManager);
 
     WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
 
@@ -517,7 +516,7 @@ void freeMap(WarContext* context, WarMap* map)
     // freeEntity(map->road);
     // freeEntity(map->ruin);
 
-    free(map->finder.data);
+    mz_free(context->permanentZone, map->finder.data);
 }
 
 void enterMap(WarContext* context)
@@ -558,7 +557,7 @@ void enterMap(WarContext* context)
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
-    map->finder = initPathFinder(PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
+    map->finder = initPathFinder(context, PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
 
     const s32 dirC = 8;
     const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
@@ -625,7 +624,7 @@ void enterMap(WarContext* context)
             minimapFrames[i].w = MINIMAP_WIDTH;
             minimapFrames[i].h = MINIMAP_HEIGHT;
             minimapFrames[i].off = 0;
-            minimapFrames[i].data = (u8*)xcalloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4, sizeof(u8));
+            minimapFrames[i].data = (u8*)mz_alloc(context->permanentZone, MINIMAP_WIDTH * MINIMAP_HEIGHT * 4 * sizeof(u8));
 
             // make the frame black
             for (s32 k = 0; k < MINIMAP_WIDTH * MINIMAP_HEIGHT; k++)

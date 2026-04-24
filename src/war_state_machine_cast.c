@@ -279,7 +279,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeCastState(WarState* state)
+void freeCastState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

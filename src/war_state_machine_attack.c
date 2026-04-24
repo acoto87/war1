@@ -171,7 +171,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeAttackState(WarState* state)
+void freeAttackState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

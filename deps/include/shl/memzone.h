@@ -104,6 +104,7 @@ void* mz_alloc(memzone_t* zone, size_t size);
 void* mz_allocAligned(memzone_t* zone, size_t size, size_t alignment);
 void mz_setReporter(memzone_t* zone, mz_reporter_t reporter, void* userData);
 void mz_free(memzone_t* zone, void* p);
+void* mz_realloc(memzone_t* zone, void* p, size_t size);
 bool mz_contains(const memzone_t* zone, const void* p);
 size_t mz_allocationSize(const memzone_t* zone, const void* p);
 bool mz_validate(const memzone_t* zone);
@@ -535,6 +536,7 @@ void* mz_allocAligned(memzone_t* zone, size_t size, size_t alignment)
     zone->usedSize += usedPayloadSize;
 
     rover->user = MZ__POINTER_OFFSET(void, mz__payloadPointer(rover), padding);
+    memset(rover->user, 0, alignedSize);
     mz__debugAssertValid(zone);
     return rover->user;
 }
@@ -584,6 +586,82 @@ void mz_free(memzone_t* zone, void* p)
     }
 
     mz__debugAssertValid(zone);
+}
+
+void* mz_realloc(memzone_t* zone, void* p, size_t size)
+{
+    if (zone == NULL)
+    {
+        return NULL;
+    }
+
+    if (p == NULL)
+    {
+        return mz_alloc(zone, size);
+    }
+
+    if (size == 0)
+    {
+        mz_free(zone, p);
+        return NULL;
+    }
+
+    memblock_t* block = (memblock_t*)mz__findBlock(zone, p);
+    if (block == NULL)
+    {
+        mz__report(zone, MZ_REPORT_INVALID_FREE, p, "pointer does not reference a live allocation in this zone");
+        return NULL;
+    }
+
+    size_t alignedSize = 0;
+    if (!mz__alignUp(size, mz_alignment(), &alignedSize))
+    {
+        char message[160];
+        snprintf(message, sizeof(message),
+            "requested reallocation size %llu bytes is too large",
+            (unsigned long long)size);
+        mz__report(zone, MZ_REPORT_ALLOCATION_FAILURE, NULL, message);
+        return NULL;
+    }
+
+    size_t currentAllocSize = mz__allocationSize(block);
+
+    // Case 1: block already has sufficient capacity
+    if (currentAllocSize >= alignedSize)
+    {
+        return p;
+    }
+
+    // Case 2: adjacent next block is empty and combined capacity is sufficient — merge in place
+    memblock_t* next = block->next;
+    if (next != block && MZ__IS_BLOCK_EMPTY(next) && mz__isNextBlockAdjacent(block))
+    {
+        if (currentAllocSize + next->size >= alignedSize)
+        {
+            size_t nextSize = next->size;
+            block->size += nextSize;
+            block->next = next->next;
+            block->next->prev = block;
+            zone->usedSize += nextSize - mz__headerSize();
+            if (zone->rover == next)
+            {
+                zone->rover = block->next;
+            }
+            mz__debugAssertValid(zone);
+            return p;
+        }
+    }
+
+    // Case 3: allocate new block, copy data, free old block
+    void* newP = mz_alloc(zone, size);
+    if (newP == NULL)
+    {
+        return NULL;
+    }
+
+    memcpy(newP, p, currentAllocSize);
+    mz_free(zone, p);
+    return newP;
 }
 
 bool mz_contains(const memzone_t* zone, const void* p)

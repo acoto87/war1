@@ -11,7 +11,9 @@
 #include "shl/map.h"
 #include "shl/set.h"
 #include "shl/wstr.h"
+#include "shl/memzone.h"
 
+#include "war_zone.h"
 #include "war_color.h"
 #include "war_math.h"
 
@@ -1197,7 +1199,7 @@ bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
 
 void freeAction(WarUnitAction* a)
 {
-    free((void*)a);
+    mz_free(gPermanentZone, (void*)a);
 }
 
 shlDeclareList(WarUnitActionList, WarUnitAction*)
@@ -1844,7 +1846,7 @@ bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
 
 void freeEntity(WarEntity* e)
 {
-    free((void*)e);
+    mz_free(gPermanentZone, (void*)e);
 }
 
 shlDeclareList(WarEntityList, WarEntity*)
@@ -1998,7 +2000,7 @@ bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
 
 void aiCommandFree(WarAICommand* command)
 {
-    free((void*)command);
+    mz_free(gPermanentZone, (void*)command);
 }
 
 #define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
@@ -2313,4 +2315,7 @@ typedef struct _WarContext
     WarScene* nextScene;
     WarMap* map;
     WarMap* nextMap;
+
+    memzone_t* permanentZone;   // program/session/object lifetime allocations
+    memzone_t* frameZone;       // per-frame scratch; reset at the top of each frame
 } WarContext;

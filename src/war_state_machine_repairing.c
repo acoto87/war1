@@ -148,7 +148,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     }
 }
 
-void freeRepairingState(WarState* state)
+void freeRepairingState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

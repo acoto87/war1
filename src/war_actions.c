@@ -3,8 +3,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "alloc.h"
 #include "war.h"
+#include "war_zone.h"
 #include "war_units.h"
 
 #define MAX_ACTIONS 6
@@ -65,7 +65,7 @@ WarUnitFrameNumbers getFrameNumbers(s32 nbdir, s32 initCounter[])
 
 WarUnitAction* createUnitAction(WarUnitActionType type)
 {
-    WarUnitAction* action = (WarUnitAction*)xmalloc(sizeof(WarUnitAction));
+    WarUnitAction* action = (WarUnitAction*)mz_alloc(gPermanentZone, sizeof(WarUnitAction));
     action->type = type;
     action->loop = true;
     action->scale = 1;

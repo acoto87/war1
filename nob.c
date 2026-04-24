@@ -360,7 +360,7 @@ static bool append_gnu_common_flags(Nob_Cmd *cmd, const Build_Options *options)
                    "-Ideps/include");
 
     if (options->debug) {
-        nob_cmd_append(cmd, "-g", "-D__DEBUG__=1");
+        nob_cmd_append(cmd, "-g", "-D__DEBUG__=1", "-DMZ_DEBUG");
     } else {
         nob_cmd_append(cmd, "-O2");
     }
@@ -380,7 +380,7 @@ static bool append_msvc_common_flags(Nob_Cmd *cmd, const Build_Options *options)
                    "/Ideps/include");
 
     if (options->debug) {
-        nob_cmd_append(cmd, "/Zi", "/D__DEBUG__=1");
+        nob_cmd_append(cmd, "/Zi", "/D__DEBUG__=1", "/DMZ_DEBUG");
     } else {
         nob_cmd_append(cmd, "/O2", "/DNDEBUG");
     }

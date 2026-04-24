@@ -4,7 +4,6 @@
 
 #include "shl/wstr.h"
 
-#include "alloc.h"
 #include "war_audio.h"
 #include "war_entities.h"
 #include "war_resources.h"

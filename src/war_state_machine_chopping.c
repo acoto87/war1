@@ -101,7 +101,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     }
 }
 
-void freeChoppingState(WarState* state)
+void freeChoppingState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

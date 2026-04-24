@@ -2,13 +2,9 @@
 
 #include <assert.h>
 
-#include "alloc.h"
-
 WarAI* createAI(WarContext* context)
 {
-    NOT_USED(context);
-
-    WarAI* ai = (WarAI*)xmalloc(sizeof(WarAI));
+    WarAI* ai = (WarAI*)mz_alloc(context->permanentZone, sizeof(WarAI));
     ai->staticCommandId = 0;
     ai->customData = NULL;
 
@@ -20,12 +16,10 @@ WarAI* createAI(WarContext* context)
 
 WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandType type)
 {
-    NOT_USED(context);
-
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    WarAICommand* command = (WarAICommand*)xcalloc(1, sizeof(WarAICommand));
+    WarAICommand* command = (WarAICommand*)mz_alloc(context->permanentZone, sizeof(WarAICommand));
     command->id = ++ai->staticCommandId;
     command->type = type;
     command->status = WAR_AI_COMMAND_STATUS_CREATED;
@@ -67,7 +61,7 @@ void initAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    WarAICustomData* customData = (WarAICustomData*)xmalloc(sizeof(WarAICustomData));
+    WarAICustomData* customData = (WarAICustomData*)mz_alloc(context->permanentZone, sizeof(WarAICustomData));
     customData->index = 0;
 
     WarAICommandList* commands = &customData->commands;

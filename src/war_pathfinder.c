@@ -339,13 +339,13 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     return path;
 }
 
-WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 data[])
+WarPathFinder initPathFinder(WarContext* context, PathFindingType type, s32 width, s32 height, u16 data[])
 {
     WarPathFinder finder = (WarPathFinder){0};
     finder.type = type;
     finder.width = width;
     finder.height = height;
-    finder.data = (u16*)xcalloc(width * height, sizeof(u16));
+    finder.data = (u16*)mz_alloc(context->permanentZone, width * height * sizeof(u16));
 
     // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
     for(s32 i = 0; i < width * height; i++)

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 
 typedef int8_t s8;

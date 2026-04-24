@@ -60,15 +60,16 @@
 #include "shl/memory_buffer.h"
 #define SHL_WAV_IMPLEMENTATION
 #include "shl/wav.h"
-#include "alloc.h"
-#define WSTR_MALLOC(sz)       xmalloc(sz)
-#define WSTR_REALLOC(p, sz)   xrealloc(p, sz)
+#define SHL_MEMORY_ZONE_IMPLEMENTATION
+#include "shl/memzone.h"
+#define WSTR_MALLOC(sz)       malloc(sz)
+#define WSTR_REALLOC(p, sz)   realloc((p), (sz))
 #define WSTR_FREE(p)          free(p)
 #define SHL_WSTR_IMPLEMENTATION
 #include "shl/wstr.h"
 
+#include "war_zone.c"
 #include "war_log.h"
-#include "alloc.h"
 #include "common.h"
 #include "war_color.h"
 #include "war_math.h"
@@ -139,8 +140,8 @@ int main(void)
 	return 0;
 }
 
+#include "war_zone.c"
 #include "war_log.c"
-#include "alloc.c"
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_net.c"

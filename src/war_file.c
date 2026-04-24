@@ -1,12 +1,9 @@
 #include "war_file.h"
 
-#include "alloc.h"
 #include "war_log.h"
 
 WarFile* loadWarFile(WarContext* context, StringView filePath)
 {
-    NOT_USED(context);
-
     SDL_IOStream *stream = SDL_IOFromFile(wsv_data(filePath), "rb");
     if (!stream)
     {
@@ -16,7 +13,7 @@ WarFile* loadWarFile(WarContext* context, StringView filePath)
 
     Sint64 fileLength = SDL_GetIOSize(stream);
 
-    WarFile *warFile = (WarFile*)xcalloc(1, sizeof(WarFile));
+    WarFile *warFile = (WarFile*)mz_alloc(context->permanentZone, sizeof(WarFile));
     SDL_ReadU32LE(stream, &warFile->archiveID);
     SDL_ReadU32LE(stream, &warFile->numberOfEntries);
 
@@ -91,7 +88,7 @@ WarFile* loadWarFile(WarContext* context, StringView filePath)
         u32 length = (size & 0x1FFFFFFF);
         bool compressed = (size & 0xE0000000) != 0;
 
-        u8 *data = (u8*)xcalloc(length, sizeof(u8));
+        u8 *data = (u8*)mz_alloc(context->permanentZone, length * sizeof(u8));
         if (!compressed)
         {
             SDL_ReadIO(stream, data, length);

@@ -2,7 +2,8 @@
 
 #include <assert.h>
 
-#include "alloc.h"
+#include "shl/memory_buffer.h"
+
 #include "war_log.h"
 #include "war_audio.h"
 
@@ -26,7 +27,7 @@ WarResource* getOrCreateResource(WarContext* context, s32 index)
     if (!context->resources[index])
     {
         logInfo("Creating resource: %d", index);
-        context->resources[index] = (WarResource*)xcalloc(1, sizeof(WarResource));
+        context->resources[index] = (WarResource*)mz_alloc(context->permanentZone, sizeof(WarResource));
     }
     return context->resources[index];
 }
@@ -87,7 +88,7 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
 
     if (rawResource.length < PALETTE_LENGTH)
     {
-        rawResource.data = (u8*)xrealloc(rawResource.data, PALETTE_LENGTH);
+        rawResource.data = (u8*)mz_realloc(context->permanentZone, rawResource.data, PALETTE_LENGTH);
         memset(rawResource.data + rawResource.length, 0, PALETTE_LENGTH - rawResource.length);
     }
 
@@ -182,7 +183,7 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     u16 width = readu16(rawResource.data, 0);
     u16 height = readu16(rawResource.data, 2);
 
-    u8 *pixels = (u8*)xcalloc(width * height * 4, sizeof(u8));
+    u8 *pixels = (u8*)mz_alloc(context->permanentZone, width * height * 4 * sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
@@ -234,7 +235,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
         frame->w = readu8(rawResource.data, 4 + i * 8 + 2);
         frame->h = readu8(rawResource.data, 4 + i * 8 + 3);
         frame->off = readu32(rawResource.data, 4 + i * 8 + 4);
-        frame->data = (u8*)xcalloc(frameWidth * frameHeight * 4, sizeof(u8));
+        frame->data = (u8*)mz_alloc(context->permanentZone, frameWidth * frameHeight * 4 * sizeof(u8));
 
         // found in war1tool.c, don't know if is needed
         // if (off < 0) {  // High bit of width
@@ -714,7 +715,9 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
 
     WarResource *tiles = getOrCreateResource(context, entry->param1);
 
-    u8 *data = (u8*)xcalloc(TILESET_WIDTH * TILESET_HEIGHT, sizeof(u8));
+    // Local scratch zone for the temporary indexed-colour tile buffer.
+    memzone_t* scratch = mz_init(TILESET_WIDTH * TILESET_HEIGHT + 1024);
+    u8 *data = (u8*)mz_alloc(scratch, TILESET_WIDTH * TILESET_HEIGHT);
     u32 tilesCount = rawResource.length / 8;
     for(u32 i = 0; i < tilesCount; i++)
     {
@@ -764,7 +767,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
         resource->tilesetData.data[i * 4 + 3] = data[i] > 0 ? 255 : 0;
     }
 
-    free(data);
+    mz_destroy(scratch);
 
 #if __DEBUG__
     {
@@ -793,7 +796,7 @@ void loadTiles(WarContext *context, DatabaseEntry *entry)
     resource->type = WAR_RESOURCE_TYPE_TILES;
     resource->tilesData.palette1 = entry->param1;
     resource->tilesData.palette2 = entry->param2;
-    resource->tilesData.data = (u8*)xcalloc(rawResource.length, sizeof(u8));
+    resource->tilesData.data = (u8*)mz_alloc(context->permanentZone, rawResource.length * sizeof(u8));
     memcpy(resource->tilesData.data, rawResource.data, rawResource.length);
 }
 
@@ -810,7 +813,7 @@ void loadText(WarContext *context, DatabaseEntry *entry)
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TEXT;
     resource->textData.length = rawResource.length;
-    resource->textData.text = (char *)xcalloc(resource->textData.length, sizeof(char));
+    resource->textData.text = (char *)mz_alloc(context->permanentZone, resource->textData.length * sizeof(char));
     memcpy(resource->textData.text, rawResource.data, resource->textData.length);
 }
 
@@ -828,7 +831,7 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
     size32 xmiLength = rawResource.length;
 
     size32 midLength;
-    uint8_t* midData = transcodeXmiToMid(xmiData, xmiLength, &midLength);
+    uint8_t* midData = transcodeXmiToMid(context, xmiData, xmiLength, &midLength);
     if (!midData)
     {
         logError("Can't convert XMI file of resource %d", index);
@@ -884,12 +887,14 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
     assert(mb_readInt32LE(&bufInput, &dataLength));
     assert(dataLength > 0);
 
-    u8* data = (u8*)xmalloc(dataLength);
+    // Local scratch zone for the intermediate 11025 Hz PCM buffer.
+    memzone_t* scratch = mz_init((size_t)dataLength + 1024);
+    u8* data = (u8*)mz_alloc(scratch, (size_t)dataLength);
     assert(mb_readBytes(&bufInput, data, dataLength));
 
     // this data is at 11025khz, and for playing it back I needed at 44100khz
     // so I need to upsampling it here by a factor of 4
-    u8* newData = changeSampleRate(data, dataLength, 4);
+    u8* newData = changeSampleRate(context, data, dataLength, 4);
     s32 newDataLength = dataLength * 4;
 
     WarResource* resource = getOrCreateResource(context, index);
@@ -897,7 +902,7 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
     resource->audio.data = newData;
     resource->audio.length = newDataLength;
 
-    free(data);
+    mz_destroy(scratch);
 }
 
 void loadVoc(WarContext *context, DatabaseEntry *entry)
@@ -943,12 +948,14 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     // skip sample rate and compression type
     assert(mb_skip(&bufInput, 2));
 
-    u8* data = (u8*)xmalloc(dataLength);
+    // Local scratch zone for the intermediate 11025 Hz PCM buffer.
+    memzone_t* scratch = mz_init((size_t)dataLength + 1024);
+    u8* data = (u8*)mz_alloc(scratch, (size_t)dataLength);
     assert(mb_readBytes(&bufInput, data, dataLength));
 
     // this data is at 11025khz, and for playing it back I needed at 44100khz
     // so I need to upsampling it here by a factor of 4
-    u8* newData = changeSampleRate(data, dataLength, 4);
+    u8* newData = changeSampleRate(context, data, dataLength, 4);
     s32 newDataLength = dataLength * 4;
 
     WarResource* resource = getOrCreateResource(context, index);
@@ -956,7 +963,7 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     resource->audio.data = newData;
     resource->audio.length = newDataLength;
 
-    free(data);
+    mz_destroy(scratch);
 }
 
 void loadCursor(WarContext* context, DatabaseEntry* entry)
@@ -977,7 +984,7 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
     u16 width = readu16(rawResource.data, 4);
     u16 height = readu16(rawResource.data, 6);
 
-    u8 *pixels = (u8*)xcalloc(width * height * 4, sizeof(u8));
+    u8 *pixels = (u8*)mz_alloc(context->permanentZone, width * height * 4 * sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 8 + i);

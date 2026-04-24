@@ -14,5 +14,5 @@ WarEntity* playAttackSound(WarContext* context, vec2 position, WarUnitActionStep
 WarEntity* playDudeSelectionSound(WarContext* context, WarEntity* entity);
 WarEntity* playBuildingSelectionSound(WarContext* context, WarEntity* entity);
 WarEntity* playAcknowledgementSound(WarContext* context, WarPlayerInfo* player);
-u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength);
-u8* changeSampleRate(u8* samplesIn, s32 length, s32 factor);
+u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t* midLength);
+u8* changeSampleRate(WarContext* context, u8* samplesIn, s32 length, s32 factor);

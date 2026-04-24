@@ -8,7 +8,7 @@ typedef struct
     void (*enterStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
     void (*leaveStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
     void (*updateStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
-    void (*freeStateFunc)(WarState* state);
+    void (*freeStateFunc)(WarContext* context, WarState* state);
 } WarStateDescriptor;
 
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type);
@@ -18,7 +18,6 @@ WarState* createPatrolState(WarContext* context, WarEntity* entity, s32 position
 WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance);
 WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile);
 WarState* createDeathState(WarContext* context, WarEntity* entity);
-WarState* createDamagedState(WarContext* context, WarEntity* entity);
 WarState* createCollapseState(WarContext* context, WarEntity* entity);
 WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime);
 WarState* createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId);
@@ -103,29 +102,89 @@ bool hasNextState(WarEntity* entity, WarStateType type);
 
 #define setDelay(state, seconds) ((state)->delay = (seconds))
 
-bool isInsideBuilding(WarEntity* entity)
-{
-    if (isMining(entity))
-    {
-        return true;
-    }
+bool isInsideBuilding(WarEntity* entity);
 
-    if(isDelivering(entity))
-    {
-        WarState* deliver = getDeliverState(entity);
-        return deliver->deliver.insideBuilding;
-    }
+void enterIdleState(WarContext* context, WarEntity* entity, WarState* state);
+void enterMoveState(WarContext* context, WarEntity* entity, WarState* state);
+void enterPatrolState(WarContext* context, WarEntity* entity, WarState* state);
+void enterFollowState(WarContext* context, WarEntity* entity, WarState* state);
+void enterAttackState(WarContext* context, WarEntity* entity, WarState* state);
+void enterGatherGoldState(WarContext* context, WarEntity* entity, WarState* state);
+void enterMiningState(WarContext* context, WarEntity* entity, WarState* state);
+void enterGatherWoodState(WarContext* context, WarEntity* entity, WarState* state);
+void enterChoppingState(WarContext* context, WarEntity* entity, WarState* state);
+void enterDeliverState(WarContext* context, WarEntity* entity, WarState* state);
+void enterDeathState(WarContext* context, WarEntity* entity, WarState* state);
+void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state);
+void enterTrainState(WarContext* context, WarEntity* entity, WarState* state);
+void enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state);
+void enterBuildState(WarContext* context, WarEntity* entity, WarState* state);
+void enterRepairState(WarContext* context, WarEntity* entity, WarState* state);
+void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state);
+void enterCastState(WarContext* context, WarEntity* entity, WarState* state);
+void enterWaitState(WarContext* context, WarEntity* entity, WarState* state);
 
-    if (isRepairing2(entity))
-    {
-        WarState* repairing = getRepairingState(entity);
-        return repairing->repairing.insideBuilding;
-    }
+void leaveIdleState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveMoveState(WarContext* context, WarEntity* entity, WarState* state);
+void leavePatrolState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveFollowState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveAttackState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveMiningState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveGatherWoodState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveDeathState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveTrainState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveBuildState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveRepairState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveCastState(WarContext* context, WarEntity* entity, WarState* state);
+void leaveWaitState(WarContext* context, WarEntity* entity, WarState* state);
 
-    return false;
-}
+void updateIdleState(WarContext* context, WarEntity* entity, WarState* state);
+void updateMoveState(WarContext* context, WarEntity* entity, WarState* state);
+void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state);
+void updateFollowState(WarContext* context, WarEntity* entity, WarState* state);
+void updateAttackState(WarContext* context, WarEntity* entity, WarState* state);
+void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state);
+void updateMiningState(WarContext* context, WarEntity* entity, WarState* state);
+void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* state);
+void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state);
+void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state);
+void updateDeathState(WarContext* context, WarEntity* entity, WarState* state);
+void updateCollapseState(WarContext* context, WarEntity* entity, WarState* state);
+void updateTrainState(WarContext* context, WarEntity* entity, WarState* state);
+void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state);
+void updateBuildState(WarContext* context, WarEntity* entity, WarState* state);
+void updateRepairState(WarContext* context, WarEntity* entity, WarState* state);
+void updateRepairingState(WarContext* context, WarEntity* entity, WarState* state);
+void updateCastState(WarContext* context, WarEntity* entity, WarState* state);
+void updateWaitState(WarContext* context, WarEntity* entity, WarState* state);
+
+void freeIdleState(WarContext* context, WarState* state);
+void freeMoveState(WarContext* context, WarState* state);
+void freePatrolState(WarContext* context, WarState* state);
+void freeFollowState(WarContext* context, WarState* state);
+void freeAttackState(WarContext* context, WarState* state);
+void freeGatherGoldState(WarContext* context, WarState* state);
+void freeMiningState(WarContext* context, WarState* state);
+void freeGatherWoodState(WarContext* context, WarState* state);
+void freeChoppingState(WarContext* context, WarState* state);
+void freeDeliverState(WarContext* context, WarState* state);
+void freeDeathState(WarContext* context, WarState* state);
+void freeCollapseState(WarContext* context, WarState* state);
+void freeTrainState(WarContext* context, WarState* state);
+void freeUpgradeState(WarContext* context, WarState* state);
+void freeBuildState(WarContext* context, WarState* state);
+void freeRepairState(WarContext* context, WarState* state);
+void freeRepairingState(WarContext* context, WarState* state);
+void freeCastState(WarContext* context, WarState* state);
+void freeWaitState(WarContext* context, WarState* state);
 
 void enterState(WarContext* context, WarEntity* entity, WarState* state);
 void leaveState(WarContext* context, WarEntity* entity, WarState* state);
 void updateStateMachine(WarContext* context, WarEntity* entity);
-void freeState(WarState* state);
+void freeState(WarContext* context, WarState* state);

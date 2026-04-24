@@ -4,14 +4,14 @@
 
 #include "shl/wstr.h"
 
-#include "alloc.h"
+#include "war_zone.h"
 #include "war_sprites.h"
 
 #define ANIM_NAME_MAX_LENGTH 50
 
 WarSpriteAnimation* createAnimation(String name, WarSprite sprite, f32 frameDelay, bool loop)
 {
-    WarSpriteAnimation* anim = (WarSpriteAnimation*)xmalloc(sizeof(WarSpriteAnimation));
+    WarSpriteAnimation* anim = (WarSpriteAnimation*)mz_alloc(gPermanentZone, sizeof(WarSpriteAnimation));
 
     anim->name = name;
     anim->loop = loop;
@@ -92,9 +92,9 @@ void freeAnimation(WarSpriteAnimation* animation)
 
     WarSprite* sprite = &animation->sprite;
     for(s32 i = 0; i < sprite->framesCount; i++)
-        free(sprite->frames[i].data);
+        mz_free(gPermanentZone, sprite->frames[i].data);
 
-    free(animation);
+    mz_free(gPermanentZone, animation);
 }
 
 s32 findAnimationIndex(WarContext* context, WarEntity* entity, StringView name)

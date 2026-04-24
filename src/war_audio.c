@@ -3,10 +3,11 @@
 #include <assert.h>
 
 #include "SDL3/SDL.h"
-
-#include "alloc.h"
-#include "war_log.h"
 #include "shl/memory_buffer.h"
+#include "shl/memzone.h"
+
+#include "war_log.h"
+#include "war_math.h"
 #include "war_entities.h"
 #include "war_units.h"
 
@@ -731,8 +732,10 @@ static MidiToken* MidiTokenListAppend(MidiTokenList* list, s32 time, u8 type)
  * http://www.shikadi.net/moddingwiki/MID_Format
  * https://github.com/colxi/midi-parser-js/wiki/MIDI-File-Format-Specifications
  */
-u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
+u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t* midLength)
 {
+    NOT_USED(context);
+
     memory_buffer_t bufInput = {0};
     mb_initFromMemory(&bufInput, xmiData, xmiLength);
 
@@ -1007,12 +1010,12 @@ u8* transcodeXmiToMid(u8* xmiData, size_t xmiLength, size_t* midLength)
     return midData;
 }
 
-u8* changeSampleRate(u8* samplesIn, s32 length, s32 factor)
+u8* changeSampleRate(WarContext* context, u8* samplesIn, s32 length, s32 factor)
 {
     assert(factor >= 1);
 
     s32 newLength = length * factor;
-    u8* samplesOut = (u8*)xmalloc(newLength);
+    u8* samplesOut = (u8*)mz_alloc(context->permanentZone, newLength);
 
     samplesOut[0] = samplesIn[0];
 

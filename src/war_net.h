@@ -27,4 +27,4 @@ WarSocket connectToHost(StringView host);
 bool requestResource(WarSocket sck, StringView resource, StringView host);
 s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength);
 s32 parseHeadersFromResponse(StringView response, s32 responseLength, StringViewMap* headers);
-bool downloadFileFromUrl(StringView url, StringView filePath);
+bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePath);

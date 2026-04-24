@@ -4,6 +4,7 @@
 
 #include "shl/wstr.h"
 
+#include "war.h"
 #include "war_game.h"
 #include "war_net.h"
 #include "war_ui.h"
@@ -87,7 +88,7 @@ void updateSceneDownload(WarContext* context)
         }
         case WAR_SCENE_DOWNLOAD_DOWNLOADING:
         {
-            bool success = downloadFileFromUrl(wsv_fromCString(ONLINE_DEMO_DATAWAR_FILE_URL), wsv_fromCString(DATAWAR_FILE_PATH));
+            bool success = downloadFileFromUrl(context, wsv_fromCString(ONLINE_DEMO_DATAWAR_FILE_URL), wsv_fromCString(DATAWAR_FILE_PATH));
             if (success)
             {
                 WarEntity* downloadingText = findUIEntity(context, wsv_fromCString("txtDownloading"));

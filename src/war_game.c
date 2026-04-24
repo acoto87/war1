@@ -13,8 +13,10 @@
 #include <unistd.h>
 #endif
 
+#include "shl/memzone.h"
 #include "shl/wstr.h"
 
+#include "war_zone.h"
 #include "war_audio.h"
 #include "war_file.h"
 #include "war_font.h"
@@ -22,6 +24,16 @@
 #include "war_map_render.h"
 #include "war_resources.h"
 #include "war_scenes.h"
+
+static void zoneReporter(const memzone_t* zone, mz_report_t report, const void* ptr, const char* message, void* userData)
+{
+    NOT_USED(zone);
+    NOT_USED(report);
+    NOT_USED(ptr);
+    NOT_USED(userData);
+
+    logError("memzone: %s", message);
+}
 
 static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
 {
@@ -162,6 +174,26 @@ static void appendCheatTextInput(WarContext* context, StringView text)
 
 bool initGame(WarContext* context)
 {
+    // Initialize memory zones first — all subsequent allocations depend on them.
+    context->permanentZone = mz_init(512 * 1024 * 1024); // 512 MB
+    if (!context->permanentZone)
+    {
+        logError("Failed to initialize permanentZone (512 MB).");
+        return false;
+    }
+    mz_setReporter(context->permanentZone, zoneReporter, NULL);
+    gPermanentZone = context->permanentZone; // expose to free callbacks
+
+    context->frameZone = mz_init(4 * 1024 * 1024); // 4 MB
+    if (!context->frameZone)
+    {
+        logError("Failed to initialize frameZone (4 MB).");
+        mz_destroy(context->permanentZone);
+        context->permanentZone = NULL;
+        return false;
+    }
+    mz_setReporter(context->frameZone, zoneReporter, NULL);
+
     context->globalScale = 3;
     context->globalSpeed = 1;
     context->originalWindowWidth = 320;
@@ -280,6 +312,18 @@ void quitGame(WarContext* context)
     wstr_free(context->windowTitle);
 
     SDL_Quit();
+
+    if (context->frameZone)
+    {
+        mz_destroy(context->frameZone);
+        context->frameZone = NULL;
+    }
+
+    if (context->permanentZone)
+    {
+        mz_destroy(context->permanentZone);
+        context->permanentZone = NULL;
+    }
 }
 
 bool loadDataFile(WarContext* context)
@@ -492,6 +536,8 @@ void processGameEvent(WarContext* context, const SDL_Event* event)
 
 void updateGame(WarContext* context)
 {
+    mz_reset(context->frameZone);
+
     WarInput* input = &context->input;
 
     if (isKeyPressed(input, WAR_KEY_CTRL) &&

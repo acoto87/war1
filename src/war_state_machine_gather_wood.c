@@ -73,7 +73,7 @@ void updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* sta
     changeNextState(context, entity, choppingState, true, true);
 }
 
-void freeGatherWoodState(WarState* state)
+void freeGatherWoodState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

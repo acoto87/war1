@@ -64,7 +64,7 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     free(positionsToMove);
 }
 
-void freePatrolState(WarState* state)
+void freePatrolState(WarContext* context, WarState* state)
 {
     vec2ListFree(&state->patrol.positions);
 }

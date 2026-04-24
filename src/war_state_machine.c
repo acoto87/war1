@@ -1,8 +1,6 @@
 #include "war_state_machine.h"
 
-#include "alloc.h"
-
-WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] = 
+WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
 {
     { WAR_STATE_IDLE,       enterIdleState,       leaveIdleState,       updateIdleState,       freeIdleState       },
     { WAR_STATE_MOVE,       enterMoveState,       leaveMoveState,       updateMoveState,       freeMoveState       },
@@ -25,11 +23,31 @@ WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
     { WAR_STATE_WAIT,       enterWaitState,       leaveWaitState,       updateWaitState,       freeWaitState       },
 };
 
+bool isInsideBuilding(WarEntity* entity)
+{
+    if (isMining(entity))
+    {
+        return true;
+    }
+
+    if(isDelivering(entity))
+    {
+        WarState* deliver = getDeliverState(entity);
+        return deliver->deliver.insideBuilding;
+    }
+
+    if (isRepairing2(entity))
+    {
+        WarState* repairing = getRepairingState(entity);
+        return repairing->repairing.insideBuilding;
+    }
+
+    return false;
+}
+
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    NOT_USED(context);
-
-    WarState* state = (WarState*)xcalloc(1, sizeof(WarState));
+    WarState* state = (WarState*)mz_alloc(context->permanentZone, sizeof(WarState));
     state->type = type;
     state->entityId = entity->id;
     state->nextUpdateTime = 0;
@@ -122,7 +140,7 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     stateDescriptors[state->type].leaveStateFunc(context, entity, state);
-    freeState(state);
+    freeState(context, state);
 }
 
 void updateStateMachine(WarContext* context, WarEntity* entity)
@@ -135,7 +153,7 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
         {
             if (stateMachine->leaveState)
                 leaveState(context, entity, stateMachine->currentState);
-            
+
             stateMachine->currentState = stateMachine->nextState;
             stateMachine->nextState = NULL;
 
@@ -164,7 +182,7 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
     }
 }
 
-void freeState(WarState* state)
+void freeState(WarContext* context, WarState* state)
 {
     if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
     {
@@ -172,10 +190,10 @@ void freeState(WarState* state)
         return;
     }
 
-    stateDescriptors[state->type].freeStateFunc(state);
+    stateDescriptors[state->type].freeStateFunc(context, state);
 
     if (state->nextState)
-        freeState(state->nextState);
+        freeState(context, state->nextState);
 
-    free(state);
+    mz_free(context->permanentZone, state);
 }

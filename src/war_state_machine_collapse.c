@@ -48,7 +48,7 @@ void updateCollapseState(WarContext* context, WarEntity* entity, WarState* state
     removeEntityById(context, entity->id);
 }
 
-void freeCollapseState(WarState* state)
+void freeCollapseState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }
