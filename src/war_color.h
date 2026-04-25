@@ -10,7 +10,11 @@ typedef union {
 
 #define WAR_COLOR_RGB(r, g, b) ((WarColor){{r, g, b, 255}})
 #define WAR_COLOR_RGBA(r, g, b, a) ((WarColor){{r, g, b, a}})
-#define WAR_COLOR_PACKED(value) ((WarColor){.packed = value})
+#define WAR_COLOR_PACKED(value) ((WarColor){{ \
+    (u8)(((value) >> 24) & 0xFF), \
+    (u8)(((value) >> 16) & 0xFF), \
+    (u8)(((value) >>  8) & 0xFF), \
+    (u8)(((value) >>  0) & 0xFF) }})
 
 #define WAR_COLOR_TRANSPARENT WAR_COLOR_PACKED(0x00000000)
 #define WAR_COLOR_WHITE WAR_COLOR_PACKED(0xFFFFFFFF)

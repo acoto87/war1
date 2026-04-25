@@ -42,6 +42,8 @@ WarFile* loadWarFile(WarContext* context, StringView filePath)
     if (warFile->type == WAR_FILE_TYPE_UNKNOWN)
     {
         logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.", warFile->archiveID);
+        mz_free(context->permanentZone, warFile);
+        SDL_CloseIO(stream);
         return NULL;
     }
 

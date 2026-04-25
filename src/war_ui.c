@@ -309,7 +309,7 @@ void updateUIButtons(WarContext* context, bool hotKeysEnabled)
             {
                 for(s32 j = 0; j < buttons->count; j++)
                 {
-                    WarEntity* otherButton = buttons->items[i];
+                    WarEntity* otherButton = buttons->items[j];
                     if (otherButton)
                     {
                         otherButton->button.hot = false;

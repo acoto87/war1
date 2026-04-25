@@ -1234,7 +1234,7 @@ void trainKnight(WarContext* context, WarEntity* entity)
 void trainRaider(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_RAIDER, WAR_UNIT_KNIGHT, WAR_UNIT_BARRACKS_ORCS);
+    trainUnit(context, WAR_COMMAND_TRAIN_RAIDER, WAR_UNIT_RAIDER, WAR_UNIT_BARRACKS_ORCS);
 }
 
 void trainArcher(WarContext* context, WarEntity* entity)
@@ -1622,7 +1622,7 @@ void buildBlacksmithHumans(WarContext* context, WarEntity* entity)
 void buildBlacksmithOrcs(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_ORCS, WAR_UNIT_BLACKSMITH_HUMANS);
+    buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_ORCS, WAR_UNIT_BLACKSMITH_ORCS);
 }
 
 void buildWall(WarContext* context, WarEntity* entity)

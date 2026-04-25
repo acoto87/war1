@@ -447,8 +447,12 @@ void beginInputFrame(WarContext* context)
     input->wasDragging = false;
 }
 
-void processGameEvent(WarContext* context, const SDL_Event* event)
+void processGameEvent(WarContext* context, SDL_Event* event)
 {
+    // NOTE: Convert event coordinates from window space to logical render space (320x200).
+    // SDL_SetRenderLogicalPresentation does NOT do this automatically in SDL3.
+    SDL_ConvertEventToRenderCoordinates(context->renderer, (SDL_Event*)event);
+
     switch (event->type)
     {
         case SDL_EVENT_MOUSE_MOTION:
