@@ -1,8 +1,11 @@
 #include "war_state_machine.h"
 
+#include "war_map.h"
 #include "war_actions.h"
 #include "war_audio.h"
 #include "war_units.h"
+#include "war_cheats.h"
+#include "war_pathfinder.h"
 
 WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
 {

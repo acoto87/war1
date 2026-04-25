@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <math.h>
 
+#include "war_actions.h"
+
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
 #ifndef F_OK
@@ -271,6 +273,8 @@ bool initGame(WarContext* context)
         WarScene* scene = createScene(context, WAR_SCENE_DOWNLOAD);
         setNextScene(context, scene, 0.0f);
     }
+
+    initUnitActionDefs();
 
     context->time = SDL_GetTicks() / 1000.0f;
     return true;

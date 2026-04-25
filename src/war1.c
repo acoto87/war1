@@ -50,7 +50,6 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb/stb_image_resize.h"
 
-#include "shl/array.h"
 #include "shl/list.h"
 #include "shl/queue.h"
 #include "shl/binary_heap.h"

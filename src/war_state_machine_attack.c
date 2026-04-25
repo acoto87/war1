@@ -1,5 +1,6 @@
 #include "war_state_machine.h"
 
+#include "war_map.h"
 #include "war_actions.h"
 #include "war_audio.h"
 #include "war_units.h"
@@ -101,7 +102,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
-    WarUnitAction* action = unit->actions.items[unit->actionIndex];
+    WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
         // when the unit begin an attack, it is not invisible anymore

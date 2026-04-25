@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 #include "SDL3/SDL.h"
-#include "shl/array.h"
 #include "shl/list.h"
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
@@ -76,9 +75,6 @@ typedef struct tml_message tml_message;
 #define MAX_TILES_COUNT 1024
 
 #define directionByIndex(i) ((WarUnitDirection)(WAR_DIRECTION_NORTH + i))
-
-shlDefineCreateArray(s32, s32)
-shlDefineFreeArray(s32, s32)
 
 bool wtype_equalsS32(const s32 a, const s32 b)
 {
@@ -1161,13 +1157,16 @@ shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 typedef enum
 {
     WAR_ACTION_TYPE_NONE = -1,
+
     WAR_ACTION_TYPE_IDLE,
     WAR_ACTION_TYPE_WALK,
     WAR_ACTION_TYPE_ATTACK,
     WAR_ACTION_TYPE_DEATH,
     WAR_ACTION_TYPE_HARVEST,
     WAR_ACTION_TYPE_REPAIR,
-    WAR_ACTION_TYPE_BUILD
+    WAR_ACTION_TYPE_BUILD,
+
+    WAR_ACTION_TYPE_COUNT
 } WarUnitActionType;
 
 typedef enum
@@ -1180,32 +1179,21 @@ typedef enum
 typedef struct
 {
     WarUnitActionType type;
-    WarUnitActionStatus status;
-    bool unbreakable;
     bool directional;
     bool loop;
+    WarUnitActionStepList steps;
+} WarUnitActionDef;
+
+typedef struct
+{
+    WarUnitActionStatus status;
+    bool unbreakable;
     f32 scale;
     f32 waitCount;
     s32 stepIndex;
-    WarUnitActionStepList steps;
     WarUnitActionStepType lastActionStep;
     WarUnitActionStepType lastSoundStep;
 } WarUnitAction;
-
-bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
-{
-    return a1->type == a2->type;
-}
-
-void freeAction(WarUnitAction* a)
-{
-    mz_free(gPermanentZone, (void*)a);
-}
-
-shlDeclareList(WarUnitActionList, WarUnitAction*)
-shlDefineList(WarUnitActionList, WarUnitAction*)
-
-#define WarUnitActionListDefaultOptions (WarUnitActionListOptions){NULL, equalsAction, freeAction}
 
 typedef struct
 {
@@ -1441,9 +1429,9 @@ typedef struct
     // index of the array of speeds of the unit
     s32 speed;
 
-    // the current and action list for the unit
-    s32 actionIndex;
-    WarUnitActionList actions;
+    // the current action index and per-unit mutable action states
+    WarUnitActionType actionType;
+    WarUnitAction actions[WAR_ACTION_TYPE_COUNT];
 
     // time remainder (in seconds) until mana is affected
     f32 manaTime;

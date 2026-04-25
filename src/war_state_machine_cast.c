@@ -4,6 +4,8 @@
 #include "war_animations.h"
 #include "war_audio.h"
 #include "war_projectiles.h"
+#include "war_units.h"
+#include "war_map.h"
 
 WarState* createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile)
 {
@@ -58,7 +60,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
-    WarUnitAction* action = unit->actions.items[unit->actionIndex];
+    WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
         // when the unit cast a spell, it is not invisible anymore

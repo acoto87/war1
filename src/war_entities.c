@@ -96,16 +96,13 @@ void addUnitComponent(WarContext* context,
     entity->unit.invisible = false;
     entity->unit.invulnerable = false;
     entity->unit.hasBeenSeen = false;
-    entity->unit.actionIndex = 0;
-
-    WarUnitActionListInit(&entity->unit.actions, WarUnitActionListDefaultOptions);
+    entity->unit.actionType = WAR_ACTION_TYPE_IDLE;
 }
 
 void removeUnitComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
-    WarUnitActionListFree(&entity->unit.actions);
     entity->unit = (WarUnitComponent){0};
 }
 
