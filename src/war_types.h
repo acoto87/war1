@@ -12,7 +12,6 @@
 #include "shl/wstr.h"
 #include "shl/memzone.h"
 
-#include "war_zone.h"
 #include "war_color.h"
 #include "war_math.h"
 
@@ -76,12 +75,12 @@ typedef struct tml_message tml_message;
 
 #define directionByIndex(i) ((WarUnitDirection)(WAR_DIRECTION_NORTH + i))
 
-bool wtype_equalsS32(const s32 a, const s32 b)
+static inline bool wtype_equalsS32(const s32 a, const s32 b)
 {
     return a == b;
 }
 
-bool wtype_compareS32(const s32 a, const s32 b)
+static inline bool wtype_compareS32(const s32 a, const s32 b)
 {
     return a - b;
 }
@@ -89,9 +88,9 @@ bool wtype_compareS32(const s32 a, const s32 b)
 shlDeclareList(s32List, s32)
 shlDefineList(s32List, s32)
 
-#define s32ListDefaultOptions (s32ListOptions){0, wtype_equalsS32, NULL}
+#define s32ListDefaultOptions (s32ListOptions){0, wtype_equalsS32, NULL, NULL}
 
-bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
+static inline bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
 {
     return v1.x == v2.x && v1.y == v2.y;
 }
@@ -99,9 +98,9 @@ bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
 shlDeclareList(vec2List, vec2)
 shlDefineList(vec2List, vec2)
 
-#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wtype_equalsVec2, NULL}
+#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wtype_equalsVec2, NULL, NULL}
 
-bool wtype_equalsRect(const rect r1, const rect r2)
+static inline bool wtype_equalsRect(const rect r1, const rect r2)
 {
     return r1.x == r2.x && r1.y == r2.y &&
            r1.width == r2.width && r1.height == r2.height;
@@ -110,12 +109,18 @@ bool wtype_equalsRect(const rect r1, const rect r2)
 shlDeclareList(rectList, rect)
 shlDefineList(rectList, rect)
 
-#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wtype_equalsRect, NULL}
+#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wtype_equalsRect, NULL, NULL}
 
 shlDeclareMap(StringViewMap, StringView, String)
 shlDefineMap(StringViewMap, StringView, String)
 
-#define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free}
+static inline void wstr_free_with_userData(String s, void* userData)
+{
+    NOT_USED(userData);
+    wstr_free(s);
+}
+
+#define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free_with_userData, NULL}
 
 //
 // Forward references to other structs that need a reference to these ones.
@@ -488,7 +493,7 @@ typedef struct
     WarAnimationStatus status;
 } WarSpriteAnimation;
 
-bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
+static inline bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
 {
     return wsv_equals(wstr_view(&anim1->name), wstr_view(&anim2->name));
 }
@@ -496,7 +501,7 @@ bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnima
 shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
 shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
 
-#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, freeAnimation}
+#define WarSpriteAnimationListDefaultOptions(zone) (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, freeAnimation, (zone)}
 
 typedef enum
 {
@@ -703,12 +708,12 @@ bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
 shlDeclareList(WarEntityIdList, WarEntityId)
 shlDefineList(WarEntityIdList, WarEntityId)
 
-#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL}
+#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL, NULL}
 
 shlDeclareSet(WarEntityIdSet, WarEntityId)
 shlDefineSet(WarEntityIdSet, WarEntityId)
 
-#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, hashEntityId, equalsEntityId, NULL}
+#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, hashEntityId, equalsEntityId, NULL, NULL}
 
 typedef enum
 {
@@ -979,7 +984,7 @@ bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarRoadPieceList, WarRoadPiece)
 
-#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL}
+#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL, NULL}
 
 typedef enum
 {
@@ -1021,7 +1026,7 @@ bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
 shlDeclareList(WarWallPieceList, WarWallPiece)
 shlDefineList(WarWallPieceList, WarWallPiece)
 
-#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, equalsWallPiece, NULL}
+#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, equalsWallPiece, NULL, NULL}
 
 typedef enum
 {
@@ -1061,7 +1066,7 @@ bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
 shlDeclareList(WarRuinPieceList, WarRuinPiece)
 shlDefineList(WarRuinPieceList, WarRuinPiece)
 
-#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL}
+#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL, NULL}
 
 typedef enum
 {
@@ -1111,7 +1116,7 @@ s32 compareTreesByPosition(const WarTree t1, const WarTree t2)
 shlDeclareList(WarTreeList, WarTree)
 shlDefineList(WarTreeList, WarTree)
 
-#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
+#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL, NULL}
 
 typedef enum
 {
@@ -1152,7 +1157,7 @@ bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep ste
 shlDeclareList(WarUnitActionStepList, WarUnitActionStep)
 shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 
-#define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, equalsActionStep, NULL}
+#define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, equalsActionStep, NULL, NULL}
 
 typedef enum
 {
@@ -1832,16 +1837,17 @@ bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
     return e1->id == e2->id;
 }
 
-void freeEntity(WarEntity* e)
+static inline void freeEntity(WarEntity* e, void* userData)
 {
-    mz_free(gPermanentZone, (void*)e);
+    assert(userData != NULL);
+    mz_free((memzone_t*)userData, e);
 }
 
 shlDeclareList(WarEntityList, WarEntity*)
 shlDefineList(WarEntityList, WarEntity*)
 
-#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, freeEntity}
-#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity, NULL}
+#define WarEntityListDefaultOptions(zone) (WarEntityListOptions){NULL, equalsEntity, freeEntity, (zone)}
+#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity, NULL, NULL}
 
 uint32_t hashEntityType(const WarEntityType type)
 {
@@ -1853,8 +1859,9 @@ bool equalsEntityType(const WarEntityType t1, const WarEntityType t2)
     return t1 == t2;
 }
 
-void freeEntityList(WarEntityList* list)
+static inline void freeEntityList(WarEntityList* list, void* userData)
 {
+    NOT_USED(userData);
     WarEntityListFree(list);
 }
 
@@ -1986,13 +1993,13 @@ bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
     return command1->id == command2->id;
 }
 
-void aiCommandFree(WarAICommand* command)
+static inline void aiCommandFree(WarAICommand* command, void* userData)
 {
-    mz_free(gPermanentZone, (void*)command);
+    mz_free((memzone_t*)userData, (void*)command);
 }
 
-#define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
-#define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
+#define WarAICommandListDefaultOptions(zone) ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree, (zone)})
+#define WarAICommandQueueDefaultOptions(zone) ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree, (zone)})
 
 typedef struct
 {

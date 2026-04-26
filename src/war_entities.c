@@ -203,7 +203,7 @@ void addAnimationsComponent(WarContext* context, WarEntity* entity)
 
     entity->animations = (WarAnimationsComponent){0};
     entity->animations.enabled = true;
-    WarSpriteAnimationListInit(&entity->animations.animations, WarSpriteAnimationListDefaultOptions);
+    WarSpriteAnimationListInit(&entity->animations.animations, WarSpriteAnimationListDefaultOptions(context->permanentZone));
 }
 
 void removeAnimationsComponent(WarContext* context, WarEntity* entity)
@@ -840,7 +840,7 @@ void initEntityManager(WarContext* context, WarEntityManager* manager)
     manager->staticEntityId = 0;
 
     // initialize entities list
-    WarEntityListInit(&manager->entities, WarEntityListDefaultOptions);
+    WarEntityListInit(&manager->entities, WarEntityListDefaultOptions(context->permanentZone));
 
     // initialize entity by type map
     WarEntityMapOptions entitiesByTypeOptions = (WarEntityMapOptions){0};

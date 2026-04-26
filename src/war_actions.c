@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 #include "war.h"
-#include "war_zone.h"
 #include "war_units.h"
 
 #define __frameCountToSeconds(f) ((f32)(f)/FRAMES_PER_SECONDS)

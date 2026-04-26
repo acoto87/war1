@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
 #ifndef F_OK
@@ -50,6 +51,14 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb/stb_image_resize.h"
 
+#define SHL_MEMORY_ZONE_IMPLEMENTATION
+#include "shl/memzone.h"
+
+#define SHL_MALLOC(sz, userData) ((userData) ? mz_alloc((memzone_t*)(userData), (sz)) : malloc(sz))
+#define SHL_CALLOC(n, sz, userData) ((userData) ? mz_alloc((memzone_t*)(userData), (n) * (sz)) : calloc((n), (sz)))
+#define SHL_REALLOC(p, sz, userData) ((userData) ? mz_realloc((memzone_t*)(userData), (p), (sz)) : realloc((p), (sz)))
+#define SHL_FREE(p, userData) ((userData) ? mz_free((memzone_t*)(userData), (p)) : free(p))
+
 #include "shl/list.h"
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
@@ -59,15 +68,12 @@
 #include "shl/memory_buffer.h"
 #define SHL_WAV_IMPLEMENTATION
 #include "shl/wav.h"
-#define SHL_MEMORY_ZONE_IMPLEMENTATION
-#include "shl/memzone.h"
 #define WSTR_MALLOC(sz)       malloc(sz)
 #define WSTR_REALLOC(p, sz)   realloc((p), (sz))
 #define WSTR_FREE(p)          free(p)
 #define SHL_WSTR_IMPLEMENTATION
 #include "shl/wstr.h"
 
-#include "war_zone.c"
 #include "war_log.h"
 #include "common.h"
 #include "war_color.h"
@@ -139,7 +145,6 @@ int main(void)
 	return 0;
 }
 
-#include "war_zone.c"
 #include "war_log.c"
 #include "war_file.c"
 #include "war_audio.c"

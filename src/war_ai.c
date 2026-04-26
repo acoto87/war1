@@ -8,8 +8,8 @@ WarAI* createAI(WarContext* context)
     ai->staticCommandId = 0;
     ai->customData = NULL;
 
-    WarAICommandListInit(&ai->currentCommands, WarAICommandListDefaultOptions);
-    WarAICommandQueueInit(&ai->nextCommands, WarAICommandQueueDefaultOptions);
+    WarAICommandListInit(&ai->currentCommands, WarAICommandListDefaultOptions(context->permanentZone));
+    WarAICommandQueueInit(&ai->nextCommands, WarAICommandQueueDefaultOptions(context->permanentZone));
 
     return ai;
 }
@@ -65,7 +65,7 @@ void initAI(WarContext* context, WarPlayerInfo* aiPlayer)
     customData->index = 0;
 
     WarAICommandList* commands = &customData->commands;
-    WarAICommandListInit(commands, WarAICommandListDefaultOptions);
+    WarAICommandListInit(commands, WarAICommandListDefaultOptions(context->permanentZone));
 
     WarUnitType townHall = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
     WarAICommandListAdd(commands, createUnitRequest(context, aiPlayer, townHall, 1));

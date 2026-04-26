@@ -49,13 +49,27 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifndef SHL_MALLOC
+#define SHL_MALLOC(sz, userData) malloc(sz)
+#endif
+#ifndef SHL_CALLOC
+#define SHL_CALLOC(n, sz, userData) calloc((n), (sz))
+#endif
+#ifndef SHL_REALLOC
+#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
+#endif
+#ifndef SHL_FREE
+#define SHL_FREE(ptr, userData) free(ptr)
+#endif
+
 #define shlDeclareSet(typeName, itemType) \
     typedef struct \
     { \
         itemType defaultValue; \
         uint32_t (*hashFn)(const itemType item); \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
+        void (*freeFn)(itemType item, void* userData); \
+        void* userData; \
     } typeName ## Options; \
     \
     typedef struct { \
@@ -72,7 +86,8 @@
         int32_t shift; \
         uint32_t (*hashFn)(const itemType item); \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
+        void (*freeFn)(itemType item, void* userData); \
+        void* userData; \
         itemType defaultValue; \
         typeName ## __Entry__* entries; \
     } typeName; \
@@ -111,7 +126,7 @@
         \
         set->loadFactor = oldCapacity; \
         set->capacity = 1 << (32 - (--set->shift)); \
-        set->entries = (typeName ## __Entry__*)calloc(set->capacity, sizeof(typeName ## __Entry__)); \
+        set->entries = (typeName ## __Entry__*)SHL_CALLOC(set->capacity, sizeof(typeName ## __Entry__), set->userData); \
         set->count = 0; \
         \
         for(int32_t i = 0; i < oldCapacity; i++) \
@@ -119,7 +134,7 @@
             if(old[i].active) \
                 typeName ## Add(set, old[i].item); \
         } \
-        free(old); \
+        SHL_FREE(old, set->userData); \
     } \
     \
     void typeName ## Init(typeName* set, typeName ## Options options) \
@@ -128,11 +143,12 @@
         set->hashFn = options.hashFn; \
         set->equalsFn = options.equalsFn; \
         set->freeFn = options.freeFn; \
+        set->userData = options.userData; \
         set->shift = 29; \
         set->capacity = 8; \
         set->loadFactor = 6; \
         set->count = 0; \
-        set->entries = (typeName ## __Entry__ *)calloc(set->capacity, sizeof(typeName ## __Entry__)); \
+        set->entries = (typeName ## __Entry__ *)SHL_CALLOC(set->capacity, sizeof(typeName ## __Entry__), set->userData); \
     } \
     \
     void typeName ## Free(typeName* set) \
@@ -142,7 +158,7 @@
         \
         typeName ## Clear(set); \
         \
-        free(set->entries); \
+        SHL_FREE(set->entries, set->userData); \
         set->entries = 0; \
     } \
     \
@@ -247,7 +263,7 @@
                 } \
                 \
                 if (set->freeFn) \
-                    set->freeFn(oldItem); \
+                    set->freeFn(oldItem, set->userData); \
                 \
                 set->count--; \
                 \
@@ -272,7 +288,7 @@
             if (set->entries[i].active) \
             { \
                 if (set->freeFn) \
-                    set->freeFn(set->entries[i].item); \
+                    set->freeFn(set->entries[i].item, set->userData); \
                 \
                 set->entries[i].item = set->defaultValue; \
                 set->entries[i].next = -1; \

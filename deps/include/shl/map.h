@@ -60,13 +60,27 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifndef SHL_MALLOC
+#define SHL_MALLOC(sz, userData) malloc(sz)
+#endif
+#ifndef SHL_CALLOC
+#define SHL_CALLOC(n, sz, userData) calloc((n), (sz))
+#endif
+#ifndef SHL_REALLOC
+#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
+#endif
+#ifndef SHL_FREE
+#define SHL_FREE(ptr, userData) free(ptr)
+#endif
+
 #define shlDeclareMap(typeName, keyType, valueType) \
     typedef struct \
     { \
         valueType defaultValue; \
         uint32_t (*hashFn)(keyType key); \
         bool (*equalsFn)(keyType item1, keyType item2); \
-        void (*freeFn)(valueType item); \
+        void (*freeFn)(valueType item, void* userData); \
+        void* userData; \
     } typeName ## Options; \
     \
     typedef struct { \
@@ -84,7 +98,8 @@
         int32_t shift; \
         uint32_t (*hashFn)(keyType key); \
         bool (*equalsFn)(keyType item1, keyType item2); \
-        void (*freeFn)(valueType item); \
+        void (*freeFn)(valueType item, void* userData); \
+        void* userData; \
         valueType defaultValue; \
         typeName ## __Entry__* entries; \
     } typeName; \
@@ -132,7 +147,7 @@
                 map->entries[index].value = value; \
                 \
                 if (map->freeFn) \
-                    map->freeFn(currentValue); \
+                    map->freeFn(currentValue, map->userData); \
                 \
                 return; \
             } \
@@ -148,7 +163,7 @@
                 map->entries[index].value = value; \
                 \
                 if (map->freeFn) \
-                    map->freeFn(currentValue); \
+                    map->freeFn(currentValue, map->userData); \
                 \
                 return; \
             } \
@@ -179,7 +194,7 @@
         \
         map->loadFactor = oldCapacity; \
         map->capacity = 1 << (32 - (--map->shift)); \
-        map->entries = (typeName ## __Entry__*)calloc(map->capacity, sizeof(typeName ## __Entry__)); \
+        map->entries = (typeName ## __Entry__*)SHL_CALLOC(map->capacity, sizeof(typeName ## __Entry__), map->userData); \
         map->count = 0; \
         \
         for(int32_t i = 0; i < oldCapacity; i++) \
@@ -187,7 +202,7 @@
             if(old[i].active) \
                 typeName ## __insert(map, old[i].key, old[i].value); \
         } \
-        free(old); \
+        SHL_FREE(old, map->userData); \
     } \
     \
     void typeName ## Init(typeName* map, typeName ## Options options) \
@@ -196,11 +211,12 @@
         map->hashFn = options.hashFn; \
         map->equalsFn = options.equalsFn; \
         map->freeFn = options.freeFn; \
+        map->userData = options.userData; \
         map->shift = 29; \
         map->capacity = 8; \
         map->loadFactor = 6; \
         map->count = 0; \
-        map->entries = (typeName ## __Entry__ *)calloc(map->capacity, sizeof(typeName ## __Entry__)); \
+        map->entries = (typeName ## __Entry__ *)SHL_CALLOC(map->capacity, sizeof(typeName ## __Entry__), map->userData); \
     } \
     \
     void typeName ## Free(typeName* map) \
@@ -210,7 +226,7 @@
         \
         typeName ## Clear(map); \
         \
-        free(map->entries); \
+        SHL_FREE(map->entries, map->userData); \
         map->entries = 0; \
     } \
     \
@@ -317,7 +333,7 @@
                 } \
                 \
                 if (map->freeFn) \
-                    map->freeFn(value); \
+                    map->freeFn(value, map->userData); \
                 \
                 map->count--; \
                 \
@@ -344,7 +360,7 @@
             if (map->entries[i].active) \
             { \
                 if (map->freeFn) \
-                    map->freeFn(map->entries[i].value); \
+                    map->freeFn(map->entries[i].value, map->userData); \
                 \
                 map->entries[i].value = map->defaultValue; \
                 map->entries[i].next = -1; \

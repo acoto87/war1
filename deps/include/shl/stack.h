@@ -49,12 +49,26 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifndef SHL_MALLOC
+#define SHL_MALLOC(sz, userData) malloc(sz)
+#endif
+#ifndef SHL_CALLOC
+#define SHL_CALLOC(n, sz, userData) calloc((n), (sz))
+#endif
+#ifndef SHL_REALLOC
+#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
+#endif
+#ifndef SHL_FREE
+#define SHL_FREE(ptr, userData) free(ptr)
+#endif
+
 #define shlDeclareStack(typeName, itemType) \
     typedef struct \
     { \
         itemType defaultValue; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
+        void (*freeFn)(itemType item, void* userData); \
+        void* userData; \
     } typeName ## Options; \
     \
     typedef struct \
@@ -62,7 +76,8 @@
         int32_t count; \
         int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
+        void (*freeFn)(itemType item, void* userData); \
+        void* userData; \
         itemType defaultValue; \
         itemType *items; \
     } typeName; \
@@ -81,7 +96,7 @@
         int32_t oldCapacity = stack->capacity; \
         \
         stack->capacity = oldCapacity << 1; \
-        stack->items = (itemType *)realloc(stack->items, stack->capacity * sizeof(itemType)); \
+        stack->items = (itemType *)SHL_REALLOC(stack->items, stack->capacity * sizeof(itemType), stack->userData); \
     } \
     \
     void typeName ## Init(typeName *stack, typeName ## Options options) \
@@ -89,9 +104,10 @@
         stack->defaultValue = options.defaultValue; \
         stack->equalsFn = options.equalsFn; \
         stack->freeFn = options.freeFn; \
+        stack->userData = options.userData; \
         stack->capacity = 8; \
         stack->count = 0; \
-        stack->items = (itemType *)calloc(stack->capacity, sizeof(itemType)); \
+        stack->items = (itemType *)SHL_CALLOC(stack->capacity, sizeof(itemType), stack->userData); \
     } \
     \
     void typeName ## Free(typeName *stack) \
@@ -101,7 +117,7 @@
         \
         typeName ## Clear(stack); \
         \
-        free(stack->items); \
+        SHL_FREE(stack->items, stack->userData); \
         stack->items = 0; \
     } \
     \
@@ -160,7 +176,7 @@
         if (stack->freeFn) \
         { \
             for(int32_t i = 0; i < stack->count; i++) \
-                stack->freeFn(stack->items[i]); \
+                stack->freeFn(stack->items[i], stack->userData); \
         } \
         \
         stack->count = 0; \

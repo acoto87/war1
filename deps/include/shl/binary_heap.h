@@ -49,13 +49,27 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifndef SHL_MALLOC
+#define SHL_MALLOC(sz, userData) malloc(sz)
+#endif
+#ifndef SHL_CALLOC
+#define SHL_CALLOC(n, sz, userData) calloc((n), (sz))
+#endif
+#ifndef SHL_REALLOC
+#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
+#endif
+#ifndef SHL_FREE
+#define SHL_FREE(ptr, userData) free(ptr)
+#endif
+
 #define shlDeclareBinaryHeap(typeName, itemType) \
     typedef struct \
     { \
         itemType defaultValue; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
         int32_t (*compareFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
+        void (*freeFn)(itemType item, void* userData); \
+        void* userData; \
     } typeName ## Options; \
     \
     typedef struct \
@@ -64,7 +78,8 @@
         int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
         int32_t (*compareFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
+        void (*freeFn)(itemType item, void* userData); \
+        void* userData; \
         itemType defaultValue; \
         itemType* items; \
     } typeName; \
@@ -86,7 +101,7 @@
         if (heap->capacity < minSize) \
             heap->capacity = minSize; \
         \
-        heap->items = (itemType *)realloc(heap->items, heap->capacity * sizeof(itemType)); \
+        heap->items = (itemType *)SHL_REALLOC(heap->items, heap->capacity * sizeof(itemType), heap->userData); \
     } \
     \
     void typeName ## __heapUp(typeName* heap, int32_t index) \
@@ -145,8 +160,9 @@
         heap->equalsFn = options.equalsFn; \
         heap->compareFn = options.compareFn; \
         heap->freeFn = options.freeFn; \
+        heap->userData = options.userData; \
         heap->count = 0; \
-        heap->items = (itemType *)malloc(heap->capacity * sizeof(itemType)); \
+        heap->items = (itemType *)SHL_MALLOC(heap->capacity * sizeof(itemType), heap->userData); \
     } \
     \
     void typeName ## Free(typeName* heap) \
@@ -156,7 +172,7 @@
         \
         typeName ## Clear(heap); \
         \
-        free(heap->items); \
+        SHL_FREE(heap->items, heap->userData); \
         heap->items = 0; \
     } \
      \
@@ -253,7 +269,7 @@
         if (heap->freeFn) \
         { \
             for(int32_t i = 0; i < heap->count; i++) \
-                heap->freeFn(heap->items[i]); \
+                heap->freeFn(heap->items[i], heap->userData); \
         } \
         \
         heap->count = 0; \

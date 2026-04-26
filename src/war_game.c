@@ -18,7 +18,6 @@
 #include "shl/memzone.h"
 #include "shl/wstr.h"
 
-#include "war_zone.h"
 #include "war_audio.h"
 #include "war_file.h"
 #include "war_font.h"
@@ -184,7 +183,6 @@ bool initGame(WarContext* context)
         return false;
     }
     mz_setReporter(context->permanentZone, zoneReporter, NULL);
-    gPermanentZone = context->permanentZone; // expose to free callbacks
 
     context->frameZone = mz_init(4 * 1024 * 1024); // 4 MB
     if (!context->frameZone)
@@ -451,7 +449,7 @@ void processGameEvent(WarContext* context, SDL_Event* event)
 {
     // NOTE: Convert event coordinates from window space to logical render space (320x200).
     // SDL_SetRenderLogicalPresentation does NOT do this automatically in SDL3.
-    SDL_ConvertEventToRenderCoordinates(context->renderer, (SDL_Event*)event);
+    SDL_ConvertEventToRenderCoordinates(context->renderer, event);
 
     switch (event->type)
     {
