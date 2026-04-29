@@ -798,12 +798,12 @@ void wmap_enterMap(WarContext* context)
 
     // add ui entities
     wmui_createMapUI(context);
-    createMenu(context);
-    createOptionsMenu(context);
+    wmm_createMenu(context);
+    wmm_createOptionsMenu(context);
     createObjectivesMenu(context);
     createRestartMenu(context);
-    createGameOverMenu(context);
-    createQuitMenu(context);
+    wmm_createGameOverMenu(context);
+    wmm_createQuitMenu(context);
     createDemoEndMenu(context);
     createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
 
@@ -2444,11 +2444,11 @@ void updateObjectives(WarContext* context)
 
     if (map->result == WAR_LEVEL_RESULT_WIN && isLastLevel)
     {
-        showDemoEndMenu(context, true);
+        wmm_showDemoEndMenu(context, true);
     }
     else
     {
-        showOrHideGameOverMenu(context, true);
+        wmm_showOrHideGameOverMenu(context, true);
     }
 }
 

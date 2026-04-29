@@ -194,7 +194,7 @@ void wcheat_applyEndCheat(WarContext* context, StringView argument)
 
     map->playing = false;
 
-    showDemoEndMenu(context, true);
+    wmm_showDemoEndMenu(context, true);
 }
 
 void wcheat_applyEnableCheat(WarContext* context, StringView argument)

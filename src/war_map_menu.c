@@ -44,7 +44,7 @@ static void setUITextS32ValueByName(WarContext* context, StringView name, s32 va
     }
 }
 
-void createMenu(WarContext* context)
+void wmm_createMenu(WarContext* context)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -106,7 +106,7 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 45)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleOptions);
+    setUIButtonClickHandler(uiEntity, wmm_handleOptions);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -118,7 +118,7 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 65)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleObjectives);
+    setUIButtonClickHandler(uiEntity, wmm_handleObjectives);
     setUIButtonHotKey(uiEntity, WAR_KEY_J);
     setUITextHighlight(uiEntity, 2, 1);
 
@@ -130,7 +130,7 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 85)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleRestart);
+    setUIButtonClickHandler(uiEntity, wmm_handleRestart);
     setUIButtonHotKey(uiEntity, WAR_KEY_R);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -142,7 +142,7 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 105)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleContinue);
+    setUIButtonClickHandler(uiEntity, wmm_handleContinue);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -154,12 +154,12 @@ void createMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(78, 105)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleQuit);
+    setUIButtonClickHandler(uiEntity, wmm_handleQuit);
     setUIButtonHotKey(uiEntity, WAR_KEY_Q);
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void createOptionsMenu(WarContext* context)
+void wmm_createOptionsMenu(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -259,7 +259,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(76, 22)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleGameSpeedDec);
+    setUIButtonClickHandler(uiEntity, wmm_handleGameSpeedDec);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsGameSpeedInc"),
@@ -268,7 +268,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(133, 22)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleGameSpeedInc);
+    setUIButtonClickHandler(uiEntity, wmm_handleGameSpeedInc);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsMusicVolDec"),
@@ -277,7 +277,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(76, 39)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleMusicVolDec);
+    setUIButtonClickHandler(uiEntity, wmm_handleMusicVolDec);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsMusicVolInc"),
@@ -286,7 +286,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(133, 39)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleMusicVolInc);
+    setUIButtonClickHandler(uiEntity, wmm_handleMusicVolInc);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsSFXVolDec"),
@@ -295,7 +295,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(76, 56)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleSfxVolDec);
+    setUIButtonClickHandler(uiEntity, wmm_handleSfxVolDec);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsSFXVolInc"),
@@ -304,7 +304,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(133, 56)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleSfxVolInc);
+    setUIButtonClickHandler(uiEntity, wmm_handleSfxVolInc);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsMouseScrollDec"),
@@ -313,7 +313,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(76, 73)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleMouseScrollSpeedDec);
+    setUIButtonClickHandler(uiEntity, wmm_handleMouseScrollSpeedDec);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsMouseScrollInc"),
@@ -322,7 +322,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(133, 73)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleMouseScrollSpeedInc);
+    setUIButtonClickHandler(uiEntity, wmm_handleMouseScrollSpeedInc);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsKeyScrollDec"),
@@ -331,7 +331,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(76, 90)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleKeyScrollSpeedDec);
+    setUIButtonClickHandler(uiEntity, wmm_handleKeyScrollSpeedDec);
 
     uiEntity = createUIImageButton(
         context, wstr_fromCString("btnOptionsKeyScrollInc"),
@@ -340,7 +340,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(133, 90)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleKeyScrollSpeedInc);
+    setUIButtonClickHandler(uiEntity, wmm_handleKeyScrollSpeedInc);
 
     uiEntity = createUITextButton(
         context, wstr_fromCString("btnOptionsOk"),
@@ -350,7 +350,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 115)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleOptionsOk);
+    setUIButtonClickHandler(uiEntity, wmm_handleOptionsOk);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -362,7 +362,7 @@ void createOptionsMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(78, 115)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleOptionsCancel);
+    setUIButtonClickHandler(uiEntity, wmm_handleOptionsCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
     setUITextHighlight(uiEntity, 0, 1);
 }
@@ -410,7 +410,7 @@ void createObjectivesMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 105)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleObjectivesMenu);
+    setUIButtonClickHandler(uiEntity, wmm_handleObjectivesMenu);
     setUIButtonHotKey(uiEntity, WAR_KEY_M);
     setUITextHighlight(uiEntity, 0, 1);
 }
@@ -447,7 +447,7 @@ void createRestartMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(20, 25)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleRestartRestart);
+    setUIButtonClickHandler(uiEntity, wmm_handleRestartRestart);
     setUIButtonHotKey(uiEntity, WAR_KEY_R);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -459,12 +459,12 @@ void createRestartMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(210, 25)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleRestartCancel);
+    setUIButtonClickHandler(uiEntity, wmm_handleRestartCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void createGameOverMenu(WarContext* context)
+void wmm_createGameOverMenu(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -492,7 +492,7 @@ void createGameOverMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(20, 25)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleGameOverSave);
+    setUIButtonClickHandler(uiEntity, wmm_handleGameOverSave);
     setUIButtonHotKey(uiEntity, WAR_KEY_S);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -504,7 +504,7 @@ void createGameOverMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(210, 25)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleGameOverContinue);
+    setUIButtonClickHandler(uiEntity, wmm_handleGameOverContinue);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -516,12 +516,12 @@ void createGameOverMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(116, 25)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleGameOverContinue);
+    setUIButtonClickHandler(uiEntity, wmm_handleGameOverContinue);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void createQuitMenu(WarContext* context)
+void wmm_createQuitMenu(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -549,7 +549,7 @@ void createQuitMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(20, 25)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleQuitQuit);
+    setUIButtonClickHandler(uiEntity, wmm_handleQuitQuit);
     setUIButtonHotKey(uiEntity, WAR_KEY_Q);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -561,7 +561,7 @@ void createQuitMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(115, 25)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleQuitMenu);
+    setUIButtonClickHandler(uiEntity, wmm_handleQuitMenu);
     setUIButtonHotKey(uiEntity, WAR_KEY_M);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -573,7 +573,7 @@ void createQuitMenu(WarContext* context)
         invalidRef,
         vec2Addv(messagePanel, vec2i(210, 25)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleQuitCancel);
+    setUIButtonClickHandler(uiEntity, wmm_handleQuitCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
     setUITextHighlight(uiEntity, 0, 1);
 }
@@ -630,12 +630,12 @@ void createDemoEndMenu(WarContext* context)
         invalidRef,
         vec2Addv(menuPanel, vec2i(20, 105)));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, handleDemoEndMenu);
+    setUIButtonClickHandler(uiEntity, wmm_handleDemoEndMenu);
     setUIButtonHotKey(uiEntity, WAR_KEY_M);
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void enableOrDisableCommandButtons(WarContext* context, bool interactive)
+void wmm_enableOrDisableCommandButtons(WarContext* context, bool interactive)
 {
     setUIButtonInteractiveByName(context, wsv_fromCString("btnCommand0"), interactive);
     setUIButtonInteractiveByName(context, wsv_fromCString("btnCommand1"), interactive);
@@ -647,7 +647,7 @@ void enableOrDisableCommandButtons(WarContext* context, bool interactive)
     setUIButtonInteractiveByName(context, wsv_fromCString("btnMenu"), interactive);
 }
 
-void showOrHideMenu(WarContext* context, bool status)
+void wmm_showOrHideMenu(WarContext* context, bool status)
 {
     setUIEntityStatusByName(context, wsv_fromCString("rectMenuBackdrop"), status);
     setUIEntityStatusByName(context, wsv_fromCString("imgMenuBackground"), status);
@@ -661,7 +661,7 @@ void showOrHideMenu(WarContext* context, bool status)
     setUIEntityStatusByName(context, wsv_fromCString("btnMenuQuit"), status);
 }
 
-void showOrHideOptionsMenu(WarContext* context, bool status)
+void wmm_showOrHideOptionsMenu(WarContext* context, bool status)
 {
     WarMap* map = context->map;
 
@@ -729,11 +729,11 @@ void showOrHideRestartMenu(WarContext* context, bool status)
     setUIEntityStatusByName(context, wsv_fromCString("btnRestartCancel"), status);
 }
 
-void showOrHideGameOverMenu(WarContext* context, bool status)
+void wmm_showOrHideGameOverMenu(WarContext* context, bool status)
 {
     WarMap* map = context->map;
 
-    enableOrDisableCommandButtons(context, !status);
+    wmm_enableOrDisableCommandButtons(context, !status);
 
     setUIEntityStatusByName(context, wsv_fromCString("rectMenuBackdrop"), status);
     setUIEntityStatusByName(context, wsv_fromCString("imgMessageMenuBackground"), status);
@@ -775,7 +775,7 @@ void showOrHideGameOverMenu(WarContext* context, bool status)
     }
 }
 
-void showOrHideQuitMenu(WarContext* context, bool status)
+void wmm_showOrHideQuitMenu(WarContext* context, bool status)
 {
     setUIEntityStatusByName(context, wsv_fromCString("rectMenuBackdrop"), status);
     setUIEntityStatusByName(context, wsv_fromCString("imgMessageMenuBackground"), status);
@@ -785,9 +785,9 @@ void showOrHideQuitMenu(WarContext* context, bool status)
     setUIEntityStatusByName(context, wsv_fromCString("btnQuitCancel"), status);
 }
 
-void showDemoEndMenu(WarContext* context, bool status)
+void wmm_showDemoEndMenu(WarContext* context, bool status)
 {
-    enableOrDisableCommandButtons(context, !status);
+    wmm_enableOrDisableCommandButtons(context, !status);
 
     setUIEntityStatusByName(context, wsv_fromCString("rectMenuBackdrop"), status);
     setUIEntityStatusByName(context, wsv_fromCString("imgMenuBackground"), status);
@@ -797,79 +797,79 @@ void showDemoEndMenu(WarContext* context, bool status)
 }
 
 // menu button handlers
-void handleMenu(WarContext* context, WarEntity* entity)
+void wmm_handleMenu(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
-    enableOrDisableCommandButtons(context, false);
-    showOrHideMenu(context, true);
+    wmm_enableOrDisableCommandButtons(context, false);
+    wmm_showOrHideMenu(context, true);
 
     map->playing = false;
 }
 
-void handleOptions(WarContext* context, WarEntity* entity)
+void wmm_handleOptions(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
-    showOrHideMenu(context, false);
-    showOrHideOptionsMenu(context, true);
+    wmm_showOrHideMenu(context, false);
+    wmm_showOrHideOptionsMenu(context, true);
 
     map->playing = false;
 }
 
-void handleObjectives(WarContext* context, WarEntity* entity)
+void wmm_handleObjectives(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
-    showOrHideMenu(context, false);
+    wmm_showOrHideMenu(context, false);
     showOrHideObjectivesMenu(context, true);
 
     map->playing = false;
 }
 
-void handleRestart(WarContext* context, WarEntity* entity)
+void wmm_handleRestart(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
-    showOrHideMenu(context, false);
+    wmm_showOrHideMenu(context, false);
     showOrHideRestartMenu(context, true);
 
     map->playing = false;
 }
 
-void handleContinue(WarContext* context, WarEntity* entity)
+void wmm_handleContinue(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
-    enableOrDisableCommandButtons(context, true);
-    showOrHideMenu(context, false);
+    wmm_enableOrDisableCommandButtons(context, true);
+    wmm_showOrHideMenu(context, false);
 
     map->playing = true;
 }
 
-void handleQuit(WarContext* context, WarEntity* entity)
+void wmm_handleQuit(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
-    showOrHideMenu(context, false);
-    showOrHideQuitMenu(context, true);
+    wmm_showOrHideMenu(context, false);
+    wmm_showOrHideQuitMenu(context, true);
 
     map->playing = false;
 }
 
-void handleGameSpeedDec(WarContext* context, WarEntity* entity)
+void wmm_handleGameSpeedDec(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -882,7 +882,7 @@ void handleGameSpeedDec(WarContext* context, WarEntity* entity)
     }
 }
 
-void handleGameSpeedInc(WarContext* context, WarEntity* entity)
+void wmm_handleGameSpeedInc(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -895,7 +895,7 @@ void handleGameSpeedInc(WarContext* context, WarEntity* entity)
     }
 }
 
-void handleMusicVolDec(WarContext* context, WarEntity* entity)
+void wmm_handleMusicVolDec(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -905,7 +905,7 @@ void handleMusicVolDec(WarContext* context, WarEntity* entity)
     setUITextS32ValueByName(context, wsv_fromCString("txtOptionsMusicVolValue"), map->settings2.musicVol);
 }
 
-void handleMusicVolInc(WarContext* context, WarEntity* entity)
+void wmm_handleMusicVolInc(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -915,7 +915,7 @@ void handleMusicVolInc(WarContext* context, WarEntity* entity)
     setUITextS32ValueByName(context, wsv_fromCString("txtOptionsMusicVolValue"), map->settings2.musicVol);
 }
 
-void handleSfxVolDec(WarContext* context, WarEntity* entity)
+void wmm_handleSfxVolDec(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -925,7 +925,7 @@ void handleSfxVolDec(WarContext* context, WarEntity* entity)
     setUITextS32ValueByName(context, wsv_fromCString("txtOptionsSFXVolValue"), map->settings2.sfxVol);
 }
 
-void handleSfxVolInc(WarContext* context, WarEntity* entity)
+void wmm_handleSfxVolInc(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -935,7 +935,7 @@ void handleSfxVolInc(WarContext* context, WarEntity* entity)
     setUITextS32ValueByName(context, wsv_fromCString("txtOptionsSFXVolValue"), map->settings2.sfxVol);
 }
 
-void handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
+void wmm_handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -948,7 +948,7 @@ void handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
     }
 }
 
-void handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity)
+void wmm_handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -961,7 +961,7 @@ void handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity)
     }
 }
 
-void handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity)
+void wmm_handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -974,7 +974,7 @@ void handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity)
     }
 }
 
-void handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
+void wmm_handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -987,7 +987,7 @@ void handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
     }
 }
 
-void handleOptionsOk(WarContext* context, WarEntity* entity)
+void wmm_handleOptionsOk(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -998,37 +998,37 @@ void handleOptionsOk(WarContext* context, WarEntity* entity)
     context->musicVolume = (f32)map->settings.musicVol / 100;
     context->soundVolume = (f32)map->settings.sfxVol / 100;
 
-    showOrHideOptionsMenu(context, false);
-    showOrHideMenu(context, true);
+    wmm_showOrHideOptionsMenu(context, false);
+    wmm_showOrHideMenu(context, true);
 
     map->playing = false;
 }
 
-void handleOptionsCancel(WarContext* context, WarEntity* entity)
+void wmm_handleOptionsCancel(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
-    showOrHideOptionsMenu(context, false);
-    showOrHideMenu(context, true);
+    wmm_showOrHideOptionsMenu(context, false);
+    wmm_showOrHideMenu(context, true);
 
     map->playing = false;
 }
 
-void handleObjectivesMenu(WarContext* context, WarEntity* entity)
+void wmm_handleObjectivesMenu(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
     showOrHideObjectivesMenu(context, false);
-    showOrHideMenu(context, true);
+    wmm_showOrHideMenu(context, true);
 
     map->playing = false;
 }
 
-void handleRestartRestart(WarContext* context, WarEntity* entity)
+void wmm_handleRestartRestart(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -1038,19 +1038,19 @@ void handleRestartRestart(WarContext* context, WarEntity* entity)
     setNextMap(context, map, 1.0f);
 }
 
-void handleRestartCancel(WarContext* context, WarEntity* entity)
+void wmm_handleRestartCancel(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
     showOrHideRestartMenu(context, false);
-    showOrHideMenu(context, true);
+    wmm_showOrHideMenu(context, true);
 
     map->playing = false;
 }
 
-void handleGameOverSave(WarContext* context, WarEntity* entity)
+void wmm_handleGameOverSave(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
     NOT_USED(entity);
@@ -1058,7 +1058,7 @@ void handleGameOverSave(WarContext* context, WarEntity* entity)
     NOT_IMPLEMENTED();
 }
 
-void handleGameOverContinue(WarContext* context, WarEntity* entity)
+void wmm_handleGameOverContinue(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -1086,7 +1086,7 @@ void handleGameOverContinue(WarContext* context, WarEntity* entity)
     }
 }
 
-void handleQuitQuit(WarContext* context, WarEntity* entity)
+void wmm_handleQuitQuit(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
     NOT_USED(entity);
@@ -1094,7 +1094,7 @@ void handleQuitQuit(WarContext* context, WarEntity* entity)
     SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
 }
 
-void handleQuitMenu(WarContext* context, WarEntity* entity)
+void wmm_handleQuitMenu(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -1102,19 +1102,19 @@ void handleQuitMenu(WarContext* context, WarEntity* entity)
     setNextScene(context, scene, 1.0f);
 }
 
-void handleQuitCancel(WarContext* context, WarEntity* entity)
+void wmm_handleQuitCancel(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
     WarMap* map = context->map;
 
-    showOrHideQuitMenu(context, false);
-    showOrHideMenu(context, true);
+    wmm_showOrHideQuitMenu(context, false);
+    wmm_showOrHideMenu(context, true);
 
     map->playing = false;
 }
 
-void handleDemoEndMenu(WarContext* context, WarEntity* entity)
+void wmm_handleDemoEndMenu(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 

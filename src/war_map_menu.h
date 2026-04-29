@@ -2,49 +2,49 @@
 
 #include "war_types.h"
 
-void createMenu(WarContext* context);
-void createOptionsMenu(WarContext* context);
-void createGameOverMenu(WarContext* context);
-void createQuitMenu(WarContext* context);
+void wmm_createMenu(WarContext* context);
+void wmm_createOptionsMenu(WarContext* context);
+void wmm_createGameOverMenu(WarContext* context);
+void wmm_createQuitMenu(WarContext* context);
 
-void enableOrDisableCommandButtons(WarContext* context, bool interactive);
-void showOrHideMenu(WarContext* context, bool status);
-void showOrHideOptionsMenu(WarContext* context, bool status);
-void showOrHideGameOverMenu(WarContext* context, bool status);
-void showOrHideQuitMenu(WarContext* context, bool status);
-void showDemoEndMenu(WarContext* context, bool status);
+void wmm_enableOrDisableCommandButtons(WarContext* context, bool interactive);
+void wmm_showOrHideMenu(WarContext* context, bool status);
+void wmm_showOrHideOptionsMenu(WarContext* context, bool status);
+void wmm_showOrHideGameOverMenu(WarContext* context, bool status);
+void wmm_showOrHideQuitMenu(WarContext* context, bool status);
+void wmm_showDemoEndMenu(WarContext* context, bool status);
 
 // menu button handlers
-void handleMenu(WarContext* context, WarEntity* entity);
-void handleOptions(WarContext* context, WarEntity* entity);
-void handleObjectives(WarContext* context, WarEntity* entity);
-void handleRestart(WarContext* context, WarEntity* entity);
-void handleContinue(WarContext* context, WarEntity* entity);
-void handleQuit(WarContext* context, WarEntity* entity);
+void wmm_handleMenu(WarContext* context, WarEntity* entity);
+void wmm_handleOptions(WarContext* context, WarEntity* entity);
+void wmm_handleObjectives(WarContext* context, WarEntity* entity);
+void wmm_handleRestart(WarContext* context, WarEntity* entity);
+void wmm_handleContinue(WarContext* context, WarEntity* entity);
+void wmm_handleQuit(WarContext* context, WarEntity* entity);
 
-void handleGameSpeedDec(WarContext* context, WarEntity* entity);
-void handleGameSpeedInc(WarContext* context, WarEntity* entity);
-void handleMusicVolDec(WarContext* context, WarEntity* entity);
-void handleMusicVolInc(WarContext* context, WarEntity* entity);
-void handleSfxVolDec(WarContext* context, WarEntity* entity);
-void handleSfxVolInc(WarContext* context, WarEntity* entity);
-void handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity);
-void handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity);
-void handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity);
-void handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity);
-void handleOptionsOk(WarContext* context, WarEntity* entity);
-void handleOptionsCancel(WarContext* context, WarEntity* entity);
+void wmm_handleGameSpeedDec(WarContext* context, WarEntity* entity);
+void wmm_handleGameSpeedInc(WarContext* context, WarEntity* entity);
+void wmm_handleMusicVolDec(WarContext* context, WarEntity* entity);
+void wmm_handleMusicVolInc(WarContext* context, WarEntity* entity);
+void wmm_handleSfxVolDec(WarContext* context, WarEntity* entity);
+void wmm_handleSfxVolInc(WarContext* context, WarEntity* entity);
+void wmm_handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity);
+void wmm_handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity);
+void wmm_handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity);
+void wmm_handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity);
+void wmm_handleOptionsOk(WarContext* context, WarEntity* entity);
+void wmm_handleOptionsCancel(WarContext* context, WarEntity* entity);
 
-void handleObjectivesMenu(WarContext* context, WarEntity* entity);
+void wmm_handleObjectivesMenu(WarContext* context, WarEntity* entity);
 
-void handleRestartRestart(WarContext* context, WarEntity* entity);
-void handleRestartCancel(WarContext* context, WarEntity* entity);
+void wmm_handleRestartRestart(WarContext* context, WarEntity* entity);
+void wmm_handleRestartCancel(WarContext* context, WarEntity* entity);
 
-void handleGameOverSave(WarContext* context, WarEntity* entity);
-void handleGameOverContinue(WarContext* context, WarEntity* entity);
+void wmm_handleGameOverSave(WarContext* context, WarEntity* entity);
+void wmm_handleGameOverContinue(WarContext* context, WarEntity* entity);
 
-void handleQuitQuit(WarContext* context, WarEntity* entity);
-void handleQuitMenu(WarContext* context, WarEntity* entity);
-void handleQuitCancel(WarContext* context, WarEntity* entity);
+void wmm_handleQuitQuit(WarContext* context, WarEntity* entity);
+void wmm_handleQuitMenu(WarContext* context, WarEntity* entity);
+void wmm_handleQuitCancel(WarContext* context, WarEntity* entity);
 
-void handleDemoEndMenu(WarContext* context, WarEntity* entity);
+void wmm_handleDemoEndMenu(WarContext* context, WarEntity* entity);

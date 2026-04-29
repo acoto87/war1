@@ -124,7 +124,7 @@ void wmui_createMapUI(WarContext* context)
         invalidRef,
         vec2Addv(leftBottomPanel, vec2i(3, 116)));
     setUITooltip(uiEntity, 6, 3, wstr_fromCString("MENU (F10)"));
-    setUIButtonClickHandler(uiEntity, handleMenu);
+    setUIButtonClickHandler(uiEntity, wmm_handleMenu);
     setUIButtonHotKey(uiEntity, WAR_KEY_F10);
 }
 
