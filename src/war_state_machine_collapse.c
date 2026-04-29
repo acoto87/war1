@@ -16,15 +16,15 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 unitSize = getUnitSize(entity);
     vec2 position = vec2MapToTileCoordinates(entity->transform.position);
 
-    removeAnimation(context, entity, wsv_fromCString("littleDamage"));
-    removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
+    wani_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
+    wani_removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
 
     // disable the sprite component to just render the animation
     entity->sprite.enabled = false;
 
-    WarSpriteAnimation* collapseAnim = createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
+    WarSpriteAnimation* collapseAnim = wani_createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
 
-    setDelay(state, getMapScaledTime(context, getAnimationDuration(collapseAnim)));
+    setDelay(state, getMapScaledTime(context, wani_getAnimationDuration(collapseAnim)));
 
     WarEntity* ruins = map->ruin;
     addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);

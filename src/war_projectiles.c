@@ -312,7 +312,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                 addAnimationsComponent(context, animEntity);
 
-                createRainOfFireExplosionAnimation(context, animEntity, projectile->target);
+                wani_createRainOfFireExplosionAnimation(context, animEntity, projectile->target);
                 waud_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
                 removeEntityById(context, entity->id);
             }
@@ -332,7 +332,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                     WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                     addAnimationsComponent(context, animEntity);
 
-                    createExplosionAnimation(context, animEntity, projectile->target);
+                    wani_createExplosionAnimation(context, animEntity, projectile->target);
                     waud_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
                 }
                 else

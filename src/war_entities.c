@@ -2120,17 +2120,17 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
         s32 hpPercent = percentabi(unit->hp, unit->maxhp);
         if(hpPercent <= 33)
         {
-            if (!containsAnimation(context, entity, wsv_fromCString("hugeDamage")))
+            if (!wani_containsAnimation(context, entity, wsv_fromCString("hugeDamage")))
             {
-                removeAnimation(context, entity, wsv_fromCString("littleDamage"));
-                createDamageAnimation(context, entity, wstr_fromCString("hugeDamage"), 2);
+                wani_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
+                wani_createDamageAnimation(context, entity, wstr_fromCString("hugeDamage"), 2);
             }
         }
         else if(hpPercent <= 66)
         {
-            if (!containsAnimation(context, entity, wsv_fromCString("littleDamage")))
+            if (!wani_containsAnimation(context, entity, wsv_fromCString("littleDamage")))
             {
-                createDamageAnimation(context, entity, wstr_fromCString("littleDamage"), 1);
+                wani_createDamageAnimation(context, entity, wstr_fromCString("littleDamage"), 1);
             }
         }
     }

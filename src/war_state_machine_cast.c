@@ -96,7 +96,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                     addAnimationsComponent(context, animEntity);
 
-                    createSpellAnimation(context, animEntity, targetPosition);
+                    wani_createSpellAnimation(context, animEntity, targetPosition);
                     waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
@@ -117,7 +117,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     addSightComponent(context, sight, targetTile, stats.time);
                     addAnimationsComponent(context, sight);
 
-                    createSpellAnimation(context, sight, targetPosition);
+                    wani_createSpellAnimation(context, sight, targetPosition);
                     waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
@@ -144,7 +144,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                         addAnimationsComponent(context, animEntity);
 
-                        createSpellAnimation(context, animEntity, targetPosition);
+                        wani_createSpellAnimation(context, animEntity, targetPosition);
                         waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                     }
                 }
@@ -203,7 +203,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                             WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                             addAnimationsComponent(context, animEntity);
 
-                            createSpellAnimation(context, animEntity, targetPosition);
+                            wani_createSpellAnimation(context, animEntity, targetPosition);
                             waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
 
                             removeEntityById(context, targetEntity->id);
@@ -237,7 +237,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                         addAnimationsComponent(context, animEntity);
 
-                        createSpellAnimation(context, animEntity, targetPosition);
+                        wani_createSpellAnimation(context, animEntity, targetPosition);
                         waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                     }
                 }
@@ -258,7 +258,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     addPoisonCloudComponent(context, poisonCloud, targetTile, stats.time);
                     addAnimationsComponent(context, poisonCloud);
 
-                    createPoisonCloudAnimation(context, poisonCloud, targetPosition);
+                    wani_createPoisonCloudAnimation(context, poisonCloud, targetPosition);
                     waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 

@@ -71,7 +71,7 @@ void updateScene(WarContext* context)
         updateCheatsPanel(context);
         updateUIButtons(context, !cheatsEnabledAndVisible(scene));
         updateUICursor(context);
-        updateAnimations(context);
+        wani_updateAnimations(context);
     }
 }
 

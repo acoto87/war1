@@ -363,7 +363,7 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
                                 (s32)unitSize.x, (s32)unitSize.y, summonedUnit->id);
 
                 WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                createSpellAnimation(context, animEntity, vec2TileToMapCoordinates(spawnPosition, true));
+                wani_createSpellAnimation(context, animEntity, vec2TileToMapCoordinates(spawnPosition, true));
 
                 casted = true;
             }

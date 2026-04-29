@@ -495,7 +495,7 @@ static inline bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const 
 shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
 shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
 
-#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, freeAnimation}
+#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, wani_freeAnimation}
 
 typedef enum
 {

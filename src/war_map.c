@@ -2480,7 +2480,7 @@ void updateMap(WarContext* context)
 
     updateStateMachines(context);
     updateActions(context);
-    updateAnimations(context);
+    wani_updateAnimations(context);
     updateProjectiles(context);
     updateMagic(context);
     updateSpells(context);
