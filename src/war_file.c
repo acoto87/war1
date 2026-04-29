@@ -2,7 +2,7 @@
 
 #include "war_log.h"
 
-WarFile* loadWarFile(WarContext* context, StringView filePath)
+WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
 {
     SDL_IOStream *stream = SDL_IOFromFile(wsv_data(filePath), "rb");
     if (!stream)

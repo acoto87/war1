@@ -302,7 +302,7 @@ void quitGame(WarContext* context)
 
 bool loadDataFile(WarContext* context)
 {
-    context->warFile = loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
+    context->warFile = wfile_loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
     if (!context->warFile)
     {
         return false;
