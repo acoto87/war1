@@ -2,6 +2,8 @@
 
 #include "war_actions.h"
 #include "war_audio.h"
+#include "war_units.h"
+#include "war_map.h"
 
 WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
 {
@@ -55,7 +57,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
         return;
     }
 
-    WarUnitAction* action = unit->actions.items[unit->actionIndex];
+    WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
         unit->amount += chopTree(context, forest, tree, 2);
@@ -101,7 +103,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     }
 }
 
-void freeChoppingState(WarState* state)
+void freeChoppingState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

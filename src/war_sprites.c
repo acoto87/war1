@@ -4,7 +4,6 @@
 
 #include "SDL3/SDL.h"
 
-#include "alloc.h"
 #include "war_render.h"
 #include "war_resources.h"
 
@@ -35,7 +34,7 @@ WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
     sprite.frames[0].w = (u16)width;
     sprite.frames[0].h = (u16)height;
     sprite.frames[0].off = 0;
-    sprite.frames[0].data = (u8*)xmalloc(width * height * 4);
+    sprite.frames[0].data = (u8*)war_malloc(width * height * 4);
 
     if (data)
         memcpy(sprite.frames[0].data, data, width * height * 4);
@@ -66,7 +65,7 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
         sprite.frames[i].w = frames[i].w;
         sprite.frames[i].h = frames[i].h;
         sprite.frames[i].off = 0;
-        sprite.frames[i].data = (u8*)xmalloc(frameWidth * frameHeight * 4);
+        sprite.frames[i].data = (u8*)war_malloc(frameWidth * frameHeight * 4);
 
         if (frames[i].data)
             memcpy(sprite.frames[i].data, frames[i].data, frameWidth * frameHeight * 4);
@@ -103,7 +102,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
             {
                 WarSpriteFrame* allFrames = frames;
 
-                frames = (WarSpriteFrame*)xmalloc(frameIndicesCount * sizeof(WarSpriteFrame));
+                frames = (WarSpriteFrame*)war_malloc_frame(frameIndicesCount * sizeof(WarSpriteFrame));
                 for (s32 i = 0; i < frameIndicesCount; i++)
                 {
                     s32 frameIndex = frameIndices[i];
@@ -119,7 +118,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
 
             if (frameIndicesCount > 0)
             {
-                free(frames);
+                // frames lives in frameZone — no explicit free needed
             }
 
             break;
@@ -200,8 +199,6 @@ WarSpriteFrame getSpriteFrame(WarContext* context, WarSprite sprite, s32 frameIn
 
 void freeSprite(WarContext* context, WarSprite sprite)
 {
-    NOT_USED(context);
-
     if (!sprite.texture)
     {
         logWarning("Trying to free a sprite with no texture");
@@ -211,7 +208,7 @@ void freeSprite(WarContext* context, WarSprite sprite)
     for (s32 i = 0; i < sprite.framesCount; i++)
     {
         if (sprite.frames[i].data)
-            free(sprite.frames[i].data);
+            war_free(sprite.frames[i].data);
     }
 
     SDL_DestroyTexture(sprite.texture);

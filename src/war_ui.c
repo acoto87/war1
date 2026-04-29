@@ -4,7 +4,6 @@
 
 #include "shl/wstr.h"
 
-#include "alloc.h"
 #include "war_audio.h"
 #include "war_entities.h"
 #include "war_resources.h"
@@ -310,7 +309,7 @@ void updateUIButtons(WarContext* context, bool hotKeysEnabled)
             {
                 for(s32 j = 0; j < buttons->count; j++)
                 {
-                    WarEntity* otherButton = buttons->items[i];
+                    WarEntity* otherButton = buttons->items[j];
                     if (otherButton)
                     {
                         otherButton->button.hot = false;

@@ -4,13 +4,13 @@
 #include <stdlib.h>
 
 #include "SDL3/SDL.h"
-#include "shl/array.h"
 #include "shl/list.h"
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
 #include "shl/map.h"
 #include "shl/set.h"
 #include "shl/wstr.h"
+#include "shl/memzone.h"
 
 #include "war_color.h"
 #include "war_math.h"
@@ -75,15 +75,12 @@ typedef struct tml_message tml_message;
 
 #define directionByIndex(i) ((WarUnitDirection)(WAR_DIRECTION_NORTH + i))
 
-shlDefineCreateArray(s32, s32)
-shlDefineFreeArray(s32, s32)
-
-bool wtype_equalsS32(const s32 a, const s32 b)
+static inline bool wtype_equalsS32(const s32 a, const s32 b)
 {
     return a == b;
 }
 
-bool wtype_compareS32(const s32 a, const s32 b)
+static inline bool wtype_compareS32(const s32 a, const s32 b)
 {
     return a - b;
 }
@@ -93,7 +90,7 @@ shlDefineList(s32List, s32)
 
 #define s32ListDefaultOptions (s32ListOptions){0, wtype_equalsS32, NULL}
 
-bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
+static inline bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
 {
     return v1.x == v2.x && v1.y == v2.y;
 }
@@ -103,7 +100,7 @@ shlDefineList(vec2List, vec2)
 
 #define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wtype_equalsVec2, NULL}
 
-bool wtype_equalsRect(const rect r1, const rect r2)
+static inline bool wtype_equalsRect(const rect r1, const rect r2)
 {
     return r1.x == r2.x && r1.y == r2.y &&
            r1.width == r2.width && r1.height == r2.height;
@@ -490,7 +487,7 @@ typedef struct
     WarAnimationStatus status;
 } WarSpriteAnimation;
 
-bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
+static inline bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
 {
     return wsv_equals(wstr_view(&anim1->name), wstr_view(&anim2->name));
 }
@@ -1159,13 +1156,16 @@ shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 typedef enum
 {
     WAR_ACTION_TYPE_NONE = -1,
+
     WAR_ACTION_TYPE_IDLE,
     WAR_ACTION_TYPE_WALK,
     WAR_ACTION_TYPE_ATTACK,
     WAR_ACTION_TYPE_DEATH,
     WAR_ACTION_TYPE_HARVEST,
     WAR_ACTION_TYPE_REPAIR,
-    WAR_ACTION_TYPE_BUILD
+    WAR_ACTION_TYPE_BUILD,
+
+    WAR_ACTION_TYPE_COUNT
 } WarUnitActionType;
 
 typedef enum
@@ -1178,32 +1178,21 @@ typedef enum
 typedef struct
 {
     WarUnitActionType type;
-    WarUnitActionStatus status;
-    bool unbreakable;
     bool directional;
     bool loop;
+    WarUnitActionStepList steps;
+} WarUnitActionDef;
+
+typedef struct
+{
+    WarUnitActionStatus status;
+    bool unbreakable;
     f32 scale;
     f32 waitCount;
     s32 stepIndex;
-    WarUnitActionStepList steps;
     WarUnitActionStepType lastActionStep;
     WarUnitActionStepType lastSoundStep;
 } WarUnitAction;
-
-bool equalsAction(const WarUnitAction* a1, const WarUnitAction* a2)
-{
-    return a1->type == a2->type;
-}
-
-void freeAction(WarUnitAction* a)
-{
-    free((void*)a);
-}
-
-shlDeclareList(WarUnitActionList, WarUnitAction*)
-shlDefineList(WarUnitActionList, WarUnitAction*)
-
-#define WarUnitActionListDefaultOptions (WarUnitActionListOptions){NULL, equalsAction, freeAction}
 
 typedef struct
 {
@@ -1439,9 +1428,9 @@ typedef struct
     // index of the array of speeds of the unit
     s32 speed;
 
-    // the current and action list for the unit
-    s32 actionIndex;
-    WarUnitActionList actions;
+    // the current action index and per-unit mutable action states
+    WarUnitActionType actionType;
+    WarUnitAction actions[WAR_ACTION_TYPE_COUNT];
 
     // time remainder (in seconds) until mana is affected
     f32 manaTime;
@@ -1842,16 +1831,16 @@ bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
     return e1->id == e2->id;
 }
 
-void freeEntity(WarEntity* e)
+static inline void freeEntity(WarEntity* e)
 {
-    free((void*)e);
+    war_free(e);
 }
 
 shlDeclareList(WarEntityList, WarEntity*)
 shlDefineList(WarEntityList, WarEntity*)
 
 #define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, freeEntity}
-#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity, NULL}
+#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity}
 
 uint32_t hashEntityType(const WarEntityType type)
 {
@@ -1863,7 +1852,7 @@ bool equalsEntityType(const WarEntityType t1, const WarEntityType t2)
     return t1 == t2;
 }
 
-void freeEntityList(WarEntityList* list)
+static inline void freeEntityList(WarEntityList* list)
 {
     WarEntityListFree(list);
 }
@@ -1996,9 +1985,9 @@ bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
     return command1->id == command2->id;
 }
 
-void aiCommandFree(WarAICommand* command)
+static inline void aiCommandFree(WarAICommand* command)
 {
-    free((void*)command);
+    war_free((void*)command);
 }
 
 #define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
@@ -2251,6 +2240,13 @@ typedef struct
     };
 } WarScene;
 
+// Maximum number of samples the audio mix buffer can hold.
+// Sized to cover any SDL3 audio device buffer at PLAYBACK_FREQ.
+#define AUDIO_MIX_BUFFER_MAX_SAMPLES 8192u
+
+// Maximum entity removals that the audio callback can queue per callback invocation.
+#define AUDIO_REMOVE_PENDING_MAX 64
+
 #define MAX_RENDER_STATE_STACK 32
 
 typedef struct
@@ -2297,6 +2293,21 @@ typedef struct _WarContext
     bool soundEnabled;
     f32 musicVolume;
     f32 soundVolume;
+
+    // Pre-allocated mix buffer owned exclusively by the audio callback.
+    // Allocated on the main thread before audio starts so that the audio
+    // callback thread never calls war_calloc / war_free, which would race
+    // with main-thread allocations on permanentZone.
+    s16* audioMixBuffer;
+    u32  audioMixBufferCapacity; // capacity in samples
+
+    // Pending audio-entity removals queued by the audio callback thread.
+    // The callback posts finished entity IDs here (under audioRemoveMutex)
+    // instead of calling removeEntityById directly.  The main thread drains
+    // this queue at the top of each updateGame tick.
+    SDL_Mutex*  audioRemoveMutex;
+    WarEntityId audioRemovePending[AUDIO_REMOVE_PENDING_MAX];
+    s32         audioRemovePendingCount;
 
     bool cheatsEnabled;
 

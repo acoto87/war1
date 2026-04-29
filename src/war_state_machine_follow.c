@@ -86,7 +86,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     freePath(path);
 }
 
-void freeFollowState(WarState* state)
+void freeFollowState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

@@ -79,9 +79,9 @@ shlDefineBinaryHeap(WarMapNodeHeap, WarMapNode)
 shlDeclareMap(WarMapNodeMap, s32, WarMapNode)
 shlDefineMap(WarMapNodeMap, s32, WarMapNode)
 
-#define WarMapNodeListDefaultOptions (WarMapNodeListOptions){WarMapNodeEmpty, equalsMapNode, NULL}
-#define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareFScore, NULL}
-#define WarMapNodeMapDefaultOptions (WarMapNodeMapOptions){WarMapNodeEmpty, hashMapNode, equalsMapNodeId, NULL}
+#define WarMapNodeListDefaultOptions (WarMapNodeListOptions){WarMapNodeEmpty, equalsMapNode}
+#define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareFScore}
+#define WarMapNodeMapDefaultOptions (WarMapNodeMapOptions){WarMapNodeEmpty, hashMapNode, equalsMapNodeId}
 
 static WarMapNode createNode(WarPathFinder finder, s32 x, s32 y)
 {
@@ -183,6 +183,7 @@ static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s3
 
 static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
+    TracyCZoneN(ctx, "Astar", 1);
     // The set of currently discovered nodes that are not evaluated yet.
     WarMapNodeHeap openSet;
     WarMapNodeHeapInit(&openSet, WarMapNodeHeapDefaultOptions);
@@ -336,16 +337,17 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     WarMapNodeHeapFree(&openSet);
     WarMapNodeMapFree(&closedSet);
 
+    TracyCZoneEnd(ctx);
     return path;
 }
 
-WarPathFinder initPathFinder(PathFindingType type, s32 width, s32 height, u16 data[])
+WarPathFinder initPathFinder(WarContext* context, PathFindingType type, s32 width, s32 height, u16 data[])
 {
     WarPathFinder finder = (WarPathFinder){0};
     finder.type = type;
     finder.width = width;
     finder.height = height;
-    finder.data = (u16*)xcalloc(width * height, sizeof(u16));
+    finder.data = (u16*)war_malloc(width * height * sizeof(u16));
 
     // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
     for(s32 i = 0; i < width * height; i++)
@@ -373,16 +375,21 @@ bool isInside(WarPathFinder finder, s32 x, s32 y)
 
 WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
+    TracyCZoneN(ctx, "FindPath", 1);
+    WarMapPath path;
     switch (finder.type)
     {
-        case PATH_FINDING_BFS: return bfs(finder, startX, startY, endX, endY);
-        case PATH_FINDING_ASTAR: return astar(finder, startX, startY, endX, endY);
+        case PATH_FINDING_BFS: path = bfs(finder, startX, startY, endX, endY); break;
+        case PATH_FINDING_ASTAR: path = astar(finder, startX, startY, endX, endY); break;
         default:
         {
             logWarning("Unkown path finding type %d, defaulting to %d", finder.type, PATH_FINDING_ASTAR);
-            return astar(finder, startX, startY, endX, endY);
+            path = astar(finder, startX, startY, endX, endY);
+            break;
         }
     }
+    TracyCZoneEnd(ctx);
+    return path;
 }
 
 bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIndex)

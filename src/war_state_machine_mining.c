@@ -89,7 +89,7 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeMiningState(WarState* state)
+void freeMiningState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

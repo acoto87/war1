@@ -11,6 +11,7 @@
 #include "war_render.h"
 #include "war_sprites.h"
 #include "war_units.h"
+#include "war_map.h"
 
 void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
@@ -96,16 +97,13 @@ void addUnitComponent(WarContext* context,
     entity->unit.invisible = false;
     entity->unit.invulnerable = false;
     entity->unit.hasBeenSeen = false;
-    entity->unit.actionIndex = 0;
-
-    WarUnitActionListInit(&entity->unit.actions, WarUnitActionListDefaultOptions);
+    entity->unit.actionType = WAR_ACTION_TYPE_IDLE;
 }
 
 void removeUnitComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
-    WarUnitActionListFree(&entity->unit.actions);
     entity->unit = (WarUnitComponent){0};
 }
 
@@ -447,7 +445,7 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene
 {
     WarEntityManager* manager = getEntityManager(context);
 
-    WarEntity* entity = (WarEntity *)xcalloc(1, sizeof(WarEntity));
+    WarEntity* entity = (WarEntity *)war_malloc(sizeof(WarEntity));
     manager->staticEntityId++;
     assert(manager->staticEntityId <= UINT16_MAX);
     entity->id = (WarEntityId)manager->staticEntityId;
@@ -769,8 +767,6 @@ void removeEntityById(WarContext* context, WarEntityId id)
 {
     WarEntityManager* manager = getEntityManager(context);
 
-    logDebug("trying to remove entity with id: %d", id);
-
     WarEntity* entity = findEntity(context, id);
     if (entity)
     {
@@ -795,8 +791,6 @@ void removeEntityById(WarContext* context, WarEntityId id)
         WarEntityListRemove(&manager->entities, entity);
 
         SDL_UnlockMutex(context->__mutex);
-
-        logDebug("removed entity with id: %d", id);
     }
 }
 
@@ -838,7 +832,7 @@ bool isStaticEntity(WarEntity* entity)
     return false;
 }
 
-void initEntityManager(WarEntityManager* manager)
+void initEntityManager(WarContext* context, WarEntityManager* manager)
 {
     manager->staticEntityId = 0;
 
@@ -854,7 +848,7 @@ void initEntityManager(WarEntityManager* manager)
     WarEntityMapInit(&manager->entitiesByType, entitiesByTypeOptions);
     for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
     {
-        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+        WarEntityList* list = (WarEntityList*)war_malloc(sizeof(WarEntityList));
         WarEntityListInit(list, WarEntityListNonFreeOptions);
         WarEntityMapSet(&manager->entitiesByType, type, list);
     }
@@ -868,7 +862,7 @@ void initEntityManager(WarEntityManager* manager)
     WarUnitMapInit(&manager->unitsByType, unitsByTypeOptions);
     for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
     {
-        WarEntityList* list = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+        WarEntityList* list = (WarEntityList*)war_malloc(sizeof(WarEntityList));
         WarEntityListInit(list, WarEntityListNonFreeOptions);
         WarUnitMapSet(&manager->unitsByType, type, list);
     }
@@ -1441,6 +1435,7 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 
 void renderMinimap(WarContext* context, WarEntity* entity)
 {
+    TracyCZoneN(ctx, "RenderMinimap", 1);
     WarMap* map = context->map;
 
     vec2 position = entity->transform.position;
@@ -1518,6 +1513,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     renderStrokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
 
     renderRestore(context);
+    TracyCZoneEnd(ctx);
 }
 
 void renderAnimation(WarContext* context, WarEntity* entity)
@@ -1596,6 +1592,7 @@ void renderEntity(WarContext* context, WarEntity* entity)
 
 void renderEntitiesOfType(WarContext* context, WarEntityType type)
 {
+    TracyCZoneN(ctx, "RenderEntities", 1);
     static WarRenderCompareFunc renderCompareFuncs[WAR_ENTITY_TYPE_COUNT] =
     {
         NULL,                       // WAR_ENTITY_TYPE_NONE,
@@ -1643,6 +1640,7 @@ void renderEntitiesOfType(WarContext* context, WarEntityType type)
             renderEntity(context, entity);
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 void renderUnitSelection(WarContext* context)
@@ -1954,7 +1952,8 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 
 WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
 {
-    WarEntityList* nearUnits = (WarEntityList*)xmalloc(sizeof(WarEntityList));
+    TracyCZoneN(ctx, "GetNearUnits", 1);
+    WarEntityList* nearUnits = (WarEntityList*)war_malloc(sizeof(WarEntityList));
     WarEntityListInit(nearUnits, WarEntityListNonFreeOptions);
 
     WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
@@ -1970,11 +1969,13 @@ WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance
         }
     }
 
+    TracyCZoneEnd(ctx);
     return nearUnits;
 }
 
 WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
 {
+    TracyCZoneN(ctx, "GetNearEnemy", 1);
     vec2 position = getUnitCenterPosition(entity, true);
 
     WarEntityList* entities = getEntities(context);
@@ -1991,11 +1992,13 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
 
             if (tileInRange(other, position, NEAR_ENEMY_RADIUS))
             {
+                TracyCZoneEnd(ctx);
                 return other;
             }
         }
     }
 
+    TracyCZoneEnd(ctx);
     return NULL;
 }
 

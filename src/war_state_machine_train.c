@@ -95,7 +95,7 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
     unit->buildPercent = percentabf01(state->train.buildTime, state->train.totalBuildTime);
 }
 
-void freeTrainState(WarState* state)
+void freeTrainState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

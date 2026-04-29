@@ -33,6 +33,7 @@ typedef struct {
     Target target;
     bool debug;
     bool check_only;
+    bool profile;           // enable Tracy profiler instrumentation
     bool build_before_run;  // set when build flags are passed alongside 'run'
 } Build_Options;
 
@@ -148,7 +149,7 @@ static Toolchain default_toolchain(void)
 
 static void usage(const char *program)
 {
-    printf("Usage: %s [build|run] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check]\n", program);
+    printf("Usage: %s [build|run] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile]\n", program);
     printf("\n");
     printf("Examples:\n");
     printf("  %s build --cc gcc --target linux64\n", program);
@@ -157,6 +158,7 @@ static void usage(const char *program)
     printf("  %s build --cc gcc --target arm64\n", program);
     printf("  %s run --target linux64\n", program);
     printf("  %s run --cc gcc --target linux64 --debug\n", program);
+    printf("  %s build --cc msvc --target win64 --profile\n", program);
 }
 
 static bool parse_toolchain(const char *value, Toolchain *toolchain)
@@ -277,6 +279,12 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
             continue;
         }
 
+        if (strcmp(arg, "--profile") == 0) {
+            options->profile = true;
+            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            continue;
+        }
+
         if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
             usage(program);
             return false;
@@ -360,9 +368,13 @@ static bool append_gnu_common_flags(Nob_Cmd *cmd, const Build_Options *options)
                    "-Ideps/include");
 
     if (options->debug) {
-        nob_cmd_append(cmd, "-g", "-D__DEBUG__=1");
+        nob_cmd_append(cmd, "-g", "-D__DEBUG__=1", "-DSHL_MZ_DEBUG");
     } else {
         nob_cmd_append(cmd, "-O2");
+    }
+
+    if (options->profile) {
+        nob_cmd_append(cmd, "-DTRACY_ENABLE");
     }
 
     return true;
@@ -380,9 +392,13 @@ static bool append_msvc_common_flags(Nob_Cmd *cmd, const Build_Options *options)
                    "/Ideps/include");
 
     if (options->debug) {
-        nob_cmd_append(cmd, "/Zi", "/D__DEBUG__=1");
+        nob_cmd_append(cmd, "/Zi", "/D__DEBUG__=1", "/DSHL_MZ_DEBUG");
     } else {
         nob_cmd_append(cmd, "/O2", "/DNDEBUG");
+    }
+
+    if (options->profile) {
+        nob_cmd_append(cmd, "/DTRACY_ENABLE");
     }
 
     return true;
@@ -420,6 +436,15 @@ static bool copy_runtime_files(const Build_Options *options)
             if (!nob_copy_file(dll_path, dll_copy_path)) {
                 return false;
             }
+
+            if (options->profile) {
+                const char *tracy_dll_path = nob_temp_sprintf("%s/Tracy.dll", target_library_dir(options->target));
+                const char *tracy_dll_copy_path = nob_temp_sprintf("%s/Tracy.dll", output_dir);
+
+                if (!nob_copy_file(tracy_dll_path, tracy_dll_copy_path)) {
+                    return false;
+                }
+            }
         } else {
             // Copy SDL3 shared libraries so the binary can find them via $ORIGIN rpath
             const char *lib_dir = target_library_dir(options->target);
@@ -428,6 +453,14 @@ static bool copy_runtime_files(const Build_Options *options)
                 const char *src = nob_temp_sprintf("%s/%s", lib_dir, so_names[i]);
                 const char *dst = nob_temp_sprintf("%s/%s", output_dir, so_names[i]);
                 if (!nob_copy_file(src, dst)) {
+                    return false;
+                }
+            }
+
+            if (options->profile) {
+                const char *tracy_src = nob_temp_sprintf("%s/libTracy.so", target_library_dir(options->target));
+                const char *tracy_dst = nob_temp_sprintf("%s/libTracy.so", output_dir);
+                if (!nob_copy_file(tracy_src, tracy_dst)) {
                     return false;
                 }
             }
@@ -440,19 +473,20 @@ static bool copy_runtime_files(const Build_Options *options)
 static bool build_with_gnu_like(const Build_Options *options)
 {
     const char *binary_path = target_binary_path(options->target);
+    const char *output_dir = target_output_dir(options->target);
 
     if (!ensure_output_dirs(options->target)) {
         nob_log(NOB_ERROR, "Could not create output directories");
         return false;
     }
 
-    if (!clear_folder(target_output_dir(options->target))) {
+    if (!clear_folder(output_dir)) {
         nob_log(NOB_ERROR, "Could not clear output directory");
         return false;
     }
 
     if (options->check_only) {
-        if (!compile_gnu_source(options, "src/war1.c", nob_temp_sprintf("%s/war1.o", target_output_dir(options->target)))) {
+        if (!compile_gnu_source(options, "src/war1.c", nob_temp_sprintf("%s/war1.o", output_dir))) {
             return false;
         }
 
@@ -473,11 +507,19 @@ static bool build_with_gnu_like(const Build_Options *options)
         if (options->toolchain == TOOLCHAIN_GCC) {
             nob_cmd_append(&cmd, "-static-libgcc");
         }
+
+        if (options->profile) {
+            nob_cmd_append(&cmd, "-lTracy");
+        }
     } else {
         nob_cmd_append(&cmd, "-lSDL3", "-lpthread", "-lm", "-ldl", "-Wl,-rpath,$ORIGIN");
 
         if (options->target == TARGET_LINUX64) {
             nob_cmd_append(&cmd, "-no-pie");
+        }
+
+        if (options->profile) {
+            nob_cmd_append(&cmd, "-lTracy");
         }
     }
 
@@ -534,6 +576,10 @@ static bool build_with_msvc(const Build_Options *options)
                    "shell32.lib",
                    "ws2_32.lib");
 
+    if (options->profile) {
+        nob_cmd_append(&cmd, "Tracy.lib");
+    }
+
     if (!nob_cmd_run(&cmd)) {
         return false;
     }
@@ -544,10 +590,11 @@ static bool build_with_msvc(const Build_Options *options)
 static bool build_project(const Build_Options *options)
 {
     nob_log(NOB_INFO,
-            "Building target=%s toolchain=%s mode=%s",
+            "Building target=%s toolchain=%s mode=%s%s",
             target_name(options->target),
             toolchain_name(options->toolchain),
-            options->check_only ? "check" : "build");
+            options->check_only ? "check" : "build",
+            options->profile ? " +profile" : "");
 
     switch (options->toolchain) {
         case TOOLCHAIN_GCC:
@@ -597,6 +644,7 @@ int main(int argc, char **argv)
         .target         = default_target(),
         .debug          = false,
         .check_only     = false,
+        .profile        = false,
         .build_before_run = false,
     };
 

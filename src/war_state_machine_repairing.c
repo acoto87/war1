@@ -1,6 +1,8 @@
 #include "war_state_machine.h"
 
 #include "war_actions.h"
+#include "war_units.h"
+#include "war_pathfinder.h"
 
 WarState* createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
 {
@@ -103,7 +105,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     // so don't make any repairing since new buildings always spawn with full hp
     if (!state->repairing.insideBuilding)
     {
-        WarUnitAction* action = unit->actions.items[unit->actionIndex];
+        WarUnitAction* action = &unit->actions[unit->actionType];
         if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
         {
             if (!decreasePlayerResources(context, player, 1, 1))
@@ -148,7 +150,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     }
 }
 
-void freeRepairingState(WarState* state)
+void freeRepairingState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

@@ -52,7 +52,7 @@ void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
     changeNextState(context, entity, repairingState, true, true);
 }
 
-void freeRepairState(WarState* state)
+void freeRepairState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

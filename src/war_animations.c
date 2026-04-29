@@ -4,14 +4,13 @@
 
 #include "shl/wstr.h"
 
-#include "alloc.h"
 #include "war_sprites.h"
 
 #define ANIM_NAME_MAX_LENGTH 50
 
-WarSpriteAnimation* createAnimation(String name, WarSprite sprite, f32 frameDelay, bool loop)
+WarSpriteAnimation* createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop)
 {
-    WarSpriteAnimation* anim = (WarSpriteAnimation*)xmalloc(sizeof(WarSpriteAnimation));
+    WarSpriteAnimation* anim = (WarSpriteAnimation*)war_malloc(sizeof(WarSpriteAnimation));
 
     anim->name = name;
     anim->loop = loop;
@@ -35,7 +34,7 @@ WarSpriteAnimation* createAnimationFromResourceIndex(WarContext* context,
                                                      bool loop)
 {
     WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
-    return createAnimation(name, sprite, frameDelay, loop);
+    return createAnimation(context, name, sprite, frameDelay, loop);
 }
 
 void addAnimation(WarEntity* entity, WarSpriteAnimation* animation)
@@ -84,17 +83,11 @@ f32 getAnimationDuration(WarSpriteAnimation* animation)
 
 void freeAnimation(WarSpriteAnimation* animation)
 {
-    logInfo("Freeing animation: %s", animation->name);
-
-    wstr_free(animation->name);
-
-    s32ListFree(&animation->frames);
-
-    WarSprite* sprite = &animation->sprite;
-    for(s32 i = 0; i < sprite->framesCount; i++)
-        free(sprite->frames[i].data);
-
-    free(animation);
+    if (animation)
+    {
+        s32ListFree(&animation->frames);
+        war_free(animation);
+    }
 }
 
 s32 findAnimationIndex(WarContext* context, WarEntity* entity, StringView name)
@@ -181,6 +174,7 @@ void updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation*
 
 void updateAnimations(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateAnimations", 1);
     WarEntityList* entities = getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
@@ -198,6 +192,7 @@ void updateAnimations(WarContext* context)
             }
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 WarSpriteAnimation* findAnimation(WarContext* context, WarEntity* entity, StringView name)
@@ -227,7 +222,7 @@ WarSpriteAnimation* createDamageAnimation(WarContext* context, WarEntity* entity
     s32 resourceIndex = damageLevel == 1 ? WAR_BUILDING_DAMAGE_1_RESOURCE : WAR_BUILDING_DAMAGE_2_RESOURCE;
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(resourceIndex);
     WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
-    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.2f, true);
+    WarSpriteAnimation* anim = createAnimation(context, name, sprite, 0.2f, true);
     anim->offset = vec2Subv(getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
 
     for(s32 i = 0; i < 4; i++)
@@ -245,7 +240,7 @@ WarSpriteAnimation* createCollapseAnimation(WarContext* context, WarEntity* enti
 
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_BUILDING_COLLAPSE_RESOURCE);
     WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
-    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
+    WarSpriteAnimation* anim = createAnimation(context, name, sprite, 0.1f, false);
 
     vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
 
@@ -275,7 +270,7 @@ WarSpriteAnimation* createExplosionAnimation(WarContext* context, WarEntity* ent
 
     String name = wstr_make();
     wstr_appendFormat(&name, "explosion_%.2f_%.2f", position.x, position.y);
-    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
+    WarSpriteAnimation* anim = createAnimation(context, name, sprite, 0.1f, false);
 
     f32 offsetx = position.x - halff(sprite.frameWidth);
     f32 offsety = position.y - halff(sprite.frameHeight);
@@ -296,7 +291,7 @@ WarSpriteAnimation* createRainOfFireExplosionAnimation(WarContext* context, WarE
 
     String name = wstr_make();
     wstr_appendFormat(&name, "explosion_%.2f_%.2f", position.x, position.y);
-    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.1f, false);
+    WarSpriteAnimation* anim = createAnimation(context, name, sprite, 0.1f, false);
 
     f32 offsetx = position.x - halff(sprite.frameWidth);
     f32 offsety = position.y - halff(sprite.frameHeight);
@@ -317,7 +312,7 @@ WarSpriteAnimation* createSpellAnimation(WarContext* context, WarEntity* entity,
 
     String name = wstr_make();
     wstr_appendFormat(&name, "spell_%.2f_%.2f", position.x, position.y);
-    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.4f, false);
+    WarSpriteAnimation* anim = createAnimation(context, name, sprite, 0.4f, false);
 
     f32 offsetx = position.x - halff(sprite.frameWidth);
     f32 offsety = position.y - halff(sprite.frameHeight);
@@ -338,7 +333,7 @@ WarSpriteAnimation* createPoisonCloudAnimation(WarContext* context, WarEntity* e
 
     String name = wstr_make();
     wstr_appendFormat(&name, "poison_cloud_%.2f_%.2f", position.x, position.y);
-    WarSpriteAnimation* anim = createAnimation(name, sprite, 0.5f, true);
+    WarSpriteAnimation* anim = createAnimation(context, name, sprite, 0.5f, true);
 
     f32 offsetx = position.x - halff(sprite.frameWidth);
     f32 offsety = position.y - halff(sprite.frameHeight);

@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
 #ifndef F_OK
@@ -33,42 +34,75 @@
 #include <assert.h>
 #include "SDL3/SDL.h"
 
+// Tracy profiler C API — all macros are no-ops unless TRACY_ENABLE is defined
+#include "TracyC.h"
+
+#define SHL_MZ_IMPLEMENTATION
+#ifdef SHL_MZ_DEBUG
+#   define SHL_MZ_AUDIT_IMPLEMENTATION
+#   include "shl/memzone_audit.h"
+#else
+#   include "shl/memzone.h"
+#endif
+
+#include "war_alloc.h"
+
 // https://github.com/schellingb/TinySoundFont
+#define TSF_MALLOC(sz) war_malloc(sz)
+#define TSF_REALLOC(p,sz) war_realloc((p),(sz))
+#define TSF_FREE(p) war_free(p)
 #define TSF_IMPLEMENTATION
 #include "TinySoundFont/tsf.h"
-#define TML_IMPLEMENTATION
+
+#define TML_MALLOC(sz) war_malloc(sz)
+#define TML_REALLOC(p,sz) war_realloc((p),(sz))
+#define TML_FREE(p) war_free(p)
 #define TML_ERROR(msg) printf("ERROR: %s\n", msg)
 #define TML_WARN(msg) printf("WARNING: %s\n", msg)
+#define TML_IMPLEMENTATION
 #include "TinySoundFont/tml.h"
 
+#define STBI_MALLOC(sz)           war_malloc(sz)
+#define STBI_REALLOC(p,newsz)     war_realloc(p,newsz)
+#define STBI_FREE(p)              war_free(p)
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
+#define STBIW_MALLOC(sz)          war_malloc(sz)
+#define STBIW_REALLOC(p,newsz)    war_realloc(p,newsz)
+#define STBIW_FREE(p)             war_free(p)
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
+#define STBIR_MALLOC(sz,c)        ((void)(c), war_malloc(sz))
+#define STBIR_FREE(p,c)           ((void)(c), war_free(p))
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb/stb_image_resize.h"
 
-#include "shl/array.h"
+#define SHL_MALLOC(sz) war_malloc(sz)
+#define SHL_CALLOC(n, sz) war_calloc((n), (sz))
+#define SHL_REALLOC(p, sz) war_realloc((p), (sz))
+#define SHL_FREE(p) war_free(p)
+
 #include "shl/list.h"
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
 #include "shl/map.h"
 #include "shl/set.h"
 #define SHL_MEMORY_BUFFER_IMPLEMENTATION
+#define MB_MALLOC(sz) war_malloc(sz)
+#define MB_CALLOC(n, sz) war_calloc((n), (sz))
+#define MB_FREE(p) war_free(p)
 #include "shl/memory_buffer.h"
 #define SHL_WAV_IMPLEMENTATION
 #include "shl/wav.h"
-#include "alloc.h"
-#define WSTR_MALLOC(sz)       xmalloc(sz)
-#define WSTR_REALLOC(p, sz)   xrealloc(p, sz)
-#define WSTR_FREE(p)          free(p)
+#define WSTR_MALLOC(sz)       war_malloc(sz)
+#define WSTR_REALLOC(p, sz)   war_realloc((p), (sz))
+#define WSTR_FREE(p)          war_free(p)
 #define SHL_WSTR_IMPLEMENTATION
 #include "shl/wstr.h"
 
 #include "war_log.h"
-#include "alloc.h"
 #include "common.h"
 #include "war_color.h"
 #include "war_math.h"
@@ -91,8 +125,17 @@
 #include "war_ai.h"
 #include "war_game.h"
 
+#define PERM_SIZE (536870912ULL) // 512 MB
+#define FRAME_SIZE (4194304ULL)  // 4 MB
+
 int main(void)
 {
+    if (!war_alloc_init(PERM_SIZE, FRAME_SIZE))
+    {
+        logError("Failed to initialize memory allocators!");
+        return -1;
+    }
+
     srand((unsigned int)time(NULL));
 
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
@@ -109,6 +152,8 @@ int main(void)
         logError("Can't initialize the game!");
         return -1;
     }
+
+    u32 frameCount = 0;
 
     bool running = true;
 
@@ -127,20 +172,24 @@ int main(void)
             }
         }
 
-        wstr_setFormat(&context.windowTitle, "War 1: %.2fs at %d fps (%.4fs)", context.time, context.fps, context.deltaTime);
+        wstr_setFormat(&context.windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context.time, context.fps, context.deltaTime, frameCount);
         SDL_SetWindowTitle(context.window, wstr_cstr(&context.windowTitle));
 
         updateGame(&context);
         renderGame(&context);
         presentGame(&context);
+        TracyCFrameMark
+
+        frameCount++;
     }
 
     quitGame(&context);
+    war_alloc_free();
 	return 0;
 }
 
 #include "war_log.c"
-#include "alloc.c"
+#include "war_alloc.c"
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_net.c"

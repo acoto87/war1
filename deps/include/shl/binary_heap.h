@@ -44,10 +44,7 @@
 #ifndef SHL_HEAP_H
 #define SHL_HEAP_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include "shl_internal.h"
 
 #define shlDeclareBinaryHeap(typeName, itemType) \
     typedef struct \
@@ -80,15 +77,6 @@
     void typeName ## Clear(typeName* heap);
 
 #define shlDefineBinaryHeap(typeName, itemType) \
-    void typeName ## __resize(typeName* heap, int32_t minSize) \
-    { \
-        heap->capacity = heap->capacity << 1; \
-        if (heap->capacity < minSize) \
-            heap->capacity = minSize; \
-        \
-        heap->items = (itemType *)realloc(heap->items, heap->capacity * sizeof(itemType)); \
-    } \
-    \
     void typeName ## __heapUp(typeName* heap, int32_t index) \
     { \
         int32_t pindex = (index - 1) >> 1; \
@@ -140,13 +128,13 @@
     \
     void typeName ## Init(typeName* heap, typeName ## Options options) \
     { \
-        heap->capacity = 8; \
+        heap->capacity = SHL__INITIAL_CAPACITY; \
         heap->defaultValue = options.defaultValue; \
         heap->equalsFn = options.equalsFn; \
         heap->compareFn = options.compareFn; \
         heap->freeFn = options.freeFn; \
         heap->count = 0; \
-        heap->items = (itemType *)malloc(heap->capacity * sizeof(itemType)); \
+        heap->items = (itemType *)SHL_MALLOC((size_t)heap->capacity * sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName* heap) \
@@ -156,7 +144,7 @@
         \
         typeName ## Clear(heap); \
         \
-        free(heap->items); \
+        SHL_FREE(heap->items); \
         heap->items = 0; \
     } \
      \
@@ -166,7 +154,7 @@
             return; \
         \
         if (heap->count + 1 >= heap->capacity) \
-            typeName ## __resize(heap, heap->count + 1); \
+            shl__resizeArray((void**)&heap->items, &heap->capacity, heap->count + 1, sizeof(itemType)); \
          \
         int32_t index = heap->count; \
         heap->items[index] = value; \

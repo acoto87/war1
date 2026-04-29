@@ -55,10 +55,7 @@
 #ifndef SHL_MAP_H
 #define SHL_MAP_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include "shl_internal.h"
 
 #define shlDeclareMap(typeName, keyType, valueType) \
     typedef struct \
@@ -98,31 +95,14 @@
     void typeName ## Clear(typeName* map);
 
 #define shlDefineMap(typeName, keyType, valueType) \
-    static int32_t typeName ## __fibHash(uint32_t hash, int32_t shift) \
-    { \
-        const uint32_t hashConstant = 2654435769u; \
-        return (int32_t)((hash * hashConstant) >> shift); \
-    } \
-    \
     static void typeName ## __resize(typeName* map); \
-    \
-    static int32_t typeName ## __findEmptyBucket(typeName* map, int32_t index) \
-    { \
-        for(int32_t i = 0; i < map->capacity; i++) \
-        { \
-            if (!map->entries[(index + i) % map->capacity].active) \
-                return (index + i) % map->capacity; \
-        } \
-        \
-        return -1; \
-    } \
     \
     static void typeName ## __insert(typeName* map, keyType key, valueType value) \
     { \
         uint32_t hash; \
         int32_t index; \
         int32_t next; \
-        hash = index = typeName ## __fibHash(map->hashFn(key), map->shift); \
+        hash = index = shl__fibHash(map->hashFn(key), map->shift); \
         \
         while (map->entries[index].active && map->entries[index].next >= 0) \
         { \
@@ -154,7 +134,7 @@
             } \
         } \
         \
-        next = typeName ## __findEmptyBucket(map, index); \
+        next = shl__findEmptyBucket(map->entries, map->capacity, index, sizeof(typeName ## __Entry__), offsetof(typeName ## __Entry__, active)); \
         if (next < 0) \
         { \
             typeName ## __resize(map); \
@@ -187,7 +167,7 @@
             if(old[i].active) \
                 typeName ## __insert(map, old[i].key, old[i].value); \
         } \
-        free(old); \
+        SHL_FREE(old); \
     } \
     \
     void typeName ## Init(typeName* map, typeName ## Options options) \
@@ -196,11 +176,11 @@
         map->hashFn = options.hashFn; \
         map->equalsFn = options.equalsFn; \
         map->freeFn = options.freeFn; \
-        map->shift = 29; \
-        map->capacity = 8; \
-        map->loadFactor = 6; \
+        map->shift = SHL__INITIAL_HASH_SHIFT; \
+        map->capacity = SHL__INITIAL_CAPACITY; \
+        map->loadFactor = SHL__INITIAL_HASH_LOAD_FACTOR; \
         map->count = 0; \
-        map->entries = (typeName ## __Entry__ *)calloc(map->capacity, sizeof(typeName ## __Entry__)); \
+        map->entries = (typeName ## __Entry__ *)SHL_CALLOC((size_t)map->capacity, sizeof(typeName ## __Entry__)); \
     } \
     \
     void typeName ## Free(typeName* map) \
@@ -210,7 +190,7 @@
         \
         typeName ## Clear(map); \
         \
-        free(map->entries); \
+        SHL_FREE(map->entries); \
         map->entries = 0; \
     } \
     \
@@ -221,7 +201,7 @@
         \
         int32_t index; \
         uint32_t hash; \
-        hash = index = typeName ## __fibHash(map->hashFn(key), map->shift); \
+        hash = index = shl__fibHash(map->hashFn(key), map->shift); \
         \
         bool found = false; \
         \
@@ -251,7 +231,7 @@
         \
         int32_t index; \
         uint32_t hash; \
-        hash = index = typeName ## __fibHash(map->hashFn(key), map->shift); \
+        hash = index = shl__fibHash(map->hashFn(key), map->shift); \
         \
         valueType value = map->defaultValue; \
         \
@@ -292,7 +272,7 @@
         \
         int32_t prevIndex, index; \
         uint32_t hash; \
-        hash = prevIndex = index = typeName ## __fibHash(map->hashFn(key), map->shift); \
+        hash = prevIndex = index = shl__fibHash(map->hashFn(key), map->shift); \
         \
         while (map->entries[index].active) \
         { \

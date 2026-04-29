@@ -45,11 +45,7 @@
 #ifndef SHL_LIST_H
 #define SHL_LIST_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include "shl_internal.h"
 
 #define shlDeclareList(typeName, itemType) \
     typedef struct \
@@ -89,17 +85,6 @@
     itemType* typeName ## ToArray(typeName* list); \
 
 #define shlDefineList(typeName, itemType) \
-    void typeName ## __resize(typeName* list, int32_t minSize) \
-    { \
-        int32_t oldCapacity = list->capacity; \
-        \
-        list->capacity = oldCapacity << 1; \
-        if (list->capacity < minSize) \
-            list->capacity = minSize; \
-        \
-        list->items = (itemType *)realloc(list->items, list->capacity * sizeof(itemType)); \
-    } \
-    \
     void typeName ## __qsort(typeName* list, int32_t left, int32_t right, int32_t (*compareFn)(const itemType item1, const itemType item2)) \
     { \
         if (left >= right) \
@@ -133,9 +118,9 @@
         list->defaultValue = options.defaultValue; \
         list->equalsFn = options.equalsFn; \
         list->freeFn = options.freeFn; \
-        list->capacity = 8; \
+        list->capacity = SHL__INITIAL_CAPACITY; \
         list->count = 0; \
-        list->items = (itemType *)malloc(list->capacity * sizeof(itemType)); \
+        list->items = (itemType *)SHL_MALLOC((size_t)list->capacity * sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName* list) \
@@ -145,7 +130,7 @@
         \
         typeName ## Clear(list); \
         \
-        free(list->items); \
+        SHL_FREE(list->items); \
         list->items = 0; \
     } \
     \
@@ -158,7 +143,7 @@
             return; \
         \
         if (list->count + count >= list->capacity) \
-            typeName ## __resize(list, list->count + count); \
+            shl__resizeArray((void**)&list->items, &list->capacity, list->count + count, sizeof(itemType)); \
         \
         memmove(list->items + index + count, list->items + index, (list->count - index) * sizeof(itemType)); \
         memcpy(list->items + index, values, count * sizeof(itemType)); \

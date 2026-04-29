@@ -267,7 +267,7 @@ WarColor getColorFromList(s32 index)
         0xFFFF00, // Yellow
     };
 
-    u32 rgb = colors[index % sizeof(colors)];
+    u32 rgb = colors[index % arrayLength(colors)];
 
     WarColor color;
     color.r = (rgb >> 16) & 0xFF;

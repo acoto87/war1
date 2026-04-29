@@ -44,10 +44,7 @@
 #ifndef SHL_STACK_H
 #define SHL_STACK_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include "shl_internal.h"
 
 #define shlDeclareStack(typeName, itemType) \
     typedef struct \
@@ -76,22 +73,14 @@
     void typeName ## Clear(typeName *stack);
 
 #define shlDefineStack(typeName, itemType) \
-    void typeName ## __resize(typeName *stack) \
-    { \
-        int32_t oldCapacity = stack->capacity; \
-        \
-        stack->capacity = oldCapacity << 1; \
-        stack->items = (itemType *)realloc(stack->items, stack->capacity * sizeof(itemType)); \
-    } \
-    \
     void typeName ## Init(typeName *stack, typeName ## Options options) \
     { \
         stack->defaultValue = options.defaultValue; \
         stack->equalsFn = options.equalsFn; \
         stack->freeFn = options.freeFn; \
-        stack->capacity = 8; \
+        stack->capacity = SHL__INITIAL_CAPACITY; \
         stack->count = 0; \
-        stack->items = (itemType *)calloc(stack->capacity, sizeof(itemType)); \
+        stack->items = (itemType *)SHL_CALLOC((size_t)stack->capacity, sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName *stack) \
@@ -101,7 +90,7 @@
         \
         typeName ## Clear(stack); \
         \
-        free(stack->items); \
+        SHL_FREE(stack->items); \
         stack->items = 0; \
     } \
     \
@@ -111,7 +100,7 @@
             return; \
         \
         if (stack->count == stack->capacity) \
-            typeName ## __resize(stack); \
+            shl__resizeArray((void**)&stack->items, &stack->capacity, stack->count + 1, sizeof(itemType)); \
         \
         stack->items[stack->count] = value; \
         stack->count++; \

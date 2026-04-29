@@ -135,6 +135,8 @@ bool       wsv_tryParseS32(StringView view, int32_t* value);
 int64_t    wsv_parseS64(StringView view);
 bool       wsv_tryParseS64(StringView view, int64_t* value);
 bool       wsv_copyToBuffer(StringView view, char* buffer, size_t capacity);
+StringView wsv_fromCStringFormat (char* buffer, size_t capacity, const char* fmt, ...);
+StringView wsv_fromCStringFormatv(char* buffer, size_t capacity, const char* fmt, va_list args);
 String     wsv_toString(StringView view);
 
 /* =========================================================================
@@ -157,6 +159,7 @@ const char* wstr_cstr(const String* string);
 bool       wstr_isEmpty(const String* string);
 bool       wstr_reserve(String* string, size_t capacity);
 bool       wstr_resize(String* string, size_t length);
+String     wstr_copy(const String* string);
 bool       wstr_assign(String* string, StringView view);
 bool       wstr_assignCString(String* string, const char* text);
 bool       wstr_assignCStringFormat(String* string, const char* textFormat, ...);
@@ -830,6 +833,33 @@ String wsv_toString(StringView view)
     return wstr_fromView(view);
 }
 
+StringView wsv_fromCStringFormatv(char* buffer, size_t capacity, const char* fmt, va_list args)
+{
+    if (buffer == NULL || capacity == 0 || fmt == NULL)
+    {
+        return wsv_empty();
+    }
+
+    int result = vsnprintf(buffer, capacity, fmt, args);
+    if (result < 0)
+    {
+        buffer[0] = 0;
+        return wsv_empty();
+    }
+
+    size_t length = (size_t)result < capacity ? (size_t)result : capacity - 1;
+    return wsv_fromParts(buffer, length);
+}
+
+StringView wsv_fromCStringFormat(char* buffer, size_t capacity, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    StringView view = wsv_fromCStringFormatv(buffer, capacity, fmt, args);
+    va_end(args);
+    return view;
+}
+
 /* ----- String implementation --------------------------------------------- */
 
 String wstr_make(void)
@@ -1004,6 +1034,16 @@ bool wstr_resize(String* string, size_t length)
     }
 
     return true;
+}
+
+String wstr_copy(const String* string)
+{
+    if (string == NULL)
+    {
+        return wstr_make();
+    }
+
+    return wstr_fromView(wsv_fromString(string));
 }
 
 bool wstr_assign(String* string, StringView view)

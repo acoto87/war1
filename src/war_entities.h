@@ -127,7 +127,7 @@ void renderEntitiesOfType(WarContext* context, WarEntityType type);
 void renderUnitSelection(WarContext* context);
 bool isStaticEntity(WarEntity* entity);
 
-void initEntityManager(WarEntityManager* manager);
+void initEntityManager(WarContext* context, WarEntityManager* manager);
 WarEntityManager* getEntityManager(WarContext* context);
 WarEntityList* getEntities(WarContext* context);
 WarEntityList* getEntitiesOfType(WarContext* context, WarEntityType type);

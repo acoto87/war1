@@ -2,7 +2,7 @@
 
 #include "war_types.h"
 
-WarSpriteAnimation* createAnimation(String name, WarSprite sprite, f32 frameDelay, bool loop);
+WarSpriteAnimation* createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop);
 WarSpriteAnimation* createAnimationFromResourceIndex(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, f32 frameDelay, bool loop);
 void addAnimation(WarEntity* entity, WarSpriteAnimation* animation);
 void addAnimationFrame(WarSpriteAnimation* animation, s32 frameIndex);

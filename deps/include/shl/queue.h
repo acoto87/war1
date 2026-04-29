@@ -44,11 +44,7 @@
 #ifndef SHL_QUEUE_H
 #define SHL_QUEUE_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include "shl_internal.h"
 
 #define shlDeclareQueue(typeName, itemType) \
     typedef struct \
@@ -79,39 +75,16 @@
     void typeName ## Clear(typeName* queue);
 
 #define shlDefineQueue(typeName, itemType) \
-    void typeName ## __resize(typeName *queue) \
-    { \
-        int32_t oldCapacity = queue->capacity; \
-        itemType* old = queue->items; \
-        \
-        queue->capacity = oldCapacity << 1; \
-        queue->items = (itemType *)calloc(queue->capacity, sizeof(itemType)); \
-        \
-        if (queue->head >= queue->tail && queue->count > 0) \
-        { \
-            memcpy(queue->items, old + queue->head, (oldCapacity - queue->head) * sizeof(itemType)); \
-            memcpy(queue->items + oldCapacity - queue->head, old, ((queue->head + queue->count) % oldCapacity) * sizeof(itemType)); \
-        } \
-        else \
-        { \
-            memcpy(queue->items, old + queue->head, queue->count * sizeof(itemType)); \
-        } \
-        \
-        queue->head = 0; \
-        queue->tail = queue->count; \
-        free(old); \
-    } \
-    \
     void typeName ## Init(typeName *queue, typeName ## Options options) \
     { \
         queue->defaultValue = options.defaultValue; \
         queue->equalsFn = options.equalsFn; \
         queue->freeFn = options.freeFn; \
-        queue->capacity = 8; \
+        queue->capacity = SHL__INITIAL_CAPACITY; \
         queue->count = 0; \
         queue->head = 0; \
         queue->tail = 0; \
-        queue->items = (itemType *)calloc(queue->capacity, sizeof(itemType)); \
+        queue->items = (itemType *)SHL_CALLOC((size_t)queue->capacity, sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName *queue) \
@@ -121,7 +94,7 @@
         \
         typeName ## Clear(queue); \
         \
-        free(queue->items); \
+        SHL_FREE(queue->items); \
         queue->items = 0; \
     } \
     \
@@ -131,7 +104,7 @@
             return; \
         \
         if (queue->count == queue->capacity) \
-            typeName ## __resize(queue); \
+            shl__resizeCircularArray((void**)&queue->items, &queue->capacity, &queue->head, &queue->tail, queue->count, sizeof(itemType)); \
         \
         queue->items[queue->tail] = value; \
         queue->tail = (queue->tail + 1) % queue->capacity; \

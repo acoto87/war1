@@ -5,7 +5,6 @@
 
 #include "shl/wstr.h"
 
-#include "alloc.h"
 #include "war_log.h"
 
 #define WAR_REQUEST_MESSAGE_MAX_SIZE 2048
@@ -232,7 +231,7 @@ s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
     return responseLength;
 }
 
-bool downloadFileFromUrl(StringView url, StringView filePath)
+bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePath)
 {
     const char* urlStr = wsv_data(url);
     const char* filePathStr = wsv_data(filePath);
@@ -295,7 +294,7 @@ bool downloadFileFromUrl(StringView url, StringView filePath)
         return false;
     }
 
-    char* response = (char*)xcalloc(RESPONSE_MAX_SIZE, sizeof(char));
+    char* response = (char*)war_malloc(RESPONSE_MAX_SIZE * sizeof(char));
     char* responsePtr = response;
 
     s32 responseLength = readResponse(sck, response, RESPONSE_MAX_SIZE);
@@ -306,7 +305,7 @@ bool downloadFileFromUrl(StringView url, StringView filePath)
 
         closeSocket(sck);
         cleanNetwork();
-        free(response);
+        war_free(response);
 
         return false;
     }
@@ -318,7 +317,7 @@ bool downloadFileFromUrl(StringView url, StringView filePath)
 
         closeSocket(sck);
         cleanNetwork();
-        free(response);
+        war_free(response);
 
         return false;
     }
@@ -329,7 +328,7 @@ bool downloadFileFromUrl(StringView url, StringView filePath)
 
         closeSocket(sck);
         cleanNetwork();
-        free(response);
+        war_free(response);
         SDL_CloseIO(stream);
 
         return true;
@@ -354,7 +353,7 @@ bool downloadFileFromUrl(StringView url, StringView filePath)
 
         closeSocket(sck);
         cleanNetwork();
-        free(response);
+        war_free(response);
         SDL_CloseIO(stream);
 
         return false;
@@ -369,7 +368,7 @@ bool downloadFileFromUrl(StringView url, StringView filePath)
 
         closeSocket(sck);
         cleanNetwork();
-        free(response);
+        war_free(response);
         SDL_CloseIO(stream);
 
         return false;
@@ -384,7 +383,7 @@ bool downloadFileFromUrl(StringView url, StringView filePath)
 
         closeSocket(sck);
         cleanNetwork();
-        free(response);
+        war_free(response);
         SDL_CloseIO(stream);
 
         return false;

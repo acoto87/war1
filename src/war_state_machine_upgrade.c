@@ -87,7 +87,7 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
     unit->buildPercent = percentabf01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
 }
 
-void freeUpgradeState(WarState* state)
+void freeUpgradeState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

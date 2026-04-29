@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SDL3/SDL_events.h"
+#include "shl/memzone.h"
 
 #include "common.h"
 #include "war_types.h"
@@ -22,7 +23,7 @@ void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
 void setInputButton(WarContext* context, s32 button, bool pressed);
 void setInputKey(WarContext* context, s32 key, bool pressed);
 void beginInputFrame(WarContext* context);
-void processGameEvent(WarContext* context, const SDL_Event* event);
+void processGameEvent(WarContext* context, SDL_Event* event);
 void updateGame(WarContext* context);
 void renderGame(WarContext *context);
 void presentGame(WarContext *context);

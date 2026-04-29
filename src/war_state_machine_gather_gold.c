@@ -52,7 +52,7 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     changeNextState(context, entity, miningState, true, true);
 }
 
-void freeGatherGoldState(WarState* state)
+void freeGatherGoldState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

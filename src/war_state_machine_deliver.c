@@ -94,7 +94,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     setDelay(state, getMapScaledTime(context, 1.0f));
 }
 
-void freeDeliverState(WarState* state)
+void freeDeliverState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

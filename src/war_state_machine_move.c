@@ -252,7 +252,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeMoveState(WarState* state)
+void freeMoveState(WarContext* context, WarState* state)
 {
     vec2ListFree(&state->move.positions);
     freePath(state->move.path);
