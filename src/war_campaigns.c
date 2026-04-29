@@ -7,9 +7,9 @@
 #include "war_entities.h"
 #include "war_units.h"
 
-WarLevelResult checkMap01Objectives(WarContext* context);
-WarLevelResult checkMap02Objectives(WarContext* context);
-WarLevelResult checkCustomMapObjectives(WarContext* context);
+WarLevelResult wcamp_checkMap01Objectives(WarContext* context);
+WarLevelResult wcamp_checkMap02Objectives(WarContext* context);
+WarLevelResult wcamp_checkCustomMapObjectives(WarContext* context);
 
 typedef struct
 {
@@ -25,7 +25,7 @@ static const WarCampaignMapRawData campaignsData[] =
 {
     {
         WAR_CAMPAIGN_HUMANS_01,
-        checkMap01Objectives,
+        wcamp_checkMap01Objectives,
         "Build:\n\t6 farms\n\t1 barracks",
         WAR_CAMPAIGNS_HUMAN_01_INTRO,
         "As a test of your abilities, the King has appointed\n"
@@ -39,7 +39,7 @@ static const WarCampaignMapRawData campaignsData[] =
     },
     {
         WAR_CAMPAIGN_ORCS_01,
-        checkMap01Objectives,
+        wcamp_checkMap01Objectives,
         "Build:\n  6 farms\n  1 barracks",
         WAR_CAMPAIGNS_ORC_01_INTRO,
         "Blackhand has assigned you to an outpost in the\n"
@@ -54,7 +54,7 @@ static const WarCampaignMapRawData campaignsData[] =
     },
     {
         WAR_CAMPAIGN_HUMANS_02,
-        checkMap02Objectives,
+        wcamp_checkMap02Objectives,
         "Defend town and\ndestroy orcs",
         WAR_CAMPAIGNS_HUMAN_02_INTRO,
         "The Orcs around Grand Hamlet are becoming\n"
@@ -68,7 +68,7 @@ static const WarCampaignMapRawData campaignsData[] =
     },
     {
         WAR_CAMPAIGN_ORCS_02,
-        checkMap02Objectives,
+        wcamp_checkMap02Objectives,
         "Crush all opposition",
         WAR_CAMPAIGNS_ORC_02_INTRO,
         "Like the stinging of a wasp, the attacks from the\n"
@@ -353,7 +353,7 @@ static const WarCampaignMapRawData campaignsData[] =
     },
     {
         WAR_CAMPAIGN_CUSTOM,
-        checkCustomMapObjectives,
+        wcamp_checkCustomMapObjectives,
         "Destroy enemy",
         0,
         NULL,
@@ -361,7 +361,7 @@ static const WarCampaignMapRawData campaignsData[] =
     }
 };
 
-WarCampaignMapData getCampaignData(WarCampaignMapType type)
+WarCampaignMapData wcamp_getCampaignData(WarCampaignMapType type)
 {
     s32 index = 0;
     s32 length = arrayLength(campaignsData);
@@ -381,7 +381,7 @@ WarCampaignMapData getCampaignData(WarCampaignMapType type)
     return data;
 }
 
-WarLevelResult checkMap01Objectives(WarContext* context)
+WarLevelResult wcamp_checkMap01Objectives(WarContext* context)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -405,7 +405,7 @@ WarLevelResult checkMap01Objectives(WarContext* context)
     return WAR_LEVEL_RESULT_NONE;
 }
 
-WarLevelResult checkMap02Objectives(WarContext* context)
+WarLevelResult wcamp_checkMap02Objectives(WarContext* context)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -424,7 +424,7 @@ WarLevelResult checkMap02Objectives(WarContext* context)
     return WAR_LEVEL_RESULT_NONE;
 }
 
-WarLevelResult checkCustomMapObjectives(WarContext* context)
+WarLevelResult wcamp_checkCustomMapObjectives(WarContext* context)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];

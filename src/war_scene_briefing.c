@@ -12,7 +12,7 @@ void enterSceneBriefingHumans(WarContext* context)
 {
     WarScene* scene = context->scene;
 
-    WarCampaignMapData data = getCampaignData(scene->briefing.mapType);
+    WarCampaignMapData data = wcamp_getCampaignData(scene->briefing.mapType);
 
     scene->briefing.time = data.briefingDuration;
 
@@ -62,7 +62,7 @@ void enterSceneBriefingOrcs(WarContext* context)
 {
     WarScene* scene = context->scene;
 
-    WarCampaignMapData data = getCampaignData(scene->briefing.mapType);
+    WarCampaignMapData data = wcamp_getCampaignData(scene->briefing.mapType);
 
     scene->briefing.time = data.briefingDuration;
 

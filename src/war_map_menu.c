@@ -374,7 +374,7 @@ void createObjectivesMenu(WarContext* context)
     WarResource* levelInfo = wres_getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    WarCampaignMapData campaignData = getCampaignData(getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
+    WarCampaignMapData campaignData = wcamp_getCampaignData(getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
 
     vec2 menuPanel = rectTopLeft(map->menuPanel);
 

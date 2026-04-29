@@ -2415,7 +2415,7 @@ WarLevelResult checkObjectives(WarContext* context)
 
     if (map->objectivesTime <= 0)
     {
-        WarCampaignMapData data = getCampaignData(getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
+        WarCampaignMapData data = wcamp_getCampaignData(getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
         if (data.checkObjectivesFunc)
         {
             return data.checkObjectivesFunc(context);
