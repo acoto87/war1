@@ -117,7 +117,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
         }
 
         WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;
-        createAudio(context, audioId, false);
+        waud_createAudio(context, audioId, false);
 
         return;
     }

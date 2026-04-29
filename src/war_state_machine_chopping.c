@@ -69,7 +69,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
         if (action->lastSoundStep == WAR_ACTION_STEP_SOUND_CHOPPING)
         {
             vec2 targetPosition = vec2TileToMapCoordinates(treePosition, true);
-            createAudioRandomWithPosition(context, WAR_TREE_CHOPPING_1, WAR_TREE_CHOPPING_4, targetPosition, false);
+            waud_createAudioRandomWithPosition(context, WAR_TREE_CHOPPING_1, WAR_TREE_CHOPPING_4, targetPosition, false);
         }
 
         if (unit->amount == UNIT_MAX_CARRY_WOOD)

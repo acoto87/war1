@@ -177,7 +177,7 @@ WarAudioData audioData[] =
     { WAR_HUMAN_VICTORY_3,              WAR_AUDIO_WAVE },
 };
 
-WarAudioData getAudioData(WarAudioId audioId)
+WarAudioData waud_getAudioData(WarAudioId audioId)
 {
     s32 index = 0;
     s32 length = arrayLength(audioData);
@@ -188,7 +188,7 @@ WarAudioData getAudioData(WarAudioId audioId)
     return audioData[index];
 }
 
-bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream, f32 volume)
+bool waud_playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream, f32 volume)
 {
     WarAudioComponent* audio = &entity->audio;
     tsf* soundFont = context->soundFont;
@@ -279,7 +279,7 @@ bool playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outp
     return !audio->currentMessage && !audio->loop;
 }
 
-bool playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream, f32 volume)
+bool waud_playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream, f32 volume)
 {
     WarAudioComponent* audio = &entity->audio;
 
@@ -384,7 +384,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                 {
                     case WAR_AUDIO_MIDI:
                     {
-                        if (musicVolume > 0 && playMidi(context, entity, sampleCount, outputStream, musicVolume))
+                        if (musicVolume > 0 && waud_playMidi(context, entity, sampleCount, outputStream, musicVolume))
                         {
                             // if the audio finish, mark it to remove it
                             if (toRemoveCount < AUDIO_REMOVE_PENDING_MAX)
@@ -426,7 +426,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                             }
                         }
 
-                        if (playWave(context, entity, sampleCount, outputStream, volume))
+                        if (waud_playWave(context, entity, sampleCount, outputStream, volume))
                         {
                             // if the audio finish, mark it to remove it
                             if (toRemoveCount < AUDIO_REMOVE_PENDING_MAX)
@@ -464,7 +464,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
     SDL_PutAudioStreamData(stream, outputBuffer, (int)(sampleCount * sizeof(s16)));
 }
 
-bool initAudio(WarContext* context)
+bool waud_initAudio(WarContext* context)
 {
     context->soundFont = tsf_load_filename("GMGeneric.SF2");
     if (!context->soundFont)
@@ -541,7 +541,7 @@ bool initAudio(WarContext* context)
     return true;
 }
 
-void removeAudiosOfType(WarContext* context, WarAudioType type)
+void waud_removeAudiosOfType(WarContext* context, WarAudioType type)
 {
     WarEntityIdList toRemove;
     WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
@@ -576,9 +576,9 @@ void removeAudiosOfType(WarContext* context, WarAudioType type)
     }
 }
 
-WarEntity* createAudio(WarContext* context, WarAudioId audioId, bool loop)
+WarEntity* waud_createAudio(WarContext* context, WarAudioId audioId, bool loop)
 {
-    WarAudioData data = getAudioData(audioId);
+    WarAudioData data = waud_getAudioData(audioId);
 
     s32 resourceIndex = (s32)audioId;
     WarAudioType type = data.type;
@@ -589,9 +589,9 @@ WarEntity* createAudio(WarContext* context, WarAudioId audioId, bool loop)
     return entity;
 }
 
-WarEntity* createAudioWithPosition(WarContext* context, WarAudioId audioId, vec2 position, bool loop)
+WarEntity* waud_createAudioWithPosition(WarContext* context, WarAudioId audioId, vec2 position, bool loop)
 {
-    WarAudioData data = getAudioData(audioId);
+    WarAudioData data = waud_getAudioData(audioId);
 
     s32 resourceIndex = (s32)audioId;
     WarAudioType type = data.type;
@@ -603,37 +603,37 @@ WarEntity* createAudioWithPosition(WarContext* context, WarAudioId audioId, vec2
     return entity;
 }
 
-WarEntity* createAudioRandom(WarContext* context, WarAudioId fromId, WarAudioId toId, bool loop)
+WarEntity* waud_createAudioRandom(WarContext* context, WarAudioId fromId, WarAudioId toId, bool loop)
 {
-    return createAudio(context, randomi(fromId, toId + 1), loop);
+    return waud_createAudio(context, randomi(fromId, toId + 1), loop);
 }
 
-WarEntity* createAudioRandomWithPosition(WarContext* context, WarAudioId fromId, WarAudioId toId, vec2 position, bool loop)
+WarEntity* waud_createAudioRandomWithPosition(WarContext* context, WarAudioId fromId, WarAudioId toId, vec2 position, bool loop)
 {
-    return createAudioWithPosition(context, randomi(fromId, toId + 1), position, loop);
+    return waud_createAudioWithPosition(context, randomi(fromId, toId + 1), position, loop);
 }
 
-WarEntity* playAttackSound(WarContext* context, vec2 position, WarUnitActionStepType soundStep)
+WarEntity* waud_playAttackSound(WarContext* context, vec2 position, WarUnitActionStepType soundStep)
 {
     switch (soundStep)
     {
         case WAR_ACTION_STEP_SOUND_SWORD:
-            return createAudioRandomWithPosition(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, position, false);
+            return waud_createAudioRandomWithPosition(context, WAR_SWORD_ATTACK_1, WAR_SWORD_ATTACK_3, position, false);
         case WAR_ACTION_STEP_SOUND_FIST:
-            return createAudioWithPosition(context, WAR_FIST_ATTACK, position, false);
+            return waud_createAudioWithPosition(context, WAR_FIST_ATTACK, position, false);
         case WAR_ACTION_STEP_SOUND_FIREBALL:
-            return createAudioWithPosition(context, WAR_FIREBALL, position, false);
+            return waud_createAudioWithPosition(context, WAR_FIREBALL, position, false);
         case WAR_ACTION_STEP_SOUND_CATAPULT:
-            return createAudioWithPosition(context, WAR_CATAPULT_ROCK_FIRED, position, false);
+            return waud_createAudioWithPosition(context, WAR_CATAPULT_ROCK_FIRED, position, false);
         case WAR_ACTION_STEP_SOUND_ARROW:
-            return createAudioWithPosition(context, WAR_ARROW_SPEAR, position, false);
+            return waud_createAudioWithPosition(context, WAR_ARROW_SPEAR, position, false);
         default:
             logWarning("Trying to play sound with step: %d", soundStep);
             return NULL;
     }
 }
 
-WarEntity* playDudeSelectionSound(WarContext* context, WarEntity* entity)
+WarEntity* waud_playDudeSelectionSound(WarContext* context, WarEntity* entity)
 {
     assert(isDudeUnit(entity));
 
@@ -645,56 +645,56 @@ WarEntity* playDudeSelectionSound(WarContext* context, WarEntity* entity)
         if (selectedEntityId == entity->id)
         {
             return isHumanUnit(entity)
-                ? createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false)
-                : createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
+                ? waud_createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false)
+                : waud_createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
         }
     }
 
     return isHumanUnit(entity)
-        ? createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false)
-        : createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
+        ? waud_createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false)
+        : waud_createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
 }
 
-WarEntity* playBuildingSelectionSound(WarContext* context, WarEntity* entity)
+WarEntity* waud_playBuildingSelectionSound(WarContext* context, WarEntity* entity)
 {
     assert(isBuildingUnit(entity));
 
     if (isBuilding(entity) || isGoingToBuild(entity))
-        return createAudio(context, WAR_BUILDING, false);
+        return waud_createAudio(context, WAR_BUILDING, false);
 
     s32 hpPercent = percentabi(entity->unit.hp, entity->unit.maxhp);
     if(hpPercent <= 33)
-        return createAudio(context, WAR_FIRE_CRACKLING, false);
+        return waud_createAudio(context, WAR_FIRE_CRACKLING, false);
 
     switch (entity->unit.type)
     {
         case WAR_UNIT_CHURCH:
-            return createAudio(context, WAR_HUMAN_CHURCH, false);
+            return waud_createAudio(context, WAR_HUMAN_CHURCH, false);
         case WAR_UNIT_TEMPLE:
-            return createAudio(context, WAR_ORC_TEMPLE, false);
+            return waud_createAudio(context, WAR_ORC_TEMPLE, false);
         case WAR_UNIT_STABLE:
-            return createAudio(context, WAR_HUMAN_STABLE, false);
+            return waud_createAudio(context, WAR_HUMAN_STABLE, false);
         case WAR_UNIT_KENNEL:
-            return createAudio(context, WAR_ORC_KENNEL, false);
+            return waud_createAudio(context, WAR_ORC_KENNEL, false);
         case WAR_UNIT_BLACKSMITH_HUMANS:
         case WAR_UNIT_BLACKSMITH_ORCS:
-            return createAudio(context, WAR_BLACKSMITH, false);
+            return waud_createAudio(context, WAR_BLACKSMITH, false);
         default:
-            return createAudio(context, WAR_UI_CLICK, false);
+            return waud_createAudio(context, WAR_UI_CLICK, false);
     }
 }
 
-WarEntity* playAcknowledgementSound(WarContext* context, WarPlayerInfo* player)
+WarEntity* waud_playAcknowledgementSound(WarContext* context, WarPlayerInfo* player)
 {
     return isHumanPlayer(player)
-        ? createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false)
-        : createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
+        ? waud_createAudioRandom(context, WAR_HUMAN_ACKNOWLEDGEMENT_1, WAR_HUMAN_ACKNOWLEDGEMENT_2, false)
+        : waud_createAudioRandom(context, WAR_ORC_ACKNOWLEDGEMENT_1, WAR_ORC_ACKNOWLEDGEMENT_4, false);
 }
 
 /**
  * Extension function of memory_buffer_t to read variable lengths integer values.
  */
-bool mb_readUIntVar(memory_buffer_t* buffer, u32* value)
+bool waud_mb_readUIntVar(memory_buffer_t* buffer, u32* value)
 {
     u32 v = 0;
     u8 byte;
@@ -714,7 +714,7 @@ bool mb_readUIntVar(memory_buffer_t* buffer, u32* value)
 /**
  * Extension function of memory_buffer_t to write variable lengths integer values.
  */
-bool mb_writeUIntVar(memory_buffer_t* buffer, u32 value)
+bool waud_mb_writeUIntVar(memory_buffer_t* buffer, u32 value)
 {
     s32 byteCount = 1;
     u32 v = value & 0x7F;
@@ -745,7 +745,7 @@ typedef struct _MidiToken
     u8  data;
 } MidiToken;
 
-static s32 compareTokens(const MidiToken left, const MidiToken right)
+static s32 waud_compareTokens(const MidiToken left, const MidiToken right)
 {
     return left.time - right.time;
 }
@@ -772,7 +772,7 @@ static MidiToken* MidiTokenListAppend(MidiTokenList* list, s32 time, u8 type)
  * http://www.shikadi.net/moddingwiki/MID_Format
  * https://github.com/colxi/midi-parser-js/wiki/MIDI-File-Format-Specifications
  */
-u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t* midLength)
+u8* waud_transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t* midLength)
 {
     NOT_USED(context);
 
@@ -877,7 +877,7 @@ u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t
                     return NULL;
                 }
 
-                assert(mb_readUIntVar(&bufInput, &intVar));
+                assert(waud_mb_readUIntVar(&bufInput, &intVar));
                 token = MidiTokenListAppend(&lstTokens, tokenTime + intVar * 3, tokenType);
                 token->data = extendedType;
                 token->buffer = (u8*)"\0";
@@ -912,7 +912,7 @@ u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t
                         else
                         {
                             MidiTokenListRemoveAt(&lstTokens, lstTokens.count - 1);
-                            assert(mb_readUIntVar(&bufInput, &intVar));
+                            assert(waud_mb_readUIntVar(&bufInput, &intVar));
                             if (!mb_skip(&bufInput, intVar))
                             {
                                 mb_free(&bufOutput);
@@ -924,7 +924,7 @@ u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t
                 }
 
                 token->data = extendedType;
-                assert(mb_readUIntVar(&bufInput, &token->bufferLength));
+                assert(waud_mb_readUIntVar(&bufInput, &token->bufferLength));
                 token->buffer = bufInput._pointer;
 
                 if (!mb_skip(&bufInput, token->bufferLength))
@@ -959,7 +959,7 @@ u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t
         return NULL;
     }
 
-    MidiTokenListSort(&lstTokens, compareTokens);
+    MidiTokenListSort(&lstTokens, waud_compareTokens);
 
     tokenTime = 0;
     tokenType = 0;
@@ -969,7 +969,7 @@ u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t
     {
         MidiToken t = lstTokens.items[i];
 
-        if (!mb_writeUIntVar(&bufOutput, t.time - tokenTime))
+        if (!waud_mb_writeUIntVar(&bufOutput, t.time - tokenTime))
         {
             mb_free(&bufOutput);
             return NULL;
@@ -998,7 +998,7 @@ u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t
                     end = true;
             }
 
-            if (!mb_writeUIntVar(&bufOutput, t.bufferLength))
+            if (!waud_mb_writeUIntVar(&bufOutput, t.bufferLength))
             {
                 mb_free(&bufOutput);
                 return NULL;
@@ -1050,7 +1050,7 @@ u8* transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t
     return midData;
 }
 
-u8* changeSampleRate(WarContext* context, u8* samplesIn, s32 length, s32 factor)
+u8* waud_changeSampleRate(WarContext* context, u8* samplesIn, s32 length, s32 factor)
 {
     assert(factor >= 1);
 

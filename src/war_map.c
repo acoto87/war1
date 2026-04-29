@@ -808,7 +808,7 @@ void enterMap(WarContext* context)
     createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
 
     if (!isDemo(context))
-        createAudio(context, WAR_MUSIC_00, true);
+        waud_createAudio(context, WAR_MUSIC_00, true);
 }
 
 void leaveMap(WarContext* context)
@@ -1037,11 +1037,11 @@ void updateSelection(WarContext* context)
                         WarEntity* newSelectedEntity = newSelectedEntities.items[0];
                         if (isFriendlyUnit(context, newSelectedEntity))
                         {
-                            playDudeSelectionSound(context, newSelectedEntity);
+                            waud_playDudeSelectionSound(context, newSelectedEntity);
                         }
                         else
                         {
-                            createAudio(context, WAR_UI_CLICK, false);
+                            waud_createAudio(context, WAR_UI_CLICK, false);
                         }
                     }
                 }
@@ -1050,7 +1050,7 @@ void updateSelection(WarContext* context)
                     WarEntity* newSelectedEntity = newSelectedEntities.items[0];
                     if (isFriendlyUnit(context, newSelectedEntity))
                     {
-                        playBuildingSelectionSound(context, newSelectedEntity);
+                        waud_playBuildingSelectionSound(context, newSelectedEntity);
                     }
                 }
 
@@ -2027,7 +2027,7 @@ void updateMagic(WarContext* context)
                         if (entity->unit.type == WAR_UNIT_SCORPION ||
                             entity->unit.type == WAR_UNIT_SPIDER)
                         {
-                            createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
+                            waud_createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
                         }
                     }
                 }

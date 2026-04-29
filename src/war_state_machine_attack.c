@@ -133,7 +133,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                 }
 
                 vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
-                playAttackSound(context, targetPosition, action->lastSoundStep);
+                waud_playAttackSound(context, targetPosition, action->lastSoundStep);
             }
         }
         else if(isWall(targetEntity))
@@ -161,7 +161,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                     }
 
                     vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
-                    playAttackSound(context, targetPosition, action->lastSoundStep);
+                    waud_playAttackSound(context, targetPosition, action->lastSoundStep);
                 }
             }
         }

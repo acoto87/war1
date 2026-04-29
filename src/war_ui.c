@@ -293,7 +293,7 @@ void updateUIButtons(WarContext* context, bool hotKeysEnabled)
                     if (pointerInside && button->clickHandler)
                     {
                         button->clickHandler(context, entity);
-                        createAudio(context, WAR_UI_CLICK, false);
+                        waud_createAudio(context, WAR_UI_CLICK, false);
                     }
 
                     button->active = false;

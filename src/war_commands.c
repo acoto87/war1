@@ -121,7 +121,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
 
     if (goingToMove)
     {
-        playAcknowledgementSound(context, player);
+        waud_playAcknowledgementSound(context, player);
     }
 }
 
@@ -150,7 +150,7 @@ void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
 
     if (goingToFollow)
     {
-        playAcknowledgementSound(context, player);
+        waud_playAcknowledgementSound(context, player);
     }
 }
 
@@ -234,7 +234,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
 
     if (goingToHarvest)
     {
-        playAcknowledgementSound(context, player);
+        waud_playAcknowledgementSound(context, player);
     }
 }
 
@@ -282,7 +282,7 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
 
     if (goingToDeliver)
     {
-        playAcknowledgementSound(context, player);
+        waud_playAcknowledgementSound(context, player);
     }
 }
 
@@ -320,7 +320,7 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 
     if (goingToRepair)
     {
-        playAcknowledgementSound(context, player);
+        waud_playAcknowledgementSound(context, player);
     }
 }
 
@@ -372,7 +372,7 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
 
     if (casted)
     {
-        createAudio(context, WAR_NORMAL_SPELL, false);
+        waud_createAudio(context, WAR_NORMAL_SPELL, false);
     }
 }
 
@@ -570,7 +570,7 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
 
     if (playSound)
     {
-        playAcknowledgementSound(context, player);
+        waud_playAcknowledgementSound(context, player);
     }
 }
 
@@ -879,7 +879,7 @@ bool executeCommand(WarContext* context)
                     }
                     else
                     {
-                        createAudio(context, WAR_UI_CANCEL, false);
+                        waud_createAudio(context, WAR_UI_CANCEL, false);
                     }
 
                     return true;
@@ -922,12 +922,12 @@ bool executeCommand(WarContext* context)
                             //
                             // command->type = WAR_COMMAND_NONE;
 
-                            createAudio(context, WAR_BUILD_ROAD, false);
+                            waud_createAudio(context, WAR_BUILD_ROAD, false);
                         }
                     }
                     else
                     {
-                        createAudio(context, WAR_UI_CANCEL, false);
+                        waud_createAudio(context, WAR_UI_CANCEL, false);
                     }
 
                     return true;
@@ -968,12 +968,12 @@ bool executeCommand(WarContext* context)
                             //
                             // command->type = WAR_COMMAND_NONE;
 
-                            createAudio(context, WAR_BUILD_ROAD, false);
+                            waud_createAudio(context, WAR_BUILD_ROAD, false);
                         }
                     }
                     else
                     {
-                        createAudio(context, WAR_UI_CANCEL, false);
+                        waud_createAudio(context, WAR_UI_CANCEL, false);
                     }
 
                     return true;
@@ -1425,7 +1425,7 @@ void cancel(WarContext* context, WarEntity* entity)
                 WarState* collapseState = createCollapseState(context, selectedEntity);
                 changeNextState(context, selectedEntity, collapseState, true, true);
 
-                createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
+                waud_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
             }
             else if (selectedEntity->unit.building)
             {

@@ -55,7 +55,7 @@ void enterSceneBriefingHumans(WarContext* context)
     setUITextLineHeight(briefingText, 150);
 
     if (!isDemo(context))
-        createAudio(context, data.briefingAudioId, false);
+        waud_createAudio(context, data.briefingAudioId, false);
 }
 
 void enterSceneBriefingOrcs(WarContext* context)
@@ -104,7 +104,7 @@ void enterSceneBriefingOrcs(WarContext* context)
     setUITextLineHeight(briefingText, 150);
 
     if (!isDemo(context))
-        createAudio(context, data.briefingAudioId, false);
+        waud_createAudio(context, data.briefingAudioId, false);
 }
 
 void enterSceneBriefing(WarContext* context)

@@ -213,7 +213,7 @@ bool initGame(WarContext* context)
     SDL_HideCursor();
 
     // init audio
-    if (!initAudio(context))
+    if (!waud_initAudio(context))
     {
         logError("Could not initialize audio.");
         return false;

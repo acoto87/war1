@@ -103,7 +103,7 @@ void enterSceneMainMenu(WarContext* context)
     createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
 
     if (!isDemo(context))
-        createAudio(context, WAR_MUSIC_00, true);
+        waud_createAudio(context, WAR_MUSIC_00, true);
 }
 
 void createMainMenu(WarContext* context)

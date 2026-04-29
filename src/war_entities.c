@@ -2089,7 +2089,7 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
             WarState* collapseState = createCollapseState(context, entity);
             changeNextState(context, entity, collapseState, true, true);
 
-            createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
+            waud_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
         else
         {
@@ -2101,17 +2101,17 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
             if (entity->unit.type == WAR_UNIT_SCORPION ||
                 entity->unit.type == WAR_UNIT_SPIDER)
             {
-                createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
+                waud_createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
             }
             else if (entity->unit.type == WAR_UNIT_CATAPULT_HUMANS ||
                      entity->unit.type == WAR_UNIT_CATAPULT_ORCS)
             {
-                createAudioRandomWithPosition(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, position, false);
+                waud_createAudioRandomWithPosition(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, position, false);
             }
             else
             {
                 WarAudioId audioId = isHumanUnit(entity)? WAR_HUMAN_DEAD : WAR_ORC_DEAD;
-                createAudioWithPosition(context, audioId, position, false);
+                waud_createAudioWithPosition(context, audioId, position, false);
             }
         }
     }
@@ -2282,7 +2282,7 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
             WarState* collapseState = createCollapseState(context, goldmine);
             changeNextState(context, goldmine, collapseState, true, true);
 
-            createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
+            waud_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
     }
 

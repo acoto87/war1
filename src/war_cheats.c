@@ -371,8 +371,8 @@ void applyMusicCheat(WarContext* context, StringView argument)
                 //
                 // for now remove all the active music (audios of type WAR_AUDIO_MIDI)
                 // and the create the new one
-                removeAudiosOfType(context, WAR_AUDIO_MIDI);
-                createAudio(context, musicId, true);
+                waud_removeAudiosOfType(context, WAR_AUDIO_MIDI);
+                waud_createAudio(context, musicId, true);
                 setCheatsFeedback(context, wstr_fromCStringFormat("Music %d set", musicId + 1));
             }
         }

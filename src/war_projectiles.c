@@ -313,7 +313,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 addAnimationsComponent(context, animEntity);
 
                 createRainOfFireExplosionAnimation(context, animEntity, projectile->target);
-                createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
+                waud_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
                 removeEntityById(context, entity->id);
             }
         }
@@ -333,14 +333,14 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                     addAnimationsComponent(context, animEntity);
 
                     createExplosionAnimation(context, animEntity, projectile->target);
-                    createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
+                    waud_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
                 }
                 else
                 {
                     doProjectileTargetDamage(context, entity);
 
                     if (projectile->type == WAR_PROJECTILE_ARROW)
-                        createAudioWithPosition(context, WAR_ARROW_SPEAR_HIT, projectile->target, false);
+                        waud_createAudioWithPosition(context, WAR_ARROW_SPEAR_HIT, projectile->target, false);
                 }
 
                 removeEntityById(context, entity->id);
