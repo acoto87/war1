@@ -223,7 +223,7 @@ WarSprite loadFontSprite(WarContext* context, StringView fontPath)
     u8* data = stbi_load(wsv_data(fontPath), &width, &height, &bitsPerPixel, 0);
     if (data)
     {
-        sprite = createSprite(context, width, height, data);
+        sprite = wspr_createSprite(context, width, height, data);
         stbi_image_free(data);
     }
 

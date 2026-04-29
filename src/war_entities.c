@@ -50,14 +50,14 @@ void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarS
         return;
     }
 
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
     addSpriteComponent(context, entity, sprite);
     entity->sprite.resourceIndex = spriteResourceRef.resourceIndex;
 }
 
 void removeSpriteComponent(WarContext* context, WarEntity* entity)
 {
-    freeSprite(context, entity->sprite.sprite);
+    wspr_freeSprite(context, entity->sprite.sprite);
 
     entity->sprite = (WarSpriteComponent){0};
 }
@@ -312,16 +312,16 @@ void addButtonComponentFromResource(WarContext* context,
         return;
     }
 
-    WarSprite normalSprite = createSpriteFromResourceIndex(context, normalRef);
-    WarSprite pressedSprite = createSpriteFromResourceIndex(context, pressedRef);
+    WarSprite normalSprite = wspr_createSpriteFromResourceIndex(context, normalRef);
+    WarSprite pressedSprite = wspr_createSpriteFromResourceIndex(context, pressedRef);
     addButtonComponent(context, entity, normalSprite, pressedSprite);
 }
 
 void removeButtonComponent(WarContext* context, WarEntity* entity)
 {
     clearUITooltip(entity);
-    freeSprite(context, entity->button.normalSprite);
-    freeSprite(context, entity->button.pressedSprite);
+    wspr_freeSprite(context, entity->button.normalSprite);
+    wspr_freeSprite(context, entity->button.pressedSprite);
     entity->button = (WarButtonComponent){0};
 }
 
@@ -955,14 +955,14 @@ void renderImage(WarContext* context, WarEntity* entity)
 
         if (sprite->sprite.framesCount > 1)
         {
-            WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-            updateSpriteImage(context, sprite->sprite, frame.data);
+            WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+            wspr_updateSpriteImage(context, sprite->sprite, frame.data);
 
             renderTranslate(context, -(f32)frame.dx, -(f32)frame.dy);
         }
 
         renderTranslate(context, transform.position.x, transform.position.y);
-        renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
+        wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
         renderRestore(context);
     }
 }
@@ -1211,9 +1211,9 @@ void renderUnit(WarContext* context, WarEntity* entity)
             }
         }
 
-        WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-        updateSpriteImage(context, sprite->sprite, frame.data);
-        renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
+        WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+        wspr_updateSpriteImage(context, sprite->sprite, frame.data);
+        wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
 
         renderRestore(context);
     }
@@ -1241,10 +1241,10 @@ void renderUnit(WarContext* context, WarEntity* entity)
                 animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
 
                 s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-                WarSpriteFrame frame = getSpriteFrame(context, anim->sprite, spriteFrameIndex);
+                WarSpriteFrame frame = wspr_getSpriteFrame(context, anim->sprite, spriteFrameIndex);
 
-                updateSpriteImage(context, anim->sprite, frame.data);
-                renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
+                wspr_updateSpriteImage(context, anim->sprite, frame.data);
+                wspr_renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
                 renderRestore(context);
             }
@@ -1325,7 +1325,7 @@ void renderButton(WarContext* context, WarEntity* entity)
         // render background
         {
             WarSprite backgroundSprite = button->active ? button->pressedSprite : button->normalSprite;
-            renderSprite(context, backgroundSprite, VEC2_ZERO, VEC2_ONE);
+            wspr_renderSprite(context, backgroundSprite, VEC2_ZERO, VEC2_ONE);
         }
 
         // render foreground
@@ -1341,9 +1341,9 @@ void renderButton(WarContext* context, WarEntity* entity)
 
                 renderTranslate(context, offset.x, offset.y);
 
-                WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-                updateSpriteImage(context, sprite->sprite, frame.data);
-                renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
+                WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+                wspr_updateSpriteImage(context, sprite->sprite, frame.data);
+                wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
             }
         }
 
@@ -1384,7 +1384,7 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 
     if (sprite->enabled)
     {
-        WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+        WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
 
 #ifdef DEBUG_RENDER_PROJECTILES
         {
@@ -1428,8 +1428,8 @@ void renderProjectile(WarContext* context, WarEntity* entity)
         renderTranslate(context, -halff(frame.w), -halff(frame.h));
         renderTranslate(context, position.x, position.y);
 
-        updateSpriteImage(context, sprite->sprite, frame.data);
-        renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
+        wspr_updateSpriteImage(context, sprite->sprite, frame.data);
+        wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
     }
 }
 
@@ -1505,8 +1505,8 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     renderTranslate(context, position.x, position.y);
 
     // render base
-    updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
-    renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
+    wspr_updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
+    wspr_renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
     // render viewport
     renderTranslate(context, (f32)map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
@@ -1540,10 +1540,10 @@ void renderAnimation(WarContext* context, WarEntity* entity)
                 animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
 
                 s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-                WarSpriteFrame frame = getSpriteFrame(context, anim->sprite, spriteFrameIndex);
+                WarSpriteFrame frame = wspr_getSpriteFrame(context, anim->sprite, spriteFrameIndex);
 
-                updateSpriteImage(context, anim->sprite, frame.data);
-                renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
+                wspr_updateSpriteImage(context, anim->sprite, frame.data);
+                wspr_renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
                 renderRestore(context);
             }

@@ -7,7 +7,7 @@
 #include "war_render.h"
 #include "war_resources.h"
 
-WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
+WarSprite wspr_createSprite(WarContext *context, u32 width, u32 height, u8 data[])
 {
     WarSprite sprite = (WarSprite){0};
     assert(width <= UINT16_MAX);
@@ -42,7 +42,7 @@ WarSprite createSprite(WarContext *context, u32 width, u32 height, u8 data[])
     return sprite;
 }
 
-WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameHeight, u32 frameCount, WarSpriteFrame frames[])
+WarSprite wspr_createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameHeight, u32 frameCount, WarSpriteFrame frames[])
 {
     WarSprite sprite = (WarSprite){0};
     sprite.frameWidth = frameWidth;
@@ -74,7 +74,7 @@ WarSprite createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 frameH
     return sprite;
 }
 
-WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s32 frameIndicesCount, s32 frameIndices[])
+WarSprite wspr_createSpriteFromResource(WarContext* context, WarResource* resource, s32 frameIndicesCount, s32 frameIndices[])
 {
     assert(resource);
 
@@ -87,7 +87,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
             u32 width = resource->imageData.width;
             u32 height = resource->imageData.height;
             u8* data = resource->imageData.pixels;
-            sprite = createSprite(context, width, height, data);
+            sprite = wspr_createSprite(context, width, height, data);
             break;
         }
 
@@ -114,7 +114,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
                 framesCount = frameIndicesCount;
             }
 
-            sprite = createSpriteFromFrames(context, frameWidth, frameHeight, framesCount, frames);
+            sprite = wspr_createSpriteFromFrames(context, frameWidth, frameHeight, framesCount, frames);
 
             if (frameIndicesCount > 0)
             {
@@ -129,7 +129,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
             u32 width = resource->cursor.width;
             u32 height = resource->cursor.height;
             u8* data = resource->cursor.pixels;
-            sprite = createSprite(context, width, height, data);
+            sprite = wspr_createSprite(context, width, height, data);
             break;
         }
 
@@ -144,13 +144,13 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
     return sprite;
 }
 
-WarSprite createSpriteFromResourceIndex(WarContext* context, WarSpriteResourceRef spriteResourceRef)
+WarSprite wspr_createSpriteFromResourceIndex(WarContext* context, WarSpriteResourceRef spriteResourceRef)
 {
     WarResource* resource = wres_getOrCreateResource(context, spriteResourceRef.resourceIndex);
-    return createSpriteFromResource(context, resource, spriteResourceRef.frameIndicesCount, spriteResourceRef.frameIndices);
+    return wspr_createSpriteFromResource(context, resource, spriteResourceRef.frameIndicesCount, spriteResourceRef.frameIndices);
 }
 
-void updateSpriteImage(WarContext *context, WarSprite sprite, u8 data[])
+void wspr_updateSpriteImage(WarContext *context, WarSprite sprite, u8 data[])
 {
     NOT_USED(context);
 
@@ -163,7 +163,7 @@ void updateSpriteImage(WarContext *context, WarSprite sprite, u8 data[])
     SDL_UpdateTexture(sprite.texture, NULL, data, sprite.frameWidth * 4);
 }
 
-void renderSubSprite(WarContext *context, WarSprite sprite, rect rs, rect rd, vec2 scale)
+void wspr_renderSubSprite(WarContext *context, WarSprite sprite, rect rs, rect rd, vec2 scale)
 {
     if (!sprite.texture)
     {
@@ -174,7 +174,7 @@ void renderSubSprite(WarContext *context, WarSprite sprite, rect rs, rect rd, ve
     renderSubImage(context, sprite.texture, rs, rd, scale);
 }
 
-void renderSprite(WarContext *context, WarSprite sprite, vec2 pos, vec2 scale)
+void wspr_renderSprite(WarContext *context, WarSprite sprite, vec2 pos, vec2 scale)
 {
     if (!sprite.texture)
     {
@@ -188,7 +188,7 @@ void renderSprite(WarContext *context, WarSprite sprite, vec2 pos, vec2 scale)
     renderSubImage(context, sprite.texture, rs, rd, scale);
 }
 
-WarSpriteFrame getSpriteFrame(WarContext* context, WarSprite sprite, s32 frameIndex)
+WarSpriteFrame wspr_getSpriteFrame(WarContext* context, WarSprite sprite, s32 frameIndex)
 {
     NOT_USED(context);
 
@@ -197,7 +197,7 @@ WarSpriteFrame getSpriteFrame(WarContext* context, WarSprite sprite, s32 frameIn
     return sprite.frames[frameIndex];
 }
 
-void freeSprite(WarContext* context, WarSprite sprite)
+void wspr_freeSprite(WarContext* context, WarSprite sprite)
 {
     if (!sprite.texture)
     {

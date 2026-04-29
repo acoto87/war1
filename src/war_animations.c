@@ -33,7 +33,7 @@ WarSpriteAnimation* createAnimationFromResourceIndex(WarContext* context,
                                                      f32 frameDelay,
                                                      bool loop)
 {
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
     return createAnimation(context, name, sprite, frameDelay, loop);
 }
 
@@ -221,7 +221,7 @@ WarSpriteAnimation* createDamageAnimation(WarContext* context, WarEntity* entity
 {
     s32 resourceIndex = damageLevel == 1 ? WAR_BUILDING_DAMAGE_1_RESOURCE : WAR_BUILDING_DAMAGE_2_RESOURCE;
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(resourceIndex);
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = createAnimation(context, name, sprite, 0.2f, true);
     anim->offset = vec2Subv(getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
 
@@ -239,7 +239,7 @@ WarSpriteAnimation* createCollapseAnimation(WarContext* context, WarEntity* enti
     vec2 unitSpriteSize = getUnitSpriteSize(entity);
 
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_BUILDING_COLLAPSE_RESOURCE);
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = createAnimation(context, name, sprite, 0.1f, false);
 
     vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
@@ -266,7 +266,7 @@ WarSpriteAnimation* createCollapseAnimation(WarContext* context, WarEntity* enti
 WarSpriteAnimation* createExplosionAnimation(WarContext* context, WarEntity* entity, vec2 position)
 {
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_EXPLOSION_RESOURCE);
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
 
     String name = wstr_make();
     wstr_appendFormat(&name, "explosion_%.2f_%.2f", position.x, position.y);
@@ -287,7 +287,7 @@ WarSpriteAnimation* createExplosionAnimation(WarContext* context, WarEntity* ent
 WarSpriteAnimation* createRainOfFireExplosionAnimation(WarContext* context, WarEntity* entity, vec2 position)
 {
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_RAIN_OF_FIRE_EXPLOSION_RESOURCE);
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
 
     String name = wstr_make();
     wstr_appendFormat(&name, "explosion_%.2f_%.2f", position.x, position.y);
@@ -308,7 +308,7 @@ WarSpriteAnimation* createRainOfFireExplosionAnimation(WarContext* context, WarE
 WarSpriteAnimation* createSpellAnimation(WarContext* context, WarEntity* entity, vec2 position)
 {
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_SPELL_RESOURCE);
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
 
     String name = wstr_make();
     wstr_appendFormat(&name, "spell_%.2f_%.2f", position.x, position.y);
@@ -329,7 +329,7 @@ WarSpriteAnimation* createSpellAnimation(WarContext* context, WarEntity* entity,
 WarSpriteAnimation* createPoisonCloudAnimation(WarContext* context, WarEntity* entity, vec2 position)
 {
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_POISON_CLOUD_RESOURCE);
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
 
     String name = wstr_make();
     wstr_appendFormat(&name, "poison_cloud_%.2f_%.2f", position.x, position.y);

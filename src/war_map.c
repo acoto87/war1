@@ -497,9 +497,9 @@ WarMap* createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yourRac
 
 void freeMap(WarContext* context, WarMap* map)
 {
-    freeSprite(context, map->sprite);
-    freeSprite(context, map->minimapSprite);
-    freeSprite(context, map->blackSprite);
+    wspr_freeSprite(context, map->sprite);
+    wspr_freeSprite(context, map->minimapSprite);
+    wspr_freeSprite(context, map->blackSprite);
 
     WarEntityManager* manager = &map->entityManager;
     WarEntityListFree(&manager->entities);
@@ -570,7 +570,7 @@ void enterMap(WarContext* context)
         for (s32 i = 0; i < MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT; i++)
             data[4 * i + 3] = 255;
 
-        map->blackSprite = createSprite(context, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT, data);
+        map->blackSprite = wspr_createSprite(context, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT, data);
     }
 
     // set the initial state for the tiles
@@ -608,7 +608,7 @@ void enterMap(WarContext* context)
         //     printf("\n");
         // }
 
-        map->sprite = createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
+        map->sprite = wspr_createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
 
         // the minimap sprite will be a 2 frames sprite
         // the first one will be the frame that actually render
@@ -644,7 +644,7 @@ void enterMap(WarContext* context)
             }
         }
 
-        map->minimapSprite = createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, arrayLength(minimapFrames), minimapFrames);
+        map->minimapSprite = wspr_createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, arrayLength(minimapFrames), minimapFrames);
     }
 
     // create the forest entities
