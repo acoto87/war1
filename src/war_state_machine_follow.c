@@ -2,30 +2,30 @@
 
 #include "war_units.h"
 
-WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
+WarState* wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
 {
-    WarState* state = createState(context, entity, WAR_STATE_FOLLOW);
+    WarState* state = wst_createState(context, entity, WAR_STATE_FOLLOW);
     state->follow.targetEntityId = targetEntityId;
     state->follow.targetTile = targetTile;
     state->follow.distance = distance;
     return state;
 }
 
-void enterFollowState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
@@ -54,11 +54,11 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     // if the unit is already in distance, go to idle
     if (distance <= state->follow.distance)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* waitState = createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
+            WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
             waitState->nextState = state;
-            changeNextState(context, entity, waitState, false, true);
+            wst_changeNextState(context, entity, waitState, false, true);
         }
 
         return;
@@ -69,24 +69,24 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     // if there is no path to the target, go to idle
     if (path.nodes.count <= 1)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         wpath_freePath(path);
         return;
     }
 
-    WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
+    WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
     moveState->nextState = state;
-    changeNextState(context, entity, moveState, false, true);
+    wst_changeNextState(context, entity, moveState, false, true);
 
     wpath_freePath(path);
 }
 
-void freeFollowState(WarContext* context, WarState* state)
+void wst_freeFollowState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

@@ -7,30 +7,30 @@
 #include "war_units.h"
 #include "war_map.h"
 
-WarState* createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile)
+WarState* wst_createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile)
 {
-    WarState* state = createState(context, entity, WAR_STATE_CAST);
+    WarState* state = wst_createState(context, entity, WAR_STATE_CAST);
     state->cast.spellType = spellType;
     state->cast.targetEntityId = targetEntityId;
     state->cast.targetTile = targetTile;
     return state;
 }
 
-void enterCastState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void leaveCastState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
@@ -49,9 +49,9 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if(!wun_tileInRange(entity, targetTile, stats.range))
         {
-            WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, stats.range);
+            WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
             followState->nextState = state;
-            changeNextState(context, entity, followState, false, true);
+            wst_changeNextState(context, entity, followState, false, true);
             return;
         }
     }
@@ -100,8 +100,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
@@ -121,8 +121,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
@@ -149,8 +149,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     }
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
@@ -177,8 +177,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 }
                 else
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    WarState* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, idleState, true, true);
                 }
 
                 break;
@@ -212,8 +212,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 }
                 WarEntityListFree(nearUnits);
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
@@ -242,8 +242,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     }
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
@@ -262,8 +262,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     waud_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
@@ -281,7 +281,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeCastState(WarContext* context, WarState* state)
+void wst_freeCastState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

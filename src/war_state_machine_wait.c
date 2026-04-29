@@ -2,14 +2,14 @@
 
 #include "war_actions.h"
 
-WarState* createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
+WarState* wst_createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 {
-    WarState* state = createState(context, entity, WAR_STATE_WAIT);
+    WarState* state = wst_createState(context, entity, WAR_STATE_WAIT);
     state->wait.waitTime = waitTime;
     return state;
 }
 
-void enterWaitState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterWaitState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
@@ -20,7 +20,7 @@ void enterWaitState(WarContext* context, WarEntity* entity, WarState* state)
     wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
 }
 
-void leaveWaitState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveWaitState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
@@ -30,21 +30,21 @@ void leaveWaitState(WarContext* context, WarEntity* entity, WarState* state)
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 }
 
-void updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
 {
     state->wait.waitTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
 
     if (state->wait.waitTime < 0)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
     }
 }
 
-void freeWaitState(WarContext* context, WarState* state)
+void wst_freeWaitState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

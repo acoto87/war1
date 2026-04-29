@@ -1,27 +1,27 @@
 #include "war_state_machine.h"
 
-WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId)
+WarState* wst_createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId)
 {
-    WarState* state = createState(context, entity, WAR_STATE_DELIVER);
+    WarState* state = wst_createState(context, entity, WAR_STATE_DELIVER);
     state->wcmd_deliver.townHallId = townHallId;
     return state;
 }
 
-void enterDeliverState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
@@ -32,8 +32,8 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     // if the town hall doesn't exists (or other units attacking it), go idle
     if (!townHall)
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
         return;
     }
 
@@ -41,9 +41,9 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     {
         vec2 targetTile = wun_unitPointOnTarget(entity, townHall);
 
-        WarState* followState = createFollowState(context, entity, townHall->id, targetTile, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats.range);
         followState->nextState = state;
-        changeNextState(context, entity, followState, false, true);
+        wst_changeNextState(context, entity, followState, false, true);
         return;
     }
 
@@ -58,10 +58,10 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
         went_removeSpriteComponent(context, entity);
         went_addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
 
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         return;
@@ -94,7 +94,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     setDelay(state, wmap_getMapScaledTime(context, 1.0f));
 }
 
-void freeDeliverState(WarContext* context, WarState* state)
+void wst_freeDeliverState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

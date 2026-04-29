@@ -4,14 +4,14 @@
 #include "war_map.h"
 #include "war_units.h"
 
-WarState* createIdleState(WarContext* context, WarEntity* entity, bool lookAround)
+WarState* wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround)
 {
-    WarState* state = createState(context, entity, WAR_STATE_IDLE);
+    WarState* state = wst_createState(context, entity, WAR_STATE_IDLE);
     state->idle.lookAround = lookAround;
     return state;
 }
 
-void enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
@@ -25,7 +25,7 @@ void enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
@@ -38,7 +38,7 @@ void leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
@@ -64,8 +64,8 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
             if (enemy)
             {
                 vec2 enemyPosition = wun_getUnitPosition(enemy, true);
-                WarState* attackState = createAttackState(context, entity, enemy->id, enemyPosition);
-                changeNextState(context, entity, attackState, true, true);
+                WarState* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
+                wst_changeNextState(context, entity, attackState, true, true);
             }
         }
 
@@ -87,7 +87,7 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeIdleState(WarContext* context, WarState* state)
+void wst_freeIdleState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

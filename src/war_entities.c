@@ -190,10 +190,10 @@ void went_removeStateMachineComponent(WarContext* context, WarEntity* entity)
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
 
     if (stateMachine->currentState)
-        leaveState(context, entity, stateMachine->currentState);
+        wst_leaveState(context, entity, stateMachine->currentState);
 
     if (stateMachine->nextState)
-        leaveState(context, entity, stateMachine->nextState);
+        wst_leaveState(context, entity, stateMachine->nextState);
 
     entity->stateMachine = (WarStateMachineComponent){0};
 }
@@ -532,8 +532,8 @@ WarEntity* went_createUnit(WarContext* context,
         entity->unit.armor = stats.armor;
     }
 
-    WarState* idleState = createIdleState(context, entity, wun_isDudeUnit(entity));
-    changeNextState(context, entity, idleState, true, true);
+    WarState* idleState = wst_createIdleState(context, entity, wun_isDudeUnit(entity));
+    wst_changeNextState(context, entity, idleState, true, true);
 
     if (addToMap)
     {
@@ -571,8 +571,8 @@ WarEntity* went_createBuilding(WarContext* context,
     if (isGoingToBuild)
     {
         WarBuildingStats stats = wun_getBuildingStats(type);
-        WarState* buildState = createBuildState(context, entity, (f32)stats.buildTime);
-        changeNextState(context, entity, buildState, true, true);
+        WarState* buildState = wst_createBuildState(context, entity, (f32)stats.buildTime);
+        wst_changeNextState(context, entity, buildState, true, true);
     }
 
     return entity;
@@ -2086,8 +2086,8 @@ void went_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 
     {
         if (wun_isBuildingUnit(entity))
         {
-            WarState* collapseState = createCollapseState(context, entity);
-            changeNextState(context, entity, collapseState, true, true);
+            WarState* collapseState = wst_createCollapseState(context, entity);
+            wst_changeNextState(context, entity, collapseState, true, true);
 
             waud_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
@@ -2095,8 +2095,8 @@ void went_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 
         {
             vec2 position = wun_getUnitCenterPosition(entity, false);
 
-            WarState* deathState = createDeathState(context, entity);
-            changeNextState(context, entity, deathState, true, true);
+            WarState* deathState = wst_createDeathState(context, entity);
+            wst_changeNextState(context, entity, deathState, true, true);
 
             if (entity->unit.type == WAR_UNIT_SCORPION ||
                 entity->unit.type == WAR_UNIT_SPIDER)
@@ -2168,8 +2168,8 @@ void went_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetE
         else
         {
             // wcmd_stop attacking if the magic unit rans out of mana
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
     }
     else
@@ -2201,8 +2201,8 @@ void went_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* tar
         else
         {
             // wcmd_stop attacking if the magic unit rans out of mana
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
     }
     else
@@ -2279,8 +2279,8 @@ s32 went_mine(WarContext* context, WarEntity* goldmine, s32 amount)
     {
         if (!isCollapsing(goldmine) && !isGoingToCollapse(goldmine))
         {
-            WarState* collapseState = createCollapseState(context, goldmine);
-            changeNextState(context, goldmine, collapseState, true, true);
+            WarState* collapseState = wst_createCollapseState(context, goldmine);
+            wst_changeNextState(context, goldmine, collapseState, true, true);
 
             waud_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }

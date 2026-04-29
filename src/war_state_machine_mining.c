@@ -1,14 +1,14 @@
 #include "war_state_machine.h"
 
-WarState* createMiningState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
+WarState* wst_createMiningState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
 {
-    WarState* state = createState(context, entity, WAR_STATE_MINING);
+    WarState* state = wst_createState(context, entity, WAR_STATE_MINING);
     state->went_mine.goldmineId = goldmineId;
     state->went_mine.miningTime = 0;
     return state;
 }
 
-void enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
 {
     // disable the sprite to simulate the mining process
     entity->sprite.enabled = false;
@@ -20,14 +20,14 @@ void enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
     wmap_removeEntityFromSelection(context, entity->id);
 }
 
-void leaveMiningState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
@@ -45,8 +45,8 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
         wun_setUnitCenterPosition(entity, spawnPosition, true);
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
         return;
     }
 
@@ -78,18 +78,18 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
         // if the town hall doesn't exists (it could be under wcmd_attack and get destroyed), go idle
         if (!townHall)
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
             return;
         }
 
-        WarState* deliverState = createDeliverState(context, entity, townHall->id);
-        deliverState->nextState = createGatherGoldState(context, entity, goldmine->id);
-        changeNextState(context, entity, deliverState, true, true);
+        WarState* deliverState = wst_createDeliverState(context, entity, townHall->id);
+        deliverState->nextState = wst_createGatherGoldState(context, entity, goldmine->id);
+        wst_changeNextState(context, entity, deliverState, true, true);
     }
 }
 
-void freeMiningState(WarContext* context, WarState* state)
+void wst_freeMiningState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

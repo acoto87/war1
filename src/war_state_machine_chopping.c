@@ -5,15 +5,15 @@
 #include "war_units.h"
 #include "war_map.h"
 
-WarState* createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
+WarState* wst_createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
 {
-    WarState* state = createState(context, entity, WAR_STATE_CHOPPING);
+    WarState* state = wst_createState(context, entity, WAR_STATE_CHOPPING);
     state->chop.forestId = forestId;
     state->chop.position = position;
     return state;
 }
 
-void enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
@@ -26,14 +26,14 @@ void enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
     wact_setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 }
 
-void leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarUnitComponent* unit = &entity->unit;
 
@@ -42,8 +42,8 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     // if the forest doesn't exists, go idle
     if (!forest)
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
         return;
     }
 
@@ -52,8 +52,8 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
 
     if (!tree || tree->amount == 0)
     {
-        WarState* gatherWoodState = createGatherWoodState(context, entity, forest->id, treePosition);
-        changeNextState(context, entity, gatherWoodState, true, true);
+        WarState* gatherWoodState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
+        wst_changeNextState(context, entity, gatherWoodState, true, true);
         return;
     }
 
@@ -87,14 +87,14 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
             // if the town hall doesn't exists (it could be under wcmd_attack and get destroyed), go idle
             if (!townHall)
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
                 return;
             }
 
-            WarState* deliverState = createDeliverState(context, entity, townHall->id);
-            deliverState->nextState = createGatherWoodState(context, entity, forest->id, treePosition);
-            changeNextState(context, entity, deliverState, true, true);
+            WarState* deliverState = wst_createDeliverState(context, entity, townHall->id);
+            deliverState->nextState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
+            wst_changeNextState(context, entity, deliverState, true, true);
         }
 
         // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
@@ -103,7 +103,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     }
 }
 
-void freeChoppingState(WarContext* context, WarState* state)
+void wst_freeChoppingState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

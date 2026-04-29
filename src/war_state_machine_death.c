@@ -2,13 +2,13 @@
 
 #include "war_actions.h"
 
-WarState* createDeathState(WarContext* context, WarEntity* entity)
+WarState* wst_createDeathState(WarContext* context, WarEntity* entity)
 {
-    WarState* state = createState(context, entity, WAR_STATE_DEATH);
+    WarState* state = wst_createState(context, entity, WAR_STATE_DEATH);
     return state;
 }
 
-void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     vec2 unitSize = wun_getUnitSize(entity);
@@ -21,14 +21,14 @@ void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
     setDelay(state, wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration)));
 }
 
-void leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
@@ -47,14 +47,14 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
 
         wun_setUnitDirection(corpse, wun_getUnitDirection(entity));
 
-        WarState* deathState = createDeathState(context, corpse);
-        changeNextState(context, corpse, deathState, true, true);
+        WarState* deathState = wst_createDeathState(context, corpse);
+        wst_changeNextState(context, corpse, deathState, true, true);
     }
 
     went_removeEntityById(context, entity->id);
 }
 
-void freeDeathState(WarContext* context, WarState* state)
+void wst_freeDeathState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

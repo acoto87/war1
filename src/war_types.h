@@ -1475,8 +1475,8 @@ typedef struct
     bool enabled;
     WarState* currentState;
     WarState* nextState;
-    bool leaveState;
-    bool enterState;
+    bool wst_leaveState;
+    bool wst_enterState;
 } WarStateMachineComponent;
 
 typedef struct

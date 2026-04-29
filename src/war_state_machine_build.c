@@ -7,9 +7,9 @@
 #include "war_cheats.h"
 #include "war_pathfinder.h"
 
-WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
+WarState* wst_createBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
 {
-    WarState* state = createState(context, entity, WAR_STATE_BUILD);
+    WarState* state = wst_createState(context, entity, WAR_STATE_BUILD);
     state->build.workerId = 0;
     state->build.buildTime = 0;
     state->build.totalBuildTime = buildTime;
@@ -17,7 +17,7 @@ WarState* createBuildState(WarContext* context, WarEntity* entity, f32 buildTime
     return state;
 }
 
-void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
@@ -42,7 +42,7 @@ void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
     unit->buildPercent = 0;
 }
 
-void leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
@@ -56,7 +56,7 @@ void leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
     unit->building = false;
 }
 
-void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -64,10 +64,10 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (state->build.cancelled)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* collapseState = createCollapseState(context, entity);
-            changeNextState(context, entity, collapseState, true, true);
+            WarState* collapseState = wst_createCollapseState(context, entity);
+            wst_changeNextState(context, entity, collapseState, true, true);
         }
 
         return;
@@ -110,10 +110,10 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
         WarUnitData buildingData = wun_getUnitData(entity->unit.type);
         went_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.resourceIndex));
 
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, false);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;
@@ -143,7 +143,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
     entity->sprite.frameIndex = frameIndex;
 }
 
-void freeBuildState(WarContext* context, WarState* state)
+void wst_freeBuildState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

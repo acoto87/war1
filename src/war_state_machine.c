@@ -2,28 +2,28 @@
 
 WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
 {
-    { WAR_STATE_IDLE,       enterIdleState,       leaveIdleState,       updateIdleState,       freeIdleState       },
-    { WAR_STATE_MOVE,       enterMoveState,       leaveMoveState,       updateMoveState,       freeMoveState       },
-    { WAR_STATE_PATROL,     enterPatrolState,     leavePatrolState,     updatePatrolState,     freePatrolState     },
-    { WAR_STATE_FOLLOW,     enterFollowState,     leaveFollowState,     updateFollowState,     freeFollowState     },
-    { WAR_STATE_ATTACK,     enterAttackState,     leaveAttackState,     updateAttackState,     freeAttackState     },
-    { WAR_STATE_GOLD,       enterGatherGoldState, leaveGatherGoldState, updateGatherGoldState, freeGatherGoldState },
-    { WAR_STATE_MINING,     enterMiningState,     leaveMiningState,     updateMiningState,     freeMiningState     },
-    { WAR_STATE_WOOD,       enterGatherWoodState, leaveGatherWoodState, updateGatherWoodState, freeGatherWoodState },
-    { WAR_STATE_CHOPPING,   enterChoppingState,   leaveChoppingState,   updateChoppingState,   freeChoppingState   },
-    { WAR_STATE_DELIVER,    enterDeliverState,    leaveDeliverState,    updateDeliverState,    freeDeliverState    },
-    { WAR_STATE_DEATH,      enterDeathState,      leaveDeathState,      updateDeathState,      freeDeathState      },
-    { WAR_STATE_COLLAPSE,   enterCollapseState,   leaveCollapseState,   updateCollapseState,   freeCollapseState   },
-    { WAR_STATE_TRAIN,      enterTrainState,      leaveTrainState,      updateTrainState,      freeTrainState      },
-    { WAR_STATE_UPGRADE,    enterUpgradeState,    leaveUpgradeState,    updateUpgradeState,    freeUpgradeState    },
-    { WAR_STATE_BUILD,      enterBuildState,      leaveBuildState,      updateBuildState,      freeBuildState      },
-    { WAR_STATE_REPAIR,     enterRepairState,     leaveRepairState,     updateRepairState,     freeRepairState     },
-    { WAR_STATE_REPAIRING,  enterRepairingState,  leaveRepairingState,  updateRepairingState,  freeRepairingState  },
-    { WAR_STATE_CAST,       enterCastState,       leaveCastState,       updateCastState,       freeCastState       },
-    { WAR_STATE_WAIT,       enterWaitState,       leaveWaitState,       updateWaitState,       freeWaitState       },
+    { WAR_STATE_IDLE,       wst_enterIdleState,       wst_leaveIdleState,       wst_updateIdleState,       wst_freeIdleState       },
+    { WAR_STATE_MOVE,       wst_enterMoveState,       wst_leaveMoveState,       wst_updateMoveState,       wst_freeMoveState       },
+    { WAR_STATE_PATROL,     wst_enterPatrolState,     wst_leavePatrolState,     wst_updatePatrolState,     wst_freePatrolState     },
+    { WAR_STATE_FOLLOW,     wst_enterFollowState,     wst_leaveFollowState,     wst_updateFollowState,     wst_freeFollowState     },
+    { WAR_STATE_ATTACK,     wst_enterAttackState,     wst_leaveAttackState,     wst_updateAttackState,     wst_freeAttackState     },
+    { WAR_STATE_GOLD,       wst_enterGatherGoldState, wst_leaveGatherGoldState, wst_updateGatherGoldState, wst_freeGatherGoldState },
+    { WAR_STATE_MINING,     wst_enterMiningState,     wst_leaveMiningState,     wst_updateMiningState,     wst_freeMiningState     },
+    { WAR_STATE_WOOD,       wst_enterGatherWoodState, wst_leaveGatherWoodState, wst_updateGatherWoodState, wst_freeGatherWoodState },
+    { WAR_STATE_CHOPPING,   wst_enterChoppingState,   wst_leaveChoppingState,   wst_updateChoppingState,   wst_freeChoppingState   },
+    { WAR_STATE_DELIVER,    wst_enterDeliverState,    wst_leaveDeliverState,    wst_updateDeliverState,    wst_freeDeliverState    },
+    { WAR_STATE_DEATH,      wst_enterDeathState,      wst_leaveDeathState,      wst_updateDeathState,      wst_freeDeathState      },
+    { WAR_STATE_COLLAPSE,   wst_enterCollapseState,   wst_leaveCollapseState,   wst_updateCollapseState,   wst_freeCollapseState   },
+    { WAR_STATE_TRAIN,      wst_enterTrainState,      wst_leaveTrainState,      wst_updateTrainState,      wst_freeTrainState      },
+    { WAR_STATE_UPGRADE,    wst_enterUpgradeState,    wst_leaveUpgradeState,    wst_updateUpgradeState,    wst_freeUpgradeState    },
+    { WAR_STATE_BUILD,      wst_enterBuildState,      wst_leaveBuildState,      wst_updateBuildState,      wst_freeBuildState      },
+    { WAR_STATE_REPAIR,     wst_enterRepairState,     wst_leaveRepairState,     wst_updateRepairState,     wst_freeRepairState     },
+    { WAR_STATE_REPAIRING,  wst_enterRepairingState,  wst_leaveRepairingState,  wst_updateRepairingState,  wst_freeRepairingState  },
+    { WAR_STATE_CAST,       wst_enterCastState,       wst_leaveCastState,       wst_updateCastState,       wst_freeCastState       },
+    { WAR_STATE_WAIT,       wst_enterWaitState,       wst_leaveWaitState,       wst_updateWaitState,       wst_freeWaitState       },
 };
 
-bool isInsideBuilding(WarEntity* entity)
+bool wst_isInsideBuilding(WarEntity* entity)
 {
     if (isMining(entity))
     {
@@ -45,7 +45,7 @@ bool isInsideBuilding(WarEntity* entity)
     return false;
 }
 
-WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
+WarState* wst_createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
     WarState* state = (WarState*)war_malloc(sizeof(WarState));
     state->type = type;
@@ -55,21 +55,21 @@ WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
     return state;
 }
 
-void changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool leaveState, bool enterState)
+void wst_changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool wst_leaveState, bool wst_enterState)
 {
     NOT_USED(context);
 
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
     stateMachine->nextState = state;
-    stateMachine->leaveState = leaveState;
-    stateMachine->enterState = enterState;
+    stateMachine->wst_leaveState = wst_leaveState;
+    stateMachine->wst_enterState = wst_enterState;
 }
 
-bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* state)
+bool wst_changeStateNextState(WarContext* context, WarEntity* entity, WarState* state)
 {
     if(state->nextState)
     {
-        changeNextState(context, entity, state->nextState, true, false);
+        wst_changeNextState(context, entity, state->nextState, true, false);
         state->nextState = NULL;
         return true;
     }
@@ -77,7 +77,7 @@ bool changeStateNextState(WarContext* context, WarEntity* entity, WarState* stat
     return false;
 }
 
-WarState* getState(WarEntity* entity, WarStateType type)
+WarState* wst_getState(WarEntity* entity, WarStateType type)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
     WarState* state = stateMachine->currentState;
@@ -86,36 +86,36 @@ WarState* getState(WarEntity* entity, WarStateType type)
     return state;
 }
 
-WarState* getDirectState(WarEntity* entity, WarStateType type)
+WarState* wst_getDirectState(WarEntity* entity, WarStateType type)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
     WarState* state = stateMachine->currentState;
     return state && state->type == type ? state : NULL;
 }
 
-WarState* getNextState(WarEntity* entity, WarStateType type)
+WarState* wst_getNextState(WarEntity* entity, WarStateType type)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
     WarState* state = stateMachine->nextState;
     return state && state->type == type ? state : NULL;
 }
 
-bool hasState(WarEntity* entity, WarStateType type)
+bool wst_hasState(WarEntity* entity, WarStateType type)
 {
-    return getState(entity, type) != NULL;
+    return wst_getState(entity, type) != NULL;
 }
 
-bool hasDirectState(WarEntity* entity, WarStateType type)
+bool wst_hasDirectState(WarEntity* entity, WarStateType type)
 {
-    return getDirectState(entity, type) != NULL;
+    return wst_getDirectState(entity, type) != NULL;
 }
 
-bool hasNextState(WarEntity* entity, WarStateType type)
+bool wst_hasNextState(WarEntity* entity, WarStateType type)
 {
-    return getNextState(entity, type) != NULL;
+    return wst_getNextState(entity, type) != NULL;
 }
 
-void enterState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterState(WarContext* context, WarEntity* entity, WarState* state)
 {
     if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
     {
@@ -126,7 +126,7 @@ void enterState(WarContext* context, WarEntity* entity, WarState* state)
     stateDescriptors[state->type].enterStateFunc(context, entity, state);
 }
 
-void leaveState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     if (!state)
     {
@@ -140,25 +140,25 @@ void leaveState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     stateDescriptors[state->type].leaveStateFunc(context, entity, state);
-    freeState(context, state);
+    wst_freeState(context, state);
 }
 
-void updateStateMachine(WarContext* context, WarEntity* entity)
+void wst_updateStateMachine(WarContext* context, WarEntity* entity)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
     if (stateMachine->enabled)
     {
-        // the enterState could potentially change state if it determine that is not ready to start the current state
+        // the wst_enterState could potentially change state if it determine that is not ready to start the current state
         while (stateMachine->nextState)
         {
-            if (stateMachine->leaveState)
-                leaveState(context, entity, stateMachine->currentState);
+            if (stateMachine->wst_leaveState)
+                wst_leaveState(context, entity, stateMachine->currentState);
 
             stateMachine->currentState = stateMachine->nextState;
             stateMachine->nextState = NULL;
 
-            if (stateMachine->enterState)
-                enterState(context, entity, stateMachine->currentState);
+            if (stateMachine->wst_enterState)
+                wst_enterState(context, entity, stateMachine->currentState);
         }
 
         WarState* currentState = stateMachine->currentState;
@@ -182,7 +182,7 @@ void updateStateMachine(WarContext* context, WarEntity* entity)
     }
 }
 
-void freeState(WarContext* context, WarState* state)
+void wst_freeState(WarContext* context, WarState* state)
 {
     if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
     {
@@ -193,7 +193,7 @@ void freeState(WarContext* context, WarState* state)
     stateDescriptors[state->type].freeStateFunc(context, state);
 
     if (state->nextState)
-        freeState(context, state->nextState);
+        wst_freeState(context, state->nextState);
 
     war_free(state);
 }

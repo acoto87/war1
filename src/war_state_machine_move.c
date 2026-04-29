@@ -3,25 +3,25 @@
 #include "war_actions.h"
 #include "war_units.h"
 
-WarState* createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
+WarState* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
-    WarState* state = createState(context, entity, WAR_STATE_MOVE);
+    WarState* state = wst_createState(context, entity, WAR_STATE_MOVE);
     vec2ListInit(&state->wcmd_move.positions, vec2ListDefaultOptions);
     vec2ListAddRange(&state->wcmd_move.positions, positionCount, positions);
     return state;
 }
 
-void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     vec2 unitSize = wun_getUnitSize(entity);
 
     if (state->wcmd_move.positions.count <= 1)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         return;
@@ -39,10 +39,10 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     // if the is no path to the next position, go to idle
     if (path.nodes.count <= 1)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         return;
@@ -58,7 +58,7 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wun_getUnitActionScale(entity));
 }
 
-void leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     vec2 unitSize = wun_getUnitSize(entity);
@@ -79,7 +79,7 @@ void leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     WarMapPath* path = &state->wcmd_move.path;
@@ -99,8 +99,8 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
         if (enemy && wun_areEnemies(context, entity, enemy) && wun_canAttack(context, entity, enemy))
         {
             vec2 enemyPosition = wun_getUnitPosition(enemy, true);
-            WarState* attackState = createAttackState(context, entity, enemy->id, enemyPosition);
-            changeNextState(context, entity, attackState, true, true);
+            WarState* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
+            wst_changeNextState(context, entity, attackState, true, true);
 
             return;
         }
@@ -116,9 +116,9 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 state->wcmd_move.waitCount++;
 
-                WarState* waitState = createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
+                WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
                 waitState->nextState = state;
-                changeNextState(context, entity, waitState, false, true);
+                wst_changeNextState(context, entity, waitState, false, true);
 
                 return;
             }
@@ -128,10 +128,10 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             // if there is no re-routing possible, go to idle
             if (!wpath_reRoutePath(map->finder, path, state->wcmd_move.pathNodeIndex, path->nodes.count - 1))
             {
-                if (!changeStateNextState(context, entity, state))
+                if (!wst_changeStateNextState(context, entity, state))
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    WarState* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, idleState, true, true);
                 }
 
                 return;
@@ -186,10 +186,10 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             // if this is no more segments, go to idle
             if (state->wcmd_move.positionIndex >= state->wcmd_move.positions.count - 1)
             {
-                if (!changeStateNextState(context, entity, state))
+                if (!wst_changeStateNextState(context, entity, state))
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    WarState* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, idleState, true, true);
                 }
 
                 return;
@@ -206,10 +206,10 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             // if there is no path for the next segment, go to idle
             if (path->nodes.count <= 1)
             {
-                if (!changeStateNextState(context, entity, state))
+                if (!wst_changeStateNextState(context, entity, state))
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    WarState* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, idleState, true, true);
                 }
 
                 return;
@@ -229,10 +229,10 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             // if the next node is occupied but is the last one, don't wait to re-route, go idle
             if (state->wcmd_move.pathNodeIndex + 1 == path->nodes.count - 1)
             {
-                if (!changeStateNextState(context, entity, state))
+                if (!wst_changeStateNextState(context, entity, state))
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    WarState* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, idleState, true, true);
                 }
 
                 return;
@@ -240,9 +240,9 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 
             state->wcmd_move.waitCount++;
 
-            WarState* waitState = createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
+            WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
             waitState->nextState = state;
-            changeNextState(context, entity, waitState, false, true);
+            wst_changeNextState(context, entity, waitState, false, true);
 
             return;
         }
@@ -252,7 +252,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeMoveState(WarContext* context, WarState* state)
+void wst_freeMoveState(WarContext* context, WarState* state)
 {
     vec2ListFree(&state->wcmd_move.positions);
     wpath_freePath(state->wcmd_move.path);

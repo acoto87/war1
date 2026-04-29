@@ -4,13 +4,13 @@
 
 #include "war_animations.h"
 
-WarState* createCollapseState(WarContext* context, WarEntity* entity)
+WarState* wst_createCollapseState(WarContext* context, WarEntity* entity)
 {
-    WarState* state = createState(context, entity, WAR_STATE_COLLAPSE);
+    WarState* state = wst_createState(context, entity, WAR_STATE_COLLAPSE);
     return state;
 }
 
-void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     vec2 unitSize = wun_getUnitSize(entity);
@@ -34,21 +34,21 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     wmap_removeEntityFromSelection(context, entity->id);
 }
 
-void leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateCollapseState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
     went_removeEntityById(context, entity->id);
 }
 
-void freeCollapseState(WarContext* context, WarState* state)
+void wst_freeCollapseState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

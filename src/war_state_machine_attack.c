@@ -5,29 +5,29 @@
 #include "war_audio.h"
 #include "war_units.h"
 
-WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
+WarState* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
 {
-    WarState* state = createState(context, entity, WAR_STATE_ATTACK);
+    WarState* state = wst_createState(context, entity, WAR_STATE_ATTACK);
     state->wcmd_attack.targetEntityId = targetEntityId;
     state->wcmd_attack.targetTile = targetTile;
     return state;
 }
 
-void enterAttackState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
@@ -51,15 +51,15 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         // of the attacking unit is greater
         if(!wun_tileInRange(entity, targetTile, 1))
         {
-            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
+            WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
             moveState->wcmd_move.checkForAttacks = true;
-            changeNextState(context, entity, moveState, false, true);
+            wst_changeNextState(context, entity, moveState, false, true);
             return;
         }
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
         return;
     }
 
@@ -74,27 +74,27 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     // if the unit is not in range to wcmd_attack, chase it
     if (isUnit(targetEntity) && !wun_unitInRange(entity, targetEntity, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
         followState->nextState = state;
-        changeNextState(context, entity, followState, false, true);
+        wst_changeNextState(context, entity, followState, false, true);
         return;
     }
 
     if(isWall(targetEntity) && !wun_tileInRange(entity, targetTile, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, 0, targetTile, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, 0, targetTile, stats.range);
         followState->nextState = state;
-        changeNextState(context, entity, followState, false, true);
+        wst_changeNextState(context, entity, followState, false, true);
         return;
     }
 
     // if the unit is attacking a worker that is currently gathering and inside of the goldmine or the townhall,
     // wcmd_stop the attacking for a moment until the unit come out again
-    if (isInsideBuilding(targetEntity))
+    if (wst_isInsideBuilding(targetEntity))
     {
-        WarState* waitState = createWaitState(context, entity, 1.0f);
+        WarState* waitState = wst_createWaitState(context, entity, 1.0f);
         waitState->nextState = state;
-        changeNextState(context, entity, waitState, false, true);
+        wst_changeNextState(context, entity, waitState, false, true);
         return;
     }
 
@@ -118,8 +118,8 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             if (isDead(targetEntity) || isGoingToDie(targetEntity) ||
                 isCollapsing(targetEntity) || isGoingToCollapse(targetEntity))
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
             }
             else
             {
@@ -146,8 +146,8 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                 // one of them could destroy the piece, so the other should wcmd_stop doing further damage.
                 if (piece->hp == 0)
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    WarState* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, idleState, true, true);
                 }
                 else
                 {
@@ -172,7 +172,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeAttackState(WarContext* context, WarState* state)
+void wst_freeAttackState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

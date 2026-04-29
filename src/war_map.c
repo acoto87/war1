@@ -747,8 +747,8 @@ void wmap_enterMap(WarContext* context)
 
         went_addStateMachineComponent(context, wall);
 
-        WarState* idleState = createIdleState(context, wall, false);
-        changeNextState(context, wall, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, wall, false);
+        wst_changeNextState(context, wall, idleState, true, true);
 
         map->wall = wall;
     }
@@ -967,7 +967,7 @@ void updateSelection(WarContext* context)
                             }
 
                             // don't select workers inside buildings
-                            if (wun_isWorkerUnit(entity) && isInsideBuilding(entity))
+                            if (wun_isWorkerUnit(entity) && wst_isInsideBuilding(entity))
                             {
                                 continue;
                             }
@@ -1963,7 +1963,7 @@ void updateStateMachines(WarContext* context)
         WarEntity* entity = entities->items[i];
         if (entity)
         {
-            updateStateMachine(context, entity);
+            wst_updateStateMachine(context, entity);
         }
     }
     TracyCZoneEnd(ctx);
@@ -2021,8 +2021,8 @@ void updateMagic(WarContext* context)
                     {
                         vec2 position = wun_getUnitCenterPosition(entity, false);
 
-                        WarState* deathState = createDeathState(context, entity);
-                        changeNextState(context, entity, deathState, true, true);
+                        WarState* deathState = wst_createDeathState(context, entity);
+                        wst_changeNextState(context, entity, deathState, true, true);
 
                         if (entity->unit.type == WAR_UNIT_SCORPION ||
                             entity->unit.type == WAR_UNIT_SPIDER)
@@ -2633,7 +2633,7 @@ void renderUnitPaths(WarContext* context)
         WarEntity *entity = units->items[i];
         if (entity)
         {
-            WarState* moveState = getDirectState(entity, WAR_STATE_MOVE);
+            WarState* moveState = wst_getDirectState(entity, WAR_STATE_MOVE);
             if (moveState)
             {
                 vec2List positions = moveState->wcmd_move.positions;

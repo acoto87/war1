@@ -1,27 +1,27 @@
 #include "war_state_machine.h"
 
-WarState* createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
+WarState* wst_createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
 {
-    WarState* state = createState(context, entity, WAR_STATE_GOLD);
+    WarState* state = wst_createState(context, entity, WAR_STATE_GOLD);
     state->gold.goldmineId = goldmineId;
     return state;
 }
 
-void enterGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = wun_getUnitStats(unit->type);
@@ -33,26 +33,26 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     // so, this unit get nothing
     if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
         return;
     }
 
     // if the goldmine is not in range, go to it
     if (!wun_unitInRange(entity, goldmine, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats.range);
         followState->nextState = state;
-        changeNextState(context, entity, followState, false, true);
+        wst_changeNextState(context, entity, followState, false, true);
         return;
     }
 
     // the unit arrive to the goldmine, go mining
-    WarState* miningState = createMiningState(context, entity, goldmine->id);
-    changeNextState(context, entity, miningState, true, true);
+    WarState* miningState = wst_createMiningState(context, entity, goldmine->id);
+    wst_changeNextState(context, entity, miningState, true, true);
 }
 
-void freeGatherGoldState(WarContext* context, WarState* state)
+void wst_freeGatherGoldState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }
