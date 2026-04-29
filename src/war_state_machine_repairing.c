@@ -16,7 +16,7 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
 {
     WarMap* map = context->map;
 
-    WarEntity* building = findEntity(context, state->repairing.buildingId);
+    WarEntity* building = went_findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
@@ -80,7 +80,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = &entity->unit;
 
-    WarEntity* building = findEntity(context, state->repairing.buildingId);
+    WarEntity* building = went_findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
@@ -108,7 +108,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
         WarUnitAction* action = &unit->actions[unit->actionType];
         if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
         {
-            if (!decreasePlayerResources(context, player, 1, 1))
+            if (!went_decreasePlayerResources(context, player, 1, 1))
             {
                 WarState* idleState = createIdleState(context, entity, true);
                 changeNextState(context, entity, idleState, true, true);

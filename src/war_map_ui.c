@@ -130,9 +130,9 @@ void wmui_createMapUI(WarContext* context)
 
 WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_MINIMAP, true);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_MINIMAP, true);
+    went_addTransformComponent(context, entity, position);
+    went_addUIComponent(context, entity, name);
 
     return entity;
 }
@@ -141,7 +141,7 @@ void wmui_updateGoldText(WarContext* context)
 {
     WarMap* map = context->map;
 
-    WarEntity* txtGold = findUIEntity(context, wsv_fromCString("txtGold"));
+    WarEntity* txtGold = went_findUIEntity(context, wsv_fromCString("txtGold"));
     assert(txtGold);
 
     s32 gold = map->players[0].gold;
@@ -153,7 +153,7 @@ void wmui_updateWoodText(WarContext* context)
 {
     WarMap* map = context->map;
 
-    WarEntity* txtWood = findUIEntity(context, wsv_fromCString("txtWood"));
+    WarEntity* txtWood = went_findUIEntity(context, wsv_fromCString("txtWood"));
     assert(txtWood);
 
     s32 wood = map->players[0].wood;
@@ -166,10 +166,10 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     WarMap* map = context->map;
 
     // retrieve entities of sprites of unit info/portraits
-    WarEntity* imgUnitInfo = findUIEntity(context, wsv_fromCString("imgUnitInfo"));
+    WarEntity* imgUnitInfo = went_findUIEntity(context, wsv_fromCString("imgUnitInfo"));
     assert(imgUnitInfo);
 
-    WarEntity* imgUnitInfoLife = findUIEntity(context, wsv_fromCString("imgUnitInfoLife"));
+    WarEntity* imgUnitInfoLife = went_findUIEntity(context, wsv_fromCString("imgUnitInfoLife"));
     assert(imgUnitInfoLife);
 
     String uiEntityName;
@@ -178,24 +178,24 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     for (s32 i = 0; i < 5; i++)
     {
         uiEntityName = wstr_fromCStringFormat("imgUnitPortrait%d", i);
-        imgUnitPortraits[i] = findUIEntity(context, wstr_view(&uiEntityName));
+        imgUnitPortraits[i] = went_findUIEntity(context, wstr_view(&uiEntityName));
         assert(imgUnitPortraits[i]);
 
         uiEntityName = wstr_fromCStringFormat("rectLifeBar%d", i);
-        rectLifeBars[i] = findUIEntity(context, wstr_view(&uiEntityName));
+        rectLifeBars[i] = went_findUIEntity(context, wstr_view(&uiEntityName));
         assert(rectLifeBars[i]);
     }
 
-    WarEntity* rectMagicBar = findUIEntity(context, wsv_fromCString("rectMagicBar"));
+    WarEntity* rectMagicBar = went_findUIEntity(context, wsv_fromCString("rectMagicBar"));
     assert(rectMagicBar);
 
-    WarEntity* rectPercentBar = findUIEntity(context, wsv_fromCString("rectPercentBar"));
+    WarEntity* rectPercentBar = went_findUIEntity(context, wsv_fromCString("rectPercentBar"));
     assert(rectPercentBar);
 
-    WarEntity* rectPercentText = findUIEntity(context, wsv_fromCString("rectPercentText"));
+    WarEntity* rectPercentText = went_findUIEntity(context, wsv_fromCString("rectPercentText"));
     assert(rectPercentText);
 
-    WarEntity* txtUnitName = findUIEntity(context, wsv_fromCString("txtUnitName"));
+    WarEntity* txtUnitName = went_findUIEntity(context, wsv_fromCString("txtUnitName"));
     assert(txtUnitName);
 
     // reset frame index of the sprites of unit info/portraits
@@ -231,7 +231,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
         for (s32 i = 1; i <= selectedEntitiesCount; i++)
         {
             WarEntityId selectedEntityId = map->selectedEntities.items[i - 1];
-            WarEntity* selectedEntity = findEntity(context, selectedEntityId);
+            WarEntity* selectedEntity = went_findEntity(context, selectedEntityId);
             if (selectedEntity && isUnit(selectedEntity))
             {
                 WarUnitComponent* unit = &selectedEntity->unit;
@@ -244,7 +244,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     else if (selectedEntitiesCount == 1)
     {
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
-        WarEntity* selectedEntity = findEntity(context, selectedEntityId);
+        WarEntity* selectedEntity = went_findEntity(context, selectedEntityId);
         if (selectedEntity && isUnit(selectedEntity))
         {
             WarUnitComponent* unit = &selectedEntity->unit;
@@ -285,19 +285,19 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
 
 void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, String text)
 {
-    WarEntity* txtStatus = findUIEntity(context, wsv_fromCString("txtStatus"));
+    WarEntity* txtStatus = went_findUIEntity(context, wsv_fromCString("txtStatus"));
     assert(txtStatus);
 
-    WarEntity* imgStatusWood = findUIEntity(context, wsv_fromCString("imgStatusWood"));
+    WarEntity* imgStatusWood = went_findUIEntity(context, wsv_fromCString("imgStatusWood"));
     assert(imgStatusWood);
 
-    WarEntity* imgStatusGold = findUIEntity(context, wsv_fromCString("imgStatusGold"));
+    WarEntity* imgStatusGold = went_findUIEntity(context, wsv_fromCString("imgStatusGold"));
     assert(imgStatusGold);
 
-    WarEntity* txtStatusWood = findUIEntity(context, wsv_fromCString("txtStatusWood"));
+    WarEntity* txtStatusWood = went_findUIEntity(context, wsv_fromCString("txtStatusWood"));
     assert(txtStatusWood);
 
-    WarEntity* txtStatusGold = findUIEntity(context, wsv_fromCString("txtStatusGold"));
+    WarEntity* txtStatusGold = went_findUIEntity(context, wsv_fromCString("txtStatusGold"));
     assert(txtStatusGold);
 
     setUIText(txtStatus, text);
@@ -421,7 +421,7 @@ void wmui_renderCommand(WarContext* context)
             WarUnitType buildingToBuild = command->build.buildingToBuild;
             WarUnitData data = getUnitData(buildingToBuild);
 
-            WarColor fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
+            WarColor fillColor = went_checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = wmap_vec2TileToMapCoordinates(position, false);
@@ -439,7 +439,7 @@ void wmui_renderCommand(WarContext* context)
             vec2 position = wmap_vec2ScreenToMapCoordinates(context, input->pos);
             position = wmap_vec2MapToTileCoordinates(position);
 
-            WarColor fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, 1, 1)
+            WarColor fillColor = went_checkRectToBuild(context, (s32)position.x, (s32)position.y, 1, 1)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = wmap_vec2TileToMapCoordinates(position, false);

@@ -520,7 +520,7 @@ void updateGame(WarContext* context)
 
     // Drain entity removals that the audio callback thread queued while we were
     // in the previous tick. We do this on the main thread (before any scene or
-    // map update) so that removeEntityById never runs concurrently with audio.
+    // map update) so that went_removeEntityById never runs concurrently with audio.
     if (context->audioRemoveMutex)
     {
         SDL_LockMutex(context->audioRemoveMutex);
@@ -532,7 +532,7 @@ void updateGame(WarContext* context)
         SDL_UnlockMutex(context->audioRemoveMutex);
 
         for (s32 i = 0; i < drainCount; i++)
-            removeEntityById(context, drainIds[i]);
+            went_removeEntityById(context, drainIds[i]);
     }
 
     WarInput* input = &context->input;

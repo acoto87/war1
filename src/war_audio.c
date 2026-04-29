@@ -371,7 +371,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
 
     s16* outputStream = outputBuffer;
 
-    WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
+    WarEntityList* audios = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
     for (s32 i = 0; i < audios->count; i++)
     {
         WarEntity* entity = audios->items[i];
@@ -447,7 +447,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
     }
 
     // Post finished entity IDs to the main thread for removal.
-    // Never call removeEntityById from the audio thread: it calls war_free which
+    // Never call went_removeEntityById from the audio thread: it calls war_free which
     // would race with main-thread allocations on permanentZone.
     if (toRemoveCount > 0)
     {
@@ -546,7 +546,7 @@ void waud_removeAudiosOfType(WarContext* context, WarAudioType type)
     WarEntityIdList toRemove;
     WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
 
-    WarEntityList* audios = getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
+    WarEntityList* audios = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
     for (s32 i = 0; i < audios->count; i++)
     {
         WarEntity* entity = audios->items[i];
@@ -563,7 +563,7 @@ void waud_removeAudiosOfType(WarContext* context, WarAudioType type)
     for (s32 i = 0; i < toRemove.count; i++)
     {
         WarEntityId entityId = toRemove.items[i];
-        removeEntityById(context, entityId);
+        went_removeEntityById(context, entityId);
     }
 
     WarEntityIdListFree(&toRemove);
@@ -583,8 +583,8 @@ WarEntity* waud_createAudio(WarContext* context, WarAudioId audioId, bool loop)
     s32 resourceIndex = (s32)audioId;
     WarAudioType type = data.type;
 
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
-    addAudioComponent(context, entity, type, resourceIndex, loop);
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
+    went_addAudioComponent(context, entity, type, resourceIndex, loop);
 
     return entity;
 }
@@ -596,9 +596,9 @@ WarEntity* waud_createAudioWithPosition(WarContext* context, WarAudioId audioId,
     s32 resourceIndex = (s32)audioId;
     WarAudioType type = data.type;
 
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
-    addAudioComponent(context, entity, type, resourceIndex, loop);
-    addTransformComponent(context, entity, position);
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
+    went_addAudioComponent(context, entity, type, resourceIndex, loop);
+    went_addTransformComponent(context, entity, position);
 
     return entity;
 }

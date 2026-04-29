@@ -175,7 +175,7 @@ void wani_updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnima
 void wani_updateAnimations(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateAnimations", 1);
-    WarEntityList* entities = getEntities(context);
+    WarEntityList* entities = went_getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* entity = entities->items[i];

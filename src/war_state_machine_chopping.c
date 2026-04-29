@@ -37,7 +37,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
 {
     WarUnitComponent* unit = &entity->unit;
 
-    WarEntity* forest = findEntity(context, (WarEntityId)state->chop.forestId);
+    WarEntity* forest = went_findEntity(context, (WarEntityId)state->chop.forestId);
 
     // if the forest doesn't exists, go idle
     if (!forest)
@@ -48,7 +48,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     }
 
     vec2 treePosition = state->chop.position;
-    WarTree* tree = getTreeAtPosition(forest, (s32)treePosition.x, (s32)treePosition.y);
+    WarTree* tree = went_getTreeAtPosition(forest, (s32)treePosition.x, (s32)treePosition.y);
 
     if (!tree || tree->amount == 0)
     {
@@ -60,7 +60,7 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
     WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
-        unit->amount += chopTree(context, forest, tree, 2);
+        unit->amount += went_chopTree(context, forest, tree, 2);
         if (unit->amount > 0)
         {
             unit->resourceKind = WAR_RESOURCE_WOOD;
@@ -76,13 +76,13 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
         {
             // set the carrying gold sprites
             WarWorkerData workerData = getWorkerData(unit->type);
-            removeSpriteComponent(context, entity);
-            addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingWoodResource));
+            went_removeSpriteComponent(context, entity);
+            went_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingWoodResource));
 
             // find the closest town hall to deliver the gold
             WarRace race = getUnitRace(entity);
             WarUnitType townHallType = getTownHallOfRace(race);
-            WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+            WarEntity* townHall = went_findClosestUnitOfType(context, entity, townHallType);
 
             // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
             if (!townHall)

@@ -39,7 +39,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitStats stats = getUnitStats(unit->type);
 
     WarEntityId targetEntityId = (WarEntityId)state->attack.targetEntityId;
-    WarEntity* targetEntity = findEntity(context, targetEntityId);
+    WarEntity* targetEntity = went_findEntity(context, targetEntityId);
 
     vec2 targetTile = state->attack.targetTile;
 
@@ -125,11 +125,11 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (isRangeUnit(entity))
                 {
-                    rangeAttack(context, entity, targetEntity);
+                    went_rangeAttack(context, entity, targetEntity);
                 }
                 else
                 {
-                    meleeAttack(context, entity, targetEntity);
+                    went_meleeAttack(context, entity, targetEntity);
                 }
 
                 vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
@@ -138,7 +138,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         }
         else if(isWall(targetEntity))
         {
-                WarWallPiece* piece = getWallPieceAtPosition(targetEntity, (s32)targetTile.x, (s32)targetTile.y);
+                WarWallPiece* piece = went_getWallPieceAtPosition(targetEntity, (s32)targetTile.x, (s32)targetTile.y);
             if (piece)
             {
                 // if the piece of the wall the unit is attacking has no more hit points, go to idle.
@@ -153,11 +153,11 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                 {
                     if (isRangeUnit(entity))
                     {
-                        rangeWallAttack(context, entity, targetEntity, piece);
+                        went_rangeWallAttack(context, entity, targetEntity, piece);
                     }
                     else
                     {
-                        meleeWallAttack(context, entity, targetEntity, piece);
+                        went_meleeWallAttack(context, entity, targetEntity, piece);
                     }
 
                     vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);

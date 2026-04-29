@@ -72,7 +72,7 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
         unit->buildPercent = 1;
 
         // increase the level of the upgrade
-        increaseUpgradeLevel(context, player, state->upgrade.upgradeToBuild);
+        went_increaseUpgradeLevel(context, player, state->upgrade.upgradeToBuild);
         assert(checkUpgradeLevel(player, state->upgrade.upgradeToBuild));
 
         if (!changeStateNextState(context, entity, state))

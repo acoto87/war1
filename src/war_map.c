@@ -439,7 +439,7 @@ WarMap* wmap_createMap(WarContext* context, s32 levelInfoIndex)
     WarMap *map = (WarMap*)war_malloc(sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
 
-    initEntityManager(context, &map->entityManager);
+    went_initEntityManager(context, &map->entityManager);
 
     WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
 
@@ -688,9 +688,9 @@ void wmap_enterMap(WarContext* context)
                     }
                 }
 
-                WarEntity* forest = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
-                addSpriteComponent(context, forest, map->sprite);
-                addForestComponent(context, forest, trees);
+                WarEntity* forest = went_createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
+                went_addSpriteComponent(context, forest, map->sprite);
+                went_addForestComponent(context, forest, trees);
 
                 for (s32 treeIndex = 0; treeIndex < trees.count; treeIndex++)
                 {
@@ -698,7 +698,7 @@ void wmap_enterMap(WarContext* context)
                     setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, forest->id);
                 }
 
-                determineTreeTiles(context, forest);
+                went_determineTreeTiles(context, forest);
             }
         }
 
@@ -707,36 +707,36 @@ void wmap_enterMap(WarContext* context)
 
     // create the starting roads
     {
-        WarEntity* road = createRoad(context);
+        WarEntity* road = went_createRoad(context);
 
         for(s32 i = 0; i < (s32)levelInfo->levelInfo.startRoadsCount; i++)
         {
             WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
             if (construct->type == WAR_CONSTRUCT_ROAD)
             {
-                addRoadPiecesFromConstruct(road, construct);
+                went_addRoadPiecesFromConstruct(road, construct);
             }
         }
 
-        determineRoadTypes(context, road);
+        went_determineRoadTypes(context, road);
 
         map->road = road;
     }
 
     // create the starting walls
     {
-        WarEntity* wall = createWall(context);
+        WarEntity* wall = went_createWall(context);
 
         for(s32 i = 0; i < (s32)levelInfo->levelInfo.startWallsCount; i++)
         {
             WarLevelConstruct *construct = &levelInfo->levelInfo.startWalls[i];
             if (construct->type == WAR_CONSTRUCT_WALL)
             {
-                addWallPiecesFromConstruct(wall, construct);
+                went_addWallPiecesFromConstruct(wall, construct);
             }
         }
 
-        determineWallTypes(context, wall);
+        went_determineWallTypes(context, wall);
 
         for(s32 i = 0; i < wall->wall.pieces.count; i++)
         {
@@ -745,7 +745,7 @@ void wmap_enterMap(WarContext* context)
             piece->maxhp = WAR_WALL_MAX_HP;
         }
 
-        addStateMachineComponent(context, wall);
+        went_addStateMachineComponent(context, wall);
 
         WarState* idleState = createIdleState(context, wall, false);
         changeNextState(context, wall, idleState, true, true);
@@ -755,7 +755,7 @@ void wmap_enterMap(WarContext* context)
 
     // create ruins
     {
-        map->ruin = createRuins(context);
+        map->ruin = went_createRuins(context);
     }
 
     // create players info
@@ -788,7 +788,7 @@ void wmap_enterMap(WarContext* context)
         for (s32 i = 0; i < (s32)levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
-            createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player,
+            went_createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player,
                        startUnit.resourceKind, startUnit.amount, true);
         }
     }
@@ -945,7 +945,7 @@ void updateSelection(WarContext* context)
                 rect pointerRect = wmap_rectScreenToMapCoordinates(context, input->dragRect);
 
                 // select the entities inside the dragging rect
-                WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+                WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
                 for(s32 i = 0; i < units->count; i++)
                 {
                     WarEntity* entity = units->items[i];
@@ -995,7 +995,7 @@ void updateSelection(WarContext* context)
                     // improve when a hash is make for looking up the entities
                     for (s32 i = 0; i < map->selectedEntities.count; i++)
                     {
-                        WarEntity* entity = findEntity(context, map->selectedEntities.items[i]);
+                        WarEntity* entity = went_findEntity(context, map->selectedEntities.items[i]);
                         if (entity)
                             WarEntityListAdd(&newSelectedEntities, entity);
                     }
@@ -1105,21 +1105,21 @@ void updateTreesEdit(WarContext* context)
             s32 y = (s32)pointerPos.y;
 
             WarEntityId entityId = getTileEntityId(map->finder, x, y);
-            WarEntity* entity = findEntity(context, entityId);
+            WarEntity* entity = went_findEntity(context, entityId);
             if (!entity)
             {
                 entity = map->forest;
 
-                plantTree(context, entity, x, y);
-                determineAllTreeTiles(context);
+                went_plantTree(context, entity, x, y);
+                went_determineAllTreeTiles(context);
             }
             else if (entity->type == WAR_ENTITY_TYPE_FOREST)
             {
-                WarTree* tree = getTreeAtPosition(entity, x, y);
+                WarTree* tree = went_getTreeAtPosition(entity, x, y);
                 if (tree)
                 {
-                    chopTree(context, entity, tree, TREE_MAX_WOOD);
-                    determineAllTreeTiles(context);
+                    went_chopTree(context, entity, tree, TREE_MAX_WOOD);
+                    went_determineAllTreeTiles(context);
                 }
             }
         }
@@ -1146,16 +1146,16 @@ void updateRoadsEdit(WarContext* context)
 
             WarEntity* road = map->road;
 
-            WarRoadPiece* piece = getRoadPieceAtPosition(road, x, y);
+            WarRoadPiece* piece = went_getRoadPieceAtPosition(road, x, y);
             if (!piece)
             {
-                addRoadPiece(road, x, y, 0);
-                determineRoadTypes(context, road);
+                went_addRoadPiece(road, x, y, 0);
+                went_determineRoadTypes(context, road);
             }
             else
             {
-                removeRoadPiece(road, piece);
-                determineRoadTypes(context, road);
+                went_removeRoadPiece(road, piece);
+                went_determineRoadTypes(context, road);
             }
         }
     }
@@ -1181,21 +1181,21 @@ void updateWallsEdit(WarContext* context)
 
             WarEntity* wall = map->wall;
 
-            WarWallPiece* piece = getWallPieceAtPosition(wall, x, y);
+            WarWallPiece* piece = went_getWallPieceAtPosition(wall, x, y);
             if (!piece)
             {
-                WarWallPiece* newPiece = addWallPiece(wall, x, y, 0);
+                WarWallPiece* newPiece = went_addWallPiece(wall, x, y, 0);
                 newPiece->hp = WAR_WALL_MAX_HP;
                 newPiece->maxhp = WAR_WALL_MAX_HP;
 
-                determineWallTypes(context, wall);
+                went_determineWallTypes(context, wall);
             }
             else
             {
                 setFreeTiles(map->finder, piece->tilex, piece->tiley, 1, 1);
 
-                removeWallPiece(wall, piece);
-                determineWallTypes(context, wall);
+                went_removeWallPiece(wall, piece);
+                went_determineWallTypes(context, wall);
             }
         }
     }
@@ -1221,16 +1221,16 @@ void updateRuinsEdit(WarContext* context)
 
             WarEntity* ruin = map->ruin;
 
-            WarRuinPiece* piece = getRuinPieceAtPosition(ruin, x, y);
+            WarRuinPiece* piece = went_getRuinPieceAtPosition(ruin, x, y);
             if (!piece)
             {
-                addRuinsPieces(context, ruin, x, y, 2);
-                determineRuinTypes(context, ruin);
+                went_addRuinsPieces(context, ruin, x, y, 2);
+                went_determineRuinTypes(context, ruin);
             }
             else
             {
                 removeRuinPiece(ruin, piece);
-                determineRuinTypes(context, ruin);
+                went_determineRuinTypes(context, ruin);
             }
         }
     }
@@ -1285,7 +1285,7 @@ void updateAddUnit(WarContext* context)
                 {
                     if (map->players[i].race == addingUnitRace)
                     {
-                        createUnit(context, map->addingUnitType, x, y, map->players[i].index, WAR_RESOURCE_NONE, 0, true);
+                        went_createUnit(context, map->addingUnitType, x, y, map->players[i].index, WAR_RESOURCE_NONE, 0, true);
                         break;
                     }
                 }
@@ -1300,20 +1300,20 @@ void updateCommandButtons(WarContext* context)
 
     WarEntity* commandButtons[6] =
     {
-        findUIEntity(context, wsv_fromCString("btnCommand0")),
-        findUIEntity(context, wsv_fromCString("btnCommand1")),
-        findUIEntity(context, wsv_fromCString("btnCommand2")),
-        findUIEntity(context, wsv_fromCString("btnCommand3")),
-        findUIEntity(context, wsv_fromCString("btnCommand4")),
-        findUIEntity(context, wsv_fromCString("btnCommand5"))
+        went_findUIEntity(context, wsv_fromCString("btnCommand0")),
+        went_findUIEntity(context, wsv_fromCString("btnCommand1")),
+        went_findUIEntity(context, wsv_fromCString("btnCommand2")),
+        went_findUIEntity(context, wsv_fromCString("btnCommand3")),
+        went_findUIEntity(context, wsv_fromCString("btnCommand4")),
+        went_findUIEntity(context, wsv_fromCString("btnCommand5"))
     };
 
     WarEntity* commandTexts[4] =
     {
-        findUIEntity(context, wsv_fromCString("txtCommand0")),
-        findUIEntity(context, wsv_fromCString("txtCommand1")),
-        findUIEntity(context, wsv_fromCString("txtCommand2")),
-        findUIEntity(context, wsv_fromCString("txtCommand3"))
+        went_findUIEntity(context, wsv_fromCString("txtCommand0")),
+        went_findUIEntity(context, wsv_fromCString("txtCommand1")),
+        went_findUIEntity(context, wsv_fromCString("txtCommand2")),
+        went_findUIEntity(context, wsv_fromCString("txtCommand3"))
     };
 
     for (s32 i = 0; i < arrayLength(commandButtons); i++)
@@ -1326,7 +1326,7 @@ void updateCommandButtons(WarContext* context)
     if (selectedEntitiesCount == 0)
         return;
 
-    WarEntity* entity = findEntity(context, map->selectedEntities.items[0]);
+    WarEntity* entity = went_findEntity(context, map->selectedEntities.items[0]);
     assert(entity && isUnit(entity));
 
     // if the selected unit is a farm,
@@ -1374,7 +1374,7 @@ void updateCommandButtons(WarContext* context)
         WarUnitCommandType selectedCommands[6] = {0};
         for (s32 i = 1; i < selectedEntitiesCount; i++)
         {
-            WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[i]);
+            WarEntity* selectedEntity = went_findEntity(context, map->selectedEntities.items[i]);
             assert(selectedEntity && isUnit(selectedEntity));
 
             memset(selectedCommands, 0, sizeof(selectedCommands));
@@ -1426,7 +1426,7 @@ void updateCommandFromRightClick(WarContext* context)
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    WarEntity* targetEntity = went_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
                         if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
@@ -1444,7 +1444,7 @@ void updateCommandFromRightClick(WarContext* context)
                             }
                             else
                             {
-                                WarTree* tree = findAccesibleTree(context, targetEntity, targetTile);
+                                WarTree* tree = went_findAccesibleTree(context, targetEntity, targetTile);
                                 if (tree)
                                 {
                                     targetTile = vec2i(tree->tilex, tree->tiley);
@@ -1522,13 +1522,13 @@ void updateStatus(WarContext* context)
     WarCheatStatus* cheatStatus = &map->cheatStatus;
     WarFlashStatus* flashStatus = &map->flashStatus;
 
-    WarEntity* statusCursor = findUIEntity(context, wsv_fromCString("txtStatusCursor"));
+    WarEntity* statusCursor = went_findUIEntity(context, wsv_fromCString("txtStatusCursor"));
     assert(statusCursor);
 
-    WarEntity* statusTextUI = findUIEntity(context, wsv_fromCString("txtStatus"));
+    WarEntity* statusTextUI = went_findUIEntity(context, wsv_fromCString("txtStatus"));
     assert(statusTextUI);
 
-    WarEntity* cheatFeedbackText = findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
+    WarEntity* cheatFeedbackText = went_findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
     assert(cheatFeedbackText);
 
     if (cheatStatus->enabled)
@@ -1665,7 +1665,7 @@ void updateStatus(WarContext* context)
         for (s32 i = 0; i < map->selectedEntities.count; i++)
         {
             WarEntityId selectedEntityId = map->selectedEntities.items[i];
-            WarEntity* selectedEntity = findEntity(context, selectedEntityId);
+            WarEntity* selectedEntity = went_findEntity(context, selectedEntityId);
             assert(selectedEntity);
 
             if (isBuildingUnit(selectedEntity))
@@ -1722,7 +1722,7 @@ void updateStatus(WarContext* context)
         }
     }
 
-    WarEntityList* buttons = getEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
+    WarEntityList* buttons = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
     for(s32 i = 0; i < buttons->count; i++)
     {
         WarEntity* entity = buttons->items[i];
@@ -1753,7 +1753,7 @@ void updateMapCursor(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    WarEntity* entity = findUIEntity(context, wsv_fromCString("cursor"));
+    WarEntity* entity = went_findUIEntity(context, wsv_fromCString("cursor"));
     if (entity)
     {
         entity->transform.position = vec2Subv(input->pos, entity->cursor.hot);
@@ -1827,7 +1827,7 @@ void updateMapCursor(WarContext* context)
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
-                    WarEntity* entityUnderCursor = findEntityUnderCursor(context, true, true);
+                    WarEntity* entityUnderCursor = went_findEntityUnderCursor(context, true, true);
                     if (!entityUnderCursor)
                     {
                         wmap_changeCursorType(context, entity, WAR_CURSOR_ARROW);
@@ -1837,7 +1837,7 @@ void updateMapCursor(WarContext* context)
                     WarEntityIdList* selectedEntities = &map->selectedEntities;
                     if (selectedEntities->count > 0)
                     {
-                        WarEntity* selectedEntity = findEntity(context, selectedEntities->items[0]);
+                        WarEntity* selectedEntity = went_findEntity(context, selectedEntities->items[0]);
                         if (selectedEntity &&
                             isFriendlyUnit(context, selectedEntity) &&
                             isDudeUnit(selectedEntity))
@@ -1957,7 +1957,7 @@ void updateMapCursor(WarContext* context)
 void updateStateMachines(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateStateMachines", 1);
-    WarEntityList* entities = getEntities(context);
+    WarEntityList* entities = went_getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* entity = entities->items[i];
@@ -1972,7 +1972,7 @@ void updateStateMachines(WarContext* context)
 void updateActions(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateActions", 1);
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -1986,7 +1986,7 @@ void updateActions(WarContext* context)
 
 void updateProjectiles(WarContext* context)
 {
-    WarEntityList* projectiles = getEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
+    WarEntityList* projectiles = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
     for (s32 i = 0; i < projectiles->count; i++)
     {
         WarEntity* entity = projectiles->items[i];
@@ -1999,7 +1999,7 @@ void updateProjectiles(WarContext* context)
 
 void updateMagic(WarContext* context)
 {
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -2057,7 +2057,7 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
 
     if (poisonCloud->damageTime <= 0)
     {
-        WarEntityList* nearUnits = getNearUnits(context, poisonCloud->position, 2);
+        WarEntityList* nearUnits = went_getNearUnits(context, poisonCloud->position, 2);
         for (s32 i = 0; i < nearUnits->count; i++)
         {
             WarEntity* targetEntity = nearUnits->items[i];
@@ -2065,7 +2065,7 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
                 !isDead(targetEntity) && !isGoingToDie(targetEntity) &&
                 !isCollapsing(targetEntity) && !isGoingToCollapse(targetEntity))
             {
-                takeDamage(context, targetEntity, 0, POISON_CLOUD_DAMAGE);
+                went_takeDamage(context, targetEntity, 0, POISON_CLOUD_DAMAGE);
             }
         }
         WarEntityListFree(nearUnits);
@@ -2088,7 +2088,7 @@ void updateSpells(WarContext* context)
     WarEntityIdList spellsToRemove;
     WarEntityIdListInit(&spellsToRemove, WarEntityIdListDefaultOptions);
 
-    WarEntityList* poisonCloudSpells = getEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
+    WarEntityList* poisonCloudSpells = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
     for (s32 i = 0; i < poisonCloudSpells->count; i++)
     {
         WarEntity* entity = poisonCloudSpells->items[i];
@@ -2101,7 +2101,7 @@ void updateSpells(WarContext* context)
         }
     }
 
-    WarEntityList* sightSpells = getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
+    WarEntityList* sightSpells = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
     for (s32 i = 0; i < sightSpells->count; i++)
     {
         WarEntity* entity = sightSpells->items[i];
@@ -2114,7 +2114,7 @@ void updateSpells(WarContext* context)
         }
     }
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -2146,7 +2146,7 @@ void updateSpells(WarContext* context)
 
     for (s32 i = 0; i < spellsToRemove.count; i++)
     {
-        removeEntityById(context, spellsToRemove.items[i]);
+        went_removeEntityById(context, spellsToRemove.items[i]);
     }
 
     WarEntityIdListFree(&spellsToRemove);
@@ -2168,7 +2168,7 @@ void updateFoW(WarContext* context)
     }
 
     // the Holy Sight and Dark Vision spells are the first entities that change FoW
-    WarEntityList* sightSpells = getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
+    WarEntityList* sightSpells = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
     for (s32 i = 0; i < sightSpells->count; i++)
     {
         WarEntity* entity = sightSpells->items[i];
@@ -2181,7 +2181,7 @@ void updateFoW(WarContext* context)
         }
     }
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
 
     // do the update of the FoW for friendly units first
     for (s32 i = 0; i < units->count; i++)
@@ -2205,7 +2205,7 @@ void updateFoW(WarContext* context)
                 wmap_setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
 
                 // reveal the attack target of the unit
-                WarEntity* targetEntity = getAttackTarget(context, entity);
+                WarEntity* targetEntity = went_getAttackTarget(context, entity);
                 if (targetEntity)
                 {
                     WarUnitStats stats = getUnitStats(unit->type);
@@ -2224,7 +2224,7 @@ void updateFoW(WarContext* context)
 
                         if (tileInRange(entity, targetTile, stats.range))
                         {
-                            WarWallPiece* piece = getWallPieceAtPosition(targetEntity, (s32)targetTile.x, (s32)targetTile.y);
+                            WarWallPiece* piece = went_getWallPieceAtPosition(targetEntity, (s32)targetTile.x, (s32)targetTile.y);
                             if (piece)
                             {
                                 wmap_setMapTileState(map, (s32)targetTile.x, (s32)targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
@@ -2234,7 +2234,7 @@ void updateFoW(WarContext* context)
                 }
 
                 // reveal the attacker
-                WarEntity* attacker = getAttacker(context, entity);
+                WarEntity* attacker = went_getAttacker(context, entity);
                 if (attacker)
                 {
                     // if the attacker is the same the unit is attacking to
@@ -2246,7 +2246,7 @@ void updateFoW(WarContext* context)
                 }
 
                 // check near non-friendly building units to mark it as seen
-                WarEntityList* nearUnits = getNearUnits(context, position, sightRange);
+                WarEntityList* nearUnits = went_getNearUnits(context, position, sightRange);
                 for (s32 k = 0; k < nearUnits->count; k++)
                 {
                     WarEntity* nearbyEntity = nearUnits->items[k];
@@ -2627,7 +2627,7 @@ void renderFoW(WarContext* context)
 
 void renderUnitPaths(WarContext* context)
 {
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity *entity = units->items[i];
@@ -2718,10 +2718,10 @@ void renderMapPanel(WarContext *context)
     wrend_renderTranslate(context, -map->viewport.x, -map->viewport.y);
 
     renderTerrain(context);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_RUIN);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_ROAD);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
+    went_renderEntitiesOfType(context, WAR_ENTITY_TYPE_RUIN);
+    went_renderEntitiesOfType(context, WAR_ENTITY_TYPE_ROAD);
+    went_renderEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
+    went_renderEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
 
 #ifdef DEBUG_RENDER_UNIT_PATHS
     renderUnitPaths(context);
@@ -2735,11 +2735,11 @@ void renderMapPanel(WarContext *context)
     renderMapGrid(context);
 #endif
 
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-    renderUnitSelection(context);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
-    renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
+    went_renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    went_renderUnitSelection(context);
+    went_renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
+    went_renderEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
+    went_renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
     renderFoW(context);
 
     wrend_renderRestore(context);

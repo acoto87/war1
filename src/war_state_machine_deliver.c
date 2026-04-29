@@ -27,7 +27,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = getUnitStats(unit->type);
 
-    WarEntity* townHall = findEntity(context, (WarEntityId)state->deliver.townHallId);
+    WarEntity* townHall = went_findEntity(context, (WarEntityId)state->deliver.townHallId);
 
     // if the town hall doesn't exists (or other units attacking it), go idle
     if (!townHall)
@@ -55,8 +55,8 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
         setUnitCenterPosition(entity, spawnPosition, true);
 
         WarUnitData unitData = getUnitData(unit->type);
-        removeSpriteComponent(context, entity);
-        addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
+        went_removeSpriteComponent(context, entity);
+        went_addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
 
         if (!changeStateNextState(context, entity, state))
         {
@@ -69,11 +69,11 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (unit->resourceKind == WAR_RESOURCE_GOLD)
     {
-        increasePlayerResources(context, &map->players[0], unit->amount, 0);
+        went_increasePlayerResources(context, &map->players[0], unit->amount, 0);
     }
     else if (unit->resourceKind == WAR_RESOURCE_WOOD)
     {
-        increasePlayerResources(context, &map->players[0], 0, unit->amount);
+        went_increasePlayerResources(context, &map->players[0], 0, unit->amount);
     }
 
     unit->resourceKind = WAR_RESOURCE_NONE;

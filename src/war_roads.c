@@ -1,6 +1,6 @@
 #include "war_entities.h"
 
-bool hasRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
+bool went_hasRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
 {
     WarRoadPieceList* pieces = &road->road.pieces;
     for (s32 i = 0; i < pieces->count; i++)
@@ -13,7 +13,7 @@ bool hasRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
     return false;
 }
 
-WarRoadPiece* getRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
+WarRoadPiece* went_getRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
 {
     WarRoadPieceList* pieces = &road->road.pieces;
     for (s32 i = 0; i < pieces->count; i++)
@@ -26,7 +26,7 @@ WarRoadPiece* getRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
     return NULL;
 }
 
-void determineRoadTypes(WarContext* context, WarEntity* entity)
+void went_determineRoadTypes(WarContext* context, WarEntity* entity)
 {
     assert(entity->type == WAR_ENTITY_TYPE_ROAD);
 
@@ -50,7 +50,7 @@ void determineRoadTypes(WarContext* context, WarEntity* entity)
             s32 xx = pi->tilex + dirX[d];
             s32 yy = pi->tiley + dirY[d];
 
-            if (!isInside(map->finder, xx, yy) || hasRoadPieceAtPosition(entity, xx, yy))
+            if (!isInside(map->finder, xx, yy) || went_hasRoadPieceAtPosition(entity, xx, yy))
             {
                 index = index | (1 << d);
             }
@@ -60,13 +60,13 @@ void determineRoadTypes(WarContext* context, WarEntity* entity)
     }
 }
 
-void addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player)
+void went_addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player)
 {
     WarRoadPieceList* pieces = &entity->road.pieces;
     WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
 }
 
-void addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
+void went_addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
 {
     assert(entity->type == WAR_ENTITY_TYPE_ROAD);
 
@@ -104,22 +104,22 @@ void addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
     WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
 }
 
-void removeRoadPiece(WarEntity* entity, WarRoadPiece* piece)
+void went_removeRoadPiece(WarEntity* entity, WarRoadPiece* piece)
 {
     WarRoadPieceList* pieces = &entity->road.pieces;
     WarRoadPieceListRemove(pieces, *piece);
 }
 
-WarEntity* createRoad(WarContext* context)
+WarEntity* went_createRoad(WarContext* context)
 {
     WarMap* map = context->map;
 
     WarRoadPieceList pieces;
     WarRoadPieceListInit(&pieces, WarRoadPieceListDefaultOptions);
 
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_ROAD, true);
-    addRoadComponent(context, entity, pieces);
-    addSpriteComponent(context, entity, map->sprite);
+    WarEntity *entity = went_createEntity(context, WAR_ENTITY_TYPE_ROAD, true);
+    went_addRoadComponent(context, entity, pieces);
+    went_addSpriteComponent(context, entity, map->sprite);
 
     return entity;
 }

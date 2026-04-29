@@ -27,8 +27,8 @@ void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
     setDelay(state, wmap_getMapScaledTime(context, wani_getAnimationDuration(collapseAnim)));
 
     WarEntity* ruins = map->ruin;
-    addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
-    determineRuinTypes(context, ruins);
+    went_addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
+    went_determineRuinTypes(context, ruins);
 
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     wmap_removeEntityFromSelection(context, entity->id);
@@ -45,7 +45,7 @@ void updateCollapseState(WarContext* context, WarEntity* entity, WarState* state
 {
     NOT_USED(state);
 
-    removeEntityById(context, entity->id);
+    went_removeEntityById(context, entity->id);
 }
 
 void freeCollapseState(WarContext* context, WarState* state)

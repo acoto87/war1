@@ -109,7 +109,7 @@ s32 getTotalNumberOfUnits(WarContext* context, u8 player)
 {
     s32 count = 0;
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -129,7 +129,7 @@ s32 getTotalNumberOfDudes(WarContext* context, u8 player)
 {
     s32 count = 0;
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -149,7 +149,7 @@ s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt)
 {
     s32 count = 0;
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -174,7 +174,7 @@ s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitT
 
     s32 count = 0;
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -198,7 +198,7 @@ s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
 {
     s32 count = 0;
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];

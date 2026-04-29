@@ -1308,7 +1308,7 @@ typedef struct _WarState
         {
             s32 goldmineId;
             f32 miningTime;
-        } mine;
+        } went_mine;
 
         struct
         {
@@ -2303,7 +2303,7 @@ typedef struct _WarContext
 
     // Pending audio-entity removals queued by the audio callback thread.
     // The callback posts finished entity IDs here (under audioRemoveMutex)
-    // instead of calling removeEntityById directly.  The main thread drains
+    // instead of calling went_removeEntityById directly.  The main thread drains
     // this queue at the top of each updateGame tick.
     SDL_Mutex*  audioRemoveMutex;
     WarEntityId audioRemovePending[AUDIO_REMOVE_PENDING_MAX];

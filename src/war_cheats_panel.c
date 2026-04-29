@@ -91,7 +91,7 @@ void wcp_createCheatsPanel(WarContext* context)
 
 void wcp_setCheatText(WarContext* context, String text)
 {
-    WarEntity* txtCheat = findUIEntity(context, wsv_fromCString("txtCheat"));
+    WarEntity* txtCheat = went_findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(txtCheat);
 
     setUIText(txtCheat, text);
@@ -108,15 +108,15 @@ void wcp_updateCheatsPanel(WarContext* context)
     if (!cheatStatus->enabled)
         return;
 
-    WarEntity* cheatPanel = findUIEntity(context, wsv_fromCString("panelCheat"));
+    WarEntity* cheatPanel = went_findUIEntity(context, wsv_fromCString("panelCheat"));
 
-    WarEntity* cheatCursor = findUIEntity(context, wsv_fromCString("cursorCheat"));
+    WarEntity* cheatCursor = went_findUIEntity(context, wsv_fromCString("cursorCheat"));
     assert(cheatCursor);
 
-    WarEntity* cheatText = findUIEntity(context, wsv_fromCString("txtCheat"));
+    WarEntity* cheatText = went_findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(cheatText);
 
-    WarEntity* cheatFeedbackText = findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
+    WarEntity* cheatFeedbackText = went_findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
     assert(cheatFeedbackText);
 
     if (cheatStatus->feedback)

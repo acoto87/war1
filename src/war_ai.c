@@ -119,14 +119,14 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
     if (isDudeUnitType(unitType))
     {
         WarUnitStats stats = getUnitStats(unitType);
-        if (!enoughPlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+        if (!went_enoughPlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
         {
             // there is not enough resources to create the unit
             return false;
         }
 
         // check if there is enough food
-        if (!enoughFarmFood(context, aiPlayer))
+        if (!went_enoughFarmFood(context, aiPlayer))
         {
             // set a request for supply because there is not enough food
             return false;
@@ -135,7 +135,7 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
         WarUnitType producerType = getProducerUnitOfType(unitType);
         if (isValidUnitType(producerType))
         {
-            WarEntityList* units = getUnitsOfType(context, producerType);
+            WarEntityList* units = went_getUnitsOfType(context, producerType);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
@@ -143,7 +143,7 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
                 {
                     if (!isTraining(entity) && !isUpgrading(entity))
                     {
-                        if (decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+                        if (went_decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
                         {
                             WarState* trainState = createTrainState(context, entity, unitType, (f32)stats.buildTime);
                             changeNextState(context, entity, trainState, true, true);

@@ -75,7 +75,7 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, S
 
 void setUIButtonStatusByName(WarContext* context, StringView name, bool enabled)
 {
-    WarEntity* entity = findUIEntity(context, name);
+    WarEntity* entity = went_findUIEntity(context, name);
     if (entity)
     {
         setUIButtonStatus(entity, enabled);
@@ -84,7 +84,7 @@ void setUIButtonStatusByName(WarContext* context, StringView name, bool enabled)
 
 void setUIButtonInteractiveByName(WarContext* context, StringView name, bool interactive)
 {
-    WarEntity* entity = findUIEntity(context, name);
+    WarEntity* entity = went_findUIEntity(context, name);
     if (entity)
     {
         setUIButtonInteractive(entity, interactive);
@@ -93,7 +93,7 @@ void setUIButtonInteractiveByName(WarContext* context, StringView name, bool int
 
 void setUIButtonHotKeyByName(WarContext* context, StringView name, WarKeys key)
 {
-    WarEntity* entity = findUIEntity(context, name);
+    WarEntity* entity = went_findUIEntity(context, name);
     if (entity)
     {
         setUIButtonHotKey(entity, key);
@@ -102,7 +102,7 @@ void setUIButtonHotKeyByName(WarContext* context, StringView name, WarKeys key)
 
 void setUIEntityStatusByName(WarContext* context, StringView name, bool enabled)
 {
-    WarEntity* entity = findUIEntity(context, name);
+    WarEntity* entity = went_findUIEntity(context, name);
     if (entity)
     {
         setUIEntityStatus(entity, enabled);
@@ -111,30 +111,30 @@ void setUIEntityStatusByName(WarContext* context, StringView name, bool enabled)
 
 WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, String text, vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addTextComponent(context, entity, fontIndex, fontSize, text);
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_TEXT, true);
+    went_addTransformComponent(context, entity, position);
+    went_addUIComponent(context, entity, name);
+    went_addTextComponent(context, entity, fontIndex, fontSize, text);
 
     return entity;
 }
 
 WarEntity* createUIRect(WarContext* context, String name, vec2 position, vec2 size, WarColor color)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_RECT, true);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addRectComponent(context, entity, size, color);
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_RECT, true);
+    went_addTransformComponent(context, entity, position);
+    went_addUIComponent(context, entity, name);
+    went_addRectComponent(context, entity, size, color);
 
     return entity;
 }
 
 WarEntity* createUIImage(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_IMAGE, true);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addSpriteComponentFromResource(context, entity, spriteResourceRef);
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_IMAGE, true);
+    went_addTransformComponent(context, entity, position);
+    went_addUIComponent(context, entity, name);
+    went_addSpriteComponentFromResource(context, entity, spriteResourceRef);
 
     return entity;
 }
@@ -144,11 +144,11 @@ WarEntity* createUICursor(WarContext* context, String name, WarCursorType type, 
     WarResource* resource = wres_getOrCreateResource(context, type);
     assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
 
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_CURSOR, true);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addSpriteComponentFromResource(context, entity, imageResourceRef(type));
-    addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_CURSOR, true);
+    went_addTransformComponent(context, entity, position);
+    went_addUIComponent(context, entity, name);
+    went_addSpriteComponentFromResource(context, entity, imageResourceRef(type));
+    went_addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
 
     return entity;
 }
@@ -163,12 +163,12 @@ WarEntity* createUITextButton(WarContext* context,
                               WarSpriteResourceRef foregroundRef,
                               vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addTextComponent(context, entity, fontIndex, fontSize, text);
-    addSpriteComponentFromResource(context, entity, foregroundRef);
-    addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
+    went_addTransformComponent(context, entity, position);
+    went_addUIComponent(context, entity, name);
+    went_addTextComponent(context, entity, fontIndex, fontSize, text);
+    went_addSpriteComponentFromResource(context, entity, foregroundRef);
+    went_addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
 
     WarSprite* normalSprite = &entity->button.normalSprite;
     vec2 backgroundSize = vec2i(normalSprite->frameWidth, normalSprite->frameHeight);
@@ -187,11 +187,11 @@ WarEntity* createUIImageButton(WarContext* context,
                                WarSpriteResourceRef foregroundRef,
                                vec2 position)
 {
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
-    addTransformComponent(context, entity, position);
-    addUIComponent(context, entity, name);
-    addSpriteComponentFromResource(context, entity, foregroundRef);
-    addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
+    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_BUTTON, true);
+    went_addTransformComponent(context, entity, position);
+    went_addUIComponent(context, entity, name);
+    went_addSpriteComponentFromResource(context, entity, foregroundRef);
+    went_addButtonComponentFromResource(context, entity, backgroundNormalRef, backgroundPressedRef);
 
     return entity;
 }
@@ -205,11 +205,11 @@ void wmap_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType
         WarResource* resource = wres_getOrCreateResource(context, type);
         assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
 
-        removeCursorComponent(context, entity);
-        addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
+        went_removeCursorComponent(context, entity);
+        went_addCursorComponent(context, entity, type, vec2i(resource->cursor.hotx, resource->cursor.hoty));
 
-        removeSpriteComponent(context, entity);
-        addSpriteComponentFromResource(context, entity, imageResourceRef(type));
+        went_removeSpriteComponent(context, entity);
+        went_addSpriteComponentFromResource(context, entity, imageResourceRef(type));
     }
 }
 
@@ -217,7 +217,7 @@ void updateUICursor(WarContext* context)
 {
     WarInput* input = &context->input;
 
-    WarEntity* entity = findUIEntity(context, wsv_fromCString("cursor"));
+    WarEntity* entity = went_findUIEntity(context, wsv_fromCString("cursor"));
     if (entity)
     {
         entity->transform.position = vec2Subv(input->pos, entity->cursor.hot);
@@ -229,7 +229,7 @@ void updateUIButtons(WarContext* context, bool hotKeysEnabled)
 {
     WarInput* input = &context->input;
 
-    WarEntityList* buttons = getEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
+    WarEntityList* buttons = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
 
     // store the buttons to update in this frame first
     // because the action of some buttons is to show other buttons
@@ -332,13 +332,13 @@ void updateUIButtons(WarContext* context, bool hotKeysEnabled)
 
 void renderUIEntities(WarContext* context)
 {
-    WarEntityList* entities = getUIEntities(context);
+    WarEntityList* entities = went_getUIEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity *entity = entities->items[i];
         if (entity)
         {
-            renderEntity(context, entity);
+            went_renderEntity(context, entity);
         }
     }
 }

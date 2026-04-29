@@ -42,7 +42,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
         WarUnitType corpseType = getUnitRace(entity) == WAR_RACE_ORCS
             ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
 
-        WarEntity* corpse = createUnit(context, corpseType, (s32)position.x, (s32)position.y, 4,
+        WarEntity* corpse = went_createUnit(context, corpseType, (s32)position.x, (s32)position.y, 4,
                                        WAR_RESOURCE_NONE, 0, true);
 
         setUnitDirection(corpse, getUnitDirection(entity));
@@ -51,7 +51,7 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
         changeNextState(context, corpse, deathState, true, true);
     }
 
-    removeEntityById(context, entity->id);
+    went_removeEntityById(context, entity->id);
 }
 
 void freeDeathState(WarContext* context, WarState* state)

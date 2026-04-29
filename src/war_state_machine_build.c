@@ -29,11 +29,11 @@ void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     // remove the current sprite...
-    removeSpriteComponent(context, entity);
+    went_removeSpriteComponent(context, entity);
 
     // ...and add the sprite for the construction of the building
     WarBuildingData buildingData = getBuildingData(entity->unit.type);
-    addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.buildingResource));
+    went_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.buildingResource));
 
     // set the action to NONE because the sprite changes will be handled by this state
     setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
@@ -95,7 +95,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
         unit->buildPercent = 1;
 
         // find the worker that is building the building
-        WarEntity* worker = findEntity(context, state->build.workerId);
+        WarEntity* worker = went_findEntity(context, state->build.workerId);
         assert(worker);
 
         // ...find an empty position to put it
@@ -104,11 +104,11 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
         setUnitCenterPosition(worker, spawnPosition, true);
 
         // remove the building sprite...
-        removeSpriteComponent(context, entity);
+        went_removeSpriteComponent(context, entity);
 
         // ...and add the normal sprite of the building
         WarUnitData buildingData = getUnitData(entity->unit.type);
-        addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.resourceIndex));
+        went_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.resourceIndex));
 
         if (!changeStateNextState(context, entity, state))
         {

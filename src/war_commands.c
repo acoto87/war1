@@ -30,7 +30,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         rs[i] = getUnitRect(entity);
@@ -59,7 +59,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         vec2 position = vec2f(
@@ -136,7 +136,7 @@ void executeFollowCommand(WarContext* context, WarEntity* targetEntity)
     for (s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isFriendlyUnit(context, entity))
@@ -162,7 +162,7 @@ void executeStopCommand(WarContext* context)
     for (s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isFriendlyUnit(context, entity))
@@ -187,7 +187,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isFriendlyUnit(context, entity))
@@ -199,7 +199,7 @@ void executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
                     // find the closest town hall to deliver the gold
                     WarRace race = getUnitRace(entity);
                     WarUnitType townHallType = getTownHallOfRace(race);
-                    WarEntity* townHall = findClosestUnitOfType(context, entity, townHallType);
+                    WarEntity* townHall = went_findClosestUnitOfType(context, entity, townHallType);
                     if (townHall)
                     {
                         WarState* deliverState = createDeliverState(context, entity, townHall->id);
@@ -249,7 +249,7 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isFriendlyUnit(context, entity))
@@ -259,7 +259,7 @@ void executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
             {
                 WarRace race = getUnitRace(entity);
                 WarUnitType townHallType = getTownHallOfRace(race);
-                townHall = findClosestUnitOfType(context, entity, townHallType);
+                townHall = went_findClosestUnitOfType(context, entity, townHallType);
                 assert(townHall);
             }
 
@@ -297,7 +297,7 @@ void executeRepairCommand(WarContext* context, WarEntity* targetEntity)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isFriendlyUnit(context, entity))
@@ -334,7 +334,7 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isConjurerOrWarlockUnit(entity))
@@ -349,12 +349,12 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
             WarSpellMapping spellMapping = getSpellMapping(commandMapping.mappedType);
             WarSpellStats stats = getSpellStats(commandMapping.mappedType);
 
-            while (decreaseUnitMana(context, entity, stats.manaCost))
+            while (went_decreaseUnitMana(context, entity, stats.manaCost))
             {
                 vec2 position = getUnitCenterPosition(entity, true);
                 vec2 spawnPosition = findEmptyPosition(map->finder, position);
 
-                WarEntity* summonedUnit = createUnit(context, spellMapping.mappedType,
+                WarEntity* summonedUnit = went_createUnit(context, spellMapping.mappedType,
                                                      (s32)spawnPosition.x, (s32)spawnPosition.y,
                                                      unit->player, WAR_RESOURCE_NONE, 0, true);
 
@@ -362,7 +362,7 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
                 setStaticEntity(map->finder, (s32)spawnPosition.x, (s32)spawnPosition.y,
                                 (s32)unitSize.x, (s32)unitSize.y, summonedUnit->id);
 
-                WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                 wani_createSpellAnimation(context, animEntity, wmap_vec2TileToMapCoordinates(spawnPosition, true));
 
                 casted = true;
@@ -384,7 +384,7 @@ void executeRainOfFireCommand(WarContext* context, vec2 targetTile)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isConjurerOrWarlockUnit(entity))
@@ -403,7 +403,7 @@ void executePoisonCloudCommand(WarContext* context, vec2 targetTile)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isConjurerOrWarlockUnit(entity))
@@ -424,7 +424,7 @@ void executeHealingCommand(WarContext* context, WarEntity* targetEntity, vec2 ta
         for(s32 i = 0; i < selEntitiesCount; i++)
         {
             WarEntityId entityId = map->selectedEntities.items[i];
-            WarEntity* entity = findEntity(context, entityId);
+            WarEntity* entity = went_findEntity(context, entityId);
             assert(entity);
 
             if (isClericOrNecrolyteUnit(entity))
@@ -450,7 +450,7 @@ void executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity, vec
         for(s32 i = 0; i < selEntitiesCount; i++)
         {
             WarEntityId entityId = map->selectedEntities.items[i];
-            WarEntity* entity = findEntity(context, entityId);
+            WarEntity* entity = went_findEntity(context, entityId);
             assert(entity);
 
             if (isClericOrNecrolyteUnit(entity))
@@ -472,7 +472,7 @@ void executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity, vec
         for(s32 i = 0; i < selEntitiesCount; i++)
         {
             WarEntityId entityId = map->selectedEntities.items[i];
-            WarEntity* entity = findEntity(context, entityId);
+            WarEntity* entity = went_findEntity(context, entityId);
             assert(entity);
 
             if (isClericOrNecrolyteUnit(entity))
@@ -492,7 +492,7 @@ void executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isClericOrNecrolyteUnit(entity))
@@ -511,7 +511,7 @@ void executeSightCommand(WarContext* context, vec2 targetTile)
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isClericOrNecrolyteUnit(entity))
@@ -534,7 +534,7 @@ void executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 tar
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = went_findEntity(context, entityId);
         assert(entity);
 
         if (isFriendlyUnit(context, entity))
@@ -633,7 +633,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    WarEntity* targetEntity = went_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
                         if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
@@ -651,7 +651,7 @@ bool executeCommand(WarContext* context)
                             }
                             else
                             {
-                                WarTree* tree = findAccesibleTree(context, targetEntity, targetTile);
+                                WarTree* tree = went_findAccesibleTree(context, targetEntity, targetTile);
                                 if (tree)
                                 {
                                     targetTile = vec2i(tree->tilex, tree->tiley);
@@ -693,7 +693,7 @@ bool executeCommand(WarContext* context)
                         isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                     {
                         WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
-                        WarEntity* targetEntity = findEntity(context, targetEntityId);
+                        WarEntity* targetEntity = went_findEntity(context, targetEntityId);
                         if (targetEntity && isBuildingUnit(targetEntity))
                         {
                             executeRepairCommand(context, targetEntity);
@@ -718,7 +718,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    WarEntity* targetEntity = went_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
                         if (isUnit(targetEntity))
@@ -773,13 +773,13 @@ bool executeCommand(WarContext* context)
 
             assert(map->selectedEntities.count == 1);
 
-            WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[0]);
+            WarEntity* selectedEntity = went_findEntity(context, map->selectedEntities.items[0]);
             assert(selectedEntity && isBuildingUnit(selectedEntity));
             assert(selectedEntity->unit.type == buildingUnit);
 
             WarUnitStats stats = getUnitStats(unitToTrain);
-            if (checkFarmFood(context, player) &&
-                decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
+            if (went_checkFarmFood(context, player) &&
+                went_decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
             {
                 WarState* trainState = createTrainState(context, selectedEntity, unitToTrain, (f32)stats.buildTime);
                 changeNextState(context, selectedEntity, trainState, true, true);
@@ -815,7 +815,7 @@ bool executeCommand(WarContext* context)
 
             assert(map->selectedEntities.count == 1);
 
-            WarEntity* selectedEntity = findEntity(context, map->selectedEntities.items[0]);
+            WarEntity* selectedEntity = went_findEntity(context, map->selectedEntities.items[0]);
             assert(selectedEntity && isBuildingUnit(selectedEntity));
             assert(selectedEntity->unit.type == buildingUnit);
 
@@ -823,7 +823,7 @@ bool executeCommand(WarContext* context)
 
             WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
             s32 level = getUpgradeLevel(player, upgradeToBuild);
-            if (decreasePlayerResources(context, player, stats.goldCost[level], 0))
+            if (went_decreasePlayerResources(context, player, stats.goldCost[level], 0))
             {
                 WarState* upgradeState = createUpgradeState(context, selectedEntity, upgradeToBuild, (f32)stats.buildTime);
                 changeNextState(context, selectedEntity, upgradeState, true, true);
@@ -857,7 +857,7 @@ bool executeCommand(WarContext* context)
                     assert(map->selectedEntities.count > 0);
 
                     WarEntityId workerId = map->selectedEntities.items[0];
-                    WarEntity* worker = findEntity(context, workerId);
+                    WarEntity* worker = went_findEntity(context, workerId);
                     assert(worker);
 
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
@@ -866,11 +866,11 @@ bool executeCommand(WarContext* context)
                     WarUnitType buildingToBuild = command->build.buildingToBuild;
 
                     WarBuildingStats stats = getBuildingStats(buildingToBuild);
-                    if (checkTileToBuild(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y))
+                    if (went_checkTileToBuild(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        if (decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
+                        if (went_decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
                         {
-                            WarEntity* building = createBuilding(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y, 0, true);
+                            WarEntity* building = went_createBuilding(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y, 0, true);
                             WarState* repairState = createRepairState(context, worker, building->id);
                             changeNextState(context, worker, repairState, true, true);
 
@@ -898,7 +898,7 @@ bool executeCommand(WarContext* context)
                     assert(map->selectedEntities.count > 0);
 
                     WarEntityId townHallId = map->selectedEntities.items[0];
-                    WarEntity* townHall = findEntity(context, townHallId);
+                    WarEntity* townHall = went_findEntity(context, townHallId);
 
                     WarUnitType townHallType = getTownHallOfRace(player->race);
                     assert(isUnitOfType(townHall, townHallType));
@@ -906,16 +906,16 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
-                    if (checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
+                    if (went_checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        if (decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
+                        if (went_decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
                         {
                             WarEntity* wall = map->wall;
-                            WarWallPiece* piece = addWallPiece(wall, (s32)targetTile.x, (s32)targetTile.y, 0);
+                            WarWallPiece* piece = went_addWallPiece(wall, (s32)targetTile.x, (s32)targetTile.y, 0);
                             piece->hp = WAR_WALL_MAX_HP;
                             piece->maxhp = WAR_WALL_MAX_HP;
 
-                            determineWallTypes(context, wall);
+                            went_determineWallTypes(context, wall);
 
                             // don't reset the current command if the player is building
                             // roads or walls, to allow rapid construction of those structures
@@ -946,7 +946,7 @@ bool executeCommand(WarContext* context)
                     assert(map->selectedEntities.count > 0);
 
                     WarEntityId townHallId = map->selectedEntities.items[0];
-                    WarEntity* townHall = findEntity(context, townHallId);
+                    WarEntity* townHall = went_findEntity(context, townHallId);
 
                     WarUnitType townHallType = getTownHallOfRace(player->race);
                     assert(isUnitOfType(townHall, townHallType));
@@ -954,14 +954,14 @@ bool executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
-                    if (checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
+                    if (went_checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        if (decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
+                        if (went_decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
                         {
                             WarEntity* road = map->road;
-                            addRoadPiece(road, (s32)targetTile.x, (s32)targetTile.y, 0);
+                            went_addRoadPiece(road, (s32)targetTile.x, (s32)targetTile.y, 0);
 
-                            determineRoadTypes(context, road);
+                            went_determineRoadTypes(context, road);
 
                             // don't reset the current command if the player is building
                             // roads or walls, to allow rapid construction of those structures
@@ -1058,7 +1058,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    WarEntity* targetEntity = went_findEntity(context, targetEntityId);
 
                     executeHealingCommand(context, targetEntity, targetTile);
 
@@ -1080,7 +1080,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    WarEntity* targetEntity = went_findEntity(context, targetEntityId);
 
                     executeInvisiblityCommand(context, targetEntity, targetTile);
 
@@ -1102,7 +1102,7 @@ bool executeCommand(WarContext* context)
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
-                    WarEntity* targetEntity = findEntity(context, targetEntityId);
+                    WarEntity* targetEntity = went_findEntity(context, targetEntityId);
 
                     executeUnholyArmorCommand(context, targetEntity, targetTile);
 
@@ -1413,14 +1413,14 @@ void cancel(WarContext* context, WarEntity* entity)
     for (s32 i = 0; i < map->selectedEntities.count; i++)
     {
         WarEntityId selectedEntityId = map->selectedEntities.items[i];
-        WarEntity* selectedEntity = findEntity(context, selectedEntityId);
+        WarEntity* selectedEntity = went_findEntity(context, selectedEntityId);
 
         if (isBuildingUnit(selectedEntity))
         {
             if (isBuilding(selectedEntity) || isGoingToBuild(selectedEntity))
             {
                 WarBuildingStats stats = getBuildingStats(selectedEntity->unit.type);
-                increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
+                went_increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
 
                 WarState* collapseState = createCollapseState(context, selectedEntity);
                 changeNextState(context, selectedEntity, collapseState, true, true);
@@ -1435,7 +1435,7 @@ void cancel(WarContext* context, WarEntity* entity)
                     WarUnitType unitToBuild = trainState->train.unitToBuild;
 
                     WarUnitStats stats = getUnitStats(unitToBuild);
-                    increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
+                    went_increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
                 }
                 else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
                 {
@@ -1445,7 +1445,7 @@ void cancel(WarContext* context, WarEntity* entity)
 
                     s32 upgradeLevel = getUpgradeLevel(player, upgradeToBuild);
                     WarUpgradeStats stats = getUpgradeStats(upgradeToBuild);
-                    increasePlayerResources(context, player, stats.goldCost[upgradeLevel], 0);
+                    went_increasePlayerResources(context, player, stats.goldCost[upgradeLevel], 0);
                 }
 
                 WarState* idleState = createIdleState(context, entity, false);

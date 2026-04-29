@@ -74,7 +74,7 @@ static String getCustomMapStr(s32 value)
 
 static void setUIRaceValueByName(WarContext* context, StringView name, WarRace value)
 {
-    WarEntity* entity = findUIEntity(context, name);
+    WarEntity* entity = went_findUIEntity(context, name);
     if (entity)
     {
         setUIText(entity, getCustomGameRaceStr(value));
@@ -84,7 +84,7 @@ static void setUIRaceValueByName(WarContext* context, StringView name, WarRace v
 
 static void setCustomMapValueByName(WarContext* context, StringView name, s32 value)
 {
-    WarEntity* entity = findUIEntity(context, name);
+    WarEntity* entity = went_findUIEntity(context, name);
     if (entity)
     {
         setUIText(entity, getCustomMapStr(value));

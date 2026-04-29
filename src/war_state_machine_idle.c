@@ -60,7 +60,7 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
         // look for foe units to attack them if they are in range
         if (isWarriorUnit(entity))
         {
-            WarEntity* enemy = getNearEnemy(context, entity);
+            WarEntity* enemy = went_getNearEnemy(context, entity);
             if (enemy)
             {
                 vec2 enemyPosition = getUnitPosition(enemy, true);

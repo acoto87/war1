@@ -18,8 +18,8 @@ void enterSceneBriefingHumans(WarContext* context)
 
     createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(421), VEC2_ZERO);
 
-    WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-    addAnimationsComponent(context, animEntity);
+    WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+    went_addAnimationsComponent(context, animEntity);
 
     WarSpriteAnimation* anim1 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(428), 0.2f, true);
     anim1->offset = vec2i(83, 37);
@@ -68,8 +68,8 @@ void enterSceneBriefingOrcs(WarContext* context)
 
     createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(422), VEC2_ZERO);
 
-    WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-    addAnimationsComponent(context, animEntity);
+    WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+    went_addAnimationsComponent(context, animEntity);
 
     WarSpriteAnimation* anim1 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(426), 0.2f, true);
     anim1->offset = vec2i(18, 67);
@@ -140,7 +140,7 @@ void updateSceneBriefing(WarContext* context)
 
     scene->briefing.time -= context->deltaTime;
 
-    WarEntity* txtBriefing = findUIEntity(context, wsv_fromCString("txtBriefing"));
+    WarEntity* txtBriefing = went_findUIEntity(context, wsv_fromCString("txtBriefing"));
     if (txtBriefing)
     {
         vec2 position = txtBriefing->transform.position;

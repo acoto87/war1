@@ -19,7 +19,7 @@ WarScene* createScene(WarContext* context, WarSceneType type)
     WarScene* scene = (WarScene*)war_malloc(sizeof(WarScene));
     scene->type = type;
 
-    initEntityManager(context, &scene->entityManager);
+    went_initEntityManager(context, &scene->entityManager);
 
     return scene;
 }
@@ -101,13 +101,13 @@ void leaveScene(WarContext* context)
 
 void renderScene(WarContext* context)
 {
-    WarEntityList* uiEntities = getEntities(context);
+    WarEntityList* uiEntities = went_getEntities(context);
     for (s32 i = 0; i < uiEntities->count; i++)
     {
         WarEntity* entity = uiEntities->items[i];
         if (entity && (isUIEntity(entity) || entity->type == WAR_ENTITY_TYPE_ANIMATION))
         {
-            renderEntity(context, entity);
+            went_renderEntity(context, entity);
         }
     }
 }

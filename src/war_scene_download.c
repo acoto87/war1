@@ -66,7 +66,7 @@ void updateSceneDownload(WarContext* context)
                                               "Press Enter to confirm you want to download the\n"
                                               "DEMO DATA.WAR file";
 
-                WarEntity* downloadText = findUIEntity(context, wsv_fromCString("txtDownload"));
+                WarEntity* downloadText = went_findUIEntity(context, wsv_fromCString("txtDownload"));
                 setUIText(downloadText, wstr_fromCString(confirm));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_CONFIRM;
@@ -78,7 +78,7 @@ void updateSceneDownload(WarContext* context)
         {
             if (wasKeyPressed(input, WAR_KEY_ENTER))
             {
-                WarEntity* downloadingText = findUIEntity(context, wsv_fromCString("txtDownloading"));
+                WarEntity* downloadingText = went_findUIEntity(context, wsv_fromCString("txtDownloading"));
                 setUIEntityStatus(downloadingText, true);
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_DOWNLOADING;
@@ -91,14 +91,14 @@ void updateSceneDownload(WarContext* context)
             bool success = wnet_downloadFileFromUrl(context, wsv_fromCString(ONLINE_DEMO_DATAWAR_FILE_URL), wsv_fromCString(DATAWAR_FILE_PATH));
             if (success)
             {
-                WarEntity* downloadingText = findUIEntity(context, wsv_fromCString("txtDownloading"));
+                WarEntity* downloadingText = went_findUIEntity(context, wsv_fromCString("txtDownloading"));
                 setUIText(downloadingText, wstr_fromCString("Downloading... Done. Press Enter to start the game."));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_DOWNLOADED;
             }
             else
             {
-                WarEntity* downloadingText = findUIEntity(context, wsv_fromCString("txtDownloading"));
+                WarEntity* downloadingText = went_findUIEntity(context, wsv_fromCString("txtDownloading"));
                 setUIText(downloadingText, wstr_fromCString("Downloading... Failed. Press Enter to quit the game."));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_FAILED;

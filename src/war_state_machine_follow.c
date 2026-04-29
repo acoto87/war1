@@ -34,7 +34,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (state->follow.targetEntityId)
     {
-        WarEntity* targetEntity = findEntity(context, (WarEntityId)state->follow.targetEntityId);
+        WarEntity* targetEntity = went_findEntity(context, (WarEntityId)state->follow.targetEntityId);
 
         if (isUnit(targetEntity))
         {

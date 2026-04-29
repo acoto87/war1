@@ -79,7 +79,7 @@ void wcheat_applyGoldCheat(WarContext* context, StringView argument)
     if (!map)
         return;
 
-    increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
+    went_increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
     wcp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
@@ -139,7 +139,7 @@ void wcheat_applySpellsCheat(WarContext* context, StringView argument)
         setUpgradeAllowed(player, upgradeFeatures[i], upgradeData.maxLevelAllowed);
         while (hasRemainingUpgrade(player, upgradeFeatures[i]))
         {
-            increaseUpgradeLevel(context, player, upgradeFeatures[i]);
+            went_increaseUpgradeLevel(context, player, upgradeFeatures[i]);
         }
     }
 
@@ -174,7 +174,7 @@ void wcheat_applyUpgradesCheat(WarContext* context, StringView argument)
         setUpgradeAllowed(player, upgrades[i], upgradeData.maxLevelAllowed);
         while (hasRemainingUpgrade(player, upgrades[i]))
         {
-            increaseUpgradeLevel(context, player, upgrades[i]);
+            went_increaseUpgradeLevel(context, player, upgrades[i]);
         }
     }
 
