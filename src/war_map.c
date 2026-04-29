@@ -1557,7 +1557,7 @@ void updateStatus(WarContext* context)
             {
                 if (wasKeyPressed(input, WAR_KEY_ENTER))
                 {
-                    applyCheat(context, wsv_fromString(&cheatStatus->text));
+                    wcheat_applyCheat(context, wsv_fromString(&cheatStatus->text));
                 }
 
                 setCheatsPanelVisible(context, false);

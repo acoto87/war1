@@ -143,7 +143,7 @@ void updateCheatsPanel(WarContext* context)
         {
             if (wasKeyPressed(input, WAR_KEY_ENTER))
             {
-                applyCheat(context, wstr_view(&cheatStatus->text));
+                wcheat_applyCheat(context, wstr_view(&cheatStatus->text));
             }
 
             setCheatsPanelVisible(context, false);
