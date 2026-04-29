@@ -2007,7 +2007,7 @@ bool we_isBeingAttackedBy(WarEntity* entity, WarEntity* other)
     if (!isFollowing(other) && !isMoving(other))
     {
         WarState* attackState = getAttackState(other);
-        return attackState && attackState->wcmd_attack.targetEntityId == entity->id;
+        return attackState && attackState->attack.targetEntityId == entity->id;
     }
 
     return false;
@@ -2051,7 +2051,7 @@ WarEntity* we_getAttackTarget(WarContext* context, WarEntity* entity)
         WarState* attackState = getAttackState(entity);
         if (attackState)
         {
-            WarEntityId targetEntityId = (WarEntityId)attackState->wcmd_attack.targetEntityId;
+            WarEntityId targetEntityId = (WarEntityId)attackState->attack.targetEntityId;
             return we_findEntity(context, targetEntityId);
         }
     }
@@ -2156,7 +2156,7 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
 
     if (wu_isMagicUnit(entity))
     {
-        // Since the wcmd_attack of magic units are considered "kind of spells"
+        // Since the attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
         if (we_decreaseUnitMana(context, entity, 2))
         {
@@ -2189,7 +2189,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
 
     if (wu_isMagicUnit(entity))
     {
-        // Since the wcmd_attack of magic units are considered "kind of spells"
+        // Since the attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
         if (we_decreaseUnitMana(context, entity, 2))
         {
@@ -2262,7 +2262,7 @@ void we_meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
     }
 }
 
-s32 we_mine(WarContext* context, WarEntity* goldmine, s32 amount)
+s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
 {
     assert(goldmine);
     assert(isUnit(goldmine));

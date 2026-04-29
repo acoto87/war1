@@ -46,12 +46,12 @@ void wcmd_upgradeUnholyArmor(WarContext* context, WarEntity* entity);
 void wcmd_cancel(WarContext* context, WarEntity* entity);
 
 // basic
-void wcmd_move(WarContext* context, WarEntity* entity);
+void move(WarContext* context, WarEntity* entity);
 void wcmd_stop(WarContext* context, WarEntity* entity);
 void wcmd_harvest(WarContext* context, WarEntity* entity);
-void wcmd_deliver(WarContext* context, WarEntity* entity);
-void wcmd_repair(WarContext* context, WarEntity* entity);
-void wcmd_attack(WarContext* context, WarEntity* entity);
+void deliver(WarContext* context, WarEntity* entity);
+void repair(WarContext* context, WarEntity* entity);
+void attack(WarContext* context, WarEntity* entity);
 void wcmd_buildBasic(WarContext* context, WarEntity* entity);
 void wcmd_buildAdvanced(WarContext* context, WarEntity* entity);
 

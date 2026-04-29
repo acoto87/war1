@@ -20,7 +20,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
 
     s32 selEntitiesCount = map->selectedEntities.count;
 
-    // wcmd_move the selected units to the target point,
+    // move the selected units to the target point,
     // but keeping the bounding box that the
     // selected units make, this is an intent to keep the
     // formation of the selected units
@@ -89,7 +89,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
                     if(isMoving(entity))
                     {
                         WarState* moveState = getMoveState(entity);
-                        vec2ListAdd(&moveState->wcmd_move.positions, target);
+                        vec2ListAdd(&moveState->move.positions, target);
                     }
 
                     WarState* patrolState = getPatrolState(entity);
@@ -98,7 +98,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
                 else if(isMoving(entity) && !isAttacking(entity))
                 {
                     WarState* moveState = getMoveState(entity);
-                    vec2ListAdd(&moveState->wcmd_move.positions, target);
+                    vec2ListAdd(&moveState->move.positions, target);
                 }
                 else
                 {
@@ -196,7 +196,7 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
             {
                 if (wu_isCarryingResources(entity))
                 {
-                    // find the closest town hall to wcmd_deliver the gold
+                    // find the closest town hall to deliver the gold
                     WarRace race = wu_getUnitRace(entity);
                     WarUnitType townHallType = wu_getTownHallOfRace(race);
                     WarEntity* townHall = we_findClosestUnitOfType(context, entity, townHallType);
@@ -302,7 +302,7 @@ void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 
         if (wu_isFriendlyUnit(context, entity))
         {
-            // the unit can't wcmd_repair itself
+            // the unit can't repair itself
             if (entity->id == targetEntity->id)
             {
                 continue;
@@ -541,7 +541,7 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
         {
             if (targetEntity)
             {
-                // the unit can't wcmd_attack itself
+                // the unit can't attack itself
                 if (entity->id != targetEntity->id)
                 {
                     if (wu_canAttack(context, entity, targetEntity))
@@ -723,13 +723,13 @@ bool wcmd_executeCommand(WarContext* context)
                     {
                         if (isUnit(targetEntity))
                         {
-                            // if the target entity is not visible or partially visible, just wcmd_attack to the point
+                            // if the target entity is not visible or partially visible, just attack to the point
                             if (isUnitUnknown(map, targetEntity))
                                 targetEntity = NULL;
                         }
                         else if (isWall(targetEntity))
                         {
-                            // if the target wall piece is not visible, just wcmd_attack to the point
+                            // if the target wall piece is not visible, just attack to the point
                             if (!isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                                 targetEntity = NULL;
                         }
@@ -1456,7 +1456,7 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
 }
 
 // basic
-void wcmd_move(WarContext* context, WarEntity* entity)
+void move(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1480,7 +1480,7 @@ void wcmd_harvest(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_HARVEST;
 }
 
-void wcmd_deliver(WarContext* context, WarEntity* entity)
+void deliver(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1488,7 +1488,7 @@ void wcmd_deliver(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_DELIVER;
 }
 
-void wcmd_repair(WarContext* context, WarEntity* entity)
+void repair(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1496,7 +1496,7 @@ void wcmd_repair(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_REPAIR;
 }
 
-void wcmd_attack(WarContext* context, WarEntity* entity)
+void attack(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;

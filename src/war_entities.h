@@ -159,4 +159,4 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
 void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece);
 void we_meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
 void we_meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece);
-s32 we_mine(WarContext* context, WarEntity* goldmine, s32 amount);
+s32 mine(WarContext* context, WarEntity* goldmine, s32 amount);

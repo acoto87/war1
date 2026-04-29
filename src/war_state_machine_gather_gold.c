@@ -29,7 +29,7 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     WarEntity* goldmine = we_findEntity(context, (WarEntityId)state->gold.goldmineId);
 
     // if the goldmine doesn't exists (it could ran out of gold, or other units attacking it), go idle
-    // if the unit was already mining, and the gold we_mine ran out of gold, then another unit previouly got all the remaining gold
+    // if the unit was already mining, and the gold mine ran out of gold, then another unit previouly got all the remaining gold
     // so, this unit get nothing
     if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
     {

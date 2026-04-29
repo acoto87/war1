@@ -789,14 +789,14 @@ const WarUnitCommandBaseData commandsBaseData[] =
     { WAR_COMMAND_NONE,                     NULL,                   WAR_KEY_NONE,      -1, 1, WSV_INIT(""),                             WSV_INIT("") },
 
     // unit commands
-    { WAR_COMMAND_MOVE,                     wcmd_move,                   WAR_KEY_M,          0, 1, WSV_INIT("MOVE"),                         WSV_INIT("") },
+    { WAR_COMMAND_MOVE,                     move,                   WAR_KEY_M,          0, 1, WSV_INIT("MOVE"),                         WSV_INIT("") },
     { WAR_COMMAND_STOP,                     wcmd_stop,                   WAR_KEY_S,          0, 1, WSV_INIT("STOP"),                         WSV_INIT("") },
     { WAR_COMMAND_HARVEST,                  wcmd_harvest,                WAR_KEY_H,          0, 1, WSV_INIT("HARVEST LUMBER/MINE GOLD"),     WSV_INIT("") },
-    { WAR_COMMAND_DELIVER,                  wcmd_deliver,                WAR_KEY_T,         16, 1, WSV_INIT("RETURN GOODS TO TOWN HALL"),    WSV_INIT("") },
-    { WAR_COMMAND_REPAIR,                   wcmd_repair,                 WAR_KEY_R,          0, 1, WSV_INIT("REPAIR"),                       WSV_INIT("") },
+    { WAR_COMMAND_DELIVER,                  deliver,                WAR_KEY_T,         16, 1, WSV_INIT("RETURN GOODS TO TOWN HALL"),    WSV_INIT("") },
+    { WAR_COMMAND_REPAIR,                   repair,                 WAR_KEY_R,          0, 1, WSV_INIT("REPAIR"),                       WSV_INIT("") },
     { WAR_COMMAND_BUILD_BASIC,              wcmd_buildBasic,             WAR_KEY_B,          0, 1, WSV_INIT("BUILD BASIC STRUCTURE"),        WSV_INIT("") },
     { WAR_COMMAND_BUILD_ADVANCED,           wcmd_buildAdvanced,          WAR_KEY_A,          6, 1, WSV_INIT("BUILD ADVANCED STRUCTURE"),     WSV_INIT("") },
-    { WAR_COMMAND_ATTACK,                   wcmd_attack,                 WAR_KEY_A,          0, 1, WSV_INIT("ATTACK"),                       WSV_INIT("") },
+    { WAR_COMMAND_ATTACK,                   attack,                 WAR_KEY_A,          0, 1, WSV_INIT("ATTACK"),                       WSV_INIT("") },
 
     // train commands
     { WAR_COMMAND_TRAIN_FOOTMAN,            wcmd_trainFootman,           WAR_KEY_F,          6, 1, WSV_INIT("TRAIN FOOTMAN"),                WSV_INIT("TRAINING A FOOTMAN")        },

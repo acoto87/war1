@@ -79,12 +79,12 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
             we_removeSpriteComponent(context, entity);
             we_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingWoodResource));
 
-            // find the closest town hall to wcmd_deliver the gold
+            // find the closest town hall to deliver the gold
             WarRace race = wu_getUnitRace(entity);
             WarUnitType townHallType = wu_getTownHallOfRace(race);
             WarEntity* townHall = we_findClosestUnitOfType(context, entity, townHallType);
 
-            // if the town hall doesn't exists (it could be under wcmd_attack and get destroyed), go idle
+            // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
             if (!townHall)
             {
                 WarState* idleState = wst_createIdleState(context, entity, true);

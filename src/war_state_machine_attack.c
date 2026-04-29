@@ -8,8 +8,8 @@
 WarState* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
 {
     WarState* state = wst_createState(context, entity, WAR_STATE_ATTACK);
-    state->wcmd_attack.targetEntityId = targetEntityId;
-    state->wcmd_attack.targetTile = targetTile;
+    state->attack.targetEntityId = targetEntityId;
+    state->attack.targetTile = targetTile;
     return state;
 }
 
@@ -38,12 +38,12 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
     WarUnitStats stats = wu_getUnitStats(unit->type);
 
-    WarEntityId targetEntityId = (WarEntityId)state->wcmd_attack.targetEntityId;
+    WarEntityId targetEntityId = (WarEntityId)state->attack.targetEntityId;
     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-    vec2 targetTile = state->wcmd_attack.targetTile;
+    vec2 targetTile = state->attack.targetTile;
 
-    // if the entity to wcmd_attack doesn't exists, go to the attacking point or go idle
+    // if the entity to attack doesn't exists, go to the attacking point or go idle
     if (!targetEntity)
     {
         // when going to an attacking point (where there is no target unit)
@@ -53,7 +53,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         {
             WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
-            moveState->wcmd_move.checkForAttacks = true;
+            moveState->move.checkForAttacks = true;
             wst_changeNextState(context, entity, moveState, false, true);
             return;
         }
@@ -71,7 +71,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         targetTile = wu_unitPointOnTarget(entity, targetEntity);
     }
 
-    // if the unit is not in range to wcmd_attack, chase it
+    // if the unit is not in range to attack, chase it
     if (isUnit(targetEntity) && !wu_unitInRange(entity, targetEntity, stats.range))
     {
         WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
@@ -105,7 +105,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
-        // when the unit begin an wcmd_attack, it is not invisible anymore
+        // when the unit begin an attack, it is not invisible anymore
         unit->invisible = false;
         unit->invisibilityTime = 0;
 

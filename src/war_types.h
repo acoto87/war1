@@ -1269,7 +1269,7 @@ typedef struct _WarState
 
             s32 waitCount;
             bool checkForAttacks;
-        } wcmd_move;
+        } move;
 
         struct
         {
@@ -1297,7 +1297,7 @@ typedef struct _WarState
         {
             s32 targetEntityId;
             vec2 targetTile;
-        } wcmd_attack;
+        } attack;
 
         struct
         {
@@ -1308,7 +1308,7 @@ typedef struct _WarState
         {
             s32 goldmineId;
             f32 miningTime;
-        } we_mine;
+        } mine;
 
         struct
         {
@@ -1326,7 +1326,7 @@ typedef struct _WarState
         {
             s32 townHallId;
             bool insideBuilding;
-        } wcmd_deliver;
+        } deliver;
 
         struct
         {
@@ -1355,7 +1355,7 @@ typedef struct _WarState
         struct
         {
             WarEntityId buildingId;
-        } wcmd_repair;
+        } repair;
 
         struct
         {
@@ -1636,8 +1636,8 @@ typedef enum
     WAR_HUMAN_WORK_COMPLETE = 502,                  // "Work completed"
     WAR_ORC_HELP_3 = 503,                           // "We are being attacked"
     WAR_ORC_HELP_4 = 504,                           // "They're destroying our city"
-    WAR_HUMAN_HELP_3 = 505,                         // "We are under wcmd_attack"
-    WAR_HUMAN_HELP_4 = 506,                         // "The town is under wcmd_attack"
+    WAR_HUMAN_HELP_3 = 505,                         // "We are under attack"
+    WAR_HUMAN_HELP_4 = 506,                         // "The town is under attack"
     WAR_ORC_READY = 507,                            // "Your command, master"
     WAR_HUMAN_READY = 508,                          // "Your command"
     WAR_ORC_ACKNOWLEDGEMENT_1 = 509,

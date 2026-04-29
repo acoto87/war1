@@ -6,8 +6,8 @@
 WarState* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
     WarState* state = wst_createState(context, entity, WAR_STATE_MOVE);
-    vec2ListInit(&state->wcmd_move.positions, vec2ListDefaultOptions);
-    vec2ListAddRange(&state->wcmd_move.positions, positionCount, positions);
+    vec2ListInit(&state->move.positions, vec2ListDefaultOptions);
+    vec2ListAddRange(&state->move.positions, positionCount, positions);
     return state;
 }
 
@@ -16,7 +16,7 @@ void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     WarMap* map = context->map;
     vec2 unitSize = wu_getUnitSize(entity);
 
-    if (state->wcmd_move.positions.count <= 1)
+    if (state->move.positions.count <= 1)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
@@ -27,14 +27,14 @@ void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    state->wcmd_move.positionIndex = 0;
-    state->wcmd_move.pathNodeIndex = 0;
-    state->wcmd_move.waitCount = 0;
+    state->move.positionIndex = 0;
+    state->move.pathNodeIndex = 0;
+    state->move.waitCount = 0;
 
-    vec2 start = state->wcmd_move.positions.items[state->wcmd_move.positionIndex];
-    vec2 end = state->wcmd_move.positions.items[state->wcmd_move.positionIndex + 1];
+    vec2 start = state->move.positions.items[state->move.positionIndex];
+    vec2 end = state->move.positions.items[state->move.positionIndex + 1];
 
-    WarMapPath path = state->wcmd_move.path = wpath_findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
+    WarMapPath path = state->move.path = wpath_findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
 
     // if the is no path to the next position, go to idle
     if (path.nodes.count <= 1)
@@ -48,10 +48,10 @@ void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    vec2 currentNode = path.nodes.items[state->wcmd_move.pathNodeIndex];
+    vec2 currentNode = path.nodes.items[state->move.pathNodeIndex];
     setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
-    vec2 nextNode = path.nodes.items[state->wcmd_move.pathNodeIndex + 1];
+    vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
     setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     wu_setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
@@ -62,18 +62,18 @@ void wst_leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     vec2 unitSize = wu_getUnitSize(entity);
-    WarMapPath* path = &state->wcmd_move.path;
+    WarMapPath* path = &state->move.path;
 
-    if (inRange(state->wcmd_move.pathNodeIndex, 0, path->nodes.count))
+    if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
     {
-        vec2 currentNode = path->nodes.items[state->wcmd_move.pathNodeIndex];
+        vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
         if (isDynamicOfEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, entity->id))
             setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
     }
 
-    if (inRange(state->wcmd_move.pathNodeIndex + 1, 0, path->nodes.count))
+    if (inRange(state->move.pathNodeIndex + 1, 0, path->nodes.count))
     {
-        vec2 nextNode = path->nodes.items[state->wcmd_move.pathNodeIndex + 1];
+        vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
         if (isDynamicOfEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, entity->id))
             setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
     }
@@ -82,18 +82,18 @@ void wst_leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
 void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    WarMapPath* path = &state->wcmd_move.path;
+    WarMapPath* path = &state->move.path;
 
     assert(path->nodes.count > 1);
-    assert(inRange(state->wcmd_move.pathNodeIndex, 0, path->nodes.count - 1));
+    assert(inRange(state->move.pathNodeIndex, 0, path->nodes.count - 1));
 
     WarUnitStats stats = wu_getUnitStats(entity->unit.type);
     vec2 unitSize = wu_getUnitSize(entity);
 
-    vec2 currentNode = path->nodes.items[state->wcmd_move.pathNodeIndex];
-    vec2 nextNode = path->nodes.items[state->wcmd_move.pathNodeIndex + 1];
+    vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
+    vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
 
-    if (state->wcmd_move.checkForAttacks)
+    if (state->move.checkForAttacks)
     {
         WarEntity* enemy = we_getAttacker(context, entity);
         if (enemy && wu_areEnemies(context, entity, enemy) && wu_canAttack(context, entity, enemy))
@@ -107,14 +107,14 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
     }
 
     // if this unit is waiting
-    if (state->wcmd_move.waitCount > 0)
+    if (state->move.waitCount > 0)
     {
         if (!isEmpty(map->finder, (s32)nextNode.x, (s32)nextNode.y))
         {
             // wait for a number of times before re-route
-            if (state->wcmd_move.waitCount < MOVE_WAIT_INTENTS)
+            if (state->move.waitCount < MOVE_WAIT_INTENTS)
             {
-                state->wcmd_move.waitCount++;
+                state->move.waitCount++;
 
                 WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
                 waitState->nextState = state;
@@ -123,10 +123,10 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
                 return;
             }
 
-            state->wcmd_move.waitCount = 0;
+            state->move.waitCount = 0;
 
             // if there is no re-routing possible, go to idle
-            if (!wpath_reRoutePath(map->finder, path, state->wcmd_move.pathNodeIndex, path->nodes.count - 1))
+            if (!wpath_reRoutePath(map->finder, path, state->move.pathNodeIndex, path->nodes.count - 1))
             {
                 if (!wst_changeStateNextState(context, entity, state))
                 {
@@ -137,11 +137,11 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
                 return;
             }
 
-            nextNode = path->nodes.items[state->wcmd_move.pathNodeIndex + 1];
+            nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
         }
         else
         {
-            state->wcmd_move.waitCount = 0;
+            state->move.waitCount = 0;
         }
 
         setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
@@ -176,15 +176,15 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
         setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
         setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
 
-        state->wcmd_move.pathNodeIndex++;
+        state->move.pathNodeIndex++;
 
         // if there is no more path nodes to check, go to idle
-        if (state->wcmd_move.pathNodeIndex >= path->nodes.count - 1)
+        if (state->move.pathNodeIndex >= path->nodes.count - 1)
         {
-            state->wcmd_move.positionIndex++;
+            state->move.positionIndex++;
 
             // if this is no more segments, go to idle
-            if (state->wcmd_move.positionIndex >= state->wcmd_move.positions.count - 1)
+            if (state->move.positionIndex >= state->move.positions.count - 1)
             {
                 if (!wst_changeStateNextState(context, entity, state))
                 {
@@ -198,8 +198,8 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
             // free the previous path and check if there is a new one
             wpath_freePath(*path);
 
-            vec2 start = state->wcmd_move.positions.items[state->wcmd_move.positionIndex];
-            vec2 end = state->wcmd_move.positions.items[state->wcmd_move.positionIndex + 1];
+            vec2 start = state->move.positions.items[state->move.positionIndex];
+            vec2 end = state->move.positions.items[state->move.positionIndex + 1];
 
             *path = wpath_findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
 
@@ -215,19 +215,19 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
                 return;
             }
 
-            state->wcmd_move.pathNodeIndex = 0;
+            state->move.pathNodeIndex = 0;
         }
 
-        currentNode = path->nodes.items[state->wcmd_move.pathNodeIndex];
+        currentNode = path->nodes.items[state->move.pathNodeIndex];
         setDynamicEntity(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
-        nextNode = path->nodes.items[state->wcmd_move.pathNodeIndex + 1];
+        nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
 
         // if the next node is occupied, check if the unit have to wait to re-route if necessary
         if (!isEmpty(map->finder, (s32)nextNode.x, (s32)nextNode.y))
         {
             // if the next node is occupied but is the last one, don't wait to re-route, go idle
-            if (state->wcmd_move.pathNodeIndex + 1 == path->nodes.count - 1)
+            if (state->move.pathNodeIndex + 1 == path->nodes.count - 1)
             {
                 if (!wst_changeStateNextState(context, entity, state))
                 {
@@ -238,7 +238,7 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
                 return;
             }
 
-            state->wcmd_move.waitCount++;
+            state->move.waitCount++;
 
             WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
             waitState->nextState = state;
@@ -254,6 +254,6 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
 
 void wst_freeMoveState(WarContext* context, WarState* state)
 {
-    vec2ListFree(&state->wcmd_move.positions);
-    wpath_freePath(state->wcmd_move.path);
+    vec2ListFree(&state->move.positions);
+    wpath_freePath(state->move.path);
 }

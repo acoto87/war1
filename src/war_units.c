@@ -1067,7 +1067,7 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
 
                     default:
                     {
-                        logWarning("Trying to get an wcmd_attack command for unit of type: %d", unit->type);
+                        logWarning("Trying to get an attack command for unit of type: %d", unit->type);
                         break;
                     }
                 }
