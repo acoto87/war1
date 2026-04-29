@@ -2,5 +2,5 @@
 
 #include "war_types.h"
 
-void enterSceneBlizzard(WarContext* context);
-void updateSceneBlizzard(WarContext* context);
+void wscb_enterSceneBlizzard(WarContext* context);
+void wscb_updateSceneBlizzard(WarContext* context);

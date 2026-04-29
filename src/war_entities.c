@@ -251,14 +251,14 @@ void went_addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex
     entity->text.wrapping = WAR_TEXT_WRAP_NONE;
     entity->text.multiline = false;
 
-    setUIText(entity, text);
+    wui_setUIText(entity, text);
 }
 
 void went_removeTextComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
-    clearUIText(entity);
+    wui_clearUIText(entity);
     entity->text = (WarTextComponent){0};
 }
 
@@ -319,7 +319,7 @@ void went_addButtonComponentFromResource(WarContext* context,
 
 void went_removeButtonComponent(WarContext* context, WarEntity* entity)
 {
-    clearUITooltip(entity);
+    wui_clearUITooltip(entity);
     wspr_freeSprite(context, entity->button.normalSprite);
     wspr_freeSprite(context, entity->button.pressedSprite);
     entity->button = (WarButtonComponent){0};
@@ -470,7 +470,7 @@ WarEntity* went_createEntity(WarContext* context, WarEntityType type, bool addTo
         WarEntityList* entitiesOfType = went_getEntitiesOfType(context, type);
         WarEntityListAdd(entitiesOfType, entity);
 
-        if (isUIEntity(entity))
+        if (wui_isUIEntity(entity))
         {
             WarEntityListAdd(&manager->uiEntities, entity);
         }
@@ -616,7 +616,7 @@ WarEntity* went_findUIEntity(WarContext* context, StringView name)
     {
         WarEntity* entity = entities->items[i];
         if (entity &&
-            isUIEntity(entity) &&
+            wui_isUIEntity(entity) &&
             wsv_equals(wsv_fromString(&entity->ui.name), name))
         {
             return entity;
@@ -774,7 +774,7 @@ void went_removeEntityById(WarContext* context, WarEntityId id)
 
         went_removeEntity(context, entity);
 
-        if (isUIEntity(entity))
+        if (wui_isUIEntity(entity))
         {
             WarEntityListRemove(&manager->uiEntities, entity);
         }

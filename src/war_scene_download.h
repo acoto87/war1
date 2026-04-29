@@ -2,5 +2,5 @@
 
 #include "war_types.h"
 
-void enterSceneDownload(WarContext* context);
-void updateSceneDownload(WarContext* context);
+void wscd_enterSceneDownload(WarContext* context);
+void wscd_updateSceneDownload(WarContext* context);

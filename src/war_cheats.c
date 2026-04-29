@@ -294,7 +294,7 @@ void wcheat_applySkipHumanCheat(WarContext* context, StringView argument)
         if (level <= 0 || level > 2)
             return;
 
-        WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
         scene->briefing.race = WAR_RACE_HUMANS;
         scene->briefing.mapType = WAR_CAMPAIGN_HUMANS_01 + 2 * (level - 1);
         setNextScene(context, scene, 1.0f);
@@ -317,7 +317,7 @@ void wcheat_applySkipOrcCheat(WarContext* context, StringView argument)
         if (level <= 0 || level > 2)
             return;
 
-        WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
         scene->briefing.race = WAR_RACE_ORCS;
         scene->briefing.mapType = WAR_CAMPAIGN_ORCS_01 + 2 * (level - 1);
         setNextScene(context, scene, 1.0f);

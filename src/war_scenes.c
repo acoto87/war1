@@ -8,13 +8,13 @@
 
 WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 {
-    { WAR_SCENE_DOWNLOAD,   enterSceneDownload, NULL, updateSceneDownload },
-    { WAR_SCENE_BLIZZARD,   enterSceneBlizzard, NULL, updateSceneBlizzard },
-    { WAR_SCENE_MAIN_MENU,  enterSceneMainMenu, NULL, NULL },
-    { WAR_SCENE_BRIEFING,   enterSceneBriefing, NULL, updateSceneBriefing }
+    { WAR_SCENE_DOWNLOAD,   wscd_enterSceneDownload, NULL, wscd_updateSceneDownload },
+    { WAR_SCENE_BLIZZARD,   wscb_enterSceneBlizzard, NULL, wscb_updateSceneBlizzard },
+    { WAR_SCENE_MAIN_MENU,  wscm_enterSceneMainMenu, NULL, NULL },
+    { WAR_SCENE_BRIEFING,   wscbr_enterSceneBriefing, NULL, wscbr_updateSceneBriefing }
 };
 
-WarScene* createScene(WarContext* context, WarSceneType type)
+WarScene* wsc_createScene(WarContext* context, WarSceneType type)
 {
     WarScene* scene = (WarScene*)war_malloc(sizeof(WarScene));
     scene->type = type;
@@ -24,7 +24,7 @@ WarScene* createScene(WarContext* context, WarSceneType type)
     return scene;
 }
 
-void freeScene(WarScene* scene)
+void wsc_freeScene(WarScene* scene)
 {
     WarEntityManager* manager = &scene->entityManager;
     WarEntityListFree(&manager->entities);
@@ -34,7 +34,7 @@ void freeScene(WarScene* scene)
     WarEntityListFree(&manager->uiEntities);
 }
 
-void enterScene(WarContext* context)
+void wsc_enterScene(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -51,7 +51,7 @@ void enterScene(WarContext* context)
     }
 }
 
-void updateScene(WarContext* context)
+void wsc_updateScene(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -69,13 +69,13 @@ void updateScene(WarContext* context)
     else
     {
         wcp_updateCheatsPanel(context);
-        updateUIButtons(context, !cheatsEnabledAndVisible(scene));
-        updateUICursor(context);
+        wui_updateUIButtons(context, !cheatsEnabledAndVisible(scene));
+        wui_updateUICursor(context);
         wani_updateAnimations(context);
     }
 }
 
-void leaveScene(WarContext* context)
+void wsc_leaveScene(WarContext* context)
 {
     WarScene* scene = context->scene;
     if (!scene)
@@ -94,18 +94,18 @@ void leaveScene(WarContext* context)
     }
     else
     {
-        freeScene(context->scene);
+        wsc_freeScene(context->scene);
         context->scene = NULL;
     }
 }
 
-void renderScene(WarContext* context)
+void wsc_renderScene(WarContext* context)
 {
     WarEntityList* uiEntities = went_getEntities(context);
     for (s32 i = 0; i < uiEntities->count; i++)
     {
         WarEntity* entity = uiEntities->items[i];
-        if (entity && (isUIEntity(entity) || entity->type == WAR_ENTITY_TYPE_ANIMATION))
+        if (entity && (wui_isUIEntity(entity) || entity->type == WAR_ENTITY_TYPE_ANIMATION))
         {
             went_renderEntity(context, entity);
         }

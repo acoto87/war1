@@ -75,16 +75,16 @@ void wcp_createCheatsPanel(WarContext* context)
 
     vec2 cheatSize = vec2f((f32)context->originalWindowWidth, 12.0f);
     WarColor cheatBackgroundColor = WAR_COLOR_RGBA(100, 100, 100, 160);
-    uiEntity = createUIRect(context, wstr_fromCString("panelCheat"), VEC2_ZERO, cheatSize, cheatBackgroundColor);
+    uiEntity = wui_createUIRect(context, wstr_fromCString("panelCheat"), VEC2_ZERO, cheatSize, cheatBackgroundColor);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, wstr_fromCString("txtCheat"), 0, 6, wstr_make(), vec2i(2, 4));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheat"), 0, 6, wstr_make(), vec2i(2, 4));
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIRect(context, wstr_fromCString("cursorCheat"), vec2i(2, 3), vec2i(1, 7), WAR_COLOR_WHITE);
+    uiEntity = wui_createUIRect(context, wstr_fromCString("cursorCheat"), vec2i(2, 3), vec2i(1, 7), WAR_COLOR_WHITE);
     setUIEntityStatus(uiEntity, false);
 
-    uiEntity = createUIText(context, wstr_fromCString("txtCheatFeedbackText"), 1, 8, wstr_make(), vec2i(10, 20));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), 1, 8, wstr_make(), vec2i(10, 20));
     setUITextColor(uiEntity, WAR_COLOR_YELLOW);
     setUIEntityStatus(uiEntity, false);
 }
@@ -94,7 +94,7 @@ void wcp_setCheatText(WarContext* context, String text)
     WarEntity* txtCheat = went_findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(txtCheat);
 
-    setUIText(txtCheat, text);
+    wui_setUIText(txtCheat, text);
 }
 
 void wcp_updateCheatsPanel(WarContext* context)
@@ -122,7 +122,7 @@ void wcp_updateCheatsPanel(WarContext* context)
     if (cheatStatus->feedback)
     {
         setUIEntityStatus(cheatFeedbackText, true);
-        setUIText(cheatFeedbackText, cheatStatus->feedbackText);
+        wui_setUIText(cheatFeedbackText, cheatStatus->feedbackText);
 
         cheatStatus->feedbackTime -= context->deltaTime;
         if (cheatStatus->feedbackTime <= 0)

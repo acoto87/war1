@@ -16,7 +16,7 @@ void enterSceneBriefingHumans(WarContext* context)
 
     scene->briefing.time = data.briefingDuration;
 
-    createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(421), VEC2_ZERO);
+    wui_createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(421), VEC2_ZERO);
 
     WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     went_addAnimationsComponent(context, animEntity);
@@ -44,7 +44,7 @@ void enterSceneBriefingHumans(WarContext* context)
     wani_addAnimationFramesRange(anim4, 0, 20);
     wani_addAnimation(animEntity, anim4);
 
-    WarEntity* briefingText = createUIText(context, wstr_fromCString("txtBriefing"), 1, 10, data.briefingText, vec2i(20, 160));
+    WarEntity* briefingText = wui_createUIText(context, wstr_fromCString("txtBriefing"), 1, 10, data.briefingText, vec2i(20, 160));
     setUITextColor(briefingText, WAR_COLOR_RGB(255, 215, 138));
     setUITextMultiline(briefingText, true);
     setUITextBoundings(briefingText, vec2f((f32)(context->originalWindowWidth - 40), 200.0f));
@@ -66,7 +66,7 @@ void enterSceneBriefingOrcs(WarContext* context)
 
     scene->briefing.time = data.briefingDuration;
 
-    createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(422), VEC2_ZERO);
+    wui_createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(422), VEC2_ZERO);
 
     WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     went_addAnimationsComponent(context, animEntity);
@@ -93,7 +93,7 @@ void enterSceneBriefingOrcs(WarContext* context)
         wani_addAnimation(animEntity, anim3);
     }
 
-    WarEntity* briefingText = createUIText(context, wstr_fromCString("txtBriefing"), 1, 10, data.briefingText, vec2i(20, 160));
+    WarEntity* briefingText = wui_createUIText(context, wstr_fromCString("txtBriefing"), 1, 10, data.briefingText, vec2i(20, 160));
     setUITextColor(briefingText, WAR_COLOR_RGB(255, 215, 138));
     setUITextMultiline(briefingText, true);
     setUITextBoundings(briefingText, vec2f((f32)(context->originalWindowWidth - 40), 200.0f));
@@ -107,7 +107,7 @@ void enterSceneBriefingOrcs(WarContext* context)
         waud_createAudio(context, data.briefingAudioId, false);
 }
 
-void enterSceneBriefing(WarContext* context)
+void wscbr_enterSceneBriefing(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -133,7 +133,7 @@ void enterSceneBriefing(WarContext* context)
     }
 }
 
-void updateSceneBriefing(WarContext* context)
+void wscbr_updateSceneBriefing(WarContext* context)
 {
     WarInput* input = &context->input;
     WarScene* scene = context->scene;

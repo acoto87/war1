@@ -234,12 +234,12 @@ bool initGame(WarContext* context)
             return false;
         }
 
-        WarScene* scene = createScene(context, WAR_SCENE_BLIZZARD);
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
         setNextScene(context, scene, 0.0f);
     }
     else
     {
-        WarScene* scene = createScene(context, WAR_SCENE_DOWNLOAD);
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_DOWNLOAD);
         setNextScene(context, scene, 0.0f);
     }
 
@@ -553,14 +553,14 @@ void updateGame(WarContext* context)
         context->audioEnabled = false;
 
         if (context->scene)
-            leaveScene(context);
+            wsc_leaveScene(context);
         else if (context->map)
             wmap_leaveMap(context);
 
         context->scene = context->nextScene;
         context->nextScene = NULL;
 
-        enterScene(context);
+        wsc_enterScene(context);
 
         context->audioEnabled = true;
     }
@@ -569,7 +569,7 @@ void updateGame(WarContext* context)
         context->audioEnabled = false;
 
         if (context->scene)
-            leaveScene(context);
+            wsc_leaveScene(context);
         else if (context->map)
             wmap_leaveMap(context);
 
@@ -589,7 +589,7 @@ void updateGame(WarContext* context)
 
     if (context->scene)
     {
-        updateScene(context);
+        wsc_updateScene(context);
     }
     else if (context->map)
     {
@@ -622,7 +622,7 @@ void renderGame(WarContext *context)
 
     if (context->scene)
     {
-        renderScene(context);
+        wsc_renderScene(context);
     }
     else if (context->map)
     {

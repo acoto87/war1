@@ -805,7 +805,7 @@ void wmap_enterMap(WarContext* context)
     wmm_createGameOverMenu(context);
     wmm_createQuitMenu(context);
     createDemoEndMenu(context);
-    createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
+    wui_createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
 
     if (!isDemo(context))
         waud_createAudio(context, WAR_MUSIC_00, true);
@@ -1320,7 +1320,7 @@ void updateCommandButtons(WarContext* context)
         commandButtons[i]->button.enabled = false;
 
     for (s32 i = 0; i < arrayLength(commandTexts); i++)
-        clearUIText(commandTexts[i]);
+        wui_clearUIText(commandTexts[i]);
 
     s32 selectedEntitiesCount = map->selectedEntities.count;
     if (selectedEntitiesCount == 0)
@@ -1341,11 +1341,11 @@ void updateCommandButtons(WarContext* context)
             s32 farmsCount = wun_getNumberOfBuildingsOfType(context, entity->unit.player, entity->unit.type, true);
             s32 dudesCount = wun_getTotalNumberOfDudes(context, entity->unit.player);
 
-            setUIText(commandTexts[0], wstr_fromCString("FOOD USAGE:"));
+            wui_setUIText(commandTexts[0], wstr_fromCString("FOOD USAGE:"));
             setUITextHighlight(commandTexts[0], NO_HIGHLIGHT, 0);
-            setUIText(commandTexts[1], wstr_fromCStringFormat("GROWN %d", farmsCount * 4 + 1));
+            wui_setUIText(commandTexts[1], wstr_fromCStringFormat("GROWN %d", farmsCount * 4 + 1));
             setUITextHighlight(commandTexts[1], NO_HIGHLIGHT, 0);
-            setUIText(commandTexts[2], wstr_fromCStringFormat(" USED %d", dudesCount));
+            wui_setUIText(commandTexts[2], wstr_fromCStringFormat(" USED %d", dudesCount));
             setUITextHighlight(commandTexts[2], NO_HIGHLIGHT, 0);
 
             return;
@@ -1358,9 +1358,9 @@ void updateCommandButtons(WarContext* context)
     {
         s32 gold = entity->unit.amount;
 
-        setUIText(commandTexts[0], wstr_fromCString("GOLD LEFT"));
+        wui_setUIText(commandTexts[0], wstr_fromCString("GOLD LEFT"));
         setUITextHighlight(commandTexts[0], NO_HIGHLIGHT, 0);
-        setUIText(commandTexts[3], wstr_fromCStringFormat("%d", gold));
+        wui_setUIText(commandTexts[3], wstr_fromCStringFormat("%d", gold));
         setUITextHighlight(commandTexts[3], NO_HIGHLIGHT, 0);
         return;
     }
@@ -1395,8 +1395,8 @@ void updateCommandButtons(WarContext* context)
         if (commands[i] != WAR_COMMAND_NONE)
         {
             WarUnitCommandData commandData = wun_getUnitCommandData(context, entity, commands[i]);
-            setUIImage(commandButtons[i], commandData.frameIndex);
-            setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.highlightCount, wsv_toString(commandData.tooltip));
+            wui_setUIImage(commandButtons[i], commandData.frameIndex);
+            wui_setUITooltip(commandButtons[i], commandData.highlightIndex, commandData.highlightCount, wsv_toString(commandData.tooltip));
             commandButtons[i]->button.enabled = true;
             commandButtons[i]->button.gold = commandData.gold;
             commandButtons[i]->button.wood = commandData.wood;
@@ -1536,7 +1536,7 @@ void updateStatus(WarContext* context)
         if (cheatStatus->feedback)
         {
             setUIEntityStatus(cheatFeedbackText, true);
-            setUIText(cheatFeedbackText, cheatStatus->feedbackText);
+            wui_setUIText(cheatFeedbackText, cheatStatus->feedbackText);
 
             cheatStatus->feedbackTime -= context->deltaTime;
             if (cheatStatus->feedbackTime <= 0)
@@ -2461,7 +2461,7 @@ void wmap_updateMap(WarContext* context)
 
     if (!map->playing)
     {
-        updateUIButtons(context, true);
+        wui_updateUIButtons(context, true);
         updateMapCursor(context);
         return;
     }
@@ -2493,7 +2493,7 @@ void wmap_updateMap(WarContext* context)
     wmui_updateSelectedUnitsInfo(context);
     updateCommandButtons(context);
 
-    updateUIButtons(context, !cheatsEnabledAndVisible(map));
+    wui_updateUIButtons(context, !cheatsEnabledAndVisible(map));
 
     updateCommandFromRightClick(context);
     updateStatus(context);
