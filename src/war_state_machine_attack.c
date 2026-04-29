@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 #include "war_map.h"
 #include "war_actions.h"
@@ -8,8 +8,8 @@
 WarState* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
 {
     WarState* state = wst_createState(context, entity, WAR_STATE_ATTACK);
-    state->wcomm_attack.targetEntityId = targetEntityId;
-    state->wcomm_attack.targetTile = targetTile;
+    state->wcmd_attack.targetEntityId = targetEntityId;
+    state->wcmd_attack.targetTile = targetTile;
     return state;
 }
 
@@ -38,12 +38,12 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
     WarUnitStats stats = wu_getUnitStats(unit->type);
 
-    WarEntityId targetEntityId = (WarEntityId)state->wcomm_attack.targetEntityId;
+    WarEntityId targetEntityId = (WarEntityId)state->wcmd_attack.targetEntityId;
     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-    vec2 targetTile = state->wcomm_attack.targetTile;
+    vec2 targetTile = state->wcmd_attack.targetTile;
 
-    // if the entity to wcomm_attack doesn't exists, go to the attacking point or go idle
+    // if the entity to wcmd_attack doesn't exists, go to the attacking point or go idle
     if (!targetEntity)
     {
         // when going to an attacking point (where there is no target unit)
@@ -53,7 +53,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         {
             WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
-            moveState->wcomm_move.checkForAttacks = true;
+            moveState->wcmd_move.checkForAttacks = true;
             wst_changeNextState(context, entity, moveState, false, true);
             return;
         }
@@ -71,7 +71,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         targetTile = wu_unitPointOnTarget(entity, targetEntity);
     }
 
-    // if the unit is not in range to wcomm_attack, chase it
+    // if the unit is not in range to wcmd_attack, chase it
     if (isUnit(targetEntity) && !wu_unitInRange(entity, targetEntity, stats.range))
     {
         WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
@@ -89,7 +89,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // if the unit is attacking a worker that is currently gathering and inside of the goldmine or the townhall,
-    // wcomm_stop the attacking for a moment until the unit come out again
+    // wcmd_stop the attacking for a moment until the unit come out again
     if (wst_isInsideBuilding(targetEntity))
     {
         WarState* waitState = wst_createWaitState(context, entity, 1.0f);
@@ -105,7 +105,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
     {
-        // when the unit begin an wcomm_attack, it is not invisible anymore
+        // when the unit begin an wcmd_attack, it is not invisible anymore
         unit->invisible = false;
         unit->invisibilityTime = 0;
 
@@ -114,7 +114,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         {
             // if the target entity is dead or is collapsing (in case of buildings), go to idle
             // do this check before apply damage in case of multiple units attacking.
-            // one of them could cause the unit to die, so the other should wcomm_stop doing further damage.
+            // one of them could cause the unit to die, so the other should wcmd_stop doing further damage.
             if (isDead(targetEntity) || isGoingToDie(targetEntity) ||
                 isCollapsing(targetEntity) || isGoingToCollapse(targetEntity))
             {
@@ -143,7 +143,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             {
                 // if the piece of the wall the unit is attacking has no more hit points, go to idle.
                 // do this check before apply damage in case of multiple units attacking.
-                // one of them could destroy the piece, so the other should wcomm_stop doing further damage.
+                // one of them could destroy the piece, so the other should wcmd_stop doing further damage.
                 if (piece->hp == 0)
                 {
                     WarState* idleState = wst_createIdleState(context, entity, true);

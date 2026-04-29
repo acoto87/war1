@@ -1432,15 +1432,15 @@ void updateCommandFromRightClick(WarContext* context)
                         if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                         {
                             if (!isUnitUnknown(map, targetEntity))
-                                wcomm_executeHarvestCommand(context, targetEntity, targetTile);
+                                wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             else
-                                wcomm_executeMoveCommand(context, targetPoint);
+                                wcmd_executeMoveCommand(context, targetPoint);
                         }
                         else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
                             if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
-                                wcomm_executeHarvestCommand(context, targetEntity, targetTile);
+                                wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             }
                             else
                             {
@@ -1448,11 +1448,11 @@ void updateCommandFromRightClick(WarContext* context)
                                 if (tree)
                                 {
                                     targetTile = vec2i(tree->tilex, tree->tiley);
-                                    wcomm_executeHarvestCommand(context, targetEntity, targetTile);
+                                    wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                                 }
                                 else
                                 {
-                                    wcomm_executeMoveCommand(context, targetPoint);
+                                    wcmd_executeMoveCommand(context, targetPoint);
                                 }
                             }
                         }
@@ -1463,39 +1463,39 @@ void updateCommandFromRightClick(WarContext* context)
                             {
                                 if (wu_isEnemyUnit(context, targetEntity))
                                 {
-                                    wcomm_executeAttackCommand(context, targetEntity, targetTile);
+                                    wcmd_executeAttackCommand(context, targetEntity, targetTile);
                                 }
                                 else
                                 {
-                                    wcomm_executeDeliverCommand(context, targetEntity);
+                                    wcmd_executeDeliverCommand(context, targetEntity);
                                 }
                             }
                             else
                             {
-                                wcomm_executeMoveCommand(context, targetPoint);
+                                wcmd_executeMoveCommand(context, targetPoint);
                             }
                         }
                         else if (isWall(targetEntity))
                         {
                             // it doesn't matter if the wall piece is visible or not,
                             // the unit will walk to it
-                            wcomm_executeMoveCommand(context, targetPoint);
+                            wcmd_executeMoveCommand(context, targetPoint);
                         }
                         else
                         {
                             if (wu_isEnemyUnit(context, targetEntity))
                             {
-                                wcomm_executeAttackCommand(context, targetEntity, targetTile);
+                                wcmd_executeAttackCommand(context, targetEntity, targetTile);
                             }
                             else
                             {
-                                wcomm_executeFollowCommand(context, targetEntity);
+                                wcmd_executeFollowCommand(context, targetEntity);
                             }
                         }
                     }
                     else
                     {
-                        wcomm_executeMoveCommand(context, targetPoint);
+                        wcmd_executeMoveCommand(context, targetPoint);
                     }
                 }
                 // if the right click was on the minimap
@@ -1504,13 +1504,13 @@ void updateCommandFromRightClick(WarContext* context)
                     vec2 offset = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
                     vec2 targetPoint = wmap_vec2TileToMapCoordinates(offset, true);
 
-                    wcomm_executeMoveCommand(context, targetPoint);
+                    wcmd_executeMoveCommand(context, targetPoint);
                 }
             }
         }
         else
         {
-            wcomm_cancel(context, NULL);
+            wcmd_cancel(context, NULL);
         }
     }
 }
@@ -1694,7 +1694,7 @@ void updateStatus(WarContext* context)
                     s32 maxhp = selectedEntity->unit.maxhp;
                     if (hp < maxhp)
                     {
-                        // to calculate the amount of wood and gold needed to wcomm_repair a
+                        // to calculate the amount of wood and gold needed to wcmd_repair a
                         // building I'm taking the 12% of the damage of the building,
                         // so for the a FARM if it has a damage of 200, the amount of
                         // wood and gold would be 200 * 0.12 = 24.
@@ -2204,7 +2204,7 @@ void updateFoW(WarContext* context)
                 // mark the tiles of the unit as visible
                 wmap_setUnitMapTileState(map, entity, MAP_TILE_STATE_VISIBLE);
 
-                // reveal the wcomm_attack target of the unit
+                // reveal the wcmd_attack target of the unit
                 WarEntity* targetEntity = we_getAttackTarget(context, entity);
                 if (targetEntity)
                 {
@@ -2220,7 +2220,7 @@ void updateFoW(WarContext* context)
                     else if (isWall(targetEntity))
                     {
                         WarState* attackState = getAttackState(entity);
-                        vec2 targetTile = attackState->wcomm_attack.targetTile;
+                        vec2 targetTile = attackState->wcmd_attack.targetTile;
 
                         if (wu_tileInRange(entity, targetTile, stats.range))
                         {
@@ -2466,7 +2466,7 @@ void wmap_updateMap(WarContext* context)
         return;
     }
 
-    if (!wcomm_executeCommand(context))
+    if (!wcmd_executeCommand(context))
     {
         // only update the selection if the current command doesn't get
         // executed or there is no command at all.
@@ -2636,16 +2636,16 @@ void renderUnitPaths(WarContext* context)
             WarState* moveState = wst_getDirectState(entity, WAR_STATE_MOVE);
             if (moveState)
             {
-                vec2List positions = moveState->wcomm_move.positions;
-                for(s32 k = moveState->wcomm_move.positionIndex; k < positions.count; k++)
+                vec2List positions = moveState->wcmd_move.positions;
+                for(s32 k = moveState->wcmd_move.positionIndex; k < positions.count; k++)
                 {
                     vec2 pos = wmap_vec2TileToMapCoordinates(positions.items[k], true);
                     pos = vec2Subv(pos, vec2i(2, 2));
                     wr_renderFillRect(context, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
                 }
 
-                s32 index = moveState->wcomm_move.pathNodeIndex;
-                WarMapPath path = moveState->wcomm_move.path;
+                s32 index = moveState->wcmd_move.pathNodeIndex;
+                WarMapPath path = moveState->wcmd_move.path;
 
                 if (index >= 0)
                 {

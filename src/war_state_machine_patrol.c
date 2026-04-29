@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 WarState* wst_createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
@@ -38,7 +38,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
 {
     vec2List positions = state->patrol.positions;
 
-    // if the unit isn't where is suppose to be, then there must have been a problem in the wcomm_move, so abort and go idle
+    // if the unit isn't where is suppose to be, then there must have been a problem in the wcmd_move, so abort and go idle
     vec2 actualPosition = wmap_vec2MapToTileCoordinates(entity->transform.position);
     vec2 shouldBeAt = positions.items[positions.count - 1];
 
@@ -51,7 +51,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    // otherwise, reverse the positions list and go to the wcomm_move state again
+    // otherwise, reverse the positions list and go to the wcmd_move state again
     state->patrol.dir *= -1;
     vec2ListReverse(&state->patrol.positions);
 

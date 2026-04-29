@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 #include "war_actions.h"
 #include "war_map.h"
@@ -57,7 +57,7 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             }
         }
 
-        // look for foe units to wcomm_attack them if they are in range
+        // look for foe units to wcmd_attack them if they are in range
         if (wu_isWarriorUnit(entity))
         {
             WarEntity* enemy = we_getNearEnemy(context, entity);

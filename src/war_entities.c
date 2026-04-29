@@ -1,4 +1,4 @@
-﻿#include "war_entities.h"
+#include "war_entities.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -2007,7 +2007,7 @@ bool we_isBeingAttackedBy(WarEntity* entity, WarEntity* other)
     if (!isFollowing(other) && !isMoving(other))
     {
         WarState* attackState = getAttackState(other);
-        return attackState && attackState->wcomm_attack.targetEntityId == entity->id;
+        return attackState && attackState->wcmd_attack.targetEntityId == entity->id;
     }
 
     return false;
@@ -2051,7 +2051,7 @@ WarEntity* we_getAttackTarget(WarContext* context, WarEntity* entity)
         WarState* attackState = getAttackState(entity);
         if (attackState)
         {
-            WarEntityId targetEntityId = (WarEntityId)attackState->wcomm_attack.targetEntityId;
+            WarEntityId targetEntityId = (WarEntityId)attackState->wcmd_attack.targetEntityId;
             return we_findEntity(context, targetEntityId);
         }
     }
@@ -2156,7 +2156,7 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
 
     if (wu_isMagicUnit(entity))
     {
-        // Since the wcomm_attack of magic units are considered "kind of spells"
+        // Since the wcmd_attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
         if (we_decreaseUnitMana(context, entity, 2))
         {
@@ -2167,7 +2167,7 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
         }
         else
         {
-            // wcomm_stop attacking if the magic unit rans out of mana
+            // wcmd_stop attacking if the magic unit rans out of mana
             WarState* idleState = wst_createIdleState(context, entity, true);
             wst_changeNextState(context, entity, idleState, true, true);
         }
@@ -2189,7 +2189,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
 
     if (wu_isMagicUnit(entity))
     {
-        // Since the wcomm_attack of magic units are considered "kind of spells"
+        // Since the wcmd_attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
         if (we_decreaseUnitMana(context, entity, 2))
         {
@@ -2200,7 +2200,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
         }
         else
         {
-            // wcomm_stop attacking if the magic unit rans out of mana
+            // wcmd_stop attacking if the magic unit rans out of mana
             WarState* idleState = wst_createIdleState(context, entity, true);
             wst_changeNextState(context, entity, idleState, true, true);
         }

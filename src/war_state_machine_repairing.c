@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 #include "war_actions.h"
 #include "war_units.h"
@@ -115,7 +115,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
                 return;
             }
 
-            // to calculate the amount of wood and gold needed to wcomm_repair a
+            // to calculate the amount of wood and gold needed to wcmd_repair a
             // building I'm taking the 12% of the damage of the building,
             // so for the a FARM if it has a damage of 200, the amount of
             // wood and gold would be 200 * 0.12 = 24.

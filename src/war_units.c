@@ -1,4 +1,4 @@
-﻿#include "war_units.h"
+#include "war_units.h"
 
 bool wu_isFriendlyUnit(WarContext* context, WarEntity* entity)
 {
@@ -1067,7 +1067,7 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
 
                     default:
                     {
-                        logWarning("Trying to get an wcomm_attack command for unit of type: %d", unit->type);
+                        logWarning("Trying to get an wcmd_attack command for unit of type: %d", unit->type);
                         break;
                     }
                 }
@@ -1223,7 +1223,7 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
             break;
         }
 
-        // wcomm_cancel
+        // wcmd_cancel
         case WAR_COMMAND_CANCEL:
         {
             data.frameIndex = WAR_PORTRAIT_CANCEL;

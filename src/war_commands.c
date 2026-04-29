@@ -1,4 +1,4 @@
-﻿#include "war_commands.h"
+#include "war_commands.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -10,7 +10,7 @@
 #include "war_ui.h"
 #include "war_units.h"
 
-void wcomm_executeMoveCommand(WarContext* context, vec2 targetPoint)
+void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -20,7 +20,7 @@ void wcomm_executeMoveCommand(WarContext* context, vec2 targetPoint)
 
     s32 selEntitiesCount = map->selectedEntities.count;
 
-    // wcomm_move the selected units to the target point,
+    // wcmd_move the selected units to the target point,
     // but keeping the bounding box that the
     // selected units make, this is an intent to keep the
     // formation of the selected units
@@ -89,7 +89,7 @@ void wcomm_executeMoveCommand(WarContext* context, vec2 targetPoint)
                     if(isMoving(entity))
                     {
                         WarState* moveState = getMoveState(entity);
-                        vec2ListAdd(&moveState->wcomm_move.positions, target);
+                        vec2ListAdd(&moveState->wcmd_move.positions, target);
                     }
 
                     WarState* patrolState = getPatrolState(entity);
@@ -98,7 +98,7 @@ void wcomm_executeMoveCommand(WarContext* context, vec2 targetPoint)
                 else if(isMoving(entity) && !isAttacking(entity))
                 {
                     WarState* moveState = getMoveState(entity);
-                    vec2ListAdd(&moveState->wcomm_move.positions, target);
+                    vec2ListAdd(&moveState->wcmd_move.positions, target);
                 }
                 else
                 {
@@ -125,7 +125,7 @@ void wcomm_executeMoveCommand(WarContext* context, vec2 targetPoint)
     }
 }
 
-void wcomm_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
+void wcmd_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -154,7 +154,7 @@ void wcomm_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
     }
 }
 
-void wcomm_executeStopCommand(WarContext* context)
+void wcmd_executeStopCommand(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -173,7 +173,7 @@ void wcomm_executeStopCommand(WarContext* context)
     }
 }
 
-void wcomm_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -196,7 +196,7 @@ void wcomm_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, v
             {
                 if (wu_isCarryingResources(entity))
                 {
-                    // find the closest town hall to wcomm_deliver the gold
+                    // find the closest town hall to wcmd_deliver the gold
                     WarRace race = wu_getUnitRace(entity);
                     WarUnitType townHallType = wu_getTownHallOfRace(race);
                     WarEntity* townHall = we_findClosestUnitOfType(context, entity, townHallType);
@@ -238,7 +238,7 @@ void wcomm_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, v
     }
 }
 
-void wcomm_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
+void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -286,7 +286,7 @@ void wcomm_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
     }
 }
 
-void wcomm_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
+void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -302,7 +302,7 @@ void wcomm_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 
         if (wu_isFriendlyUnit(context, entity))
         {
-            // the unit can't wcomm_repair itself
+            // the unit can't wcmd_repair itself
             if (entity->id == targetEntity->id)
             {
                 continue;
@@ -324,7 +324,7 @@ void wcomm_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
     }
 }
 
-void wcomm_executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
+void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
 {
     WarMap* map = context->map;
 
@@ -376,7 +376,7 @@ void wcomm_executeSummonCommand(WarContext* context, WarUnitCommandType summonTy
     }
 }
 
-void wcomm_executeRainOfFireCommand(WarContext* context, vec2 targetTile)
+void wcmd_executeRainOfFireCommand(WarContext* context, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -395,7 +395,7 @@ void wcomm_executeRainOfFireCommand(WarContext* context, vec2 targetTile)
     }
 }
 
-void wcomm_executePoisonCloudCommand(WarContext* context, vec2 targetTile)
+void wcmd_executePoisonCloudCommand(WarContext* context, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -414,7 +414,7 @@ void wcomm_executePoisonCloudCommand(WarContext* context, vec2 targetTile)
     }
 }
 
-void wcomm_executeHealingCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -440,7 +440,7 @@ void wcomm_executeHealingCommand(WarContext* context, WarEntity* targetEntity, v
     }
 }
 
-void wcomm_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -462,7 +462,7 @@ void wcomm_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntit
     }
 }
 
-void wcomm_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -484,7 +484,7 @@ void wcomm_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntit
     }
 }
 
-void wcomm_executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
+void wcmd_executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -503,7 +503,7 @@ void wcomm_executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
     }
 }
 
-void wcomm_executeSightCommand(WarContext* context, vec2 targetTile)
+void wcmd_executeSightCommand(WarContext* context, vec2 targetTile)
 {
     WarMap* map = context->map;
 
@@ -523,7 +523,7 @@ void wcomm_executeSightCommand(WarContext* context, vec2 targetTile)
     }
 }
 
-void wcomm_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -541,7 +541,7 @@ void wcomm_executeAttackCommand(WarContext* context, WarEntity* targetEntity, ve
         {
             if (targetEntity)
             {
-                // the unit can't wcomm_attack itself
+                // the unit can't wcmd_attack itself
                 if (entity->id != targetEntity->id)
                 {
                     if (wu_canAttack(context, entity, targetEntity))
@@ -574,7 +574,7 @@ void wcomm_executeAttackCommand(WarContext* context, WarEntity* targetEntity, ve
     }
 }
 
-bool wcomm_executeCommand(WarContext* context)
+bool wcmd_executeCommand(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -596,7 +596,7 @@ bool wcomm_executeCommand(WarContext* context)
                 {
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
 
-                    wcomm_executeMoveCommand(context, targetPoint);
+                    wcmd_executeMoveCommand(context, targetPoint);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -605,7 +605,7 @@ bool wcomm_executeCommand(WarContext* context)
                 {
                     vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
                     vec2 targetPoint = wmap_vec2TileToMapCoordinates(targetTile, true);
-                    wcomm_executeMoveCommand(context, targetPoint);
+                    wcmd_executeMoveCommand(context, targetPoint);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -617,7 +617,7 @@ bool wcomm_executeCommand(WarContext* context)
 
         case WAR_COMMAND_STOP:
         {
-            wcomm_executeStopCommand(context);
+            wcmd_executeStopCommand(context);
 
             command->type = WAR_COMMAND_NONE;
             return true;
@@ -639,15 +639,15 @@ bool wcomm_executeCommand(WarContext* context)
                         if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                         {
                             if (!isUnitUnknown(map, targetEntity))
-                                wcomm_executeHarvestCommand(context, targetEntity, targetTile);
+                                wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             else
-                                wcomm_executeMoveCommand(context, targetPoint);
+                                wcmd_executeMoveCommand(context, targetPoint);
                         }
                         else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
                             if (!isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
-                                wcomm_executeHarvestCommand(context, targetEntity, targetTile);
+                                wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             }
                             else
                             {
@@ -655,11 +655,11 @@ bool wcomm_executeCommand(WarContext* context)
                                 if (tree)
                                 {
                                     targetTile = vec2i(tree->tilex, tree->tiley);
-                                    wcomm_executeHarvestCommand(context, targetEntity, targetTile);
+                                    wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                                 }
                                 else
                                 {
-                                    wcomm_executeMoveCommand(context, targetPoint);
+                                    wcmd_executeMoveCommand(context, targetPoint);
                                 }
                             }
                         }
@@ -675,7 +675,7 @@ bool wcomm_executeCommand(WarContext* context)
 
         case WAR_COMMAND_DELIVER:
         {
-            wcomm_executeDeliverCommand(context, NULL);
+            wcmd_executeDeliverCommand(context, NULL);
 
             command->type = WAR_COMMAND_NONE;
             return true;
@@ -696,7 +696,7 @@ bool wcomm_executeCommand(WarContext* context)
                         WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                         if (targetEntity && wu_isBuildingUnit(targetEntity))
                         {
-                            wcomm_executeRepairCommand(context, targetEntity);
+                            wcmd_executeRepairCommand(context, targetEntity);
                         }
                     }
 
@@ -723,19 +723,19 @@ bool wcomm_executeCommand(WarContext* context)
                     {
                         if (isUnit(targetEntity))
                         {
-                            // if the target entity is not visible or partially visible, just wcomm_attack to the point
+                            // if the target entity is not visible or partially visible, just wcmd_attack to the point
                             if (isUnitUnknown(map, targetEntity))
                                 targetEntity = NULL;
                         }
                         else if (isWall(targetEntity))
                         {
-                            // if the target wall piece is not visible, just wcomm_attack to the point
+                            // if the target wall piece is not visible, just wcmd_attack to the point
                             if (!isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                                 targetEntity = NULL;
                         }
                     }
 
-                    wcomm_executeAttackCommand(context, targetEntity, targetTile);
+                    wcmd_executeAttackCommand(context, targetEntity, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -743,7 +743,7 @@ bool wcomm_executeCommand(WarContext* context)
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
-                    wcomm_executeAttackCommand(context, NULL, targetTile);
+                    wcmd_executeAttackCommand(context, NULL, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -988,7 +988,7 @@ bool wcomm_executeCommand(WarContext* context)
         case WAR_COMMAND_SUMMON_DAEMON:
         case WAR_COMMAND_SUMMON_WATER_ELEMENTAL:
         {
-            wcomm_executeSummonCommand(context, command->type);
+            wcmd_executeSummonCommand(context, command->type);
 
             command->type = WAR_COMMAND_NONE;
             return true;
@@ -1003,7 +1003,7 @@ bool wcomm_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
-                    wcomm_executeRainOfFireCommand(context, targetTile);
+                    wcmd_executeRainOfFireCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1011,7 +1011,7 @@ bool wcomm_executeCommand(WarContext* context)
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
-                    wcomm_executeRainOfFireCommand(context, targetTile);
+                    wcmd_executeRainOfFireCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1030,7 +1030,7 @@ bool wcomm_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
-                    wcomm_executePoisonCloudCommand(context, targetTile);
+                    wcmd_executePoisonCloudCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1038,7 +1038,7 @@ bool wcomm_executeCommand(WarContext* context)
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
-                    wcomm_executePoisonCloudCommand(context, targetTile);
+                    wcmd_executePoisonCloudCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1060,7 +1060,7 @@ bool wcomm_executeCommand(WarContext* context)
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-                    wcomm_executeHealingCommand(context, targetEntity, targetTile);
+                    wcmd_executeHealingCommand(context, targetEntity, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1082,7 +1082,7 @@ bool wcomm_executeCommand(WarContext* context)
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-                    wcomm_executeInvisiblityCommand(context, targetEntity, targetTile);
+                    wcmd_executeInvisiblityCommand(context, targetEntity, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1104,7 +1104,7 @@ bool wcomm_executeCommand(WarContext* context)
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-                    wcomm_executeUnholyArmorCommand(context, targetEntity, targetTile);
+                    wcmd_executeUnholyArmorCommand(context, targetEntity, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1123,7 +1123,7 @@ bool wcomm_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
-                    wcomm_executeRaiseDeadCommand(context, targetTile);
+                    wcmd_executeRaiseDeadCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1143,7 +1143,7 @@ bool wcomm_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
                     vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
-                    wcomm_executeSightCommand(context, targetTile);
+                    wcmd_executeSightCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1151,7 +1151,7 @@ bool wcomm_executeCommand(WarContext* context)
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
-                    wcomm_executeSightCommand(context, targetTile);
+                    wcmd_executeSightCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
                     return true;
@@ -1179,7 +1179,7 @@ bool wcomm_executeCommand(WarContext* context)
 }
 
 // train units
-void trainUnit(WarContext* context, WarUnitCommandType commandType, WarUnitType unitToTrain, WarUnitType buildingUnit)
+void wcmd_trainUnit(WarContext* context, WarUnitCommandType commandType, WarUnitType unitToTrain, WarUnitType buildingUnit)
 {
     WarMap* map = context->map;
 
@@ -1188,92 +1188,92 @@ void trainUnit(WarContext* context, WarUnitCommandType commandType, WarUnitType 
     map->command.train.buildingUnit = buildingUnit;
 }
 
-void wcomm_trainFootman(WarContext* context, WarEntity* entity)
+void wcmd_trainFootman(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_FOOTMAN, WAR_UNIT_FOOTMAN, WAR_UNIT_BARRACKS_HUMANS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_FOOTMAN, WAR_UNIT_FOOTMAN, WAR_UNIT_BARRACKS_HUMANS);
 }
 
-void wcomm_trainGrunt(WarContext* context, WarEntity* entity)
+void wcmd_trainGrunt(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_GRUNT, WAR_UNIT_GRUNT, WAR_UNIT_BARRACKS_ORCS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_GRUNT, WAR_UNIT_GRUNT, WAR_UNIT_BARRACKS_ORCS);
 }
 
-void wcomm_trainPeasant(WarContext* context, WarEntity* entity)
+void wcmd_trainPeasant(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_PEASANT, WAR_UNIT_PEASANT, WAR_UNIT_TOWNHALL_HUMANS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_PEASANT, WAR_UNIT_PEASANT, WAR_UNIT_TOWNHALL_HUMANS);
 }
 
-void wcomm_trainPeon(WarContext* context, WarEntity* entity)
+void wcmd_trainPeon(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_PEON, WAR_UNIT_PEON, WAR_UNIT_TOWNHALL_ORCS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_PEON, WAR_UNIT_PEON, WAR_UNIT_TOWNHALL_ORCS);
 }
 
-void wcomm_trainHumanCatapult(WarContext* context, WarEntity* entity)
+void wcmd_trainHumanCatapult(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_CATAPULT_HUMANS, WAR_UNIT_CATAPULT_HUMANS, WAR_UNIT_BARRACKS_HUMANS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_CATAPULT_HUMANS, WAR_UNIT_CATAPULT_HUMANS, WAR_UNIT_BARRACKS_HUMANS);
 }
 
-void wcomm_trainOrcCatapult(WarContext* context, WarEntity* entity)
+void wcmd_trainOrcCatapult(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_CATAPULT_ORCS, WAR_UNIT_CATAPULT_ORCS, WAR_UNIT_BARRACKS_ORCS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_CATAPULT_ORCS, WAR_UNIT_CATAPULT_ORCS, WAR_UNIT_BARRACKS_ORCS);
 }
 
-void wcomm_trainKnight(WarContext* context, WarEntity* entity)
+void wcmd_trainKnight(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_KNIGHT, WAR_UNIT_KNIGHT, WAR_UNIT_BARRACKS_HUMANS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_KNIGHT, WAR_UNIT_KNIGHT, WAR_UNIT_BARRACKS_HUMANS);
 }
 
-void wcomm_trainRaider(WarContext* context, WarEntity* entity)
+void wcmd_trainRaider(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_RAIDER, WAR_UNIT_RAIDER, WAR_UNIT_BARRACKS_ORCS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_RAIDER, WAR_UNIT_RAIDER, WAR_UNIT_BARRACKS_ORCS);
 }
 
-void wcomm_trainArcher(WarContext* context, WarEntity* entity)
+void wcmd_trainArcher(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_ARCHER, WAR_UNIT_ARCHER, WAR_UNIT_BARRACKS_HUMANS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_ARCHER, WAR_UNIT_ARCHER, WAR_UNIT_BARRACKS_HUMANS);
 }
 
-void wcomm_trainSpearman(WarContext* context, WarEntity* entity)
+void wcmd_trainSpearman(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_SPEARMAN, WAR_UNIT_SPEARMAN, WAR_UNIT_BARRACKS_ORCS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_SPEARMAN, WAR_UNIT_SPEARMAN, WAR_UNIT_BARRACKS_ORCS);
 }
 
-void wcomm_trainConjurer(WarContext* context, WarEntity* entity)
+void wcmd_trainConjurer(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_CONJURER, WAR_UNIT_CONJURER, WAR_UNIT_TOWER_HUMANS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_CONJURER, WAR_UNIT_CONJURER, WAR_UNIT_TOWER_HUMANS);
 }
 
-void wcomm_trainWarlock(WarContext* context, WarEntity* entity)
+void wcmd_trainWarlock(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_WARLOCK, WAR_UNIT_WARLOCK, WAR_UNIT_TOWER_ORCS);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_WARLOCK, WAR_UNIT_WARLOCK, WAR_UNIT_TOWER_ORCS);
 }
 
-void wcomm_trainCleric(WarContext* context, WarEntity* entity)
+void wcmd_trainCleric(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_CLERIC, WAR_UNIT_CLERIC, WAR_UNIT_CHURCH);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_CLERIC, WAR_UNIT_CLERIC, WAR_UNIT_CHURCH);
 }
 
-void wcomm_trainNecrolyte(WarContext* context, WarEntity* entity)
+void wcmd_trainNecrolyte(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    trainUnit(context, WAR_COMMAND_TRAIN_NECROLYTE, WAR_UNIT_NECROLYTE, WAR_UNIT_TEMPLE);
+    wcmd_trainUnit(context, WAR_COMMAND_TRAIN_NECROLYTE, WAR_UNIT_NECROLYTE, WAR_UNIT_TEMPLE);
 }
 
 // upgrades
-void upgradeUpgrade(WarContext* context, WarUnitCommandType commandType, WarUpgradeType upgradeToBuild, WarUnitType buildingUnit)
+void wcmd_upgradeUpgrade(WarContext* context, WarUnitCommandType commandType, WarUpgradeType upgradeToBuild, WarUnitType buildingUnit)
 {
     WarMap* map = context->map;
 
@@ -1282,128 +1282,128 @@ void upgradeUpgrade(WarContext* context, WarUnitCommandType commandType, WarUpgr
     map->command.upgrade.buildingUnit = buildingUnit;
 }
 
-void wcomm_upgradeSwords(WarContext* context, WarEntity* entity)
+void wcmd_upgradeSwords(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SWORDS, WAR_UPGRADE_SWORDS, WAR_UNIT_BLACKSMITH_HUMANS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SWORDS, WAR_UPGRADE_SWORDS, WAR_UNIT_BLACKSMITH_HUMANS);
 }
 
-void wcomm_upgradeAxes(WarContext* context, WarEntity* entity)
+void wcmd_upgradeAxes(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_AXES, WAR_UPGRADE_AXES, WAR_UNIT_BLACKSMITH_ORCS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_AXES, WAR_UPGRADE_AXES, WAR_UNIT_BLACKSMITH_ORCS);
 }
 
-void wcomm_upgradeHumanShields(WarContext* context, WarEntity* entity)
+void wcmd_upgradeHumanShields(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SHIELD_HUMANS, WAR_UPGRADE_SHIELD, WAR_UNIT_BLACKSMITH_HUMANS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SHIELD_HUMANS, WAR_UPGRADE_SHIELD, WAR_UNIT_BLACKSMITH_HUMANS);
 }
 
-void wcomm_upgradeOrcsShields(WarContext* context, WarEntity* entity)
+void wcmd_upgradeOrcsShields(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SHIELD_ORCS, WAR_UPGRADE_SHIELD, WAR_UNIT_BLACKSMITH_ORCS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SHIELD_ORCS, WAR_UPGRADE_SHIELD, WAR_UNIT_BLACKSMITH_ORCS);
 }
 
-void wcomm_upgradeArrows(WarContext* context, WarEntity* entity)
+void wcmd_upgradeArrows(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_ARROWS, WAR_UPGRADE_ARROWS, WAR_UNIT_LUMBERMILL_HUMANS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_ARROWS, WAR_UPGRADE_ARROWS, WAR_UNIT_LUMBERMILL_HUMANS);
 }
 
-void wcomm_upgradeSpears(WarContext* context, WarEntity* entity)
+void wcmd_upgradeSpears(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SPEARS, WAR_UPGRADE_SPEARS, WAR_UNIT_LUMBERMILL_ORCS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SPEARS, WAR_UPGRADE_SPEARS, WAR_UNIT_LUMBERMILL_ORCS);
 }
 
-void wcomm_upgradeHorses(WarContext* context, WarEntity* entity)
+void wcmd_upgradeHorses(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_HORSES, WAR_UPGRADE_HORSES, WAR_UNIT_STABLE);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_HORSES, WAR_UPGRADE_HORSES, WAR_UNIT_STABLE);
 }
 
-void wcomm_upgradeWolves(WarContext* context, WarEntity* entity)
+void wcmd_upgradeWolves(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_WOLVES, WAR_UPGRADE_WOLVES, WAR_UNIT_KENNEL);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_WOLVES, WAR_UPGRADE_WOLVES, WAR_UNIT_KENNEL);
 }
 
-void wcomm_upgradeScorpions(WarContext* context, WarEntity* entity)
+void wcmd_upgradeScorpions(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SCORPION, WAR_UPGRADE_SCORPIONS, WAR_UNIT_TOWER_HUMANS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SCORPION, WAR_UPGRADE_SCORPIONS, WAR_UNIT_TOWER_HUMANS);
 }
 
-void wcomm_upgradeSpiders(WarContext* context, WarEntity* entity)
+void wcmd_upgradeSpiders(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SPIDER, WAR_UPGRADE_SPIDERS, WAR_UNIT_TOWER_ORCS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_SPIDER, WAR_UPGRADE_SPIDERS, WAR_UNIT_TOWER_ORCS);
 }
 
-void wcomm_upgradeRainOfFire(WarContext* context, WarEntity* entity)
+void wcmd_upgradeRainOfFire(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_RAIN_OF_FIRE, WAR_UPGRADE_RAIN_OF_FIRE, WAR_UNIT_TOWER_HUMANS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_RAIN_OF_FIRE, WAR_UPGRADE_RAIN_OF_FIRE, WAR_UNIT_TOWER_HUMANS);
 }
 
-void wcomm_upgradePoisonCloud(WarContext* context, WarEntity* entity)
+void wcmd_upgradePoisonCloud(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_POISON_CLOUD, WAR_UPGRADE_POISON_CLOUD, WAR_UNIT_TOWER_ORCS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_POISON_CLOUD, WAR_UPGRADE_POISON_CLOUD, WAR_UNIT_TOWER_ORCS);
 }
 
-void wcomm_upgradeWaterElemental(WarContext* context, WarEntity* entity)
+void wcmd_upgradeWaterElemental(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_WATER_ELEMENTAL, WAR_UPGRADE_WATER_ELEMENTAL, WAR_UNIT_TOWER_HUMANS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_WATER_ELEMENTAL, WAR_UPGRADE_WATER_ELEMENTAL, WAR_UNIT_TOWER_HUMANS);
 }
 
-void wcomm_upgradeDaemon(WarContext* context, WarEntity* entity)
+void wcmd_upgradeDaemon(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_DAEMON, WAR_UPGRADE_DAEMON, WAR_UNIT_TOWER_ORCS);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_DAEMON, WAR_UPGRADE_DAEMON, WAR_UNIT_TOWER_ORCS);
 }
 
-void wcomm_upgradeHealing(WarContext* context, WarEntity* entity)
+void wcmd_upgradeHealing(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_HEALING, WAR_UPGRADE_HEALING, WAR_UNIT_CHURCH);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_HEALING, WAR_UPGRADE_HEALING, WAR_UNIT_CHURCH);
 }
 
-void wcomm_upgradeRaiseDead(WarContext* context, WarEntity* entity)
+void wcmd_upgradeRaiseDead(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_RAISE_DEAD, WAR_UPGRADE_RAISE_DEAD, WAR_UNIT_TEMPLE);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_RAISE_DEAD, WAR_UPGRADE_RAISE_DEAD, WAR_UNIT_TEMPLE);
 }
 
-void wcomm_upgradeFarSight(WarContext* context, WarEntity* entity)
+void wcmd_upgradeFarSight(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_FAR_SIGHT, WAR_UPGRADE_FAR_SIGHT, WAR_UNIT_CHURCH);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_FAR_SIGHT, WAR_UPGRADE_FAR_SIGHT, WAR_UNIT_CHURCH);
 }
 
-void wcomm_upgradeDarkVision(WarContext* context, WarEntity* entity)
+void wcmd_upgradeDarkVision(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_DARK_VISION, WAR_UPGRADE_DARK_VISION, WAR_UNIT_TEMPLE);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_DARK_VISION, WAR_UPGRADE_DARK_VISION, WAR_UNIT_TEMPLE);
 }
 
-void wcomm_upgradeInvisibility(WarContext* context, WarEntity* entity)
+void wcmd_upgradeInvisibility(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_INVISIBILITY, WAR_UPGRADE_INVISIBILITY, WAR_UNIT_CHURCH);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_INVISIBILITY, WAR_UPGRADE_INVISIBILITY, WAR_UNIT_CHURCH);
 }
 
-void wcomm_upgradeUnholyArmor(WarContext* context, WarEntity* entity)
+void wcmd_upgradeUnholyArmor(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    upgradeUpgrade(context, WAR_COMMAND_UPGRADE_UNHOLY_ARMOR, WAR_UPGRADE_UNHOLY_ARMOR, WAR_UNIT_TEMPLE);
+    wcmd_upgradeUpgrade(context, WAR_COMMAND_UPGRADE_UNHOLY_ARMOR, WAR_UPGRADE_UNHOLY_ARMOR, WAR_UNIT_TEMPLE);
 }
 
-// wcomm_cancel
-void wcomm_cancel(WarContext* context, WarEntity* entity)
+// wcmd_cancel
+void wcmd_cancel(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -1456,7 +1456,7 @@ void wcomm_cancel(WarContext* context, WarEntity* entity)
 }
 
 // basic
-void wcomm_move(WarContext* context, WarEntity* entity)
+void wcmd_move(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1464,7 +1464,7 @@ void wcomm_move(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_MOVE;
 }
 
-void wcomm_stop(WarContext* context, WarEntity* entity)
+void wcmd_stop(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1472,7 +1472,7 @@ void wcomm_stop(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_STOP;
 }
 
-void wcomm_harvest(WarContext* context, WarEntity* entity)
+void wcmd_harvest(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1480,7 +1480,7 @@ void wcomm_harvest(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_HARVEST;
 }
 
-void wcomm_deliver(WarContext* context, WarEntity* entity)
+void wcmd_deliver(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1488,7 +1488,7 @@ void wcomm_deliver(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_DELIVER;
 }
 
-void wcomm_repair(WarContext* context, WarEntity* entity)
+void wcmd_repair(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1496,7 +1496,7 @@ void wcomm_repair(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_REPAIR;
 }
 
-void wcomm_attack(WarContext* context, WarEntity* entity)
+void wcmd_attack(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1504,7 +1504,7 @@ void wcomm_attack(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_ATTACK;
 }
 
-void wcomm_buildBasic(WarContext* context, WarEntity* entity)
+void wcmd_buildBasic(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1512,7 +1512,7 @@ void wcomm_buildBasic(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_BUILD_BASIC;
 }
 
-void wcomm_buildAdvanced(WarContext* context, WarEntity* entity)
+void wcmd_buildAdvanced(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1520,7 +1520,7 @@ void wcomm_buildAdvanced(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_BUILD_ADVANCED;
 }
 
-void buildBuilding(WarContext* context, WarUnitCommandType commandType, WarUnitType buildingToBuild)
+void wcmd_buildBuilding(WarContext* context, WarUnitCommandType commandType, WarUnitType buildingToBuild)
 {
     WarMap* map = context->map;
 
@@ -1528,103 +1528,103 @@ void buildBuilding(WarContext* context, WarUnitCommandType commandType, WarUnitT
     map->command.build.buildingToBuild = buildingToBuild;
 }
 
-void wcomm_buildFarmHumans(WarContext* context, WarEntity* entity)
+void wcmd_buildFarmHumans(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_FARM_HUMANS, WAR_UNIT_FARM_HUMANS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_FARM_HUMANS, WAR_UNIT_FARM_HUMANS);
 }
 
-void wcomm_buildFarmOrcs(WarContext* context, WarEntity* entity)
+void wcmd_buildFarmOrcs(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_FARM_ORCS, WAR_UNIT_FARM_ORCS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_FARM_ORCS, WAR_UNIT_FARM_ORCS);
 }
 
-void wcomm_buildBarracksHumans(WarContext* context, WarEntity* entity)
+void wcmd_buildBarracksHumans(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_BARRACKS_HUMANS, WAR_UNIT_BARRACKS_HUMANS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_BARRACKS_HUMANS, WAR_UNIT_BARRACKS_HUMANS);
 }
 
-void wcomm_buildBarracksOrcs(WarContext* context, WarEntity* entity)
+void wcmd_buildBarracksOrcs(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_BARRACKS_ORCS, WAR_UNIT_BARRACKS_ORCS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_BARRACKS_ORCS, WAR_UNIT_BARRACKS_ORCS);
 }
 
-void wcomm_buildChurch(WarContext* context, WarEntity* entity)
+void wcmd_buildChurch(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_CHURCH, WAR_UNIT_CHURCH);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_CHURCH, WAR_UNIT_CHURCH);
 }
 
-void wcomm_buildTemple(WarContext* context, WarEntity* entity)
+void wcmd_buildTemple(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_TEMPLE, WAR_UNIT_TEMPLE);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_TEMPLE, WAR_UNIT_TEMPLE);
 }
 
-void wcomm_buildTowerHumans(WarContext* context, WarEntity* entity)
+void wcmd_buildTowerHumans(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_TOWER_HUMANS, WAR_UNIT_TOWER_HUMANS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_TOWER_HUMANS, WAR_UNIT_TOWER_HUMANS);
 }
 
-void wcomm_buildTowerOrcs(WarContext* context, WarEntity* entity)
+void wcmd_buildTowerOrcs(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_TOWER_ORCS, WAR_UNIT_TOWER_ORCS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_TOWER_ORCS, WAR_UNIT_TOWER_ORCS);
 }
 
-void wcomm_buildTownHallHumans(WarContext* context, WarEntity* entity)
+void wcmd_buildTownHallHumans(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_TOWNHALL_HUMANS, WAR_UNIT_TOWNHALL_HUMANS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_TOWNHALL_HUMANS, WAR_UNIT_TOWNHALL_HUMANS);
 }
 
-void wcomm_buildTownHallOrcs(WarContext* context, WarEntity* entity)
+void wcmd_buildTownHallOrcs(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_TOWNHALL_ORCS, WAR_UNIT_TOWNHALL_ORCS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_TOWNHALL_ORCS, WAR_UNIT_TOWNHALL_ORCS);
 }
 
-void wcomm_buildLumbermillHumans(WarContext* context, WarEntity* entity)
+void wcmd_buildLumbermillHumans(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_LUMBERMILL_HUMANS, WAR_UNIT_LUMBERMILL_HUMANS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_LUMBERMILL_HUMANS, WAR_UNIT_LUMBERMILL_HUMANS);
 }
 
-void wcomm_buildLumbermillOrcs(WarContext* context, WarEntity* entity)
+void wcmd_buildLumbermillOrcs(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_LUMBERMILL_ORCS, WAR_UNIT_LUMBERMILL_ORCS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_LUMBERMILL_ORCS, WAR_UNIT_LUMBERMILL_ORCS);
 }
 
-void wcomm_buildStable(WarContext* context, WarEntity* entity)
+void wcmd_buildStable(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_STABLE, WAR_UNIT_STABLE);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_STABLE, WAR_UNIT_STABLE);
 }
 
-void wcomm_buildKennel(WarContext* context, WarEntity* entity)
+void wcmd_buildKennel(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_KENNEL, WAR_UNIT_KENNEL);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_KENNEL, WAR_UNIT_KENNEL);
 }
 
-void wcomm_buildBlacksmithHumans(WarContext* context, WarEntity* entity)
+void wcmd_buildBlacksmithHumans(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_HUMANS, WAR_UNIT_BLACKSMITH_HUMANS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_HUMANS, WAR_UNIT_BLACKSMITH_HUMANS);
 }
 
-void wcomm_buildBlacksmithOrcs(WarContext* context, WarEntity* entity)
+void wcmd_buildBlacksmithOrcs(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
-    buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_ORCS, WAR_UNIT_BLACKSMITH_ORCS);
+    wcmd_buildBuilding(context, WAR_COMMAND_BUILD_BLACKSMITH_ORCS, WAR_UNIT_BLACKSMITH_ORCS);
 }
 
-void wcomm_buildWall(WarContext* context, WarEntity* entity)
+void wcmd_buildWall(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1632,7 +1632,7 @@ void wcomm_buildWall(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_BUILD_WALL;
 }
 
-void wcomm_buildRoad(WarContext* context, WarEntity* entity)
+void wcmd_buildRoad(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1641,7 +1641,7 @@ void wcomm_buildRoad(WarContext* context, WarEntity* entity)
 }
 
 // spells
-void wcomm_castRainOfFire(WarContext* context, WarEntity* entity)
+void wcmd_castRainOfFire(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1649,7 +1649,7 @@ void wcomm_castRainOfFire(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
 }
 
-void wcomm_castPoisonCloud(WarContext* context, WarEntity* entity)
+void wcmd_castPoisonCloud(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1657,7 +1657,7 @@ void wcomm_castPoisonCloud(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SPELL_POISON_CLOUD;
 }
 
-void wcomm_castHeal(WarContext* context, WarEntity* entity)
+void wcmd_castHeal(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1665,7 +1665,7 @@ void wcomm_castHeal(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SPELL_HEALING;
 }
 
-void wcomm_castFarSight(WarContext* context, WarEntity* entity)
+void wcmd_castFarSight(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1673,7 +1673,7 @@ void wcomm_castFarSight(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SPELL_FAR_SIGHT;
 }
 
-void wcomm_castDarkVision(WarContext* context, WarEntity* entity)
+void wcmd_castDarkVision(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1681,7 +1681,7 @@ void wcomm_castDarkVision(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SPELL_DARK_VISION;
 }
 
-void wcomm_castInvisibility(WarContext* context, WarEntity* entity)
+void wcmd_castInvisibility(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1689,7 +1689,7 @@ void wcomm_castInvisibility(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SPELL_INVISIBILITY;
 }
 
-void wcomm_castUnHolyArmor(WarContext* context, WarEntity* entity)
+void wcmd_castUnHolyArmor(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1697,7 +1697,7 @@ void wcomm_castUnHolyArmor(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
 }
 
-void wcomm_castRaiseDead(WarContext* context, WarEntity* entity)
+void wcmd_castRaiseDead(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1706,7 +1706,7 @@ void wcomm_castRaiseDead(WarContext* context, WarEntity* entity)
 }
 
 // summons
-void wcomm_summonSpider(WarContext* context, WarEntity* entity)
+void wcmd_summonSpider(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1714,7 +1714,7 @@ void wcomm_summonSpider(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SUMMON_SPIDER;
 }
 
-void wcomm_summonScorpion(WarContext* context, WarEntity* entity)
+void wcmd_summonScorpion(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1722,7 +1722,7 @@ void wcomm_summonScorpion(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SUMMON_SCORPION;
 }
 
-void wcomm_summonDaemon(WarContext* context, WarEntity* entity)
+void wcmd_summonDaemon(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;
@@ -1730,7 +1730,7 @@ void wcomm_summonDaemon(WarContext* context, WarEntity* entity)
     map->command.type = WAR_COMMAND_SUMMON_DAEMON;
 }
 
-void wcomm_summonWaterElemental(WarContext* context, WarEntity* entity)
+void wcmd_summonWaterElemental(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
     WarMap* map = context->map;

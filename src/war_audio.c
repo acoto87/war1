@@ -1,4 +1,4 @@
-﻿#include "war_audio.h"
+#include "war_audio.h"
 
 #include <assert.h>
 
@@ -237,7 +237,7 @@ bool wa_playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* o
                     break;
                 }
 
-                // wcomm_stop a note
+                // wcmd_stop a note
                 case TML_NOTE_OFF:
                 {
                     s8 key = midiMessage->key;

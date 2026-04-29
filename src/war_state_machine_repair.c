@@ -1,9 +1,9 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 WarState* wst_createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
 {
     WarState* state = wst_createState(context, entity, WAR_STATE_REPAIR);
-    state->wcomm_repair.buildingId = buildingId;
+    state->wcmd_repair.buildingId = buildingId;
     return state;
 }
 
@@ -26,7 +26,7 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = wu_getUnitStats(unit->type);
 
-    WarEntity* building = we_findEntity(context, state->wcomm_repair.buildingId);
+    WarEntity* building = we_findEntity(context, state->wcmd_repair.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))

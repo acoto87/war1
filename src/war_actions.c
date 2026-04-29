@@ -1,4 +1,4 @@
-﻿#include "war_actions.h"
+#include "war_actions.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -22,7 +22,7 @@ typedef struct
     s32 deathFrames[5];
 } WarUnitFrameNumbers;
 
-static WarUnitFrameNumbers getFrameNumbers(s32 nbdir, s32 initCounter[])
+static WarUnitFrameNumbers wact_getFrameNumbers(s32 nbdir, s32 initCounter[])
 {
     initCounter[0]--;
 
@@ -91,8 +91,8 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
     // 4 frames a b c d   => a b a 0 d c d 0
     // 5 frames a b c d e => a b c b a e d c d e
     //
-    // This code is used with a previous steps calling 'getFrameNumbers'
-    // and construct the base frame sequences for walk, wcomm_attack and death animations.
+    // This code is used with a previous steps calling 'wact_getFrameNumbers'
+    // and construct the base frame sequences for walk, wcmd_attack and death animations.
     //
     // Is this way because of the layout of the spritesheets of the units:
     // (in reality is 5 frames per row, because of the directions of the units,
@@ -100,18 +100,18 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
     //
     // footman spritesheet:
     // 1 frame of walk
-    // 1 frame of wcomm_attack
+    // 1 frame of wcmd_attack
     // 1 frame of death
     // 1 frame of walk
-    // 1 frame of wcomm_attack
+    // 1 frame of wcmd_attack
     // 1 frame of death
     // 1 frame of walk
-    // 1 frame of wcomm_attack
+    // 1 frame of wcmd_attack
     // 1 frame of death (death anim is only 3 frames for the footman)
     // 1 frame of walk
-    // 1 frame of wcomm_attack
+    // 1 frame of wcmd_attack
     // 1 frame of walk
-    // 1 frame of wcomm_attack
+    // 1 frame of wcmd_attack
     //
     // other spritesheets are similar, just with different frames count per animations
 
@@ -209,7 +209,7 @@ static WarUnitActionDef createAttackActionDef(s32 nframes, s32 frames[], s32 att
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, attackSpeed);
     }
 
-    // make sure we don't wcomm_attack faster just because we have fewer frames
+    // make sure we don't wcmd_attack faster just because we have fewer frames
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * attackSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);
@@ -242,7 +242,7 @@ static WarUnitActionDef createRepairActionDef(s32 nframes, s32 frames[], s32 att
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, attackSpeed);
     }
 
-    // make sure we don't wcomm_attack faster just because we have fewer frames
+    // make sure we don't wcmd_attack faster just because we have fewer frames
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * attackSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);
@@ -276,7 +276,7 @@ static WarUnitActionDef createHarvestActionDef(s32 nframes, s32 frames[], s32 ha
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, harvestSpeed);
     }
 
-    // make sure we don't wcomm_attack faster just because we have fewer frames
+    // make sure we don't wcmd_attack faster just because we have fewer frames
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * harvestSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);
@@ -952,21 +952,21 @@ static void initOrcCorpseActionDefs(void)
 
 void wact_initUnitActionDefs(void)
 {
-    WarUnitFrameNumbers frameNumbers_5_5_5_5 = getFrameNumbers(5, arrayArg(s32, 5, 5, 5));
-    WarUnitFrameNumbers frameNumbers_5_5_5_4 = getFrameNumbers(5, arrayArg(s32, 5, 5, 4));
-    WarUnitFrameNumbers frameNumbers_5_5_5_3 = getFrameNumbers(5, arrayArg(s32, 5, 5, 3));
-    WarUnitFrameNumbers frameNumbers_5_5_4_5 = getFrameNumbers(5, arrayArg(s32, 5, 4, 5));
-    WarUnitFrameNumbers frameNumbers_5_5_4_4 = getFrameNumbers(5, arrayArg(s32, 5, 4, 4));
-    WarUnitFrameNumbers frameNumbers_5_5_4_3 = getFrameNumbers(5, arrayArg(s32, 5, 4, 3));
-    WarUnitFrameNumbers frameNumbers_5_5_3_2 = getFrameNumbers(5, arrayArg(s32, 5, 3, 2));
-    WarUnitFrameNumbers frameNumbers_5_5_2_3 = getFrameNumbers(5, arrayArg(s32, 5, 2, 3));
-    WarUnitFrameNumbers frameNumbers_5_3_5_3 = getFrameNumbers(5, arrayArg(s32, 3, 5, 3));
-    WarUnitFrameNumbers frameNumbers_5_2_5_3 = getFrameNumbers(5, arrayArg(s32, 2, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_5_5 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 5));
+    WarUnitFrameNumbers frameNumbers_5_5_5_4 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 4));
+    WarUnitFrameNumbers frameNumbers_5_5_5_3 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_4_5 = wact_getFrameNumbers(5, arrayArg(s32, 5, 4, 5));
+    WarUnitFrameNumbers frameNumbers_5_5_4_4 = wact_getFrameNumbers(5, arrayArg(s32, 5, 4, 4));
+    WarUnitFrameNumbers frameNumbers_5_5_4_3 = wact_getFrameNumbers(5, arrayArg(s32, 5, 4, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_3_2 = wact_getFrameNumbers(5, arrayArg(s32, 5, 3, 2));
+    WarUnitFrameNumbers frameNumbers_5_5_2_3 = wact_getFrameNumbers(5, arrayArg(s32, 5, 2, 3));
+    WarUnitFrameNumbers frameNumbers_5_3_5_3 = wact_getFrameNumbers(5, arrayArg(s32, 3, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_2_5_3 = wact_getFrameNumbers(5, arrayArg(s32, 2, 5, 3));
 
-    WarUnitFrameNumbers frameNumbers_5_4_3_3 = getFrameNumbers(5, arrayArg(s32, 4, 3, 3));
+    WarUnitFrameNumbers frameNumbers_5_4_3_3 = wact_getFrameNumbers(5, arrayArg(s32, 4, 3, 3));
     NOT_USED(frameNumbers_5_4_3_3);
 
-    WarUnitFrameNumbers frameNumbers_5_5_5_0 = getFrameNumbers(5, arrayArg(s32, 5, 5, 0));
+    WarUnitFrameNumbers frameNumbers_5_5_5_0 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 0));
 
     for (s32 i = 0; i < WAR_UNIT_COUNT; i++)
     {
@@ -1046,7 +1046,7 @@ s32 wact_getActionDuration(WarEntity* entity, WarUnitActionType type)
     return duration;
 }
 
-void resetAction(WarUnitAction* action)
+void wact_resetAction(WarUnitAction* action)
 {
     action->stepIndex = 0;
     action->status = WAR_ACTION_NOT_STARTED;
@@ -1076,7 +1076,7 @@ void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType ty
 
         if (reset)
         {
-            resetAction(action);
+            wact_resetAction(action);
         }
     }
     else
@@ -1104,7 +1104,7 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
 
     if (action->stepIndex < 0)
     {
-        resetAction(action);
+        wact_resetAction(action);
     }
 
     action->status = WAR_ACTION_RUNNING;

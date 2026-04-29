@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 WarState* wst_createMiningState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
 {
@@ -70,12 +70,12 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         we_removeSpriteComponent(context, entity);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingGoldResource));
 
-        // find the closest town hall to wcomm_deliver the gold
+        // find the closest town hall to wcmd_deliver the gold
         WarRace race = wu_getUnitRace(entity);
         WarUnitType townHallType = wu_getTownHallOfRace(race);
         WarEntity* townHall = we_findClosestUnitOfType(context, entity, townHallType);
 
-        // if the town hall doesn't exists (it could be under wcomm_attack and get destroyed), go idle
+        // if the town hall doesn't exists (it could be under wcmd_attack and get destroyed), go idle
         if (!townHall)
         {
             WarState* idleState = wst_createIdleState(context, entity, true);
