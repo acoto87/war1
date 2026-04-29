@@ -88,7 +88,7 @@ void updateSceneDownload(WarContext* context)
         }
         case WAR_SCENE_DOWNLOAD_DOWNLOADING:
         {
-            bool success = downloadFileFromUrl(context, wsv_fromCString(ONLINE_DEMO_DATAWAR_FILE_URL), wsv_fromCString(DATAWAR_FILE_PATH));
+            bool success = wnet_downloadFileFromUrl(context, wsv_fromCString(ONLINE_DEMO_DATAWAR_FILE_URL), wsv_fromCString(DATAWAR_FILE_PATH));
             if (success)
             {
                 WarEntity* downloadingText = findUIEntity(context, wsv_fromCString("txtDownloading"));
