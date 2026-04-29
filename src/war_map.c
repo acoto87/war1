@@ -1560,7 +1560,7 @@ void updateStatus(WarContext* context)
                     wcheat_applyCheat(context, wsv_fromString(&cheatStatus->text));
                 }
 
-                setCheatsPanelVisible(context, false);
+                wcp_setCheatsPanelVisible(context, false);
                 return;
             }
 
@@ -1637,7 +1637,7 @@ void updateStatus(WarContext* context)
 
             if (wasKeyPressed(input, WAR_KEY_ENTER))
             {
-                setCheatsPanelVisible(context, true);
+                wcp_setCheatsPanelVisible(context, true);
             }
         }
     }

@@ -48,8 +48,8 @@ void wcheat_applyRainOfFireCheat(WarContext* context, StringView argument);
 void wcheat_applyAddUnitCheat(WarContext* context, StringView argument);
 
 // ui
-void setCheatsPanelVisible(WarContext* context, bool visible);
-void setCheatsFeedback(WarContext* context, String feedbackText);
-void createCheatsPanel(WarContext* context);
-void setCheatText(WarContext* context, String text);
-void updateCheatsPanel(WarContext* context);
+void wcp_setCheatsPanelVisible(WarContext* context, bool visible);
+void wcp_setCheatsFeedback(WarContext* context, String feedbackText);
+void wcp_createCheatsPanel(WarContext* context);
+void wcp_setCheatText(WarContext* context, String text);
+void wcp_updateCheatsPanel(WarContext* context);

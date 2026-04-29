@@ -9,7 +9,7 @@
 #include "war_font.h"
 #include "war_ui.h"
 
-void setCheatsPanelVisible(WarContext* context, bool visible)
+void wcp_setCheatsPanelVisible(WarContext* context, bool visible)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -32,7 +32,7 @@ void setCheatsPanelVisible(WarContext* context, bool visible)
     }
 }
 
-void setCheatsFeedback(WarContext* context, String feedbackText)
+void wcp_setCheatsFeedback(WarContext* context, String feedbackText)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -60,7 +60,7 @@ void setCheatsFeedback(WarContext* context, String feedbackText)
     }
 }
 
-void createCheatsPanel(WarContext* context)
+void wcp_createCheatsPanel(WarContext* context)
 {
     WarScene* scene = context->scene;
     assert(scene);
@@ -89,7 +89,7 @@ void createCheatsPanel(WarContext* context)
     setUIEntityStatus(uiEntity, false);
 }
 
-void setCheatText(WarContext* context, String text)
+void wcp_setCheatText(WarContext* context, String text)
 {
     WarEntity* txtCheat = findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(txtCheat);
@@ -97,7 +97,7 @@ void setCheatText(WarContext* context, String text)
     setUIText(txtCheat, text);
 }
 
-void updateCheatsPanel(WarContext* context)
+void wcp_updateCheatsPanel(WarContext* context)
 {
     WarScene* scene = context->scene;
     assert(scene);
@@ -146,7 +146,7 @@ void updateCheatsPanel(WarContext* context)
                 wcheat_applyCheat(context, wstr_view(&cheatStatus->text));
             }
 
-            setCheatsPanelVisible(context, false);
+            wcp_setCheatsPanelVisible(context, false);
             return;
         }
 
@@ -204,7 +204,7 @@ void updateCheatsPanel(WarContext* context)
         StringView cheatStatusText = wstr_view(&cheatStatus->text);
 
         String statusText = wstr_concat(prefix, cheatStatusText);
-        setCheatText(context, statusText);
+        wcp_setCheatText(context, statusText);
 
         WarFontParams params = {0};
         params.fontSize = cheatText->text.fontSize;
@@ -226,7 +226,7 @@ void updateCheatsPanel(WarContext* context)
 
         if (wasKeyPressed(input, WAR_KEY_ENTER))
         {
-            setCheatsPanelVisible(context, true);
+            wcp_setCheatsPanelVisible(context, true);
         }
     }
 }

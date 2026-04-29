@@ -98,7 +98,7 @@ void enterSceneMainMenu(WarContext* context)
     createSinglePlayerMenu(context);
     createLoadMenu(context);
     createCustomGameMenu(context);
-    createCheatsPanel(context);
+    wcp_createCheatsPanel(context);
 
     createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
 
