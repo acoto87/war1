@@ -63,7 +63,7 @@ WarEntity* wui_createUIImageButton(WarContext* context,
                                WarSpriteResourceRef foregroundRef,
                                vec2 position);
 
-void wmap_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
 void wui_updateUICursor(WarContext* context);
 void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled);
 

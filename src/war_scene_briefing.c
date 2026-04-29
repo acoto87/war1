@@ -8,7 +8,7 @@
 #include "war_entities.h"
 #include "war_ui.h"
 
-void enterSceneBriefingHumans(WarContext* context)
+void wsbr_enterSceneBriefingHumans(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -18,31 +18,31 @@ void enterSceneBriefingHumans(WarContext* context)
 
     wui_createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(421), VEC2_ZERO);
 
-    WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-    went_addAnimationsComponent(context, animEntity);
+    WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+    we_addAnimationsComponent(context, animEntity);
 
-    WarSpriteAnimation* anim1 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(428), 0.2f, true);
+    WarSpriteAnimation* anim1 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(428), 0.2f, true);
     anim1->offset = vec2i(83, 37);
     anim1->loopDelay = 2.0f;
-    wani_addAnimationFramesRange(anim1, 0, 4);
-    wani_addAnimationFramesRange(anim1, 4, 0);
-    wani_addAnimation(animEntity, anim1);
+    wanim_addAnimationFramesRange(anim1, 0, 4);
+    wanim_addAnimationFramesRange(anim1, 4, 0);
+    wanim_addAnimation(animEntity, anim1);
 
-    WarSpriteAnimation* anim2 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim2"), imageResourceRef(429), 0.2f, true);
+    WarSpriteAnimation* anim2 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim2"), imageResourceRef(429), 0.2f, true);
     anim2->offset = vec2i(207, 29);
     anim1->loopDelay = 2.0f;
-    wani_addAnimationFramesRange(anim2, 0, 20);
-    wani_addAnimation(animEntity, anim2);
+    wanim_addAnimationFramesRange(anim2, 0, 20);
+    wanim_addAnimation(animEntity, anim2);
 
-    WarSpriteAnimation* anim3 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim3"), imageResourceRef(430), 0.1f, true);
+    WarSpriteAnimation* anim3 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim3"), imageResourceRef(430), 0.1f, true);
     anim3->offset = vec2i(21, 17);
-    wani_addAnimationFramesRange(anim3, 0, 20);
-    wani_addAnimation(animEntity, anim3);
+    wanim_addAnimationFramesRange(anim3, 0, 20);
+    wanim_addAnimation(animEntity, anim3);
 
-    WarSpriteAnimation* anim4 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim4"), imageResourceRef(431), 0.1f, true);
+    WarSpriteAnimation* anim4 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim4"), imageResourceRef(431), 0.1f, true);
     anim4->offset = vec2i(275, 21);
-    wani_addAnimationFramesRange(anim4, 0, 20);
-    wani_addAnimation(animEntity, anim4);
+    wanim_addAnimationFramesRange(anim4, 0, 20);
+    wanim_addAnimation(animEntity, anim4);
 
     WarEntity* briefingText = wui_createUIText(context, wstr_fromCString("txtBriefing"), 1, 10, data.briefingText, vec2i(20, 160));
     setUITextColor(briefingText, WAR_COLOR_RGB(255, 215, 138));
@@ -55,10 +55,10 @@ void enterSceneBriefingHumans(WarContext* context)
     setUITextLineHeight(briefingText, 150);
 
     if (!isDemo(context))
-        waud_createAudio(context, data.briefingAudioId, false);
+        wa_createAudio(context, data.briefingAudioId, false);
 }
 
-void enterSceneBriefingOrcs(WarContext* context)
+void wsbr_enterSceneBriefingOrcs(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -68,29 +68,29 @@ void enterSceneBriefingOrcs(WarContext* context)
 
     wui_createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(422), VEC2_ZERO);
 
-    WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-    went_addAnimationsComponent(context, animEntity);
+    WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+    we_addAnimationsComponent(context, animEntity);
 
-    WarSpriteAnimation* anim1 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(426), 0.2f, true);
+    WarSpriteAnimation* anim1 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(426), 0.2f, true);
     anim1->offset = vec2i(18, 67);
     anim1->loopDelay = 2.0f;
-    wani_addAnimationFramesRange(anim1, 0, 4);
-    wani_addAnimationFramesRange(anim1, 4, 0);
-    wani_addAnimation(animEntity, anim1);
+    wanim_addAnimationFramesRange(anim1, 0, 4);
+    wanim_addAnimationFramesRange(anim1, 4, 0);
+    wanim_addAnimation(animEntity, anim1);
 
-    WarSpriteAnimation* anim2 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim2"), imageResourceRef(427), 0.2f, true);
+    WarSpriteAnimation* anim2 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim2"), imageResourceRef(427), 0.2f, true);
     anim2->offset = vec2i(202, 52);
     anim1->loopDelay = 2.0f;
-    wani_addAnimationFramesRange(anim2, 0, 4);
-    wani_addAnimationFramesRange(anim2, 4, 0);
-    wani_addAnimation(animEntity, anim2);
+    wanim_addAnimationFramesRange(anim2, 0, 4);
+    wanim_addAnimationFramesRange(anim2, 4, 0);
+    wanim_addAnimation(animEntity, anim2);
 
     if (!isDemo(context))
     {
-        WarSpriteAnimation* anim3 = wani_createAnimationFromResourceIndex(context, wstr_fromCString("anim3"), imageResourceRef(425), 0.1f, true);
+        WarSpriteAnimation* anim3 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim3"), imageResourceRef(425), 0.1f, true);
         anim3->offset = vec2i(140, 66);
-        wani_addAnimationFramesRange(anim3, 0, 30);
-        wani_addAnimation(animEntity, anim3);
+        wanim_addAnimationFramesRange(anim3, 0, 30);
+        wanim_addAnimation(animEntity, anim3);
     }
 
     WarEntity* briefingText = wui_createUIText(context, wstr_fromCString("txtBriefing"), 1, 10, data.briefingText, vec2i(20, 160));
@@ -104,7 +104,7 @@ void enterSceneBriefingOrcs(WarContext* context)
     setUITextLineHeight(briefingText, 150);
 
     if (!isDemo(context))
-        waud_createAudio(context, data.briefingAudioId, false);
+        wa_createAudio(context, data.briefingAudioId, false);
 }
 
 void wsbr_enterSceneBriefing(WarContext* context)
@@ -115,13 +115,13 @@ void wsbr_enterSceneBriefing(WarContext* context)
     {
         case WAR_RACE_HUMANS:
         {
-            enterSceneBriefingHumans(context);
+            wsbr_enterSceneBriefingHumans(context);
             break;
         }
 
         case WAR_RACE_ORCS:
         {
-            enterSceneBriefingOrcs(context);
+            wsbr_enterSceneBriefingOrcs(context);
             break;
         }
 
@@ -140,7 +140,7 @@ void wsbr_updateSceneBriefing(WarContext* context)
 
     scene->briefing.time -= context->deltaTime;
 
-    WarEntity* txtBriefing = went_findUIEntity(context, wsv_fromCString("txtBriefing"));
+    WarEntity* txtBriefing = we_findUIEntity(context, wsv_fromCString("txtBriefing"));
     if (txtBriefing)
     {
         vec2 position = txtBriefing->transform.position;
@@ -148,7 +148,7 @@ void wsbr_updateSceneBriefing(WarContext* context)
         txtBriefing->transform.position = position;
     }
 
-    wani_updateAnimations(context);
+    wanim_updateAnimations(context);
 
     if (scene->briefing.time <= 0 ||
         wasButtonPressed(input, WAR_MOUSE_LEFT) ||

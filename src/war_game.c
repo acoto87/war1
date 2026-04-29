@@ -1,4 +1,4 @@
-#include "war_game.h"
+﻿#include "war_game.h"
 
 #include <assert.h>
 #include <math.h>
@@ -203,7 +203,7 @@ bool wg_initGame(WarContext* context)
     }
 
     // Initialize render state stack
-    wrend_renderInit(context);
+    wr_renderInit(context);
 
     context->transitionDelay = 0.0f;
     context->cheatsEnabled = true;
@@ -213,7 +213,7 @@ bool wg_initGame(WarContext* context)
     SDL_HideCursor();
 
     // init audio
-    if (!waud_initAudio(context))
+    if (!wa_initAudio(context))
     {
         logError("Could not initialize audio.");
         return false;
@@ -520,7 +520,7 @@ void wg_updateGame(WarContext* context)
 
     // Drain entity removals that the audio callback thread queued while we were
     // in the previous tick. We do this on the main thread (before any scene or
-    // map update) so that went_removeEntityById never runs concurrently with audio.
+    // map update) so that we_removeEntityById never runs concurrently with audio.
     if (context->audioRemoveMutex)
     {
         SDL_LockMutex(context->audioRemoveMutex);
@@ -532,7 +532,7 @@ void wg_updateGame(WarContext* context)
         SDL_UnlockMutex(context->audioRemoveMutex);
 
         for (s32 i = 0; i < drainCount; i++)
-            went_removeEntityById(context, drainIds[i]);
+            we_removeEntityById(context, drainIds[i]);
     }
 
     WarInput* input = &context->input;
@@ -618,7 +618,7 @@ void wg_renderGame(WarContext *context)
     }
 
     // Reset render state for this frame
-    wrend_renderInit(context);
+    wr_renderInit(context);
 
     if (context->scene)
     {

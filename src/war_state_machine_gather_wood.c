@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 WarState* wst_createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
 {
@@ -27,10 +27,10 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     WarMap* map = context->map;
 
     WarUnitComponent* unit = &entity->unit;
-    WarUnitStats stats = wun_getUnitStats(unit->type);
-    vec2 position = wun_getUnitCenterPosition(entity, true);
+    WarUnitStats stats = wu_getUnitStats(unit->type);
+    vec2 position = wu_getUnitCenterPosition(entity, true);
 
-    WarEntity* forest = went_findEntity(context, (WarEntityId)state->wood.forestId);
+    WarEntity* forest = we_findEntity(context, (WarEntityId)state->wood.forestId);
 
     // if the forest doesn't exists, go idle
     if (!forest)
@@ -41,11 +41,11 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     }
 
     vec2 treePosition = state->wood.position;
-    WarTree* tree = went_getTreeAtPosition(forest, (s32)treePosition.x, (s32)treePosition.y);
+    WarTree* tree = we_getTreeAtPosition(forest, (s32)treePosition.x, (s32)treePosition.y);
 
     if (!tree || tree->amount == 0 || !wpath_isPositionAccesible(map->finder, treePosition))
     {
-        tree = went_findAccesibleTree(context, forest, treePosition);
+        tree = we_findAccesibleTree(context, forest, treePosition);
 
         // if there is no more nearby tree, go idle
         if (!tree)
@@ -60,7 +60,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     }
 
     // if the tree is not in range, go to it
-    if (!wun_tileInRange(entity, treePosition, stats.range))
+    if (!wu_tileInRange(entity, treePosition, stats.range))
     {
         WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition));
         moveState->nextState = state;

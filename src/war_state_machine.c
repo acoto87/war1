@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
 {
@@ -32,8 +32,8 @@ bool wst_isInsideBuilding(WarEntity* entity)
 
     if(isDelivering(entity))
     {
-        WarState* wcmd_deliver = getDeliverState(entity);
-        return wcmd_deliver->wcmd_deliver.insideBuilding;
+        WarState* wcomm_deliver = getDeliverState(entity);
+        return wcomm_deliver->wcomm_deliver.insideBuilding;
     }
 
     if (isRepairing2(entity))

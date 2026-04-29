@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "war_types.h"
 
@@ -48,8 +48,8 @@ void wcheat_applyRainOfFireCheat(WarContext* context, StringView argument);
 void wcheat_applyAddUnitCheat(WarContext* context, StringView argument);
 
 // ui
-void wcp_setCheatsPanelVisible(WarContext* context, bool visible);
-void wcp_setCheatsFeedback(WarContext* context, String feedbackText);
-void wcp_createCheatsPanel(WarContext* context);
-void wcp_setCheatText(WarContext* context, String text);
-void wcp_updateCheatsPanel(WarContext* context);
+void wcheatp_setCheatsPanelVisible(WarContext* context, bool visible);
+void wcheatp_setCheatsFeedback(WarContext* context, String feedbackText);
+void wcheatp_createCheatsPanel(WarContext* context);
+void wcheatp_setCheatText(WarContext* context, String text);
+void wcheatp_updateCheatsPanel(WarContext* context);

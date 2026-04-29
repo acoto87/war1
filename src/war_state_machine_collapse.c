@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "shl/wstr.h"
 
@@ -13,22 +13,22 @@ WarState* wst_createCollapseState(WarContext* context, WarEntity* entity)
 void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = wun_getUnitSize(entity);
+    vec2 unitSize = wu_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
 
-    wani_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
-    wani_removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
+    wanim_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
+    wanim_removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
 
     // disable the sprite component to just render the animation
     entity->sprite.enabled = false;
 
-    WarSpriteAnimation* collapseAnim = wani_createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
+    WarSpriteAnimation* collapseAnim = wanim_createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
 
-    setDelay(state, wmap_getMapScaledTime(context, wani_getAnimationDuration(collapseAnim)));
+    setDelay(state, wmap_getMapScaledTime(context, wanim_getAnimationDuration(collapseAnim)));
 
     WarEntity* ruins = map->ruin;
-    went_addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
-    went_determineRuinTypes(context, ruins);
+    we_addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
+    we_determineRuinTypes(context, ruins);
 
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     wmap_removeEntityFromSelection(context, entity->id);
@@ -45,7 +45,7 @@ void wst_updateCollapseState(WarContext* context, WarEntity* entity, WarState* s
 {
     NOT_USED(state);
 
-    went_removeEntityById(context, entity->id);
+    we_removeEntityById(context, entity->id);
 }
 
 void wst_freeCollapseState(WarContext* context, WarState* state)

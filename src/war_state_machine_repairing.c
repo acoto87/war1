@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_actions.h"
 #include "war_units.h"
@@ -16,7 +16,7 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
 {
     WarMap* map = context->map;
 
-    WarEntity* building = went_findEntity(context, state->repairing.buildingId);
+    WarEntity* building = we_findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
@@ -53,12 +53,12 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
     }
     else
     {
-        vec2 unitSize = wun_getUnitSize(entity);
-        vec2 position = wun_getUnitCenterPosition(entity, true);
-        vec2 targetPosition = wun_getUnitCenterPosition(building, true);
+        vec2 unitSize = wu_getUnitSize(entity);
+        vec2 position = wu_getUnitCenterPosition(entity, true);
+        vec2 targetPosition = wu_getUnitCenterPosition(building, true);
 
         setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wun_setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
+        wu_setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
         wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
 }
@@ -69,8 +69,8 @@ void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* s
 
     WarMap* map = context->map;
 
-    vec2 unitSize = wun_getUnitSize(entity);
-    vec2 position = wun_getUnitCenterPosition(entity, true);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wu_getUnitCenterPosition(entity, true);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 }
 
@@ -80,7 +80,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = &entity->unit;
 
-    WarEntity* building = went_findEntity(context, state->repairing.buildingId);
+    WarEntity* building = we_findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
@@ -90,9 +90,9 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
             entity->sprite.enabled = true;
 
             // find a valid spawn position for the unit
-            vec2 position = wun_getUnitCenterPosition(entity, true);
+            vec2 position = wu_getUnitCenterPosition(entity, true);
             vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-            wun_setUnitCenterPosition(entity, spawnPosition, true);
+            wu_setUnitCenterPosition(entity, spawnPosition, true);
         }
 
         WarState* idleState = wst_createIdleState(context, entity, true);
@@ -108,14 +108,14 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         WarUnitAction* action = &unit->actions[unit->actionType];
         if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
         {
-            if (!went_decreasePlayerResources(context, player, 1, 1))
+            if (!we_decreasePlayerResources(context, player, 1, 1))
             {
                 WarState* idleState = wst_createIdleState(context, entity, true);
                 wst_changeNextState(context, entity, idleState, true, true);
                 return;
             }
 
-            // to calculate the amount of wood and gold needed to wcmd_repair a
+            // to calculate the amount of wood and gold needed to wcomm_repair a
             // building I'm taking the 12% of the damage of the building,
             // so for the a FARM if it has a damage of 200, the amount of
             // wood and gold would be 200 * 0.12 = 24.
@@ -141,9 +141,9 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         entity->sprite.enabled = true;
 
         // find a valid spawn position for the unit
-        vec2 position = wun_getUnitCenterPosition(entity, true);
+        vec2 position = wu_getUnitCenterPosition(entity, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wun_setUnitCenterPosition(entity, spawnPosition, true);
+        wu_setUnitCenterPosition(entity, spawnPosition, true);
 
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);

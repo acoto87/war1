@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_actions.h"
 
@@ -11,7 +11,7 @@ WarState* wst_createDeathState(WarContext* context, WarEntity* entity)
 void wst_enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = wun_getUnitSize(entity);
+    vec2 unitSize = wu_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
@@ -34,24 +34,24 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
 
     // when this state updates there will have pass the time of the death animation,
     // using the delay field of the states
-    if (!wun_isCorpseUnit(entity) && !wun_isCatapultUnit(entity) &&
-        !wun_isSummonUnit(entity) && !wun_isSkeletonUnit(entity))
+    if (!wu_isCorpseUnit(entity) && !wu_isCatapultUnit(entity) &&
+        !wu_isSummonUnit(entity) && !wu_isSkeletonUnit(entity))
     {
-        vec2 position = wun_getUnitCenterPosition(entity, true);
+        vec2 position = wu_getUnitCenterPosition(entity, true);
 
-        WarUnitType corpseType = wun_getUnitRace(entity) == WAR_RACE_ORCS
+        WarUnitType corpseType = wu_getUnitRace(entity) == WAR_RACE_ORCS
             ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
 
-        WarEntity* corpse = went_createUnit(context, corpseType, (s32)position.x, (s32)position.y, 4,
+        WarEntity* corpse = we_createUnit(context, corpseType, (s32)position.x, (s32)position.y, 4,
                                        WAR_RESOURCE_NONE, 0, true);
 
-        wun_setUnitDirection(corpse, wun_getUnitDirection(entity));
+        wu_setUnitDirection(corpse, wu_getUnitDirection(entity));
 
         WarState* deathState = wst_createDeathState(context, corpse);
         wst_changeNextState(context, corpse, deathState, true, true);
     }
 
-    went_removeEntityById(context, entity->id);
+    we_removeEntityById(context, entity->id);
 }
 
 void wst_freeDeathState(WarContext* context, WarState* state)

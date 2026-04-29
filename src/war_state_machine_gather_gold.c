@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 WarState* wst_createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
 {
@@ -24,12 +24,12 @@ void wst_leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* 
 void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarUnitComponent* unit = &entity->unit;
-    WarUnitStats stats = wun_getUnitStats(unit->type);
+    WarUnitStats stats = wu_getUnitStats(unit->type);
 
-    WarEntity* goldmine = went_findEntity(context, (WarEntityId)state->gold.goldmineId);
+    WarEntity* goldmine = we_findEntity(context, (WarEntityId)state->gold.goldmineId);
 
     // if the goldmine doesn't exists (it could ran out of gold, or other units attacking it), go idle
-    // if the unit was already mining, and the gold went_mine ran out of gold, then another unit previouly got all the remaining gold
+    // if the unit was already mining, and the gold we_mine ran out of gold, then another unit previouly got all the remaining gold
     // so, this unit get nothing
     if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
     {
@@ -39,7 +39,7 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     }
 
     // if the goldmine is not in range, go to it
-    if (!wun_unitInRange(entity, goldmine, stats.range))
+    if (!wu_unitInRange(entity, goldmine, stats.range))
     {
         WarState* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats.range);
         followState->nextState = state;

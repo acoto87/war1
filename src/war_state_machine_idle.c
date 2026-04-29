@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_actions.h"
 #include "war_map.h"
@@ -18,8 +18,8 @@ void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
     if (isUnit(entity))
     {
         WarMap* map = context->map;
-        vec2 unitSize = wun_getUnitSize(entity);
-        vec2 position = wun_getUnitPosition(entity, true);
+        vec2 unitSize = wu_getUnitSize(entity);
+        vec2 position = wu_getUnitPosition(entity, true);
         setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
@@ -32,8 +32,8 @@ void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
     if (isUnit(entity))
     {
         WarMap* map = context->map;
-        vec2 unitSize = wun_getUnitSize(entity);
-        vec2 position = wun_getUnitPosition(entity, true);
+        vec2 unitSize = wu_getUnitSize(entity);
+        vec2 position = wu_getUnitPosition(entity, true);
         setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     }
 }
@@ -57,13 +57,13 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             }
         }
 
-        // look for foe units to wcmd_attack them if they are in range
-        if (wun_isWarriorUnit(entity))
+        // look for foe units to wcomm_attack them if they are in range
+        if (wu_isWarriorUnit(entity))
         {
-            WarEntity* enemy = went_getNearEnemy(context, entity);
+            WarEntity* enemy = we_getNearEnemy(context, entity);
             if (enemy)
             {
-                vec2 enemyPosition = wun_getUnitPosition(enemy, true);
+                vec2 enemyPosition = wu_getUnitPosition(enemy, true);
                 WarState* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
                 wst_changeNextState(context, entity, attackState, true, true);
             }

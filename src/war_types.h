@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -75,12 +75,12 @@ typedef struct tml_message tml_message;
 
 #define directionByIndex(i) ((WarUnitDirection)(WAR_DIRECTION_NORTH + i))
 
-static inline bool wtype_equalsS32(const s32 a, const s32 b)
+static inline bool wt_equalsS32(const s32 a, const s32 b)
 {
     return a == b;
 }
 
-static inline bool wtype_compareS32(const s32 a, const s32 b)
+static inline bool wt_compareS32(const s32 a, const s32 b)
 {
     return a - b;
 }
@@ -88,9 +88,9 @@ static inline bool wtype_compareS32(const s32 a, const s32 b)
 shlDeclareList(s32List, s32)
 shlDefineList(s32List, s32)
 
-#define s32ListDefaultOptions (s32ListOptions){0, wtype_equalsS32, NULL}
+#define s32ListDefaultOptions (s32ListOptions){0, wt_equalsS32, NULL}
 
-static inline bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
+static inline bool wt_equalsVec2(const vec2 v1, const vec2 v2)
 {
     return v1.x == v2.x && v1.y == v2.y;
 }
@@ -98,9 +98,9 @@ static inline bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
 shlDeclareList(vec2List, vec2)
 shlDefineList(vec2List, vec2)
 
-#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wtype_equalsVec2, NULL}
+#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wt_equalsVec2, NULL}
 
-static inline bool wtype_equalsRect(const rect r1, const rect r2)
+static inline bool wt_equalsRect(const rect r1, const rect r2)
 {
     return r1.x == r2.x && r1.y == r2.y &&
            r1.width == r2.width && r1.height == r2.height;
@@ -109,7 +109,7 @@ static inline bool wtype_equalsRect(const rect r1, const rect r2)
 shlDeclareList(rectList, rect)
 shlDefineList(rectList, rect)
 
-#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wtype_equalsRect, NULL}
+#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wt_equalsRect, NULL}
 
 shlDeclareMap(StringViewMap, StringView, String)
 shlDefineMap(StringViewMap, StringView, String)
@@ -495,7 +495,7 @@ static inline bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const 
 shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
 shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
 
-#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, wani_freeAnimation}
+#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, wanim_freeAnimation}
 
 typedef enum
 {
@@ -887,7 +887,7 @@ typedef enum
     WAR_COMMAND_UPGRADE_INVISIBILITY,
     WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,
 
-    // wcmd_cancel
+    // wcomm_cancel
     WAR_COMMAND_CANCEL // 73
 } WarUnitCommandType;
 
@@ -1269,7 +1269,7 @@ typedef struct _WarState
 
             s32 waitCount;
             bool checkForAttacks;
-        } wcmd_move;
+        } wcomm_move;
 
         struct
         {
@@ -1297,7 +1297,7 @@ typedef struct _WarState
         {
             s32 targetEntityId;
             vec2 targetTile;
-        } wcmd_attack;
+        } wcomm_attack;
 
         struct
         {
@@ -1308,7 +1308,7 @@ typedef struct _WarState
         {
             s32 goldmineId;
             f32 miningTime;
-        } went_mine;
+        } we_mine;
 
         struct
         {
@@ -1326,7 +1326,7 @@ typedef struct _WarState
         {
             s32 townHallId;
             bool insideBuilding;
-        } wcmd_deliver;
+        } wcomm_deliver;
 
         struct
         {
@@ -1355,7 +1355,7 @@ typedef struct _WarState
         struct
         {
             WarEntityId buildingId;
-        } wcmd_repair;
+        } wcomm_repair;
 
         struct
         {
@@ -1636,8 +1636,8 @@ typedef enum
     WAR_HUMAN_WORK_COMPLETE = 502,                  // "Work completed"
     WAR_ORC_HELP_3 = 503,                           // "We are being attacked"
     WAR_ORC_HELP_4 = 504,                           // "They're destroying our city"
-    WAR_HUMAN_HELP_3 = 505,                         // "We are under wcmd_attack"
-    WAR_HUMAN_HELP_4 = 506,                         // "The town is under wcmd_attack"
+    WAR_HUMAN_HELP_3 = 505,                         // "We are under wcomm_attack"
+    WAR_HUMAN_HELP_4 = 506,                         // "The town is under wcomm_attack"
     WAR_ORC_READY = 507,                            // "Your command, master"
     WAR_HUMAN_READY = 508,                          // "Your command"
     WAR_ORC_ACKNOWLEDGEMENT_1 = 509,
@@ -2049,7 +2049,7 @@ typedef enum
     WAR_CHEAT_UPGRADES,     // Iron forge: Research all upgrades
     WAR_CHEAT_END,          // Ides of March: Brings player to final campaign sequence
     WAR_CHEAT_ENABLE,       // Corwin of Amber: Enables cheats
-    WAR_CHEAT_GOD_MODE,     // There can be only one: Your units wcmd_stop taking damage and deal 255 Damage
+    WAR_CHEAT_GOD_MODE,     // There can be only one: Your units wcomm_stop taking damage and deal 255 Damage
     WAR_CHEAT_WIN,          // Yours truly: Win current mission
     WAR_CHEAT_LOSS,         // Crushing defeat: Instant loss
     WAR_CHEAT_FOG,          // Sally Shears: Disables fog of war
@@ -2303,7 +2303,7 @@ typedef struct _WarContext
 
     // Pending audio-entity removals queued by the audio callback thread.
     // The callback posts finished entity IDs here (under audioRemoveMutex)
-    // instead of calling went_removeEntityById directly.  The main thread drains
+    // instead of calling we_removeEntityById directly.  The main thread drains
     // this queue at the top of each wg_updateGame tick.
     SDL_Mutex*  audioRemoveMutex;
     WarEntityId audioRemovePending[AUDIO_REMOVE_PENDING_MAX];

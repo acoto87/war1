@@ -1,9 +1,9 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 WarState* wst_createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId)
 {
     WarState* state = wst_createState(context, entity, WAR_STATE_DELIVER);
-    state->wcmd_deliver.townHallId = townHallId;
+    state->wcomm_deliver.townHallId = townHallId;
     return state;
 }
 
@@ -25,9 +25,9 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 {
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
-    WarUnitStats stats = wun_getUnitStats(unit->type);
+    WarUnitStats stats = wu_getUnitStats(unit->type);
 
-    WarEntity* townHall = went_findEntity(context, (WarEntityId)state->wcmd_deliver.townHallId);
+    WarEntity* townHall = we_findEntity(context, (WarEntityId)state->wcomm_deliver.townHallId);
 
     // if the town hall doesn't exists (or other units attacking it), go idle
     if (!townHall)
@@ -37,9 +37,9 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
         return;
     }
 
-    if (!wun_unitInRange(entity, townHall, stats.range))
+    if (!wu_unitInRange(entity, townHall, stats.range))
     {
-        vec2 targetTile = wun_unitPointOnTarget(entity, townHall);
+        vec2 targetTile = wu_unitPointOnTarget(entity, townHall);
 
         WarState* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats.range);
         followState->nextState = state;
@@ -47,16 +47,16 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
         return;
     }
 
-    if (state->wcmd_deliver.insideBuilding)
+    if (state->wcomm_deliver.insideBuilding)
     {
         // find a valid spawn position for the unit
-        vec2 position = wun_getUnitCenterPosition(townHall, true);
+        vec2 position = wu_getUnitCenterPosition(townHall, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wun_setUnitCenterPosition(entity, spawnPosition, true);
+        wu_setUnitCenterPosition(entity, spawnPosition, true);
 
-        WarUnitData unitData = wun_getUnitData(unit->type);
-        went_removeSpriteComponent(context, entity);
-        went_addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
+        WarUnitData unitData = wu_getUnitData(unit->type);
+        we_removeSpriteComponent(context, entity);
+        we_addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
 
         if (!wst_changeStateNextState(context, entity, state))
         {
@@ -69,11 +69,11 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     if (unit->resourceKind == WAR_RESOURCE_GOLD)
     {
-        went_increasePlayerResources(context, &map->players[0], unit->amount, 0);
+        we_increasePlayerResources(context, &map->players[0], unit->amount, 0);
     }
     else if (unit->resourceKind == WAR_RESOURCE_WOOD)
     {
-        went_increasePlayerResources(context, &map->players[0], 0, unit->amount);
+        we_increasePlayerResources(context, &map->players[0], 0, unit->amount);
     }
 
     unit->resourceKind = WAR_RESOURCE_NONE;
@@ -81,7 +81,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     // the unit arrive to the townhall, so now the unit go inside the building for some time to simulate the depositing
     // then need go back to the goldmine/trees.
-    state->wcmd_deliver.insideBuilding = true;
+    state->wcomm_deliver.insideBuilding = true;
 
     // for this the sprite is turn off for the depositing time
     entity->sprite.enabled = false;

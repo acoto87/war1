@@ -1,4 +1,4 @@
-#include "war_resources.h"
+﻿#include "war_resources.h"
 
 #include <assert.h>
 
@@ -826,7 +826,7 @@ void wres_loadXmi(WarContext *context, DatabaseEntry *entry)
     size32 xmiLength = rawResource.length;
 
     size32 midLength;
-    uint8_t* midData = waud_transcodeXmiToMid(context, xmiData, xmiLength, &midLength);
+    uint8_t* midData = wa_transcodeXmiToMid(context, xmiData, xmiLength, &midLength);
     if (!midData)
     {
         logError("Can't convert XMI file of resource %d", index);
@@ -889,7 +889,7 @@ void wres_loadWave(WarContext *context, DatabaseEntry *entry)
 
     // this data is at 11025khz, and for playing it back I needed at 44100khz
     // so I need to upsampling it here by a factor of 4
-    u8* newData = waud_changeSampleRate(context, data, dataLength, 4);
+    u8* newData = wa_changeSampleRate(context, data, dataLength, 4);
     s32 newDataLength = dataLength * 4;
 
     WarResource* resource = wres_getOrCreateResource(context, index);
@@ -950,7 +950,7 @@ void wres_loadVoc(WarContext *context, DatabaseEntry *entry)
 
     // this data is at 11025khz, and for playing it back I needed at 44100khz
     // so I need to upsampling it here by a factor of 4
-    u8* newData = waud_changeSampleRate(context, data, dataLength, 4);
+    u8* newData = wa_changeSampleRate(context, data, dataLength, 4);
     s32 newDataLength = dataLength * 4;
 
     WarResource* resource = wres_getOrCreateResource(context, index);

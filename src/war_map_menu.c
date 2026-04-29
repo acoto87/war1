@@ -1,4 +1,4 @@
-#include "war_map_menu.h"
+﻿#include "war_map_menu.h"
 
 #include "SDL3/SDL.h"
 #include "shl/wstr.h"
@@ -26,7 +26,7 @@ static String getSpeedStr(WarMapSpeed value)
 
 static void setUITextSpeedValueByName(WarContext* context, StringView name, WarMapSpeed value)
 {
-    WarEntity* entity = went_findUIEntity(context, name);
+    WarEntity* entity = we_findUIEntity(context, name);
     if (entity)
     {
         wui_setUIText(entity, getSpeedStr(value));
@@ -36,7 +36,7 @@ static void setUITextSpeedValueByName(WarContext* context, StringView name, WarM
 
 static void setUITextS32ValueByName(WarContext* context, StringView name, s32 value)
 {
-    WarEntity* entity = went_findUIEntity(context, name);
+    WarEntity* entity = we_findUIEntity(context, name);
     if (entity)
     {
         wui_setUIText(entity, wstr_fromCStringFormat("%d", value));
@@ -746,30 +746,30 @@ void wmm_showOrHideGameOverMenu(WarContext* context, bool status)
     {
         if (map->result == WAR_LEVEL_RESULT_WIN)
         {
-            WarEntity* gameOverText = went_findUIEntity(context, wsv_fromCString("txtGameOverText"));
+            WarEntity* gameOverText = we_findUIEntity(context, wsv_fromCString("txtGameOverText"));
             wui_setUIText(gameOverText, wstr_fromCString("You are victorious!"));
 
-            WarEntity* saveBtn = went_findUIEntity(context, wsv_fromCString("btnGameOverSave"));
+            WarEntity* saveBtn = we_findUIEntity(context, wsv_fromCString("btnGameOverSave"));
             setUIEntityStatus(saveBtn, true);
 
-            WarEntity* continueBtn = went_findUIEntity(context, wsv_fromCString("btnGameOverContinue"));
+            WarEntity* continueBtn = we_findUIEntity(context, wsv_fromCString("btnGameOverContinue"));
             setUIEntityStatus(continueBtn, true);
 
-            WarEntity* okBtn = went_findUIEntity(context, wsv_fromCString("btnGameOverOk"));
+            WarEntity* okBtn = we_findUIEntity(context, wsv_fromCString("btnGameOverOk"));
             setUIEntityStatus(okBtn, false);
         }
         else if (map->result == WAR_LEVEL_RESULT_LOSE)
         {
-            WarEntity* gameOverText = went_findUIEntity(context, wsv_fromCString("txtGameOverText"));
+            WarEntity* gameOverText = we_findUIEntity(context, wsv_fromCString("txtGameOverText"));
             wui_setUIText(gameOverText, wstr_fromCString("You failed to archieve victory..."));
 
-            WarEntity* saveBtn = went_findUIEntity(context, wsv_fromCString("btnGameOverSave"));
+            WarEntity* saveBtn = we_findUIEntity(context, wsv_fromCString("btnGameOverSave"));
             setUIEntityStatus(saveBtn, false);
 
-            WarEntity* continueBtn = went_findUIEntity(context, wsv_fromCString("btnGameOverContinue"));
+            WarEntity* continueBtn = we_findUIEntity(context, wsv_fromCString("btnGameOverContinue"));
             setUIEntityStatus(continueBtn, false);
 
-            WarEntity* okBtn = went_findUIEntity(context, wsv_fromCString("btnGameOverOk"));
+            WarEntity* okBtn = we_findUIEntity(context, wsv_fromCString("btnGameOverOk"));
             setUIEntityStatus(okBtn, true);
         }
     }

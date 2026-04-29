@@ -1,6 +1,6 @@
-#include "war_entities.h"
+﻿#include "war_entities.h"
 
-bool went_hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
+bool we_hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
 {
     WarRuinPieceList* pieces = &ruins->ruin.pieces;
     for (s32 i = 0; i < pieces->count; i++)
@@ -13,7 +13,7 @@ bool went_hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
     return false;
 }
 
-WarRuinPiece* went_getRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
+WarRuinPiece* we_getRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
 {
     WarRuinPieceList* pieces = &ruins->ruin.pieces;
     for (s32 i = 0; i < pieces->count; i++)
@@ -26,7 +26,7 @@ WarRuinPiece* went_getRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
     return NULL;
 }
 
-void went_determineRuinTypes(WarContext* context, WarEntity* entity)
+void we_determineRuinTypes(WarContext* context, WarEntity* entity)
 {
     assert(entity);
     assert(entity->type == WAR_ENTITY_TYPE_RUIN);
@@ -53,7 +53,7 @@ void went_determineRuinTypes(WarContext* context, WarEntity* entity)
             s32 xx = pi->tilex + dirX[d];
             s32 yy = pi->tiley + dirY[d];
             
-            if (!wpath_isInside(map->finder, xx, yy) || went_hasRuinPieceAtPosition(entity, xx, yy))
+            if (!wpath_isInside(map->finder, xx, yy) || we_hasRuinPieceAtPosition(entity, xx, yy))
             {
                 index = index | (1 << d);
             }
@@ -71,21 +71,21 @@ void went_determineRuinTypes(WarContext* context, WarEntity* entity)
     s32ListFree(&invalidPieces);
 }
 
-WarEntity* went_createRuins(WarContext* context)
+WarEntity* we_createRuins(WarContext* context)
 {
     WarMap* map = context->map;
 
     WarRuinPieceList pieces;
     WarRuinPieceListInit(&pieces, WarRuinPieceListDefaultOptions);
 
-    WarEntity *entity = went_createEntity(context, WAR_ENTITY_TYPE_RUIN, true);
-    went_addRuinComponent(context, entity, pieces);
-    went_addSpriteComponent(context, entity, map->sprite);
+    WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_RUIN, true);
+    we_addRuinComponent(context, entity, pieces);
+    we_addSpriteComponent(context, entity, map->sprite);
 
     return entity;
 }
 
-void went_addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim)
+void we_addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim)
 {
     NOT_USED(context);
 
@@ -98,13 +98,13 @@ void went_addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s
     {
         for(s32 xx = 0; xx < dim; xx++)
         {
-            if (!went_hasRuinPieceAtPosition(entity, x + xx, y + yy))
+            if (!we_hasRuinPieceAtPosition(entity, x + xx, y + yy))
                 WarRuinPieceListAdd(pieces, createRuinPiece(x + xx, y + yy));
         }
     }
 }
 
-void went_removeRuinPiece(WarEntity* entity, WarRuinPiece* piece)
+void we_removeRuinPiece(WarEntity* entity, WarRuinPiece* piece)
 {
     WarRuinPieceList* pieces = &entity->ruin.pieces;
     WarRuinPieceListRemove(pieces, *piece);

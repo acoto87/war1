@@ -47,7 +47,7 @@ bool wmap_areAllUnitTilesInState(WarMap* map, WarEntity* entity, WarMapTileState
 #define isTileFog(map, x, y) wmap_isTileInState(map, x, y, MAP_TILE_STATE_FOG)
 #define isTileVisible(map, x, y) wmap_isTileInState(map, x, y, MAP_TILE_STATE_VISIBLE)
 
-void wmap_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
 
 WarCampaignMapType wmap_getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex);
 

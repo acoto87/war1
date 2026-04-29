@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 WarState* wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
 {
@@ -17,7 +17,7 @@ void wst_enterUpgradeState(WarContext* context, WarEntity* entity, WarState* sta
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = wun_getUnitSize(entity);
+    vec2 unitSize = wu_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
@@ -32,7 +32,7 @@ void wst_leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* sta
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = wun_getUnitSize(entity);
+    vec2 unitSize = wu_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
@@ -72,7 +72,7 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
         unit->buildPercent = 1;
 
         // increase the level of the upgrade
-        went_increaseUpgradeLevel(context, player, state->upgrade.upgradeToBuild);
+        we_increaseUpgradeLevel(context, player, state->upgrade.upgradeToBuild);
         assert(checkUpgradeLevel(player, state->upgrade.upgradeToBuild));
 
         if (!wst_changeStateNextState(context, entity, state))

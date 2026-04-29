@@ -72,9 +72,9 @@ static String getCustomMapStr(s32 value)
     return wstr_fromCString(str);
 }
 
-static void setUIRaceValueByName(WarContext* context, StringView name, WarRace value)
+static void wsm_setUIRaceValueByName(WarContext* context, StringView name, WarRace value)
 {
-    WarEntity* entity = went_findUIEntity(context, name);
+    WarEntity* entity = we_findUIEntity(context, name);
     if (entity)
     {
         wui_setUIText(entity, getCustomGameRaceStr(value));
@@ -82,9 +82,9 @@ static void setUIRaceValueByName(WarContext* context, StringView name, WarRace v
     }
 }
 
-static void setCustomMapValueByName(WarContext* context, StringView name, s32 value)
+static void wsm_setCustomMapValueByName(WarContext* context, StringView name, s32 value)
 {
-    WarEntity* entity = went_findUIEntity(context, name);
+    WarEntity* entity = we_findUIEntity(context, name);
     if (entity)
     {
         wui_setUIText(entity, getCustomMapStr(value));
@@ -98,12 +98,12 @@ void wsm_enterSceneMainMenu(WarContext* context)
     wsm_createSinglePlayerMenu(context);
     wsm_createLoadMenu(context);
     wsm_createCustomGameMenu(context);
-    wcp_createCheatsPanel(context);
+    wcheatp_createCheatsPanel(context);
 
     wui_createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
 
     if (!isDemo(context))
-        waud_createAudio(context, WAR_MUSIC_00, true);
+        wa_createAudio(context, WAR_MUSIC_00, true);
 }
 
 void wsm_createMainMenu(WarContext* context)
@@ -409,9 +409,9 @@ void wsm_showOrHideCustomGame(WarContext* context, bool status)
         scene->menu.enemyRace = WAR_RACE_ORCS;
         scene->menu.customMap = 147;
 
-        setUIRaceValueByName(context, wsv_fromCString("txtYourRace"), scene->menu.yourRace);
-        setUIRaceValueByName(context, wsv_fromCString("txtEnemyRace"), scene->menu.enemyRace);
-        setCustomMapValueByName(context, wsv_fromCString("txtMap"), scene->menu.customMap);
+        wsm_setUIRaceValueByName(context, wsv_fromCString("txtYourRace"), scene->menu.yourRace);
+        wsm_setUIRaceValueByName(context, wsv_fromCString("txtEnemyRace"), scene->menu.enemyRace);
+        wsm_setCustomMapValueByName(context, wsv_fromCString("txtMap"), scene->menu.customMap);
     }
 }
 
@@ -480,7 +480,7 @@ void wsm_handleYourRaceLeft(WarContext* context, WarEntity* entity)
     if (scene->menu.yourRace > WAR_RACE_NEUTRAL)
     {
         scene->menu.yourRace--;
-        setUIRaceValueByName(context, wsv_fromCString("txtYourRace"), scene->menu.yourRace);
+        wsm_setUIRaceValueByName(context, wsv_fromCString("txtYourRace"), scene->menu.yourRace);
     }
 }
 
@@ -493,7 +493,7 @@ void wsm_handleYourRaceRight(WarContext* context, WarEntity* entity)
     if (scene->menu.yourRace < WAR_RACE_ORCS)
     {
         scene->menu.yourRace++;
-        setUIRaceValueByName(context, wsv_fromCString("txtYourRace"), scene->menu.yourRace);
+        wsm_setUIRaceValueByName(context, wsv_fromCString("txtYourRace"), scene->menu.yourRace);
     }
 }
 
@@ -506,7 +506,7 @@ void wsm_handleEnemyRaceLeft(WarContext* context, WarEntity* entity)
     if (scene->menu.enemyRace > WAR_RACE_NEUTRAL)
     {
         scene->menu.enemyRace--;
-        setUIRaceValueByName(context, wsv_fromCString("txtEnemyRace"), scene->menu.enemyRace);
+        wsm_setUIRaceValueByName(context, wsv_fromCString("txtEnemyRace"), scene->menu.enemyRace);
     }
 }
 
@@ -519,7 +519,7 @@ void wsm_handleEnemyRaceRight(WarContext* context, WarEntity* entity)
     if (scene->menu.enemyRace < WAR_RACE_ORCS)
     {
         scene->menu.enemyRace++;
-        setUIRaceValueByName(context, wsv_fromCString("txtEnemyRace"), scene->menu.enemyRace);
+        wsm_setUIRaceValueByName(context, wsv_fromCString("txtEnemyRace"), scene->menu.enemyRace);
     }
 }
 
@@ -532,7 +532,7 @@ void wsm_handleMapLeft(WarContext* context, WarEntity* entity)
     if (scene->menu.customMap > 147)
     {
         scene->menu.customMap--;
-        setCustomMapValueByName(context, wsv_fromCString("txtMap"), scene->menu.customMap);
+        wsm_setCustomMapValueByName(context, wsv_fromCString("txtMap"), scene->menu.customMap);
     }
 }
 
@@ -545,7 +545,7 @@ void wsm_handleMapRight(WarContext* context, WarEntity* entity)
     if (scene->menu.customMap < 188)
     {
         scene->menu.customMap++;
-        setCustomMapValueByName(context, wsv_fromCString("txtMap"), scene->menu.customMap);
+        wsm_setCustomMapValueByName(context, wsv_fromCString("txtMap"), scene->menu.customMap);
     }
 }
 

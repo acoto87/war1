@@ -1,4 +1,4 @@
-#include "war_projectiles.h"
+﻿#include "war_projectiles.h"
 
 #include <assert.h>
 
@@ -48,23 +48,23 @@ void wproj_doProjectileTargetDamage(WarContext* context, WarEntity* entity)
 
     vec2 position = wmap_vec2MapToTileCoordinates(projectile->target);
 
-    WarEntity* sourceEntity = went_findEntity(context, projectile->sourceEntityId);
-    WarEntity* targetEntity = went_findEntity(context, projectile->targetEntityId);
+    WarEntity* sourceEntity = we_findEntity(context, projectile->sourceEntityId);
+    WarEntity* targetEntity = we_findEntity(context, projectile->targetEntityId);
 
     // check if the attacker and the victim exists because it could be eliminated by other unit
     if (sourceEntity && targetEntity)
     {
         if (isWall(targetEntity))
         {
-            WarWallPiece* piece = went_getWallPieceAtPosition(targetEntity, (s32)position.x, (s32)position.y);
+            WarWallPiece* piece = we_getWallPieceAtPosition(targetEntity, (s32)position.x, (s32)position.y);
             if (piece)
             {
-                went_meleeWallAttack(context, sourceEntity, targetEntity, piece);
+                we_meleeWallAttack(context, sourceEntity, targetEntity, piece);
             }
         }
         else
         {
-            went_meleeAttack(context, sourceEntity, targetEntity);
+            we_meleeAttack(context, sourceEntity, targetEntity);
         }
     }
 }
@@ -75,21 +75,21 @@ void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 
 
     vec2 targetTile = wmap_vec2MapToTileCoordinates(projectile->target);
 
-    WarEntity* sourceEntity = went_findEntity(context, projectile->sourceEntityId);
+    WarEntity* sourceEntity = we_findEntity(context, projectile->sourceEntityId);
     if (sourceEntity)
     {
-        WarEntityList* nearUnits = went_getNearUnits(context, targetTile, splashRadius);
+        WarEntityList* nearUnits = we_getNearUnits(context, targetTile, splashRadius);
         for (s32 i = 0; i < nearUnits->count; i++)
         {
             WarEntity* targetEntity = nearUnits->items[i];
-            if (targetEntity && wun_canAttack(context, sourceEntity, targetEntity))
+            if (targetEntity && wu_canAttack(context, sourceEntity, targetEntity))
             {
-                went_meleeAttack(context, sourceEntity, targetEntity);
+                we_meleeAttack(context, sourceEntity, targetEntity);
             }
         }
         WarEntityListFree(nearUnits);
 
-        WarEntityList* walls = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
+        WarEntityList* walls = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
         for (s32 i = 0; i < walls->count; i++)
         {
             WarEntity* targetEntity = walls->items[i];
@@ -101,7 +101,7 @@ void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 
                 vec2 piecePosition = vec2i(piece->tilex, piece->tiley);
                 if (vec2DistanceInTiles(targetTile, piecePosition) <= splashRadius)
                 {
-                    went_meleeWallAttack(context, sourceEntity, targetEntity, piece);
+                    we_meleeWallAttack(context, sourceEntity, targetEntity, piece);
                 }
             }
         }
@@ -114,7 +114,7 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
 
     vec2 targetTile = wmap_vec2MapToTileCoordinates(projectile->target);
 
-    WarEntityList* nearUnits = went_getNearUnits(context, targetTile, splashRadius);
+    WarEntityList* nearUnits = we_getNearUnits(context, targetTile, splashRadius);
     for (s32 i = 0; i < nearUnits->count; i++)
     {
         WarEntity* targetEntity = nearUnits->items[i];
@@ -122,12 +122,12 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
             !isDead(targetEntity) && !isGoingToDie(targetEntity) &&
             !isCollapsing(targetEntity) && !isGoingToCollapse(targetEntity))
         {
-            went_takeDamage(context, targetEntity, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
+            we_takeDamage(context, targetEntity, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
         }
     }
     WarEntityListFree(nearUnits);
 
-    WarEntityList* walls = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
+    WarEntityList* walls = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
     for (s32 i = 0; i < walls->count; i++)
     {
         WarEntity* targetEntity = walls->items[i];
@@ -139,7 +139,7 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
             vec2 piecePosition = vec2i(piece->tilex, piece->tiley);
             if (vec2DistanceInTiles(targetTile, piecePosition) <= splashRadius)
             {
-                went_takeWallDamage(context, targetEntity, piece, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
+                we_takeWallDamage(context, targetEntity, piece, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
             }
         }
     }
@@ -309,12 +309,12 @@ void wproj_updateProjectile(WarContext* context, WarEntity* entity)
             {
                 wproj_doRainOfFireProjectileSplashDamage(context, entity, NEAR_RAIN_OF_FIRE_RADIUS);
 
-                WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                went_addAnimationsComponent(context, animEntity);
+                WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                we_addAnimationsComponent(context, animEntity);
 
-                wani_createRainOfFireExplosionAnimation(context, animEntity, projectile->target);
-                waud_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
-                went_removeEntityById(context, entity->id);
+                wanim_createRainOfFireExplosionAnimation(context, animEntity, projectile->target);
+                wa_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
+                we_removeEntityById(context, entity->id);
             }
         }
         else
@@ -329,21 +329,21 @@ void wproj_updateProjectile(WarContext* context, WarEntity* entity)
                 {
                     wproj_doProjectileSplashDamage(context, entity, NEAR_CATAPULT_RADIUS);
 
-                    WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                    went_addAnimationsComponent(context, animEntity);
+                    WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                    we_addAnimationsComponent(context, animEntity);
 
-                    wani_createExplosionAnimation(context, animEntity, projectile->target);
-                    waud_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
+                    wanim_createExplosionAnimation(context, animEntity, projectile->target);
+                    wa_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
                 }
                 else
                 {
                     wproj_doProjectileTargetDamage(context, entity);
 
                     if (projectile->type == WAR_PROJECTILE_ARROW)
-                        waud_createAudioWithPosition(context, WAR_ARROW_SPEAR_HIT, projectile->target, false);
+                        wa_createAudioWithPosition(context, WAR_ARROW_SPEAR_HIT, projectile->target, false);
                 }
 
-                went_removeEntityById(context, entity->id);
+                we_removeEntityById(context, entity->id);
             }
         }
     }
@@ -355,10 +355,10 @@ WarEntity* wproj_createProjectile(WarContext* context, WarProjectileType type,
 {
     WarProjectileData data = wproj_getProjectileData(type);
 
-    WarEntity* projectile = went_createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
-    went_addTransformComponent(context, projectile, origin);
-    went_addSpriteComponentFromResource(context, projectile, imageResourceRef(data.resourceIndex));
-    went_addProjectileComponent(context, projectile, type, sourceEntityId, targetEntityId, origin, target, data.speed);
+    WarEntity* projectile = we_createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
+    we_addTransformComponent(context, projectile, origin);
+    we_addSpriteComponentFromResource(context, projectile, imageResourceRef(data.resourceIndex));
+    we_addProjectileComponent(context, projectile, type, sourceEntityId, targetEntityId, origin, target, data.speed);
 
     return projectile;
 }

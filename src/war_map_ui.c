@@ -1,4 +1,4 @@
-#include "war_map_ui.h"
+﻿#include "war_map_ui.h"
 
 #include "shl/wstr.h"
 
@@ -130,9 +130,9 @@ void wmui_createMapUI(WarContext* context)
 
 WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
 {
-    WarEntity* entity = went_createEntity(context, WAR_ENTITY_TYPE_MINIMAP, true);
-    went_addTransformComponent(context, entity, position);
-    went_addUIComponent(context, entity, name);
+    WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_MINIMAP, true);
+    we_addTransformComponent(context, entity, position);
+    we_addUIComponent(context, entity, name);
 
     return entity;
 }
@@ -141,7 +141,7 @@ void wmui_updateGoldText(WarContext* context)
 {
     WarMap* map = context->map;
 
-    WarEntity* txtGold = went_findUIEntity(context, wsv_fromCString("txtGold"));
+    WarEntity* txtGold = we_findUIEntity(context, wsv_fromCString("txtGold"));
     assert(txtGold);
 
     s32 gold = map->players[0].gold;
@@ -153,7 +153,7 @@ void wmui_updateWoodText(WarContext* context)
 {
     WarMap* map = context->map;
 
-    WarEntity* txtWood = went_findUIEntity(context, wsv_fromCString("txtWood"));
+    WarEntity* txtWood = we_findUIEntity(context, wsv_fromCString("txtWood"));
     assert(txtWood);
 
     s32 wood = map->players[0].wood;
@@ -166,10 +166,10 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     WarMap* map = context->map;
 
     // retrieve entities of sprites of unit info/portraits
-    WarEntity* imgUnitInfo = went_findUIEntity(context, wsv_fromCString("imgUnitInfo"));
+    WarEntity* imgUnitInfo = we_findUIEntity(context, wsv_fromCString("imgUnitInfo"));
     assert(imgUnitInfo);
 
-    WarEntity* imgUnitInfoLife = went_findUIEntity(context, wsv_fromCString("imgUnitInfoLife"));
+    WarEntity* imgUnitInfoLife = we_findUIEntity(context, wsv_fromCString("imgUnitInfoLife"));
     assert(imgUnitInfoLife);
 
     String uiEntityName;
@@ -178,24 +178,24 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     for (s32 i = 0; i < 5; i++)
     {
         uiEntityName = wstr_fromCStringFormat("imgUnitPortrait%d", i);
-        imgUnitPortraits[i] = went_findUIEntity(context, wstr_view(&uiEntityName));
+        imgUnitPortraits[i] = we_findUIEntity(context, wstr_view(&uiEntityName));
         assert(imgUnitPortraits[i]);
 
         uiEntityName = wstr_fromCStringFormat("rectLifeBar%d", i);
-        rectLifeBars[i] = went_findUIEntity(context, wstr_view(&uiEntityName));
+        rectLifeBars[i] = we_findUIEntity(context, wstr_view(&uiEntityName));
         assert(rectLifeBars[i]);
     }
 
-    WarEntity* rectMagicBar = went_findUIEntity(context, wsv_fromCString("rectMagicBar"));
+    WarEntity* rectMagicBar = we_findUIEntity(context, wsv_fromCString("rectMagicBar"));
     assert(rectMagicBar);
 
-    WarEntity* rectPercentBar = went_findUIEntity(context, wsv_fromCString("rectPercentBar"));
+    WarEntity* rectPercentBar = we_findUIEntity(context, wsv_fromCString("rectPercentBar"));
     assert(rectPercentBar);
 
-    WarEntity* rectPercentText = went_findUIEntity(context, wsv_fromCString("rectPercentText"));
+    WarEntity* rectPercentText = we_findUIEntity(context, wsv_fromCString("rectPercentText"));
     assert(rectPercentText);
 
-    WarEntity* txtUnitName = went_findUIEntity(context, wsv_fromCString("txtUnitName"));
+    WarEntity* txtUnitName = we_findUIEntity(context, wsv_fromCString("txtUnitName"));
     assert(txtUnitName);
 
     // reset frame index of the sprites of unit info/portraits
@@ -231,11 +231,11 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
         for (s32 i = 1; i <= selectedEntitiesCount; i++)
         {
             WarEntityId selectedEntityId = map->selectedEntities.items[i - 1];
-            WarEntity* selectedEntity = went_findEntity(context, selectedEntityId);
+            WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
             if (selectedEntity && isUnit(selectedEntity))
             {
                 WarUnitComponent* unit = &selectedEntity->unit;
-                WarUnitData unitData = wun_getUnitData(unit->type);
+                WarUnitData unitData = wu_getUnitData(unit->type);
                 wui_setUIImage(imgUnitPortraits[i], unitData.portraitFrameIndex);
                 wmui_setLifeBar(rectLifeBars[i], unit);
             }
@@ -244,14 +244,14 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     else if (selectedEntitiesCount == 1)
     {
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
-        WarEntity* selectedEntity = went_findEntity(context, selectedEntityId);
+        WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
         if (selectedEntity && isUnit(selectedEntity))
         {
             WarUnitComponent* unit = &selectedEntity->unit;
 
-            if (wun_isDudeUnit(selectedEntity))
+            if (wu_isDudeUnit(selectedEntity))
             {
-                if (wun_isMagicUnit(selectedEntity))
+                if (wu_isMagicUnit(selectedEntity))
                 {
                     wui_setUIImage(imgUnitInfo, 1);
                     wmui_setManaBar(rectMagicBar, unit);
@@ -261,7 +261,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
                     wui_setUIImage(imgUnitInfo, 0);
                 }
             }
-            else if (wun_isBuildingUnit(selectedEntity))
+            else if (wu_isBuildingUnit(selectedEntity))
             {
                 if (unit->building)
                 {
@@ -274,7 +274,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
                 }
             }
 
-            WarUnitData unitData = wun_getUnitData(unit->type);
+            WarUnitData unitData = wu_getUnitData(unit->type);
             wui_setUIImage(imgUnitPortraits[0], unitData.portraitFrameIndex);
             wui_setUIText(txtUnitName, wsv_toString(unitData.name));
             setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
@@ -285,19 +285,19 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
 
 void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, String text)
 {
-    WarEntity* txtStatus = went_findUIEntity(context, wsv_fromCString("txtStatus"));
+    WarEntity* txtStatus = we_findUIEntity(context, wsv_fromCString("txtStatus"));
     assert(txtStatus);
 
-    WarEntity* imgStatusWood = went_findUIEntity(context, wsv_fromCString("imgStatusWood"));
+    WarEntity* imgStatusWood = we_findUIEntity(context, wsv_fromCString("imgStatusWood"));
     assert(imgStatusWood);
 
-    WarEntity* imgStatusGold = went_findUIEntity(context, wsv_fromCString("imgStatusGold"));
+    WarEntity* imgStatusGold = we_findUIEntity(context, wsv_fromCString("imgStatusGold"));
     assert(imgStatusGold);
 
-    WarEntity* txtStatusWood = went_findUIEntity(context, wsv_fromCString("txtStatusWood"));
+    WarEntity* txtStatusWood = we_findUIEntity(context, wsv_fromCString("txtStatusWood"));
     assert(txtStatusWood);
 
-    WarEntity* txtStatusGold = went_findUIEntity(context, wsv_fromCString("txtStatusGold"));
+    WarEntity* txtStatusGold = we_findUIEntity(context, wsv_fromCString("txtStatusGold"));
     assert(txtStatusGold);
 
     wui_setUIText(txtStatus, text);
@@ -375,16 +375,16 @@ void wmui_setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, W
 
 void wmui_renderSelectionRect(WarContext* context)
 {
-    wrend_renderSave(context);
+    wr_renderSave(context);
 
     WarInput* input = &context->input;
     if (input->isDragging)
     {
         rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
-        wrend_renderStrokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
+        wr_renderStrokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
     }
 
-    wrend_renderRestore(context);
+    wr_renderRestore(context);
 }
 
 void wmui_renderCommand(WarContext* context)
@@ -394,7 +394,7 @@ void wmui_renderCommand(WarContext* context)
 
     WarInput* input = &context->input;
 
-    wrend_renderSave(context);
+    wr_renderSave(context);
 
     switch (command->type)
     {
@@ -419,16 +419,16 @@ void wmui_renderCommand(WarContext* context)
             position = wmap_vec2MapToTileCoordinates(position);
 
             WarUnitType buildingToBuild = command->build.buildingToBuild;
-            WarUnitData data = wun_getUnitData(buildingToBuild);
+            WarUnitData data = wu_getUnitData(buildingToBuild);
 
-            WarColor fillColor = went_checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
+            WarColor fillColor = we_checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = wmap_vec2TileToMapCoordinates(position, false);
             position = wmap_vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(data.sizex * MEGA_TILE_WIDTH, data.sizey * MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
-            wrend_renderFillRect(context, buildingRect, fillColor);
+            wr_renderFillRect(context, buildingRect, fillColor);
 
             break;
         }
@@ -439,14 +439,14 @@ void wmui_renderCommand(WarContext* context)
             vec2 position = wmap_vec2ScreenToMapCoordinates(context, input->pos);
             position = wmap_vec2MapToTileCoordinates(position);
 
-            WarColor fillColor = went_checkRectToBuild(context, (s32)position.x, (s32)position.y, 1, 1)
+            WarColor fillColor = we_checkRectToBuild(context, (s32)position.x, (s32)position.y, 1, 1)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = wmap_vec2TileToMapCoordinates(position, false);
             position = wmap_vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
-            wrend_renderFillRect(context, buildingRect, fillColor);
+            wr_renderFillRect(context, buildingRect, fillColor);
 
             break;
         }
@@ -458,16 +458,16 @@ void wmui_renderCommand(WarContext* context)
         }
     }
 
-    wrend_renderRestore(context);
+    wr_renderRestore(context);
 }
 
 void wmui_renderMapUI(WarContext* context)
 {
-    wrend_renderSave(context);
+    wr_renderSave(context);
 
     wmui_renderSelectionRect(context);
     wmui_renderCommand(context);
     wui_renderUIEntities(context);
 
-    wrend_renderRestore(context);
+    wr_renderRestore(context);
 }

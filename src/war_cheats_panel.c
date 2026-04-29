@@ -1,4 +1,4 @@
-#include "war_cheats.h"
+﻿#include "war_cheats.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -9,7 +9,7 @@
 #include "war_font.h"
 #include "war_ui.h"
 
-void wcp_setCheatsPanelVisible(WarContext* context, bool visible)
+void wcheatp_setCheatsPanelVisible(WarContext* context, bool visible)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -32,7 +32,7 @@ void wcp_setCheatsPanelVisible(WarContext* context, bool visible)
     }
 }
 
-void wcp_setCheatsFeedback(WarContext* context, String feedbackText)
+void wcheatp_setCheatsFeedback(WarContext* context, String feedbackText)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -60,7 +60,7 @@ void wcp_setCheatsFeedback(WarContext* context, String feedbackText)
     }
 }
 
-void wcp_createCheatsPanel(WarContext* context)
+void wcheatp_createCheatsPanel(WarContext* context)
 {
     WarScene* scene = context->scene;
     assert(scene);
@@ -89,15 +89,15 @@ void wcp_createCheatsPanel(WarContext* context)
     setUIEntityStatus(uiEntity, false);
 }
 
-void wcp_setCheatText(WarContext* context, String text)
+void wcheatp_setCheatText(WarContext* context, String text)
 {
-    WarEntity* txtCheat = went_findUIEntity(context, wsv_fromCString("txtCheat"));
+    WarEntity* txtCheat = we_findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(txtCheat);
 
     wui_setUIText(txtCheat, text);
 }
 
-void wcp_updateCheatsPanel(WarContext* context)
+void wcheatp_updateCheatsPanel(WarContext* context)
 {
     WarScene* scene = context->scene;
     assert(scene);
@@ -108,15 +108,15 @@ void wcp_updateCheatsPanel(WarContext* context)
     if (!cheatStatus->enabled)
         return;
 
-    WarEntity* cheatPanel = went_findUIEntity(context, wsv_fromCString("panelCheat"));
+    WarEntity* cheatPanel = we_findUIEntity(context, wsv_fromCString("panelCheat"));
 
-    WarEntity* cheatCursor = went_findUIEntity(context, wsv_fromCString("cursorCheat"));
+    WarEntity* cheatCursor = we_findUIEntity(context, wsv_fromCString("cursorCheat"));
     assert(cheatCursor);
 
-    WarEntity* cheatText = went_findUIEntity(context, wsv_fromCString("txtCheat"));
+    WarEntity* cheatText = we_findUIEntity(context, wsv_fromCString("txtCheat"));
     assert(cheatText);
 
-    WarEntity* cheatFeedbackText = went_findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
+    WarEntity* cheatFeedbackText = we_findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
     assert(cheatFeedbackText);
 
     if (cheatStatus->feedback)
@@ -146,7 +146,7 @@ void wcp_updateCheatsPanel(WarContext* context)
                 wcheat_applyCheat(context, wstr_view(&cheatStatus->text));
             }
 
-            wcp_setCheatsPanelVisible(context, false);
+            wcheatp_setCheatsPanelVisible(context, false);
             return;
         }
 
@@ -204,7 +204,7 @@ void wcp_updateCheatsPanel(WarContext* context)
         StringView cheatStatusText = wstr_view(&cheatStatus->text);
 
         String statusText = wstr_concat(prefix, cheatStatusText);
-        wcp_setCheatText(context, statusText);
+        wcheatp_setCheatText(context, statusText);
 
         WarFontParams params = {0};
         params.fontSize = cheatText->text.fontSize;
@@ -226,7 +226,7 @@ void wcp_updateCheatsPanel(WarContext* context)
 
         if (wasKeyPressed(input, WAR_KEY_ENTER))
         {
-            wcp_setCheatsPanelVisible(context, true);
+            wcheatp_setCheatsPanelVisible(context, true);
         }
     }
 }

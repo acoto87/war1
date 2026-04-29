@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_units.h"
 
@@ -29,23 +29,23 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
 {
     WarMap* map = context->map;
 
-    vec2 start = wun_getUnitCenterPosition(entity, true);
+    vec2 start = wu_getUnitCenterPosition(entity, true);
     vec2 end = state->follow.targetTile;
 
     if (state->follow.targetEntityId)
     {
-        WarEntity* targetEntity = went_findEntity(context, (WarEntityId)state->follow.targetEntityId);
+        WarEntity* targetEntity = we_findEntity(context, (WarEntityId)state->follow.targetEntityId);
 
         if (isUnit(targetEntity))
         {
             // if the target entity is an unit the instead of using the tile where
             // the player click, use a point on the target unit that is closer to
             // the following unit
-            end = wun_unitPointOnTarget(entity, targetEntity);
+            end = wu_unitPointOnTarget(entity, targetEntity);
         }
         else
         {
-            end = wun_getUnitCenterPosition(targetEntity, true);
+            end = wu_getUnitCenterPosition(targetEntity, true);
         }
     }
 

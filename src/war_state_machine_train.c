@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_audio.h"
 
@@ -19,7 +19,7 @@ void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = wun_getUnitSize(entity);
+    vec2 unitSize = wu_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
@@ -34,7 +34,7 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = wun_getUnitSize(entity);
+    vec2 unitSize = wu_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
@@ -73,12 +73,12 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         unit->buildPercent = 1;
 
         // ...create the unit
-        WarEntity* unitToBuild = went_createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
+        WarEntity* unitToBuild = we_createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
 
         // ...find an empty position to put it
-        vec2 position = wun_getUnitCenterPosition(entity, true);
+        vec2 position = wu_getUnitCenterPosition(entity, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wun_setUnitCenterPosition(unitToBuild, spawnPosition, true);
+        wu_setUnitCenterPosition(unitToBuild, spawnPosition, true);
 
         if (!wst_changeStateNextState(context, entity, state))
         {
@@ -87,7 +87,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         }
 
         WarAudioId audioId = isHumanUnit(unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
-        waud_createAudio(context, audioId, false);
+        wa_createAudio(context, audioId, false);
 
         return;
     }
