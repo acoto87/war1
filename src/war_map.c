@@ -436,7 +436,7 @@ f32 wmap_getMapScaledTime(WarContext* context, f32 t)
 
 WarMap* wmap_createMap(WarContext* context, s32 levelInfoIndex)
 {
-    WarMap *map = (WarMap*)war_malloc(sizeof(WarMap));
+    WarMap *map = (WarMap*)wm_alloc(sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
 
     went_initEntityManager(context, &map->entityManager);
@@ -516,7 +516,7 @@ void wmap_freeMap(WarContext* context, WarMap* map)
     // freeEntity(map->road);
     // freeEntity(map->ruin);
 
-    war_free(map->finder.data);
+    wm_free(map->finder.data);
 }
 
 void wmap_enterMap(WarContext* context)
@@ -624,7 +624,7 @@ void wmap_enterMap(WarContext* context)
             minimapFrames[i].w = MINIMAP_WIDTH;
             minimapFrames[i].h = MINIMAP_HEIGHT;
             minimapFrames[i].off = 0;
-            minimapFrames[i].data = (u8*)war_malloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4 * sizeof(u8));
+            minimapFrames[i].data = (u8*)wm_alloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4 * sizeof(u8));
 
             // make the frame black
             for (s32 k = 0; k < MINIMAP_WIDTH * MINIMAP_HEIGHT; k++)

@@ -34,7 +34,7 @@ WarSprite wspr_createSprite(WarContext *context, u32 width, u32 height, u8 data[
     sprite.frames[0].w = (u16)width;
     sprite.frames[0].h = (u16)height;
     sprite.frames[0].off = 0;
-    sprite.frames[0].data = (u8*)war_malloc(width * height * 4);
+    sprite.frames[0].data = (u8*)wm_alloc(width * height * 4);
 
     if (data)
         memcpy(sprite.frames[0].data, data, width * height * 4);
@@ -65,7 +65,7 @@ WarSprite wspr_createSpriteFromFrames(WarContext *context, u32 frameWidth, u32 f
         sprite.frames[i].w = frames[i].w;
         sprite.frames[i].h = frames[i].h;
         sprite.frames[i].off = 0;
-        sprite.frames[i].data = (u8*)war_malloc(frameWidth * frameHeight * 4);
+        sprite.frames[i].data = (u8*)wm_alloc(frameWidth * frameHeight * 4);
 
         if (frames[i].data)
             memcpy(sprite.frames[i].data, frames[i].data, frameWidth * frameHeight * 4);
@@ -102,7 +102,7 @@ WarSprite wspr_createSpriteFromResource(WarContext* context, WarResource* resour
             {
                 WarSpriteFrame* allFrames = frames;
 
-                frames = (WarSpriteFrame*)war_malloc_frame(frameIndicesCount * sizeof(WarSpriteFrame));
+                frames = (WarSpriteFrame*)wm_allocFrame(frameIndicesCount * sizeof(WarSpriteFrame));
                 for (s32 i = 0; i < frameIndicesCount; i++)
                 {
                     s32 frameIndex = frameIndices[i];
@@ -208,7 +208,7 @@ void wspr_freeSprite(WarContext* context, WarSprite sprite)
     for (s32 i = 0; i < sprite.framesCount; i++)
     {
         if (sprite.frames[i].data)
-            war_free(sprite.frames[i].data);
+            wm_free(sprite.frames[i].data);
     }
 
     SDL_DestroyTexture(sprite.texture);

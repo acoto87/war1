@@ -61,7 +61,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     moveState->nextState = state;
     wst_changeNextState(context, entity, moveState, false, true);
 
-    war_free(positionsToMove);
+    wm_free(positionsToMove);
 }
 
 void wst_freePatrolState(WarContext* context, WarState* state)

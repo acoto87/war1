@@ -33,7 +33,7 @@ WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
     if (!context->resources[index])
     {
         logInfo("Creating resource: %d", index);
-        context->resources[index] = (WarResource*)war_malloc(sizeof(WarResource));
+        context->resources[index] = (WarResource*)wm_alloc(sizeof(WarResource));
     }
     return context->resources[index];
 }
@@ -94,7 +94,7 @@ void wres_loadPaletteResource(WarContext *context, DatabaseEntry *entry)
 
     if (rawResource.length < PALETTE_LENGTH)
     {
-        rawResource.data = (u8*)war_realloc(rawResource.data, PALETTE_LENGTH);
+        rawResource.data = (u8*)wm_realloc(rawResource.data, PALETTE_LENGTH);
         memset(rawResource.data + rawResource.length, 0, PALETTE_LENGTH - rawResource.length);
     }
 
@@ -189,7 +189,7 @@ void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
     u16 width = readu16(rawResource.data, 0);
     u16 height = readu16(rawResource.data, 2);
 
-    u8 *pixels = (u8*)war_malloc(width * height * 4 * sizeof(u8));
+    u8 *pixels = (u8*)wm_alloc(width * height * 4 * sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
@@ -241,7 +241,7 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
         frame->w = readu8(rawResource.data, 4 + i * 8 + 2);
         frame->h = readu8(rawResource.data, 4 + i * 8 + 3);
         frame->off = readu32(rawResource.data, 4 + i * 8 + 4);
-        frame->data = (u8*)war_malloc(frameWidth * frameHeight * 4 * sizeof(u8));
+        frame->data = (u8*)wm_alloc(frameWidth * frameHeight * 4 * sizeof(u8));
 
         // found in war1tool.c, don't know if is needed
         // if (off < 0) {  // High bit of width
@@ -791,7 +791,7 @@ void wres_loadTiles(WarContext *context, DatabaseEntry *entry)
     resource->type = WAR_RESOURCE_TYPE_TILES;
     resource->tilesData.palette1 = entry->param1;
     resource->tilesData.palette2 = entry->param2;
-    resource->tilesData.data = (u8*)war_malloc(rawResource.length * sizeof(u8));
+    resource->tilesData.data = (u8*)wm_alloc(rawResource.length * sizeof(u8));
     memcpy(resource->tilesData.data, rawResource.data, rawResource.length);
 }
 
@@ -808,7 +808,7 @@ void wres_loadText(WarContext *context, DatabaseEntry *entry)
     WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TEXT;
     resource->textData.length = rawResource.length;
-    resource->textData.text = (char *)war_malloc(resource->textData.length * sizeof(char));
+    resource->textData.text = (char *)wm_alloc(resource->textData.length * sizeof(char));
     memcpy(resource->textData.text, rawResource.data, resource->textData.length);
 }
 
@@ -979,7 +979,7 @@ void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
     u16 width = readu16(rawResource.data, 4);
     u16 height = readu16(rawResource.data, 6);
 
-    u8 *pixels = (u8*)war_malloc(width * height * 4 * sizeof(u8));
+    u8 *pixels = (u8*)wm_alloc(width * height * 4 * sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 8 + i);

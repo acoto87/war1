@@ -447,7 +447,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
     }
 
     // Post finished entity IDs to the main thread for removal.
-    // Never call went_removeEntityById from the audio thread: it calls war_free which
+    // Never call went_removeEntityById from the audio thread: it calls wm_free which
     // would race with main-thread allocations on permanentZone.
     if (toRemoveCount > 0)
     {
@@ -480,9 +480,9 @@ bool waud_initAudio(WarContext* context)
     tsf_set_output(context->soundFont, TSF_MONO, PLAYBACK_FREQ, 0.0f);
 
     // Pre-allocate the mix buffer on the main thread before audio starts.
-    // This ensures the audio callback thread never needs to call war_calloc
-    // or war_free, which would race with main-thread allocations on permanentZone.
-    context->audioMixBuffer = (s16*)war_malloc(AUDIO_MIX_BUFFER_MAX_SAMPLES * sizeof(s16));
+    // This ensures the audio callback thread never needs to call wm_calloc
+    // or wm_free, which would race with main-thread allocations on permanentZone.
+    context->audioMixBuffer = (s16*)wm_alloc(AUDIO_MIX_BUFFER_MAX_SAMPLES * sizeof(s16));
     if (!context->audioMixBuffer)
     {
         logError("Failed to allocate audio mix buffer.");
@@ -497,7 +497,7 @@ bool waud_initAudio(WarContext* context)
     if (!context->audioRemoveMutex)
     {
         logError("Failed to create audio remove mutex: %s", SDL_GetError());
-        war_free(context->audioMixBuffer);
+        wm_free(context->audioMixBuffer);
         context->audioMixBuffer = NULL;
         tsf_close(context->soundFont);
         context->soundFont = NULL;
@@ -1055,7 +1055,7 @@ u8* waud_changeSampleRate(WarContext* context, u8* samplesIn, s32 length, s32 fa
     assert(factor >= 1);
 
     s32 newLength = length * factor;
-    u8* samplesOut = (u8*)war_malloc(newLength);
+    u8* samplesOut = (u8*)wm_alloc(newLength);
 
     samplesOut[0] = samplesIn[0];
 

@@ -47,7 +47,7 @@ bool wst_isInsideBuilding(WarEntity* entity)
 
 WarState* wst_createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    WarState* state = (WarState*)war_malloc(sizeof(WarState));
+    WarState* state = (WarState*)wm_alloc(sizeof(WarState));
     state->type = type;
     state->entityId = entity->id;
     state->nextUpdateTime = 0;
@@ -195,5 +195,5 @@ void wst_freeState(WarContext* context, WarState* state)
     if (state->nextState)
         wst_freeState(context, state->nextState);
 
-    war_free(state);
+    wm_free(state);
 }

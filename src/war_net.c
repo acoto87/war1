@@ -294,7 +294,7 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
         return false;
     }
 
-    char* response = (char*)war_malloc(RESPONSE_MAX_SIZE * sizeof(char));
+    char* response = (char*)wm_alloc(RESPONSE_MAX_SIZE * sizeof(char));
     char* responsePtr = response;
 
     s32 responseLength = wnet_readResponse(sck, response, RESPONSE_MAX_SIZE);
@@ -305,7 +305,7 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
 
         closeSocket(sck);
         wnet_cleanNetwork();
-        war_free(response);
+        wm_free(response);
 
         return false;
     }
@@ -317,7 +317,7 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
 
         closeSocket(sck);
         wnet_cleanNetwork();
-        war_free(response);
+        wm_free(response);
 
         return false;
     }
@@ -328,7 +328,7 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
 
         closeSocket(sck);
         wnet_cleanNetwork();
-        war_free(response);
+        wm_free(response);
         SDL_CloseIO(stream);
 
         return true;
@@ -353,7 +353,7 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
 
         closeSocket(sck);
         wnet_cleanNetwork();
-        war_free(response);
+        wm_free(response);
         SDL_CloseIO(stream);
 
         return false;
@@ -368,7 +368,7 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
 
         closeSocket(sck);
         wnet_cleanNetwork();
-        war_free(response);
+        wm_free(response);
         SDL_CloseIO(stream);
 
         return false;
@@ -383,7 +383,7 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
 
         closeSocket(sck);
         wnet_cleanNetwork();
-        war_free(response);
+        wm_free(response);
         SDL_CloseIO(stream);
 
         return false;

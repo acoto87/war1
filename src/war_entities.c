@@ -445,7 +445,7 @@ WarEntity* went_createEntity(WarContext* context, WarEntityType type, bool addTo
 {
     WarEntityManager* manager = went_getEntityManager(context);
 
-    WarEntity* entity = (WarEntity *)war_malloc(sizeof(WarEntity));
+    WarEntity* entity = (WarEntity *)wm_alloc(sizeof(WarEntity));
     manager->staticEntityId++;
     assert(manager->staticEntityId <= UINT16_MAX);
     entity->id = (WarEntityId)manager->staticEntityId;
@@ -848,7 +848,7 @@ void went_initEntityManager(WarContext* context, WarEntityManager* manager)
     WarEntityMapInit(&manager->entitiesByType, entitiesByTypeOptions);
     for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
     {
-        WarEntityList* list = (WarEntityList*)war_malloc(sizeof(WarEntityList));
+        WarEntityList* list = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
         WarEntityListInit(list, WarEntityListNonFreeOptions);
         WarEntityMapSet(&manager->entitiesByType, type, list);
     }
@@ -862,7 +862,7 @@ void went_initEntityManager(WarContext* context, WarEntityManager* manager)
     WarUnitMapInit(&manager->unitsByType, unitsByTypeOptions);
     for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
     {
-        WarEntityList* list = (WarEntityList*)war_malloc(sizeof(WarEntityList));
+        WarEntityList* list = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
         WarEntityListInit(list, WarEntityListNonFreeOptions);
         WarUnitMapSet(&manager->unitsByType, type, list);
     }
@@ -1953,7 +1953,7 @@ bool went_checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 WarEntityList* went_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
 {
     TracyCZoneN(ctx, "GetNearUnits", 1);
-    WarEntityList* nearUnits = (WarEntityList*)war_malloc(sizeof(WarEntityList));
+    WarEntityList* nearUnits = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
     WarEntityListInit(nearUnits, WarEntityListNonFreeOptions);
 
     WarEntityList* units = went_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);

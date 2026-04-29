@@ -10,7 +10,7 @@
 
 WarSpriteAnimation* wani_createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop)
 {
-    WarSpriteAnimation* anim = (WarSpriteAnimation*)war_malloc(sizeof(WarSpriteAnimation));
+    WarSpriteAnimation* anim = (WarSpriteAnimation*)wm_alloc(sizeof(WarSpriteAnimation));
 
     anim->name = name;
     anim->loop = loop;
@@ -86,7 +86,7 @@ void wani_freeAnimation(WarSpriteAnimation* animation)
     if (animation)
     {
         s32ListFree(&animation->frames);
-        war_free(animation);
+        wm_free(animation);
     }
 }
 

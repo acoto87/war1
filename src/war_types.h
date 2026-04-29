@@ -1833,7 +1833,7 @@ bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
 
 static inline void freeEntity(WarEntity* e)
 {
-    war_free(e);
+    wm_free(e);
 }
 
 shlDeclareList(WarEntityList, WarEntity*)
@@ -1987,7 +1987,7 @@ bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
 
 static inline void aiCommandFree(WarAICommand* command)
 {
-    war_free((void*)command);
+    wm_free((void*)command);
 }
 
 #define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
@@ -2296,7 +2296,7 @@ typedef struct _WarContext
 
     // Pre-allocated mix buffer owned exclusively by the audio callback.
     // Allocated on the main thread before audio starts so that the audio
-    // callback thread never calls war_calloc / war_free, which would race
+    // callback thread never calls wm_calloc / war_free, which would race
     // with main-thread allocations on permanentZone.
     s16* audioMixBuffer;
     u32  audioMixBufferCapacity; // capacity in samples

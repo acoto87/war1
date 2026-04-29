@@ -16,7 +16,7 @@ WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 
 WarScene* wsc_createScene(WarContext* context, WarSceneType type)
 {
-    WarScene* scene = (WarScene*)war_malloc(sizeof(WarScene));
+    WarScene* scene = (WarScene*)wm_alloc(sizeof(WarScene));
     scene->type = type;
 
     went_initEntityManager(context, &scene->entityManager);

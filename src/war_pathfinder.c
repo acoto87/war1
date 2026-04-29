@@ -347,7 +347,7 @@ WarPathFinder wpath_initPathFinder(WarContext* context, PathFindingType type, s3
     finder.type = type;
     finder.width = width;
     finder.height = height;
-    finder.data = (u16*)war_malloc(width * height * sizeof(u16));
+    finder.data = (u16*)wm_alloc(width * height * sizeof(u16));
 
     // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
     for(s32 i = 0; i < width * height; i++)

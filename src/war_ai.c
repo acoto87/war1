@@ -6,7 +6,7 @@ WarAI* wai_createAI(WarContext* context)
 {
     NOT_USED(context);
 
-    WarAI* ai = (WarAI*)war_malloc(sizeof(WarAI));
+    WarAI* ai = (WarAI*)wm_alloc(sizeof(WarAI));
     ai->staticCommandId = 0;
     ai->customData = NULL;
 
@@ -23,7 +23,7 @@ WarAICommand* wai_createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, 
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    WarAICommand* command = (WarAICommand*)war_malloc(sizeof(WarAICommand));
+    WarAICommand* command = (WarAICommand*)wm_alloc(sizeof(WarAICommand));
     command->id = ++ai->staticCommandId;
     command->type = type;
     command->status = WAR_AI_COMMAND_STATUS_CREATED;
@@ -65,7 +65,7 @@ void wai_initAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    WarAICustomData* customData = (WarAICustomData*)war_malloc(sizeof(WarAICustomData));
+    WarAICustomData* customData = (WarAICustomData*)wm_alloc(sizeof(WarAICustomData));
     customData->index = 0;
 
     WarAICommandList* commands = &customData->commands;

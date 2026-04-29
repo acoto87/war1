@@ -25,7 +25,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
     // selected units make, this is an intent to keep the
     // formation of the selected units
     //
-    rect* rs = (rect*)war_malloc_frame(selEntitiesCount * sizeof(rect));
+    rect* rs = (rect*)wm_allocFrame(selEntitiesCount * sizeof(rect));
 
     for(s32 i = 0; i < selEntitiesCount; i++)
     {

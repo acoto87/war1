@@ -35,7 +35,7 @@ static bool is_in_zone(memzone_t* zone, void* p)
     return ptr >= z && ptr < (z + mz_maxSize(zone));
 }
 
-bool war_alloc_init(size_t permSize, size_t frameSize)
+bool wm_allocInit(size_t permSize, size_t frameSize)
 {
 #ifdef SHL_MZ_DEBUG
     permanentZone = mz_initAudit(permSize, SHL_MZ_AUDIT_FORMAT_COMPACT, "permanent_zone.log");
@@ -70,7 +70,7 @@ bool war_alloc_init(size_t permSize, size_t frameSize)
     return true;
 }
 
-void war_alloc_free(void)
+void wm_allocFree(void)
 {
     if (permanentZone) mz_destroy(permanentZone);
     if (frameZone) mz_destroy(frameZone);
@@ -79,27 +79,27 @@ void war_alloc_free(void)
     currentZone = NULL;
 }
 
-void war_set_zone(memzone_t* zone)
+void wm_setZone(memzone_t* zone)
 {
     currentZone = zone;
 }
 
-void war_reset_zone(void)
+void wm_resetZone(void)
 {
     currentZone = permanentZone;
 }
 
-void* war_malloc(size_t sz)
+void* wm_alloc(size_t sz)
 {
     return mz_alloc(currentZone, sz);
 }
 
-void* war_malloc_frame(size_t sz)
+void* wm_allocFrame(size_t sz)
 {
     return mz_alloc(frameZone, sz);
 }
 
-void* war_calloc(size_t n, size_t sz)
+void* wm_calloc(size_t n, size_t sz)
 {
     // Guard against n*sz wrapping to a smaller value on overflow.
     if (n != 0 && sz > (size_t)-1 / n)
@@ -108,12 +108,12 @@ void* war_calloc(size_t n, size_t sz)
     return mz_alloc(currentZone, n * sz);
 }
 
-void* war_realloc(void* p, size_t sz)
+void* wm_realloc(void* p, size_t sz)
 {
-    if (!p) return war_malloc(sz);
+    if (!p) return wm_alloc(sz);
     if (sz == 0)
     {
-        war_free(p);
+        wm_free(p);
         return NULL;
     }
 
@@ -131,7 +131,7 @@ void* war_realloc(void* p, size_t sz)
     return realloc(p, sz);
 }
 
-void war_free(void* p)
+void wm_free(void* p)
 {
     if (!p) return;
 

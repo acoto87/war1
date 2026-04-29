@@ -272,7 +272,7 @@ void wg_quitGame(WarContext* context)
 
     if (context->audioMixBuffer)
     {
-        war_free(context->audioMixBuffer);
+        wm_free(context->audioMixBuffer);
         context->audioMixBuffer = NULL;
         context->audioMixBufferCapacity = 0;
     }
