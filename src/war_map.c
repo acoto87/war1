@@ -2537,14 +2537,14 @@ void renderTerrain(WarContext* context)
                 s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
                 s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-                renderSave(context);
-                renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
+                wrend_renderSave(context);
+                wrend_renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
                 rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
+                wrend_renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
 
-                renderRestore(context);
+                wrend_renderRestore(context);
             }
         }
     }
@@ -2577,21 +2577,21 @@ void renderFoW(WarContext* context)
 
                 rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
+                wrend_renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
             }
 
             if (tile->state == MAP_TILE_STATE_UNKOWN)
             {
                 rect rs = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderSubImage(context, map->blackSprite.texture, rs, rd, VEC2_ONE);
+                wrend_renderSubImage(context, map->blackSprite.texture, rs, rd, VEC2_ONE);
             }
         }
     }
 
     // Pass 2: render fog boundary and fog tiles at half opacity
-    renderSave(context);
-    renderGlobalAlpha(context, 0.5f);
+    wrend_renderSave(context);
+    wrend_renderGlobalAlpha(context, 0.5f);
 
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
     {
@@ -2609,19 +2609,19 @@ void renderFoW(WarContext* context)
 
                 rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
+                wrend_renderSubImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
             }
 
             if (tile->state == MAP_TILE_STATE_FOG)
             {
                 rect rs = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderSubImage(context, map->blackSprite.texture, rs, rd, VEC2_ONE);
+                wrend_renderSubImage(context, map->blackSprite.texture, rs, rd, VEC2_ONE);
             }
         }
     }
 
-    renderRestore(context);
+    wrend_renderRestore(context);
     TracyCZoneEnd(ctx);
 }
 
@@ -2641,7 +2641,7 @@ void renderUnitPaths(WarContext* context)
                 {
                     vec2 pos = vec2TileToMapCoordinates(positions.items[k], true);
                     pos = vec2Subv(pos, vec2i(2, 2));
-                    renderFillRect(context, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
+                    wrend_renderFillRect(context, rectv(pos, vec2i(4, 4)), getColorFromList(entity->id));
                 }
 
                 s32 index = moveState->move.pathNodeIndex;
@@ -2655,9 +2655,9 @@ void renderUnitPaths(WarContext* context)
                         vec2 pos = vec2TileToMapCoordinates(path.nodes.items[k], true);
 
                         if (k > 0)
-                            renderStrokeLine(context, prevPos, pos, getColorFromList(entity->id), 0.5f);
+                            wrend_renderStrokeLine(context, prevPos, pos, getColorFromList(entity->id), 0.5f);
 
-                        renderFillRect(context, rectv(pos, VEC2_ONE), k == index ? WAR_COLOR_RGB(255, 0, 255) : WAR_COLOR_RGB(255, 255, 0));
+                        wrend_renderFillRect(context, rectv(pos, VEC2_ONE), k == index ? WAR_COLOR_RGB(255, 0, 255) : WAR_COLOR_RGB(255, 255, 0));
 
                         prevPos = pos;
                     }
@@ -2679,13 +2679,13 @@ void renderPassableInfo(WarContext* context)
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderFillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 0, 0, 100));
+                wrend_renderFillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 0, 0, 100));
             }
             else if(isDynamic(map->finder, x, y))
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                renderFillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 150, 100, 100));
+                wrend_renderFillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 150, 100, 100));
             }
         }
     }
@@ -2697,14 +2697,14 @@ void renderMapGrid(WarContext* context)
     {
         vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
         vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
-        renderStrokeLine(context, p1, p2, WAR_COLOR_WHITE, 0.25f);
+        wrend_renderStrokeLine(context, p1, p2, WAR_COLOR_WHITE, 0.25f);
     }
 
     for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
     {
         vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
         vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
-        renderStrokeLine(context, p1, p2, WAR_COLOR_WHITE, 0.25f);
+        wrend_renderStrokeLine(context, p1, p2, WAR_COLOR_WHITE, 0.25f);
     }
 }
 
@@ -2712,10 +2712,10 @@ void renderMapPanel(WarContext *context)
 {
     WarMap *map = context->map;
 
-    renderSave(context);
+    wrend_renderSave(context);
 
-    renderTranslate(context, map->mapPanel.x, map->mapPanel.y);
-    renderTranslate(context, -map->viewport.x, -map->viewport.y);
+    wrend_renderTranslate(context, map->mapPanel.x, map->mapPanel.y);
+    wrend_renderTranslate(context, -map->viewport.x, -map->viewport.y);
 
     renderTerrain(context);
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_RUIN);
@@ -2742,7 +2742,7 @@ void renderMapPanel(WarContext *context)
     renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
     renderFoW(context);
 
-    renderRestore(context);
+    wrend_renderRestore(context);
 }
 
 void renderMap(WarContext *context)

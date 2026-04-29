@@ -375,16 +375,16 @@ void setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUni
 
 void renderSelectionRect(WarContext* context)
 {
-    renderSave(context);
+    wrend_renderSave(context);
 
     WarInput* input = &context->input;
     if (input->isDragging)
     {
         rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
-        renderStrokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
+        wrend_renderStrokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
     }
 
-    renderRestore(context);
+    wrend_renderRestore(context);
 }
 
 void renderCommand(WarContext* context)
@@ -394,7 +394,7 @@ void renderCommand(WarContext* context)
 
     WarInput* input = &context->input;
 
-    renderSave(context);
+    wrend_renderSave(context);
 
     switch (command->type)
     {
@@ -428,7 +428,7 @@ void renderCommand(WarContext* context)
             position = vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(data.sizex * MEGA_TILE_WIDTH, data.sizey * MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
-            renderFillRect(context, buildingRect, fillColor);
+            wrend_renderFillRect(context, buildingRect, fillColor);
 
             break;
         }
@@ -446,7 +446,7 @@ void renderCommand(WarContext* context)
             position = vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
-            renderFillRect(context, buildingRect, fillColor);
+            wrend_renderFillRect(context, buildingRect, fillColor);
 
             break;
         }
@@ -458,16 +458,16 @@ void renderCommand(WarContext* context)
         }
     }
 
-    renderRestore(context);
+    wrend_renderRestore(context);
 }
 
 void renderMapUI(WarContext* context)
 {
-    renderSave(context);
+    wrend_renderSave(context);
 
     renderSelectionRect(context);
     renderCommand(context);
     renderUIEntities(context);
 
-    renderRestore(context);
+    wrend_renderRestore(context);
 }
