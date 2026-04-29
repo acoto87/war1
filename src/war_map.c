@@ -557,7 +557,7 @@ void wmap_enterMap(WarContext* context)
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
     map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
-    map->finder = initPathFinder(context, PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
+    map->finder = wpath_initPathFinder(context, PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
 
     const s32 dirC = 8;
     const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
@@ -673,7 +673,7 @@ void wmap_enterMap(WarContext* context)
                     {
                         s32 xx = tree.tilex + dirX[d];
                         s32 yy = tree.tiley + dirY[d];
-                        if (isInside(map->finder, xx, yy))
+                        if (wpath_isInside(map->finder, xx, yy))
                         {
                             s32 k = yy * MAP_TILES_WIDTH + xx;
                             if (!processed[k] && passableData[k] == 128)
@@ -1253,7 +1253,7 @@ void updateRainOfFireEdit(WarContext* context)
             vec2 target = wmap_vec2ScreenToMapCoordinates(context, input->pos);
             vec2 origin = vec2f(target.x, viewport.y);
 
-            createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+            wproj_createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
         }
 
     }
@@ -1978,7 +1978,7 @@ void updateActions(WarContext* context)
         WarEntity* entity = units->items[i];
         if (entity)
         {
-            updateAction(context, entity);
+            wact_updateAction(context, entity);
         }
     }
     TracyCZoneEnd(ctx);
@@ -1992,7 +1992,7 @@ void updateProjectiles(WarContext* context)
         WarEntity* entity = projectiles->items[i];
         if (entity)
         {
-            updateProjectile(context, entity);
+            wproj_updateProjectile(context, entity);
         }
     }
 }

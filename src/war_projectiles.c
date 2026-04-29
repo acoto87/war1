@@ -31,7 +31,7 @@ WarProjectileData projectilesData[] =
     { WAR_PROJECTILE_RAIN_OF_FIRE,      351,                6 * MEGA_TILE_WIDTH,    3,      1 },
 };
 
-WarProjectileData getProjectileData(WarProjectileType type)
+WarProjectileData wproj_getProjectileData(WarProjectileType type)
 {
     s32 index = 0;
     s32 length = arrayLength(projectilesData);
@@ -42,7 +42,7 @@ WarProjectileData getProjectileData(WarProjectileType type)
     return projectilesData[index];
 }
 
-void doProjectileTargetDamage(WarContext* context, WarEntity* entity)
+void wproj_doProjectileTargetDamage(WarContext* context, WarEntity* entity)
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
@@ -69,7 +69,7 @@ void doProjectileTargetDamage(WarContext* context, WarEntity* entity)
     }
 }
 
-void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
+void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
@@ -108,7 +108,7 @@ void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splash
     }
 }
 
-void doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
+void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
@@ -145,7 +145,7 @@ void doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, 
     }
 }
 
-bool updateProjectilePosition(WarContext* context, WarEntity* entity)
+bool wproj_updateProjectilePosition(WarContext* context, WarEntity* entity)
 {
     WarTransformComponent* transform = &entity->transform;
     WarProjectileComponent* projectile = &entity->projectile;
@@ -175,7 +175,7 @@ bool updateProjectilePosition(WarContext* context, WarEntity* entity)
     return distance < MOVE_EPSILON;
 }
 
-void updateProjectileSprite(WarContext* context, WarEntity* entity)
+void wproj_updateProjectileSprite(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -183,7 +183,7 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
     WarSpriteComponent* sprite = &entity->sprite;
     WarProjectileComponent* projectile = &entity->projectile;
 
-    WarProjectileData data = getProjectileData(projectile->type);
+    WarProjectileData data = wproj_getProjectileData(projectile->type);
 
     vec2 position = transform->position;
     vec2 origin = projectile->origin;
@@ -252,7 +252,7 @@ void updateProjectileSprite(WarContext* context, WarEntity* entity)
     sprite->frameIndex = newFrameIndex;
 }
 
-void updateRainOfFireProjectileSprite(WarContext* context, WarEntity* entity)
+void wproj_updateRainOfFireProjectileSprite(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -260,7 +260,7 @@ void updateRainOfFireProjectileSprite(WarContext* context, WarEntity* entity)
     WarSpriteComponent* sprite = &entity->sprite;
     WarProjectileComponent* projectile = &entity->projectile;
 
-    WarProjectileData data = getProjectileData(projectile->type);
+    WarProjectileData data = wproj_getProjectileData(projectile->type);
 
     vec2 position = transform->position;
     vec2 origin = projectile->origin;
@@ -292,7 +292,7 @@ void updateRainOfFireProjectileSprite(WarContext* context, WarEntity* entity)
     sprite->frameIndex = newFrameIndex;
 }
 
-void updateProjectile(WarContext* context, WarEntity* entity)
+void wproj_updateProjectile(WarContext* context, WarEntity* entity)
 {
     WarSpriteComponent* sprite = &entity->sprite;
     WarProjectileComponent* projectile = &entity->projectile;
@@ -301,13 +301,13 @@ void updateProjectile(WarContext* context, WarEntity* entity)
     {
         if (projectile->type == WAR_PROJECTILE_RAIN_OF_FIRE)
         {
-            if (!updateProjectilePosition(context, entity))
+            if (!wproj_updateProjectilePosition(context, entity))
             {
-                updateRainOfFireProjectileSprite(context, entity);
+                wproj_updateRainOfFireProjectileSprite(context, entity);
             }
             else
             {
-                doRainOfFireProjectileSplashDamage(context, entity, NEAR_RAIN_OF_FIRE_RADIUS);
+                wproj_doRainOfFireProjectileSplashDamage(context, entity, NEAR_RAIN_OF_FIRE_RADIUS);
 
                 WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                 went_addAnimationsComponent(context, animEntity);
@@ -319,15 +319,15 @@ void updateProjectile(WarContext* context, WarEntity* entity)
         }
         else
         {
-            if (!updateProjectilePosition(context, entity))
+            if (!wproj_updateProjectilePosition(context, entity))
             {
-                updateProjectileSprite(context, entity);
+                wproj_updateProjectileSprite(context, entity);
             }
             else
             {
                 if (projectile->type == WAR_PROJECTILE_CATAPULT)
                 {
-                    doProjectileSplashDamage(context, entity, NEAR_CATAPULT_RADIUS);
+                    wproj_doProjectileSplashDamage(context, entity, NEAR_CATAPULT_RADIUS);
 
                     WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                     went_addAnimationsComponent(context, animEntity);
@@ -337,7 +337,7 @@ void updateProjectile(WarContext* context, WarEntity* entity)
                 }
                 else
                 {
-                    doProjectileTargetDamage(context, entity);
+                    wproj_doProjectileTargetDamage(context, entity);
 
                     if (projectile->type == WAR_PROJECTILE_ARROW)
                         waud_createAudioWithPosition(context, WAR_ARROW_SPEAR_HIT, projectile->target, false);
@@ -349,11 +349,11 @@ void updateProjectile(WarContext* context, WarEntity* entity)
     }
 }
 
-WarEntity* createProjectile(WarContext* context, WarProjectileType type,
+WarEntity* wproj_createProjectile(WarContext* context, WarProjectileType type,
                             WarEntityId sourceEntityId, WarEntityId targetEntityId,
                             vec2 origin, vec2 target)
 {
-    WarProjectileData data = getProjectileData(type);
+    WarProjectileData data = wproj_getProjectileData(type);
 
     WarEntity* projectile = went_createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
     went_addTransformComponent(context, projectile, origin);

@@ -352,7 +352,7 @@ void executeSummonCommand(WarContext* context, WarUnitCommandType summonType)
             while (went_decreaseUnitMana(context, entity, stats.manaCost))
             {
                 vec2 position = wun_getUnitCenterPosition(entity, true);
-                vec2 spawnPosition = findEmptyPosition(map->finder, position);
+                vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
 
                 WarEntity* summonedUnit = went_createUnit(context, spellMapping.mappedType,
                                                      (s32)spawnPosition.x, (s32)spawnPosition.y,

@@ -950,7 +950,7 @@ static void initOrcCorpseActionDefs(void)
     gUnitActionDefs[WAR_UNIT_ORC_CORPSE][WAR_ACTION_TYPE_DEATH] = deathDef;
 }
 
-void initUnitActionDefs(void)
+void wact_initUnitActionDefs(void)
 {
     WarUnitFrameNumbers frameNumbers_5_5_5_5 = getFrameNumbers(5, arrayArg(s32, 5, 5, 5));
     WarUnitFrameNumbers frameNumbers_5_5_5_4 = getFrameNumbers(5, arrayArg(s32, 5, 5, 4));
@@ -1005,7 +1005,7 @@ void initUnitActionDefs(void)
     initOrcCorpseActionDefs();
 }
 
- void addUnitActions(WarEntity* entity)
+ void wact_addUnitActions(WarEntity* entity)
 {
     WarUnitComponent* unit = &entity->unit;
 
@@ -1022,7 +1022,7 @@ void initUnitActionDefs(void)
     }
 }
 
-s32 getActionDuration(WarEntity* entity, WarUnitActionType type)
+s32 wact_getActionDuration(WarEntity* entity, WarUnitActionType type)
 {
     assert(isUnit(entity));
 
@@ -1052,7 +1052,7 @@ void resetAction(WarUnitAction* action)
     action->status = WAR_ACTION_NOT_STARTED;
 }
 
-void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale)
+void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale)
 {
     NOT_USED(context);
 
@@ -1085,7 +1085,7 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
     }
 }
 
-void updateAction(WarContext* context, WarEntity* entity)
+void wact_updateAction(WarContext* context, WarEntity* entity)
 {
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;

@@ -17,7 +17,7 @@ void enterWaitState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
 }
 
 void leaveWaitState(WarContext* context, WarEntity* entity, WarState* state)

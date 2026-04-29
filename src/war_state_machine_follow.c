@@ -64,7 +64,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    WarMapPath path = findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
+    WarMapPath path = wpath_findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
 
     // if there is no path to the target, go to idle
     if (path.nodes.count <= 1)
@@ -75,7 +75,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
             changeNextState(context, entity, idleState, true, true);
         }
 
-        freePath(path);
+        wpath_freePath(path);
         return;
     }
 
@@ -83,7 +83,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     moveState->nextState = state;
     changeNextState(context, entity, moveState, false, true);
 
-    freePath(path);
+    wpath_freePath(path);
 }
 
 void freeFollowState(WarContext* context, WarState* state)

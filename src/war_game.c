@@ -243,7 +243,7 @@ bool initGame(WarContext* context)
         setNextScene(context, scene, 0.0f);
     }
 
-    initUnitActionDefs();
+    wact_initUnitActionDefs();
 
     context->time = SDL_GetTicks() / 1000.0f;
     return true;

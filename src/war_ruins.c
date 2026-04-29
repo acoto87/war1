@@ -53,7 +53,7 @@ void went_determineRuinTypes(WarContext* context, WarEntity* entity)
             s32 xx = pi->tilex + dirX[d];
             s32 yy = pi->tiley + dirY[d];
             
-            if (!isInside(map->finder, xx, yy) || went_hasRuinPieceAtPosition(entity, xx, yy))
+            if (!wpath_isInside(map->finder, xx, yy) || went_hasRuinPieceAtPosition(entity, xx, yy))
             {
                 index = index | (1 << d);
             }

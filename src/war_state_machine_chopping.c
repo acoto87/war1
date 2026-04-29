@@ -23,7 +23,7 @@ void enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     wun_setUnitDirectionFromDiff(entity, treePosition.x - position.x, treePosition.y - position.y);
-    setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 }
 
 void leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state)

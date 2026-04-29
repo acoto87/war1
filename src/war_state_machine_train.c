@@ -77,7 +77,7 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 
         // ...find an empty position to put it
         vec2 position = wun_getUnitCenterPosition(entity, true);
-        vec2 spawnPosition = findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
         wun_setUnitCenterPosition(unitToBuild, spawnPosition, true);
 
         if (!changeStateNextState(context, entity, state))

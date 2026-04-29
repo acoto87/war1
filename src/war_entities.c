@@ -504,7 +504,7 @@ WarEntity* went_createUnit(WarContext* context,
     }
     went_addSpriteComponentFromResource(context, entity, imageResourceRef(spriteIndex));
 
-    addUnitActions(entity);
+    wact_addUnitActions(entity);
     went_addAnimationsComponent(context, entity);
     went_addStateMachineComponent(context, entity);
 
@@ -2163,7 +2163,7 @@ void went_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetE
             vec2 origin = wun_getUnitCenterPosition(entity, false);
             vec2 target = wun_getUnitCenterPosition(targetEntity, false);
             WarProjectileType projectileType = wun_getProjectileType(unit->type);
-            createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+            wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
         else
         {
@@ -2177,7 +2177,7 @@ void went_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetE
         vec2 origin = wun_getUnitCenterPosition(entity, false);
         vec2 target = wun_getUnitCenterPosition(targetEntity, false);
         WarProjectileType projectileType = wun_getProjectileType(unit->type);
-        createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+        wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }
 }
 
@@ -2196,7 +2196,7 @@ void went_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* tar
             vec2 origin = wun_getUnitCenterPosition(entity, false);
             vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
             WarProjectileType projectileType = wun_getProjectileType(unit->type);
-            createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+            wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
         else
         {
@@ -2210,7 +2210,7 @@ void went_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* tar
         vec2 origin = wun_getUnitCenterPosition(entity, false);
         vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
         WarProjectileType projectileType = wun_getProjectileType(unit->type);
-        createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+        wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }
 }
 

@@ -21,7 +21,7 @@ void enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
         vec2 unitSize = wun_getUnitSize(entity);
         vec2 position = wun_getUnitPosition(entity, true);
         setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
+        wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
 }
 

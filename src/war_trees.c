@@ -54,7 +54,7 @@ void went_determineTreeTiles(WarContext* context, WarEntity* forest)
         {
             s32 xx = ti->tilex + dirX[d];
             s32 yy = ti->tiley + dirY[d];
-            if (isInside(map->finder, xx, yy))
+            if (wpath_isInside(map->finder, xx, yy))
             {
                 WarEntityId entityId = getTileEntityId(map->finder, xx, yy);
                 WarEntity* entity = went_findEntity(context, entityId);
@@ -117,7 +117,7 @@ WarTree* went_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 pos
         WarTree* tree = went_getTreeAtPosition(forest, (s32)position.x, (s32)position.y);
         if (tree)
         {
-            bool isTreeAccessible = isPositionAccesible(map->finder, position);
+            bool isTreeAccessible = wpath_isPositionAccesible(map->finder, position);
             bool isTreeVisibleOrFog =
                 isTileVisible(map, (s32)position.x, (s32)position.y) ||
                 isTileFog(map, (s32)position.x, (s32)position.y);
@@ -133,7 +133,7 @@ WarTree* went_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 pos
         {
             s32 xx = (s32)position.x + dirX[d];
             s32 yy = (s32)position.y + dirY[d];
-            if (isInside(map->finder, xx, yy))
+            if (wpath_isInside(map->finder, xx, yy))
             {
                 vec2 newPosition = vec2i(xx, yy);
                 if (!vec2ListContains(&positions, newPosition))
@@ -159,7 +159,7 @@ void went_plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
         return;
 
     // only plant a tree in the top border of the map, if there are one below
-    if (!isInside(map->finder, x, y - 1))
+    if (!wpath_isInside(map->finder, x, y - 1))
     {
         WarTree* belowTree = went_getTreeAtPosition(forest, x, y + 1);
         if (belowTree)

@@ -58,7 +58,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     wun_setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
-    setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
@@ -172,7 +172,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
                         vec2 origin = vec2f(target.x, map->viewport.y - offsety);
 
-                        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+                        wproj_createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
                     }
                 }
                 else

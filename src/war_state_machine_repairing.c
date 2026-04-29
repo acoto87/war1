@@ -59,7 +59,7 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
 
         setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         wun_setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
-        setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
+        wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
 }
 
@@ -91,7 +91,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
 
             // find a valid spawn position for the unit
             vec2 position = wun_getUnitCenterPosition(entity, true);
-            vec2 spawnPosition = findEmptyPosition(map->finder, position);
+            vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
             wun_setUnitCenterPosition(entity, spawnPosition, true);
         }
 
@@ -142,7 +142,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
 
         // find a valid spawn position for the unit
         vec2 position = wun_getUnitCenterPosition(entity, true);
-        vec2 spawnPosition = findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
         wun_setUnitCenterPosition(entity, spawnPosition, true);
 
         WarState* idleState = createIdleState(context, entity, true);

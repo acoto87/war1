@@ -36,7 +36,7 @@ void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
     went_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.buildingResource));
 
     // set the action to NONE because the sprite changes will be handled by this state
-    setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
 
     unit->building = true;
     unit->buildPercent = 0;
@@ -100,7 +100,7 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
 
         // ...find an empty position to put it
         vec2 position = wun_getUnitCenterPosition(entity, true);
-        vec2 spawnPosition = findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
         wun_setUnitCenterPosition(worker, spawnPosition, true);
 
         // remove the building sprite...

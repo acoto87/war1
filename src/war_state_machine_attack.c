@@ -100,7 +100,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     wun_setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
-    setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
