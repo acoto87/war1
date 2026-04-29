@@ -887,7 +887,7 @@ typedef enum
     WAR_COMMAND_UPGRADE_INVISIBILITY,
     WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,
 
-    // cancel
+    // wcmd_cancel
     WAR_COMMAND_CANCEL // 73
 } WarUnitCommandType;
 
@@ -1269,7 +1269,7 @@ typedef struct _WarState
 
             s32 waitCount;
             bool checkForAttacks;
-        } move;
+        } wcmd_move;
 
         struct
         {
@@ -1297,7 +1297,7 @@ typedef struct _WarState
         {
             s32 targetEntityId;
             vec2 targetTile;
-        } attack;
+        } wcmd_attack;
 
         struct
         {
@@ -1326,7 +1326,7 @@ typedef struct _WarState
         {
             s32 townHallId;
             bool insideBuilding;
-        } deliver;
+        } wcmd_deliver;
 
         struct
         {
@@ -1355,7 +1355,7 @@ typedef struct _WarState
         struct
         {
             WarEntityId buildingId;
-        } repair;
+        } wcmd_repair;
 
         struct
         {
@@ -1636,8 +1636,8 @@ typedef enum
     WAR_HUMAN_WORK_COMPLETE = 502,                  // "Work completed"
     WAR_ORC_HELP_3 = 503,                           // "We are being attacked"
     WAR_ORC_HELP_4 = 504,                           // "They're destroying our city"
-    WAR_HUMAN_HELP_3 = 505,                         // "We are under attack"
-    WAR_HUMAN_HELP_4 = 506,                         // "The town is under attack"
+    WAR_HUMAN_HELP_3 = 505,                         // "We are under wcmd_attack"
+    WAR_HUMAN_HELP_4 = 506,                         // "The town is under wcmd_attack"
     WAR_ORC_READY = 507,                            // "Your command, master"
     WAR_HUMAN_READY = 508,                          // "Your command"
     WAR_ORC_ACKNOWLEDGEMENT_1 = 509,
@@ -2049,7 +2049,7 @@ typedef enum
     WAR_CHEAT_UPGRADES,     // Iron forge: Research all upgrades
     WAR_CHEAT_END,          // Ides of March: Brings player to final campaign sequence
     WAR_CHEAT_ENABLE,       // Corwin of Amber: Enables cheats
-    WAR_CHEAT_GOD_MODE,     // There can be only one: Your units stop taking damage and deal 255 Damage
+    WAR_CHEAT_GOD_MODE,     // There can be only one: Your units wcmd_stop taking damage and deal 255 Damage
     WAR_CHEAT_WIN,          // Yours truly: Win current mission
     WAR_CHEAT_LOSS,         // Crushing defeat: Instant loss
     WAR_CHEAT_FOG,          // Sally Shears: Disables fog of war

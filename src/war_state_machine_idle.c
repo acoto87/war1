@@ -57,7 +57,7 @@ void updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
             }
         }
 
-        // look for foe units to attack them if they are in range
+        // look for foe units to wcmd_attack them if they are in range
         if (wun_isWarriorUnit(entity))
         {
             WarEntity* enemy = went_getNearEnemy(context, entity);

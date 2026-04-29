@@ -160,9 +160,9 @@ static const WarCampaignMapRawData campaignsData[] =
         WAR_CAMPAIGNS_HUMAN_06_INTRO,
         "The monks of Northshire Abbey are under siege by a band of warriors that have been\n"
         "convinced by enemy agents to fight against the crown. You will be given a complement\n"
-        "of knights to lead to the Abbey, which is already under attack. Ride hard and fast,\n"
+        "of knights to lead to the Abbey, which is already under wcmd_attack. Ride hard and fast,\n"
         "as you must prevent its destruction.  When you have secured the Abbey and beaten back\n"
-        "these treacherous curs, you must then move to destroy the enemy at their source.",
+        "these treacherous curs, you must then wcmd_move to destroy the enemy at their source.",
         22.0f
     },
     {
@@ -257,7 +257,7 @@ static const WarCampaignMapRawData campaignsData[] =
         "south that pose the greatest threat to our security.\n"
         "Reports from scouts near these towns show that the key to your\n"
         "success in this confrontation is to hold back the Human forces\n"
-        "at their bridges while you strengthen your attack force.\n"
+        "at their bridges while you strengthen your wcmd_attack force.\n"
         "The glories of combat will be yours as you personally lead the\n"
         "armies that will reclaim your homelands.",
         22.0f
@@ -289,7 +289,7 @@ static const WarCampaignMapRawData campaignsData[] =
         "and complete domination of this race a simple matter.\n"
         "Your spies have gathered intelligence that points to an encampment\n"
         "near the center of the Human lands where their knights and soldiers\n"
-        "are sent to train. Although they will not be expecting an attack,\n"
+        "are sent to train. Although they will not be expecting an wcmd_attack,\n"
         "they should prove a good fight. The destruction of this site would\n"
         "greatly weaken their forces, and etch your position as War Chief\n"
         "in stone. None shall survive!",

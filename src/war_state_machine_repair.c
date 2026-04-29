@@ -3,7 +3,7 @@
 WarState* createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
 {
     WarState* state = createState(context, entity, WAR_STATE_REPAIR);
-    state->repair.buildingId = buildingId;
+    state->wcmd_repair.buildingId = buildingId;
     return state;
 }
 
@@ -26,7 +26,7 @@ void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = wun_getUnitStats(unit->type);
 
-    WarEntity* building = went_findEntity(context, state->repair.buildingId);
+    WarEntity* building = went_findEntity(context, state->wcmd_repair.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))

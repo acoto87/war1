@@ -1067,7 +1067,7 @@ WarUnitCommandData wun_getUnitCommandData(WarContext* context, WarEntity* entity
 
                     default:
                     {
-                        logWarning("Trying to get an attack command for unit of type: %d", unit->type);
+                        logWarning("Trying to get an wcmd_attack command for unit of type: %d", unit->type);
                         break;
                     }
                 }
@@ -1223,7 +1223,7 @@ WarUnitCommandData wun_getUnitCommandData(WarContext* context, WarEntity* entity
             break;
         }
 
-        // cancel
+        // wcmd_cancel
         case WAR_COMMAND_CANCEL:
         {
             data.frameIndex = WAR_PORTRAIT_CANCEL;

@@ -32,8 +32,8 @@ bool isInsideBuilding(WarEntity* entity)
 
     if(isDelivering(entity))
     {
-        WarState* deliver = getDeliverState(entity);
-        return deliver->deliver.insideBuilding;
+        WarState* wcmd_deliver = getDeliverState(entity);
+        return wcmd_deliver->wcmd_deliver.insideBuilding;
     }
 
     if (isRepairing2(entity))

@@ -92,7 +92,7 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
     // 5 frames a b c d e => a b c b a e d c d e
     //
     // This code is used with a previous steps calling 'getFrameNumbers'
-    // and construct the base frame sequences for walk, attack and death animations.
+    // and construct the base frame sequences for walk, wcmd_attack and death animations.
     //
     // Is this way because of the layout of the spritesheets of the units:
     // (in reality is 5 frames per row, because of the directions of the units,
@@ -100,18 +100,18 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
     //
     // footman spritesheet:
     // 1 frame of walk
-    // 1 frame of attack
+    // 1 frame of wcmd_attack
     // 1 frame of death
     // 1 frame of walk
-    // 1 frame of attack
+    // 1 frame of wcmd_attack
     // 1 frame of death
     // 1 frame of walk
-    // 1 frame of attack
+    // 1 frame of wcmd_attack
     // 1 frame of death (death anim is only 3 frames for the footman)
     // 1 frame of walk
-    // 1 frame of attack
+    // 1 frame of wcmd_attack
     // 1 frame of walk
-    // 1 frame of attack
+    // 1 frame of wcmd_attack
     //
     // other spritesheets are similar, just with different frames count per animations
 
@@ -209,7 +209,7 @@ static WarUnitActionDef createAttackActionDef(s32 nframes, s32 frames[], s32 att
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, attackSpeed);
     }
 
-    // make sure we don't attack faster just because we have fewer frames
+    // make sure we don't wcmd_attack faster just because we have fewer frames
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * attackSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);
@@ -242,7 +242,7 @@ static WarUnitActionDef createRepairActionDef(s32 nframes, s32 frames[], s32 att
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, attackSpeed);
     }
 
-    // make sure we don't attack faster just because we have fewer frames
+    // make sure we don't wcmd_attack faster just because we have fewer frames
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * attackSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);
@@ -276,7 +276,7 @@ static WarUnitActionDef createHarvestActionDef(s32 nframes, s32 frames[], s32 ha
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, harvestSpeed);
     }
 
-    // make sure we don't attack faster just because we have fewer frames
+    // make sure we don't wcmd_attack faster just because we have fewer frames
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * harvestSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);

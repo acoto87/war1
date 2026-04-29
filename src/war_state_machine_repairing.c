@@ -115,7 +115,7 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
                 return;
             }
 
-            // to calculate the amount of wood and gold needed to repair a
+            // to calculate the amount of wood and gold needed to wcmd_repair a
             // building I'm taking the 12% of the damage of the building,
             // so for the a FARM if it has a damage of 200, the amount of
             // wood and gold would be 200 * 0.12 = 24.

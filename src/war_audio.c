@@ -237,7 +237,7 @@ bool waud_playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16*
                     break;
                 }
 
-                // stop a note
+                // wcmd_stop a note
                 case TML_NOTE_OFF:
                 {
                     s8 key = midiMessage->key;

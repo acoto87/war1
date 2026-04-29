@@ -2007,7 +2007,7 @@ bool went_isBeingAttackedBy(WarEntity* entity, WarEntity* other)
     if (!isFollowing(other) && !isMoving(other))
     {
         WarState* attackState = getAttackState(other);
-        return attackState && attackState->attack.targetEntityId == entity->id;
+        return attackState && attackState->wcmd_attack.targetEntityId == entity->id;
     }
 
     return false;
@@ -2051,7 +2051,7 @@ WarEntity* went_getAttackTarget(WarContext* context, WarEntity* entity)
         WarState* attackState = getAttackState(entity);
         if (attackState)
         {
-            WarEntityId targetEntityId = (WarEntityId)attackState->attack.targetEntityId;
+            WarEntityId targetEntityId = (WarEntityId)attackState->wcmd_attack.targetEntityId;
             return went_findEntity(context, targetEntityId);
         }
     }
@@ -2156,7 +2156,7 @@ void went_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetE
 
     if (wun_isMagicUnit(entity))
     {
-        // Since the attack of magic units are considered "kind of spells"
+        // Since the wcmd_attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
         if (went_decreaseUnitMana(context, entity, 2))
         {
@@ -2167,7 +2167,7 @@ void went_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetE
         }
         else
         {
-            // stop attacking if the magic unit rans out of mana
+            // wcmd_stop attacking if the magic unit rans out of mana
             WarState* idleState = createIdleState(context, entity, true);
             changeNextState(context, entity, idleState, true, true);
         }
@@ -2189,7 +2189,7 @@ void went_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* tar
 
     if (wun_isMagicUnit(entity))
     {
-        // Since the attack of magic units are considered "kind of spells"
+        // Since the wcmd_attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
         if (went_decreaseUnitMana(context, entity, 2))
         {
@@ -2200,7 +2200,7 @@ void went_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* tar
         }
         else
         {
-            // stop attacking if the magic unit rans out of mana
+            // wcmd_stop attacking if the magic unit rans out of mana
             WarState* idleState = createIdleState(context, entity, true);
             changeNextState(context, entity, idleState, true, true);
         }

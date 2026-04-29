@@ -3,7 +3,7 @@
 WarState* createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId)
 {
     WarState* state = createState(context, entity, WAR_STATE_DELIVER);
-    state->deliver.townHallId = townHallId;
+    state->wcmd_deliver.townHallId = townHallId;
     return state;
 }
 
@@ -27,7 +27,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
     WarUnitStats stats = wun_getUnitStats(unit->type);
 
-    WarEntity* townHall = went_findEntity(context, (WarEntityId)state->deliver.townHallId);
+    WarEntity* townHall = went_findEntity(context, (WarEntityId)state->wcmd_deliver.townHallId);
 
     // if the town hall doesn't exists (or other units attacking it), go idle
     if (!townHall)
@@ -47,7 +47,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    if (state->deliver.insideBuilding)
+    if (state->wcmd_deliver.insideBuilding)
     {
         // find a valid spawn position for the unit
         vec2 position = wun_getUnitCenterPosition(townHall, true);
@@ -81,7 +81,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
     // the unit arrive to the townhall, so now the unit go inside the building for some time to simulate the depositing
     // then need go back to the goldmine/trees.
-    state->deliver.insideBuilding = true;
+    state->wcmd_deliver.insideBuilding = true;
 
     // for this the sprite is turn off for the depositing time
     entity->sprite.enabled = false;
