@@ -375,10 +375,10 @@ s32 getMapTileIndex(WarContext* context, s32 x, s32 y)
 {
     WarMap* map = context->map;
 
-    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+    WarResource* levelInfo = wres_getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+    WarResource* levelVisual = wres_getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
     assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
     WarMapTilesetType tilesetType = map->tilesetType;
@@ -391,13 +391,13 @@ void setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
 {
     WarMap* map = context->map;
 
-    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+    WarResource* levelInfo = wres_getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+    WarResource* levelVisual = wres_getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
     assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-    WarResource* tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
+    WarResource* tileset = wres_getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
     assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
     assert(tile >= 0 && tile <= UINT16_MAX);
@@ -450,7 +450,7 @@ WarMap* createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yourRac
 {
     WarMap* map = createMap(context, levelInfoIndex);
 
-    WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
+    WarResource* levelInfo = wres_getOrCreateResource(context, levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO && levelInfo->levelInfo.customMap);
 
     levelInfo->levelInfo.startEntitiesCount = 0;
@@ -525,10 +525,10 @@ void enterMap(WarContext* context)
 
     s32 levelInfoIndex = map->levelInfoIndex;
 
-    WarResource* levelInfo = getOrCreateResource(context, levelInfoIndex);
+    WarResource* levelInfo = wres_getOrCreateResource(context, levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    WarResource* levelPassable = getOrCreateResource(context, levelInfo->levelInfo.passableIndex);
+    WarResource* levelPassable = wres_getOrCreateResource(context, levelInfo->levelInfo.passableIndex);
     assert(levelPassable && levelPassable->type == WAR_RESOURCE_TYPE_LEVEL_PASSABLE);
 
     map->playing = true;
@@ -587,10 +587,10 @@ void enterMap(WarContext* context)
 
     // create the map sprite
     {
-        WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+        WarResource* levelVisual = wres_getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
         assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-        WarResource* tileset = getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
+        WarResource* tileset = wres_getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
         assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
 
         // DEBUG:
@@ -2515,10 +2515,10 @@ void renderTerrain(WarContext* context)
     TracyCZoneN(ctx, "RenderTerrain", 1);
     WarMap *map = context->map;
 
-    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+    WarResource* levelInfo = wres_getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    WarResource* levelVisual = getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+    WarResource* levelVisual = wres_getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
     assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)

@@ -371,7 +371,7 @@ void createObjectivesMenu(WarContext* context)
 {
     WarMap* map = context->map;
 
-    WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
+    WarResource* levelInfo = wres_getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
     WarCampaignMapData campaignData = getCampaignData(getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));

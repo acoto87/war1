@@ -146,7 +146,7 @@ WarSprite createSpriteFromResource(WarContext* context, WarResource* resource, s
 
 WarSprite createSpriteFromResourceIndex(WarContext* context, WarSpriteResourceRef spriteResourceRef)
 {
-    WarResource* resource = getOrCreateResource(context, spriteResourceRef.resourceIndex);
+    WarResource* resource = wres_getOrCreateResource(context, spriteResourceRef.resourceIndex);
     return createSpriteFromResource(context, resource, spriteResourceRef.frameIndicesCount, spriteResourceRef.frameIndices);
 }
 

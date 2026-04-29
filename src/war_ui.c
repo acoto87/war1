@@ -141,7 +141,7 @@ WarEntity* createUIImage(WarContext* context, String name, WarSpriteResourceRef 
 
 WarEntity* createUICursor(WarContext* context, String name, WarCursorType type, vec2 position)
 {
-    WarResource* resource = getOrCreateResource(context, type);
+    WarResource* resource = wres_getOrCreateResource(context, type);
     assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
 
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_CURSOR, true);
@@ -202,7 +202,7 @@ void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type
 
     if (entity->cursor.type != type)
     {
-        WarResource* resource = getOrCreateResource(context, type);
+        WarResource* resource = wres_getOrCreateResource(context, type);
         assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
 
         removeCursorComponent(context, entity);

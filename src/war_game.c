@@ -311,7 +311,7 @@ bool loadDataFile(WarContext* context)
     for (int i = 0; i < arrayLength(assets); ++i)
     {
         DatabaseEntry entry = assets[i];
-        loadResource(context, &entry);
+        wres_loadResource(context, &entry);
     }
 
     return true;
