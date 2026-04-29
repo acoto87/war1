@@ -104,7 +104,7 @@ void went_addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s
     }
 }
 
-void removeRuinPiece(WarEntity* entity, WarRuinPiece* piece)
+void went_removeRuinPiece(WarEntity* entity, WarRuinPiece* piece)
 {
     WarRuinPieceList* pieces = &entity->ruin.pieces;
     WarRuinPieceListRemove(pieces, *piece);

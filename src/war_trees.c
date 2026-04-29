@@ -205,7 +205,7 @@ bool went_validTree(WarContext* context, WarEntity* forest, WarTree* tree)
     return false;
 }
 
-void takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
+void went_takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
 {
     WarMap* map = context->map;
     assert(map);
@@ -226,11 +226,11 @@ void takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
 
     WarTree* aboveTree = went_getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley - 1);
     if (aboveTree && !went_validTree(context, forest, aboveTree))
-        takeTreeDown(context, forest, aboveTree);
+        went_takeTreeDown(context, forest, aboveTree);
 
     WarTree* belowTree = went_getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley + 1);
     if (belowTree && !went_validTree(context, forest, belowTree))
-        takeTreeDown(context, forest, belowTree);
+        went_takeTreeDown(context, forest, belowTree);
 }
 
 s32 went_chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
@@ -243,14 +243,14 @@ s32 went_chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amo
 
     if (tree->amount == 0)
     {
-        takeTreeDown(context, forest, tree);
+        went_takeTreeDown(context, forest, tree);
         went_determineTreeTiles(context, forest);
     }
 
     return amount;
 }
 
-WarEntity* createForest(WarContext* context)
+WarEntity* went_createForest(WarContext* context)
 {
     WarMap* map = context->map;
 

@@ -702,7 +702,7 @@ void wmap_enterMap(WarContext* context)
             }
         }
 
-        map->forest = createForest(context);;
+        map->forest = went_createForest(context);;
     }
 
     // create the starting roads
@@ -1229,7 +1229,7 @@ void updateRuinsEdit(WarContext* context)
             }
             else
             {
-                removeRuinPiece(ruin, piece);
+                went_removeRuinPiece(ruin, piece);
                 went_determineRuinTypes(context, ruin);
             }
         }
