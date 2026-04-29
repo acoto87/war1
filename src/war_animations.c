@@ -10,7 +10,7 @@
 
 WarSpriteAnimation* createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop)
 {
-    WarSpriteAnimation* anim = (WarSpriteAnimation*)mz_alloc(context->permanentZone, sizeof(WarSpriteAnimation));
+    WarSpriteAnimation* anim = (WarSpriteAnimation*)war_malloc(sizeof(WarSpriteAnimation));
 
     anim->name = name;
     anim->loop = loop;
@@ -81,22 +81,13 @@ f32 getAnimationDuration(WarSpriteAnimation* animation)
     return animation->frameDelay * animation->frames.count;
 }
 
-void freeAnimation(WarSpriteAnimation* animation, void* userData)
+void freeAnimation(WarSpriteAnimation* animation)
 {
-    logInfo("Freeing animation: %s", animation->name);
-
-    memzone_t* zone = (memzone_t*)userData;
-    assert(zone);
-
-    wstr_free(animation->name);
-
-    s32ListFree(&animation->frames);
-
-    WarSprite* sprite = &animation->sprite;
-    for(s32 i = 0; i < sprite->framesCount; i++)
-        mz_free(zone, sprite->frames[i].data);
-
-    mz_free(zone, animation);
+    if (animation)
+    {
+        s32ListFree(&animation->frames);
+        war_free(animation);
+    }
 }
 
 s32 findAnimationIndex(WarContext* context, WarEntity* entity, StringView name)
@@ -183,6 +174,7 @@ void updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation*
 
 void updateAnimations(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateAnimations", 1);
     WarEntityList* entities = getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
@@ -200,6 +192,7 @@ void updateAnimations(WarContext* context)
             }
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 WarSpriteAnimation* findAnimation(WarContext* context, WarEntity* entity, StringView name)

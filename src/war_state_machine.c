@@ -47,7 +47,7 @@ bool isInsideBuilding(WarEntity* entity)
 
 WarState* createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    WarState* state = (WarState*)mz_alloc(context->permanentZone, sizeof(WarState));
+    WarState* state = (WarState*)war_malloc(sizeof(WarState));
     state->type = type;
     state->entityId = entity->id;
     state->nextUpdateTime = 0;
@@ -195,5 +195,5 @@ void freeState(WarContext* context, WarState* state)
     if (state->nextState)
         freeState(context, state->nextState);
 
-    mz_free(context->permanentZone, state);
+    war_free(state);
 }

@@ -61,7 +61,7 @@ void updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
     moveState->nextState = state;
     changeNextState(context, entity, moveState, false, true);
 
-    free(positionsToMove);
+    war_free(positionsToMove);
 }
 
 void freePatrolState(WarContext* context, WarState* state)

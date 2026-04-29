@@ -25,7 +25,7 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
     // selected units make, this is an intent to keep the
     // formation of the selected units
     //
-    rect* rs = (rect*)mz_alloc(context->frameZone, selEntitiesCount * sizeof(rect));
+    rect* rs = (rect*)war_malloc_frame(selEntitiesCount * sizeof(rect));
 
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
@@ -123,7 +123,6 @@ void executeMoveCommand(WarContext* context, vec2 targetPoint)
     {
         playAcknowledgementSound(context, player);
     }
-    // rs lives in frameZone — no explicit free needed; zone resets each frame
 }
 
 void executeFollowCommand(WarContext* context, WarEntity* targetEntity)

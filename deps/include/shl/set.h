@@ -44,23 +44,7 @@
 #ifndef SHL_SET_H
 #define SHL_SET_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#ifndef SHL_MALLOC
-#define SHL_MALLOC(sz, userData) malloc(sz)
-#endif
-#ifndef SHL_CALLOC
-#define SHL_CALLOC(n, sz, userData) calloc((n), (sz))
-#endif
-#ifndef SHL_REALLOC
-#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
-#endif
-#ifndef SHL_FREE
-#define SHL_FREE(ptr, userData) free(ptr)
-#endif
+#include "shl_internal.h"
 
 #define shlDeclareSet(typeName, itemType) \
     typedef struct \
@@ -68,8 +52,7 @@
         itemType defaultValue; \
         uint32_t (*hashFn)(const itemType item); \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
     } typeName ## Options; \
     \
     typedef struct { \
@@ -86,8 +69,7 @@
         int32_t shift; \
         uint32_t (*hashFn)(const itemType item); \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
         itemType defaultValue; \
         typeName ## __Entry__* entries; \
     } typeName; \
@@ -100,24 +82,7 @@
     void typeName ## Clear(typeName* set); \
 
 #define shlDefineSet(typeName, itemType) \
-    static int32_t typeName ## __fibHash(uint32_t hash, int32_t shift) \
-    { \
-        const uint32_t hashConstant = 2654435769u; \
-        return (int32_t)((hash * hashConstant) >> shift); \
-    } \
-    \
     static void typeName ## __resize(typeName* set); \
-    \
-    static int32_t typeName ## __findEmptyBucket(typeName* set, int32_t index) \
-    { \
-        for(int32_t i = 0; i < set->capacity; i++) \
-        { \
-            if (!set->entries[(index + i) % set->capacity].active) \
-                return (index + i) % set->capacity; \
-        } \
-        \
-        return -1; \
-    } \
     \
     static void typeName ## __resize(typeName* set) \
     { \
@@ -126,7 +91,7 @@
         \
         set->loadFactor = oldCapacity; \
         set->capacity = 1 << (32 - (--set->shift)); \
-        set->entries = (typeName ## __Entry__*)SHL_CALLOC(set->capacity, sizeof(typeName ## __Entry__), set->userData); \
+        set->entries = (typeName ## __Entry__*)calloc(set->capacity, sizeof(typeName ## __Entry__)); \
         set->count = 0; \
         \
         for(int32_t i = 0; i < oldCapacity; i++) \
@@ -134,7 +99,7 @@
             if(old[i].active) \
                 typeName ## Add(set, old[i].item); \
         } \
-        SHL_FREE(old, set->userData); \
+        SHL_FREE(old); \
     } \
     \
     void typeName ## Init(typeName* set, typeName ## Options options) \
@@ -143,12 +108,11 @@
         set->hashFn = options.hashFn; \
         set->equalsFn = options.equalsFn; \
         set->freeFn = options.freeFn; \
-        set->userData = options.userData; \
-        set->shift = 29; \
-        set->capacity = 8; \
-        set->loadFactor = 6; \
+        set->shift = SHL__INITIAL_HASH_SHIFT; \
+        set->capacity = SHL__INITIAL_CAPACITY; \
+        set->loadFactor = SHL__INITIAL_HASH_LOAD_FACTOR; \
         set->count = 0; \
-        set->entries = (typeName ## __Entry__ *)SHL_CALLOC(set->capacity, sizeof(typeName ## __Entry__), set->userData); \
+        set->entries = (typeName ## __Entry__ *)SHL_CALLOC((size_t)set->capacity, sizeof(typeName ## __Entry__)); \
     } \
     \
     void typeName ## Free(typeName* set) \
@@ -158,7 +122,7 @@
         \
         typeName ## Clear(set); \
         \
-        SHL_FREE(set->entries, set->userData); \
+        SHL_FREE(set->entries); \
         set->entries = 0; \
     } \
     \
@@ -173,7 +137,7 @@
         uint32_t hash; \
         int32_t index; \
         int32_t next; \
-        hash = index = typeName ## __fibHash(set->hashFn(item), set->shift); \
+        hash = index = shl__fibHash(set->hashFn(item), set->shift); \
         \
         while (set->entries[index].active) \
         { \
@@ -186,7 +150,7 @@
             index = set->entries[index].next; \
         } \
         \
-        next = typeName ## __findEmptyBucket(set, index); \
+        next = shl__findEmptyBucket(set->entries, set->capacity, index, sizeof(typeName ## __Entry__), offsetof(typeName ## __Entry__, active)); \
         if (next < 0) \
         { \
             typeName ## __resize(set); \
@@ -210,7 +174,7 @@
         \
         int32_t index; \
         uint32_t hash; \
-        hash = index = typeName ## __fibHash(set->hashFn(item), set->shift); \
+        hash = index = shl__fibHash(set->hashFn(item), set->shift); \
         \
         bool found = false; \
         \
@@ -238,7 +202,7 @@
         \
         int32_t prevIndex, index; \
         uint32_t hash; \
-        hash = prevIndex = index = typeName ## __fibHash(set->hashFn(item), set->shift); \
+        hash = prevIndex = index = shl__fibHash(set->hashFn(item), set->shift); \
         \
         while (set->entries[index].active) \
         { \
@@ -263,7 +227,7 @@
                 } \
                 \
                 if (set->freeFn) \
-                    set->freeFn(oldItem, set->userData); \
+                    set->freeFn(oldItem); \
                 \
                 set->count--; \
                 \
@@ -288,7 +252,7 @@
             if (set->entries[i].active) \
             { \
                 if (set->freeFn) \
-                    set->freeFn(set->entries[i].item, set->userData); \
+                    set->freeFn(set->entries[i].item); \
                 \
                 set->entries[i].item = set->defaultValue; \
                 set->entries[i].next = -1; \

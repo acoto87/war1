@@ -44,23 +44,7 @@
 #ifndef SHL_HEAP_H
 #define SHL_HEAP_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#ifndef SHL_MALLOC
-#define SHL_MALLOC(sz, userData) malloc(sz)
-#endif
-#ifndef SHL_CALLOC
-#define SHL_CALLOC(n, sz, userData) calloc((n), (sz))
-#endif
-#ifndef SHL_REALLOC
-#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
-#endif
-#ifndef SHL_FREE
-#define SHL_FREE(ptr, userData) free(ptr)
-#endif
+#include "shl_internal.h"
 
 #define shlDeclareBinaryHeap(typeName, itemType) \
     typedef struct \
@@ -68,8 +52,7 @@
         itemType defaultValue; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
         int32_t (*compareFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
     } typeName ## Options; \
     \
     typedef struct \
@@ -78,8 +61,7 @@
         int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
         int32_t (*compareFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
         itemType defaultValue; \
         itemType* items; \
     } typeName; \
@@ -95,15 +77,6 @@
     void typeName ## Clear(typeName* heap);
 
 #define shlDefineBinaryHeap(typeName, itemType) \
-    void typeName ## __resize(typeName* heap, int32_t minSize) \
-    { \
-        heap->capacity = heap->capacity << 1; \
-        if (heap->capacity < minSize) \
-            heap->capacity = minSize; \
-        \
-        heap->items = (itemType *)SHL_REALLOC(heap->items, heap->capacity * sizeof(itemType), heap->userData); \
-    } \
-    \
     void typeName ## __heapUp(typeName* heap, int32_t index) \
     { \
         int32_t pindex = (index - 1) >> 1; \
@@ -155,14 +128,13 @@
     \
     void typeName ## Init(typeName* heap, typeName ## Options options) \
     { \
-        heap->capacity = 8; \
+        heap->capacity = SHL__INITIAL_CAPACITY; \
         heap->defaultValue = options.defaultValue; \
         heap->equalsFn = options.equalsFn; \
         heap->compareFn = options.compareFn; \
         heap->freeFn = options.freeFn; \
-        heap->userData = options.userData; \
         heap->count = 0; \
-        heap->items = (itemType *)SHL_MALLOC(heap->capacity * sizeof(itemType), heap->userData); \
+        heap->items = (itemType *)SHL_MALLOC((size_t)heap->capacity * sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName* heap) \
@@ -172,7 +144,7 @@
         \
         typeName ## Clear(heap); \
         \
-        SHL_FREE(heap->items, heap->userData); \
+        SHL_FREE(heap->items); \
         heap->items = 0; \
     } \
      \
@@ -182,7 +154,7 @@
             return; \
         \
         if (heap->count + 1 >= heap->capacity) \
-            typeName ## __resize(heap, heap->count + 1); \
+            shl__resizeArray((void**)&heap->items, &heap->capacity, heap->count + 1, sizeof(itemType)); \
          \
         int32_t index = heap->count; \
         heap->items[index] = value; \
@@ -269,7 +241,7 @@
         if (heap->freeFn) \
         { \
             for(int32_t i = 0; i < heap->count; i++) \
-                heap->freeFn(heap->items[i], heap->userData); \
+                heap->freeFn(heap->items[i]); \
         } \
         \
         heap->count = 0; \

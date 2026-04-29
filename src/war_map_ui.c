@@ -172,17 +172,17 @@ void updateSelectedUnitsInfo(WarContext* context)
     WarEntity* imgUnitInfoLife = findUIEntity(context, wsv_fromCString("imgUnitInfoLife"));
     assert(imgUnitInfoLife);
 
-    char uiEntityName[20];
+    String uiEntityName;
     WarEntity* imgUnitPortraits[5];
     WarEntity* rectLifeBars[5];
     for (s32 i = 0; i < 5; i++)
     {
-        sprintf(uiEntityName, "imgUnitPortrait%d", i);
-        imgUnitPortraits[i] = findUIEntity(context, wsv_fromCString(uiEntityName));
+        uiEntityName = wstr_fromCStringFormat("imgUnitPortrait%d", i);
+        imgUnitPortraits[i] = findUIEntity(context, wstr_view(&uiEntityName));
         assert(imgUnitPortraits[i]);
 
-        sprintf(uiEntityName, "rectLifeBar%d", i);
-        rectLifeBars[i] = findUIEntity(context, wsv_fromCString(uiEntityName));
+        uiEntityName = wstr_fromCStringFormat("rectLifeBar%d", i);
+        rectLifeBars[i] = findUIEntity(context, wstr_view(&uiEntityName));
         assert(rectLifeBars[i]);
     }
 

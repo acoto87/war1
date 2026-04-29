@@ -3,9 +3,7 @@
 #include <assert.h>
 #include <math.h>
 
-#include "war_actions.h"
-
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(_MSC_VER) && !defined(__clan_)
 #include <io.h>
 #ifndef F_OK
 #define F_OK 0
@@ -18,6 +16,8 @@
 #include "shl/memzone.h"
 #include "shl/wstr.h"
 
+#include "war_alloc.h"
+#include "war_actions.h"
 #include "war_audio.h"
 #include "war_file.h"
 #include "war_font.h"
@@ -25,16 +25,6 @@
 #include "war_map_render.h"
 #include "war_resources.h"
 #include "war_scenes.h"
-
-static void zoneReporter(const memzone_t* zone, mz_report_t report, const void* ptr, const char* message, void* userData)
-{
-    NOT_USED(zone);
-    NOT_USED(report);
-    NOT_USED(ptr);
-    NOT_USED(userData);
-
-    logError("memzone: %s", message);
-}
 
 static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
 {
@@ -175,25 +165,6 @@ static void appendCheatTextInput(WarContext* context, StringView text)
 
 bool initGame(WarContext* context)
 {
-    // Initialize memory zones first — all subsequent allocations depend on them.
-    context->permanentZone = mz_init(512 * 1024 * 1024); // 512 MB
-    if (!context->permanentZone)
-    {
-        logError("Failed to initialize permanentZone (512 MB).");
-        return false;
-    }
-    mz_setReporter(context->permanentZone, zoneReporter, NULL);
-
-    context->frameZone = mz_init(4 * 1024 * 1024); // 4 MB
-    if (!context->frameZone)
-    {
-        logError("Failed to initialize frameZone (4 MB).");
-        mz_destroy(context->permanentZone);
-        context->permanentZone = NULL;
-        return false;
-    }
-    mz_setReporter(context->frameZone, zoneReporter, NULL);
-
     context->globalScale = 3;
     context->globalSpeed = 1;
     context->originalWindowWidth = 320;
@@ -293,6 +264,19 @@ void quitGame(WarContext* context)
         context->soundFont = NULL;
     }
 
+    if (context->audioRemoveMutex)
+    {
+        SDL_DestroyMutex(context->audioRemoveMutex);
+        context->audioRemoveMutex = NULL;
+    }
+
+    if (context->audioMixBuffer)
+    {
+        war_free(context->audioMixBuffer);
+        context->audioMixBuffer = NULL;
+        context->audioMixBufferCapacity = 0;
+    }
+
     if (context->__mutex)
     {
         SDL_DestroyMutex(context->__mutex);
@@ -314,18 +298,6 @@ void quitGame(WarContext* context)
     wstr_free(context->windowTitle);
 
     SDL_Quit();
-
-    if (context->frameZone)
-    {
-        mz_destroy(context->frameZone);
-        context->frameZone = NULL;
-    }
-
-    if (context->permanentZone)
-    {
-        mz_destroy(context->permanentZone);
-        context->permanentZone = NULL;
-    }
 }
 
 bool loadDataFile(WarContext* context)
@@ -542,7 +514,26 @@ void processGameEvent(WarContext* context, SDL_Event* event)
 
 void updateGame(WarContext* context)
 {
-    mz_reset(context->frameZone);
+    TracyCZoneN(ctx, "UpdateGame", 1);
+
+    mz_reset(frameZone);
+
+    // Drain entity removals that the audio callback thread queued while we were
+    // in the previous tick. We do this on the main thread (before any scene or
+    // map update) so that removeEntityById never runs concurrently with audio.
+    if (context->audioRemoveMutex)
+    {
+        SDL_LockMutex(context->audioRemoveMutex);
+        s32 drainCount = context->audioRemovePendingCount;
+        WarEntityId drainIds[AUDIO_REMOVE_PENDING_MAX];
+        for (s32 i = 0; i < drainCount; i++)
+            drainIds[i] = context->audioRemovePending[i];
+        context->audioRemovePendingCount = 0;
+        SDL_UnlockMutex(context->audioRemoveMutex);
+
+        for (s32 i = 0; i < drainCount; i++)
+            removeEntityById(context, drainIds[i]);
+    }
 
     WarInput* input = &context->input;
 
@@ -608,10 +599,14 @@ void updateGame(WarContext* context)
     {
         logError("There is no map or scene active.");
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void renderGame(WarContext *context)
 {
+    TracyCZoneN(ctx, "RenderGame", 1);
+
     // Clear the screen (black)
     SDL_SetRenderDrawColor(context->renderer, 0, 0, 0, 255);
     SDL_RenderClear(context->renderer);
@@ -633,6 +628,8 @@ void renderGame(WarContext *context)
     {
         renderMap(context);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void presentGame(WarContext *context)
@@ -657,12 +654,19 @@ void presentGame(WarContext *context)
     // sleep the process and save CPU usage and battery.
     //
     // Going back to this code for now, until we get a consistent game loop with sleep.
-    while (context->deltaTime <= SECONDS_PER_FRAME)
     {
-        currentTime = SDL_GetTicks() / 1000.0f;
-        context->deltaTime = (currentTime - context->time);
+        TracyCZoneN(waitCtx, "FrameWait", 1);
+        while (context->deltaTime <= SECONDS_PER_FRAME)
+        {
+            currentTime = SDL_GetTicks() / 1000.0f;
+            context->deltaTime = (currentTime - context->time);
+        }
+        TracyCZoneEnd(waitCtx);
     }
 
     context->time = currentTime;
     context->fps = (u32)(1.0f / context->deltaTime);
+
+    TracyCPlotI("FPS", (s64)context->fps);
+    TracyCPlotF("DeltaTime_ms", context->deltaTime * 1000.0f);
 }

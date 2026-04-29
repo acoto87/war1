@@ -436,7 +436,7 @@ f32 getMapScaledTime(WarContext* context, f32 t)
 
 WarMap* createMap(WarContext* context, s32 levelInfoIndex)
 {
-    WarMap *map = (WarMap*)mz_alloc(context->permanentZone, sizeof(WarMap));
+    WarMap *map = (WarMap*)war_malloc(sizeof(WarMap));
     map->levelInfoIndex = levelInfoIndex;
 
     initEntityManager(context, &map->entityManager);
@@ -516,7 +516,7 @@ void freeMap(WarContext* context, WarMap* map)
     // freeEntity(map->road);
     // freeEntity(map->ruin);
 
-    mz_free(context->permanentZone, map->finder.data);
+    war_free(map->finder.data);
 }
 
 void enterMap(WarContext* context)
@@ -624,7 +624,7 @@ void enterMap(WarContext* context)
             minimapFrames[i].w = MINIMAP_WIDTH;
             minimapFrames[i].h = MINIMAP_HEIGHT;
             minimapFrames[i].off = 0;
-            minimapFrames[i].data = (u8*)mz_alloc(context->permanentZone, MINIMAP_WIDTH * MINIMAP_HEIGHT * 4 * sizeof(u8));
+            minimapFrames[i].data = (u8*)war_malloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4 * sizeof(u8));
 
             // make the frame black
             for (s32 k = 0; k < MINIMAP_WIDTH * MINIMAP_HEIGHT; k++)
@@ -1956,6 +1956,7 @@ void updateMapCursor(WarContext* context)
 
 void updateStateMachines(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateStateMachines", 1);
     WarEntityList* entities = getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
@@ -1965,10 +1966,12 @@ void updateStateMachines(WarContext* context)
             updateStateMachine(context, entity);
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 void updateActions(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateActions", 1);
     WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
@@ -1978,6 +1981,7 @@ void updateActions(WarContext* context)
             updateAction(context, entity);
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 void updateProjectiles(WarContext* context)
@@ -2150,6 +2154,7 @@ void updateSpells(WarContext* context)
 
 void updateFoW(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateFoW", 1);
     WarMap* map = context->map;
 
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
@@ -2271,14 +2276,19 @@ void updateFoW(WarContext* context)
             }
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 void determineFoWTypes(WarContext* context)
 {
+    TracyCZoneN(ctx, "DetermineFoWTypes", 1);
     WarMap* map = context->map;
 
     if (!map->fowEnabled)
+    {
+        TracyCZoneEnd(ctx);
         return;
+    }
 
     const s32 dirC = 8;
     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
@@ -2387,6 +2397,7 @@ void determineFoWTypes(WarContext* context)
             }
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 WarCampaignMapType getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex)
@@ -2501,6 +2512,7 @@ void updateMap(WarContext* context)
 
 void renderTerrain(WarContext* context)
 {
+    TracyCZoneN(ctx, "RenderTerrain", 1);
     WarMap *map = context->map;
 
     WarResource* levelInfo = getOrCreateResource(context, map->levelInfoIndex);
@@ -2536,14 +2548,19 @@ void renderTerrain(WarContext* context)
             }
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 void renderFoW(WarContext* context)
 {
+    TracyCZoneN(ctx, "RenderFoW", 1);
     WarMap* map = context->map;
 
     if (!map->fowEnabled)
+    {
+        TracyCZoneEnd(ctx);
         return;
+    }
 
     // Pass 1: render unknown boundary and unknown tiles at full opacity
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
@@ -2605,6 +2622,7 @@ void renderFoW(WarContext* context)
     }
 
     renderRestore(context);
+    TracyCZoneEnd(ctx);
 }
 
 void renderUnitPaths(WarContext* context)

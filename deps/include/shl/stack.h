@@ -44,31 +44,14 @@
 #ifndef SHL_STACK_H
 #define SHL_STACK_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#ifndef SHL_MALLOC
-#define SHL_MALLOC(sz, userData) malloc(sz)
-#endif
-#ifndef SHL_CALLOC
-#define SHL_CALLOC(n, sz, userData) calloc((n), (sz))
-#endif
-#ifndef SHL_REALLOC
-#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
-#endif
-#ifndef SHL_FREE
-#define SHL_FREE(ptr, userData) free(ptr)
-#endif
+#include "shl_internal.h"
 
 #define shlDeclareStack(typeName, itemType) \
     typedef struct \
     { \
         itemType defaultValue; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
     } typeName ## Options; \
     \
     typedef struct \
@@ -76,8 +59,7 @@
         int32_t count; \
         int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
         itemType defaultValue; \
         itemType *items; \
     } typeName; \
@@ -91,23 +73,14 @@
     void typeName ## Clear(typeName *stack);
 
 #define shlDefineStack(typeName, itemType) \
-    void typeName ## __resize(typeName *stack) \
-    { \
-        int32_t oldCapacity = stack->capacity; \
-        \
-        stack->capacity = oldCapacity << 1; \
-        stack->items = (itemType *)SHL_REALLOC(stack->items, stack->capacity * sizeof(itemType), stack->userData); \
-    } \
-    \
     void typeName ## Init(typeName *stack, typeName ## Options options) \
     { \
         stack->defaultValue = options.defaultValue; \
         stack->equalsFn = options.equalsFn; \
         stack->freeFn = options.freeFn; \
-        stack->userData = options.userData; \
-        stack->capacity = 8; \
+        stack->capacity = SHL__INITIAL_CAPACITY; \
         stack->count = 0; \
-        stack->items = (itemType *)SHL_CALLOC(stack->capacity, sizeof(itemType), stack->userData); \
+        stack->items = (itemType *)SHL_CALLOC((size_t)stack->capacity, sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName *stack) \
@@ -117,7 +90,7 @@
         \
         typeName ## Clear(stack); \
         \
-        SHL_FREE(stack->items, stack->userData); \
+        SHL_FREE(stack->items); \
         stack->items = 0; \
     } \
     \
@@ -127,7 +100,7 @@
             return; \
         \
         if (stack->count == stack->capacity) \
-            typeName ## __resize(stack); \
+            shl__resizeArray((void**)&stack->items, &stack->capacity, stack->count + 1, sizeof(itemType)); \
         \
         stack->items[stack->count] = value; \
         stack->count++; \
@@ -176,7 +149,7 @@
         if (stack->freeFn) \
         { \
             for(int32_t i = 0; i < stack->count; i++) \
-                stack->freeFn(stack->items[i], stack->userData); \
+                stack->freeFn(stack->items[i]); \
         } \
         \
         stack->count = 0; \

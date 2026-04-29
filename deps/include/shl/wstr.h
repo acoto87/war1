@@ -135,6 +135,8 @@ bool       wsv_tryParseS32(StringView view, int32_t* value);
 int64_t    wsv_parseS64(StringView view);
 bool       wsv_tryParseS64(StringView view, int64_t* value);
 bool       wsv_copyToBuffer(StringView view, char* buffer, size_t capacity);
+StringView wsv_fromCStringFormat (char* buffer, size_t capacity, const char* fmt, ...);
+StringView wsv_fromCStringFormatv(char* buffer, size_t capacity, const char* fmt, va_list args);
 String     wsv_toString(StringView view);
 
 /* =========================================================================
@@ -829,6 +831,33 @@ bool wsv_copyToBuffer(StringView view, char* buffer, size_t capacity)
 String wsv_toString(StringView view)
 {
     return wstr_fromView(view);
+}
+
+StringView wsv_fromCStringFormatv(char* buffer, size_t capacity, const char* fmt, va_list args)
+{
+    if (buffer == NULL || capacity == 0 || fmt == NULL)
+    {
+        return wsv_empty();
+    }
+
+    int result = vsnprintf(buffer, capacity, fmt, args);
+    if (result < 0)
+    {
+        buffer[0] = 0;
+        return wsv_empty();
+    }
+
+    size_t length = (size_t)result < capacity ? (size_t)result : capacity - 1;
+    return wsv_fromParts(buffer, length);
+}
+
+StringView wsv_fromCStringFormat(char* buffer, size_t capacity, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    StringView view = wsv_fromCStringFormatv(buffer, capacity, fmt, args);
+    va_end(args);
+    return view;
 }
 
 /* ----- String implementation --------------------------------------------- */

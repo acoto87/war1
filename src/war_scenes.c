@@ -16,7 +16,7 @@ WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 
 WarScene* createScene(WarContext* context, WarSceneType type)
 {
-    WarScene* scene = (WarScene*)mz_alloc(context->permanentZone, sizeof(WarScene));
+    WarScene* scene = (WarScene*)war_malloc(sizeof(WarScene));
     scene->type = type;
 
     initEntityManager(context, &scene->entityManager);

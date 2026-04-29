@@ -45,29 +45,14 @@
 #ifndef SHL_LIST_H
 #define SHL_LIST_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#ifndef SHL_MALLOC
-#define SHL_MALLOC(sz, userData) malloc(sz)
-#endif
-#ifndef SHL_REALLOC
-#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
-#endif
-#ifndef SHL_FREE
-#define SHL_FREE(ptr, userData) free(ptr)
-#endif
-#include <string.h>
+#include "shl_internal.h"
 
 #define shlDeclareList(typeName, itemType) \
     typedef struct \
     { \
         itemType defaultValue; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
     } typeName ## Options; \
     \
     typedef struct \
@@ -75,8 +60,7 @@
         int32_t count; \
         int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
         itemType defaultValue; \
         itemType* items; \
     } typeName; \
@@ -101,17 +85,6 @@
     itemType* typeName ## ToArray(typeName* list); \
 
 #define shlDefineList(typeName, itemType) \
-    void typeName ## __resize(typeName* list, int32_t minSize) \
-    { \
-        int32_t oldCapacity = list->capacity; \
-        \
-        list->capacity = oldCapacity << 1; \
-        if (list->capacity < minSize) \
-            list->capacity = minSize; \
-        \
-        list->items = (itemType *)SHL_REALLOC(list->items, list->capacity * sizeof(itemType), list->userData); \
-    } \
-    \
     void typeName ## __qsort(typeName* list, int32_t left, int32_t right, int32_t (*compareFn)(const itemType item1, const itemType item2)) \
     { \
         if (left >= right) \
@@ -145,10 +118,9 @@
         list->defaultValue = options.defaultValue; \
         list->equalsFn = options.equalsFn; \
         list->freeFn = options.freeFn; \
-        list->userData = options.userData; \
-        list->capacity = 8; \
+        list->capacity = SHL__INITIAL_CAPACITY; \
         list->count = 0; \
-        list->items = (itemType *)SHL_MALLOC(list->capacity * sizeof(itemType), list->userData); \
+        list->items = (itemType *)SHL_MALLOC((size_t)list->capacity * sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName* list) \
@@ -158,7 +130,7 @@
         \
         typeName ## Clear(list); \
         \
-        SHL_FREE(list->items, list->userData); \
+        SHL_FREE(list->items); \
         list->items = 0; \
     } \
     \
@@ -171,7 +143,7 @@
             return; \
         \
         if (list->count + count >= list->capacity) \
-            typeName ## __resize(list, list->count + count); \
+            shl__resizeArray((void**)&list->items, &list->capacity, list->count + count, sizeof(itemType)); \
         \
         memmove(list->items + index + count, list->items + index, (list->count - index) * sizeof(itemType)); \
         memcpy(list->items + index, values, count * sizeof(itemType)); \
@@ -236,7 +208,7 @@
         \
         itemType currentValue = list->items[index]; \
         if (list->freeFn) \
-            list->freeFn(currentValue, list->userData); \
+            list->freeFn(currentValue); \
         \
         list->items[index] = value; \
     } \
@@ -255,7 +227,7 @@
         if (list->freeFn) \
         { \
             for(int32_t i = 0; i < count; i++) \
-                list->freeFn(list->items[index + i], list->userData); \
+                list->freeFn(list->items[index + i]); \
         } \
         \
         memmove(list->items + index, list->items + index + count, (list->count - index - count) * sizeof(itemType)); \
@@ -282,7 +254,7 @@
         if (list->freeFn) \
         { \
             for(int32_t i = 0; i < list->count; i++) \
-                list->freeFn(list->items[i], list->userData); \
+                list->freeFn(list->items[i]); \
         } \
         \
         list->count = 0; \
@@ -320,7 +292,7 @@
         if (!list->items) \
             return 0; \
         \
-        itemType* array = (itemType *)SHL_MALLOC(list->count * sizeof(itemType), list->userData); \
+        itemType* array = (itemType*)malloc(list->count * sizeof(itemType)); \
         memcpy(array, list->items, list->count * sizeof(itemType)); \
         return array; \
     }

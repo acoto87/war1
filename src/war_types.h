@@ -88,7 +88,7 @@ static inline bool wtype_compareS32(const s32 a, const s32 b)
 shlDeclareList(s32List, s32)
 shlDefineList(s32List, s32)
 
-#define s32ListDefaultOptions (s32ListOptions){0, wtype_equalsS32, NULL, NULL}
+#define s32ListDefaultOptions (s32ListOptions){0, wtype_equalsS32, NULL}
 
 static inline bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
 {
@@ -98,7 +98,7 @@ static inline bool wtype_equalsVec2(const vec2 v1, const vec2 v2)
 shlDeclareList(vec2List, vec2)
 shlDefineList(vec2List, vec2)
 
-#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wtype_equalsVec2, NULL, NULL}
+#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wtype_equalsVec2, NULL}
 
 static inline bool wtype_equalsRect(const rect r1, const rect r2)
 {
@@ -109,18 +109,12 @@ static inline bool wtype_equalsRect(const rect r1, const rect r2)
 shlDeclareList(rectList, rect)
 shlDefineList(rectList, rect)
 
-#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wtype_equalsRect, NULL, NULL}
+#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wtype_equalsRect, NULL}
 
 shlDeclareMap(StringViewMap, StringView, String)
 shlDefineMap(StringViewMap, StringView, String)
 
-static inline void wstr_free_with_userData(String s, void* userData)
-{
-    NOT_USED(userData);
-    wstr_free(s);
-}
-
-#define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free_with_userData, NULL}
+#define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free}
 
 //
 // Forward references to other structs that need a reference to these ones.
@@ -501,7 +495,7 @@ static inline bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const 
 shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
 shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
 
-#define WarSpriteAnimationListDefaultOptions(zone) (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, freeAnimation, (zone)}
+#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, freeAnimation}
 
 typedef enum
 {
@@ -708,12 +702,12 @@ bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
 shlDeclareList(WarEntityIdList, WarEntityId)
 shlDefineList(WarEntityIdList, WarEntityId)
 
-#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL, NULL}
+#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL}
 
 shlDeclareSet(WarEntityIdSet, WarEntityId)
 shlDefineSet(WarEntityIdSet, WarEntityId)
 
-#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, hashEntityId, equalsEntityId, NULL, NULL}
+#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, hashEntityId, equalsEntityId, NULL}
 
 typedef enum
 {
@@ -984,7 +978,7 @@ bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarRoadPieceList, WarRoadPiece)
 
-#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL, NULL}
+#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL}
 
 typedef enum
 {
@@ -1026,7 +1020,7 @@ bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
 shlDeclareList(WarWallPieceList, WarWallPiece)
 shlDefineList(WarWallPieceList, WarWallPiece)
 
-#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, equalsWallPiece, NULL, NULL}
+#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, equalsWallPiece, NULL}
 
 typedef enum
 {
@@ -1066,7 +1060,7 @@ bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
 shlDeclareList(WarRuinPieceList, WarRuinPiece)
 shlDefineList(WarRuinPieceList, WarRuinPiece)
 
-#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL, NULL}
+#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL}
 
 typedef enum
 {
@@ -1116,7 +1110,7 @@ s32 compareTreesByPosition(const WarTree t1, const WarTree t2)
 shlDeclareList(WarTreeList, WarTree)
 shlDefineList(WarTreeList, WarTree)
 
-#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL, NULL}
+#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
 
 typedef enum
 {
@@ -1157,7 +1151,7 @@ bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep ste
 shlDeclareList(WarUnitActionStepList, WarUnitActionStep)
 shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 
-#define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, equalsActionStep, NULL, NULL}
+#define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, equalsActionStep, NULL}
 
 typedef enum
 {
@@ -1837,17 +1831,16 @@ bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
     return e1->id == e2->id;
 }
 
-static inline void freeEntity(WarEntity* e, void* userData)
+static inline void freeEntity(WarEntity* e)
 {
-    assert(userData != NULL);
-    mz_free((memzone_t*)userData, e);
+    war_free(e);
 }
 
 shlDeclareList(WarEntityList, WarEntity*)
 shlDefineList(WarEntityList, WarEntity*)
 
-#define WarEntityListDefaultOptions(zone) (WarEntityListOptions){NULL, equalsEntity, freeEntity, (zone)}
-#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity, NULL, NULL}
+#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, freeEntity}
+#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity}
 
 uint32_t hashEntityType(const WarEntityType type)
 {
@@ -1859,9 +1852,8 @@ bool equalsEntityType(const WarEntityType t1, const WarEntityType t2)
     return t1 == t2;
 }
 
-static inline void freeEntityList(WarEntityList* list, void* userData)
+static inline void freeEntityList(WarEntityList* list)
 {
-    NOT_USED(userData);
     WarEntityListFree(list);
 }
 
@@ -1993,13 +1985,13 @@ bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
     return command1->id == command2->id;
 }
 
-static inline void aiCommandFree(WarAICommand* command, void* userData)
+static inline void aiCommandFree(WarAICommand* command)
 {
-    mz_free((memzone_t*)userData, (void*)command);
+    war_free((void*)command);
 }
 
-#define WarAICommandListDefaultOptions(zone) ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree, (zone)})
-#define WarAICommandQueueDefaultOptions(zone) ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree, (zone)})
+#define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
+#define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
 
 typedef struct
 {
@@ -2248,6 +2240,13 @@ typedef struct
     };
 } WarScene;
 
+// Maximum number of samples the audio mix buffer can hold.
+// Sized to cover any SDL3 audio device buffer at PLAYBACK_FREQ.
+#define AUDIO_MIX_BUFFER_MAX_SAMPLES 8192u
+
+// Maximum entity removals that the audio callback can queue per callback invocation.
+#define AUDIO_REMOVE_PENDING_MAX 64
+
 #define MAX_RENDER_STATE_STACK 32
 
 typedef struct
@@ -2295,6 +2294,21 @@ typedef struct _WarContext
     f32 musicVolume;
     f32 soundVolume;
 
+    // Pre-allocated mix buffer owned exclusively by the audio callback.
+    // Allocated on the main thread before audio starts so that the audio
+    // callback thread never calls war_calloc / war_free, which would race
+    // with main-thread allocations on permanentZone.
+    s16* audioMixBuffer;
+    u32  audioMixBufferCapacity; // capacity in samples
+
+    // Pending audio-entity removals queued by the audio callback thread.
+    // The callback posts finished entity IDs here (under audioRemoveMutex)
+    // instead of calling removeEntityById directly.  The main thread drains
+    // this queue at the top of each updateGame tick.
+    SDL_Mutex*  audioRemoveMutex;
+    WarEntityId audioRemovePending[AUDIO_REMOVE_PENDING_MAX];
+    s32         audioRemovePendingCount;
+
     bool cheatsEnabled;
 
     // this is a mutex used to make the deletion of the entities thread-safe
@@ -2310,7 +2324,4 @@ typedef struct _WarContext
     WarScene* nextScene;
     WarMap* map;
     WarMap* nextMap;
-
-    memzone_t* permanentZone;   // program/session/object lifetime allocations
-    memzone_t* frameZone;       // per-frame scratch; reset at the top of each frame
 } WarContext;

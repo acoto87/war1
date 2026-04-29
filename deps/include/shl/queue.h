@@ -44,32 +44,14 @@
 #ifndef SHL_QUEUE_H
 #define SHL_QUEUE_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#ifndef SHL_MALLOC
-#define SHL_MALLOC(sz, userData) malloc(sz)
-#endif
-#ifndef SHL_CALLOC
-#define SHL_CALLOC(n, sz, userData) calloc((n), (sz))
-#endif
-#ifndef SHL_REALLOC
-#define SHL_REALLOC(ptr, sz, userData) realloc((ptr), (sz))
-#endif
-#ifndef SHL_FREE
-#define SHL_FREE(ptr, userData) free(ptr)
-#endif
-#include <string.h>
+#include "shl_internal.h"
 
 #define shlDeclareQueue(typeName, itemType) \
     typedef struct \
     { \
         itemType defaultValue; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
     } typeName ## Options; \
     \
     typedef struct \
@@ -79,8 +61,7 @@
         int32_t count; \
         int32_t capacity; \
         bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item, void* userData); \
-        void* userData; \
+        void (*freeFn)(itemType item); \
         itemType defaultValue; \
         itemType *items; \
     } typeName; \
@@ -94,40 +75,16 @@
     void typeName ## Clear(typeName* queue);
 
 #define shlDefineQueue(typeName, itemType) \
-    void typeName ## __resize(typeName *queue) \
-    { \
-        int32_t oldCapacity = queue->capacity; \
-        itemType* old = queue->items; \
-        \
-        queue->capacity = oldCapacity << 1; \
-        queue->items = (itemType *)SHL_CALLOC(queue->capacity, sizeof(itemType), queue->userData); \
-        \
-        if (queue->head >= queue->tail && queue->count > 0) \
-        { \
-            memcpy(queue->items, old + queue->head, (oldCapacity - queue->head) * sizeof(itemType)); \
-            memcpy(queue->items + oldCapacity - queue->head, old, ((queue->head + queue->count) % oldCapacity) * sizeof(itemType)); \
-        } \
-        else \
-        { \
-            memcpy(queue->items, old + queue->head, queue->count * sizeof(itemType)); \
-        } \
-        \
-        queue->head = 0; \
-        queue->tail = queue->count; \
-        SHL_FREE(old, queue->userData); \
-    } \
-    \
     void typeName ## Init(typeName *queue, typeName ## Options options) \
     { \
         queue->defaultValue = options.defaultValue; \
         queue->equalsFn = options.equalsFn; \
         queue->freeFn = options.freeFn; \
-        queue->userData = options.userData; \
-        queue->capacity = 8; \
+        queue->capacity = SHL__INITIAL_CAPACITY; \
         queue->count = 0; \
         queue->head = 0; \
         queue->tail = 0; \
-        queue->items = (itemType *)SHL_CALLOC(queue->capacity, sizeof(itemType), queue->userData); \
+        queue->items = (itemType *)SHL_CALLOC((size_t)queue->capacity, sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName *queue) \
@@ -137,7 +94,7 @@
         \
         typeName ## Clear(queue); \
         \
-        SHL_FREE(queue->items, queue->userData); \
+        SHL_FREE(queue->items); \
         queue->items = 0; \
     } \
     \
@@ -147,7 +104,7 @@
             return; \
         \
         if (queue->count == queue->capacity) \
-            typeName ## __resize(queue); \
+            shl__resizeCircularArray((void**)&queue->items, &queue->capacity, &queue->head, &queue->tail, queue->count, sizeof(itemType)); \
         \
         queue->items[queue->tail] = value; \
         queue->tail = (queue->tail + 1) % queue->capacity; \
@@ -200,7 +157,7 @@
             for(int32_t i = 0; i < queue->count; i++) \
             { \
                 int32_t index = (queue->head + i) % queue->capacity; \
-                queue->freeFn(queue->items[index], queue->userData); \
+                queue->freeFn(queue->items[index]); \
                 queue->items[index] = queue->defaultValue; \
             } \
         } \

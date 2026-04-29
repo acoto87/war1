@@ -2,7 +2,13 @@
 
 #include <assert.h>
 
+#ifdef SHL_MZ_DEBUG
+#include "shl/memzone_audit.h"
+#else
+#include "shl/memzone.h"
+#endif
 #include "shl/memory_buffer.h"
+#include "shl/wstr.h"
 
 #include "war_log.h"
 #include "war_audio.h"
@@ -27,7 +33,7 @@ WarResource* getOrCreateResource(WarContext* context, s32 index)
     if (!context->resources[index])
     {
         logInfo("Creating resource: %d", index);
-        context->resources[index] = (WarResource*)mz_alloc(context->permanentZone, sizeof(WarResource));
+        context->resources[index] = (WarResource*)war_malloc(sizeof(WarResource));
     }
     return context->resources[index];
 }
@@ -88,7 +94,7 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
 
     if (rawResource.length < PALETTE_LENGTH)
     {
-        rawResource.data = (u8*)mz_realloc(context->permanentZone, rawResource.data, PALETTE_LENGTH);
+        rawResource.data = (u8*)war_realloc(rawResource.data, PALETTE_LENGTH);
         memset(rawResource.data + rawResource.length, 0, PALETTE_LENGTH - rawResource.length);
     }
 
@@ -183,7 +189,7 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     u16 width = readu16(rawResource.data, 0);
     u16 height = readu16(rawResource.data, 2);
 
-    u8 *pixels = (u8*)mz_alloc(context->permanentZone, width * height * 4 * sizeof(u8));
+    u8 *pixels = (u8*)war_malloc(width * height * 4 * sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
@@ -235,7 +241,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
         frame->w = readu8(rawResource.data, 4 + i * 8 + 2);
         frame->h = readu8(rawResource.data, 4 + i * 8 + 3);
         frame->off = readu32(rawResource.data, 4 + i * 8 + 4);
-        frame->data = (u8*)mz_alloc(context->permanentZone, frameWidth * frameHeight * 4 * sizeof(u8));
+        frame->data = (u8*)war_malloc(frameWidth * frameHeight * 4 * sizeof(u8));
 
         // found in war1tool.c, don't know if is needed
         // if (off < 0) {  // High bit of width
@@ -440,16 +446,6 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
         logInfo("Placeholder resource found at: %d", index);
         return;
     }
-
-    // DEBUG: This is debug code, remove it!
-    // if (index >= 117 && index <= 188)
-    // {
-    //     char fileName[10] = {0};
-    //     sprintf(fileName, "res%d", index);
-    //     FILE* f = fopen(fileName, "wb");
-    //     fwrite(rawResource.data, sizeof(u8), rawResource.length, f);
-    //     fclose(f);
-    // }
 
     u32 allowId = readu32(rawResource.data, 0);
 
@@ -767,16 +763,15 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
         resource->tilesetData.data[i * 4 + 3] = data[i] > 0 ? 255 : 0;
     }
 
-    mz_destroy(scratch);
-
-#if __DEBUG__
+    #if __DEBUG__
     {
-        char fp[30];
-        sprintf(fp, "output_%d.png", index);
-
-        stbi_write_png(fp, TILESET_WIDTH, TILESET_HEIGHT, 4, resource->tilesetData.data, TILESET_WIDTH * 4);
+        char path[32];
+        StringView fp = wsv_fromCStringFormat(path, sizeof(path), "tileset_%d.png", index);
+        stbi_write_png(wstr_cstr(&fp), TILESET_WIDTH, TILESET_HEIGHT, 4, resource->tilesetData.data, TILESET_WIDTH * 4);
     }
-#endif
+    #endif
+
+    mz_destroy(scratch);
 }
 
 void loadTiles(WarContext *context, DatabaseEntry *entry)
@@ -796,7 +791,7 @@ void loadTiles(WarContext *context, DatabaseEntry *entry)
     resource->type = WAR_RESOURCE_TYPE_TILES;
     resource->tilesData.palette1 = entry->param1;
     resource->tilesData.palette2 = entry->param2;
-    resource->tilesData.data = (u8*)mz_alloc(context->permanentZone, rawResource.length * sizeof(u8));
+    resource->tilesData.data = (u8*)war_malloc(rawResource.length * sizeof(u8));
     memcpy(resource->tilesData.data, rawResource.data, rawResource.length);
 }
 
@@ -813,7 +808,7 @@ void loadText(WarContext *context, DatabaseEntry *entry)
     WarResource *resource = getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TEXT;
     resource->textData.length = rawResource.length;
-    resource->textData.text = (char *)mz_alloc(context->permanentZone, resource->textData.length * sizeof(char));
+    resource->textData.text = (char *)war_malloc(resource->textData.length * sizeof(char));
     memcpy(resource->textData.text, rawResource.data, resource->textData.length);
 }
 
@@ -984,7 +979,7 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
     u16 width = readu16(rawResource.data, 4);
     u16 height = readu16(rawResource.data, 6);
 
-    u8 *pixels = (u8*)mz_alloc(context->permanentZone, width * height * 4 * sizeof(u8));
+    u8 *pixels = (u8*)war_malloc(width * height * 4 * sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 8 + i);

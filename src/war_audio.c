@@ -349,18 +349,25 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
         return;
     }
 
-    // allocate a zeroed buffer to mix into
-    s16* outputBuffer = (s16*)calloc(sampleCount, sizeof(s16));
-    if (!outputBuffer)
+    // Use the pre-allocated mix buffer (owned by WarContext, never freed here).
+    // Cap to the allocated capacity; if SDL requests more than expected, we mix
+    // what we can and the stream will request the remainder on the next callback.
+    if (sampleCount > context->audioMixBufferCapacity)
     {
-        return;
+        logWarning("Audio callback requested %u samples; capping to pre-allocated capacity %u.",
+                   sampleCount, context->audioMixBufferCapacity);
+        sampleCount = context->audioMixBufferCapacity;
     }
+
+    s16* outputBuffer = context->audioMixBuffer;
+    memset(outputBuffer, 0, sampleCount * sizeof(s16));
 
     f32 musicVolume = context->musicEnabled ? context->musicVolume : 0;
     f32 soundVolume = context->soundEnabled ? context->soundVolume : 0;
 
-    WarEntityIdList toRemove;
-    WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
+    // Fixed-size stack array: no heap allocation from the audio thread.
+    WarEntityId toRemove[AUDIO_REMOVE_PENDING_MAX];
+    s32 toRemoveCount = 0;
 
     s16* outputStream = outputBuffer;
 
@@ -380,7 +387,8 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                         if (musicVolume > 0 && playMidi(context, entity, sampleCount, outputStream, musicVolume))
                         {
                             // if the audio finish, mark it to remove it
-                            WarEntityIdListAdd(&toRemove, entity->id);
+                            if (toRemoveCount < AUDIO_REMOVE_PENDING_MAX)
+                                toRemove[toRemoveCount++] = entity->id;
                         }
 
                         break;
@@ -421,7 +429,8 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                         if (playWave(context, entity, sampleCount, outputStream, volume))
                         {
                             // if the audio finish, mark it to remove it
-                            WarEntityIdListAdd(&toRemove, entity->id);
+                            if (toRemoveCount < AUDIO_REMOVE_PENDING_MAX)
+                                toRemove[toRemoveCount++] = entity->id;
                         }
 
                         break;
@@ -437,17 +446,22 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
         }
     }
 
-    for (s32 i = 0; i < toRemove.count; i++)
+    // Post finished entity IDs to the main thread for removal.
+    // Never call removeEntityById from the audio thread: it calls war_free which
+    // would race with main-thread allocations on permanentZone.
+    if (toRemoveCount > 0)
     {
-        WarEntityId entityId = toRemove.items[i];
-        removeEntityById(context, entityId);
+        SDL_LockMutex(context->audioRemoveMutex);
+        for (s32 i = 0; i < toRemoveCount; i++)
+        {
+            if (context->audioRemovePendingCount < AUDIO_REMOVE_PENDING_MAX)
+                context->audioRemovePending[context->audioRemovePendingCount++] = toRemove[i];
+        }
+        SDL_UnlockMutex(context->audioRemoveMutex);
     }
-
-    WarEntityIdListFree(&toRemove);
 
     // push the mixed audio data into the stream
     SDL_PutAudioStreamData(stream, outputBuffer, (int)(sampleCount * sizeof(s16)));
-    free(outputBuffer);
 }
 
 bool initAudio(WarContext* context)
@@ -464,6 +478,32 @@ bool initAudio(WarContext* context)
 
     // Set the SoundFont rendering output mode
     tsf_set_output(context->soundFont, TSF_MONO, PLAYBACK_FREQ, 0.0f);
+
+    // Pre-allocate the mix buffer on the main thread before audio starts.
+    // This ensures the audio callback thread never needs to call war_calloc
+    // or war_free, which would race with main-thread allocations on permanentZone.
+    context->audioMixBuffer = (s16*)war_malloc(AUDIO_MIX_BUFFER_MAX_SAMPLES * sizeof(s16));
+    if (!context->audioMixBuffer)
+    {
+        logError("Failed to allocate audio mix buffer.");
+        tsf_close(context->soundFont);
+        context->soundFont = NULL;
+        return false;
+    }
+    context->audioMixBufferCapacity = AUDIO_MIX_BUFFER_MAX_SAMPLES;
+
+    // Mutex that guards audioRemovePending / audioRemovePendingCount.
+    context->audioRemoveMutex = SDL_CreateMutex();
+    if (!context->audioRemoveMutex)
+    {
+        logError("Failed to create audio remove mutex: %s", SDL_GetError());
+        war_free(context->audioMixBuffer);
+        context->audioMixBuffer = NULL;
+        tsf_close(context->soundFont);
+        context->soundFont = NULL;
+        return false;
+    }
+    context->audioRemovePendingCount = 0;
 
     // Open an SDL3 audio device stream with S16 mono at PLAYBACK_FREQ
     SDL_AudioSpec spec;
@@ -1015,7 +1055,7 @@ u8* changeSampleRate(WarContext* context, u8* samplesIn, s32 length, s32 factor)
     assert(factor >= 1);
 
     s32 newLength = length * factor;
-    u8* samplesOut = (u8*)mz_alloc(context->permanentZone, newLength);
+    u8* samplesOut = (u8*)war_malloc(newLength);
 
     samplesOut[0] = samplesIn[0];
 

@@ -4,22 +4,26 @@
 
 WarAI* createAI(WarContext* context)
 {
-    WarAI* ai = (WarAI*)mz_alloc(context->permanentZone, sizeof(WarAI));
+    NOT_USED(context);
+
+    WarAI* ai = (WarAI*)war_malloc(sizeof(WarAI));
     ai->staticCommandId = 0;
     ai->customData = NULL;
 
-    WarAICommandListInit(&ai->currentCommands, WarAICommandListDefaultOptions(context->permanentZone));
-    WarAICommandQueueInit(&ai->nextCommands, WarAICommandQueueDefaultOptions(context->permanentZone));
+    WarAICommandListInit(&ai->currentCommands, WarAICommandListDefaultOptions);
+    WarAICommandQueueInit(&ai->nextCommands, WarAICommandQueueDefaultOptions);
 
     return ai;
 }
 
 WarAICommand* createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandType type)
 {
+    NOT_USED(context);
+
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    WarAICommand* command = (WarAICommand*)mz_alloc(context->permanentZone, sizeof(WarAICommand));
+    WarAICommand* command = (WarAICommand*)war_malloc(sizeof(WarAICommand));
     command->id = ++ai->staticCommandId;
     command->type = type;
     command->status = WAR_AI_COMMAND_STATUS_CREATED;
@@ -61,11 +65,11 @@ void initAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAI* ai = aiPlayer->ai;
     assert(ai);
 
-    WarAICustomData* customData = (WarAICustomData*)mz_alloc(context->permanentZone, sizeof(WarAICustomData));
+    WarAICustomData* customData = (WarAICustomData*)war_malloc(sizeof(WarAICustomData));
     customData->index = 0;
 
     WarAICommandList* commands = &customData->commands;
-    WarAICommandListInit(commands, WarAICommandListDefaultOptions(context->permanentZone));
+    WarAICommandListInit(commands, WarAICommandListDefaultOptions);
 
     WarUnitType townHall = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
     WarAICommandListAdd(commands, createUnitRequest(context, aiPlayer, townHall, 1));
@@ -336,8 +340,10 @@ void updateAIPlayer(WarContext* context, WarPlayerInfo* aiPlayer)
 
 void updateAIPlayers(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateAI", 1);
     WarMap* map = context->map;
 
     // for now assume player 1 is the only AI
     updateAIPlayer(context, &map->players[1]);
+    TracyCZoneEnd(ctx);
 }
