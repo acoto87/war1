@@ -171,7 +171,7 @@ void wspr_renderSubSprite(WarContext *context, WarSprite sprite, rect rs, rect r
         return;
     }
 
-    wr_renderSubImage(context, sprite.texture, rs, rd, scale);
+    wr_subImage(context, sprite.texture, rs, rd, scale);
 }
 
 void wspr_renderSprite(WarContext *context, WarSprite sprite, vec2 pos, vec2 scale)
@@ -185,7 +185,7 @@ void wspr_renderSprite(WarContext *context, WarSprite sprite, vec2 pos, vec2 sca
     vec2 frameSize = vec2i(sprite.frameWidth, sprite.frameHeight);
     rect rs = rectv(VEC2_ZERO, frameSize);
     rect rd = rectv(pos, frameSize);
-    wr_renderSubImage(context, sprite.texture, rs, rd, scale);
+    wr_subImage(context, sprite.texture, rs, rd, scale);
 }
 
 WarSpriteFrame wspr_getSpriteFrame(WarContext* context, WarSprite sprite, s32 frameIndex)

@@ -951,19 +951,19 @@ void renderImage(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && sprite->enabled && sprite->frameIndex >= 0)
     {
-        wr_renderSave(context);
+        wr_save(context);
 
         if (sprite->sprite.framesCount > 1)
         {
             WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
             wspr_updateSpriteImage(context, sprite->sprite, frame.data);
 
-            wr_renderTranslate(context, -(f32)frame.dx, -(f32)frame.dy);
+            wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
         }
 
-        wr_renderTranslate(context, transform.position.x, transform.position.y);
+        wr_translate(context, transform.position.x, transform.position.y);
         wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
-        wr_renderRestore(context);
+        wr_restore(context);
     }
 }
 
@@ -997,14 +997,14 @@ void renderRoad(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            wr_renderSave(context);
-            wr_renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
+            wr_save(context);
+            wr_translate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            wr_renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
+            wr_subImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            wr_renderRestore(context);
+            wr_restore(context);
         }
     }
 }
@@ -1057,14 +1057,14 @@ void renderWall(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            wr_renderSave(context);
-            wr_renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
+            wr_save(context);
+            wr_translate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            wr_renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
+            wr_subImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            wr_renderRestore(context);
+            wr_restore(context);
         }
     }
 }
@@ -1103,14 +1103,14 @@ void renderRuin(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            wr_renderSave(context);
-            wr_renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
+            wr_save(context);
+            wr_translate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            wr_renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
+            wr_subImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            wr_renderRestore(context);
+            wr_restore(context);
         }
     }
 }
@@ -1175,14 +1175,14 @@ void renderUnit(WarContext* context, WarEntity* entity)
     // the unit is visible if it's partially on the clear areas of the fog
     bool isVisible = isUnitPartiallyVisible(map, entity);
 
-    wr_renderTranslate(context, -halff(frameSize.x), -halff(frameSize.y));
-    wr_renderTranslate(context, halff(unitSize.x), halff(unitSize.y));
-    wr_renderTranslate(context, position.x, position.y);
+    wr_translate(context, -halff(frameSize.x), -halff(frameSize.y));
+    wr_translate(context, halff(unitSize.x), halff(unitSize.y));
+    wr_translate(context, position.x, position.y);
 
 #ifdef DEBUG_RENDER_UNIT_INFO
-    wr_renderFillRect(context, wu_getUnitFrameRect(entity), WAR_COLOR_RGBA(0, 0, 128, 128));
-    wr_renderFillRect(context, wu_getUnitSpriteRect(entity), WAR_COLOR_GRAY_TRANSPARENT);
-    wr_renderFillRect(context, rectv(wu_getUnitSpriteCenter(entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
+    wr_fillRect(context, wu_getUnitFrameRect(entity), WAR_COLOR_RGBA(0, 0, 128, 128));
+    wr_fillRect(context, wu_getUnitSpriteRect(entity), WAR_COLOR_GRAY_TRANSPARENT);
+    wr_fillRect(context, rectv(wu_getUnitSpriteCenter(entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
 #endif
 
 #ifdef DEBUG_RENDER_UNIT_STATS
@@ -1192,7 +1192,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
 
     if (sprite->enabled && (isVisible || unit->hasBeenSeen))
     {
-        wr_renderSave(context);
+        wr_save(context);
 
         if (wu_isDudeUnit(entity))
         {
@@ -1200,14 +1200,14 @@ void renderUnit(WarContext* context, WarEntity* entity)
 
             if (unitComponent->invisible)
             {
-                wr_renderGlobalAlpha(context, 0.5f);
+                wr_globalAlpha(context, 0.5f);
             }
 
             if (unitComponent->invulnerable)
             {
                 rect unitRect = wu_getUnitSpriteRect(entity);
                 unitRect = rectExpand(unitRect, -1, -1);
-                wr_renderStrokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
+                wr_strokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
             }
         }
 
@@ -1215,7 +1215,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
         wspr_updateSpriteImage(context, sprite->sprite, frame.data);
         wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
 
-        wr_renderRestore(context);
+        wr_restore(context);
     }
 
     if (animations->enabled && isVisible)
@@ -1225,16 +1225,16 @@ void renderUnit(WarContext* context, WarEntity* entity)
             WarSpriteAnimation* anim = animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
-                wr_renderSave(context);
+                wr_save(context);
 
-                wr_renderTranslate(context, anim->offset.x, anim->offset.y);
-                wr_renderScale(context, anim->scale.x, anim->scale.y);
+                wr_translate(context, anim->offset.x, anim->offset.y);
+                wr_scale(context, anim->scale.x, anim->scale.y);
 
 #ifdef DEBUG_RENDER_UNIT_ANIMATIONS
                 // size of the original sprite
                 vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
 
-                wr_renderFillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
+                wr_fillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
 #endif
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
@@ -1246,7 +1246,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
                 wspr_updateSpriteImage(context, anim->sprite, frame.data);
                 wspr_renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
-                wr_renderRestore(context);
+                wr_restore(context);
             }
         }
     }
@@ -1260,9 +1260,9 @@ void renderText(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && text->enabled && text->text.data)
     {
-        wr_renderSave(context);
-        wr_renderTranslate(context, transform->position.x, transform->position.y);
-        wr_renderScale(context, transform->scale.x, transform->scale.y);
+        wr_save(context);
+        wr_translate(context, transform->position.x, transform->position.y);
+        wr_scale(context, transform->scale.x, transform->scale.y);
 
         WarFontParams params;
         params.fontIndex = text->fontIndex;
@@ -1286,7 +1286,7 @@ void renderText(WarContext* context, WarEntity* entity)
         else
             wfont_renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
 
-        wr_renderRestore(context);
+        wr_restore(context);
     }
 }
 
@@ -1298,13 +1298,13 @@ void renderRect(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && rect->enabled)
     {
-        wr_renderSave(context);
-        wr_renderTranslate(context, transform->position.x, transform->position.y);
-        wr_renderScale(context, transform->scale.x, transform->scale.y);
+        wr_save(context);
+        wr_translate(context, transform->position.x, transform->position.y);
+        wr_scale(context, transform->scale.x, transform->scale.y);
 
-        wr_renderFillRect(context, rectf(0.0f, 0.0f, rect->size.x, rect->size.y), rect->color);
+        wr_fillRect(context, rectf(0.0f, 0.0f, rect->size.x, rect->size.y), rect->color);
 
-        wr_renderRestore(context);
+        wr_restore(context);
     }
 }
 
@@ -1318,9 +1318,9 @@ void renderButton(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && button->enabled)
     {
-        wr_renderSave(context);
-        wr_renderTranslate(context, transform->position.x, transform->position.y);
-        wr_renderScale(context, transform->scale.x, transform->scale.y);
+        wr_save(context);
+        wr_translate(context, transform->position.x, transform->position.y);
+        wr_scale(context, transform->scale.x, transform->scale.y);
 
         // render background
         {
@@ -1339,7 +1339,7 @@ void renderButton(WarContext* context, WarEntity* entity)
                 if (button->active)
                     offset = vec2Addv(offset, vec2i(0, 1));
 
-                wr_renderTranslate(context, offset.x, offset.y);
+                wr_translate(context, offset.x, offset.y);
 
                 WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
                 wspr_updateSpriteImage(context, sprite->sprite, frame.data);
@@ -1370,7 +1370,7 @@ void renderButton(WarContext* context, WarEntity* entity)
             }
         }
 
-        wr_renderRestore(context);
+        wr_restore(context);
     }
 }
 
@@ -1388,45 +1388,45 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 
 #ifdef DEBUG_RENDER_PROJECTILES
         {
-            wr_renderSave(context);
+            wr_save(context);
 
-            wr_renderTranslate(context, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
-            wr_renderTranslate(context, position.x, position.y);
+            wr_translate(context, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
+            wr_translate(context, position.x, position.y);
 
             rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-            wr_renderFillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
+            wr_fillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
 
-            wr_renderRestore(context);
+            wr_restore(context);
         }
 
         {
-            wr_renderSave(context);
+            wr_save(context);
 
-            wr_renderTranslate(context, -halfi(frame.w),-halfi(frame.h));
-            wr_renderTranslate(context, position.x, position.y);
+            wr_translate(context, -halfi(frame.w),-halfi(frame.h));
+            wr_translate(context, position.x, position.y);
 
             rect r = rectf(0, 0, frame.w, frame.h);
-            wr_renderFillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
+            wr_fillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
 
-            wr_renderRestore(context);
+            wr_restore(context);
         }
 
         {
             WarProjectileComponent* projectile = &entity->projectile;
 
-            wr_renderSave(context);
+            wr_save(context);
 
-            wr_renderStrokeLine(context, projectile->origin, projectile->target, getColorFromList(entity->id), 0.5f);
-            wr_renderFillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
-            wr_renderFillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+            wr_strokeLine(context, projectile->origin, projectile->target, wr_getColorFromList(entity->id), 0.5f);
+            wr_fillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+            wr_fillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
 
-            wr_renderRestore(context);
+            wr_restore(context);
         }
 #endif
 
-        wr_renderTranslate(context, -(f32)frame.dx, -(f32)frame.dy);
-        wr_renderTranslate(context, -halff(frame.w), -halff(frame.h));
-        wr_renderTranslate(context, position.x, position.y);
+        wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
+        wr_translate(context, -halff(frame.w), -halff(frame.h));
+        wr_translate(context, position.x, position.y);
 
         wspr_updateSpriteImage(context, sprite->sprite, frame.data);
         wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
@@ -1501,18 +1501,18 @@ void renderMinimap(WarContext* context, WarEntity* entity)
         }
     }
 
-    wr_renderSave(context);
-    wr_renderTranslate(context, position.x, position.y);
+    wr_save(context);
+    wr_translate(context, position.x, position.y);
 
     // render base
     wspr_updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
     wspr_renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
     // render viewport
-    wr_renderTranslate(context, (f32)map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
-    wr_renderStrokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
+    wr_translate(context, (f32)map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
+    wr_strokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
 
-    wr_renderRestore(context);
+    wr_restore(context);
     TracyCZoneEnd(ctx);
 }
 
@@ -1522,7 +1522,7 @@ void renderAnimation(WarContext* context, WarEntity* entity)
     WarAnimationsComponent* animations = &entity->animations;
 
     vec2 position = transform->position;
-    wr_renderTranslate(context, position.x, position.y);
+    wr_translate(context, position.x, position.y);
 
     if (animations->enabled)
     {
@@ -1531,10 +1531,10 @@ void renderAnimation(WarContext* context, WarEntity* entity)
             WarSpriteAnimation* anim = animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
-                wr_renderSave(context);
+                wr_save(context);
 
-                wr_renderTranslate(context, anim->offset.x, anim->offset.y);
-                wr_renderScale(context, anim->scale.x, anim->scale.y);
+                wr_translate(context, anim->offset.x, anim->offset.y);
+                wr_scale(context, anim->scale.x, anim->scale.y);
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
                 animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
@@ -1545,7 +1545,7 @@ void renderAnimation(WarContext* context, WarEntity* entity)
                 wspr_updateSpriteImage(context, anim->sprite, frame.data);
                 wspr_renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
-                wr_renderRestore(context);
+                wr_restore(context);
             }
         }
     }
@@ -1584,9 +1584,9 @@ void we_renderEntity(WarContext* context, WarEntity* entity)
             return;
         }
 
-        wr_renderSave(context);
+        wr_save(context);
         renderFunc(context, entity);
-        wr_renderRestore(context);
+        wr_restore(context);
     }
 }
 
@@ -1668,10 +1668,10 @@ void we_renderUnitSelection(WarContext* context)
                 // position of the unit in the map
                 vec2 position = transform->position;
 
-                wr_renderSave(context);
-                wr_renderTranslate(context, -halff(frameSize.x), -halff(frameSize.y));
-                wr_renderTranslate(context, halff(unitSize.x), halff(unitSize.y));
-                wr_renderTranslate(context, position.x, position.y);
+                wr_save(context);
+                wr_translate(context, -halff(frameSize.x), -halff(frameSize.y));
+                wr_translate(context, halff(unitSize.x), halff(unitSize.y));
+                wr_translate(context, position.x, position.y);
 
                 rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
                 WarColor color = WAR_COLOR_WHITE_SELECTION;
@@ -1679,9 +1679,9 @@ void we_renderUnitSelection(WarContext* context)
                     color = WAR_COLOR_GREEN_SELECTION;
                 else if (wu_isEnemyUnit(context, entity))
                     color = WAR_COLOR_RED_SELECTION;
-                wr_renderStrokeRect(context, selr, color, 1.0f);
+                wr_strokeRect(context, selr, color, 1.0f);
 
-                wr_renderRestore(context);
+                wr_restore(context);
             }
         }
     }

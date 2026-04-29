@@ -203,7 +203,7 @@ bool wg_initGame(WarContext* context)
     }
 
     // Initialize render state stack
-    wr_renderInit(context);
+    wr_init(context);
 
     context->transitionDelay = 0.0f;
     context->cheatsEnabled = true;
@@ -618,7 +618,7 @@ void wg_renderGame(WarContext *context)
     }
 
     // Reset render state for this frame
-    wr_renderInit(context);
+    wr_init(context);
 
     if (context->scene)
     {

@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 // Render state stack (replaces nvgSave/nvgRestore/nvgTranslate/nvgScale/nvgGlobalAlpha)
 // ---------------------------------------------------------------------------
-void wr_renderInit(WarContext* context)
+void wr_init(WarContext* context)
 {
     context->renderStateTop = 0;
     context->renderState[0].offsetX = 0;
@@ -20,34 +20,34 @@ static WarRenderState* wr_renderGetState(WarContext* context)
     return &context->renderState[context->renderStateTop];
 }
 
-void wr_renderSave(WarContext* context)
+void wr_save(WarContext* context)
 {
     assert(context->renderStateTop + 1 < MAX_RENDER_STATE_STACK);
     context->renderState[context->renderStateTop + 1] = context->renderState[context->renderStateTop];
     context->renderStateTop++;
 }
 
-void wr_renderRestore(WarContext* context)
+void wr_restore(WarContext* context)
 {
     assert(context->renderStateTop > 0);
     context->renderStateTop--;
 }
 
-void wr_renderTranslate(WarContext* context, f32 tx, f32 ty)
+void wr_translate(WarContext* context, f32 tx, f32 ty)
 {
     WarRenderState* s = wr_renderGetState(context);
     s->offsetX += tx * s->scaleX;
     s->offsetY += ty * s->scaleY;
 }
 
-void wr_renderScale(WarContext* context, f32 sx, f32 sy)
+void wr_scale(WarContext* context, f32 sx, f32 sy)
 {
     WarRenderState* s = wr_renderGetState(context);
     s->scaleX *= sx;
     s->scaleY *= sy;
 }
 
-void wr_renderGlobalAlpha(WarContext* context, f32 a)
+void wr_globalAlpha(WarContext* context, f32 a)
 {
     WarRenderState* s = wr_renderGetState(context);
     s->alpha *= a;
@@ -91,7 +91,7 @@ static void wr_renderSetDrawColor(WarContext* context, WarColor color)
     SDL_SetRenderDrawColor(context->renderer, color.r, color.g, color.b, a);
 }
 
-void wr_renderFillRect(WarContext* context, rect r, WarColor color)
+void wr_fillRect(WarContext* context, rect r, WarColor color)
 {
     SDL_FRect dr = renderTransformRect(context, r);
     wr_renderSetDrawColor(context, color);
@@ -99,13 +99,13 @@ void wr_renderFillRect(WarContext* context, rect r, WarColor color)
     SDL_RenderFillRect(context->renderer, &dr);
 }
 
-void wr_renderFillRects(WarContext* context, s32 count, rect r[], WarColor color)
+void wr_fillRects(WarContext* context, s32 count, rect r[], WarColor color)
 {
     for (s32 i = 0; i < count; i++)
-        wr_renderFillRect(context, r[i], color);
+        wr_fillRect(context, r[i], color);
 }
 
-void wr_renderStrokeRect(WarContext* context, rect r, WarColor color, f32 width)
+void wr_strokeRect(WarContext* context, rect r, WarColor color, f32 width)
 {
     NOT_USED(width); // SDL_RenderRect always draws 1px lines; good enough at 320x200
     SDL_FRect dr = renderTransformRect(context, r);
@@ -114,7 +114,7 @@ void wr_renderStrokeRect(WarContext* context, rect r, WarColor color, f32 width)
     SDL_RenderRect(context->renderer, &dr);
 }
 
-void wr_renderStrokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, f32 width)
+void wr_strokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, f32 width)
 {
     NOT_USED(width);
     f32 x1, y1, x2, y2;
@@ -128,7 +128,7 @@ void wr_renderStrokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, 
 // ---------------------------------------------------------------------------
 // Image / sub-image rendering (replaces nvgRenderSubImage and batch system)
 // ---------------------------------------------------------------------------
-void wr_renderSubImage(WarContext* context, SDL_Texture* texture, rect rs, rect rd, vec2 scale)
+void wr_subImage(WarContext* context, SDL_Texture* texture, rect rs, rect rd, vec2 scale)
 {
     if (!texture) return;
 
@@ -174,9 +174,9 @@ void wr_renderSubImage(WarContext* context, SDL_Texture* texture, rect rs, rect 
 }
 
 // ---------------------------------------------------------------------------
-// Color helper (replaces getColorFromList which returned NVGcolor)
+// Color helper (replaces wr_getColorFromList which returned NVGcolor)
 // ---------------------------------------------------------------------------
-WarColor getColorFromList(s32 index)
+WarColor wr_getColorFromList(s32 index)
 {
     const u32 colors[] =
     {

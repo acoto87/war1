@@ -375,16 +375,16 @@ void wmui_setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, W
 
 void wmui_renderSelectionRect(WarContext* context)
 {
-    wr_renderSave(context);
+    wr_save(context);
 
     WarInput* input = &context->input;
     if (input->isDragging)
     {
         rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
-        wr_renderStrokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
+        wr_strokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
     }
 
-    wr_renderRestore(context);
+    wr_restore(context);
 }
 
 void wmui_renderCommand(WarContext* context)
@@ -394,7 +394,7 @@ void wmui_renderCommand(WarContext* context)
 
     WarInput* input = &context->input;
 
-    wr_renderSave(context);
+    wr_save(context);
 
     switch (command->type)
     {
@@ -428,7 +428,7 @@ void wmui_renderCommand(WarContext* context)
             position = wmap_vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(data.sizex * MEGA_TILE_WIDTH, data.sizey * MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
-            wr_renderFillRect(context, buildingRect, fillColor);
+            wr_fillRect(context, buildingRect, fillColor);
 
             break;
         }
@@ -446,7 +446,7 @@ void wmui_renderCommand(WarContext* context)
             position = wmap_vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
-            wr_renderFillRect(context, buildingRect, fillColor);
+            wr_fillRect(context, buildingRect, fillColor);
 
             break;
         }
@@ -458,16 +458,16 @@ void wmui_renderCommand(WarContext* context)
         }
     }
 
-    wr_renderRestore(context);
+    wr_restore(context);
 }
 
 void wmui_renderMapUI(WarContext* context)
 {
-    wr_renderSave(context);
+    wr_save(context);
 
     wmui_renderSelectionRect(context);
     wmui_renderCommand(context);
     wui_renderUIEntities(context);
 
-    wr_renderRestore(context);
+    wr_restore(context);
 }
