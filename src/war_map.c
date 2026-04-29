@@ -1432,15 +1432,15 @@ void updateCommandFromRightClick(WarContext* context)
                         if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
                         {
                             if (!isUnitUnknown(map, targetEntity))
-                                executeHarvestCommand(context, targetEntity, targetTile);
+                                wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             else
-                                executeMoveCommand(context, targetPoint);
+                                wcmd_executeMoveCommand(context, targetPoint);
                         }
                         else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
                             if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
-                                executeHarvestCommand(context, targetEntity, targetTile);
+                                wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             }
                             else
                             {
@@ -1448,11 +1448,11 @@ void updateCommandFromRightClick(WarContext* context)
                                 if (tree)
                                 {
                                     targetTile = vec2i(tree->tilex, tree->tiley);
-                                    executeHarvestCommand(context, targetEntity, targetTile);
+                                    wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                                 }
                                 else
                                 {
-                                    executeMoveCommand(context, targetPoint);
+                                    wcmd_executeMoveCommand(context, targetPoint);
                                 }
                             }
                         }
@@ -1463,39 +1463,39 @@ void updateCommandFromRightClick(WarContext* context)
                             {
                                 if (wun_isEnemyUnit(context, targetEntity))
                                 {
-                                    executeAttackCommand(context, targetEntity, targetTile);
+                                    wcmd_executeAttackCommand(context, targetEntity, targetTile);
                                 }
                                 else
                                 {
-                                    executeDeliverCommand(context, targetEntity);
+                                    wcmd_executeDeliverCommand(context, targetEntity);
                                 }
                             }
                             else
                             {
-                                executeMoveCommand(context, targetPoint);
+                                wcmd_executeMoveCommand(context, targetPoint);
                             }
                         }
                         else if (isWall(targetEntity))
                         {
                             // it doesn't matter if the wall piece is visible or not,
                             // the unit will walk to it
-                            executeMoveCommand(context, targetPoint);
+                            wcmd_executeMoveCommand(context, targetPoint);
                         }
                         else
                         {
                             if (wun_isEnemyUnit(context, targetEntity))
                             {
-                                executeAttackCommand(context, targetEntity, targetTile);
+                                wcmd_executeAttackCommand(context, targetEntity, targetTile);
                             }
                             else
                             {
-                                executeFollowCommand(context, targetEntity);
+                                wcmd_executeFollowCommand(context, targetEntity);
                             }
                         }
                     }
                     else
                     {
-                        executeMoveCommand(context, targetPoint);
+                        wcmd_executeMoveCommand(context, targetPoint);
                     }
                 }
                 // if the right click was on the minimap
@@ -1504,7 +1504,7 @@ void updateCommandFromRightClick(WarContext* context)
                     vec2 offset = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
                     vec2 targetPoint = wmap_vec2TileToMapCoordinates(offset, true);
 
-                    executeMoveCommand(context, targetPoint);
+                    wcmd_executeMoveCommand(context, targetPoint);
                 }
             }
         }
