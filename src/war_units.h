@@ -1767,7 +1767,7 @@ rect getUnitRect(WarEntity* entity)
 vec2 getUnitPosition(WarEntity* entity, bool inTiles)
 {
     vec2 position = entity->transform.position;
-    return inTiles ? vec2MapToTileCoordinates(position) : position;
+    return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
 }
 
 vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
@@ -1776,14 +1776,14 @@ vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
     vec2 spriteSize = getUnitSpriteSize(entity);
     vec2 unitCenter = vec2Half(spriteSize);
     vec2 position = vec2Addv(transform->position, unitCenter);
-    return inTiles ? vec2MapToTileCoordinates(position) : position;
+    return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
 }
 
 void setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
-        position = vec2TileToMapCoordinates(position, true);
+        position = wmap_vec2TileToMapCoordinates(position, true);
     }
 
     entity->transform.position = position;
@@ -1793,7 +1793,7 @@ void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
-        position = vec2TileToMapCoordinates(position, true);
+        position = wmap_vec2TileToMapCoordinates(position, true);
     }
 
     WarTransformComponent* transform = &entity->transform;
@@ -1869,7 +1869,7 @@ vec2 unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
 
     vec2 position = getUnitCenterPosition(entity, true);
 
-    vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
+    vec2 targetPosition = wmap_vec2MapToTileCoordinates(targetEntity->transform.position);
     vec2 unitSize = getUnitSize(targetEntity);
     rect unitRect = rectv(targetPosition, unitSize);
 

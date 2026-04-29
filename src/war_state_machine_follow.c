@@ -56,7 +56,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     {
         if (!changeStateNextState(context, entity, state))
         {
-            WarState* waitState = createWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME));
+            WarState* waitState = createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
             waitState->nextState = state;
             changeNextState(context, entity, waitState, false, true);
         }

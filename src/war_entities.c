@@ -633,8 +633,8 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
     WarMap* map = context->map;
     assert(map);
 
-    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
+    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
     WarEntity* entityUnderCursor = NULL;
 
@@ -1139,13 +1139,13 @@ void renderForest(WarContext* context, WarEntity* entity)
             s32 x = tree->tilex;
             s32 y = tree->tiley;
 
-            s32 prevTileIndex = getMapTileIndex(context, x, y);
+            s32 prevTileIndex = wmap_getMapTileIndex(context, x, y);
             s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
 
             if (prevTileIndex != newTileIndex)
                 logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", x, y, prevTileIndex, newTileIndex);
 
-            setMapTileIndex(context, x, y, newTileIndex);
+            wmap_setMapTileIndex(context, x, y, newTileIndex);
         }
     }
 }
@@ -2194,7 +2194,7 @@ void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
         if (decreaseUnitMana(context, entity, 2))
         {
             vec2 origin = getUnitCenterPosition(entity, false);
-            vec2 target = vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+            vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
             WarProjectileType projectileType = getProjectileType(unit->type);
             createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
@@ -2208,7 +2208,7 @@ void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
     else
     {
         vec2 origin = getUnitCenterPosition(entity, false);
-        vec2 target = vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+        vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
         WarProjectileType projectileType = getProjectileType(unit->type);
         createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }

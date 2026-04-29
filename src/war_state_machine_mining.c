@@ -17,7 +17,7 @@ void enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
     state->mine.miningTime = 2.0f;
 
     // remove the unit from selection to avoid the player giving it orders while inside the mine
-    removeEntityFromSelection(context, entity->id);
+    wmap_removeEntityFromSelection(context, entity->id);
 }
 
 void leaveMiningState(WarContext* context, WarEntity* entity, WarState* state)
@@ -50,7 +50,7 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    state->mine.miningTime -= getMapScaledSpeed(context, context->deltaTime);
+    state->mine.miningTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
 
     if (state->mine.miningTime < 0)
     {

@@ -144,7 +144,7 @@ void wani_updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnima
         if (context->scene)
             animation->loopTime -= getScaledSpeed(context, context->deltaTime);
         else if (context->map)
-            animation->loopTime -= getMapScaledSpeed(context, context->deltaTime);
+            animation->loopTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
 
         return;
     }
@@ -154,7 +154,7 @@ void wani_updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnima
     if (context->scene)
         dt = getScaledSpeed(context, dt);
     else if (context->map)
-        dt = getMapScaledSpeed(context, dt);
+        dt = wmap_getMapScaledSpeed(context, dt);
 
     animation->animTime += dt;
 

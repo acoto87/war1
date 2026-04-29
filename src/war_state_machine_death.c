@@ -12,13 +12,13 @@ void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
-    removeEntityFromSelection(context, entity->id);
+    wmap_removeEntityFromSelection(context, entity->id);
 
     s32 deathDuration = getActionDuration(entity, WAR_ACTION_TYPE_DEATH);
-    setDelay(state, getMapScaledTime(context, __frameCountToSeconds(deathDuration)));
+    setDelay(state, wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration)));
 }
 
 void leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)

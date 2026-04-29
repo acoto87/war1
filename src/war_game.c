@@ -555,7 +555,7 @@ void updateGame(WarContext* context)
         if (context->scene)
             leaveScene(context);
         else if (context->map)
-            leaveMap(context);
+            wmap_leaveMap(context);
 
         context->scene = context->nextScene;
         context->nextScene = NULL;
@@ -571,12 +571,12 @@ void updateGame(WarContext* context)
         if (context->scene)
             leaveScene(context);
         else if (context->map)
-            leaveMap(context);
+            wmap_leaveMap(context);
 
         context->map = context->nextMap;
         context->nextMap = NULL;
 
-        enterMap(context);
+        wmap_enterMap(context);
 
         context->audioEnabled = true;
     }
@@ -593,7 +593,7 @@ void updateGame(WarContext* context)
     }
     else if (context->map)
     {
-        updateMap(context);
+        wmap_updateMap(context);
     }
     else
     {

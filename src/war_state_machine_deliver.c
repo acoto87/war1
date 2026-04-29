@@ -88,10 +88,10 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 
     // remove the unit from selection to avoid the player giving it orders
     // while inside the townhall
-    removeEntityFromSelection(context, entity->id);
+    wmap_removeEntityFromSelection(context, entity->id);
 
     // simulate the time inside the townhall
-    setDelay(state, getMapScaledTime(context, 1.0f));
+    setDelay(state, wmap_getMapScaledTime(context, 1.0f));
 }
 
 void freeDeliverState(WarContext* context, WarState* state)

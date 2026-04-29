@@ -221,7 +221,7 @@ void takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
     WarTree choppedTree = *tree;
 
     setFreeTiles(map->finder, choppedTree.tilex, choppedTree.tiley, 1, 1);
-    setMapTileIndex(context, choppedTree.tilex, choppedTree.tiley, choppedTileIndex);
+    wmap_setMapTileIndex(context, choppedTree.tilex, choppedTree.tiley, choppedTileIndex);
     WarTreeListRemove(&forest->forest.trees, choppedTree);
 
     WarTree* aboveTree = getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley - 1);

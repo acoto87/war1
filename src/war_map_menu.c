@@ -374,7 +374,7 @@ void createObjectivesMenu(WarContext* context)
     WarResource* levelInfo = wres_getOrCreateResource(context, map->levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO);
 
-    WarCampaignMapData campaignData = wcamp_getCampaignData(getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
+    WarCampaignMapData campaignData = wcamp_getCampaignData(wmap_getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
 
     vec2 menuPanel = rectTopLeft(map->menuPanel);
 
@@ -1034,7 +1034,7 @@ void handleRestartRestart(WarContext* context, WarEntity* entity)
 
     s32 levelInfoIndex = context->map->levelInfoIndex;
 
-    WarMap* map = createMap(context, levelInfoIndex);
+    WarMap* map = wmap_createMap(context, levelInfoIndex);
     setNextMap(context, map, 1.0f);
 }
 

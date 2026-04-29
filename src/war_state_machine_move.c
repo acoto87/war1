@@ -116,7 +116,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 state->move.waitCount++;
 
-                WarState* waitState = createWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME));
+                WarState* waitState = createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
                 waitState->nextState = state;
                 changeNextState(context, entity, waitState, false, true);
 
@@ -150,12 +150,12 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     vec2 position = getUnitCenterPosition(entity, false);
-    vec2 target = vec2TileToMapCoordinates(nextNode, true);
+    vec2 target = wmap_vec2TileToMapCoordinates(nextNode, true);
 
     vec2 direction = vec2Subv(target, position);
     f32 directionLength = vec2Length(direction);
 
-    f32 speed = getMapScaledSpeed(context, (f32)stats.speeds[entity->unit.speed]);
+    f32 speed = wmap_getMapScaledSpeed(context, (f32)stats.speeds[entity->unit.speed]);
     vec2 step = vec2Mulf(vec2Normalize(direction), speed * context->deltaTime);
     f32 stepLength = vec2Length(step);
 
@@ -240,7 +240,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 
             state->move.waitCount++;
 
-            WarState* waitState = createWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME));
+            WarState* waitState = createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
             waitState->nextState = state;
             changeNextState(context, entity, waitState, false, true);
 

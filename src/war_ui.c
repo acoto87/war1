@@ -196,7 +196,7 @@ WarEntity* createUIImageButton(WarContext* context,
     return entity;
 }
 
-void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type)
+void wmap_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type)
 {
     assert(entity->type == WAR_ENTITY_TYPE_CURSOR);
 
@@ -221,7 +221,7 @@ void updateUICursor(WarContext* context)
     if (entity)
     {
         entity->transform.position = vec2Subv(input->pos, entity->cursor.hot);
-        changeCursorType(context, entity, WAR_CURSOR_ARROW);
+        wmap_changeCursorType(context, entity, WAR_CURSOR_ARROW);
     }
 }
 

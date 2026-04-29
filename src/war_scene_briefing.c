@@ -155,7 +155,7 @@ void updateSceneBriefing(WarContext* context)
         wasKeyPressed(input, WAR_KEY_ENTER) ||
         wasKeyPressed(input, WAR_KEY_SPACE))
     {
-        WarMap* map = createMap(context, scene->briefing.mapType);
+        WarMap* map = wmap_createMap(context, scene->briefing.mapType);
         setNextMap(context, map, 1.0f);
     }
 }

@@ -46,7 +46,7 @@ void doProjectileTargetDamage(WarContext* context, WarEntity* entity)
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
-    vec2 position = vec2MapToTileCoordinates(projectile->target);
+    vec2 position = wmap_vec2MapToTileCoordinates(projectile->target);
 
     WarEntity* sourceEntity = findEntity(context, projectile->sourceEntityId);
     WarEntity* targetEntity = findEntity(context, projectile->targetEntityId);
@@ -73,7 +73,7 @@ void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splash
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
-    vec2 targetTile = vec2MapToTileCoordinates(projectile->target);
+    vec2 targetTile = wmap_vec2MapToTileCoordinates(projectile->target);
 
     WarEntity* sourceEntity = findEntity(context, projectile->sourceEntityId);
     if (sourceEntity)
@@ -112,7 +112,7 @@ void doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, 
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
-    vec2 targetTile = vec2MapToTileCoordinates(projectile->target);
+    vec2 targetTile = wmap_vec2MapToTileCoordinates(projectile->target);
 
     WarEntityList* nearUnits = getNearUnits(context, targetTile, splashRadius);
     for (s32 i = 0; i < nearUnits->count; i++)
@@ -154,7 +154,7 @@ bool updateProjectilePosition(WarContext* context, WarEntity* entity)
     vec2 target = projectile->target;
 
     f32 speed = (f32)projectile->speed;
-    speed = getMapScaledSpeed(context, speed);
+    speed = wmap_getMapScaledSpeed(context, speed);
 
     vec2 direction = vec2Subv(target, position);
     f32 directionLength = vec2Length(direction);

@@ -1113,7 +1113,7 @@ void updateAction(WarContext* context, WarEntity* entity)
     WarUnitActionStep step = actionDef->steps.items[action->stepIndex];
     if (step.type == WAR_ACTION_STEP_WAIT)
     {
-        action->waitCount -= getMapScaledSpeed(context, context->deltaTime);
+        action->waitCount -= wmap_getMapScaledSpeed(context, context->deltaTime);
         if (action->waitCount > 0)
         {
             return;

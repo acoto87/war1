@@ -37,7 +37,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
 
     WarSpellType spellType = state->cast.spellType;
     WarEntityId targetEntityId = state->cast.targetEntityId;
@@ -111,7 +111,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);
 
                     WarEntity* sight = createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
                     addSightComponent(context, sight, targetTile, stats.time);
@@ -159,7 +159,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetTilePosition = wmap_vec2TileToMapCoordinates(targetTile, true);
                     s32 radius = 2 * MEGA_TILE_WIDTH;
 
                     s32 projectilesCount = 5;
@@ -252,7 +252,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
             {
                 if (decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);
 
                     WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
                     addPoisonCloudComponent(context, poisonCloud, targetTile, stats.time);

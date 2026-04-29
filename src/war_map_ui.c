@@ -415,8 +415,8 @@ void renderCommand(WarContext* context)
         case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
         case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
-            vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
-            position = vec2MapToTileCoordinates(position);
+            vec2 position = wmap_vec2ScreenToMapCoordinates(context, input->pos);
+            position = wmap_vec2MapToTileCoordinates(position);
 
             WarUnitType buildingToBuild = command->build.buildingToBuild;
             WarUnitData data = getUnitData(buildingToBuild);
@@ -424,8 +424,8 @@ void renderCommand(WarContext* context)
             WarColor fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
-            position = vec2TileToMapCoordinates(position, false);
-            position = vec2MapToScreenCoordinates(context, position);
+            position = wmap_vec2TileToMapCoordinates(position, false);
+            position = wmap_vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(data.sizex * MEGA_TILE_WIDTH, data.sizey * MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
             wrend_renderFillRect(context, buildingRect, fillColor);
@@ -436,14 +436,14 @@ void renderCommand(WarContext* context)
         case WAR_COMMAND_BUILD_WALL:
         case WAR_COMMAND_BUILD_ROAD:
         {
-            vec2 position = vec2ScreenToMapCoordinates(context, input->pos);
-            position = vec2MapToTileCoordinates(position);
+            vec2 position = wmap_vec2ScreenToMapCoordinates(context, input->pos);
+            position = wmap_vec2MapToTileCoordinates(position);
 
             WarColor fillColor = checkRectToBuild(context, (s32)position.x, (s32)position.y, 1, 1)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
-            position = vec2TileToMapCoordinates(position, false);
-            position = vec2MapToScreenCoordinates(context, position);
+            position = wmap_vec2TileToMapCoordinates(position, false);
+            position = wmap_vec2MapToScreenCoordinates(context, position);
             vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
             wrend_renderFillRect(context, buildingRect, fillColor);

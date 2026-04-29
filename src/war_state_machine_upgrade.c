@@ -18,7 +18,7 @@ void enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
@@ -33,7 +33,7 @@ void leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
@@ -56,7 +56,7 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    f32 buildSpeed = getMapScaledSpeed(context, context->deltaTime);
+    f32 buildSpeed = wmap_getMapScaledSpeed(context, context->deltaTime);
 
     // if hurry up cheat is enabled, speed up the build time by 5000%
     if (map->hurryUp)
