@@ -210,8 +210,8 @@ void updateCheatsPanel(WarContext* context)
         params.fontSize = cheatText->text.fontSize;
         params.fontData = getFontData(cheatText->text.fontIndex);
 
-        vec2 prefixSize = measureSingleSpriteText(prefix, (s32)wsv_length(prefix), params);
-        vec2 textSize = measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
+        vec2 prefixSize = wfont_measureSingleSpriteText(prefix, (s32)wsv_length(prefix), params);
+        vec2 textSize = wfont_measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
         cheatCursor->transform.position.x = prefixSize.x + textSize.x;
 
         setUIEntityStatus(cheatPanel, true);

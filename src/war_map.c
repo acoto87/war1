@@ -1624,8 +1624,8 @@ void updateStatus(WarContext* context)
             params.fontSize = statusTextUI->text.fontSize;
             params.fontData = getFontData(statusTextUI->text.fontIndex);
 
-            vec2 prefixSize = measureSingleSpriteText(prefix, (s32)prefix.length, params);
-            vec2 textSize = measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
+            vec2 prefixSize = wfont_measureSingleSpriteText(prefix, (s32)prefix.length, params);
+            vec2 textSize = wfont_measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
             statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
 
             setUIEntityStatus(statusCursor, true);

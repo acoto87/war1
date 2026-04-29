@@ -220,8 +220,8 @@ bool initGame(WarContext* context)
     }
 
     // load fonts
-    context->fontSprites[0] = loadFontSprite(context, wsv_fromCString("./war1_font_1.png"));
-    context->fontSprites[1] = loadFontSprite(context, wsv_fromCString("./war1_font_2.png"));
+    context->fontSprites[0] = wfont_loadFontSprite(context, wsv_fromCString("./war1_font_1.png"));
+    context->fontSprites[1] = wfont_loadFontSprite(context, wsv_fromCString("./war1_font_2.png"));
 
     // check if the DATA.WAR file exists
     bool dataFileExists = access(DATAWAR_FILE_PATH, F_OK) == 0;

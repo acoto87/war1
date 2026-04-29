@@ -1282,9 +1282,9 @@ void renderText(WarContext* context, WarEntity* entity)
         params.fontData = getFontData(text->fontIndex);
 
         if (entity->text.multiline)
-            renderMultiSpriteText(context, wstr_view(&text->text), 0, 0, params);
+            wfont_renderMultiSpriteText(context, wstr_view(&text->text), 0, 0, params);
         else
-            renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
+            wfont_renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
 
         renderRestore(context);
     }
@@ -1366,7 +1366,7 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.fontSprite = context->fontSprites[text->fontIndex];
                 params.fontData = getFontData(text->fontIndex);
 
-                renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
+                wfont_renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
             }
         }
 
