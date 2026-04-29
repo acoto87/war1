@@ -107,7 +107,7 @@ void enterSceneBriefingOrcs(WarContext* context)
         waud_createAudio(context, data.briefingAudioId, false);
 }
 
-void wscbr_enterSceneBriefing(WarContext* context)
+void wsbr_enterSceneBriefing(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -133,7 +133,7 @@ void wscbr_enterSceneBriefing(WarContext* context)
     }
 }
 
-void wscbr_updateSceneBriefing(WarContext* context)
+void wsbr_updateSceneBriefing(WarContext* context)
 {
     WarInput* input = &context->input;
     WarScene* scene = context->scene;

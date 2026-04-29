@@ -848,7 +848,7 @@ void updateViewport(WarContext *context)
         // check if it was at the edge of the map to scroll also and update the position of the viewport
         else if(!input->isDragging)
         {
-            dir = getDirFromMousePos(context);
+            dir = wg_getDirFromMousePos(context);
             mouseScroll = true;
         }
     }
@@ -861,7 +861,7 @@ void updateViewport(WarContext *context)
             !isKeyPressed(input, WAR_KEY_SHIFT) &&
             !cheatsEnabledAndVisible(map))
         {
-            dir = getDirFromArrowKeys(context);
+            dir = wg_getDirFromArrowKeys(context);
             keyScroll = true;
         }
     }
@@ -1931,7 +1931,7 @@ void updateMapCursor(WarContext* context)
         }
         else
         {
-            vec2 dir = getDirFromMousePos(context);
+            vec2 dir = wg_getDirFromMousePos(context);
             if (dir.x < 0 && dir.y < 0)         // -1, -1
                 wmap_changeCursorType(context, entity, WAR_CURSOR_ARROW_UP_LEFT);
             else if (dir.x < 0 && dir.y > 0)    // -1,  1

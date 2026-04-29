@@ -68,7 +68,7 @@ void wg_setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
 
 bool wg_loadDataFile(WarContext* context);
 
-vec2 getDirFromArrowKeys(WarContext* context)
+vec2 wg_getDirFromArrowKeys(WarContext* context)
 {
     WarInput* input = &context->input;
 
@@ -88,7 +88,7 @@ vec2 getDirFromArrowKeys(WarContext* context)
     return dir;
 }
 
-vec2 getDirFromMousePos(WarContext* context)
+vec2 wg_getDirFromMousePos(WarContext* context)
 {
     WarInput* input = &context->input;
 

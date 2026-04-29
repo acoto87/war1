@@ -2,5 +2,5 @@
 
 #include "war_types.h"
 
-void wscbr_enterSceneBriefing(WarContext* context);
-void wscbr_updateSceneBriefing(WarContext* context);
+void wsbr_enterSceneBriefing(WarContext* context);
+void wsbr_updateSceneBriefing(WarContext* context);

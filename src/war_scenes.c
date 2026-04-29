@@ -8,10 +8,10 @@
 
 WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 {
-    { WAR_SCENE_DOWNLOAD,   wscd_enterSceneDownload, NULL, wscd_updateSceneDownload },
-    { WAR_SCENE_BLIZZARD,   wscb_enterSceneBlizzard, NULL, wscb_updateSceneBlizzard },
-    { WAR_SCENE_MAIN_MENU,  wscm_enterSceneMainMenu, NULL, NULL },
-    { WAR_SCENE_BRIEFING,   wscbr_enterSceneBriefing, NULL, wscbr_updateSceneBriefing }
+    { WAR_SCENE_DOWNLOAD,   wsd_enterSceneDownload, NULL, wsd_updateSceneDownload },
+    { WAR_SCENE_BLIZZARD,   wsb_enterSceneBlizzard, NULL, wsb_updateSceneBlizzard },
+    { WAR_SCENE_MAIN_MENU,  wsm_enterSceneMainMenu, NULL, NULL },
+    { WAR_SCENE_BRIEFING,   wsbr_enterSceneBriefing, NULL, wsbr_updateSceneBriefing }
 };
 
 WarScene* wsc_createScene(WarContext* context, WarSceneType type)

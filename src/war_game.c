@@ -26,7 +26,7 @@
 #include "war_resources.h"
 #include "war_scenes.h"
 
-static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
+static WarKeys wg_getWarKeyFromSDLKey(SDL_Keycode key)
 {
     switch (key)
     {
@@ -131,7 +131,7 @@ static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
     }
 }
 
-static void appendCheatTextInput(WarContext* context, StringView text)
+static void wg_appendCheatTextInput(WarContext* context, StringView text)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -453,7 +453,7 @@ void wg_processGameEvent(WarContext* context, SDL_Event* event)
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
         {
-            WarKeys key = getWarKeyFromSDLKey(event->key.key);
+            WarKeys key = wg_getWarKeyFromSDLKey(event->key.key);
             if (key != WAR_KEY_NONE)
             {
                 bool pressed = event->type == SDL_EVENT_KEY_DOWN;
@@ -479,7 +479,7 @@ void wg_processGameEvent(WarContext* context, SDL_Event* event)
         }
 
         case SDL_EVENT_TEXT_INPUT:
-            appendCheatTextInput(context, wsv_fromCString(event->text.text));
+            wg_appendCheatTextInput(context, wsv_fromCString(event->text.text));
             break;
 
         case SDL_EVENT_WINDOW_FOCUS_LOST:
