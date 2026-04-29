@@ -48,41 +48,41 @@
 #include "war_alloc.h"
 
 // https://github.com/schellingb/TinySoundFont
-#define TSF_MALLOC(sz) war_malloc(sz)
-#define TSF_REALLOC(p,sz) war_realloc((p),(sz))
-#define TSF_FREE(p) war_free(p)
+#define TSF_MALLOC(sz) wm_alloc(sz)
+#define TSF_REALLOC(p,sz) wm_realloc((p),(sz))
+#define TSF_FREE(p) wm_free(p)
 #define TSF_IMPLEMENTATION
 #include "TinySoundFont/tsf.h"
 
-#define TML_MALLOC(sz) war_malloc(sz)
-#define TML_REALLOC(p,sz) war_realloc((p),(sz))
-#define TML_FREE(p) war_free(p)
+#define TML_MALLOC(sz) wm_alloc(sz)
+#define TML_REALLOC(p,sz) wm_realloc((p),(sz))
+#define TML_FREE(p) wm_free(p)
 #define TML_ERROR(msg) printf("ERROR: %s\n", msg)
 #define TML_WARN(msg) printf("WARNING: %s\n", msg)
 #define TML_IMPLEMENTATION
 #include "TinySoundFont/tml.h"
 
-#define STBI_MALLOC(sz)           war_malloc(sz)
-#define STBI_REALLOC(p,newsz)     war_realloc(p,newsz)
-#define STBI_FREE(p)              war_free(p)
+#define STBI_MALLOC(sz)           wm_alloc(sz)
+#define STBI_REALLOC(p,newsz)     wm_realloc(p,newsz)
+#define STBI_FREE(p)              wm_free(p)
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
-#define STBIW_MALLOC(sz)          war_malloc(sz)
-#define STBIW_REALLOC(p,newsz)    war_realloc(p,newsz)
-#define STBIW_FREE(p)             war_free(p)
+#define STBIW_MALLOC(sz)          wm_alloc(sz)
+#define STBIW_REALLOC(p,newsz)    wm_realloc(p,newsz)
+#define STBIW_FREE(p)             wm_free(p)
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#define STBIR_MALLOC(sz,c)        ((void)(c), war_malloc(sz))
-#define STBIR_FREE(p,c)           ((void)(c), war_free(p))
+#define STBIR_MALLOC(sz,c)        ((void)(c), wm_alloc(sz))
+#define STBIR_FREE(p,c)           ((void)(c), wm_free(p))
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb/stb_image_resize.h"
 
-#define SHL_MALLOC(sz) war_malloc(sz)
-#define SHL_CALLOC(n, sz) war_calloc((n), (sz))
-#define SHL_REALLOC(p, sz) war_realloc((p), (sz))
-#define SHL_FREE(p) war_free(p)
+#define SHL_MALLOC(sz) wm_alloc(sz)
+#define SHL_CALLOC(n, sz) wm_calloc((n), (sz))
+#define SHL_REALLOC(p, sz) wm_realloc((p), (sz))
+#define SHL_FREE(p) wm_free(p)
 
 #include "shl/list.h"
 #include "shl/queue.h"
@@ -90,15 +90,15 @@
 #include "shl/map.h"
 #include "shl/set.h"
 #define SHL_MEMORY_BUFFER_IMPLEMENTATION
-#define MB_MALLOC(sz) war_malloc(sz)
-#define MB_CALLOC(n, sz) war_calloc((n), (sz))
-#define MB_FREE(p) war_free(p)
+#define MB_MALLOC(sz) wm_alloc(sz)
+#define MB_CALLOC(n, sz) wm_calloc((n), (sz))
+#define MB_FREE(p) wm_free(p)
 #include "shl/memory_buffer.h"
 #define SHL_WAV_IMPLEMENTATION
 #include "shl/wav.h"
-#define WSTR_MALLOC(sz)       war_malloc(sz)
-#define WSTR_REALLOC(p, sz)   war_realloc((p), (sz))
-#define WSTR_FREE(p)          war_free(p)
+#define WSTR_MALLOC(sz)       wm_alloc(sz)
+#define WSTR_REALLOC(p, sz)   wm_realloc((p), (sz))
+#define WSTR_FREE(p)          wm_free(p)
 #define SHL_WSTR_IMPLEMENTATION
 #include "shl/wstr.h"
 
@@ -130,7 +130,7 @@
 
 int main(void)
 {
-    if (!war_alloc_init(PERM_SIZE, FRAME_SIZE))
+    if (!wm_allocInit(PERM_SIZE, FRAME_SIZE))
     {
         logError("Failed to initialize memory allocators!");
         return -1;
@@ -147,7 +147,7 @@ int main(void)
     }
 
     WarContext context = {0};
-    if (!initGame(&context))
+    if (!wg_initGame(&context))
     {
         logError("Can't initialize the game!");
         return -1;
@@ -159,12 +159,12 @@ int main(void)
 
     while (running)
     {
-        beginInputFrame(&context);
+        wg_beginInputFrame(&context);
 
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            processGameEvent(&context, &event);
+            wg_processGameEvent(&context, &event);
 
             if (event.type == SDL_EVENT_QUIT)
             {
@@ -175,16 +175,16 @@ int main(void)
         wstr_setFormat(&context.windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context.time, context.fps, context.deltaTime, frameCount);
         SDL_SetWindowTitle(context.window, wstr_cstr(&context.windowTitle));
 
-        updateGame(&context);
-        renderGame(&context);
-        presentGame(&context);
+        wg_updateGame(&context);
+        wg_renderGame(&context);
+        wg_presentGame(&context);
         TracyCFrameMark
 
         frameCount++;
     }
 
-    quitGame(&context);
-    war_alloc_free();
+    wg_quitGame(&context);
+    wm_allocFree();
 	return 0;
 }
 

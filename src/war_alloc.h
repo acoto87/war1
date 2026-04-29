@@ -11,15 +11,15 @@ extern memzone_t* permanentZone;
 extern memzone_t* frameZone;
 extern memzone_t* currentZone;
 
-bool war_alloc_init(size_t permSize, size_t frameSize);
-void war_alloc_free(void);
+bool wm_allocInit(size_t permSize, size_t frameSize);
+void wm_allocFree(void);
 
 // Temporary set current zone, useful for frame-specific allocations
-void war_set_zone(memzone_t* zone);
-void war_reset_zone(void); // restores to permanentZone
+void wm_setZone(memzone_t* zone);
+void wm_resetZone(void); // restores to permanentZone
 
-void* war_malloc(size_t sz);
-void* war_malloc_frame(size_t sz);
-void* war_calloc(size_t n, size_t sz);
-void* war_realloc(void* p, size_t sz);
-void  war_free(void* p);
+void* wm_alloc(size_t sz);
+void* wm_allocFrame(size_t sz);
+void* wm_calloc(size_t n, size_t sz);
+void* wm_realloc(void* p, size_t sz);
+void  wm_free(void* p);

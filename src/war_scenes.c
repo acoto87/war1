@@ -1,4 +1,4 @@
-#include "war_scenes.h"
+﻿#include "war_scenes.h"
 
 #include "war_animations.h"
 #include "war_cheats.h"
@@ -8,23 +8,23 @@
 
 WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 {
-    { WAR_SCENE_DOWNLOAD,   enterSceneDownload, NULL, updateSceneDownload },
-    { WAR_SCENE_BLIZZARD,   enterSceneBlizzard, NULL, updateSceneBlizzard },
-    { WAR_SCENE_MAIN_MENU,  enterSceneMainMenu, NULL, NULL },
-    { WAR_SCENE_BRIEFING,   enterSceneBriefing, NULL, updateSceneBriefing }
+    { WAR_SCENE_DOWNLOAD,   wsd_enterSceneDownload, NULL, wsd_updateSceneDownload },
+    { WAR_SCENE_BLIZZARD,   wsbl_enterSceneBlizzard, NULL, wsbl_updateSceneBlizzard },
+    { WAR_SCENE_MAIN_MENU,  wsm_enterSceneMainMenu, NULL, NULL },
+    { WAR_SCENE_BRIEFING,   wsbr_enterSceneBriefing, NULL, wsbr_updateSceneBriefing }
 };
 
-WarScene* createScene(WarContext* context, WarSceneType type)
+WarScene* wsc_createScene(WarContext* context, WarSceneType type)
 {
-    WarScene* scene = (WarScene*)war_malloc(sizeof(WarScene));
+    WarScene* scene = (WarScene*)wm_alloc(sizeof(WarScene));
     scene->type = type;
 
-    initEntityManager(context, &scene->entityManager);
+    we_initEntityManager(context, &scene->entityManager);
 
     return scene;
 }
 
-void freeScene(WarScene* scene)
+void wsc_freeScene(WarScene* scene)
 {
     WarEntityManager* manager = &scene->entityManager;
     WarEntityListFree(&manager->entities);
@@ -34,7 +34,7 @@ void freeScene(WarScene* scene)
     WarEntityListFree(&manager->uiEntities);
 }
 
-void enterScene(WarContext* context)
+void wsc_enterScene(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -51,7 +51,7 @@ void enterScene(WarContext* context)
     }
 }
 
-void updateScene(WarContext* context)
+void wsc_updateScene(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -68,14 +68,14 @@ void updateScene(WarContext* context)
     }
     else
     {
-        updateCheatsPanel(context);
-        updateUIButtons(context, !cheatsEnabledAndVisible(scene));
-        updateUICursor(context);
-        updateAnimations(context);
+        wcheatp_updateCheatsPanel(context);
+        wui_updateUIButtons(context, !cheatsEnabledAndVisible(scene));
+        wui_updateUICursor(context);
+        wanim_updateAnimations(context);
     }
 }
 
-void leaveScene(WarContext* context)
+void wsc_leaveScene(WarContext* context)
 {
     WarScene* scene = context->scene;
     if (!scene)
@@ -94,20 +94,20 @@ void leaveScene(WarContext* context)
     }
     else
     {
-        freeScene(context->scene);
+        wsc_freeScene(context->scene);
         context->scene = NULL;
     }
 }
 
-void renderScene(WarContext* context)
+void wsc_renderScene(WarContext* context)
 {
-    WarEntityList* uiEntities = getEntities(context);
+    WarEntityList* uiEntities = we_getEntities(context);
     for (s32 i = 0; i < uiEntities->count; i++)
     {
         WarEntity* entity = uiEntities->items[i];
-        if (entity && (isUIEntity(entity) || entity->type == WAR_ENTITY_TYPE_ANIMATION))
+        if (entity && (wui_isUIEntity(entity) || entity->type == WAR_ENTITY_TYPE_ANIMATION))
         {
-            renderEntity(context, entity);
+            we_renderEntity(context, entity);
         }
     }
 }

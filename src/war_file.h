@@ -2,4 +2,4 @@
 
 #include "war_types.h"
 
-WarFile* loadWarFile(WarContext* context, StringView filePath);
+WarFile* wfile_loadWarFile(WarContext* context, StringView filePath);

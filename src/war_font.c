@@ -1,4 +1,4 @@
-#include "war_font.h"
+﻿#include "war_font.h"
 
 #include "war_sprites.h"
 #include "shl/wstr.h"
@@ -215,7 +215,7 @@ WarFontData fontsData[2] =
 
 #define getCharIndex(c) ((s32)((c) > 0 ? (c) - 32 : 0))
 
-WarSprite loadFontSprite(WarContext* context, StringView fontPath)
+WarSprite wfont_loadFontSprite(WarContext* context, StringView fontPath)
 {
     WarSprite sprite = {0};
 
@@ -223,7 +223,7 @@ WarSprite loadFontSprite(WarContext* context, StringView fontPath)
     u8* data = stbi_load(wsv_data(fontPath), &width, &height, &bitsPerPixel, 0);
     if (data)
     {
-        sprite = createSprite(context, width, height, data);
+        sprite = wspr_createSprite(context, width, height, data);
         stbi_image_free(data);
     }
 
@@ -241,7 +241,7 @@ WarFontData getFontData(s32 fontIndex)
     return fontsData[fontIndex];
 }
 
-vec2 getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment verticalAlign, vec2 boundings, vec2 textSize)
+vec2 wfont_getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment verticalAlign, vec2 boundings, vec2 textSize)
 {
     vec2 offset = VEC2_ZERO;
 
@@ -296,7 +296,7 @@ vec2 getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment verti
     return offset;
 }
 
-f32 getLineAlignmentOffset(WarTextAlignment lineAlign, f32 width, f32 lineWidth)
+f32 wfont_getLineAlignmentOffset(WarTextAlignment lineAlign, f32 width, f32 lineWidth)
 {
     f32 offset = 0;
 
@@ -334,7 +334,7 @@ typedef struct
     f32 width;
 } WarTextSpan;
 
-static s32 splitTextIntoLines(StringView text, s32 maxLines, WarTextSpan lines[], f32 width, WarFontParams params)
+static s32 wfont_splitTextIntoLines(StringView text, s32 maxLines, WarTextSpan lines[], f32 width, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
     bool wrap = params.wrapping == WAR_TEXT_WRAP_CHAR;
@@ -456,7 +456,7 @@ static s32 splitTextIntoLines(StringView text, s32 maxLines, WarTextSpan lines[]
     return k;
 }
 
-vec2 measureSingleSpriteText(StringView text, s32 length, WarFontParams params)
+vec2 wfont_measureSingleSpriteText(StringView text, s32 length, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
 
@@ -489,7 +489,7 @@ vec2 measureSingleSpriteText(StringView text, s32 length, WarFontParams params)
     return size;
 }
 
-vec2 measureMultiSpriteText(StringView text, f32 width, WarFontParams params)
+vec2 wfont_measureMultiSpriteText(StringView text, f32 width, WarFontParams params)
 {
     NOT_USED(width);
 
@@ -497,7 +497,7 @@ vec2 measureMultiSpriteText(StringView text, f32 width, WarFontParams params)
     f32 lineHeight = params.lineHeight > 0 ? params.lineHeight : params.fontData.lineHeight;
 
     WarTextSpan lines[MAX_LINES];
-    s32 linesCount = splitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
+    s32 linesCount = wfont_splitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
 
     vec2 size = VEC2_ZERO;
 
@@ -512,7 +512,7 @@ vec2 measureMultiSpriteText(StringView text, f32 width, WarFontParams params)
 
 // Render a span of characters from the font sprite.
 // Uses SDL_SetTextureColorMod for tinting instead of nvgFillColor.
-f32 renderSingleSpriteTextSpan(WarContext* context, StringView text,
+f32 wfont_renderSingleSpriteTextSpan(WarContext* context, StringView text,
                                s32 index, s32 count,
                                f32 x, f32 y,
                                WarColor fontColor,
@@ -523,7 +523,7 @@ f32 renderSingleSpriteTextSpan(WarContext* context, StringView text,
 {
     if (count > 0)
     {
-        renderSave(context);
+        wr_save(context);
 
         // Apply font color tint to the texture
         SDL_SetTextureColorMod(fontSprite.texture, fontColor.r, fontColor.g, fontColor.b);
@@ -555,12 +555,12 @@ f32 renderSingleSpriteTextSpan(WarContext* context, StringView text,
                 rect rd = rectf(x, y, rs.width, rs.height);
 
 #ifdef DEBUG_RENDER_FONT
-                renderFillRect(context, rd, WAR_COLOR_GREEN_SELECTION);
+                wr_fillRect(context, rd, WAR_COLOR_GREEN_SELECTION);
 #endif
 
                 if (c != ' ')
                 {
-                    renderSubImage(context, fontSprite.texture, rs, rd, VEC2_ONE);
+                    wr_subImage(context, fontSprite.texture, rs, rd, VEC2_ONE);
                 }
 
                 x += rs.width + fontData.advance;
@@ -571,37 +571,37 @@ f32 renderSingleSpriteTextSpan(WarContext* context, StringView text,
         SDL_SetTextureColorMod(fontSprite.texture, 255, 255, 255);
         SDL_SetTextureAlphaMod(fontSprite.texture, 255);
 
-        renderRestore(context);
+        wr_restore(context);
     }
 
     return x;
 }
 
-void renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params)
+void wfont_renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
-    vec2 textSize = measureSingleSpriteText(text, -1, params);
+    vec2 textSize = wfont_measureSingleSpriteText(text, -1, params);
     s32 length = (s32)wsv_length(text);
 
-    renderSave(context);
-    renderTranslate(context, x, y);
+    wr_save(context);
+    wr_translate(context, x, y);
 
     if (!vec2IsZero(params.boundings))
     {
-        vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
-        renderTranslate(context, textOffset.x, textOffset.y);
+        vec2 textOffset = wfont_getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
+        wr_translate(context, textOffset.x, textOffset.y);
     }
 
-    renderScale(context, scale, scale);
+    wr_scale(context, scale, scale);
 
 #ifdef DEBUG_RENDER_FONT
     rect outline = rectf(0, 0, textSize.x / scale, 1.5f);
-    renderStrokeRect(context, outline, WAR_COLOR_GREEN_SELECTION, 3);
+    wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION, 3);
 #endif
 
     if (params.highlightIndex >= 0)
     {
-        x = renderSingleSpriteTextSpan(context, text,
+        x = wfont_renderSingleSpriteTextSpan(context, text,
                                     0, params.highlightIndex,
                                     0, 0,
                                     params.fontColor,
@@ -610,7 +610,7 @@ void renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, 
                                     params.boundings,
                                     scale);
 
-        x = renderSingleSpriteTextSpan(context, text,
+        x = wfont_renderSingleSpriteTextSpan(context, text,
                                     params.highlightIndex, params.highlightCount,
                                     x, 0,
                                     params.highlightColor,
@@ -619,7 +619,7 @@ void renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, 
                                     params.boundings,
                                     scale);
 
-        x = renderSingleSpriteTextSpan(context, text,
+        x = wfont_renderSingleSpriteTextSpan(context, text,
                                     params.highlightIndex + params.highlightCount,
                                     length - params.highlightIndex - params.highlightCount,
                                     x, 0,
@@ -636,7 +636,7 @@ void renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, 
         WarColor fontColor = params.highlightIndex == ALL_HIGHLIGHT
             ? params.highlightColor : params.fontColor;
 
-        renderSingleSpriteTextSpan(context, text,
+        wfont_renderSingleSpriteTextSpan(context, text,
                                 0, length,
                                 0, 0,
                                 fontColor,
@@ -646,28 +646,28 @@ void renderSingleSpriteText(WarContext* context, StringView text, f32 x, f32 y, 
                                 scale);
     }
 
-    renderRestore(context);
+    wr_restore(context);
 }
 
-void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params)
+void wfont_renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, WarFontParams params)
 {
     f32 scale = params.fontSize / params.fontData.lineHeight;
     f32 lineHeight = params.lineHeight > 0 ? params.lineHeight : params.fontData.lineHeight;
 
     WarTextSpan lines[MAX_LINES];
-    s32 linesCount = splitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
+    s32 linesCount = wfont_splitTextIntoLines(text, MAX_LINES, lines, params.boundings.x, params);
 
-    renderSave(context);
-    renderTranslate(context, x, y);
+    wr_save(context);
+    wr_translate(context, x, y);
 
-    vec2 textSize = measureMultiSpriteText(text, params.boundings.x, params);
+    vec2 textSize = wfont_measureMultiSpriteText(text, params.boundings.x, params);
 
-    vec2 textOffset = getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
-    renderTranslate(context, textOffset.x, textOffset.y);
+    vec2 textOffset = wfont_getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
+    wr_translate(context, textOffset.x, textOffset.y);
 
 #ifdef DEBUG_RENDER_FONT
     rect outline = rectf(0, 0, textSize.x, textSize.y);
-    renderStrokeRect(context, outline, WAR_COLOR_RED_SELECTION, 1);
+    wr_strokeRect(context, outline, WAR_COLOR_RED_SELECTION, 1);
 #endif
 
     s32 lineStartIndex = 0;
@@ -676,20 +676,20 @@ void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, W
     {
         s32 lineLength = lines[i].length;
         StringView lineView = wsv_slice(text, (size_t)lines[i].start, (size_t)lineLength);
-        f32 lineAlignOffset = getLineAlignmentOffset(params.lineAlign, textSize.x, lines[i].width);
+        f32 lineAlignOffset = wfont_getLineAlignmentOffset(params.lineAlign, textSize.x, lines[i].width);
         vec2 lineOffset = vec2f(lineAlignOffset, i * lineHeight);
 
         if (lineOffset.y * scale > params.boundings.y)
             break;
 
-        renderSave(context);
-        renderTranslate(context, lineOffset.x, 0);
-        renderScale(context, scale, scale);
-        renderTranslate(context, 0, lineOffset.y);
+        wr_save(context);
+        wr_translate(context, lineOffset.x, 0);
+        wr_scale(context, scale, scale);
+        wr_translate(context, 0, lineOffset.y);
 
 #ifdef DEBUG_RENDER_FONT
         rect outline = rectf(0, 0, lines[i].width / scale, lineHeight);
-        renderStrokeRect(context, outline, WAR_COLOR_GREEN_SELECTION, 1);
+        wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION, 1);
 #endif
 
         if (params.highlightIndex >= lineStartIndex && params.highlightIndex < lineStartIndex + lineLength)
@@ -697,7 +697,7 @@ void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, W
             s32 highlightIndex = params.highlightIndex - lineStartIndex;
             s32 highlightCount = min(params.highlightCount, lineLength - highlightIndex);
 
-            x = renderSingleSpriteTextSpan(context, lineView,
+            x = wfont_renderSingleSpriteTextSpan(context, lineView,
                                         0, highlightIndex,
                                         0, 0,
                                         params.fontColor,
@@ -706,7 +706,7 @@ void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, W
                                         params.boundings,
                                         scale);
 
-            x = renderSingleSpriteTextSpan(context, lineView,
+            x = wfont_renderSingleSpriteTextSpan(context, lineView,
                                         highlightIndex, highlightCount,
                                         x, 0,
                                         params.highlightColor,
@@ -715,7 +715,7 @@ void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, W
                                         params.boundings,
                                         scale);
 
-            x = renderSingleSpriteTextSpan(context, lineView,
+            x = wfont_renderSingleSpriteTextSpan(context, lineView,
                                         highlightIndex + highlightCount,
                                         lineLength - highlightIndex - highlightCount,
                                         x, 0,
@@ -730,7 +730,7 @@ void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, W
         {
             s32 highlightCount = min(params.highlightIndex + params.highlightCount - lineStartIndex, lineLength);
 
-            x = renderSingleSpriteTextSpan(context, lineView,
+            x = wfont_renderSingleSpriteTextSpan(context, lineView,
                                         0, highlightCount,
                                         0, 0,
                                         params.highlightColor,
@@ -739,7 +739,7 @@ void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, W
                                         params.boundings,
                                         scale);
 
-            x = renderSingleSpriteTextSpan(context, lineView,
+            x = wfont_renderSingleSpriteTextSpan(context, lineView,
                                         highlightCount,
                                         lineLength - highlightCount,
                                         x, 0,
@@ -756,7 +756,7 @@ void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, W
             WarColor fontColor = params.highlightIndex == ALL_HIGHLIGHT
                 ? params.highlightColor : params.fontColor;
 
-            renderSingleSpriteTextSpan(context, lineView,
+            wfont_renderSingleSpriteTextSpan(context, lineView,
                                     0, lineLength,
                                     0, 0,
                                     fontColor,
@@ -766,10 +766,10 @@ void renderMultiSpriteText(WarContext* context, StringView text, f32 x, f32 y, W
                                     scale);
         }
 
-        renderRestore(context);
+        wr_restore(context);
 
         lineStartIndex += lineLength;
     }
 
-    renderRestore(context);
+    wr_restore(context);
 }

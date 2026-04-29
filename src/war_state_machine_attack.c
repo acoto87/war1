@@ -5,41 +5,41 @@
 #include "war_audio.h"
 #include "war_units.h"
 
-WarState* createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
+WarState* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
 {
-    WarState* state = createState(context, entity, WAR_STATE_ATTACK);
+    WarState* state = wst_createState(context, entity, WAR_STATE_ATTACK);
     state->attack.targetEntityId = targetEntityId;
     state->attack.targetTile = targetTile;
     return state;
 }
 
-void enterAttackState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
 
-    WarUnitStats stats = getUnitStats(unit->type);
+    WarUnitStats stats = wu_getUnitStats(unit->type);
 
     WarEntityId targetEntityId = (WarEntityId)state->attack.targetEntityId;
-    WarEntity* targetEntity = findEntity(context, targetEntityId);
+    WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
     vec2 targetTile = state->attack.targetTile;
 
@@ -49,17 +49,17 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         // when going to an attacking point (where there is no target unit)
         // check if the attacking unit is in range 1, no matter if the range
         // of the attacking unit is greater
-        if(!tileInRange(entity, targetTile, 1))
+        if(!wu_tileInRange(entity, targetTile, 1))
         {
-            WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
+            WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
             moveState->move.checkForAttacks = true;
-            changeNextState(context, entity, moveState, false, true);
+            wst_changeNextState(context, entity, moveState, false, true);
             return;
         }
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
         return;
     }
 
@@ -68,39 +68,39 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         // if the target entity is an unit the instead of using the tile where
         // the player click, use a point on the target unit that is closer to
         // the attacking unit
-        targetTile = unitPointOnTarget(entity, targetEntity);
+        targetTile = wu_unitPointOnTarget(entity, targetEntity);
     }
 
     // if the unit is not in range to attack, chase it
-    if (isUnit(targetEntity) && !unitInRange(entity, targetEntity, stats.range))
+    if (isUnit(targetEntity) && !wu_unitInRange(entity, targetEntity, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
         followState->nextState = state;
-        changeNextState(context, entity, followState, false, true);
+        wst_changeNextState(context, entity, followState, false, true);
         return;
     }
 
-    if(isWall(targetEntity) && !tileInRange(entity, targetTile, stats.range))
+    if(isWall(targetEntity) && !wu_tileInRange(entity, targetTile, stats.range))
     {
-        WarState* followState = createFollowState(context, entity, 0, targetTile, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, 0, targetTile, stats.range);
         followState->nextState = state;
-        changeNextState(context, entity, followState, false, true);
+        wst_changeNextState(context, entity, followState, false, true);
         return;
     }
 
     // if the unit is attacking a worker that is currently gathering and inside of the goldmine or the townhall,
-    // stop the attacking for a moment until the unit come out again
-    if (isInsideBuilding(targetEntity))
+    // wcmd_stop the attacking for a moment until the unit come out again
+    if (wst_isInsideBuilding(targetEntity))
     {
-        WarState* waitState = createWaitState(context, entity, 1.0f);
+        WarState* waitState = wst_createWaitState(context, entity, 1.0f);
         waitState->nextState = state;
-        changeNextState(context, entity, waitState, false, true);
+        wst_changeNextState(context, entity, waitState, false, true);
         return;
     }
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
-    setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
+    wu_setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
@@ -114,54 +114,54 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         {
             // if the target entity is dead or is collapsing (in case of buildings), go to idle
             // do this check before apply damage in case of multiple units attacking.
-            // one of them could cause the unit to die, so the other should stop doing further damage.
+            // one of them could cause the unit to die, so the other should wcmd_stop doing further damage.
             if (isDead(targetEntity) || isGoingToDie(targetEntity) ||
                 isCollapsing(targetEntity) || isGoingToCollapse(targetEntity))
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
             }
             else
             {
-                if (isRangeUnit(entity))
+                if (wu_isRangeUnit(entity))
                 {
-                    rangeAttack(context, entity, targetEntity);
+                    we_rangeAttack(context, entity, targetEntity);
                 }
                 else
                 {
-                    meleeAttack(context, entity, targetEntity);
+                    we_meleeAttack(context, entity, targetEntity);
                 }
 
-                vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
-                playAttackSound(context, targetPosition, action->lastSoundStep);
+                vec2 targetPosition = wu_getUnitCenterPosition(targetEntity, false);
+                wa_playAttackSound(context, targetPosition, action->lastSoundStep);
             }
         }
         else if(isWall(targetEntity))
         {
-                WarWallPiece* piece = getWallPieceAtPosition(targetEntity, (s32)targetTile.x, (s32)targetTile.y);
+                WarWallPiece* piece = we_getWallPieceAtPosition(targetEntity, (s32)targetTile.x, (s32)targetTile.y);
             if (piece)
             {
                 // if the piece of the wall the unit is attacking has no more hit points, go to idle.
                 // do this check before apply damage in case of multiple units attacking.
-                // one of them could destroy the piece, so the other should stop doing further damage.
+                // one of them could destroy the piece, so the other should wcmd_stop doing further damage.
                 if (piece->hp == 0)
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    WarState* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, idleState, true, true);
                 }
                 else
                 {
-                    if (isRangeUnit(entity))
+                    if (wu_isRangeUnit(entity))
                     {
-                        rangeWallAttack(context, entity, targetEntity, piece);
+                        we_rangeWallAttack(context, entity, targetEntity, piece);
                     }
                     else
                     {
-                        meleeWallAttack(context, entity, targetEntity, piece);
+                        we_meleeWallAttack(context, entity, targetEntity, piece);
                     }
 
-                    vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
-                    playAttackSound(context, targetPosition, action->lastSoundStep);
+                    vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);
+                    wa_playAttackSound(context, targetPosition, action->lastSoundStep);
                 }
             }
         }
@@ -172,7 +172,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeAttackState(WarContext* context, WarState* state)
+void wst_freeAttackState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

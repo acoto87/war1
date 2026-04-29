@@ -88,14 +88,14 @@ static WarMapNode createNode(WarPathFinder finder, s32 x, s32 y)
     return (WarMapNode){y * finder.width + x, x, y, 0, -1, INT32_MAX, INT32_MAX};
 }
 
-u16 getTileValue(WarPathFinder finder, s32 x, s32 y)
+u16 wpath_getTileValue(WarPathFinder finder, s32 x, s32 y)
 {
     assert(inRange(x, 0, finder.width));
     assert(inRange(y, 0, finder.height));
     return finder.data[y * finder.width + x];
 }
 
-void setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, u16 value)
+void wpath_setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, u16 value)
 {
     if (!inRange(startX, 0, finder.width) || !inRange(startY, 0, finder.height))
         return;
@@ -143,7 +143,7 @@ static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s3
         {
             s32 xx = node.x + dirX[d];
             s32 yy = node.y + dirY[d];
-            if (isInside(finder, xx, yy))
+            if (wpath_isInside(finder, xx, yy))
             {
                 WarMapNode newNode = createNode(finder, xx, yy);
                 if (isEmpty(finder, xx, yy) || equalsMapNode(newNode, endNode))
@@ -227,7 +227,7 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
         {
             s32 xx = current.x + dirX[d];
             s32 yy = current.y + dirY[d];
-            if (isInside(finder, xx, yy))
+            if (wpath_isInside(finder, xx, yy))
             {
                 // if the neighbor position is occupied by a static entity,
                 // don't consider it so that the unit is able to surround it
@@ -341,13 +341,13 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     return path;
 }
 
-WarPathFinder initPathFinder(WarContext* context, PathFindingType type, s32 width, s32 height, u16 data[])
+WarPathFinder wpath_initPathFinder(WarContext* context, PathFindingType type, s32 width, s32 height, u16 data[])
 {
     WarPathFinder finder = (WarPathFinder){0};
     finder.type = type;
     finder.width = width;
     finder.height = height;
-    finder.data = (u16*)war_malloc(width * height * sizeof(u16));
+    finder.data = (u16*)wm_alloc(width * height * sizeof(u16));
 
     // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
     for(s32 i = 0; i < width * height; i++)
@@ -368,12 +368,12 @@ WarPathFinder initPathFinder(WarContext* context, PathFindingType type, s32 widt
     return finder;
 }
 
-bool isInside(WarPathFinder finder, s32 x, s32 y)
+bool wpath_isInside(WarPathFinder finder, s32 x, s32 y)
 {
     return inRange(x, 0, finder.width) && inRange(y, 0, finder.height);
 }
 
-WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
+WarMapPath wpath_findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
     TracyCZoneN(ctx, "FindPath", 1);
     WarMapPath path;
@@ -392,7 +392,7 @@ WarMapPath findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 
     return path;
 }
 
-bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIndex)
+bool wpath_reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIndex)
 {
     assert(inRange(fromIndex, 0, path->nodes.count));
     assert(inRange(toIndex, 0, path->nodes.count));
@@ -404,7 +404,7 @@ bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIn
     vec2 toNode = path->nodes.items[toIndex];
 
     // find a new path from the current position to the destination
-    WarMapPath newPath = findPath(finder, (s32)fromNode.x, (s32)fromNode.y, (s32)toNode.x, (s32)toNode.y);
+    WarMapPath newPath = wpath_findPath(finder, (s32)fromNode.x, (s32)fromNode.y, (s32)toNode.x, (s32)toNode.y);
 
     if (newPath.nodes.count > 1)
     {
@@ -420,24 +420,24 @@ bool reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIn
         result = true;
     }
 
-    freePath(newPath);
+    wpath_freePath(newPath);
     return result;
 }
 
-bool pathExists(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
+bool wpath_pathExists(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
-    WarMapPath path = findPath(finder, startX, startY, endX, endY);
+    WarMapPath path = wpath_findPath(finder, startX, startY, endX, endY);
     bool result = path.nodes.count >= 2;
-    freePath(path);
+    wpath_freePath(path);
     return result;
 }
 
-void freePath(WarMapPath path)
+void wpath_freePath(WarMapPath path)
 {
     vec2ListFree(&path.nodes);
 }
 
-vec2 findEmptyPosition(WarPathFinder finder, vec2 position)
+vec2 wpath_findEmptyPosition(WarPathFinder finder, vec2 position)
 {
     const s32 dirC = 8;
     const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
@@ -477,7 +477,7 @@ vec2 findEmptyPosition(WarPathFinder finder, vec2 position)
     return position;
 }
 
-bool isPositionAccesible(WarPathFinder finder, vec2 position)
+bool wpath_isPositionAccesible(WarPathFinder finder, vec2 position)
 {
     const s32 dirC = 8;
     const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };

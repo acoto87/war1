@@ -1,4 +1,4 @@
-#include "war_game.h"
+﻿#include "war_game.h"
 
 #include <assert.h>
 #include <math.h>
@@ -26,7 +26,7 @@
 #include "war_resources.h"
 #include "war_scenes.h"
 
-static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
+static WarKeys wg_getWarKeyFromSDLKey(SDL_Keycode key)
 {
     switch (key)
     {
@@ -131,7 +131,7 @@ static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
     }
 }
 
-static void appendCheatTextInput(WarContext* context, StringView text)
+static void wg_appendCheatTextInput(WarContext* context, StringView text)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -163,7 +163,7 @@ static void appendCheatTextInput(WarContext* context, StringView text)
     }
 }
 
-bool initGame(WarContext* context)
+bool wg_initGame(WarContext* context)
 {
     context->globalScale = 3;
     context->globalSpeed = 1;
@@ -203,7 +203,7 @@ bool initGame(WarContext* context)
     }
 
     // Initialize render state stack
-    renderInit(context);
+    wr_init(context);
 
     context->transitionDelay = 0.0f;
     context->cheatsEnabled = true;
@@ -213,43 +213,43 @@ bool initGame(WarContext* context)
     SDL_HideCursor();
 
     // init audio
-    if (!initAudio(context))
+    if (!wa_initAudio(context))
     {
         logError("Could not initialize audio.");
         return false;
     }
 
     // load fonts
-    context->fontSprites[0] = loadFontSprite(context, wsv_fromCString("./war1_font_1.png"));
-    context->fontSprites[1] = loadFontSprite(context, wsv_fromCString("./war1_font_2.png"));
+    context->fontSprites[0] = wfont_loadFontSprite(context, wsv_fromCString("./war1_font_1.png"));
+    context->fontSprites[1] = wfont_loadFontSprite(context, wsv_fromCString("./war1_font_2.png"));
 
     // check if the DATA.WAR file exists
     bool dataFileExists = access(DATAWAR_FILE_PATH, F_OK) == 0;
     if (dataFileExists)
     {
         // load DATA.WAR file
-        if (!loadDataFile(context))
+        if (!wg_loadDataFile(context))
         {
             logError("Could not load file: %s", DATAWAR_FILE_PATH);
             return false;
         }
 
-        WarScene* scene = createScene(context, WAR_SCENE_BLIZZARD);
-        setNextScene(context, scene, 0.0f);
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
+        wg_setNextScene(context, scene, 0.0f);
     }
     else
     {
-        WarScene* scene = createScene(context, WAR_SCENE_DOWNLOAD);
-        setNextScene(context, scene, 0.0f);
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_DOWNLOAD);
+        wg_setNextScene(context, scene, 0.0f);
     }
 
-    initUnitActionDefs();
+    wact_initUnitActionDefs();
 
     context->time = SDL_GetTicks() / 1000.0f;
     return true;
 }
 
-void quitGame(WarContext* context)
+void wg_quitGame(WarContext* context)
 {
     // Destroy audio stream (this also closes the audio device)
     if (context->audioStream)
@@ -272,7 +272,7 @@ void quitGame(WarContext* context)
 
     if (context->audioMixBuffer)
     {
-        war_free(context->audioMixBuffer);
+        wm_free(context->audioMixBuffer);
         context->audioMixBuffer = NULL;
         context->audioMixBufferCapacity = 0;
     }
@@ -300,9 +300,9 @@ void quitGame(WarContext* context)
     SDL_Quit();
 }
 
-bool loadDataFile(WarContext* context)
+bool wg_loadDataFile(WarContext* context)
 {
-    context->warFile = loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
+    context->warFile = wfile_loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
     if (!context->warFile)
     {
         return false;
@@ -311,80 +311,80 @@ bool loadDataFile(WarContext* context)
     for (int i = 0; i < arrayLength(assets); ++i)
     {
         DatabaseEntry entry = assets[i];
-        loadResource(context, &entry);
+        wres_loadResource(context, &entry);
     }
 
     return true;
 }
 
-void setWindowSize(WarContext* context, s32 width, s32 height)
+void wg_setWindowSize(WarContext* context, s32 width, s32 height)
 {
     context->windowWidth = width;
     context->windowHeight = height;
     SDL_SetWindowSize(context->window, context->windowWidth, context->windowHeight);
 }
 
-void setGlobalScale(WarContext* context, f32 scale)
+void wg_setGlobalScale(WarContext* context, f32 scale)
 {
     context->globalScale = max(scale, 1.0f);
     logDebug("set global scale to: %.2f", context->globalScale);
 
     s32 newWidth = (s32)(context->originalWindowWidth * context->globalScale);
     s32 newHeight = (s32)(context->originalWindowHeight * context->globalScale);
-    setWindowSize(context, newWidth, newHeight);
+    wg_setWindowSize(context, newWidth, newHeight);
 }
 
-void changeGlobalScale(WarContext* context, f32 deltaScale)
+void wg_changeGlobalScale(WarContext* context, f32 deltaScale)
 {
-    setGlobalScale(context, context->globalScale + deltaScale);
+    wg_setGlobalScale(context, context->globalScale + deltaScale);
 }
 
-void setGlobalSpeed(WarContext* context, f32 speed)
+void wg_setGlobalSpeed(WarContext* context, f32 speed)
 {
     context->globalSpeed = max(speed, 1.0f);
     logDebug("set global speed to: %.2f", context->globalSpeed);
 }
 
-void changeGlobalSpeed(WarContext* context, f32 deltaSpeed)
+void wg_changeGlobalSpeed(WarContext* context, f32 deltaSpeed)
 {
-    setGlobalSpeed(context, context->globalSpeed + deltaSpeed);
+    wg_setGlobalSpeed(context, context->globalSpeed + deltaSpeed);
 }
 
-void setMusicVolume(WarContext* context, f32 volume)
+void wg_setMusicVolume(WarContext* context, f32 volume)
 {
     context->musicVolume = clamp(volume, 0.0f, 1.0f);
     logDebug("set music volume to: %.2f", context->musicVolume);
 }
 
-void changeMusicVolume(WarContext* context, f32 deltaVolume)
+void wg_changeMusicVolume(WarContext* context, f32 deltaVolume)
 {
-    setMusicVolume(context, context->musicVolume + deltaVolume);
+    wg_setMusicVolume(context, context->musicVolume + deltaVolume);
 }
 
-void setSoundVolume(WarContext* context, f32 volume)
+void wg_setSoundVolume(WarContext* context, f32 volume)
 {
     context->soundVolume = clamp(volume, 0.0f, 1.0f);
     logDebug("set sound volume to: %.2f", context->soundVolume);
 }
 
-void changeSoundVolume(WarContext* context, f32 deltaVolume)
+void wg_changeSoundVolume(WarContext* context, f32 deltaVolume)
 {
-    setSoundVolume(context, context->soundVolume + deltaVolume);
+    wg_setSoundVolume(context, context->soundVolume + deltaVolume);
 }
 
-void setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay)
+void wg_setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay)
 {
     context->nextScene = scene;
     context->transitionDelay = transitionDelay;
 }
 
-void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay)
+void wg_setNextMap(WarContext* context, WarMap* map, f32 transitionDelay)
 {
     context->nextMap = map;
     context->transitionDelay = transitionDelay;
 }
 
-void setInputButton(WarContext* context, s32 button, bool pressed)
+void wg_setInputButton(WarContext* context, s32 button, bool pressed)
 {
     WarInput* input = &context->input;
 
@@ -392,7 +392,7 @@ void setInputButton(WarContext* context, s32 button, bool pressed)
     input->buttons[button].pressed = pressed;
 }
 
-void setInputKey(WarContext* context, s32 key, bool pressed)
+void wg_setInputKey(WarContext* context, s32 key, bool pressed)
 {
     WarInput* input = &context->input;
 
@@ -400,7 +400,7 @@ void setInputKey(WarContext* context, s32 key, bool pressed)
     input->keys[key].pressed = pressed;
 }
 
-void beginInputFrame(WarContext* context)
+void wg_beginInputFrame(WarContext* context)
 {
     WarInput* input = &context->input;
 
@@ -417,7 +417,7 @@ void beginInputFrame(WarContext* context)
     input->wasDragging = false;
 }
 
-void processGameEvent(WarContext* context, SDL_Event* event)
+void wg_processGameEvent(WarContext* context, SDL_Event* event)
 {
     // NOTE: Convert event coordinates from window space to logical render space (320x200).
     // SDL_SetRenderLogicalPresentation does NOT do this automatically in SDL3.
@@ -441,11 +441,11 @@ void processGameEvent(WarContext* context, SDL_Event* event)
             bool pressed = event->button.down;
             if (event->button.button == SDL_BUTTON_LEFT)
             {
-                setInputButton(context, WAR_MOUSE_LEFT, pressed);
+                wg_setInputButton(context, WAR_MOUSE_LEFT, pressed);
             }
             else if (event->button.button == SDL_BUTTON_RIGHT)
             {
-                setInputButton(context, WAR_MOUSE_RIGHT, pressed);
+                wg_setInputButton(context, WAR_MOUSE_RIGHT, pressed);
             }
             break;
         }
@@ -453,33 +453,33 @@ void processGameEvent(WarContext* context, SDL_Event* event)
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
         {
-            WarKeys key = getWarKeyFromSDLKey(event->key.key);
+            WarKeys key = wg_getWarKeyFromSDLKey(event->key.key);
             if (key != WAR_KEY_NONE)
             {
                 bool pressed = event->type == SDL_EVENT_KEY_DOWN;
 
                 if (key == WAR_KEY_SHIFT)
                 {
-                    setInputKey(context, key, (event->key.mod & SDL_KMOD_SHIFT) != 0);
+                    wg_setInputKey(context, key, (event->key.mod & SDL_KMOD_SHIFT) != 0);
                 }
                 else if (key == WAR_KEY_CTRL)
                 {
-                    setInputKey(context, key, (event->key.mod & SDL_KMOD_CTRL) != 0);
+                    wg_setInputKey(context, key, (event->key.mod & SDL_KMOD_CTRL) != 0);
                 }
                 else if (key == WAR_KEY_ALT)
                 {
-                    setInputKey(context, key, (event->key.mod & SDL_KMOD_ALT) != 0);
+                    wg_setInputKey(context, key, (event->key.mod & SDL_KMOD_ALT) != 0);
                 }
                 else
                 {
-                    setInputKey(context, key, pressed);
+                    wg_setInputKey(context, key, pressed);
                 }
             }
             break;
         }
 
         case SDL_EVENT_TEXT_INPUT:
-            appendCheatTextInput(context, wsv_fromCString(event->text.text));
+            wg_appendCheatTextInput(context, wsv_fromCString(event->text.text));
             break;
 
         case SDL_EVENT_WINDOW_FOCUS_LOST:
@@ -512,7 +512,7 @@ void processGameEvent(WarContext* context, SDL_Event* event)
     }
 }
 
-void updateGame(WarContext* context)
+void wg_updateGame(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateGame", 1);
 
@@ -520,7 +520,7 @@ void updateGame(WarContext* context)
 
     // Drain entity removals that the audio callback thread queued while we were
     // in the previous tick. We do this on the main thread (before any scene or
-    // map update) so that removeEntityById never runs concurrently with audio.
+    // map update) so that we_removeEntityById never runs concurrently with audio.
     if (context->audioRemoveMutex)
     {
         SDL_LockMutex(context->audioRemoveMutex);
@@ -532,7 +532,7 @@ void updateGame(WarContext* context)
         SDL_UnlockMutex(context->audioRemoveMutex);
 
         for (s32 i = 0; i < drainCount; i++)
-            removeEntityById(context, drainIds[i]);
+            we_removeEntityById(context, drainIds[i]);
     }
 
     WarInput* input = &context->input;
@@ -553,14 +553,14 @@ void updateGame(WarContext* context)
         context->audioEnabled = false;
 
         if (context->scene)
-            leaveScene(context);
+            wsc_leaveScene(context);
         else if (context->map)
-            leaveMap(context);
+            wmap_leaveMap(context);
 
         context->scene = context->nextScene;
         context->nextScene = NULL;
 
-        enterScene(context);
+        wsc_enterScene(context);
 
         context->audioEnabled = true;
     }
@@ -569,14 +569,14 @@ void updateGame(WarContext* context)
         context->audioEnabled = false;
 
         if (context->scene)
-            leaveScene(context);
+            wsc_leaveScene(context);
         else if (context->map)
-            leaveMap(context);
+            wmap_leaveMap(context);
 
         context->map = context->nextMap;
         context->nextMap = NULL;
 
-        enterMap(context);
+        wmap_enterMap(context);
 
         context->audioEnabled = true;
     }
@@ -589,11 +589,11 @@ void updateGame(WarContext* context)
 
     if (context->scene)
     {
-        updateScene(context);
+        wsc_updateScene(context);
     }
     else if (context->map)
     {
-        updateMap(context);
+        wmap_updateMap(context);
     }
     else
     {
@@ -603,7 +603,7 @@ void updateGame(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void renderGame(WarContext *context)
+void wg_renderGame(WarContext *context)
 {
     TracyCZoneN(ctx, "RenderGame", 1);
 
@@ -618,11 +618,11 @@ void renderGame(WarContext *context)
     }
 
     // Reset render state for this frame
-    renderInit(context);
+    wr_init(context);
 
     if (context->scene)
     {
-        renderScene(context);
+        wsc_renderScene(context);
     }
     else if (context->map)
     {
@@ -632,7 +632,7 @@ void renderGame(WarContext *context)
     TracyCZoneEnd(ctx);
 }
 
-void presentGame(WarContext *context)
+void wg_presentGame(WarContext *context)
 {
     SDL_RenderPresent(context->renderer);
 

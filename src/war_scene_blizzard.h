@@ -1,6 +1,6 @@
-#pragma once
+﻿#pragma once
 
 #include "war_types.h"
 
-void enterSceneBlizzard(WarContext* context);
-void updateSceneBlizzard(WarContext* context);
+void wsbl_enterSceneBlizzard(WarContext* context);
+void wsbl_updateSceneBlizzard(WarContext* context);

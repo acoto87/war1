@@ -21,10 +21,10 @@ typedef int WarSocket;
 
 #include "war_types.h"
 
-bool initNetwork(void);
-bool cleanNetwork(void);
-WarSocket connectToHost(StringView host);
-bool requestResource(WarSocket sck, StringView resource, StringView host);
-s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength);
-s32 parseHeadersFromResponse(StringView response, s32 responseLength, StringViewMap* headers);
-bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePath);
+bool wnet_initNetwork(void);
+bool wnet_cleanNetwork(void);
+WarSocket wnet_connectToHost(StringView host);
+bool wnet_requestResource(WarSocket sck, StringView resource, StringView host);
+s32 wnet_readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength);
+s32 wnet_parseHeadersFromResponse(StringView response, s32 responseLength, StringViewMap* headers);
+bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView filePath);

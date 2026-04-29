@@ -2,20 +2,20 @@
 
 #include "war_types.h"
 
-void createMapUI(WarContext* context);
+void wmui_createMapUI(WarContext* context);
 
-WarEntity* createUIMinimap(WarContext* context, String name, vec2 position);
+WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position);
 
-void updateGoldText(WarContext* context);
-void updateWoodText(WarContext* context);
-void updateSelectedUnitsInfo(WarContext* context);
+void wmui_updateGoldText(WarContext* context);
+void wmui_updateWoodText(WarContext* context);
+void wmui_updateSelectedUnitsInfo(WarContext* context);
 
-void setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, String text);
-void setFlashStatus(WarContext* context, f32 duration, String text);
-void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit);
-void setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit);
-void setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUnitComponent* unit);
+void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, String text);
+void wmui_setFlashStatus(WarContext* context, f32 duration, String text);
+void wmui_setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit);
+void wmui_setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit);
+void wmui_setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUnitComponent* unit);
 
-void renderSelectionRect(WarContext* context);
-void renderCommand(WarContext* context);
-void renderMapUI(WarContext* context);
+void wmui_renderSelectionRect(WarContext* context);
+void wmui_renderCommand(WarContext* context);
+void wmui_renderMapUI(WarContext* context);

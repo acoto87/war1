@@ -22,7 +22,7 @@ typedef struct
     s32 deathFrames[5];
 } WarUnitFrameNumbers;
 
-static WarUnitFrameNumbers getFrameNumbers(s32 nbdir, s32 initCounter[])
+static WarUnitFrameNumbers wact_getFrameNumbers(s32 nbdir, s32 initCounter[])
 {
     initCounter[0]--;
 
@@ -91,7 +91,7 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
     // 4 frames a b c d   => a b a 0 d c d 0
     // 5 frames a b c d e => a b c b a e d c d e
     //
-    // This code is used with a previous steps calling 'getFrameNumbers'
+    // This code is used with a previous steps calling 'wact_getFrameNumbers'
     // and construct the base frame sequences for walk, attack and death animations.
     //
     // Is this way because of the layout of the spritesheets of the units:
@@ -950,23 +950,23 @@ static void initOrcCorpseActionDefs(void)
     gUnitActionDefs[WAR_UNIT_ORC_CORPSE][WAR_ACTION_TYPE_DEATH] = deathDef;
 }
 
-void initUnitActionDefs(void)
+void wact_initUnitActionDefs(void)
 {
-    WarUnitFrameNumbers frameNumbers_5_5_5_5 = getFrameNumbers(5, arrayArg(s32, 5, 5, 5));
-    WarUnitFrameNumbers frameNumbers_5_5_5_4 = getFrameNumbers(5, arrayArg(s32, 5, 5, 4));
-    WarUnitFrameNumbers frameNumbers_5_5_5_3 = getFrameNumbers(5, arrayArg(s32, 5, 5, 3));
-    WarUnitFrameNumbers frameNumbers_5_5_4_5 = getFrameNumbers(5, arrayArg(s32, 5, 4, 5));
-    WarUnitFrameNumbers frameNumbers_5_5_4_4 = getFrameNumbers(5, arrayArg(s32, 5, 4, 4));
-    WarUnitFrameNumbers frameNumbers_5_5_4_3 = getFrameNumbers(5, arrayArg(s32, 5, 4, 3));
-    WarUnitFrameNumbers frameNumbers_5_5_3_2 = getFrameNumbers(5, arrayArg(s32, 5, 3, 2));
-    WarUnitFrameNumbers frameNumbers_5_5_2_3 = getFrameNumbers(5, arrayArg(s32, 5, 2, 3));
-    WarUnitFrameNumbers frameNumbers_5_3_5_3 = getFrameNumbers(5, arrayArg(s32, 3, 5, 3));
-    WarUnitFrameNumbers frameNumbers_5_2_5_3 = getFrameNumbers(5, arrayArg(s32, 2, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_5_5 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 5));
+    WarUnitFrameNumbers frameNumbers_5_5_5_4 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 4));
+    WarUnitFrameNumbers frameNumbers_5_5_5_3 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_4_5 = wact_getFrameNumbers(5, arrayArg(s32, 5, 4, 5));
+    WarUnitFrameNumbers frameNumbers_5_5_4_4 = wact_getFrameNumbers(5, arrayArg(s32, 5, 4, 4));
+    WarUnitFrameNumbers frameNumbers_5_5_4_3 = wact_getFrameNumbers(5, arrayArg(s32, 5, 4, 3));
+    WarUnitFrameNumbers frameNumbers_5_5_3_2 = wact_getFrameNumbers(5, arrayArg(s32, 5, 3, 2));
+    WarUnitFrameNumbers frameNumbers_5_5_2_3 = wact_getFrameNumbers(5, arrayArg(s32, 5, 2, 3));
+    WarUnitFrameNumbers frameNumbers_5_3_5_3 = wact_getFrameNumbers(5, arrayArg(s32, 3, 5, 3));
+    WarUnitFrameNumbers frameNumbers_5_2_5_3 = wact_getFrameNumbers(5, arrayArg(s32, 2, 5, 3));
 
-    WarUnitFrameNumbers frameNumbers_5_4_3_3 = getFrameNumbers(5, arrayArg(s32, 4, 3, 3));
+    WarUnitFrameNumbers frameNumbers_5_4_3_3 = wact_getFrameNumbers(5, arrayArg(s32, 4, 3, 3));
     NOT_USED(frameNumbers_5_4_3_3);
 
-    WarUnitFrameNumbers frameNumbers_5_5_5_0 = getFrameNumbers(5, arrayArg(s32, 5, 5, 0));
+    WarUnitFrameNumbers frameNumbers_5_5_5_0 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 0));
 
     for (s32 i = 0; i < WAR_UNIT_COUNT; i++)
     {
@@ -1005,7 +1005,7 @@ void initUnitActionDefs(void)
     initOrcCorpseActionDefs();
 }
 
- void addUnitActions(WarEntity* entity)
+ void wact_addUnitActions(WarEntity* entity)
 {
     WarUnitComponent* unit = &entity->unit;
 
@@ -1022,7 +1022,7 @@ void initUnitActionDefs(void)
     }
 }
 
-s32 getActionDuration(WarEntity* entity, WarUnitActionType type)
+s32 wact_getActionDuration(WarEntity* entity, WarUnitActionType type)
 {
     assert(isUnit(entity));
 
@@ -1046,13 +1046,13 @@ s32 getActionDuration(WarEntity* entity, WarUnitActionType type)
     return duration;
 }
 
-void resetAction(WarUnitAction* action)
+void wact_resetAction(WarUnitAction* action)
 {
     action->stepIndex = 0;
     action->status = WAR_ACTION_NOT_STARTED;
 }
 
-void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale)
+void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale)
 {
     NOT_USED(context);
 
@@ -1076,7 +1076,7 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
 
         if (reset)
         {
-            resetAction(action);
+            wact_resetAction(action);
         }
     }
     else
@@ -1085,7 +1085,7 @@ void setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, b
     }
 }
 
-void updateAction(WarContext* context, WarEntity* entity)
+void wact_updateAction(WarContext* context, WarEntity* entity)
 {
     WarTransformComponent* transform = &entity->transform;
     WarSpriteComponent* sprite = &entity->sprite;
@@ -1104,7 +1104,7 @@ void updateAction(WarContext* context, WarEntity* entity)
 
     if (action->stepIndex < 0)
     {
-        resetAction(action);
+        wact_resetAction(action);
     }
 
     action->status = WAR_ACTION_RUNNING;
@@ -1113,7 +1113,7 @@ void updateAction(WarContext* context, WarEntity* entity)
     WarUnitActionStep step = actionDef->steps.items[action->stepIndex];
     if (step.type == WAR_ACTION_STEP_WAIT)
     {
-        action->waitCount -= getMapScaledSpeed(context, context->deltaTime);
+        action->waitCount -= wmap_getMapScaledSpeed(context, context->deltaTime);
         if (action->waitCount > 0)
         {
             return;

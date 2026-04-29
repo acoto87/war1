@@ -1,6 +1,6 @@
-#include "war_entities.h"
+﻿#include "war_entities.h"
 
-bool hasTreeAtPosition(WarEntity* forest, s32 x, s32 y)
+bool we_hasTreeAtPosition(WarEntity* forest, s32 x, s32 y)
 {
     WarTreeList* trees = &forest->forest.trees;
     for (s32 i = 0; i < trees->count; i++)
@@ -13,7 +13,7 @@ bool hasTreeAtPosition(WarEntity* forest, s32 x, s32 y)
     return false;
 }
 
-WarTree* getTreeAtPosition(WarEntity* forest, s32 x, s32 y)
+WarTree* we_getTreeAtPosition(WarEntity* forest, s32 x, s32 y)
 {
     WarTreeList* trees = &forest->forest.trees;
     for (s32 i = 0; i < trees->count; i++)
@@ -26,7 +26,7 @@ WarTree* getTreeAtPosition(WarEntity* forest, s32 x, s32 y)
     return NULL;
 }
 
-void determineTreeTiles(WarContext* context, WarEntity* forest)
+void we_determineTreeTiles(WarContext* context, WarEntity* forest)
 {
     assert(forest);
     assert(forest->type == WAR_ENTITY_TYPE_FOREST);
@@ -54,13 +54,13 @@ void determineTreeTiles(WarContext* context, WarEntity* forest)
         {
             s32 xx = ti->tilex + dirX[d];
             s32 yy = ti->tiley + dirY[d];
-            if (isInside(map->finder, xx, yy))
+            if (wpath_isInside(map->finder, xx, yy))
             {
                 WarEntityId entityId = getTileEntityId(map->finder, xx, yy);
-                WarEntity* entity = findEntity(context, entityId);
+                WarEntity* entity = we_findEntity(context, entityId);
                 if (entity && entity->type == WAR_ENTITY_TYPE_FOREST)
                 {
-                    WarTree* tree = getTreeAtPosition(entity, xx, yy);
+                    WarTree* tree = we_getTreeAtPosition(entity, xx, yy);
                     if (tree && tree->amount > 0)
                         index = index | (1 << d);
                 }
@@ -83,20 +83,20 @@ void determineTreeTiles(WarContext* context, WarEntity* forest)
     s32ListFree(&invalidTrees);
 }
 
-void determineAllTreeTiles(WarContext* context)
+void we_determineAllTreeTiles(WarContext* context)
 {
-    WarEntityList* forests = getEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
+    WarEntityList* forests = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
     for (s32 i = 0; i < forests->count; i++)
     {
         WarEntity* entity = forests->items[i];
         if (entity)
         {
-            determineTreeTiles(context, entity);
+            we_determineTreeTiles(context, entity);
         }
     }
 }
 
-WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position)
+WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position)
 {
     WarMap* map = context->map;
 
@@ -114,10 +114,10 @@ WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position
     {
         position = positions.items[i];
 
-        WarTree* tree = getTreeAtPosition(forest, (s32)position.x, (s32)position.y);
+        WarTree* tree = we_getTreeAtPosition(forest, (s32)position.x, (s32)position.y);
         if (tree)
         {
-            bool isTreeAccessible = isPositionAccesible(map->finder, position);
+            bool isTreeAccessible = wpath_isPositionAccesible(map->finder, position);
             bool isTreeVisibleOrFog =
                 isTileVisible(map, (s32)position.x, (s32)position.y) ||
                 isTileFog(map, (s32)position.x, (s32)position.y);
@@ -133,7 +133,7 @@ WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position
         {
             s32 xx = (s32)position.x + dirX[d];
             s32 yy = (s32)position.y + dirY[d];
-            if (isInside(map->finder, xx, yy))
+            if (wpath_isInside(map->finder, xx, yy))
             {
                 vec2 newPosition = vec2i(xx, yy);
                 if (!vec2ListContains(&positions, newPosition))
@@ -147,7 +147,7 @@ WarTree* findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position
     return result;
 }
 
-void plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
+void we_plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
 {
     assert(forest);
     assert(forest->type == WAR_ENTITY_TYPE_FOREST);
@@ -159,9 +159,9 @@ void plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
         return;
 
     // only plant a tree in the top border of the map, if there are one below
-    if (!isInside(map->finder, x, y - 1))
+    if (!wpath_isInside(map->finder, x, y - 1))
     {
-        WarTree* belowTree = getTreeAtPosition(forest, x, y + 1);
+        WarTree* belowTree = we_getTreeAtPosition(forest, x, y + 1);
         if (belowTree)
         {
             WarTree tree1 = createTree(x, y, TREE_MAX_WOOD);
@@ -184,7 +184,7 @@ void plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
     }
 }
 
-bool validTree(WarContext* context, WarEntity* forest, WarTree* tree)
+bool we_validTree(WarContext* context, WarEntity* forest, WarTree* tree)
 {
     NOT_USED(context);
 
@@ -205,7 +205,7 @@ bool validTree(WarContext* context, WarEntity* forest, WarTree* tree)
     return false;
 }
 
-void takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
+void we_takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
 {
     WarMap* map = context->map;
     assert(map);
@@ -214,26 +214,26 @@ void takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
     assert(forest->type == WAR_ENTITY_TYPE_FOREST);
     assert(tree);
 
-    WarTreeData data = getTreeData(WAR_TREE_CHOPPED);
+    WarTreeData data = wu_getTreeData(WAR_TREE_CHOPPED);
     s32 choppedTileIndex = map->tilesetType == MAP_TILESET_FOREST
         ? data.tileIndexForest : data.tileIndexSwamp;
 
     WarTree choppedTree = *tree;
 
     setFreeTiles(map->finder, choppedTree.tilex, choppedTree.tiley, 1, 1);
-    setMapTileIndex(context, choppedTree.tilex, choppedTree.tiley, choppedTileIndex);
+    wmap_setMapTileIndex(context, choppedTree.tilex, choppedTree.tiley, choppedTileIndex);
     WarTreeListRemove(&forest->forest.trees, choppedTree);
 
-    WarTree* aboveTree = getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley - 1);
-    if (aboveTree && !validTree(context, forest, aboveTree))
-        takeTreeDown(context, forest, aboveTree);
+    WarTree* aboveTree = we_getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley - 1);
+    if (aboveTree && !we_validTree(context, forest, aboveTree))
+        we_takeTreeDown(context, forest, aboveTree);
 
-    WarTree* belowTree = getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley + 1);
-    if (belowTree && !validTree(context, forest, belowTree))
-        takeTreeDown(context, forest, belowTree);
+    WarTree* belowTree = we_getTreeAtPosition(forest, choppedTree.tilex, choppedTree.tiley + 1);
+    if (belowTree && !we_validTree(context, forest, belowTree))
+        we_takeTreeDown(context, forest, belowTree);
 }
 
-s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
+s32 we_chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
 {
     if (tree->amount < amount)
         amount = tree->amount;
@@ -243,23 +243,23 @@ s32 chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount)
 
     if (tree->amount == 0)
     {
-        takeTreeDown(context, forest, tree);
-        determineTreeTiles(context, forest);
+        we_takeTreeDown(context, forest, tree);
+        we_determineTreeTiles(context, forest);
     }
 
     return amount;
 }
 
-WarEntity* createForest(WarContext* context)
+WarEntity* we_createForest(WarContext* context)
 {
     WarMap* map = context->map;
 
     WarTreeList trees;
     WarTreeListInit(&trees, WarTreeListDefaultOptions);
 
-    WarEntity *entity = createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
-    addSpriteComponent(context, entity, map->sprite);
-    addForestComponent(context, entity, trees);
+    WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
+    we_addSpriteComponent(context, entity, map->sprite);
+    we_addForestComponent(context, entity, trees);
 
     return entity;
 }

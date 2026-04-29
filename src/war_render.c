@@ -1,11 +1,11 @@
-#include "war_render.h"
+﻿#include "war_render.h"
 
 #include <assert.h>
 
 // ---------------------------------------------------------------------------
 // Render state stack (replaces nvgSave/nvgRestore/nvgTranslate/nvgScale/nvgGlobalAlpha)
 // ---------------------------------------------------------------------------
-void renderInit(WarContext* context)
+void wr_init(WarContext* context)
 {
     context->renderStateTop = 0;
     context->renderState[0].offsetX = 0;
@@ -15,41 +15,41 @@ void renderInit(WarContext* context)
     context->renderState[0].alpha = 1;
 }
 
-static WarRenderState* renderGetState(WarContext* context)
+static WarRenderState* wr_renderGetState(WarContext* context)
 {
     return &context->renderState[context->renderStateTop];
 }
 
-void renderSave(WarContext* context)
+void wr_save(WarContext* context)
 {
     assert(context->renderStateTop + 1 < MAX_RENDER_STATE_STACK);
     context->renderState[context->renderStateTop + 1] = context->renderState[context->renderStateTop];
     context->renderStateTop++;
 }
 
-void renderRestore(WarContext* context)
+void wr_restore(WarContext* context)
 {
     assert(context->renderStateTop > 0);
     context->renderStateTop--;
 }
 
-void renderTranslate(WarContext* context, f32 tx, f32 ty)
+void wr_translate(WarContext* context, f32 tx, f32 ty)
 {
-    WarRenderState* s = renderGetState(context);
+    WarRenderState* s = wr_renderGetState(context);
     s->offsetX += tx * s->scaleX;
     s->offsetY += ty * s->scaleY;
 }
 
-void renderScale(WarContext* context, f32 sx, f32 sy)
+void wr_scale(WarContext* context, f32 sx, f32 sy)
 {
-    WarRenderState* s = renderGetState(context);
+    WarRenderState* s = wr_renderGetState(context);
     s->scaleX *= sx;
     s->scaleY *= sy;
 }
 
-void renderGlobalAlpha(WarContext* context, f32 a)
+void wr_globalAlpha(WarContext* context, f32 a)
 {
-    WarRenderState* s = renderGetState(context);
+    WarRenderState* s = wr_renderGetState(context);
     s->alpha *= a;
 }
 
@@ -58,7 +58,7 @@ void renderGlobalAlpha(WarContext* context, f32 a)
 // ---------------------------------------------------------------------------
 static SDL_FRect renderTransformRect(WarContext* context, rect r)
 {
-    WarRenderState* s = renderGetState(context);
+    WarRenderState* s = wr_renderGetState(context);
     f32 sx = s->scaleX;
     f32 sy = s->scaleY;
 
@@ -74,9 +74,9 @@ static SDL_FRect renderTransformRect(WarContext* context, rect r)
     return (SDL_FRect){ x, y, w, h };
 }
 
-static void renderTransformPoint(WarContext* context, f32 lx, f32 ly, f32* ox, f32* oy)
+static void wr_renderTransformPoint(WarContext* context, f32 lx, f32 ly, f32* ox, f32* oy)
 {
-    WarRenderState* s = renderGetState(context);
+    WarRenderState* s = wr_renderGetState(context);
     *ox = s->offsetX + lx * s->scaleX;
     *oy = s->offsetY + ly * s->scaleY;
 }
@@ -84,43 +84,43 @@ static void renderTransformPoint(WarContext* context, f32 lx, f32 ly, f32* ox, f
 // ---------------------------------------------------------------------------
 // Primitive rendering (replaces nvgFillRect, nvgStrokeRect, nvgStrokeLine, etc.)
 // ---------------------------------------------------------------------------
-static void renderSetDrawColor(WarContext* context, WarColor color)
+static void wr_renderSetDrawColor(WarContext* context, WarColor color)
 {
-    WarRenderState* s = renderGetState(context);
+    WarRenderState* s = wr_renderGetState(context);
     u8 a = (u8)(color.a * s->alpha);
     SDL_SetRenderDrawColor(context->renderer, color.r, color.g, color.b, a);
 }
 
-void renderFillRect(WarContext* context, rect r, WarColor color)
+void wr_fillRect(WarContext* context, rect r, WarColor color)
 {
     SDL_FRect dr = renderTransformRect(context, r);
-    renderSetDrawColor(context, color);
+    wr_renderSetDrawColor(context, color);
     SDL_SetRenderDrawBlendMode(context->renderer, SDL_BLENDMODE_BLEND);
     SDL_RenderFillRect(context->renderer, &dr);
 }
 
-void renderFillRects(WarContext* context, s32 count, rect r[], WarColor color)
+void wr_fillRects(WarContext* context, s32 count, rect r[], WarColor color)
 {
     for (s32 i = 0; i < count; i++)
-        renderFillRect(context, r[i], color);
+        wr_fillRect(context, r[i], color);
 }
 
-void renderStrokeRect(WarContext* context, rect r, WarColor color, f32 width)
+void wr_strokeRect(WarContext* context, rect r, WarColor color, f32 width)
 {
     NOT_USED(width); // SDL_RenderRect always draws 1px lines; good enough at 320x200
     SDL_FRect dr = renderTransformRect(context, r);
-    renderSetDrawColor(context, color);
+    wr_renderSetDrawColor(context, color);
     SDL_SetRenderDrawBlendMode(context->renderer, SDL_BLENDMODE_BLEND);
     SDL_RenderRect(context->renderer, &dr);
 }
 
-void renderStrokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, f32 width)
+void wr_strokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, f32 width)
 {
     NOT_USED(width);
     f32 x1, y1, x2, y2;
-    renderTransformPoint(context, p1.x, p1.y, &x1, &y1);
-    renderTransformPoint(context, p2.x, p2.y, &x2, &y2);
-    renderSetDrawColor(context, color);
+    wr_renderTransformPoint(context, p1.x, p1.y, &x1, &y1);
+    wr_renderTransformPoint(context, p2.x, p2.y, &x2, &y2);
+    wr_renderSetDrawColor(context, color);
     SDL_SetRenderDrawBlendMode(context->renderer, SDL_BLENDMODE_BLEND);
     SDL_RenderLine(context->renderer, x1, y1, x2, y2);
 }
@@ -128,11 +128,11 @@ void renderStrokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, f32
 // ---------------------------------------------------------------------------
 // Image / sub-image rendering (replaces nvgRenderSubImage and batch system)
 // ---------------------------------------------------------------------------
-void renderSubImage(WarContext* context, SDL_Texture* texture, rect rs, rect rd, vec2 scale)
+void wr_subImage(WarContext* context, SDL_Texture* texture, rect rs, rect rd, vec2 scale)
 {
     if (!texture) return;
 
-    WarRenderState* s = renderGetState(context);
+    WarRenderState* s = wr_renderGetState(context);
 
     // Combine the per-call scale with the render-state scale
     f32 combinedSX = s->scaleX * scale.x;
@@ -174,9 +174,9 @@ void renderSubImage(WarContext* context, SDL_Texture* texture, rect rs, rect rd,
 }
 
 // ---------------------------------------------------------------------------
-// Color helper (replaces getColorFromList which returned NVGcolor)
+// Color helper (replaces wr_getColorFromList which returned NVGcolor)
 // ---------------------------------------------------------------------------
-WarColor getColorFromList(s32 index)
+WarColor wr_getColorFromList(s32 index)
 {
     const u32 colors[] =
     {

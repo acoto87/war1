@@ -12,4 +12,4 @@ typedef struct
     f32 briefingDuration;
 } WarCampaignMapData;
 
-WarCampaignMapData getCampaignData(WarCampaignMapType type);
+WarCampaignMapData wcamp_getCampaignData(WarCampaignMapType type);

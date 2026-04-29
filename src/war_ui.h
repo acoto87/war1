@@ -6,16 +6,16 @@
 
 #include "war_types.h"
 
-bool isUIEntity(WarEntity* entity);
+bool wui_isUIEntity(WarEntity* entity);
 
-void clearUIText(WarEntity* uiText);
-void setUIText(WarEntity* uiText, String text);
+void wui_clearUIText(WarEntity* uiText);
+void wui_setUIText(WarEntity* uiText, String text);
 
-void setUIImage(WarEntity* uiImage, s32 frameIndex);
-void setUIRectWidth(WarEntity* uiRect, s32 width);
+void wui_setUIImage(WarEntity* uiImage, s32 frameIndex);
+void wui_setUIRectWidth(WarEntity* uiRect, s32 width);
 
-void clearUITooltip(WarEntity* uiButton);
-void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text);
+void wui_clearUITooltip(WarEntity* uiButton);
+void wui_setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text);
 
 #define setUIEntityStatus(uiEntity, value) ((uiEntity)->ui.enabled = (value))
 
@@ -38,16 +38,16 @@ void setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, S
 #define setUIButtonHotKey(uiEntity, key) ((uiEntity)->button.hotKey = (key))
 #define setUIButtonClickHandler(uiEntity, handler) ((uiEntity)->button.clickHandler = (handler))
 
-void setUIButtonStatusByName(WarContext* context, StringView name, bool enabled);
-void setUIButtonInteractiveByName(WarContext* context, StringView name, bool interactive);
-void setUIButtonHotKeyByName(WarContext* context, StringView name, WarKeys key);
-void setUIEntityStatusByName(WarContext* context, StringView name, bool enabled);
+void wui_setUIButtonStatusByName(WarContext* context, StringView name, bool enabled);
+void wui_setUIButtonInteractiveByName(WarContext* context, StringView name, bool interactive);
+void wui_setUIButtonHotKeyByName(WarContext* context, StringView name, WarKeys key);
+void wui_setUIEntityStatusByName(WarContext* context, StringView name, bool enabled);
 
-WarEntity* createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, String text, vec2 position);
-WarEntity* createUIRect(WarContext* context, String name, vec2 position, vec2 size, WarColor color);
-WarEntity* createUIImage(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, vec2 position);
-WarEntity* createUICursor(WarContext* context, String name, WarCursorType type, vec2 position);
-WarEntity* createUITextButton(WarContext* context,
+WarEntity* wui_createUIText(WarContext* context, String name, s32 fontIndex, f32 fontSize, String text, vec2 position);
+WarEntity* wui_createUIRect(WarContext* context, String name, vec2 position, vec2 size, WarColor color);
+WarEntity* wui_createUIImage(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, vec2 position);
+WarEntity* wui_createUICursor(WarContext* context, String name, WarCursorType type, vec2 position);
+WarEntity* wui_createUITextButton(WarContext* context,
                               String name,
                               s32 fontIndex,
                               f32 fontSize,
@@ -56,15 +56,15 @@ WarEntity* createUITextButton(WarContext* context,
                               WarSpriteResourceRef backgroundPressedRef,
                               WarSpriteResourceRef foregroundRef,
                               vec2 position);
-WarEntity* createUIImageButton(WarContext* context,
+WarEntity* wui_createUIImageButton(WarContext* context,
                                String name,
                                WarSpriteResourceRef backgroundNormalRef,
                                WarSpriteResourceRef backgroundPressedRef,
                                WarSpriteResourceRef foregroundRef,
                                vec2 position);
 
-void changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
-void updateUICursor(WarContext* context);
-void updateUIButtons(WarContext* context, bool hotKeysEnabled);
+void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+void wui_updateUICursor(WarContext* context);
+void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled);
 
-void renderUIEntities(WarContext* context);
+void wui_renderUIEntities(WarContext* context);

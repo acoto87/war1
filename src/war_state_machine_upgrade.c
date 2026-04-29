@@ -1,8 +1,8 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
-WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
+WarState* wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
 {
-    WarState* state = createState(context, entity, WAR_STATE_UPGRADE);
+    WarState* state = wst_createState(context, entity, WAR_STATE_UPGRADE);
     state->upgrade.upgradeToBuild = upgradeToBuild;
     state->upgrade.buildTime = 0;
     state->upgrade.totalBuildTime = buildTime;
@@ -10,36 +10,36 @@ WarState* createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeT
     return state;
 }
 
-void enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
     unit->buildPercent = 0;
 }
 
-void leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
 }
 
-void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -47,16 +47,16 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (state->upgrade.cancelled)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, false);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         return;
     }
 
-    f32 buildSpeed = getMapScaledSpeed(context, context->deltaTime);
+    f32 buildSpeed = wmap_getMapScaledSpeed(context, context->deltaTime);
 
     // if hurry up cheat is enabled, speed up the build time by 5000%
     if (map->hurryUp)
@@ -72,13 +72,13 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
         unit->buildPercent = 1;
 
         // increase the level of the upgrade
-        increaseUpgradeLevel(context, player, state->upgrade.upgradeToBuild);
+        we_increaseUpgradeLevel(context, player, state->upgrade.upgradeToBuild);
         assert(checkUpgradeLevel(player, state->upgrade.upgradeToBuild));
 
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, false);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         return;
@@ -87,7 +87,7 @@ void updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
     unit->buildPercent = percentabf01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
 }
 
-void freeUpgradeState(WarContext* context, WarState* state)
+void wst_freeUpgradeState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

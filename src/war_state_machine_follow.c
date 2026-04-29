@@ -1,51 +1,51 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_units.h"
 
-WarState* createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
+WarState* wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
 {
-    WarState* state = createState(context, entity, WAR_STATE_FOLLOW);
+    WarState* state = wst_createState(context, entity, WAR_STATE_FOLLOW);
     state->follow.targetEntityId = targetEntityId;
     state->follow.targetTile = targetTile;
     state->follow.distance = distance;
     return state;
 }
 
-void enterFollowState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
-    vec2 start = getUnitCenterPosition(entity, true);
+    vec2 start = wu_getUnitCenterPosition(entity, true);
     vec2 end = state->follow.targetTile;
 
     if (state->follow.targetEntityId)
     {
-        WarEntity* targetEntity = findEntity(context, (WarEntityId)state->follow.targetEntityId);
+        WarEntity* targetEntity = we_findEntity(context, (WarEntityId)state->follow.targetEntityId);
 
         if (isUnit(targetEntity))
         {
             // if the target entity is an unit the instead of using the tile where
             // the player click, use a point on the target unit that is closer to
             // the following unit
-            end = unitPointOnTarget(entity, targetEntity);
+            end = wu_unitPointOnTarget(entity, targetEntity);
         }
         else
         {
-            end = getUnitCenterPosition(targetEntity, true);
+            end = wu_getUnitCenterPosition(targetEntity, true);
         }
     }
 
@@ -54,39 +54,39 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
     // if the unit is already in distance, go to idle
     if (distance <= state->follow.distance)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* waitState = createWaitState(context, entity, getMapScaledTime(context, MOVE_WAIT_TIME));
+            WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
             waitState->nextState = state;
-            changeNextState(context, entity, waitState, false, true);
+            wst_changeNextState(context, entity, waitState, false, true);
         }
 
         return;
     }
 
-    WarMapPath path = findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
+    WarMapPath path = wpath_findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
 
     // if there is no path to the target, go to idle
     if (path.nodes.count <= 1)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
-        freePath(path);
+        wpath_freePath(path);
         return;
     }
 
-    WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
+    WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
     moveState->nextState = state;
-    changeNextState(context, entity, moveState, false, true);
+    wst_changeNextState(context, entity, moveState, false, true);
 
-    freePath(path);
+    wpath_freePath(path);
 }
 
-void freeFollowState(WarContext* context, WarState* state)
+void wst_freeFollowState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

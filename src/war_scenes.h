@@ -12,10 +12,10 @@ typedef struct
     WarSceneFunc updateSceneFunc;
 } WarSceneDescriptor;
 
-WarScene* createScene(WarContext* context, WarSceneType type);
-void freeScene(WarScene* scene);
+WarScene* wsc_createScene(WarContext* context, WarSceneType type);
+void wsc_freeScene(WarScene* scene);
 
-void enterScene(WarContext* context);
-void updateScene(WarContext* context);
-void renderScene(WarContext* context);
-void leaveScene(WarContext* context);
+void wsc_enterScene(WarContext* context);
+void wsc_updateScene(WarContext* context);
+void wsc_renderScene(WarContext* context);
+void wsc_leaveScene(WarContext* context);

@@ -1,60 +1,60 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_actions.h"
 
-WarState* createDeathState(WarContext* context, WarEntity* entity)
+WarState* wst_createDeathState(WarContext* context, WarEntity* entity)
 {
-    WarState* state = createState(context, entity, WAR_STATE_DEATH);
+    WarState* state = wst_createState(context, entity, WAR_STATE_DEATH);
     return state;
 }
 
-void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
-    setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
-    removeEntityFromSelection(context, entity->id);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
+    wmap_removeEntityFromSelection(context, entity->id);
 
-    s32 deathDuration = getActionDuration(entity, WAR_ACTION_TYPE_DEATH);
-    setDelay(state, getMapScaledTime(context, __frameCountToSeconds(deathDuration)));
+    s32 deathDuration = wact_getActionDuration(entity, WAR_ACTION_TYPE_DEATH);
+    setDelay(state, wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration)));
 }
 
-void leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
     // when this state updates there will have pass the time of the death animation,
     // using the delay field of the states
-    if (!isCorpseUnit(entity) && !isCatapultUnit(entity) &&
-        !isSummonUnit(entity) && !isSkeletonUnit(entity))
+    if (!wu_isCorpseUnit(entity) && !wu_isCatapultUnit(entity) &&
+        !wu_isSummonUnit(entity) && !wu_isSkeletonUnit(entity))
     {
-        vec2 position = getUnitCenterPosition(entity, true);
+        vec2 position = wu_getUnitCenterPosition(entity, true);
 
-        WarUnitType corpseType = getUnitRace(entity) == WAR_RACE_ORCS
+        WarUnitType corpseType = wu_getUnitRace(entity) == WAR_RACE_ORCS
             ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
 
-        WarEntity* corpse = createUnit(context, corpseType, (s32)position.x, (s32)position.y, 4,
+        WarEntity* corpse = we_createUnit(context, corpseType, (s32)position.x, (s32)position.y, 4,
                                        WAR_RESOURCE_NONE, 0, true);
 
-        setUnitDirection(corpse, getUnitDirection(entity));
+        wu_setUnitDirection(corpse, wu_getUnitDirection(entity));
 
-        WarState* deathState = createDeathState(context, corpse);
-        changeNextState(context, corpse, deathState, true, true);
+        WarState* deathState = wst_createDeathState(context, corpse);
+        wst_changeNextState(context, corpse, deathState, true, true);
     }
 
-    removeEntityById(context, entity->id);
+    we_removeEntityById(context, entity->id);
 }
 
-void freeDeathState(WarContext* context, WarState* state)
+void wst_freeDeathState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

@@ -1,4 +1,4 @@
-#include "war_resources.h"
+﻿#include "war_resources.h"
 
 #include <assert.h>
 
@@ -27,24 +27,24 @@
 #define reads32(arr, index) (*(s32*)((arr) + (index)))
 #define readu32(arr, index) (*(u32*)((arr) + (index)))
 
-WarResource* getOrCreateResource(WarContext* context, s32 index)
+WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
 {
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
     if (!context->resources[index])
     {
         logInfo("Creating resource: %d", index);
-        context->resources[index] = (WarResource*)war_malloc(sizeof(WarResource));
+        context->resources[index] = (WarResource*)wm_alloc(sizeof(WarResource));
     }
     return context->resources[index];
 }
 
-void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
+void wres_getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
 {
     memset(paletteData, 0, PALETTE_LENGTH);
 
     if (palette1Index)
     {
-        WarResource* palette1 = getOrCreateResource(context, palette1Index);
+        WarResource* palette1 = wres_getOrCreateResource(context, palette1Index);
         u8 *palette1Data = palette1->paletteData.colors;
         memcpy(paletteData, palette1Data, PALETTE_LENGTH);
     }
@@ -53,7 +53,7 @@ void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *p
     // for now leave it whenever there is specified a second palette on the entry
     if (palette2Index)
     {
-        WarResource* palette2 = getOrCreateResource(context, palette2Index);
+        WarResource* palette2 = wres_getOrCreateResource(context, palette2Index);
         u8 *palette2Data = palette2->paletteData.colors;
 
         for (s32 i = 0; i < 128; ++i)
@@ -82,7 +82,7 @@ void getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *p
     }
 }
 
-void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
+void wres_loadPaletteResource(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -94,11 +94,11 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
 
     if (rawResource.length < PALETTE_LENGTH)
     {
-        rawResource.data = (u8*)war_realloc(rawResource.data, PALETTE_LENGTH);
+        rawResource.data = (u8*)wm_realloc(rawResource.data, PALETTE_LENGTH);
         memset(rawResource.data + rawResource.length, 0, PALETTE_LENGTH - rawResource.length);
     }
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_PALETTE;
 
     for (s32 i = 0; i < PALETTE_LENGTH; ++i)
@@ -173,10 +173,10 @@ void loadPaletteResource(WarContext *context, DatabaseEntry *entry)
     }
 }
 
-void loadImageResource(WarContext *context, DatabaseEntry *entry)
+void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
 {
     u8 paletteData[PALETTE_LENGTH];
-    getPalette(context, entry->param1, entry->param2, paletteData);
+    wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -189,7 +189,7 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
     u16 width = readu16(rawResource.data, 0);
     u16 height = readu16(rawResource.data, 2);
 
-    u8 *pixels = (u8*)war_malloc(width * height * 4 * sizeof(u8));
+    u8 *pixels = (u8*)wm_alloc(width * height * 4 * sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
@@ -208,17 +208,17 @@ void loadImageResource(WarContext *context, DatabaseEntry *entry)
         }
     }
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_IMAGE;
     resource->imageData.width = width;
     resource->imageData.height = height;
     resource->imageData.pixels = pixels;
 }
 
-void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
+void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
 {
     u8 paletteData[PALETTE_LENGTH];
-    getPalette(context, entry->param1, entry->param2, paletteData);
+    wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -232,7 +232,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     u8 frameWidth = readu8(rawResource.data, 2);
     u8 frameHeight = readu8(rawResource.data, 3);
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     for (s32 i = 0; i < framesCount; ++i)
     {
         WarSpriteFrame *frame = &resource->spriteData.frames[i];
@@ -241,7 +241,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
         frame->w = readu8(rawResource.data, 4 + i * 8 + 2);
         frame->h = readu8(rawResource.data, 4 + i * 8 + 3);
         frame->off = readu32(rawResource.data, 4 + i * 8 + 4);
-        frame->data = (u8*)war_malloc(frameWidth * frameHeight * 4 * sizeof(u8));
+        frame->data = (u8*)wm_alloc(frameWidth * frameHeight * 4 * sizeof(u8));
 
         // found in war1tool.c, don't know if is needed
         // if (off < 0) {  // High bit of width
@@ -293,7 +293,7 @@ void loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     resource->spriteData.frameHeight = frameHeight;
 }
 
-s32 loadStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset)
+s32 wres_loadStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startEntitiesCount = 0;
 
@@ -326,7 +326,7 @@ s32 loadStartEntities(WarResource* resource, WarRawResource* rawResource, s32 of
     return offset;
 }
 
-s32 loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 offset)
+s32 wres_loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startRoadsCount = 0;
 
@@ -354,7 +354,7 @@ s32 loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 offse
     return offset;
 }
 
-s32 loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 offset)
+s32 wres_loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startWallsCount = 0;
 
@@ -382,7 +382,7 @@ s32 loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 offse
     return offset;
 }
 
-s32 loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource, s32 offset)
+s32 wres_loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startGoldminesCount = 0;
 
@@ -408,7 +408,7 @@ s32 loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource,
     return offset;
 }
 
-s32 loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset, WarCustomMapConfiguration* configuration, u8 player)
+s32 wres_loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset, WarCustomMapConfiguration* configuration, u8 player)
 {
     NOT_USED(resource);
 
@@ -434,7 +434,7 @@ s32 loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, 
     return offset;
 }
 
-void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
+void wres_loadLevelInfo(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarMapTilesetType tilesetType = (WarMapTilesetType)entry->param1;
@@ -449,7 +449,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
 
     u32 allowId = readu32(rawResource.data, 0);
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_INFO;
     resource->levelInfo.allowId = allowId;
     resource->levelInfo.allowedHumanUnits = 1;
@@ -613,7 +613,7 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
         // start of the map it gets replaced by the actual race townhall and farm
         //
         s32 goldminesOffset = readu16(rawResource.data, offset);
-        loadCustomStartGoldmines(resource, &rawResource, goldminesOffset);
+        wres_loadCustomStartGoldmines(resource, &rawResource, goldminesOffset);
         offset += 2;
 
         // skip marker 0xFFFF
@@ -625,13 +625,13 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
             configuration->startEntitiesCount = 0;
 
             s32 offset0 = readu16(rawResource.data, offset);
-            offset0 = loadCustomStartEntities(resource, &rawResource, offset0, configuration, 0);
-            offset0 = loadStartRoads(resource, &rawResource, offset0 + 2);
+            offset0 = wres_loadCustomStartEntities(resource, &rawResource, offset0, configuration, 0);
+            offset0 = wres_loadStartRoads(resource, &rawResource, offset0 + 2);
             offset += 2;
 
             s32 offset1 = readu16(rawResource.data, offset);
-            offset1 = loadCustomStartEntities(resource, &rawResource, offset1, configuration, 1);
-            offset1 = loadStartRoads(resource, &rawResource, offset1 + 2);
+            offset1 = wres_loadCustomStartEntities(resource, &rawResource, offset1, configuration, 1);
+            offset1 = wres_loadStartRoads(resource, &rawResource, offset1 + 2);
             offset += 2;
 
             // skip marker 0xFFFF
@@ -643,26 +643,26 @@ void loadLevelInfo(WarContext *context, DatabaseEntry *entry)
     else
     {
         // starting units
-        offset = loadStartEntities(resource, &rawResource, offset);
+        offset = wres_loadStartEntities(resource, &rawResource, offset);
 
         // skip marker 0xFFFF
         offset += 2;
 
         // roads
-        offset = loadStartRoads(resource, &rawResource, offset);
+        offset = wres_loadStartRoads(resource, &rawResource, offset);
 
         // skip marker 0xFFFF
         offset += 2;
 
         // walls
-        offset = loadStartWalls(resource, &rawResource, offset);
+        offset = wres_loadStartWalls(resource, &rawResource, offset);
 
         // skip marker 0xFFFF
         offset += 2;
     }
 }
 
-void loadLevelVisual(WarContext *context, DatabaseEntry *entry)
+void wres_loadLevelVisual(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -672,7 +672,7 @@ void loadLevelVisual(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_VISUAL;
     for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
@@ -680,7 +680,7 @@ void loadLevelVisual(WarContext *context, DatabaseEntry *entry)
     }
 }
 
-void loadLevelPassable(WarContext *context, DatabaseEntry *entry)
+void wres_loadLevelPassable(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -690,7 +690,7 @@ void loadLevelPassable(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_PASSABLE;
     for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
@@ -699,7 +699,7 @@ void loadLevelPassable(WarContext *context, DatabaseEntry *entry)
     }
 }
 
-void loadTileset(WarContext *context, DatabaseEntry *entry)
+void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -709,7 +709,7 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    WarResource *tiles = getOrCreateResource(context, entry->param1);
+    WarResource *tiles = wres_getOrCreateResource(context, entry->param1);
 
     // Local scratch zone for the temporary indexed-colour tile buffer.
     memzone_t* scratch = mz_init(TILESET_WIDTH * TILESET_HEIGHT + 1024);
@@ -749,9 +749,9 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
     }
 
     u8 paletteData[PALETTE_LENGTH];
-    getPalette(context, tiles->tilesData.palette1, tiles->tilesData.palette2, paletteData);
+    wres_getPalette(context, tiles->tilesData.palette1, tiles->tilesData.palette2, paletteData);
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TILESET;
     resource->tilesetData.tilesCount = rawResource.length / 8;
 
@@ -774,10 +774,10 @@ void loadTileset(WarContext *context, DatabaseEntry *entry)
     mz_destroy(scratch);
 }
 
-void loadTiles(WarContext *context, DatabaseEntry *entry)
+void wres_loadTiles(WarContext *context, DatabaseEntry *entry)
 {
     u8 paletteData[PALETTE_LENGTH];
-    getPalette(context, entry->param1, entry->param2, paletteData);
+    wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -787,15 +787,15 @@ void loadTiles(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TILES;
     resource->tilesData.palette1 = entry->param1;
     resource->tilesData.palette2 = entry->param2;
-    resource->tilesData.data = (u8*)war_malloc(rawResource.length * sizeof(u8));
+    resource->tilesData.data = (u8*)wm_alloc(rawResource.length * sizeof(u8));
     memcpy(resource->tilesData.data, rawResource.data, rawResource.length);
 }
 
-void loadText(WarContext *context, DatabaseEntry *entry)
+void wres_loadText(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -805,14 +805,14 @@ void loadText(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TEXT;
     resource->textData.length = rawResource.length;
-    resource->textData.text = (char *)war_malloc(resource->textData.length * sizeof(char));
+    resource->textData.text = (char *)wm_alloc(resource->textData.length * sizeof(char));
     memcpy(resource->textData.text, rawResource.data, resource->textData.length);
 }
 
-void loadXmi(WarContext *context, DatabaseEntry *entry)
+void wres_loadXmi(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -826,21 +826,21 @@ void loadXmi(WarContext *context, DatabaseEntry *entry)
     size32 xmiLength = rawResource.length;
 
     size32 midLength;
-    uint8_t* midData = transcodeXmiToMid(context, xmiData, xmiLength, &midLength);
+    uint8_t* midData = wa_transcodeXmiToMid(context, xmiData, xmiLength, &midLength);
     if (!midData)
     {
         logError("Can't convert XMI file of resource %d", index);
         return;
     }
 
-    WarResource* resource = getOrCreateResource(context, index);
+    WarResource* resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_XMID;
     resource->audio.data = midData;
     assert(midLength <= INT32_MAX);
     resource->audio.length = (s32)midLength;
 }
 
-void loadWave(WarContext *context, DatabaseEntry *entry)
+void wres_loadWave(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -889,10 +889,10 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
 
     // this data is at 11025khz, and for playing it back I needed at 44100khz
     // so I need to upsampling it here by a factor of 4
-    u8* newData = changeSampleRate(context, data, dataLength, 4);
+    u8* newData = wa_changeSampleRate(context, data, dataLength, 4);
     s32 newDataLength = dataLength * 4;
 
-    WarResource* resource = getOrCreateResource(context, index);
+    WarResource* resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_WAVE;
     resource->audio.data = newData;
     resource->audio.length = newDataLength;
@@ -900,7 +900,7 @@ void loadWave(WarContext *context, DatabaseEntry *entry)
     mz_destroy(scratch);
 }
 
-void loadVoc(WarContext *context, DatabaseEntry *entry)
+void wres_loadVoc(WarContext *context, DatabaseEntry *entry)
 {
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -950,10 +950,10 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
 
     // this data is at 11025khz, and for playing it back I needed at 44100khz
     // so I need to upsampling it here by a factor of 4
-    u8* newData = changeSampleRate(context, data, dataLength, 4);
+    u8* newData = wa_changeSampleRate(context, data, dataLength, 4);
     s32 newDataLength = dataLength * 4;
 
-    WarResource* resource = getOrCreateResource(context, index);
+    WarResource* resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_VOC;
     resource->audio.data = newData;
     resource->audio.length = newDataLength;
@@ -961,10 +961,10 @@ void loadVoc(WarContext *context, DatabaseEntry *entry)
     mz_destroy(scratch);
 }
 
-void loadCursor(WarContext* context, DatabaseEntry* entry)
+void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
 {
     u8 paletteData[PALETTE_LENGTH];
-    getPalette(context, entry->param1, entry->param2, paletteData);
+    wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -979,7 +979,7 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
     u16 width = readu16(rawResource.data, 4);
     u16 height = readu16(rawResource.data, 6);
 
-    u8 *pixels = (u8*)war_malloc(width * height * 4 * sizeof(u8));
+    u8 *pixels = (u8*)wm_alloc(width * height * 4 * sizeof(u8));
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 8 + i);
@@ -998,7 +998,7 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
         }
     }
 
-    WarResource *resource = getOrCreateResource(context, index);
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_CURSOR;
     resource->cursor.hotx = hotx;
     resource->cursor.hoty = hoty;
@@ -1007,85 +1007,85 @@ void loadCursor(WarContext* context, DatabaseEntry* entry)
     resource->cursor.pixels = pixels;
 }
 
-void loadResource(WarContext *context, DatabaseEntry *entry)
+void wres_loadResource(WarContext *context, DatabaseEntry *entry)
 {
     switch (entry->type)
     {
         case DB_ENTRY_TYPE_PALETTE:
         {
-            loadPaletteResource(context, entry);
+            wres_loadPaletteResource(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_IMAGE:
         {
-            loadImageResource(context, entry);
+            wres_loadImageResource(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_SPRITE:
         {
-            loadSpriteResource(context, entry);
+            wres_loadSpriteResource(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_LEVEL_INFO:
         {
-            loadLevelInfo(context, entry);
+            wres_loadLevelInfo(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_LEVEL_VISUAL:
         {
-            loadLevelVisual(context, entry);
+            wres_loadLevelVisual(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_LEVEL_PASSABLE:
         {
-            loadLevelPassable(context, entry);
+            wres_loadLevelPassable(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_TILESET:
         {
-            loadTileset(context, entry);
+            wres_loadTileset(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_TILES:
         {
-            loadTiles(context, entry);
+            wres_loadTiles(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_TEXT:
         {
-            loadText(context, entry);
+            wres_loadText(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_XMID:
         {
-            loadXmi(context, entry);
+            wres_loadXmi(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_WAVE:
         {
-            loadWave(context, entry);
+            wres_loadWave(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_VOC:
         {
-            loadVoc(context, entry);
+            wres_loadVoc(context, entry);
             break;
         }
 
         case DB_ENTRY_TYPE_CURSOR:
         {
-            loadCursor(context, entry);
+            wres_loadCursor(context, entry);
             break;
         }
 

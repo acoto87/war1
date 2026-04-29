@@ -790,90 +790,90 @@ const WarUnitCommandBaseData commandsBaseData[] =
 
     // unit commands
     { WAR_COMMAND_MOVE,                     move,                   WAR_KEY_M,          0, 1, WSV_INIT("MOVE"),                         WSV_INIT("") },
-    { WAR_COMMAND_STOP,                     stop,                   WAR_KEY_S,          0, 1, WSV_INIT("STOP"),                         WSV_INIT("") },
-    { WAR_COMMAND_HARVEST,                  harvest,                WAR_KEY_H,          0, 1, WSV_INIT("HARVEST LUMBER/MINE GOLD"),     WSV_INIT("") },
+    { WAR_COMMAND_STOP,                     wcmd_stop,                   WAR_KEY_S,          0, 1, WSV_INIT("STOP"),                         WSV_INIT("") },
+    { WAR_COMMAND_HARVEST,                  wcmd_harvest,                WAR_KEY_H,          0, 1, WSV_INIT("HARVEST LUMBER/MINE GOLD"),     WSV_INIT("") },
     { WAR_COMMAND_DELIVER,                  deliver,                WAR_KEY_T,         16, 1, WSV_INIT("RETURN GOODS TO TOWN HALL"),    WSV_INIT("") },
     { WAR_COMMAND_REPAIR,                   repair,                 WAR_KEY_R,          0, 1, WSV_INIT("REPAIR"),                       WSV_INIT("") },
-    { WAR_COMMAND_BUILD_BASIC,              buildBasic,             WAR_KEY_B,          0, 1, WSV_INIT("BUILD BASIC STRUCTURE"),        WSV_INIT("") },
-    { WAR_COMMAND_BUILD_ADVANCED,           buildAdvanced,          WAR_KEY_A,          6, 1, WSV_INIT("BUILD ADVANCED STRUCTURE"),     WSV_INIT("") },
+    { WAR_COMMAND_BUILD_BASIC,              wcmd_buildBasic,             WAR_KEY_B,          0, 1, WSV_INIT("BUILD BASIC STRUCTURE"),        WSV_INIT("") },
+    { WAR_COMMAND_BUILD_ADVANCED,           wcmd_buildAdvanced,          WAR_KEY_A,          6, 1, WSV_INIT("BUILD ADVANCED STRUCTURE"),     WSV_INIT("") },
     { WAR_COMMAND_ATTACK,                   attack,                 WAR_KEY_A,          0, 1, WSV_INIT("ATTACK"),                       WSV_INIT("") },
 
     // train commands
-    { WAR_COMMAND_TRAIN_FOOTMAN,            trainFootman,           WAR_KEY_F,          6, 1, WSV_INIT("TRAIN FOOTMAN"),                WSV_INIT("TRAINING A FOOTMAN")        },
-    { WAR_COMMAND_TRAIN_GRUNT,              trainGrunt,             WAR_KEY_U,          8, 1, WSV_INIT("TRAIN GRUNT"),                  WSV_INIT("TRAINING A GRUNT")          },
-    { WAR_COMMAND_TRAIN_PEASANT,            trainPeasant,           WAR_KEY_P,          6, 1, WSV_INIT("TRAIN PEASANT"),                WSV_INIT("TRAINING A PEASANT")        },
-    { WAR_COMMAND_TRAIN_PEON,               trainPeon,              WAR_KEY_P,          6, 1, WSV_INIT("TRAIN PEON"),                   WSV_INIT("TRAINING A PEON")           },
-    { WAR_COMMAND_TRAIN_CATAPULT_HUMANS,    trainHumanCatapult,     WAR_KEY_T,          8, 1, WSV_INIT("BUILD CATAPULT"),               WSV_INIT("TRAINING A CATAPULT CREW")  },
-    { WAR_COMMAND_TRAIN_CATAPULT_ORCS,      trainOrcCatapult,       WAR_KEY_T,          8, 1, WSV_INIT("BUILD CATAPULT"),               WSV_INIT("TRAINING A CATAPULT CREW")  },
-    { WAR_COMMAND_TRAIN_KNIGHT,             trainKnight,            WAR_KEY_K,          6, 1, WSV_INIT("TRAIN KNIGHT"),                 WSV_INIT("TRAINING A KNIGHT")         },
-    { WAR_COMMAND_TRAIN_RAIDER,             trainRaider,            WAR_KEY_R,          6, 1, WSV_INIT("TRAIN RAIDER"),                 WSV_INIT("TRAINING A RAIDER")         },
-    { WAR_COMMAND_TRAIN_ARCHER,             trainArcher,            WAR_KEY_A,          6, 1, WSV_INIT("TRAIN ARCHER"),                 WSV_INIT("TRAINING AN ARCHER")        },
-    { WAR_COMMAND_TRAIN_SPEARMAN,           trainSpearman,          WAR_KEY_S,          6, 1, WSV_INIT("TRAIN SPEARMAN"),               WSV_INIT("TRAINING A SPEARMAN")       },
-    { WAR_COMMAND_TRAIN_CONJURER,           trainConjurer,          WAR_KEY_T,          0, 1, WSV_INIT("TRAIN CONJURER"),               WSV_INIT("TRAINING A CONJURER")       },
-    { WAR_COMMAND_TRAIN_WARLOCK,            trainWarlock,           WAR_KEY_T,          0, 1, WSV_INIT("TRAIN WARLOCK"),                WSV_INIT("TRAINING A WARLOCK")        },
-    { WAR_COMMAND_TRAIN_CLERIC,             trainCleric,            WAR_KEY_T,          0, 1, WSV_INIT("TRAIN CLERIC"),                 WSV_INIT("TRAINING A CLERIC")         },
-    { WAR_COMMAND_TRAIN_NECROLYTE,          trainNecrolyte,         WAR_KEY_T,          0, 1, WSV_INIT("TRAIN NECROLYTE"),              WSV_INIT("TRAINING A NECROLYTE")      },
+    { WAR_COMMAND_TRAIN_FOOTMAN,            wcmd_trainFootman,           WAR_KEY_F,          6, 1, WSV_INIT("TRAIN FOOTMAN"),                WSV_INIT("TRAINING A FOOTMAN")        },
+    { WAR_COMMAND_TRAIN_GRUNT,              wcmd_trainGrunt,             WAR_KEY_U,          8, 1, WSV_INIT("TRAIN GRUNT"),                  WSV_INIT("TRAINING A GRUNT")          },
+    { WAR_COMMAND_TRAIN_PEASANT,            wcmd_trainPeasant,           WAR_KEY_P,          6, 1, WSV_INIT("TRAIN PEASANT"),                WSV_INIT("TRAINING A PEASANT")        },
+    { WAR_COMMAND_TRAIN_PEON,               wcmd_trainPeon,              WAR_KEY_P,          6, 1, WSV_INIT("TRAIN PEON"),                   WSV_INIT("TRAINING A PEON")           },
+    { WAR_COMMAND_TRAIN_CATAPULT_HUMANS,    wcmd_trainHumanCatapult,     WAR_KEY_T,          8, 1, WSV_INIT("BUILD CATAPULT"),               WSV_INIT("TRAINING A CATAPULT CREW")  },
+    { WAR_COMMAND_TRAIN_CATAPULT_ORCS,      wcmd_trainOrcCatapult,       WAR_KEY_T,          8, 1, WSV_INIT("BUILD CATAPULT"),               WSV_INIT("TRAINING A CATAPULT CREW")  },
+    { WAR_COMMAND_TRAIN_KNIGHT,             wcmd_trainKnight,            WAR_KEY_K,          6, 1, WSV_INIT("TRAIN KNIGHT"),                 WSV_INIT("TRAINING A KNIGHT")         },
+    { WAR_COMMAND_TRAIN_RAIDER,             wcmd_trainRaider,            WAR_KEY_R,          6, 1, WSV_INIT("TRAIN RAIDER"),                 WSV_INIT("TRAINING A RAIDER")         },
+    { WAR_COMMAND_TRAIN_ARCHER,             wcmd_trainArcher,            WAR_KEY_A,          6, 1, WSV_INIT("TRAIN ARCHER"),                 WSV_INIT("TRAINING AN ARCHER")        },
+    { WAR_COMMAND_TRAIN_SPEARMAN,           wcmd_trainSpearman,          WAR_KEY_S,          6, 1, WSV_INIT("TRAIN SPEARMAN"),               WSV_INIT("TRAINING A SPEARMAN")       },
+    { WAR_COMMAND_TRAIN_CONJURER,           wcmd_trainConjurer,          WAR_KEY_T,          0, 1, WSV_INIT("TRAIN CONJURER"),               WSV_INIT("TRAINING A CONJURER")       },
+    { WAR_COMMAND_TRAIN_WARLOCK,            wcmd_trainWarlock,           WAR_KEY_T,          0, 1, WSV_INIT("TRAIN WARLOCK"),                WSV_INIT("TRAINING A WARLOCK")        },
+    { WAR_COMMAND_TRAIN_CLERIC,             wcmd_trainCleric,            WAR_KEY_T,          0, 1, WSV_INIT("TRAIN CLERIC"),                 WSV_INIT("TRAINING A CLERIC")         },
+    { WAR_COMMAND_TRAIN_NECROLYTE,          wcmd_trainNecrolyte,         WAR_KEY_T,          0, 1, WSV_INIT("TRAIN NECROLYTE"),              WSV_INIT("TRAINING A NECROLYTE")      },
 
     // spell commands
-    { WAR_COMMAND_SPELL_HEALING,            castHeal,               WAR_KEY_H,          0, 1, WSV_INIT("HEALING"),                      WSV_INIT("")                          },
-    { WAR_COMMAND_SPELL_POISON_CLOUD,       castPoisonCloud,        WAR_KEY_P,          9, 1, WSV_INIT("CLOUD OF POISON"),              WSV_INIT("")                          },
-    { WAR_COMMAND_SPELL_FAR_SIGHT,          castFarSight,           WAR_KEY_F,          0, 1, WSV_INIT("FAR SEEING"),                   WSV_INIT("")                          },
-    { WAR_COMMAND_SPELL_DARK_VISION,        castDarkVision,         WAR_KEY_D,          0, 1, WSV_INIT("DARK VISION"),                  WSV_INIT("")                          },
-    { WAR_COMMAND_SPELL_INVISIBILITY,       castInvisibility,       WAR_KEY_I,          0, 1, WSV_INIT("INVISIBILITY"),                 WSV_INIT("")                          },
-    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       castUnHolyArmor,        WAR_KEY_U,          0, 1, WSV_INIT("UNHOLY ARMOR"),                 WSV_INIT("")                          },
-    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       castRainOfFire,         WAR_KEY_R,          0, 1, WSV_INIT("RAIN OF FIRE"),                 WSV_INIT("")                          },
-    { WAR_COMMAND_SPELL_RAISE_DEAD,         castRaiseDead,          WAR_KEY_R,          0, 1, WSV_INIT("RAISE DEAD"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_HEALING,            wcmd_castHeal,               WAR_KEY_H,          0, 1, WSV_INIT("HEALING"),                      WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_POISON_CLOUD,       wcmd_castPoisonCloud,        WAR_KEY_P,          9, 1, WSV_INIT("CLOUD OF POISON"),              WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_FAR_SIGHT,          wcmd_castFarSight,           WAR_KEY_F,          0, 1, WSV_INIT("FAR SEEING"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_DARK_VISION,        wcmd_castDarkVision,         WAR_KEY_D,          0, 1, WSV_INIT("DARK VISION"),                  WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_INVISIBILITY,       wcmd_castInvisibility,       WAR_KEY_I,          0, 1, WSV_INIT("INVISIBILITY"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       wcmd_castUnHolyArmor,        WAR_KEY_U,          0, 1, WSV_INIT("UNHOLY ARMOR"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_RAIN_OF_FIRE,       wcmd_castRainOfFire,         WAR_KEY_R,          0, 1, WSV_INIT("RAIN OF FIRE"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_SPELL_RAISE_DEAD,         wcmd_castRaiseDead,          WAR_KEY_R,          0, 1, WSV_INIT("RAISE DEAD"),                   WSV_INIT("")                          },
 
     // summons
-    { WAR_COMMAND_SUMMON_SCORPION,          summonScorpion,         WAR_KEY_O,          9, 1, WSV_INIT("SUMMON SCORPIONS"),             WSV_INIT("")                          },
-    { WAR_COMMAND_SUMMON_SPIDER,            summonSpider,           WAR_KEY_R,         12, 1, WSV_INIT("SUMMON SPIDERS"),               WSV_INIT("")                          },
-    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   summonWaterElemental,   WAR_KEY_W,          7, 1, WSV_INIT("SUMMON WATER ELEMENTAL"),       WSV_INIT("")                          },
-    { WAR_COMMAND_SUMMON_DAEMON,            summonDaemon,           WAR_KEY_D,          7, 1, WSV_INIT("SUMMON DAEMON"),                WSV_INIT("")                          },
+    { WAR_COMMAND_SUMMON_SCORPION,          wcmd_summonScorpion,         WAR_KEY_O,          9, 1, WSV_INIT("SUMMON SCORPIONS"),             WSV_INIT("")                          },
+    { WAR_COMMAND_SUMMON_SPIDER,            wcmd_summonSpider,           WAR_KEY_R,         12, 1, WSV_INIT("SUMMON SPIDERS"),               WSV_INIT("")                          },
+    { WAR_COMMAND_SUMMON_WATER_ELEMENTAL,   wcmd_summonWaterElemental,   WAR_KEY_W,          7, 1, WSV_INIT("SUMMON WATER ELEMENTAL"),       WSV_INIT("")                          },
+    { WAR_COMMAND_SUMMON_DAEMON,            wcmd_summonDaemon,           WAR_KEY_D,          7, 1, WSV_INIT("SUMMON DAEMON"),                WSV_INIT("")                          },
 
     // build commands
-    { WAR_COMMAND_BUILD_FARM_HUMANS,        buildFarmHumans,        WAR_KEY_F,          6, 1, WSV_INIT("BUILD FARM"),                   WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_FARM_ORCS,          buildFarmOrcs,          WAR_KEY_F,          6, 1, WSV_INIT("BUILD FARM"),                   WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_BARRACKS_HUMANS,    buildBarracksHumans,    WAR_KEY_B,          6, 1, WSV_INIT("BUILD BARRACKS"),               WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_BARRACKS_ORCS,      buildBarracksOrcs,      WAR_KEY_B,          6, 1, WSV_INIT("BUILD BARRACKS"),               WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_CHURCH,             buildChurch,            WAR_KEY_U,          8, 1, WSV_INIT("BUILD CHURCH"),                 WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_TEMPLE,             buildTemple,            WAR_KEY_E,          7, 1, WSV_INIT("BUILD TEMPLE"),                 WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_TOWER_HUMANS,       buildTowerHumans,       WAR_KEY_T,          6, 1, WSV_INIT("BUILD TOWER"),                  WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_TOWER_ORCS,         buildTowerOrcs,         WAR_KEY_T,          6, 1, WSV_INIT("BUILD TOWER"),                  WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_TOWNHALL_HUMANS,    buildTownHallHumans,    WAR_KEY_H,         11, 1, WSV_INIT("BUILD TOWN HALL"),              WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_TOWNHALL_ORCS,      buildTownHallOrcs,      WAR_KEY_H,         11, 1, WSV_INIT("BUILD TOWN HALL"),              WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_LUMBERMILL_HUMANS,  buildLumbermillHumans,  WAR_KEY_L,          6, 1, WSV_INIT("BUILD LUMBER MILL"),            WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_LUMBERMILL_ORCS,    buildLumbermillOrcs,    WAR_KEY_L,          6, 1, WSV_INIT("BUILD LUMBER MILL"),            WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_STABLE,             buildStable,            WAR_KEY_S,          6, 1, WSV_INIT("BUILD STABLES"),                WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_KENNEL,             buildKennel,            WAR_KEY_K,          6, 1, WSV_INIT("BUILD KENNEL"),                 WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,  buildBlacksmithHumans,  WAR_KEY_B,          6, 1, WSV_INIT("BUILD BLACKSMITH"),             WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_BLACKSMITH_ORCS,    buildBlacksmithOrcs,    WAR_KEY_B,          6, 1, WSV_INIT("BUILD BLACKSMITH"),             WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_ROAD,               buildRoad,              WAR_KEY_R,          6, 1, WSV_INIT("BUILD ROAD"),                   WSV_INIT("")                          },
-    { WAR_COMMAND_BUILD_WALL,               buildWall,              WAR_KEY_W,          6, 1, WSV_INIT("BUILD WALL"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_FARM_HUMANS,        wcmd_buildFarmHumans,        WAR_KEY_F,          6, 1, WSV_INIT("BUILD FARM"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_FARM_ORCS,          wcmd_buildFarmOrcs,          WAR_KEY_F,          6, 1, WSV_INIT("BUILD FARM"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_BARRACKS_HUMANS,    wcmd_buildBarracksHumans,    WAR_KEY_B,          6, 1, WSV_INIT("BUILD BARRACKS"),               WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_BARRACKS_ORCS,      wcmd_buildBarracksOrcs,      WAR_KEY_B,          6, 1, WSV_INIT("BUILD BARRACKS"),               WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_CHURCH,             wcmd_buildChurch,            WAR_KEY_U,          8, 1, WSV_INIT("BUILD CHURCH"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TEMPLE,             wcmd_buildTemple,            WAR_KEY_E,          7, 1, WSV_INIT("BUILD TEMPLE"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TOWER_HUMANS,       wcmd_buildTowerHumans,       WAR_KEY_T,          6, 1, WSV_INIT("BUILD TOWER"),                  WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TOWER_ORCS,         wcmd_buildTowerOrcs,         WAR_KEY_T,          6, 1, WSV_INIT("BUILD TOWER"),                  WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TOWNHALL_HUMANS,    wcmd_buildTownHallHumans,    WAR_KEY_H,         11, 1, WSV_INIT("BUILD TOWN HALL"),              WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_TOWNHALL_ORCS,      wcmd_buildTownHallOrcs,      WAR_KEY_H,         11, 1, WSV_INIT("BUILD TOWN HALL"),              WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_LUMBERMILL_HUMANS,  wcmd_buildLumbermillHumans,  WAR_KEY_L,          6, 1, WSV_INIT("BUILD LUMBER MILL"),            WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_LUMBERMILL_ORCS,    wcmd_buildLumbermillOrcs,    WAR_KEY_L,          6, 1, WSV_INIT("BUILD LUMBER MILL"),            WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_STABLE,             wcmd_buildStable,            WAR_KEY_S,          6, 1, WSV_INIT("BUILD STABLES"),                WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_KENNEL,             wcmd_buildKennel,            WAR_KEY_K,          6, 1, WSV_INIT("BUILD KENNEL"),                 WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_BLACKSMITH_HUMANS,  wcmd_buildBlacksmithHumans,  WAR_KEY_B,          6, 1, WSV_INIT("BUILD BLACKSMITH"),             WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_BLACKSMITH_ORCS,    wcmd_buildBlacksmithOrcs,    WAR_KEY_B,          6, 1, WSV_INIT("BUILD BLACKSMITH"),             WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_ROAD,               wcmd_buildRoad,              WAR_KEY_R,          6, 1, WSV_INIT("BUILD ROAD"),                   WSV_INIT("")                          },
+    { WAR_COMMAND_BUILD_WALL,               wcmd_buildWall,              WAR_KEY_W,          6, 1, WSV_INIT("BUILD WALL"),                   WSV_INIT("")                          },
 
     // upgrades
-    { WAR_COMMAND_UPGRADE_SWORDS,           upgradeSwords,          WAR_KEY_W,          9, 1, WSV_INIT("UPGRADE SWORD STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
-    { WAR_COMMAND_UPGRADE_AXES,             upgradeAxes,            WAR_KEY_A,          8, 1, WSV_INIT("UPGRADE AXE STRENGTH"),         WSV_INIT("RESEARCHING WEAPONRY")      },
-    { WAR_COMMAND_UPGRADE_SHIELD_HUMANS,    upgradeHumanShields,    WAR_KEY_H,          9, 1, WSV_INIT("UPGRADE SHIELD STRENGTH"),      WSV_INIT("RESEARCHING ARMOR")         },
-    { WAR_COMMAND_UPGRADE_SHIELD_ORCS,      upgradeOrcsShields,     WAR_KEY_H,          9, 1, WSV_INIT("UPGRADE SHIELD STRENGTH"),      WSV_INIT("RESEARCHING ARMOR")         },
-    { WAR_COMMAND_UPGRADE_ARROWS,           upgradeArrows,          WAR_KEY_U,          0, 1, WSV_INIT("UPGRADE ARROW STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
-    { WAR_COMMAND_UPGRADE_SPEARS,           upgradeSpears,          WAR_KEY_U,          0, 1, WSV_INIT("UPGRADE SPEAR STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
-    { WAR_COMMAND_UPGRADE_HORSES,           upgradeHorses,          WAR_KEY_B,          0, 1, WSV_INIT("BREED FASTER HORSES"),          WSV_INIT("BREADING BETTER STOCK")     },
-    { WAR_COMMAND_UPGRADE_WOLVES,           upgradeWolves,          WAR_KEY_B,          0, 1, WSV_INIT("BREED FASTER WOLVES"),          WSV_INIT("BREADING BETTER STOCK")     },
-    { WAR_COMMAND_UPGRADE_SCORPION,         upgradeScorpions,       WAR_KEY_M,          9, 1, WSV_INIT("RESEARCH MINOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_SPIDER,           upgradeSpiders,         WAR_KEY_M,          9, 1, WSV_INIT("RESEARCH MINOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_RAIN_OF_FIRE,     upgradeRainOfFire,      WAR_KEY_R,          9, 1, WSV_INIT("RESEARCH RAIN OF FIRE"),        WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_POISON_CLOUD,     upgradePoisonCloud,     WAR_KEY_P,         18, 1, WSV_INIT("RESEARCH CLOUD OF POISON"),     WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_WATER_ELEMENTAL,  upgradeWaterElemental,  WAR_KEY_A,         10, 1, WSV_INIT("RESEARCH MAJOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_DAEMON,           upgradeDaemon,          WAR_KEY_A,         10, 1, WSV_INIT("RESEARCH MAJOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_HEALING,          upgradeHealing,         WAR_KEY_H,          9, 1, WSV_INIT("RESEARCH HEALING"),             WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_RAISE_DEAD,       upgradeRaiseDead,       WAR_KEY_R,          9, 1, WSV_INIT("RESEARCH RAISING DEAD"),        WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_FAR_SIGHT,        upgradeFarSight,        WAR_KEY_F,          9, 1, WSV_INIT("RESEARCH FAR SEEING"),          WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_DARK_VISION,      upgradeDarkVision,      WAR_KEY_D,          9, 1, WSV_INIT("RESEARCH DARK VISION"),         WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_INVISIBILITY,     upgradeInvisibility,    WAR_KEY_I,          9, 1, WSV_INIT("RESEARCH INVISIBILITY"),        WSV_INIT("RESEARCHING NEW SPELL")     },
-    { WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,     upgradeUnholyArmor,     WAR_KEY_U,          9, 1, WSV_INIT("RESEARCH UNHOLY ARMOR"),        WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_SWORDS,           wcmd_upgradeSwords,          WAR_KEY_W,          9, 1, WSV_INIT("UPGRADE SWORD STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
+    { WAR_COMMAND_UPGRADE_AXES,             wcmd_upgradeAxes,            WAR_KEY_A,          8, 1, WSV_INIT("UPGRADE AXE STRENGTH"),         WSV_INIT("RESEARCHING WEAPONRY")      },
+    { WAR_COMMAND_UPGRADE_SHIELD_HUMANS,    wcmd_upgradeHumanShields,    WAR_KEY_H,          9, 1, WSV_INIT("UPGRADE SHIELD STRENGTH"),      WSV_INIT("RESEARCHING ARMOR")         },
+    { WAR_COMMAND_UPGRADE_SHIELD_ORCS,      wcmd_upgradeOrcsShields,     WAR_KEY_H,          9, 1, WSV_INIT("UPGRADE SHIELD STRENGTH"),      WSV_INIT("RESEARCHING ARMOR")         },
+    { WAR_COMMAND_UPGRADE_ARROWS,           wcmd_upgradeArrows,          WAR_KEY_U,          0, 1, WSV_INIT("UPGRADE ARROW STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
+    { WAR_COMMAND_UPGRADE_SPEARS,           wcmd_upgradeSpears,          WAR_KEY_U,          0, 1, WSV_INIT("UPGRADE SPEAR STRENGTH"),       WSV_INIT("RESEARCHING WEAPONRY")      },
+    { WAR_COMMAND_UPGRADE_HORSES,           wcmd_upgradeHorses,          WAR_KEY_B,          0, 1, WSV_INIT("BREED FASTER HORSES"),          WSV_INIT("BREADING BETTER STOCK")     },
+    { WAR_COMMAND_UPGRADE_WOLVES,           wcmd_upgradeWolves,          WAR_KEY_B,          0, 1, WSV_INIT("BREED FASTER WOLVES"),          WSV_INIT("BREADING BETTER STOCK")     },
+    { WAR_COMMAND_UPGRADE_SCORPION,         wcmd_upgradeScorpions,       WAR_KEY_M,          9, 1, WSV_INIT("RESEARCH MINOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_SPIDER,           wcmd_upgradeSpiders,         WAR_KEY_M,          9, 1, WSV_INIT("RESEARCH MINOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_RAIN_OF_FIRE,     wcmd_upgradeRainOfFire,      WAR_KEY_R,          9, 1, WSV_INIT("RESEARCH RAIN OF FIRE"),        WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_POISON_CLOUD,     wcmd_upgradePoisonCloud,     WAR_KEY_P,         18, 1, WSV_INIT("RESEARCH CLOUD OF POISON"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_WATER_ELEMENTAL,  wcmd_upgradeWaterElemental,  WAR_KEY_A,         10, 1, WSV_INIT("RESEARCH MAJOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_DAEMON,           wcmd_upgradeDaemon,          WAR_KEY_A,         10, 1, WSV_INIT("RESEARCH MAJOR SUMMONING"),     WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_HEALING,          wcmd_upgradeHealing,         WAR_KEY_H,          9, 1, WSV_INIT("RESEARCH HEALING"),             WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_RAISE_DEAD,       wcmd_upgradeRaiseDead,       WAR_KEY_R,          9, 1, WSV_INIT("RESEARCH RAISING DEAD"),        WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_FAR_SIGHT,        wcmd_upgradeFarSight,        WAR_KEY_F,          9, 1, WSV_INIT("RESEARCH FAR SEEING"),          WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_DARK_VISION,      wcmd_upgradeDarkVision,      WAR_KEY_D,          9, 1, WSV_INIT("RESEARCH DARK VISION"),         WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_INVISIBILITY,     wcmd_upgradeInvisibility,    WAR_KEY_I,          9, 1, WSV_INIT("RESEARCH INVISIBILITY"),        WSV_INIT("RESEARCHING NEW SPELL")     },
+    { WAR_COMMAND_UPGRADE_UNHOLY_ARMOR,     wcmd_upgradeUnholyArmor,     WAR_KEY_U,          9, 1, WSV_INIT("RESEARCH UNHOLY ARMOR"),        WSV_INIT("RESEARCHING NEW SPELL")     },
 
-    // cancel
-    { WAR_COMMAND_CANCEL,                   cancel,                 WAR_KEY_ESC,        0, 3, WSV_INIT("ESC - CANCEL"),                 WSV_INIT("")                          }
+    // wcmd_cancel
+    { WAR_COMMAND_CANCEL,                   wcmd_cancel,                 WAR_KEY_ESC,        0, 3, WSV_INIT("ESC - CANCEL"),                 WSV_INIT("")                          }
 };
 
 typedef struct
@@ -970,7 +970,7 @@ typedef struct
     WarClickHandler clickHandler;
 } WarUnitCommandData;
 
-WarUnitData getUnitData(WarUnitType type)
+WarUnitData wu_getUnitData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(unitsData);
@@ -981,7 +981,7 @@ WarUnitData getUnitData(WarUnitType type)
     return unitsData[index];
 }
 
-WarWorkerData getWorkerData(WarUnitType type)
+WarWorkerData wu_getWorkerData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(workersData);
@@ -992,7 +992,7 @@ WarWorkerData getWorkerData(WarUnitType type)
     return workersData[index];
 }
 
-WarBuildingData getBuildingData(WarUnitType type)
+WarBuildingData wu_getBuildingData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(buildingsData);
@@ -1003,7 +1003,7 @@ WarBuildingData getBuildingData(WarUnitType type)
     return buildingsData[index];
 }
 
-WarRoadData getRoadData(WarRoadPieceType type)
+WarRoadData wu_getRoadData(WarRoadPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(roadsData);
@@ -1014,7 +1014,7 @@ WarRoadData getRoadData(WarRoadPieceType type)
     return roadsData[index];
 }
 
-WarWallData getWallData(WarWallPieceType type)
+WarWallData wu_getWallData(WarWallPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(wallsData);
@@ -1025,7 +1025,7 @@ WarWallData getWallData(WarWallPieceType type)
     return wallsData[index];
 }
 
-WarRuinData getRuinData(WarRuinPieceType type)
+WarRuinData wu_getRuinData(WarRuinPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(ruinsData);
@@ -1036,7 +1036,7 @@ WarRuinData getRuinData(WarRuinPieceType type)
     return ruinsData[index];
 }
 
-WarTreeData getTreeData(WarTreeTileType type)
+WarTreeData wu_getTreeData(WarTreeTileType type)
 {
     s32 index = 0;
     s32 length = arrayLength(treesData);
@@ -1047,7 +1047,7 @@ WarTreeData getTreeData(WarTreeTileType type)
     return treesData[index];
 }
 
-WarUpgradeData getUpgradeData(WarUpgradeType type)
+WarUpgradeData wu_getUpgradeData(WarUpgradeType type)
 {
     s32 index = 0;
     s32 length = arrayLength(upgradesData);
@@ -1058,7 +1058,7 @@ WarUpgradeData getUpgradeData(WarUpgradeType type)
     return upgradesData[index];
 }
 
-WarSpellData getSpellData(WarSpellType type)
+WarSpellData wu_getSpellData(WarSpellType type)
 {
     s32 index = 0;
     s32 length = arrayLength(spellData);
@@ -1069,7 +1069,7 @@ WarSpellData getSpellData(WarSpellType type)
     return spellData[index];
 }
 
-WarUnitStats getUnitStats(WarUnitType type)
+WarUnitStats wu_getUnitStats(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(unitStats);
@@ -1080,7 +1080,7 @@ WarUnitStats getUnitStats(WarUnitType type)
     return unitStats[index];
 }
 
-WarBuildingStats getBuildingStats(WarUnitType type)
+WarBuildingStats wu_getBuildingStats(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(buildingStats);
@@ -1091,7 +1091,7 @@ WarBuildingStats getBuildingStats(WarUnitType type)
     return buildingStats[index];
 }
 
-WarUpgradeStats getUpgradeStats(WarUpgradeType type)
+WarUpgradeStats wu_getUpgradeStats(WarUpgradeType type)
 {
     s32 index = 0;
     s32 length = arrayLength(upgradeStats);
@@ -1102,7 +1102,7 @@ WarUpgradeStats getUpgradeStats(WarUpgradeType type)
     return upgradeStats[index];
 }
 
-WarSpellStats getSpellStats(WarSpellType type)
+WarSpellStats wu_getSpellStats(WarSpellType type)
 {
     s32 index = 0;
     s32 length = arrayLength(spellStats);
@@ -1113,7 +1113,7 @@ WarSpellStats getSpellStats(WarSpellType type)
     return spellStats[index];
 }
 
-WarSpellMapping getSpellMapping(WarSpellType type)
+WarSpellMapping wu_getSpellMapping(WarSpellType type)
 {
     s32 index = 0;
     s32 length = arrayLength(spellMappings);
@@ -1124,7 +1124,7 @@ WarSpellMapping getSpellMapping(WarSpellType type)
     return spellMappings[index];
 }
 
-WarUnitCommandBaseData getCommandBaseData(WarUnitCommandType type)
+WarUnitCommandBaseData wu_getCommandBaseData(WarUnitCommandType type)
 {
     s32 index = 0;
     s32 length = arrayLength(commandsBaseData);
@@ -1135,7 +1135,7 @@ WarUnitCommandBaseData getCommandBaseData(WarUnitCommandType type)
     return commandsBaseData[index];
 }
 
-WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)
+WarUnitCommandMapping wu_getCommandMapping(WarUnitCommandType type)
 {
     s32 index = 0;
     s32 length = arrayLength(commandMappings);
@@ -1146,7 +1146,7 @@ WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)
     return commandMappings[index];
 }
 
-WarUnitCommandMapping getCommandMappingFromUnitType(WarUnitType unitType)
+WarUnitCommandMapping wu_getCommandMappingFromUnitType(WarUnitType unitType)
 {
     s32 index = 0;
     s32 length = index + 30;
@@ -1157,7 +1157,7 @@ WarUnitCommandMapping getCommandMappingFromUnitType(WarUnitType unitType)
     return commandMappings[index];
 }
 
-WarUnitCommandMapping getCommandMappingFromUpgradeType(WarUpgradeType upgradeType)
+WarUnitCommandMapping wu_getCommandMappingFromUpgradeType(WarUpgradeType upgradeType)
 {
     s32 index = 30;
     s32 length = index + 20;
@@ -1168,7 +1168,7 @@ WarUnitCommandMapping getCommandMappingFromUpgradeType(WarUpgradeType upgradeTyp
     return commandMappings[index];
 }
 
-WarUnitCommandMapping getCommandMappingFromSpellType(WarSpellType spellType)
+WarUnitCommandMapping wu_getCommandMappingFromSpellType(WarSpellType spellType)
 {
     s32 index = 50;
     s32 length = arrayLength(commandMappings);
@@ -1185,7 +1185,7 @@ WarUnitCommandMapping getCommandMappingFromSpellType(WarSpellType spellType)
 #define isWall(entity) ((entity)->type == WAR_ENTITY_TYPE_WALL)
 #define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
 
-bool isDudeUnitType(WarUnitType type)
+bool wu_isDudeUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1225,7 +1225,7 @@ bool isDudeUnitType(WarUnitType type)
     }
 }
 
-bool isBuildingUnitType(WarUnitType type)
+bool wu_isBuildingUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1255,7 +1255,7 @@ bool isBuildingUnitType(WarUnitType type)
     }
 }
 
-bool isWorkerUnitType(WarUnitType type)
+bool wu_isWorkerUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1268,7 +1268,7 @@ bool isWorkerUnitType(WarUnitType type)
     }
 }
 
-bool isWarriorUnitType(WarUnitType type)
+bool wu_isWarriorUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1304,7 +1304,7 @@ bool isWarriorUnitType(WarUnitType type)
     }
 }
 
-bool isRangeUnitType(WarUnitType type)
+bool wu_isRangeUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1325,7 +1325,7 @@ bool isRangeUnitType(WarUnitType type)
     }
 }
 
-bool isMeleeUnitType(WarUnitType type)
+bool wu_isMeleeUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1350,7 +1350,7 @@ bool isMeleeUnitType(WarUnitType type)
     }
 }
 
-bool isFistUnitType(WarUnitType type)
+bool wu_isFistUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1366,7 +1366,7 @@ bool isFistUnitType(WarUnitType type)
     }
 }
 
-bool isSwordUnitType(WarUnitType type)
+bool wu_isSwordUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1385,7 +1385,7 @@ bool isSwordUnitType(WarUnitType type)
     }
 }
 
-bool isMagicUnitType(WarUnitType type)
+bool wu_isMagicUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1405,7 +1405,7 @@ bool isMagicUnitType(WarUnitType type)
     }
 }
 
-bool isCorpseUnitType(WarUnitType type)
+bool wu_isCorpseUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1418,7 +1418,7 @@ bool isCorpseUnitType(WarUnitType type)
     }
 }
 
-bool isCatapultUnitType(WarUnitType type)
+bool wu_isCatapultUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1431,7 +1431,7 @@ bool isCatapultUnitType(WarUnitType type)
     }
 }
 
-bool isConjurerOrWarlockUnitType(WarUnitType type)
+bool wu_isConjurerOrWarlockUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1444,7 +1444,7 @@ bool isConjurerOrWarlockUnitType(WarUnitType type)
     }
 }
 
-bool isClericOrNecrolyteUnitType(WarUnitType type)
+bool wu_isClericOrNecrolyteUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1457,7 +1457,7 @@ bool isClericOrNecrolyteUnitType(WarUnitType type)
     }
 }
 
-bool isSummonUnitType(WarUnitType type)
+bool wu_isSummonUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1474,82 +1474,82 @@ bool isSummonUnitType(WarUnitType type)
 }
 
 
-bool isDudeUnit(WarEntity* entity)
+bool wu_isDudeUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isDudeUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isDudeUnitType(entity->unit.type);
 }
 
-bool isBuildingUnit(WarEntity* entity)
+bool wu_isBuildingUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isBuildingUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isBuildingUnitType(entity->unit.type);
 }
 
-bool isWorkerUnit(WarEntity* entity)
+bool wu_isWorkerUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isWorkerUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isWorkerUnitType(entity->unit.type);
 }
 
-bool isWarriorUnit(WarEntity* entity)
+bool wu_isWarriorUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isWarriorUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isWarriorUnitType(entity->unit.type);
 }
 
-bool isRangeUnit(WarEntity* entity)
+bool wu_isRangeUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isRangeUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isRangeUnitType(entity->unit.type);
 }
 
-bool isMeleeUnit(WarEntity* entity)
+bool wu_isMeleeUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isMeleeUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isMeleeUnitType(entity->unit.type);
 }
 
-bool isFistUnit(WarEntity* entity)
+bool wu_isFistUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isFistUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isFistUnitType(entity->unit.type);
 }
 
-bool isSwordUnit(WarEntity* entity)
+bool wu_isSwordUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isSwordUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isSwordUnitType(entity->unit.type);
 }
 
-bool isMagicUnit(WarEntity* entity)
+bool wu_isMagicUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isMagicUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isMagicUnitType(entity->unit.type);
 }
 
-bool isCorpseUnit(WarEntity* entity)
+bool wu_isCorpseUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isCorpseUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isCorpseUnitType(entity->unit.type);
 }
 
-bool isCatapultUnit(WarEntity* entity)
+bool wu_isCatapultUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isCatapultUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isCatapultUnitType(entity->unit.type);
 }
 
-bool isConjurerOrWarlockUnit(WarEntity* entity)
+bool wu_isConjurerOrWarlockUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isConjurerOrWarlockUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isConjurerOrWarlockUnitType(entity->unit.type);
 }
 
-bool isClericOrNecrolyteUnit(WarEntity* entity)
+bool wu_isClericOrNecrolyteUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isClericOrNecrolyteUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isClericOrNecrolyteUnitType(entity->unit.type);
 }
 
-bool isSummonUnit(WarEntity* entity)
+bool wu_isSummonUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isSummonUnitType(entity->unit.type);
+    return isUnit(entity) && wu_isSummonUnitType(entity->unit.type);
 }
 
-bool isSkeletonUnit(WarEntity* entity)
+bool wu_isSkeletonUnit(WarEntity* entity)
 {
     return isUnit(entity) && entity->unit.type == WAR_UNIT_SKELETON;
 }
 
-WarRace getUnitTypeRace(WarUnitType type)
+WarRace wu_getUnitTypeRace(WarUnitType type)
 {
     switch (type)
     {
@@ -1607,23 +1607,23 @@ WarRace getUnitTypeRace(WarUnitType type)
     }
 }
 
-WarRace getUnitRace(WarEntity* entity)
+WarRace wu_getUnitRace(WarEntity* entity)
 {
     if (!isUnit(entity))
         return WAR_RACE_NEUTRAL;
 
-    return getUnitTypeRace(entity->unit.type);
+    return wu_getUnitTypeRace(entity->unit.type);
 }
 
-#define isHumanUnit(entity) (getUnitRace(entity) == WAR_RACE_HUMANS)
-#define isOrcUnit(entity) (getUnitRace(entity) == WAR_RACE_ORCS)
-#define isNeutralUnit(entity) (getUnitRace(entity) == WAR_RACE_NEUTRAL)
+#define isHumanUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_HUMANS)
+#define isOrcUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_ORCS)
+#define isNeutralUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_NEUTRAL)
 
-WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race);
+WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race);
 
-WarProjectileType getProjectileType(WarUnitType type)
+WarProjectileType wu_getProjectileType(WarUnitType type)
 {
-    assert(isRangeUnitType(type));
+    assert(wu_isRangeUnitType(type));
 
     switch (type)
     {
@@ -1661,12 +1661,12 @@ WarProjectileType getProjectileType(WarUnitType type)
     }
 }
 
-bool isFriendlyUnit(WarContext* context, WarEntity* entity);
-bool isEnemyUnit(WarContext* context, WarEntity* entity);
-bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other);
-bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
+bool wu_isFriendlyUnit(WarContext* context, WarEntity* entity);
+bool wu_isEnemyUnit(WarContext* context, WarEntity* entity);
+bool wu_areEnemies(WarContext* context, WarEntity* entity, WarEntity* other);
+bool wu_canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
 
-WarUnitType getTownHallOfRace(WarRace race)
+WarUnitType wu_getTownHallOfRace(WarRace race)
 {
     switch (race)
     {
@@ -1676,7 +1676,7 @@ WarUnitType getTownHallOfRace(WarRace race)
     }
 }
 
-WarUnitType getProducerUnitOfType(WarUnitType type)
+WarUnitType wu_getProducerUnitOfType(WarUnitType type)
 {
     switch (type)
     {
@@ -1714,7 +1714,7 @@ WarUnitType getProducerUnitOfType(WarUnitType type)
     }
 }
 
-vec2 getUnitSize(WarEntity* entity)
+vec2 wu_getUnitSize(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -1722,18 +1722,18 @@ vec2 getUnitSize(WarEntity* entity)
     return vec2i(unit->sizex, unit->sizey);
 }
 
-vec2 getUnitFrameSize(WarEntity* entity)
+vec2 wu_getUnitFrameSize(WarEntity* entity)
 {
     WarSpriteComponent* sprite = &entity->sprite;
     return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
 }
 
-rect getUnitFrameRect(WarEntity* entity)
+rect wu_getUnitFrameRect(WarEntity* entity)
 {
-    return rectv(VEC2_ZERO, getUnitFrameSize(entity));
+    return rectv(VEC2_ZERO, wu_getUnitFrameSize(entity));
 }
 
-vec2 getUnitSpriteSize(WarEntity* entity)
+vec2 wu_getUnitSpriteSize(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -1741,75 +1741,75 @@ vec2 getUnitSpriteSize(WarEntity* entity)
     return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
 }
 
-rect getUnitSpriteRect(WarEntity* entity)
+rect wu_getUnitSpriteRect(WarEntity* entity)
 {
-    vec2 frameSize = getUnitFrameSize(entity);
-    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 frameSize = wu_getUnitFrameSize(entity);
+    vec2 unitSize = wu_getUnitSpriteSize(entity);
     vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
     return rectv(pos, unitSize);
 }
 
-vec2 getUnitSpriteCenter(WarEntity* entity)
+vec2 wu_getUnitSpriteCenter(WarEntity* entity)
 {
-    vec2 frameSize = getUnitFrameSize(entity);
-    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 frameSize = wu_getUnitFrameSize(entity);
+    vec2 unitSize = wu_getUnitSpriteSize(entity);
     vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
     return vec2Addv(pos, vec2Half(unitSize));
 }
 
-rect getUnitRect(WarEntity* entity)
+rect wu_getUnitRect(WarEntity* entity)
 {
     assert(isUnit(entity));
 
-    return rectv(entity->transform.position, getUnitSpriteSize(entity));
+    return rectv(entity->transform.position, wu_getUnitSpriteSize(entity));
 }
 
-vec2 getUnitPosition(WarEntity* entity, bool inTiles)
+vec2 wu_getUnitPosition(WarEntity* entity, bool inTiles)
 {
     vec2 position = entity->transform.position;
-    return inTiles ? vec2MapToTileCoordinates(position) : position;
+    return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
 }
 
-vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
+vec2 wu_getUnitCenterPosition(WarEntity* entity, bool inTiles)
 {
     WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = getUnitSpriteSize(entity);
+    vec2 spriteSize = wu_getUnitSpriteSize(entity);
     vec2 unitCenter = vec2Half(spriteSize);
     vec2 position = vec2Addv(transform->position, unitCenter);
-    return inTiles ? vec2MapToTileCoordinates(position) : position;
+    return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
 }
 
-void setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
+void wu_setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
-        position = vec2TileToMapCoordinates(position, true);
+        position = wmap_vec2TileToMapCoordinates(position, true);
     }
 
     entity->transform.position = position;
 }
 
-void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
+void wu_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
-        position = vec2TileToMapCoordinates(position, true);
+        position = wmap_vec2TileToMapCoordinates(position, true);
     }
 
     WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = getUnitSpriteSize(entity);
+    vec2 spriteSize = wu_getUnitSpriteSize(entity);
     vec2 unitCenter = vec2Half(spriteSize);
     transform->position = vec2Subv(position, unitCenter);
 }
 
-WarUnitDirection getUnitDirection(WarEntity* entity)
+WarUnitDirection wu_getUnitDirection(WarEntity* entity)
 {
     assert(isUnit(entity));
 
     return entity->unit.direction;
 }
 
-WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
+WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
 {
     if (x < 0 && y < 0)
         return WAR_DIRECTION_NORTH_WEST;
@@ -1833,22 +1833,22 @@ WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
     return WAR_DIRECTION_NORTH;
 }
 
-void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
+void wu_setUnitDirection(WarEntity* entity, WarUnitDirection direction)
 {
     assert(isUnit(entity));
 
     entity->unit.direction = direction;
 }
 
-void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
+void wu_setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
 {
     assert(isUnit(entity));
 
-    WarUnitDirection direction = getDirectionFromDiff(dx, dy);
-    setUnitDirection(entity, direction);
+    WarUnitDirection direction = wu_getDirectionFromDiff(dx, dy);
+    wu_setUnitDirection(entity, direction);
 }
 
-f32 getUnitActionScale(WarEntity* entity)
+f32 wu_getUnitActionScale(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -1862,57 +1862,57 @@ f32 getUnitActionScale(WarEntity* entity)
     return 1 - entity->unit.speed * 0.1f;
 }
 
-vec2 unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
+vec2 wu_unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
 {
     assert(isUnit(entity));
     assert(isUnit(targetEntity));
 
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 position = wu_getUnitCenterPosition(entity, true);
 
-    vec2 targetPosition = vec2MapToTileCoordinates(targetEntity->transform.position);
-    vec2 unitSize = getUnitSize(targetEntity);
+    vec2 targetPosition = wmap_vec2MapToTileCoordinates(targetEntity->transform.position);
+    vec2 unitSize = wu_getUnitSize(targetEntity);
     rect unitRect = rectv(targetPosition, unitSize);
 
     return getClosestPointOnRect(position, unitRect);
 }
 
-s32 entityTileDistance(WarEntity* entity, vec2 targetPosition)
+s32 wu_entityTileDistance(WarEntity* entity, vec2 targetPosition)
 {
     assert(isUnit(entity));
 
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 position = wu_getUnitCenterPosition(entity, true);
     f32 distance = vec2DistanceInTiles(position, targetPosition);
     return (s32)distance;
 }
 
-bool tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
+bool wu_tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
 {
     assert(range >= 0);
 
-    s32 distance = entityTileDistance(entity, targetTile);
+    s32 distance = wu_entityTileDistance(entity, targetTile);
     return distance <= range;
 }
 
-s32 unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
+s32 wu_unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
 {
     assert(isUnit(entity));
     assert(isUnit(targetEntity));
 
-    vec2 pointOnTarget = unitPointOnTarget(entity, targetEntity);
-    return entityTileDistance(entity, pointOnTarget);
+    vec2 pointOnTarget = wu_unitPointOnTarget(entity, targetEntity);
+    return wu_entityTileDistance(entity, pointOnTarget);
 }
 
-bool unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
+bool wu_unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
 {
     assert(isUnit(entity));
     assert(isUnit(targetEntity));
     assert(range >= 0);
 
-    s32 distance = unitDistanceInTiles(entity, targetEntity);
+    s32 distance = wu_unitDistanceInTiles(entity, targetEntity);
     return distance <= range;
 }
 
-bool isCarryingResources(WarEntity* entity)
+bool wu_isCarryingResources(WarEntity* entity)
 {
     assert(entity);
     assert(isUnit(entity));
@@ -1925,41 +1925,41 @@ bool isCarryingResources(WarEntity* entity)
     }
 }
 
-s32 getUnitSightRange(WarEntity* entity)
+s32 wu_getUnitSightRange(WarEntity* entity)
 {
     assert(isUnit(entity));
 
     s32 sight = 0;
 
-    if (isBuildingUnit(entity))
+    if (wu_isBuildingUnit(entity))
     {
-        WarBuildingStats stats = getBuildingStats(entity->unit.type);
+        WarBuildingStats stats = wu_getBuildingStats(entity->unit.type);
         sight = stats.sight;
     }
     else
     {
-        WarUnitStats stats = getUnitStats(entity->unit.type);
+        WarUnitStats stats = wu_getUnitStats(entity->unit.type);
         sight = stats.sight;
     }
 
     return sight;
 }
 
-bool displayUnitOnMinimap(WarEntity* entity);
-WarColor getUnitColorOnMinimap(WarEntity* entity);
+bool wu_displayUnitOnMinimap(WarEntity* entity);
+WarColor wu_getUnitColorOnMinimap(WarEntity* entity);
 
-s32 getTotalNumberOfDudes(WarContext* context, u8 player);
-s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt);
-s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitType, bool alreadyBuilt);
-s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType);
-s32 getTotalNumberOfUnits(WarContext* context, u8 player);
+s32 wu_getTotalNumberOfDudes(WarContext* context, u8 player);
+s32 wu_getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt);
+s32 wu_getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitType, bool alreadyBuilt);
+s32 wu_getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType);
+s32 wu_getTotalNumberOfUnits(WarContext* context, u8 player);
 
-#define playerHasUnit(context, player, unitType) (getNumberOfUnitsOfType(context, player, unitType) > 0)
-#define playerHasBuilding(context, player, unitType) (getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
+#define playerHasUnit(context, player, unitType) (wu_getNumberOfUnitsOfType(context, player, unitType) > 0)
+#define playerHasBuilding(context, player, unitType) (wu_getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
 
 #define isValidUnitType(type) inRange(type, WAR_UNIT_FOOTMAN, WAR_UNIT_COUNT)
 
-void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
-void getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
-void getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
-WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType);
+void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
+void wu_getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
+void wu_getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
+WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType);

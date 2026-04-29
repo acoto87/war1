@@ -2,7 +2,7 @@
 
 #include "war_log.h"
 
-WarFile* loadWarFile(WarContext* context, StringView filePath)
+WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
 {
     SDL_IOStream *stream = SDL_IOFromFile(wsv_data(filePath), "rb");
     if (!stream)
@@ -13,7 +13,7 @@ WarFile* loadWarFile(WarContext* context, StringView filePath)
 
     Sint64 fileLength = SDL_GetIOSize(stream);
 
-    WarFile *warFile = (WarFile*)war_malloc(sizeof(WarFile));
+    WarFile *warFile = (WarFile*)wm_alloc(sizeof(WarFile));
     SDL_ReadU32LE(stream, &warFile->archiveID);
     SDL_ReadU32LE(stream, &warFile->numberOfEntries);
 
@@ -42,7 +42,7 @@ WarFile* loadWarFile(WarContext* context, StringView filePath)
     if (warFile->type == WAR_FILE_TYPE_UNKNOWN)
     {
         logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.", warFile->archiveID);
-        war_free(warFile);
+        wm_free(warFile);
         SDL_CloseIO(stream);
         return NULL;
     }
@@ -90,7 +90,7 @@ WarFile* loadWarFile(WarContext* context, StringView filePath)
         u32 length = (size & 0x1FFFFFFF);
         bool compressed = (size & 0xE0000000) != 0;
 
-        u8 *data = (u8*)war_malloc(length * sizeof(u8));
+        u8 *data = (u8*)wm_alloc(length * sizeof(u8));
         if (!compressed)
         {
             SDL_ReadIO(stream, data, length);

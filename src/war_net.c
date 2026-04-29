@@ -16,7 +16,7 @@
 #define closeSocket close
 #endif
 
-bool initNetwork(void)
+bool wnet_initNetwork(void)
 {
 #if _WIN32
     WSADATA wsaData;
@@ -31,7 +31,7 @@ bool initNetwork(void)
     return true;
 }
 
-bool cleanNetwork(void)
+bool wnet_cleanNetwork(void)
 {
 #if _WIN32
     s32 status = WSACleanup();
@@ -45,7 +45,7 @@ bool cleanNetwork(void)
     return true;
 }
 
-WarSocket connectToHost(StringView host)
+WarSocket wnet_connectToHost(StringView host)
 {
     const char* hostStr = wsv_data(host);
     struct hostent* hostEntry = gethostbyname(hostStr);
@@ -94,7 +94,7 @@ WarSocket connectToHost(StringView host)
     return sck;
 }
 
-bool requestResource(WarSocket sck, StringView resource, StringView host)
+bool wnet_requestResource(WarSocket sck, StringView resource, StringView host)
 {
     const char* resourceStr = wsv_data(resource);
     const char* hostStr = wsv_data(host);
@@ -150,7 +150,7 @@ bool requestResource(WarSocket sck, StringView resource, StringView host)
     return true;
 }
 
-s32 parseHeadersFromResponse(StringView response, s32 responseLength, StringViewMap* headers)
+s32 wnet_parseHeadersFromResponse(StringView response, s32 responseLength, StringViewMap* headers)
 {
     NOT_USED(responseLength);
     StringView view = response;
@@ -199,7 +199,7 @@ s32 parseHeadersFromResponse(StringView response, s32 responseLength, StringView
     return (s32)(headersEnd + 4);
 }
 
-s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
+s32 wnet_readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
 {
     char* responsePtr = responseBuffer;
     s32 responseLength = 0;
@@ -231,7 +231,7 @@ s32 readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLength)
     return responseLength;
 }
 
-bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePath)
+bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView filePath)
 {
     const char* urlStr = wsv_data(url);
     const char* filePathStr = wsv_data(filePath);
@@ -272,40 +272,40 @@ bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePat
     const char* host = strtok(cut, "/");
     const char* resource = urlStr + shift + strlen(host);
 
-    if (!initNetwork())
+    if (!wnet_initNetwork())
     {
         logError("Couldn't initialize the network.");
         return false;
     }
 
-    WarSocket sck = connectToHost(wsv_fromCString(host));
+    WarSocket sck = wnet_connectToHost(wsv_fromCString(host));
     if (!sck)
     {
         logError("Couldn't connect to host: %s", host);
-        cleanNetwork();
+        wnet_cleanNetwork();
         return false;
     }
 
-    if (!requestResource(sck, wsv_fromCString(resource), wsv_fromCString(host)))
+    if (!wnet_requestResource(sck, wsv_fromCString(resource), wsv_fromCString(host)))
     {
         logError("Couldn't download file from url %s", urlStr);
         closeSocket(sck);
-        cleanNetwork();
+        wnet_cleanNetwork();
         return false;
     }
 
-    char* response = (char*)war_malloc(RESPONSE_MAX_SIZE * sizeof(char));
+    char* response = (char*)wm_alloc(RESPONSE_MAX_SIZE * sizeof(char));
     char* responsePtr = response;
 
-    s32 responseLength = readResponse(sck, response, RESPONSE_MAX_SIZE);
+    s32 responseLength = wnet_readResponse(sck, response, RESPONSE_MAX_SIZE);
 
     if (responseLength < 0)
     {
         logError("Couldn't receive response from url %s", urlStr);
 
         closeSocket(sck);
-        cleanNetwork();
-        war_free(response);
+        wnet_cleanNetwork();
+        wm_free(response);
 
         return false;
     }
@@ -316,8 +316,8 @@ bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePat
         logError("Couldn't create a new file at: %s", filePathStr);
 
         closeSocket(sck);
-        cleanNetwork();
-        war_free(response);
+        wnet_cleanNetwork();
+        wm_free(response);
 
         return false;
     }
@@ -327,8 +327,8 @@ bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePat
         logError("The response was empty from %s", urlStr);
 
         closeSocket(sck);
-        cleanNetwork();
-        war_free(response);
+        wnet_cleanNetwork();
+        wm_free(response);
         SDL_CloseIO(stream);
 
         return true;
@@ -339,7 +339,7 @@ bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePat
     StringViewMap headers;
     StringViewMapInit(&headers, options);
 
-    s32 readFromResponse = parseHeadersFromResponse(wsv_fromParts(response, responseLength), responseLength, &headers);
+    s32 readFromResponse = wnet_parseHeadersFromResponse(wsv_fromParts(response, responseLength), responseLength, &headers);
 
     responsePtr += readFromResponse;
     responseLength -= readFromResponse;
@@ -352,8 +352,8 @@ bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePat
         StringViewMapFree(&headers);
 
         closeSocket(sck);
-        cleanNetwork();
-        war_free(response);
+        wnet_cleanNetwork();
+        wm_free(response);
         SDL_CloseIO(stream);
 
         return false;
@@ -367,8 +367,8 @@ bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePat
         StringViewMapFree(&headers);
 
         closeSocket(sck);
-        cleanNetwork();
-        war_free(response);
+        wnet_cleanNetwork();
+        wm_free(response);
         SDL_CloseIO(stream);
 
         return false;
@@ -382,8 +382,8 @@ bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePat
         StringViewMapFree(&headers);
 
         closeSocket(sck);
-        cleanNetwork();
-        war_free(response);
+        wnet_cleanNetwork();
+        wm_free(response);
         SDL_CloseIO(stream);
 
         return false;
@@ -422,7 +422,7 @@ bool downloadFileFromUrl(WarContext* context, StringView url, StringView filePat
     StringViewMapFree(&headers);
 
     closeSocket(sck);
-    cleanNetwork();
+    wnet_cleanNetwork();
     free(response);
     SDL_CloseIO(stream);
 

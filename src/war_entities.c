@@ -13,7 +13,7 @@
 #include "war_units.h"
 #include "war_map.h"
 
-void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
+void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
     NOT_USED(context);
 
@@ -24,14 +24,14 @@ void addTransformComponent(WarContext* context, WarEntity* entity, vec2 position
     entity->transform.scale = VEC2_ONE;
 }
 
-void removeTransformComponent(WarContext* context, WarEntity* entity)
+void we_removeTransformComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
     entity->transform = (WarTransformComponent){0};
 }
 
-void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite)
+void we_addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite)
 {
     NOT_USED(context);
 
@@ -42,7 +42,7 @@ void addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite
     entity->sprite.sprite = sprite;
 }
 
-void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef)
+void we_addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef)
 {
     if (spriteResourceRef.resourceIndex < 0)
     {
@@ -50,19 +50,19 @@ void addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarS
         return;
     }
 
-    WarSprite sprite = createSpriteFromResourceIndex(context, spriteResourceRef);
-    addSpriteComponent(context, entity, sprite);
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
+    we_addSpriteComponent(context, entity, sprite);
     entity->sprite.resourceIndex = spriteResourceRef.resourceIndex;
 }
 
-void removeSpriteComponent(WarContext* context, WarEntity* entity)
+void we_removeSpriteComponent(WarContext* context, WarEntity* entity)
 {
-    freeSprite(context, entity->sprite.sprite);
+    wspr_freeSprite(context, entity->sprite.sprite);
 
     entity->sprite = (WarSpriteComponent){0};
 }
 
-void addUnitComponent(WarContext* context,
+void we_addUnitComponent(WarContext* context,
                       WarEntity* entity,
                       WarUnitType type,
                       s32 x,
@@ -73,7 +73,7 @@ void addUnitComponent(WarContext* context,
 {
     NOT_USED(context);
 
-    WarUnitData unitData = getUnitData(type);
+    WarUnitData unitData = wu_getUnitData(type);
 
     entity->unit = (WarUnitComponent){0};
     entity->unit.enabled = true;
@@ -100,14 +100,14 @@ void addUnitComponent(WarContext* context,
     entity->unit.actionType = WAR_ACTION_TYPE_IDLE;
 }
 
-void removeUnitComponent(WarContext* context, WarEntity* entity)
+void we_removeUnitComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
     entity->unit = (WarUnitComponent){0};
 }
 
-void addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces)
+void we_addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces)
 {
     NOT_USED(context);
 
@@ -116,7 +116,7 @@ void addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList p
     entity->road.pieces = pieces;
 }
 
-void removeRoadComponent(WarContext* context, WarEntity* entity)
+void we_removeRoadComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -124,7 +124,7 @@ void removeRoadComponent(WarContext* context, WarEntity* entity)
     entity->road = (WarRoadComponent){0};
 }
 
-void addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList pieces)
+void we_addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList pieces)
 {
     NOT_USED(context);
 
@@ -133,7 +133,7 @@ void addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList p
     entity->wall.pieces = pieces;
 }
 
-void removeWallComponent(WarContext* context, WarEntity* entity)
+void we_removeWallComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -141,7 +141,7 @@ void removeWallComponent(WarContext* context, WarEntity* entity)
     entity->wall = (WarWallComponent){0};
 }
 
-void addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces)
+void we_addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces)
 {
     NOT_USED(context);
 
@@ -150,7 +150,7 @@ void addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList p
     entity->ruin.pieces = pieces;
 }
 
-void removeRuinComponent(WarContext* context, WarEntity* entity)
+void we_removeRuinComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -158,7 +158,7 @@ void removeRuinComponent(WarContext* context, WarEntity* entity)
     entity->ruin = (WarRuinComponent){0};
 }
 
-void addForestComponent(WarContext* context, WarEntity* entity, WarTreeList trees)
+void we_addForestComponent(WarContext* context, WarEntity* entity, WarTreeList trees)
 {
     NOT_USED(context);
 
@@ -167,7 +167,7 @@ void addForestComponent(WarContext* context, WarEntity* entity, WarTreeList tree
     entity->forest.trees = trees;
 }
 
-void removeForestComponent(WarContext* context, WarEntity* entity)
+void we_removeForestComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -175,7 +175,7 @@ void removeForestComponent(WarContext* context, WarEntity* entity)
     entity->forest = (WarForestComponent){0};
 }
 
-void addStateMachineComponent(WarContext* context, WarEntity* entity)
+void we_addStateMachineComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -185,20 +185,20 @@ void addStateMachineComponent(WarContext* context, WarEntity* entity)
     entity->stateMachine.nextState = NULL;
 }
 
-void removeStateMachineComponent(WarContext* context, WarEntity* entity)
+void we_removeStateMachineComponent(WarContext* context, WarEntity* entity)
 {
     WarStateMachineComponent* stateMachine = &entity->stateMachine;
 
     if (stateMachine->currentState)
-        leaveState(context, entity, stateMachine->currentState);
+        wst_leaveState(context, entity, stateMachine->currentState);
 
     if (stateMachine->nextState)
-        leaveState(context, entity, stateMachine->nextState);
+        wst_leaveState(context, entity, stateMachine->nextState);
 
     entity->stateMachine = (WarStateMachineComponent){0};
 }
 
-void addAnimationsComponent(WarContext* context, WarEntity* entity)
+void we_addAnimationsComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -207,7 +207,7 @@ void addAnimationsComponent(WarContext* context, WarEntity* entity)
     WarSpriteAnimationListInit(&entity->animations.animations, WarSpriteAnimationListDefaultOptions);
 }
 
-void removeAnimationsComponent(WarContext* context, WarEntity* entity)
+void we_removeAnimationsComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -215,7 +215,7 @@ void removeAnimationsComponent(WarContext* context, WarEntity* entity)
     entity->animations = (WarAnimationsComponent){0};
 }
 
-void addUIComponent(WarContext* context, WarEntity* entity, String name)
+void we_addUIComponent(WarContext* context, WarEntity* entity, String name)
 {
     NOT_USED(context);
 
@@ -224,14 +224,14 @@ void addUIComponent(WarContext* context, WarEntity* entity, String name)
     entity->ui.name = name;
 }
 
-void removeUIComponent(WarContext* context, WarEntity* entity)
+void we_removeUIComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
     entity->ui = (WarUIComponent){0};
 }
 
-void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, String text)
+void we_addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, String text)
 {
     NOT_USED(context);
 
@@ -251,18 +251,18 @@ void addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32
     entity->text.wrapping = WAR_TEXT_WRAP_NONE;
     entity->text.multiline = false;
 
-    setUIText(entity, text);
+    wui_setUIText(entity, text);
 }
 
-void removeTextComponent(WarContext* context, WarEntity* entity)
+void we_removeTextComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
-    clearUIText(entity);
+    wui_clearUIText(entity);
     entity->text = (WarTextComponent){0};
 }
 
-void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarColor color)
+void we_addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarColor color)
 {
     NOT_USED(context);
 
@@ -272,14 +272,14 @@ void addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarColo
     entity->rect.color = color;
 }
 
-void removeRectComponent(WarContext* context, WarEntity* entity)
+void we_removeRectComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
     entity->rect = (WarRectComponent){0};
 }
 
-void addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normalSprite, WarSprite pressedSprite)
+void we_addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normalSprite, WarSprite pressedSprite)
 {
     NOT_USED(context);
 
@@ -295,7 +295,7 @@ void addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normal
     entity->button.clickHandler = NULL;
 }
 
-void addButtonComponentFromResource(WarContext* context,
+void we_addButtonComponentFromResource(WarContext* context,
                                     WarEntity* entity,
                                     WarSpriteResourceRef normalRef,
                                     WarSpriteResourceRef pressedRef)
@@ -312,20 +312,20 @@ void addButtonComponentFromResource(WarContext* context,
         return;
     }
 
-    WarSprite normalSprite = createSpriteFromResourceIndex(context, normalRef);
-    WarSprite pressedSprite = createSpriteFromResourceIndex(context, pressedRef);
-    addButtonComponent(context, entity, normalSprite, pressedSprite);
+    WarSprite normalSprite = wspr_createSpriteFromResourceIndex(context, normalRef);
+    WarSprite pressedSprite = wspr_createSpriteFromResourceIndex(context, pressedRef);
+    we_addButtonComponent(context, entity, normalSprite, pressedSprite);
 }
 
-void removeButtonComponent(WarContext* context, WarEntity* entity)
+void we_removeButtonComponent(WarContext* context, WarEntity* entity)
 {
-    clearUITooltip(entity);
-    freeSprite(context, entity->button.normalSprite);
-    freeSprite(context, entity->button.pressedSprite);
+    wui_clearUITooltip(entity);
+    wspr_freeSprite(context, entity->button.normalSprite);
+    wspr_freeSprite(context, entity->button.pressedSprite);
     entity->button = (WarButtonComponent){0};
 }
 
-void addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType type, s32 resourceIndex, bool loop)
+void we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType type, s32 resourceIndex, bool loop)
 {
     entity->audio = (WarAudioComponent){0};
     entity->audio.enabled = true;
@@ -348,7 +348,7 @@ void addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType type
     }
 }
 
-void removeAudioComponent(WarContext* context, WarEntity* entity)
+void we_removeAudioComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -365,7 +365,7 @@ void removeAudioComponent(WarContext* context, WarEntity* entity)
     entity->audio = (WarAudioComponent){0};
 }
 
-void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileType type,
+void we_addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileType type,
                             WarEntityId sourceEntityId, WarEntityId targetEntityId,
                             vec2 origin, vec2 target, s32 speed)
 {
@@ -381,14 +381,14 @@ void addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectil
     entity->projectile.speed = speed;
 }
 
-void removeProjectileComponent(WarContext* context, WarEntity* entity)
+void we_removeProjectileComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
     entity->projectile = (WarProjectileComponent){0};
 }
 
-void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType type, vec2 hot)
+void we_addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType type, vec2 hot)
 {
     NOT_USED(context);
 
@@ -398,14 +398,14 @@ void addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType ty
     entity->cursor.hot = hot;
 }
 
-void removeCursorComponent(WarContext* context, WarEntity* entity)
+void we_removeCursorComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
     entity->cursor = (WarCursorComponent){0};
 }
 
-void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
+void we_addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
 {
     NOT_USED(context);
 
@@ -416,14 +416,14 @@ void addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 positi
     entity->poisonCloud.damageTime = 0;
 }
 
-void removePoisonCloudComponent(WarContext* context, WarEntity* entity)
+void we_removePoisonCloudComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
     entity->poisonCloud = (WarPoisonCloudComponent){0};
 }
 
-void addSightComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
+void we_addSightComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
 {
     NOT_USED(context);
 
@@ -433,7 +433,7 @@ void addSightComponent(WarContext* context, WarEntity* entity, vec2 position, f3
     entity->sight.time = time;
 }
 
-void removeSightComponent(WarContext* context, WarEntity* entity)
+void we_removeSightComponent(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
@@ -441,11 +441,11 @@ void removeSightComponent(WarContext* context, WarEntity* entity)
 }
 
 // Entities
-WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene)
+WarEntity* we_createEntity(WarContext* context, WarEntityType type, bool addToScene)
 {
-    WarEntityManager* manager = getEntityManager(context);
+    WarEntityManager* manager = we_getEntityManager(context);
 
-    WarEntity* entity = (WarEntity *)war_malloc(sizeof(WarEntity));
+    WarEntity* entity = (WarEntity *)wm_alloc(sizeof(WarEntity));
     manager->staticEntityId++;
     assert(manager->staticEntityId <= UINT16_MAX);
     entity->id = (WarEntityId)manager->staticEntityId;
@@ -467,10 +467,10 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene
         WarEntityListAdd(&manager->entities, entity);
         WarEntityIdMapSet(&manager->entitiesById, entity->id, entity);
 
-        WarEntityList* entitiesOfType = getEntitiesOfType(context, type);
+        WarEntityList* entitiesOfType = we_getEntitiesOfType(context, type);
         WarEntityListAdd(entitiesOfType, entity);
 
-        if (isUIEntity(entity))
+        if (wui_isUIEntity(entity))
         {
             WarEntityListAdd(&manager->uiEntities, entity);
         }
@@ -479,7 +479,7 @@ WarEntity* createEntity(WarContext* context, WarEntityType type, bool addToScene
     return entity;
 }
 
-WarEntity* createUnit(WarContext* context,
+WarEntity* we_createUnit(WarContext* context,
                       WarUnitType type,
                       s32 x,
                       s32 y,
@@ -490,11 +490,11 @@ WarEntity* createUnit(WarContext* context,
 {
     WarMap* map = context->map;
 
-    WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
-    addUnitComponent(context, entity, type, x, y, player, resourceKind, amount);
-    addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
+    WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
+    we_addUnitComponent(context, entity, type, x, y, player, resourceKind, amount);
+    we_addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
 
-    WarUnitData unitData = getUnitData(type);
+    WarUnitData unitData = wu_getUnitData(type);
 
     s32 spriteIndex = unitData.resourceIndex;
     if (spriteIndex == 0)
@@ -502,20 +502,20 @@ WarEntity* createUnit(WarContext* context,
         logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
         spriteIndex = 279;
     }
-    addSpriteComponentFromResource(context, entity, imageResourceRef(spriteIndex));
+    we_addSpriteComponentFromResource(context, entity, imageResourceRef(spriteIndex));
 
-    addUnitActions(entity);
-    addAnimationsComponent(context, entity);
-    addStateMachineComponent(context, entity);
+    wact_addUnitActions(entity);
+    we_addAnimationsComponent(context, entity);
+    we_addStateMachineComponent(context, entity);
 
-    if (isDudeUnit(entity))
+    if (wu_isDudeUnit(entity))
     {
-        WarUnitStats stats = getUnitStats(type);
+        WarUnitStats stats = wu_getUnitStats(type);
 
         entity->unit.maxhp = stats.hp;
         entity->unit.hp = stats.hp;
         entity->unit.maxMana = stats.mana;
-        entity->unit.mana = isSummonUnit(entity) ? stats.mana : 100;
+        entity->unit.mana = wu_isSummonUnit(entity) ? stats.mana : 100;
         entity->unit.armor = stats.armor;
         entity->unit.range = stats.range;
         entity->unit.minDamage = stats.minDamage;
@@ -523,17 +523,17 @@ WarEntity* createUnit(WarContext* context,
         entity->unit.decay = stats.decay;
         entity->unit.manaTime = 1;
     }
-    else if(isBuildingUnit(entity))
+    else if(wu_isBuildingUnit(entity))
     {
-        WarBuildingStats stats = getBuildingStats(type);
+        WarBuildingStats stats = wu_getBuildingStats(type);
 
         entity->unit.maxhp = stats.hp;
         entity->unit.hp = stats.hp;
         entity->unit.armor = stats.armor;
     }
 
-    WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
-    changeNextState(context, entity, idleState, true, true);
+    WarState* idleState = wst_createIdleState(context, entity, wu_isDudeUnit(entity));
+    wst_changeNextState(context, entity, idleState, true, true);
 
     if (addToMap)
     {
@@ -545,51 +545,51 @@ WarEntity* createUnit(WarContext* context,
     return entity;
 }
 
-WarEntity* createDude(WarContext* context,
+WarEntity* we_createDude(WarContext* context,
                       WarUnitType type,
                       s32 x,
                       s32 y,
                       u8 player,
                       bool isGoingToTrain)
 {
-    assert(isDudeUnitType(type));
+    assert(wu_isDudeUnitType(type));
 
-    return createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, !isGoingToTrain);
+    return we_createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, !isGoingToTrain);
 }
 
-WarEntity* createBuilding(WarContext* context,
+WarEntity* we_createBuilding(WarContext* context,
                           WarUnitType type,
                           s32 x,
                           s32 y,
                           u8 player,
                           bool isGoingToBuild)
 {
-    assert(isBuildingUnitType(type));
+    assert(wu_isBuildingUnitType(type));
 
-    WarEntity* entity = createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, true);
+    WarEntity* entity = we_createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, true);
 
     if (isGoingToBuild)
     {
-        WarBuildingStats stats = getBuildingStats(type);
-        WarState* buildState = createBuildState(context, entity, (f32)stats.buildTime);
-        changeNextState(context, entity, buildState, true, true);
+        WarBuildingStats stats = wu_getBuildingStats(type);
+        WarState* buildState = wst_createBuildState(context, entity, (f32)stats.buildTime);
+        wst_changeNextState(context, entity, buildState, true, true);
     }
 
     return entity;
 }
 
-WarEntity* findEntity(WarContext* context, WarEntityId id)
+WarEntity* we_findEntity(WarContext* context, WarEntityId id)
 {
-    WarEntityManager* manager = getEntityManager(context);
+    WarEntityManager* manager = we_getEntityManager(context);
     return WarEntityIdMapGet(&manager->entitiesById, id);
 }
 
-WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
+WarEntity* we_findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type)
 {
     WarEntity* result = NULL;
     s32 minDst = INT32_MAX;
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     assert(units);
 
     for (s32 i = 0; i < units->count; i++)
@@ -597,7 +597,7 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
         WarEntity* target = units->items[i];
         if (isUnitOfType(target, type))
         {
-            s32 dst = unitDistanceInTiles(entity, target);
+            s32 dst = wu_unitDistanceInTiles(entity, target);
             if (dst < minDst)
             {
                 result = target;
@@ -609,14 +609,14 @@ WarEntity* findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnit
     return result;
 }
 
-WarEntity* findUIEntity(WarContext* context, StringView name)
+WarEntity* we_findUIEntity(WarContext* context, StringView name)
 {
-    WarEntityList* entities = getUIEntities(context);
+    WarEntityList* entities = we_getUIEntities(context);
     for (s32 i = 0; i < entities->count; i++)
     {
         WarEntity* entity = entities->items[i];
         if (entity &&
-            isUIEntity(entity) &&
+            wui_isUIEntity(entity) &&
             wsv_equals(wsv_fromString(&entity->ui.name), name))
         {
             return entity;
@@ -626,19 +626,19 @@ WarEntity* findUIEntity(WarContext* context, StringView name)
     return NULL;
 }
 
-WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool includeWalls)
+WarEntity* we_findEntityUnderCursor(WarContext* context, bool includeTrees, bool includeWalls)
 {
     WarInput* input = &context->input;
 
     WarMap* map = context->map;
     assert(map);
 
-    vec2 targetPoint = vec2ScreenToMapCoordinates(context, input->pos);
-    vec2 targetTile = vec2MapToTileCoordinates(targetPoint);
+    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
+    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
 
     WarEntity* entityUnderCursor = NULL;
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
@@ -648,7 +648,7 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
             if (unit->enabled)
             {
                 // don't change the cursor for dead units or corpses
-                if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                if (isDead(entity) || isGoingToDie(entity) || wu_isCorpseUnit(entity))
                 {
                     continue;
                 }
@@ -666,7 +666,7 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
                 }
             }
 
-            rect unitRect = getUnitRect(entity);
+            rect unitRect = wu_getUnitRect(entity);
             if (rectContainsf(unitRect, targetPoint.x, targetPoint.y))
             {
                 entityUnderCursor = entity;
@@ -677,7 +677,7 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
 
     if (includeTrees && !entityUnderCursor)
     {
-        WarEntityList* forests = getEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
+        WarEntityList* forests = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
         for (s32 i = 0; i < forests->count; i++)
         {
             WarEntity* forest = forests->items[i];
@@ -711,7 +711,7 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
     // if there is no unit under the cursor, check the walls
     if (includeWalls && !entityUnderCursor)
     {
-        WarEntityList* walls = getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
+        WarEntityList* walls = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
         for (s32 i = 0; i < walls->count; i++)
         {
             WarEntity* wall = walls->items[i];
@@ -744,37 +744,37 @@ WarEntity* findEntityUnderCursor(WarContext* context, bool includeTrees, bool in
     return entityUnderCursor;
 }
 
-void removeEntity(WarContext* context, WarEntity* entity)
+void we_removeEntity(WarContext* context, WarEntity* entity)
 {
-    removeTransformComponent(context, entity);
-    removeSpriteComponent(context, entity);
-    removeRoadComponent(context, entity);
-    removeWallComponent(context, entity);
-    removeRuinComponent(context, entity);
-    removeForestComponent(context, entity);
-    removeUnitComponent(context, entity);
-    removeStateMachineComponent(context, entity);
-    removeAnimationsComponent(context, entity);
-    removeUIComponent(context, entity);
-    removeTextComponent(context, entity);
-    removeRectComponent(context, entity);
-    removeButtonComponent(context, entity);
-    removeAudioComponent(context, entity);
-    removeCursorComponent(context, entity);
+    we_removeTransformComponent(context, entity);
+    we_removeSpriteComponent(context, entity);
+    we_removeRoadComponent(context, entity);
+    we_removeWallComponent(context, entity);
+    we_removeRuinComponent(context, entity);
+    we_removeForestComponent(context, entity);
+    we_removeUnitComponent(context, entity);
+    we_removeStateMachineComponent(context, entity);
+    we_removeAnimationsComponent(context, entity);
+    we_removeUIComponent(context, entity);
+    we_removeTextComponent(context, entity);
+    we_removeRectComponent(context, entity);
+    we_removeButtonComponent(context, entity);
+    we_removeAudioComponent(context, entity);
+    we_removeCursorComponent(context, entity);
 }
 
-void removeEntityById(WarContext* context, WarEntityId id)
+void we_removeEntityById(WarContext* context, WarEntityId id)
 {
-    WarEntityManager* manager = getEntityManager(context);
+    WarEntityManager* manager = we_getEntityManager(context);
 
-    WarEntity* entity = findEntity(context, id);
+    WarEntity* entity = we_findEntity(context, id);
     if (entity)
     {
         SDL_LockMutex(context->__mutex);
 
-        removeEntity(context, entity);
+        we_removeEntity(context, entity);
 
-        if (isUIEntity(entity))
+        if (wui_isUIEntity(entity))
         {
             WarEntityListRemove(&manager->uiEntities, entity);
         }
@@ -794,7 +794,7 @@ void removeEntityById(WarContext* context, WarEntityId id)
     }
 }
 
-bool isStaticEntity(WarEntity* entity)
+bool we_isStaticEntity(WarEntity* entity)
 {
     if (isUnit(entity))
     {
@@ -832,7 +832,7 @@ bool isStaticEntity(WarEntity* entity)
     return false;
 }
 
-void initEntityManager(WarContext* context, WarEntityManager* manager)
+void we_initEntityManager(WarContext* context, WarEntityManager* manager)
 {
     manager->staticEntityId = 0;
 
@@ -848,7 +848,7 @@ void initEntityManager(WarContext* context, WarEntityManager* manager)
     WarEntityMapInit(&manager->entitiesByType, entitiesByTypeOptions);
     for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
     {
-        WarEntityList* list = (WarEntityList*)war_malloc(sizeof(WarEntityList));
+        WarEntityList* list = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
         WarEntityListInit(list, WarEntityListNonFreeOptions);
         WarEntityMapSet(&manager->entitiesByType, type, list);
     }
@@ -862,7 +862,7 @@ void initEntityManager(WarContext* context, WarEntityManager* manager)
     WarUnitMapInit(&manager->unitsByType, unitsByTypeOptions);
     for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
     {
-        WarEntityList* list = (WarEntityList*)war_malloc(sizeof(WarEntityList));
+        WarEntityList* list = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
         WarEntityListInit(list, WarEntityListNonFreeOptions);
         WarUnitMapSet(&manager->unitsByType, type, list);
     }
@@ -878,7 +878,7 @@ void initEntityManager(WarContext* context, WarEntityManager* manager)
     WarEntityListInit(&manager->uiEntities, WarEntityListNonFreeOptions);
 }
 
-WarEntityManager* getEntityManager(WarContext* context)
+WarEntityManager* we_getEntityManager(WarContext* context)
 {
     if (context->scene)
         return &context->scene->entityManager;
@@ -890,27 +890,27 @@ WarEntityManager* getEntityManager(WarContext* context)
     return NULL;
 }
 
-WarEntityList* getEntities(WarContext* context)
+WarEntityList* we_getEntities(WarContext* context)
 {
-    WarEntityManager* manager = getEntityManager(context);
+    WarEntityManager* manager = we_getEntityManager(context);
     return &manager->entities;
 }
 
-WarEntityList* getEntitiesOfType(WarContext* context, WarEntityType type)
+WarEntityList* we_getEntitiesOfType(WarContext* context, WarEntityType type)
 {
-    WarEntityManager* manager = getEntityManager(context);
+    WarEntityManager* manager = we_getEntityManager(context);
     return WarEntityMapGet(&manager->entitiesByType, type);
 }
 
-WarEntityList* getUnitsOfType(WarContext* context, WarUnitType type)
+WarEntityList* we_getUnitsOfType(WarContext* context, WarUnitType type)
 {
-    WarEntityManager* manager = getEntityManager(context);
+    WarEntityManager* manager = we_getEntityManager(context);
     return WarUnitMapGet(&manager->unitsByType, type);
 }
 
-WarEntityList* getUIEntities(WarContext* context)
+WarEntityList* we_getUIEntities(WarContext* context)
 {
-    WarEntityManager* manager = getEntityManager(context);
+    WarEntityManager* manager = we_getEntityManager(context);
     return &manager->uiEntities;
 }
 
@@ -920,8 +920,8 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
     assert(isUnit(e1));
     assert(isUnit(e2));
 
-    bool isDead1 = isCorpseUnit((WarEntity*)e1) || isDead((WarEntity*)e1) || isGoingToDie((WarEntity*)e1);
-    bool isDead2 = isCorpseUnit((WarEntity*)e2) || isDead((WarEntity*)e2) || isGoingToDie((WarEntity*)e2);
+    bool isDead1 = wu_isCorpseUnit((WarEntity*)e1) || isDead((WarEntity*)e1) || isGoingToDie((WarEntity*)e1);
+    bool isDead2 = wu_isCorpseUnit((WarEntity*)e2) || isDead((WarEntity*)e2) || isGoingToDie((WarEntity*)e2);
 
     if (isDead1 && !isDead2)
         return -1;
@@ -929,8 +929,8 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
     if (!isDead1 && isDead2)
         return 1;
 
-    vec2 p1 = getUnitPosition((WarEntity*)e1, false);
-    vec2 p2 = getUnitPosition((WarEntity*)e2, false);
+    vec2 p1 = wu_getUnitPosition((WarEntity*)e1, false);
+    vec2 p2 = wu_getUnitPosition((WarEntity*)e2, false);
 
     return (s32)(p1.y - p2.y);
 }
@@ -951,19 +951,19 @@ void renderImage(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && sprite->enabled && sprite->frameIndex >= 0)
     {
-        renderSave(context);
+        wr_save(context);
 
         if (sprite->sprite.framesCount > 1)
         {
-            WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-            updateSpriteImage(context, sprite->sprite, frame.data);
+            WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+            wspr_updateSpriteImage(context, sprite->sprite, frame.data);
 
-            renderTranslate(context, -(f32)frame.dx, -(f32)frame.dy);
+            wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
         }
 
-        renderTranslate(context, transform.position.x, transform.position.y);
-        renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
-        renderRestore(context);
+        wr_translate(context, transform.position.x, transform.position.y);
+        wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
+        wr_restore(context);
     }
 }
 
@@ -984,7 +984,7 @@ void renderRoad(WarContext* context, WarEntity* entity)
         {
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRoadData roadData = getRoadData(pieces->items[i].type);
+            WarRoadData roadData = wu_getRoadData(pieces->items[i].type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
                 ? roadData.tileIndexForest : roadData.tileIndexSwamp;
@@ -997,14 +997,14 @@ void renderRoad(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            renderSave(context);
-            renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
+            wr_save(context);
+            wr_translate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
+            wr_subImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            renderRestore(context);
+            wr_restore(context);
         }
     }
 }
@@ -1028,7 +1028,7 @@ void renderWall(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarWallData wallData = getWallData(piece->type);
+            WarWallData wallData = wu_getWallData(piece->type);
 
             s32 tileIndex = 0;
 
@@ -1057,14 +1057,14 @@ void renderWall(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            renderSave(context);
-            renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
+            wr_save(context);
+            wr_translate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
+            wr_subImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            renderRestore(context);
+            wr_restore(context);
         }
     }
 }
@@ -1090,7 +1090,7 @@ void renderRuin(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRuinData ruinData = getRuinData(piece->type);
+            WarRuinData ruinData = wu_getRuinData(piece->type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
                 ? ruinData.tileIndexForest : ruinData.tileIndexSwamp;
@@ -1103,14 +1103,14 @@ void renderRuin(WarContext* context, WarEntity* entity)
             s32 tilePixelX = (tileIndex % TILESET_TILES_PER_ROW) * MEGA_TILE_WIDTH;
             s32 tilePixelY = ((tileIndex / TILESET_TILES_PER_ROW) * MEGA_TILE_HEIGHT);
 
-            renderSave(context);
-            renderTranslate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
+            wr_save(context);
+            wr_translate(context, (f32)(x * MEGA_TILE_WIDTH), (f32)(y * MEGA_TILE_HEIGHT));
 
             rect rs = recti(tilePixelX, tilePixelY, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
             rect rd = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-            renderSubImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
+            wr_subImage(context, sprite->sprite.texture, rs, rd, VEC2_ONE);
 
-            renderRestore(context);
+            wr_restore(context);
         }
     }
 }
@@ -1133,19 +1133,19 @@ void renderForest(WarContext* context, WarEntity* entity)
             if (tree->type == WAR_TREE_NONE)
                 continue;
 
-            WarTreeData data = getTreeData(tree->type);
+            WarTreeData data = wu_getTreeData(tree->type);
 
             // the position in the world of the wood tile
             s32 x = tree->tilex;
             s32 y = tree->tiley;
 
-            s32 prevTileIndex = getMapTileIndex(context, x, y);
+            s32 prevTileIndex = wmap_getMapTileIndex(context, x, y);
             s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
 
             if (prevTileIndex != newTileIndex)
                 logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", x, y, prevTileIndex, newTileIndex);
 
-            setMapTileIndex(context, x, y, newTileIndex);
+            wmap_setMapTileIndex(context, x, y, newTileIndex);
         }
     }
 }
@@ -1167,22 +1167,22 @@ void renderUnit(WarContext* context, WarEntity* entity)
     vec2 scale = transform->scale;
 
     // size of the original sprite
-    vec2 frameSize = getUnitFrameSize(entity);
+    vec2 frameSize = wu_getUnitFrameSize(entity);
 
     // size of the unit
-    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 unitSize = wu_getUnitSpriteSize(entity);
 
     // the unit is visible if it's partially on the clear areas of the fog
     bool isVisible = isUnitPartiallyVisible(map, entity);
 
-    renderTranslate(context, -halff(frameSize.x), -halff(frameSize.y));
-    renderTranslate(context, halff(unitSize.x), halff(unitSize.y));
-    renderTranslate(context, position.x, position.y);
+    wr_translate(context, -halff(frameSize.x), -halff(frameSize.y));
+    wr_translate(context, halff(unitSize.x), halff(unitSize.y));
+    wr_translate(context, position.x, position.y);
 
 #ifdef DEBUG_RENDER_UNIT_INFO
-    renderFillRect(context, getUnitFrameRect(entity), WAR_COLOR_RGBA(0, 0, 128, 128));
-    renderFillRect(context, getUnitSpriteRect(entity), WAR_COLOR_GRAY_TRANSPARENT);
-    renderFillRect(context, rectv(getUnitSpriteCenter(entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
+    wr_fillRect(context, wu_getUnitFrameRect(entity), WAR_COLOR_RGBA(0, 0, 128, 128));
+    wr_fillRect(context, wu_getUnitSpriteRect(entity), WAR_COLOR_GRAY_TRANSPARENT);
+    wr_fillRect(context, rectv(wu_getUnitSpriteCenter(entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
 #endif
 
 #ifdef DEBUG_RENDER_UNIT_STATS
@@ -1192,30 +1192,30 @@ void renderUnit(WarContext* context, WarEntity* entity)
 
     if (sprite->enabled && (isVisible || unit->hasBeenSeen))
     {
-        renderSave(context);
+        wr_save(context);
 
-        if (isDudeUnit(entity))
+        if (wu_isDudeUnit(entity))
         {
             WarUnitComponent* unitComponent = &entity->unit;
 
             if (unitComponent->invisible)
             {
-                renderGlobalAlpha(context, 0.5f);
+                wr_globalAlpha(context, 0.5f);
             }
 
             if (unitComponent->invulnerable)
             {
-                rect unitRect = getUnitSpriteRect(entity);
+                rect unitRect = wu_getUnitSpriteRect(entity);
                 unitRect = rectExpand(unitRect, -1, -1);
-                renderStrokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
+                wr_strokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
             }
         }
 
-        WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-        updateSpriteImage(context, sprite->sprite, frame.data);
-        renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
+        WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+        wspr_updateSpriteImage(context, sprite->sprite, frame.data);
+        wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
 
-        renderRestore(context);
+        wr_restore(context);
     }
 
     if (animations->enabled && isVisible)
@@ -1225,28 +1225,28 @@ void renderUnit(WarContext* context, WarEntity* entity)
             WarSpriteAnimation* anim = animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
-                renderSave(context);
+                wr_save(context);
 
-                renderTranslate(context, anim->offset.x, anim->offset.y);
-                renderScale(context, anim->scale.x, anim->scale.y);
+                wr_translate(context, anim->offset.x, anim->offset.y);
+                wr_scale(context, anim->scale.x, anim->scale.y);
 
 #ifdef DEBUG_RENDER_UNIT_ANIMATIONS
                 // size of the original sprite
                 vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
 
-                renderFillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
+                wr_fillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
 #endif
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
                 animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
 
                 s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-                WarSpriteFrame frame = getSpriteFrame(context, anim->sprite, spriteFrameIndex);
+                WarSpriteFrame frame = wspr_getSpriteFrame(context, anim->sprite, spriteFrameIndex);
 
-                updateSpriteImage(context, anim->sprite, frame.data);
-                renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
+                wspr_updateSpriteImage(context, anim->sprite, frame.data);
+                wspr_renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
-                renderRestore(context);
+                wr_restore(context);
             }
         }
     }
@@ -1260,9 +1260,9 @@ void renderText(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && text->enabled && text->text.data)
     {
-        renderSave(context);
-        renderTranslate(context, transform->position.x, transform->position.y);
-        renderScale(context, transform->scale.x, transform->scale.y);
+        wr_save(context);
+        wr_translate(context, transform->position.x, transform->position.y);
+        wr_scale(context, transform->scale.x, transform->scale.y);
 
         WarFontParams params;
         params.fontIndex = text->fontIndex;
@@ -1282,11 +1282,11 @@ void renderText(WarContext* context, WarEntity* entity)
         params.fontData = getFontData(text->fontIndex);
 
         if (entity->text.multiline)
-            renderMultiSpriteText(context, wstr_view(&text->text), 0, 0, params);
+            wfont_renderMultiSpriteText(context, wstr_view(&text->text), 0, 0, params);
         else
-            renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
+            wfont_renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
 
-        renderRestore(context);
+        wr_restore(context);
     }
 }
 
@@ -1298,13 +1298,13 @@ void renderRect(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && rect->enabled)
     {
-        renderSave(context);
-        renderTranslate(context, transform->position.x, transform->position.y);
-        renderScale(context, transform->scale.x, transform->scale.y);
+        wr_save(context);
+        wr_translate(context, transform->position.x, transform->position.y);
+        wr_scale(context, transform->scale.x, transform->scale.y);
 
-        renderFillRect(context, rectf(0.0f, 0.0f, rect->size.x, rect->size.y), rect->color);
+        wr_fillRect(context, rectf(0.0f, 0.0f, rect->size.x, rect->size.y), rect->color);
 
-        renderRestore(context);
+        wr_restore(context);
     }
 }
 
@@ -1318,14 +1318,14 @@ void renderButton(WarContext* context, WarEntity* entity)
 
     if (ui->enabled && button->enabled)
     {
-        renderSave(context);
-        renderTranslate(context, transform->position.x, transform->position.y);
-        renderScale(context, transform->scale.x, transform->scale.y);
+        wr_save(context);
+        wr_translate(context, transform->position.x, transform->position.y);
+        wr_scale(context, transform->scale.x, transform->scale.y);
 
         // render background
         {
             WarSprite backgroundSprite = button->active ? button->pressedSprite : button->normalSprite;
-            renderSprite(context, backgroundSprite, VEC2_ZERO, VEC2_ONE);
+            wspr_renderSprite(context, backgroundSprite, VEC2_ZERO, VEC2_ONE);
         }
 
         // render foreground
@@ -1339,11 +1339,11 @@ void renderButton(WarContext* context, WarEntity* entity)
                 if (button->active)
                     offset = vec2Addv(offset, vec2i(0, 1));
 
-                renderTranslate(context, offset.x, offset.y);
+                wr_translate(context, offset.x, offset.y);
 
-                WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-                updateSpriteImage(context, sprite->sprite, frame.data);
-                renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
+                WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+                wspr_updateSpriteImage(context, sprite->sprite, frame.data);
+                wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
             }
         }
 
@@ -1366,11 +1366,11 @@ void renderButton(WarContext* context, WarEntity* entity)
                 params.fontSprite = context->fontSprites[text->fontIndex];
                 params.fontData = getFontData(text->fontIndex);
 
-                renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
+                wfont_renderSingleSpriteText(context, wstr_view(&text->text), 0, 0, params);
             }
         }
 
-        renderRestore(context);
+        wr_restore(context);
     }
 }
 
@@ -1384,52 +1384,52 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 
     if (sprite->enabled)
     {
-        WarSpriteFrame frame = getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+        WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
 
 #ifdef DEBUG_RENDER_PROJECTILES
         {
-            renderSave(context);
+            wr_save(context);
 
-            renderTranslate(context, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
-            renderTranslate(context, position.x, position.y);
+            wr_translate(context, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
+            wr_translate(context, position.x, position.y);
 
             rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-            renderFillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
+            wr_fillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
 
-            renderRestore(context);
+            wr_restore(context);
         }
 
         {
-            renderSave(context);
+            wr_save(context);
 
-            renderTranslate(context, -halfi(frame.w),-halfi(frame.h));
-            renderTranslate(context, position.x, position.y);
+            wr_translate(context, -halfi(frame.w),-halfi(frame.h));
+            wr_translate(context, position.x, position.y);
 
             rect r = rectf(0, 0, frame.w, frame.h);
-            renderFillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
+            wr_fillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
 
-            renderRestore(context);
+            wr_restore(context);
         }
 
         {
             WarProjectileComponent* projectile = &entity->projectile;
 
-            renderSave(context);
+            wr_save(context);
 
-            renderStrokeLine(context, projectile->origin, projectile->target, getColorFromList(entity->id), 0.5f);
-            renderFillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
-            renderFillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+            wr_strokeLine(context, projectile->origin, projectile->target, wr_getColorFromList(entity->id), 0.5f);
+            wr_fillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+            wr_fillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
 
-            renderRestore(context);
+            wr_restore(context);
         }
 #endif
 
-        renderTranslate(context, -(f32)frame.dx, -(f32)frame.dy);
-        renderTranslate(context, -halff(frame.w), -halff(frame.h));
-        renderTranslate(context, position.x, position.y);
+        wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
+        wr_translate(context, -halff(frame.w), -halff(frame.h));
+        wr_translate(context, position.x, position.y);
 
-        updateSpriteImage(context, sprite->sprite, frame.data);
-        renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
+        wspr_updateSpriteImage(context, sprite->sprite, frame.data);
+        wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, scale);
     }
 }
 
@@ -1471,7 +1471,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
         }
     }
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* unitEntity = units->items[i];
@@ -1480,12 +1480,12 @@ void renderMinimap(WarContext* context, WarEntity* entity)
             WarUnitComponent* unit = &unitEntity->unit;
             WarTransformComponent* transform = &unitEntity->transform;
 
-            if (displayUnitOnMinimap(unitEntity) && (isUnitPartiallyVisible(map, unitEntity) || unitEntity->unit.hasBeenSeen))
+            if (wu_displayUnitOnMinimap(unitEntity) && (isUnitPartiallyVisible(map, unitEntity) || unitEntity->unit.hasBeenSeen))
             {
                 s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                 s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
 
-                WarColor color = getUnitColorOnMinimap(unitEntity);
+                WarColor color = wu_getUnitColorOnMinimap(unitEntity);
 
                 for(s32 y = 0; y < unit->sizey; y++)
                 {
@@ -1501,18 +1501,18 @@ void renderMinimap(WarContext* context, WarEntity* entity)
         }
     }
 
-    renderSave(context);
-    renderTranslate(context, position.x, position.y);
+    wr_save(context);
+    wr_translate(context, position.x, position.y);
 
     // render base
-    updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
-    renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
+    wspr_updateSpriteImage(context, map->minimapSprite, map->minimapSprite.frames[0].data);
+    wspr_renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
     // render viewport
-    renderTranslate(context, (f32)map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
-    renderStrokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
+    wr_translate(context, (f32)map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
+    wr_strokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
 
-    renderRestore(context);
+    wr_restore(context);
     TracyCZoneEnd(ctx);
 }
 
@@ -1522,7 +1522,7 @@ void renderAnimation(WarContext* context, WarEntity* entity)
     WarAnimationsComponent* animations = &entity->animations;
 
     vec2 position = transform->position;
-    renderTranslate(context, position.x, position.y);
+    wr_translate(context, position.x, position.y);
 
     if (animations->enabled)
     {
@@ -1531,27 +1531,27 @@ void renderAnimation(WarContext* context, WarEntity* entity)
             WarSpriteAnimation* anim = animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
-                renderSave(context);
+                wr_save(context);
 
-                renderTranslate(context, anim->offset.x, anim->offset.y);
-                renderScale(context, anim->scale.x, anim->scale.y);
+                wr_translate(context, anim->offset.x, anim->offset.y);
+                wr_scale(context, anim->scale.x, anim->scale.y);
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
                 animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
 
                 s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
-                WarSpriteFrame frame = getSpriteFrame(context, anim->sprite, spriteFrameIndex);
+                WarSpriteFrame frame = wspr_getSpriteFrame(context, anim->sprite, spriteFrameIndex);
 
-                updateSpriteImage(context, anim->sprite, frame.data);
-                renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
+                wspr_updateSpriteImage(context, anim->sprite, frame.data);
+                wspr_renderSprite(context, anim->sprite, VEC2_ZERO, VEC2_ONE);
 
-                renderRestore(context);
+                wr_restore(context);
             }
         }
     }
 }
 
-void renderEntity(WarContext* context, WarEntity* entity)
+void we_renderEntity(WarContext* context, WarEntity* entity)
 {
     static WarRenderFunc renderFuncs[WAR_ENTITY_TYPE_COUNT] =
     {
@@ -1584,13 +1584,13 @@ void renderEntity(WarContext* context, WarEntity* entity)
             return;
         }
 
-        renderSave(context);
+        wr_save(context);
         renderFunc(context, entity);
-        renderRestore(context);
+        wr_restore(context);
     }
 }
 
-void renderEntitiesOfType(WarContext* context, WarEntityType type)
+void we_renderEntitiesOfType(WarContext* context, WarEntityType type)
 {
     TracyCZoneN(ctx, "RenderEntities", 1);
     static WarRenderCompareFunc renderCompareFuncs[WAR_ENTITY_TYPE_COUNT] =
@@ -1615,7 +1615,7 @@ void renderEntitiesOfType(WarContext* context, WarEntityType type)
         NULL,                       // WAR_ENTITY_TYPE_ANIMATION,
     };
 
-    WarEntityList* entities = getEntitiesOfType(context, type);
+    WarEntityList* entities = we_getEntitiesOfType(context, type);
 
     // lookup the render compare function and sort the list
     if (inRange(type, WAR_ENTITY_TYPE_NONE, WAR_ENTITY_TYPE_COUNT))
@@ -1637,13 +1637,13 @@ void renderEntitiesOfType(WarContext* context, WarEntityType type)
         WarEntity* entity = entities->items[i];
         if (entity)
         {
-            renderEntity(context, entity);
+            we_renderEntity(context, entity);
         }
     }
     TracyCZoneEnd(ctx);
 }
 
-void renderUnitSelection(WarContext* context)
+void we_renderUnitSelection(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -1651,7 +1651,7 @@ void renderUnitSelection(WarContext* context)
     for (s32 i = 0; i < selectedEntities->count; i++)
     {
         WarEntityId entityId = selectedEntities->items[i];
-        WarEntity* entity = findEntity(context, entityId);
+        WarEntity* entity = we_findEntity(context, entityId);
         if (entity)
         {
             WarTransformComponent* transform = &entity->transform;
@@ -1660,34 +1660,34 @@ void renderUnitSelection(WarContext* context)
             if (sprite->enabled)
             {
                 // size of the original sprite
-                vec2 frameSize = getUnitFrameSize(entity);
+                vec2 frameSize = wu_getUnitFrameSize(entity);
 
                 // size of the unit
-                vec2 unitSize = getUnitSpriteSize(entity);
+                vec2 unitSize = wu_getUnitSpriteSize(entity);
 
                 // position of the unit in the map
                 vec2 position = transform->position;
 
-                renderSave(context);
-                renderTranslate(context, -halff(frameSize.x), -halff(frameSize.y));
-                renderTranslate(context, halff(unitSize.x), halff(unitSize.y));
-                renderTranslate(context, position.x, position.y);
+                wr_save(context);
+                wr_translate(context, -halff(frameSize.x), -halff(frameSize.y));
+                wr_translate(context, halff(unitSize.x), halff(unitSize.y));
+                wr_translate(context, position.x, position.y);
 
                 rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
                 WarColor color = WAR_COLOR_WHITE_SELECTION;
-                if (isFriendlyUnit(context, entity))
+                if (wu_isFriendlyUnit(context, entity))
                     color = WAR_COLOR_GREEN_SELECTION;
-                else if (isEnemyUnit(context, entity))
+                else if (wu_isEnemyUnit(context, entity))
                     color = WAR_COLOR_RED_SELECTION;
-                renderStrokeRect(context, selr, color, 1.0f);
+                wr_strokeRect(context, selr, color, 1.0f);
 
-                renderRestore(context);
+                wr_restore(context);
             }
         }
     }
 }
 
-void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade)
+void we_increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade)
 {
     assert(hasRemainingUpgrade(player, upgrade));
 
@@ -1698,7 +1698,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_ARROWS:
         case WAR_UPGRADE_SPEARS:
         {
-            WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+            WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
@@ -1718,7 +1718,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_SWORDS:
         case WAR_UPGRADE_AXES:
         {
-            WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+            WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
@@ -1749,13 +1749,13 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
         case WAR_UPGRADE_HORSES:
         case WAR_UPGRADE_WOLVES:
         {
-            WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+            WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
                 if (entity && entity->unit.player == player->index)
                 {
-                    if (isDudeUnit(entity))
+                    if (wu_isDudeUnit(entity))
                     {
                         entity->unit.speed++;
                     }
@@ -1767,7 +1767,7 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
 
         case WAR_UPGRADE_SHIELD:
         {
-            WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+            WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
@@ -1795,24 +1795,24 @@ void increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgrade
     }
 }
 
-bool enoughPlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+bool we_enoughPlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
 {
     NOT_USED(context);
 
     return player->gold >= gold && player->wood >= wood;
 }
 
-bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+bool we_decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
 {
     if (player->gold < gold)
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH GOLD... MINE MORE GOLD"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH GOLD... MINE MORE GOLD"));
         return false;
     }
 
     if (player->wood < wood)
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH LUMBER... CHOP MORE TREES"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH LUMBER... CHOP MORE TREES"));
         return false;
     }
 
@@ -1821,7 +1821,7 @@ bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
     return true;
 }
 
-void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
+void we_increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gold, s32 wood)
 {
     NOT_USED(context);
 
@@ -1829,7 +1829,7 @@ void increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
     player->wood += wood;
 }
 
-bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
+bool we_increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 {
     NOT_USED(context);
 
@@ -1843,7 +1843,7 @@ bool increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
     return true;
 }
 
-bool decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
+bool we_decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 {
     NOT_USED(context);
 
@@ -1857,14 +1857,14 @@ bool decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
     return true;
 }
 
-bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
+bool we_decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 {
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
     if (unit->mana < mana)
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH MANA"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH MANA"));
         return false;
     }
 
@@ -1872,7 +1872,7 @@ bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     return true;
 }
 
-void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
+void we_increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 {
     NOT_USED(context);
 
@@ -1882,28 +1882,28 @@ void increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     unit->mana = clamp(unit->mana + mana, 0, unit->maxMana);
 }
 
-bool enoughFarmFood(WarContext* context, WarPlayerInfo* player)
+bool we_enoughFarmFood(WarContext* context, WarPlayerInfo* player)
 {
-    WarUnitType farmType = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, player->race);
-    s32 farmCount = getNumberOfBuildingsOfType(context, player->index, farmType, true);
+    WarUnitType farmType = wu_getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, player->race);
+    s32 farmCount = wu_getNumberOfBuildingsOfType(context, player->index, farmType, true);
     s32 foodCount = farmCount * 4 + 1;
 
-    s32 dudesCount = getTotalNumberOfDudes(context, player->index);
+    s32 dudesCount = wu_getTotalNumberOfDudes(context, player->index);
     return dudesCount + 1 <= foodCount;
 }
 
-bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
+bool we_checkFarmFood(WarContext* context, WarPlayerInfo* player)
 {
-    if (!enoughFarmFood(context, player))
+    if (!we_enoughFarmFood(context, player))
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH FOOD... BUILD MORE FARMS"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH FOOD... BUILD MORE FARMS"));
         return false;
     }
 
     return true;
 }
 
-bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
+bool we_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
 {
     WarMap* map = context->map;
 
@@ -1926,43 +1926,43 @@ bool checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
     return true;
 }
 
-bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y)
+bool we_checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y)
 {
-    WarUnitData data = getUnitData(buildingToBuild);
+    WarUnitData data = wu_getUnitData(buildingToBuild);
 
-    if (!checkRectToBuild(context, x, y, data.sizex, data.sizey))
+    if (!we_checkRectToBuild(context, x, y, data.sizex, data.sizey))
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
     }
 
     return true;
 }
 
-bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
+bool we_checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 {
-    if (!checkRectToBuild(context, x, y, 1, 1))
+    if (!we_checkRectToBuild(context, x, y, 1, 1))
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
     }
 
     return true;
 }
 
-WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
+WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
 {
     TracyCZoneN(ctx, "GetNearUnits", 1);
-    WarEntityList* nearUnits = (WarEntityList*)war_malloc(sizeof(WarEntityList));
+    WarEntityList* nearUnits = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
     WarEntityListInit(nearUnits, WarEntityListNonFreeOptions);
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
         if (other)
         {
-            if (tileInRange(other, tilePosition, distance))
+            if (wu_tileInRange(other, tilePosition, distance))
             {
                 WarEntityListAdd(nearUnits, other);
             }
@@ -1973,16 +1973,16 @@ WarEntityList* getNearUnits(WarContext* context, vec2 tilePosition, s32 distance
     return nearUnits;
 }
 
-WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
+WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "GetNearEnemy", 1);
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 position = wu_getUnitCenterPosition(entity, true);
 
-    WarEntityList* entities = getEntities(context);
+    WarEntityList* entities = we_getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* other = entities->items[i];
-        if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
+        if (other && wu_areEnemies(context, entity, other) && wu_canAttack(context, entity, other))
         {
             if (isUnit(other))
             {
@@ -1990,7 +1990,7 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
                     continue;
             }
 
-            if (tileInRange(other, position, NEAR_ENEMY_RADIUS))
+            if (wu_tileInRange(other, position, NEAR_ENEMY_RADIUS))
             {
                 TracyCZoneEnd(ctx);
                 return other;
@@ -2002,7 +2002,7 @@ WarEntity* getNearEnemy(WarContext* context, WarEntity* entity)
     return NULL;
 }
 
-bool isBeingAttackedBy(WarEntity* entity, WarEntity* other)
+bool we_isBeingAttackedBy(WarEntity* entity, WarEntity* other)
 {
     if (!isFollowing(other) && !isMoving(other))
     {
@@ -2013,14 +2013,14 @@ bool isBeingAttackedBy(WarEntity* entity, WarEntity* other)
     return false;
 }
 
-bool isBeingAttacked(WarContext* context, WarEntity* entity)
+bool we_isBeingAttacked(WarContext* context, WarEntity* entity)
 {
 
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
-        if (isBeingAttackedBy(entity, other))
+        if (we_isBeingAttackedBy(entity, other))
         {
             return true;
         }
@@ -2029,13 +2029,13 @@ bool isBeingAttacked(WarContext* context, WarEntity* entity)
     return false;
 }
 
-WarEntity* getAttacker(WarContext* context, WarEntity* entity)
+WarEntity* we_getAttacker(WarContext* context, WarEntity* entity)
 {
-    WarEntityList* units = getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
-        if (other && isBeingAttackedBy(entity, other))
+        if (other && we_isBeingAttackedBy(entity, other))
         {
             return other;
         }
@@ -2044,7 +2044,7 @@ WarEntity* getAttacker(WarContext* context, WarEntity* entity)
     return NULL;
 }
 
-WarEntity* getAttackTarget(WarContext* context, WarEntity* entity)
+WarEntity* we_getAttackTarget(WarContext* context, WarEntity* entity)
 {
     if (!isFollowing(entity) && !isMoving(entity))
     {
@@ -2052,19 +2052,19 @@ WarEntity* getAttackTarget(WarContext* context, WarEntity* entity)
         if (attackState)
         {
             WarEntityId targetEntityId = (WarEntityId)attackState->attack.targetEntityId;
-            return findEntity(context, targetEntityId);
+            return we_findEntity(context, targetEntityId);
         }
     }
 
     return NULL;
 }
 
-s32 getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)
+s32 we_getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)
 {
     return minDamage + max(rndDamage - armor, 0);
 }
 
-void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
+void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
 {
     WarMap* map = context->map;
 
@@ -2079,142 +2079,142 @@ void takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDa
         return;
 
     // Minimal damage + [Random damage - Enemy's Armor]
-    s32 damage = getTotalDamage(minDamage, rndDamage, unit->armor);
-    decreaseUnitHp(context, entity, damage);
+    s32 damage = we_getTotalDamage(minDamage, rndDamage, unit->armor);
+    we_decreaseUnitHp(context, entity, damage);
 
     if (unit->hp == 0)
     {
-        if (isBuildingUnit(entity))
+        if (wu_isBuildingUnit(entity))
         {
-            WarState* collapseState = createCollapseState(context, entity);
-            changeNextState(context, entity, collapseState, true, true);
+            WarState* collapseState = wst_createCollapseState(context, entity);
+            wst_changeNextState(context, entity, collapseState, true, true);
 
-            createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
+            wa_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
         else
         {
-            vec2 position = getUnitCenterPosition(entity, false);
+            vec2 position = wu_getUnitCenterPosition(entity, false);
 
-            WarState* deathState = createDeathState(context, entity);
-            changeNextState(context, entity, deathState, true, true);
+            WarState* deathState = wst_createDeathState(context, entity);
+            wst_changeNextState(context, entity, deathState, true, true);
 
             if (entity->unit.type == WAR_UNIT_SCORPION ||
                 entity->unit.type == WAR_UNIT_SPIDER)
             {
-                createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
+                wa_createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
             }
             else if (entity->unit.type == WAR_UNIT_CATAPULT_HUMANS ||
                      entity->unit.type == WAR_UNIT_CATAPULT_ORCS)
             {
-                createAudioRandomWithPosition(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, position, false);
+                wa_createAudioRandomWithPosition(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, position, false);
             }
             else
             {
                 WarAudioId audioId = isHumanUnit(entity)? WAR_HUMAN_DEAD : WAR_ORC_DEAD;
-                createAudioWithPosition(context, audioId, position, false);
+                wa_createAudioWithPosition(context, audioId, position, false);
             }
         }
     }
-    else if (isBuildingUnit(entity))
+    else if (wu_isBuildingUnit(entity))
     {
         s32 hpPercent = percentabi(unit->hp, unit->maxhp);
         if(hpPercent <= 33)
         {
-            if (!containsAnimation(context, entity, wsv_fromCString("hugeDamage")))
+            if (!wanim_containsAnimation(context, entity, wsv_fromCString("hugeDamage")))
             {
-                removeAnimation(context, entity, wsv_fromCString("littleDamage"));
-                createDamageAnimation(context, entity, wstr_fromCString("hugeDamage"), 2);
+                wanim_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
+                wanim_createDamageAnimation(context, entity, wstr_fromCString("hugeDamage"), 2);
             }
         }
         else if(hpPercent <= 66)
         {
-            if (!containsAnimation(context, entity, wsv_fromCString("littleDamage")))
+            if (!wanim_containsAnimation(context, entity, wsv_fromCString("littleDamage")))
             {
-                createDamageAnimation(context, entity, wstr_fromCString("littleDamage"), 1);
+                wanim_createDamageAnimation(context, entity, wstr_fromCString("littleDamage"), 1);
             }
         }
     }
 }
 
-void takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage)
+void we_takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage)
 {
     NOT_USED(context);
 
     assert(isWall(entity));
 
     // Minimal damage + [Random damage - Enemy's Armor]
-    s32 damage = getTotalDamage(minDamage, rndDamage, 0);
+    s32 damage = we_getTotalDamage(minDamage, rndDamage, 0);
     piece->hp -= damage;
     piece->hp = max(piece->hp, 0);
 }
 
-void rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
+void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
 
-    if (isMagicUnit(entity))
+    if (wu_isMagicUnit(entity))
     {
         // Since the attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
-        if (decreaseUnitMana(context, entity, 2))
+        if (we_decreaseUnitMana(context, entity, 2))
         {
-            vec2 origin = getUnitCenterPosition(entity, false);
-            vec2 target = getUnitCenterPosition(targetEntity, false);
-            WarProjectileType projectileType = getProjectileType(unit->type);
-            createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+            vec2 origin = wu_getUnitCenterPosition(entity, false);
+            vec2 target = wu_getUnitCenterPosition(targetEntity, false);
+            WarProjectileType projectileType = wu_getProjectileType(unit->type);
+            wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
         else
         {
-            // stop attacking if the magic unit rans out of mana
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            // wcmd_stop attacking if the magic unit rans out of mana
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
     }
     else
     {
-        vec2 origin = getUnitCenterPosition(entity, false);
-        vec2 target = getUnitCenterPosition(targetEntity, false);
-        WarProjectileType projectileType = getProjectileType(unit->type);
-        createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+        vec2 origin = wu_getUnitCenterPosition(entity, false);
+        vec2 target = wu_getUnitCenterPosition(targetEntity, false);
+        WarProjectileType projectileType = wu_getProjectileType(unit->type);
+        wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }
 }
 
-void rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece)
+void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece)
 {
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
 
-    if (isMagicUnit(entity))
+    if (wu_isMagicUnit(entity))
     {
         // Since the attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
-        if (decreaseUnitMana(context, entity, 2))
+        if (we_decreaseUnitMana(context, entity, 2))
         {
-            vec2 origin = getUnitCenterPosition(entity, false);
-            vec2 target = vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
-            WarProjectileType projectileType = getProjectileType(unit->type);
-            createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+            vec2 origin = wu_getUnitCenterPosition(entity, false);
+            vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+            WarProjectileType projectileType = wu_getProjectileType(unit->type);
+            wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
         else
         {
-            // stop attacking if the magic unit rans out of mana
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            // wcmd_stop attacking if the magic unit rans out of mana
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
     }
     else
     {
-        vec2 origin = getUnitCenterPosition(entity, false);
-        vec2 target = vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
-        WarProjectileType projectileType = getProjectileType(unit->type);
-        createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
+        vec2 origin = wu_getUnitCenterPosition(entity, false);
+        vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+        WarProjectileType projectileType = wu_getProjectileType(unit->type);
+        wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }
 }
 
-void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
+void we_meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
 
@@ -2223,7 +2223,7 @@ void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity
     WarUnitComponent* unit = &entity->unit;
 
     // every unit has a 20 percent chance to miss (except catapults)
-    if (isCatapultUnit(entity) || chance(80))
+    if (wu_isCatapultUnit(entity) || chance(80))
     {
         s32 minDamage = unit->minDamage;
         s32 rndDamage = unit->rndDamage;
@@ -2234,11 +2234,11 @@ void meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity
             minDamage = GOD_MODE_MIN_DAMAGE;
         }
 
-        takeDamage(context, targetEntity, minDamage, rndDamage);
+        we_takeDamage(context, targetEntity, minDamage, rndDamage);
     }
 }
 
-void meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece)
+void we_meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece)
 {
     WarMap* map = context->map;
 
@@ -2247,7 +2247,7 @@ void meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
     WarUnitComponent* unit = &entity->unit;
 
     // every unit has a 20 percent chance to miss (except catapults)
-    if (isCatapultUnit(entity) || chance(80))
+    if (wu_isCatapultUnit(entity) || chance(80))
     {
         s32 minDamage = unit->minDamage;
         s32 rndDamage = unit->rndDamage;
@@ -2258,7 +2258,7 @@ void meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEn
             minDamage = GOD_MODE_MIN_DAMAGE;
         }
 
-        takeWallDamage(context, targetEntity, piece, minDamage, rndDamage);
+        we_takeWallDamage(context, targetEntity, piece, minDamage, rndDamage);
     }
 }
 
@@ -2279,10 +2279,10 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
     {
         if (!isCollapsing(goldmine) && !isGoingToCollapse(goldmine))
         {
-            WarState* collapseState = createCollapseState(context, goldmine);
-            changeNextState(context, goldmine, collapseState, true, true);
+            WarState* collapseState = wst_createCollapseState(context, goldmine);
+            wst_changeNextState(context, goldmine, collapseState, true, true);
 
-            createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
+            wa_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
         }
     }
 

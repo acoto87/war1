@@ -4,25 +4,25 @@
 #include "war_units.h"
 #include "war_pathfinder.h"
 
-WarState* createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
+WarState* wst_createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
 {
-    WarState* state = createState(context, entity, WAR_STATE_REPAIRING);
+    WarState* state = wst_createState(context, entity, WAR_STATE_REPAIRING);
     state->repairing.buildingId = buildingId;
     state->repairing.insideBuilding = false;
     return state;
 }
 
-void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
-    WarEntity* building = findEntity(context, state->repairing.buildingId);
+    WarEntity* building = we_findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
     {
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
 
         return;
     }
@@ -36,8 +36,8 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
         // if there is already someone building it, go idle
         if (buildState->build.workerId)
         {
-            WarState* idleState = createIdleState(context, entity, true);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
 
             return;
         }
@@ -53,34 +53,34 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
     }
     else
     {
-        vec2 unitSize = getUnitSize(entity);
-        vec2 position = getUnitCenterPosition(entity, true);
-        vec2 targetPosition = getUnitCenterPosition(building, true);
+        vec2 unitSize = wu_getUnitSize(entity);
+        vec2 position = wu_getUnitCenterPosition(entity, true);
+        vec2 targetPosition = wu_getUnitCenterPosition(building, true);
 
         setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
-        setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
+        wu_setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
+        wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
 }
 
-void leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
     WarMap* map = context->map;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wu_getUnitCenterPosition(entity, true);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 }
 
-void updateRepairingState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = &entity->unit;
 
-    WarEntity* building = findEntity(context, state->repairing.buildingId);
+    WarEntity* building = we_findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || isCollapsing(building) || isGoingToCollapse(building))
@@ -90,13 +90,13 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
             entity->sprite.enabled = true;
 
             // find a valid spawn position for the unit
-            vec2 position = getUnitCenterPosition(entity, true);
-            vec2 spawnPosition = findEmptyPosition(map->finder, position);
-            setUnitCenterPosition(entity, spawnPosition, true);
+            vec2 position = wu_getUnitCenterPosition(entity, true);
+            vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+            wu_setUnitCenterPosition(entity, spawnPosition, true);
         }
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
 
         return;
     }
@@ -108,10 +108,10 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
         WarUnitAction* action = &unit->actions[unit->actionType];
         if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
         {
-            if (!decreasePlayerResources(context, player, 1, 1))
+            if (!we_decreasePlayerResources(context, player, 1, 1))
             {
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
                 return;
             }
 
@@ -129,8 +129,8 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
             {
                 building->unit.hp = building->unit.maxhp;
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
             }
 
             action->lastActionStep = WAR_ACTION_STEP_NONE;
@@ -141,16 +141,16 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
         entity->sprite.enabled = true;
 
         // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(entity, true);
-        vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(entity, spawnPosition, true);
+        vec2 position = wu_getUnitCenterPosition(entity, true);
+        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        wu_setUnitCenterPosition(entity, spawnPosition, true);
 
-        WarState* idleState = createIdleState(context, entity, true);
-        changeNextState(context, entity, idleState, true, true);
+        WarState* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, idleState, true, true);
     }
 }
 
-void freeRepairingState(WarContext* context, WarState* state)
+void wst_freeRepairingState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

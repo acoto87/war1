@@ -1,54 +1,54 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "shl/wstr.h"
 
 #include "war_animations.h"
 
-WarState* createCollapseState(WarContext* context, WarEntity* entity)
+WarState* wst_createCollapseState(WarContext* context, WarEntity* entity)
 {
-    WarState* state = createState(context, entity, WAR_STATE_COLLAPSE);
+    WarState* state = wst_createState(context, entity, WAR_STATE_COLLAPSE);
     return state;
 }
 
-void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
 
-    removeAnimation(context, entity, wsv_fromCString("littleDamage"));
-    removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
+    wanim_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
+    wanim_removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
 
     // disable the sprite component to just render the animation
     entity->sprite.enabled = false;
 
-    WarSpriteAnimation* collapseAnim = createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
+    WarSpriteAnimation* collapseAnim = wanim_createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
 
-    setDelay(state, getMapScaledTime(context, getAnimationDuration(collapseAnim)));
+    setDelay(state, wmap_getMapScaledTime(context, wanim_getAnimationDuration(collapseAnim)));
 
     WarEntity* ruins = map->ruin;
-    addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
-    determineRuinTypes(context, ruins);
+    we_addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
+    we_determineRuinTypes(context, ruins);
 
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
-    removeEntityFromSelection(context, entity->id);
+    wmap_removeEntityFromSelection(context, entity->id);
 }
 
-void leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateCollapseState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
-    removeEntityById(context, entity->id);
+    we_removeEntityById(context, entity->id);
 }
 
-void freeCollapseState(WarContext* context, WarState* state)
+void wst_freeCollapseState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

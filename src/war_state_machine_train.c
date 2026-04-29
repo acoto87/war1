@@ -1,10 +1,10 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_audio.h"
 
-WarState* createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
+WarState* wst_createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
 {
-    WarState* state = createState(context, entity, WAR_STATE_TRAIN);
+    WarState* state = wst_createState(context, entity, WAR_STATE_TRAIN);
     state->train.unitToBuild = unitToBuild;
     state->train.buildTime = 0;
     state->train.totalBuildTime = buildTime;
@@ -12,52 +12,52 @@ WarState* createTrainState(WarContext* context, WarEntity* entity, WarUnitType u
     return state;
 }
 
-void enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
     unit->buildPercent = 0;
 }
 
-void leaveTrainState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
 }
 
-void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
     if (state->train.cancelled)
     {
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, false);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         return;
     }
 
-    f32 trainSpeed = getMapScaledSpeed(context, context->deltaTime);
+    f32 trainSpeed = wmap_getMapScaledSpeed(context, context->deltaTime);
 
     // if hurry up cheat is enabled, speed up the train time by 5000%
     if (map->hurryUp)
@@ -73,21 +73,21 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
         unit->buildPercent = 1;
 
         // ...create the unit
-        WarEntity* unitToBuild = createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
+        WarEntity* unitToBuild = we_createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
 
         // ...find an empty position to put it
-        vec2 position = getUnitCenterPosition(entity, true);
-        vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(unitToBuild, spawnPosition, true);
+        vec2 position = wu_getUnitCenterPosition(entity, true);
+        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        wu_setUnitCenterPosition(unitToBuild, spawnPosition, true);
 
-        if (!changeStateNextState(context, entity, state))
+        if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = createIdleState(context, entity, false);
-            changeNextState(context, entity, idleState, true, true);
+            WarState* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, idleState, true, true);
         }
 
         WarAudioId audioId = isHumanUnit(unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
-        createAudio(context, audioId, false);
+        wa_createAudio(context, audioId, false);
 
         return;
     }
@@ -95,7 +95,7 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
     unit->buildPercent = percentabf01(state->train.buildTime, state->train.totalBuildTime);
 }
 
-void freeTrainState(WarContext* context, WarState* state)
+void wst_freeTrainState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

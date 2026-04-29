@@ -1,4 +1,4 @@
-#include "war_cheats.h"
+﻿#include "war_cheats.h"
 
 #include "shl/wstr.h"
 
@@ -11,32 +11,32 @@
 const WarCheatDescriptor cheatDescriptors[] =
 {
     // original cheats
-    { WAR_CHEAT_GOLD,           "Pot of gold",              false,  applyGoldCheat          },
-    { WAR_CHEAT_SPELLS,         "Eye of newt",              false,  applySpellsCheat        },
-    { WAR_CHEAT_UPGRADES,       "Iron forge",               false,  applyUpgradesCheat      },
-    { WAR_CHEAT_END,            "Ides of march",            false,  applyEndCheat           },
-    { WAR_CHEAT_ENABLE,         "Corwin of Amber",          false,  applyEnableCheat        },
-    { WAR_CHEAT_GOD_MODE,       "There can be only one",    false,  applyGodModeCheat       },
-    { WAR_CHEAT_WIN,            "Yours truly",              false,  applyWinCheat           },
-    { WAR_CHEAT_LOSS,           "Crushing defeat",          false,  applyLossCheat          },
-    { WAR_CHEAT_FOG,            "Sally Shears",             false,  applyFogOfWarCheat      },
-    { WAR_CHEAT_SKIP_HUMAN,     "Human",                    true,   applySkipHumanCheat     },
-    { WAR_CHEAT_SKIP_ORC,       "Orc",                      true,   applySkipOrcCheat       },
-    { WAR_CHEAT_SPEED,          "Hurry up guys",            false,  applySpeedCheat         },
+    { WAR_CHEAT_GOLD,           "Pot of gold",              false,  wcheat_applyGoldCheat          },
+    { WAR_CHEAT_SPELLS,         "Eye of newt",              false,  wcheat_applySpellsCheat        },
+    { WAR_CHEAT_UPGRADES,       "Iron forge",               false,  wcheat_applyUpgradesCheat      },
+    { WAR_CHEAT_END,            "Ides of march",            false,  wcheat_applyEndCheat           },
+    { WAR_CHEAT_ENABLE,         "Corwin of Amber",          false,  wcheat_applyEnableCheat        },
+    { WAR_CHEAT_GOD_MODE,       "There can be only one",    false,  wcheat_applyGodModeCheat       },
+    { WAR_CHEAT_WIN,            "Yours truly",              false,  wcheat_applyWinCheat           },
+    { WAR_CHEAT_LOSS,           "Crushing defeat",          false,  wcheat_applyLossCheat          },
+    { WAR_CHEAT_FOG,            "Sally Shears",             false,  wcheat_applyFogOfWarCheat      },
+    { WAR_CHEAT_SKIP_HUMAN,     "Human",                    true,   wcheat_applySkipHumanCheat     },
+    { WAR_CHEAT_SKIP_ORC,       "Orc",                      true,   wcheat_applySkipOrcCheat       },
+    { WAR_CHEAT_SPEED,          "Hurry up guys",            false,  wcheat_applySpeedCheat         },
 
     // custom cheats
-    { WAR_CHEAT_MUSIC_VOL,      "Music vol",                true,   applyMusicVolCheat      },
-    { WAR_CHEAT_SOUND_VOL,      "Sound vol",                true,   applySoundVolCheat      },
-    { WAR_CHEAT_MUSIC,          "Music",                    true,   applyMusicCheat         },
-    { WAR_CHEAT_SOUND,          "Sound",                    true,   applySoundCheat         },
-    { WAR_CHEAT_GLOBAL_SCALE,   "Scale",                    true,   applyGlobalScaleCheat   },
-    { WAR_CHEAT_GLOBAL_SPEED,   "Speed",                    true,   applyGlobalSpeedCheat   },
-    { WAR_CHEAT_EDIT,           "Edit",                     true,   applyEditCheat          },
-    { WAR_CHEAT_ADD_UNIT,       "Add unit",                 true,   applyAddUnitCheat       },
-    { WAR_CHEAT_RAIN_OF_FIRE,   "Rain of fire",             false,  applyRainOfFireCheat    },
+    { WAR_CHEAT_MUSIC_VOL,      "Music vol",                true,   wcheat_applyMusicVolCheat      },
+    { WAR_CHEAT_SOUND_VOL,      "Sound vol",                true,   wcheat_applySoundVolCheat      },
+    { WAR_CHEAT_MUSIC,          "Music",                    true,   wcheat_applyMusicCheat         },
+    { WAR_CHEAT_SOUND,          "Sound",                    true,   wcheat_applySoundCheat         },
+    { WAR_CHEAT_GLOBAL_SCALE,   "Scale",                    true,   wcheat_applyGlobalScaleCheat   },
+    { WAR_CHEAT_GLOBAL_SPEED,   "Speed",                    true,   wcheat_applyGlobalSpeedCheat   },
+    { WAR_CHEAT_EDIT,           "Edit",                     true,   wcheat_applyEditCheat          },
+    { WAR_CHEAT_ADD_UNIT,       "Add unit",                 true,   wcheat_applyAddUnitCheat       },
+    { WAR_CHEAT_RAIN_OF_FIRE,   "Rain of fire",             false,  wcheat_applyRainOfFireCheat    },
 };
 
-void applyCheat(WarContext* context, StringView text)
+void wcheat_applyCheat(WarContext* context, StringView text)
 {
     for (s32 i = 0; i < arrayLength(cheatDescriptors); i++)
     {
@@ -68,7 +68,7 @@ void applyCheat(WarContext* context, StringView text)
     logInfo("Unknown cheat: %.*s", (int)text.length, text.data);
 }
 
-void applyGoldCheat(WarContext* context, StringView argument)
+void wcheat_applyGoldCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -79,11 +79,11 @@ void applyGoldCheat(WarContext* context, StringView argument)
     if (!map)
         return;
 
-    increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
-    setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
+    we_increasePlayerResources(context, &map->players[0], CHEAT_GOLD_INCREASE, CHEAT_WOOD_INCREASE);
+    wcheatp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
-void applySpellsCheat(WarContext* context, StringView argument)
+void wcheat_applySpellsCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -135,18 +135,18 @@ void applySpellsCheat(WarContext* context, StringView argument)
 
     for (s32 i = 0; i < arrayLength(upgradeFeatures); i++)
     {
-        WarUpgradeData upgradeData = getUpgradeData(upgradeFeatures[i]);
+        WarUpgradeData upgradeData = wu_getUpgradeData(upgradeFeatures[i]);
         setUpgradeAllowed(player, upgradeFeatures[i], upgradeData.maxLevelAllowed);
         while (hasRemainingUpgrade(player, upgradeFeatures[i]))
         {
-            increaseUpgradeLevel(context, player, upgradeFeatures[i]);
+            we_increaseUpgradeLevel(context, player, upgradeFeatures[i]);
         }
     }
 
-    setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
+    wcheatp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
-void applyUpgradesCheat(WarContext* context, StringView argument)
+void wcheat_applyUpgradesCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -170,18 +170,18 @@ void applyUpgradesCheat(WarContext* context, StringView argument)
 
     for (s32 i = 0; i < arrayLength(upgrades); i++)
     {
-        WarUpgradeData upgradeData = getUpgradeData(upgrades[i]);
+        WarUpgradeData upgradeData = wu_getUpgradeData(upgrades[i]);
         setUpgradeAllowed(player, upgrades[i], upgradeData.maxLevelAllowed);
         while (hasRemainingUpgrade(player, upgrades[i]))
         {
-            increaseUpgradeLevel(context, player, upgrades[i]);
+            we_increaseUpgradeLevel(context, player, upgrades[i]);
         }
     }
 
-    setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
+    wcheatp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
-void applyEndCheat(WarContext* context, StringView argument)
+void wcheat_applyEndCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -194,26 +194,26 @@ void applyEndCheat(WarContext* context, StringView argument)
 
     map->playing = false;
 
-    showDemoEndMenu(context, true);
+    wmm_showDemoEndMenu(context, true);
 }
 
-void applyEnableCheat(WarContext* context, StringView argument)
+void wcheat_applyEnableCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
     if (!context->cheatsEnabled)
     {
         context->cheatsEnabled = true;
-        setCheatsFeedback(context, wstr_fromCString("cheats enabled"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("cheats enabled"));
     }
     else
     {
         context->cheatsEnabled = false;
-        setCheatsFeedback(context, wstr_fromCString("cheats disabled"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("cheats disabled"));
     }
 }
 
-void applyGodModeCheat(WarContext* context, StringView argument)
+void wcheat_applyGodModeCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -227,10 +227,10 @@ void applyGodModeCheat(WarContext* context, StringView argument)
     WarPlayerInfo* player = &map->players[0];
     player->godMode = !player->godMode;
 
-    setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
+    wcheatp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
-void applyWinCheat(WarContext* context, StringView argument)
+void wcheat_applyWinCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -243,10 +243,10 @@ void applyWinCheat(WarContext* context, StringView argument)
 
     map->result = WAR_LEVEL_RESULT_WIN;
 
-    setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
+    wcheatp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
-void applyLossCheat(WarContext* context, StringView argument)
+void wcheat_applyLossCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -259,10 +259,10 @@ void applyLossCheat(WarContext* context, StringView argument)
 
     map->result = WAR_LEVEL_RESULT_LOSE;
 
-    setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
+    wcheatp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
-void applyFogOfWarCheat(WarContext* context, StringView argument)
+void wcheat_applyFogOfWarCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -275,10 +275,10 @@ void applyFogOfWarCheat(WarContext* context, StringView argument)
 
     map->fowEnabled = !map->fowEnabled;
 
-    setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
+    wcheatp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
-void applySkipHumanCheat(WarContext* context, StringView argument)
+void wcheat_applySkipHumanCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -294,14 +294,14 @@ void applySkipHumanCheat(WarContext* context, StringView argument)
         if (level <= 0 || level > 2)
             return;
 
-        WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
         scene->briefing.race = WAR_RACE_HUMANS;
         scene->briefing.mapType = WAR_CAMPAIGN_HUMANS_01 + 2 * (level - 1);
-        setNextScene(context, scene, 1.0f);
+        wg_setNextScene(context, scene, 1.0f);
     }
 }
 
-void applySkipOrcCheat(WarContext* context, StringView argument)
+void wcheat_applySkipOrcCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -317,14 +317,14 @@ void applySkipOrcCheat(WarContext* context, StringView argument)
         if (level <= 0 || level > 2)
             return;
 
-        WarScene* scene = createScene(context, WAR_SCENE_BRIEFING);
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
         scene->briefing.race = WAR_RACE_ORCS;
         scene->briefing.mapType = WAR_CAMPAIGN_ORCS_01 + 2 * (level - 1);
-        setNextScene(context, scene, 1.0f);
+        wg_setNextScene(context, scene, 1.0f);
     }
 }
 
-void applySpeedCheat(WarContext* context, StringView argument)
+void wcheat_applySpeedCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -337,10 +337,10 @@ void applySpeedCheat(WarContext* context, StringView argument)
 
     map->hurryUp = !map->hurryUp;
 
-    setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
+    wcheatp_setCheatsFeedback(context, wstr_fromCString(CHEAT_FEEDBACK_WASCALLY_WABBIT));
 }
 
-void applyMusicCheat(WarContext* context, StringView argument)
+void wcheat_applyMusicCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -348,12 +348,12 @@ void applyMusicCheat(WarContext* context, StringView argument)
     if (wsv_equalsIgnoreCase(argument, wsv_fromCString("on")))
     {
         context->musicEnabled = true;
-        setCheatsFeedback(context, wstr_fromCString("Music on"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Music on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("off")))
     {
         context->musicEnabled = false;
-        setCheatsFeedback(context, wstr_fromCString("Music off"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Music off"));
     }
     else if (!isDemo(context))
     {
@@ -371,15 +371,15 @@ void applyMusicCheat(WarContext* context, StringView argument)
                 //
                 // for now remove all the active music (audios of type WAR_AUDIO_MIDI)
                 // and the create the new one
-                removeAudiosOfType(context, WAR_AUDIO_MIDI);
-                createAudio(context, musicId, true);
-                setCheatsFeedback(context, wstr_fromCStringFormat("Music %d set", musicId + 1));
+                wa_removeAudiosOfType(context, WAR_AUDIO_MIDI);
+                wa_createAudio(context, musicId, true);
+                wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Music %d set", musicId + 1));
             }
         }
     }
 }
 
-void applySoundCheat(WarContext* context, StringView argument)
+void wcheat_applySoundCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -387,16 +387,16 @@ void applySoundCheat(WarContext* context, StringView argument)
     if (wsv_equalsIgnoreCase(argument, wsv_fromCString("on")))
     {
         context->soundEnabled = true;
-        setCheatsFeedback(context, wstr_fromCString("Sounds on"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Sounds on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("off")))
     {
         context->soundEnabled = false;
-        setCheatsFeedback(context, wstr_fromCString("Sounds off"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Sounds off"));
     }
 }
 
-void applyMusicVolCheat(WarContext* context, StringView argument)
+void wcheat_applyMusicVolCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -423,12 +423,12 @@ void applyMusicVolCheat(WarContext* context, StringView argument)
         context->audioEnabled = true;
         context->musicEnabled = true;
 
-        setMusicVolume(context, (f32)musicVol / 100.0f);
-        setCheatsFeedback(context, wstr_fromCStringFormat("Music volume set to %d", musicVol));
+        wg_setMusicVolume(context, (f32)musicVol / 100.0f);
+        wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Music volume set to %d", musicVol));
     }
 }
 
-void applySoundVolCheat(WarContext* context, StringView argument)
+void wcheat_applySoundVolCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -455,12 +455,12 @@ void applySoundVolCheat(WarContext* context, StringView argument)
         context->audioEnabled = true;
         context->soundEnabled = true;
 
-        setSoundVolume(context, (f32)sfxVol / 100.0f);
-        setCheatsFeedback(context, wstr_fromCStringFormat("Sounds volume set to %d", sfxVol));
+        wg_setSoundVolume(context, (f32)sfxVol / 100.0f);
+        wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Sounds volume set to %d", sfxVol));
     }
 }
 
-void applyGlobalScaleCheat(WarContext* context, StringView argument)
+void wcheat_applyGlobalScaleCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -469,12 +469,12 @@ void applyGlobalScaleCheat(WarContext* context, StringView argument)
     if (wsv_tryParseS32(argument, &scale))
     {
         scale = clamp(scale, 1, 5);
-        setGlobalScale(context, (f32)scale);
-        setCheatsFeedback(context, wstr_fromCStringFormat("Global scale set to %d", scale));
+        wg_setGlobalScale(context, (f32)scale);
+        wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Global scale set to %d", scale));
     }
 }
 
-void applyGlobalSpeedCheat(WarContext* context, StringView argument)
+void wcheat_applyGlobalSpeedCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -483,12 +483,12 @@ void applyGlobalSpeedCheat(WarContext* context, StringView argument)
     if (wsv_tryParseS32(argument, &speed))
     {
         speed = clamp(speed, 1, 5);
-        setGlobalSpeed(context, (f32)speed);
-        setCheatsFeedback(context, wstr_fromCStringFormat("Global speed set to %d", speed));
+        wg_setGlobalSpeed(context, (f32)speed);
+        wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Global speed set to %d", speed));
     }
 }
 
-void applyEditCheat(WarContext* context, StringView argument)
+void wcheat_applyEditCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -506,33 +506,33 @@ void applyEditCheat(WarContext* context, StringView argument)
 
     if (wsv_equalsIgnoreCase(argument, wsv_fromCString("off")))
     {
-        setCheatsFeedback(context, wstr_fromCString("Edit off"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit off"));
         return;
     }
 
     if (wsv_equalsIgnoreCase(argument, wsv_fromCString("trees")))
     {
         map->editingTrees = true;
-        setCheatsFeedback(context, wstr_fromCString("Edit trees on"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit trees on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("walls")))
     {
         map->editingWalls = true;
-        setCheatsFeedback(context, wstr_fromCString("Edit walls on"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit walls on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("roads")))
     {
         map->editingRoads = true;
-        setCheatsFeedback(context, wstr_fromCString("Edit roads on"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit roads on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("ruins")))
     {
         map->editingRuins = true;
-        setCheatsFeedback(context, wstr_fromCString("Edit ruins on"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit ruins on"));
     }
 }
 
-void applyRainOfFireCheat(WarContext* context, StringView argument)
+void wcheat_applyRainOfFireCheat(WarContext* context, StringView argument)
 {
     NOT_USED(argument);
 
@@ -551,12 +551,12 @@ void applyRainOfFireCheat(WarContext* context, StringView argument)
     map->addingUnit = false;
 
     if (map->editingRainOfFire)
-        setCheatsFeedback(context, wstr_fromCString("Rain of fire on"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Rain of fire on"));
     else
-        setCheatsFeedback(context, wstr_fromCString("Rain of fire off"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Rain of fire off"));
 }
 
-void applyAddUnitCheat(WarContext* context, StringView argument)
+void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
         return;
@@ -575,7 +575,7 @@ void applyAddUnitCheat(WarContext* context, StringView argument)
 
     if (wsv_startsWithIgnoreCase(argument, wsv_fromCString("off")))
     {
-        setCheatsFeedback(context, wstr_fromCString("Add unit off"));
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Add unit off"));
         return;
     }
 
@@ -708,6 +708,6 @@ void applyAddUnitCheat(WarContext* context, StringView argument)
 
     if (map->addingUnit)
     {
-        setCheatsFeedback(context, wstr_fromCStringFormat("Add unit %.*s", (int)argument.length, argument.data));
+        wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Add unit %.*s", (int)argument.length, argument.data));
     }
 }

@@ -1,4 +1,4 @@
-#include "war_state_machine.h"
+﻿#include "war_state_machine.h"
 
 #include "war_actions.h"
 #include "war_animations.h"
@@ -7,58 +7,58 @@
 #include "war_units.h"
 #include "war_map.h"
 
-WarState* createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile)
+WarState* wst_createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile)
 {
-    WarState* state = createState(context, entity, WAR_STATE_CAST);
+    WarState* state = wst_createState(context, entity, WAR_STATE_CAST);
     state->cast.spellType = spellType;
     state->cast.targetEntityId = targetEntityId;
     state->cast.targetTile = targetTile;
     return state;
 }
 
-void enterCastState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void leaveCastState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_leaveCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
 }
 
-void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = vec2MapToTileCoordinates(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
 
     WarSpellType spellType = state->cast.spellType;
     WarEntityId targetEntityId = state->cast.targetEntityId;
     vec2 targetTile = state->cast.targetTile;
 
-    WarSpellStats stats = getSpellStats(spellType);
+    WarSpellStats stats = wu_getSpellStats(spellType);
 
     if (stats.range)
     {
-        if(!tileInRange(entity, targetTile, stats.range))
+        if(!wu_tileInRange(entity, targetTile, stats.range))
         {
-            WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, stats.range);
+            WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
             followState->nextState = state;
-            changeNextState(context, entity, followState, false, true);
+            wst_changeNextState(context, entity, followState, false, true);
             return;
         }
     }
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
-    setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
+    wu_setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
     if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
@@ -71,8 +71,8 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
         {
             case WAR_SPELL_HEALING:
             {
-                WarEntity* targetEntity = findEntity(context, targetEntityId);
-                if (targetEntity && isDudeUnit(targetEntity))
+                WarEntity* targetEntity = we_findEntity(context, targetEntityId);
+                if (targetEntity && wu_isDudeUnit(targetEntity))
                 {
                     WarUnitComponent* targetUnit = &targetEntity->unit;
 
@@ -88,20 +88,20 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     // recalculate how much mana the cleric need to spend
                     s32 manaToSpend = hpToRestore * stats.manaCost;
 
-                    increaseUnitHp(context, targetEntity, hpToRestore);
-                    decreaseUnitMana(context, entity, manaToSpend);
+                    we_increaseUnitHp(context, targetEntity, hpToRestore);
+                    we_decreaseUnitMana(context, entity, manaToSpend);
 
-                    vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                    vec2 targetPosition = wu_getUnitCenterPosition(targetEntity, false);
 
-                    WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                    addAnimationsComponent(context, animEntity);
+                    WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                    we_addAnimationsComponent(context, animEntity);
 
-                    createSpellAnimation(context, animEntity, targetPosition);
-                    createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                    wanim_createSpellAnimation(context, animEntity, targetPosition);
+                    wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
@@ -109,57 +109,57 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
             case WAR_SPELL_FAR_SIGHT:
             case WAR_SPELL_DARK_VISION:
             {
-                if (decreaseUnitMana(context, entity, stats.manaCost))
+                if (we_decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);
 
-                    WarEntity* sight = createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
-                    addSightComponent(context, sight, targetTile, stats.time);
-                    addAnimationsComponent(context, sight);
+                    WarEntity* sight = we_createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
+                    we_addSightComponent(context, sight, targetTile, stats.time);
+                    we_addAnimationsComponent(context, sight);
 
-                    createSpellAnimation(context, sight, targetPosition);
-                    createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                    wanim_createSpellAnimation(context, sight, targetPosition);
+                    wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
 
             case WAR_SPELL_INVISIBILITY:
             {
-                WarEntity* targetEntity = findEntity(context, targetEntityId);
-                if (targetEntity && isDudeUnit(targetEntity))
+                WarEntity* targetEntity = we_findEntity(context, targetEntityId);
+                if (targetEntity && wu_isDudeUnit(targetEntity))
                 {
                     WarUnitComponent* targetUnit = &targetEntity->unit;
 
-                    if (decreaseUnitMana(context, entity, stats.manaCost))
+                    if (we_decreaseUnitMana(context, entity, stats.manaCost))
                     {
                         targetUnit->invisible = true;
                         targetUnit->invisibilityTime = stats.time;
 
-                        vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                        vec2 targetPosition = wu_getUnitCenterPosition(targetEntity, false);
 
-                        WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                        addAnimationsComponent(context, animEntity);
+                        WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                        we_addAnimationsComponent(context, animEntity);
 
-                        createSpellAnimation(context, animEntity, targetPosition);
-                        createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                        wanim_createSpellAnimation(context, animEntity, targetPosition);
+                        wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                     }
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
 
             case WAR_SPELL_RAIN_OF_FIRE:
             {
-                if (decreaseUnitMana(context, entity, stats.manaCost))
+                if (we_decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetTilePosition = vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetTilePosition = wmap_vec2TileToMapCoordinates(targetTile, true);
                     s32 radius = 2 * MEGA_TILE_WIDTH;
 
                     s32 projectilesCount = 5;
@@ -172,13 +172,13 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
                         vec2 origin = vec2f(target.x, map->viewport.y - offsety);
 
-                        createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+                        wproj_createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
                     }
                 }
                 else
                 {
-                    WarState* idleState = createIdleState(context, entity, true);
-                    changeNextState(context, entity, idleState, true, true);
+                    WarState* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, idleState, true, true);
                 }
 
                 break;
@@ -186,84 +186,84 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
             case WAR_SPELL_RAISE_DEAD:
             {
-                WarEntityList* nearUnits = getNearUnits(context, targetTile, 4);
+                WarEntityList* nearUnits = we_getNearUnits(context, targetTile, 4);
                 for (s32 i = 0; i < nearUnits->count; i++)
                 {
                     WarEntity* targetEntity = nearUnits->items[i];
-                    if (targetEntity && isCorpseUnit(targetEntity))
+                    if (targetEntity && wu_isCorpseUnit(targetEntity))
                     {
-                        if (decreaseUnitMana(context, entity, stats.manaCost))
+                        if (we_decreaseUnitMana(context, entity, stats.manaCost))
                         {
-                            vec2 targetPosition = getUnitCenterPosition(targetEntity, true);
-                            createUnit(context, WAR_UNIT_SKELETON, (s32)targetPosition.x, (s32)targetPosition.y,
+                            vec2 targetPosition = wu_getUnitCenterPosition(targetEntity, true);
+                            we_createUnit(context, WAR_UNIT_SKELETON, (s32)targetPosition.x, (s32)targetPosition.y,
                                        unit->player, WAR_RESOURCE_NONE, 0, true);
 
-                            targetPosition = getUnitCenterPosition(targetEntity, false);
+                            targetPosition = wu_getUnitCenterPosition(targetEntity, false);
 
-                            WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                            addAnimationsComponent(context, animEntity);
+                            WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                            we_addAnimationsComponent(context, animEntity);
 
-                            createSpellAnimation(context, animEntity, targetPosition);
-                            createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                            wanim_createSpellAnimation(context, animEntity, targetPosition);
+                            wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
 
-                            removeEntityById(context, targetEntity->id);
+                            we_removeEntityById(context, targetEntity->id);
                         }
                     }
                 }
                 WarEntityListFree(nearUnits);
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
 
             case WAR_SPELL_UNHOLY_ARMOR:
             {
-                WarEntity* targetEntity = findEntity(context, targetEntityId);
-                if (targetEntity && isDudeUnit(targetEntity))
+                WarEntity* targetEntity = we_findEntity(context, targetEntityId);
+                if (targetEntity && wu_isDudeUnit(targetEntity))
                 {
                     WarUnitComponent* targetUnit = &targetEntity->unit;
 
-                    if (decreaseUnitMana(context, entity, stats.manaCost))
+                    if (we_decreaseUnitMana(context, entity, stats.manaCost))
                     {
-                        decreaseUnitHp(context, targetEntity, halfi(targetUnit->hp));
+                        we_decreaseUnitHp(context, targetEntity, halfi(targetUnit->hp));
 
                         targetUnit->invulnerable = true;
                         targetUnit->invulnerabilityTime = stats.time;
 
-                        vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                        vec2 targetPosition = wu_getUnitCenterPosition(targetEntity, false);
 
-                        WarEntity* animEntity = createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                        addAnimationsComponent(context, animEntity);
+                        WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+                        we_addAnimationsComponent(context, animEntity);
 
-                        createSpellAnimation(context, animEntity, targetPosition);
-                        createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                        wanim_createSpellAnimation(context, animEntity, targetPosition);
+                        wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                     }
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
 
             case WAR_SPELL_POISON_CLOUD:
             {
-                if (decreaseUnitMana(context, entity, stats.manaCost))
+                if (we_decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetPosition = vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);
 
-                    WarEntity* poisonCloud = createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
-                    addPoisonCloudComponent(context, poisonCloud, targetTile, stats.time);
-                    addAnimationsComponent(context, poisonCloud);
+                    WarEntity* poisonCloud = we_createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
+                    we_addPoisonCloudComponent(context, poisonCloud, targetTile, stats.time);
+                    we_addAnimationsComponent(context, poisonCloud);
 
-                    createPoisonCloudAnimation(context, poisonCloud, targetPosition);
-                    createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                    wanim_createPoisonCloudAnimation(context, poisonCloud, targetPosition);
+                    wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
                 }
 
-                WarState* idleState = createIdleState(context, entity, true);
-                changeNextState(context, entity, idleState, true, true);
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
 
                 break;
             }
@@ -281,7 +281,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     }
 }
 
-void freeCastState(WarContext* context, WarState* state)
+void wst_freeCastState(WarContext* context, WarState* state)
 {
     NOT_USED(state);
 }

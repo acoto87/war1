@@ -51,24 +51,24 @@
 #define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
 #define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)
 
-void setGlobalScale(WarContext* context, f32 scale);
-void changeGlobalScale(WarContext* context, f32 deltaScale);
+void wg_setGlobalScale(WarContext* context, f32 scale);
+void wg_changeGlobalScale(WarContext* context, f32 deltaScale);
 
-void setGlobalSpeed(WarContext* context, f32 speed);
-void changeGlobalSpeed(WarContext* context, f32 deltaSpeed);
+void wg_setGlobalSpeed(WarContext* context, f32 speed);
+void wg_changeGlobalSpeed(WarContext* context, f32 deltaSpeed);
 
-void setMusicVolume(WarContext* context, f32 volume);
-void changeMusicVolume(WarContext* context, f32 deltaVolume);
+void wg_setMusicVolume(WarContext* context, f32 volume);
+void wg_changeMusicVolume(WarContext* context, f32 deltaVolume);
 
-void setSoundVolume(WarContext* context, f32 volume);
-void changeSoundVolume(WarContext* context, f32 deltaVolume);
+void wg_setSoundVolume(WarContext* context, f32 volume);
+void wg_changeSoundVolume(WarContext* context, f32 deltaVolume);
 
-void setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay);
-void setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
+void wg_setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay);
+void wg_setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
 
-bool loadDataFile(WarContext* context);
+bool wg_loadDataFile(WarContext* context);
 
-vec2 getDirFromArrowKeys(WarContext* context)
+vec2 wg_getDirFromArrowKeys(WarContext* context)
 {
     WarInput* input = &context->input;
 
@@ -88,7 +88,7 @@ vec2 getDirFromArrowKeys(WarContext* context)
     return dir;
 }
 
-vec2 getDirFromMousePos(WarContext* context)
+vec2 wg_getDirFromMousePos(WarContext* context)
 {
     WarInput* input = &context->input;
 
