@@ -794,7 +794,7 @@ void enterMap(WarContext* context)
     }
 
     // init AI
-    initAIPlayers(context);
+    wai_initAIPlayers(context);
 
     // add ui entities
     createMapUI(context);
@@ -2476,7 +2476,7 @@ void updateMap(WarContext* context)
         updateSelection(context);
     }
 
-    updateAIPlayers(context);
+    wai_updateAIPlayers(context);
 
     updateStateMachines(context);
     updateActions(context);
