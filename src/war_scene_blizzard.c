@@ -24,6 +24,6 @@ void wscb_updateSceneBlizzard(WarContext* context)
     if (scene->blizzard.time <= 0)
     {
         WarScene* nextScene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
-        setNextScene(context, nextScene, 0.3f);
+        wg_setNextScene(context, nextScene, 0.3f);
     }
 }

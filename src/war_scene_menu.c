@@ -440,7 +440,7 @@ void wscm_handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
     WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
     scene->briefing.race = WAR_RACE_ORCS;
     scene->briefing.mapType = WAR_CAMPAIGN_ORCS_01;
-    setNextScene(context, scene, 1.0f);
+    wg_setNextScene(context, scene, 1.0f);
 }
 
 void wscm_handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
@@ -450,7 +450,7 @@ void wscm_handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
     WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
     scene->briefing.race = WAR_RACE_HUMANS;
     scene->briefing.mapType = WAR_CAMPAIGN_HUMANS_01;
-    setNextScene(context, scene, 1.0f);
+    wg_setNextScene(context, scene, 1.0f);
 }
 
 void wscm_handleCustomGame(WarContext* context, WarEntity* entity)
@@ -556,5 +556,5 @@ void wscm_handleCustomGameOk(WarContext* context, WarEntity* entity)
     WarScene* scene = context->scene;
 
     WarMap* map = createCustomMap(context, scene->menu.customMap, scene->menu.yourRace, scene->menu.enemyRace);
-    setNextMap(context, map, 1.0f);
+    wg_setNextMap(context, map, 1.0f);
 }

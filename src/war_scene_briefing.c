@@ -156,6 +156,6 @@ void wscbr_updateSceneBriefing(WarContext* context)
         wasKeyPressed(input, WAR_KEY_SPACE))
     {
         WarMap* map = wmap_createMap(context, scene->briefing.mapType);
-        setNextMap(context, map, 1.0f);
+        wg_setNextMap(context, map, 1.0f);
     }
 }

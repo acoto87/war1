@@ -297,7 +297,7 @@ void wcheat_applySkipHumanCheat(WarContext* context, StringView argument)
         WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
         scene->briefing.race = WAR_RACE_HUMANS;
         scene->briefing.mapType = WAR_CAMPAIGN_HUMANS_01 + 2 * (level - 1);
-        setNextScene(context, scene, 1.0f);
+        wg_setNextScene(context, scene, 1.0f);
     }
 }
 
@@ -320,7 +320,7 @@ void wcheat_applySkipOrcCheat(WarContext* context, StringView argument)
         WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
         scene->briefing.race = WAR_RACE_ORCS;
         scene->briefing.mapType = WAR_CAMPAIGN_ORCS_01 + 2 * (level - 1);
-        setNextScene(context, scene, 1.0f);
+        wg_setNextScene(context, scene, 1.0f);
     }
 }
 
@@ -423,7 +423,7 @@ void wcheat_applyMusicVolCheat(WarContext* context, StringView argument)
         context->audioEnabled = true;
         context->musicEnabled = true;
 
-        setMusicVolume(context, (f32)musicVol / 100.0f);
+        wg_setMusicVolume(context, (f32)musicVol / 100.0f);
         wcp_setCheatsFeedback(context, wstr_fromCStringFormat("Music volume set to %d", musicVol));
     }
 }
@@ -455,7 +455,7 @@ void wcheat_applySoundVolCheat(WarContext* context, StringView argument)
         context->audioEnabled = true;
         context->soundEnabled = true;
 
-        setSoundVolume(context, (f32)sfxVol / 100.0f);
+        wg_setSoundVolume(context, (f32)sfxVol / 100.0f);
         wcp_setCheatsFeedback(context, wstr_fromCStringFormat("Sounds volume set to %d", sfxVol));
     }
 }
@@ -469,7 +469,7 @@ void wcheat_applyGlobalScaleCheat(WarContext* context, StringView argument)
     if (wsv_tryParseS32(argument, &scale))
     {
         scale = clamp(scale, 1, 5);
-        setGlobalScale(context, (f32)scale);
+        wg_setGlobalScale(context, (f32)scale);
         wcp_setCheatsFeedback(context, wstr_fromCStringFormat("Global scale set to %d", scale));
     }
 }
@@ -483,7 +483,7 @@ void wcheat_applyGlobalSpeedCheat(WarContext* context, StringView argument)
     if (wsv_tryParseS32(argument, &speed))
     {
         speed = clamp(speed, 1, 5);
-        setGlobalSpeed(context, (f32)speed);
+        wg_setGlobalSpeed(context, (f32)speed);
         wcp_setCheatsFeedback(context, wstr_fromCStringFormat("Global speed set to %d", speed));
     }
 }

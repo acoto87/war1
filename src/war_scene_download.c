@@ -111,7 +111,7 @@ void wscd_updateSceneDownload(WarContext* context)
             if (wasKeyPressed(input, WAR_KEY_ENTER))
             {
                 // load DATA.WAR file
-                if (loadDataFile(context))
+                if (wg_loadDataFile(context))
                 {
                     scene->download.status = WAR_SCENE_DOWNLOAD_FILE_LOADED;
                 }
@@ -126,7 +126,7 @@ void wscd_updateSceneDownload(WarContext* context)
         case WAR_SCENE_DOWNLOAD_FILE_LOADED:
         {
             WarScene* nextScene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
-            setNextScene(context, nextScene, 0.0f);
+            wg_setNextScene(context, nextScene, 0.0f);
 
             break;
         }

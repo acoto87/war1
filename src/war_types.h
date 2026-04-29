@@ -2304,7 +2304,7 @@ typedef struct _WarContext
     // Pending audio-entity removals queued by the audio callback thread.
     // The callback posts finished entity IDs here (under audioRemoveMutex)
     // instead of calling went_removeEntityById directly.  The main thread drains
-    // this queue at the top of each updateGame tick.
+    // this queue at the top of each wg_updateGame tick.
     SDL_Mutex*  audioRemoveMutex;
     WarEntityId audioRemovePending[AUDIO_REMOVE_PENDING_MAX];
     s32         audioRemovePendingCount;

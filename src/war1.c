@@ -147,7 +147,7 @@ int main(void)
     }
 
     WarContext context = {0};
-    if (!initGame(&context))
+    if (!wg_initGame(&context))
     {
         logError("Can't initialize the game!");
         return -1;
@@ -159,12 +159,12 @@ int main(void)
 
     while (running)
     {
-        beginInputFrame(&context);
+        wg_beginInputFrame(&context);
 
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            processGameEvent(&context, &event);
+            wg_processGameEvent(&context, &event);
 
             if (event.type == SDL_EVENT_QUIT)
             {
@@ -175,15 +175,15 @@ int main(void)
         wstr_setFormat(&context.windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context.time, context.fps, context.deltaTime, frameCount);
         SDL_SetWindowTitle(context.window, wstr_cstr(&context.windowTitle));
 
-        updateGame(&context);
-        renderGame(&context);
-        presentGame(&context);
+        wg_updateGame(&context);
+        wg_renderGame(&context);
+        wg_presentGame(&context);
         TracyCFrameMark
 
         frameCount++;
     }
 
-    quitGame(&context);
+    wg_quitGame(&context);
     war_alloc_free();
 	return 0;
 }

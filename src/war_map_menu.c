@@ -1035,7 +1035,7 @@ void wmm_handleRestartRestart(WarContext* context, WarEntity* entity)
     s32 levelInfoIndex = context->map->levelInfoIndex;
 
     WarMap* map = wmap_createMap(context, levelInfoIndex);
-    setNextMap(context, map, 1.0f);
+    wg_setNextMap(context, map, 1.0f);
 }
 
 void wmm_handleRestartCancel(WarContext* context, WarEntity* entity)
@@ -1070,14 +1070,14 @@ void wmm_handleGameOverContinue(WarContext* context, WarEntity* entity)
         WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
         scene->briefing.race = map->players[0].race;
         scene->briefing.mapType = levelInfoIndex + 2;
-        setNextScene(context, scene, 1.0f);
+        wg_setNextScene(context, scene, 1.0f);
     }
     else if (map->result == WAR_LEVEL_RESULT_LOSE)
     {
         WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);
         scene->briefing.race = map->players[0].race;
         scene->briefing.mapType = levelInfoIndex;
-        setNextScene(context, scene, 1.0f);
+        wg_setNextScene(context, scene, 1.0f);
     }
     else
     {
@@ -1099,7 +1099,7 @@ void wmm_handleQuitMenu(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
 
     WarScene* scene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
-    setNextScene(context, scene, 1.0f);
+    wg_setNextScene(context, scene, 1.0f);
 }
 
 void wmm_handleQuitCancel(WarContext* context, WarEntity* entity)
@@ -1119,5 +1119,5 @@ void wmm_handleDemoEndMenu(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
 
     WarScene* scene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
-    setNextScene(context, scene, 1.0f);
+    wg_setNextScene(context, scene, 1.0f);
 }
