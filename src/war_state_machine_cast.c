@@ -36,18 +36,18 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
 
     WarSpellType spellType = state->cast.spellType;
     WarEntityId targetEntityId = state->cast.targetEntityId;
     vec2 targetTile = state->cast.targetTile;
 
-    WarSpellStats stats = getSpellStats(spellType);
+    WarSpellStats stats = wun_getSpellStats(spellType);
 
     if (stats.range)
     {
-        if(!tileInRange(entity, targetTile, stats.range))
+        if(!wun_tileInRange(entity, targetTile, stats.range))
         {
             WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, stats.range);
             followState->nextState = state;
@@ -57,7 +57,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
+    wun_setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
@@ -72,7 +72,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
             case WAR_SPELL_HEALING:
             {
                 WarEntity* targetEntity = went_findEntity(context, targetEntityId);
-                if (targetEntity && isDudeUnit(targetEntity))
+                if (targetEntity && wun_isDudeUnit(targetEntity))
                 {
                     WarUnitComponent* targetUnit = &targetEntity->unit;
 
@@ -91,7 +91,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                     went_increaseUnitHp(context, targetEntity, hpToRestore);
                     went_decreaseUnitMana(context, entity, manaToSpend);
 
-                    vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                    vec2 targetPosition = wun_getUnitCenterPosition(targetEntity, false);
 
                     WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                     went_addAnimationsComponent(context, animEntity);
@@ -130,7 +130,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
             case WAR_SPELL_INVISIBILITY:
             {
                 WarEntity* targetEntity = went_findEntity(context, targetEntityId);
-                if (targetEntity && isDudeUnit(targetEntity))
+                if (targetEntity && wun_isDudeUnit(targetEntity))
                 {
                     WarUnitComponent* targetUnit = &targetEntity->unit;
 
@@ -139,7 +139,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         targetUnit->invisible = true;
                         targetUnit->invisibilityTime = stats.time;
 
-                        vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                        vec2 targetPosition = wun_getUnitCenterPosition(targetEntity, false);
 
                         WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                         went_addAnimationsComponent(context, animEntity);
@@ -190,15 +190,15 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                 for (s32 i = 0; i < nearUnits->count; i++)
                 {
                     WarEntity* targetEntity = nearUnits->items[i];
-                    if (targetEntity && isCorpseUnit(targetEntity))
+                    if (targetEntity && wun_isCorpseUnit(targetEntity))
                     {
                         if (went_decreaseUnitMana(context, entity, stats.manaCost))
                         {
-                            vec2 targetPosition = getUnitCenterPosition(targetEntity, true);
+                            vec2 targetPosition = wun_getUnitCenterPosition(targetEntity, true);
                             went_createUnit(context, WAR_UNIT_SKELETON, (s32)targetPosition.x, (s32)targetPosition.y,
                                        unit->player, WAR_RESOURCE_NONE, 0, true);
 
-                            targetPosition = getUnitCenterPosition(targetEntity, false);
+                            targetPosition = wun_getUnitCenterPosition(targetEntity, false);
 
                             WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                             went_addAnimationsComponent(context, animEntity);
@@ -221,7 +221,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
             case WAR_SPELL_UNHOLY_ARMOR:
             {
                 WarEntity* targetEntity = went_findEntity(context, targetEntityId);
-                if (targetEntity && isDudeUnit(targetEntity))
+                if (targetEntity && wun_isDudeUnit(targetEntity))
                 {
                     WarUnitComponent* targetUnit = &targetEntity->unit;
 
@@ -232,7 +232,7 @@ void updateCastState(WarContext* context, WarEntity* entity, WarState* state)
                         targetUnit->invulnerable = true;
                         targetUnit->invulnerabilityTime = stats.time;
 
-                        vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                        vec2 targetPosition = wun_getUnitCenterPosition(targetEntity, false);
 
                         WarEntity* animEntity = went_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                         went_addAnimationsComponent(context, animEntity);

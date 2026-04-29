@@ -71,11 +71,11 @@ void wai_initAI(WarContext* context, WarPlayerInfo* aiPlayer)
     WarAICommandList* commands = &customData->commands;
     WarAICommandListInit(commands, WarAICommandListDefaultOptions);
 
-    WarUnitType townHall = getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
+    WarUnitType townHall = wun_getUnitTypeForRace(WAR_UNIT_TOWNHALL_HUMANS, aiPlayer->race);
     WarAICommandListAdd(commands, wai_createUnitRequest(context, aiPlayer, townHall, 1));
     WarAICommandListAdd(commands, wai_createWaitForUnit(context, aiPlayer, townHall, 1));
 
-    WarUnitType worker = getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
+    WarUnitType worker = wun_getUnitTypeForRace(WAR_UNIT_PEASANT, aiPlayer->race);
     WarAICommandListAdd(commands, wai_createUnitRequest(context, aiPlayer, worker, 2));
     WarAICommandListAdd(commands, wai_createWaitForUnit(context, aiPlayer, worker, 2));
     WarAICommandListAdd(commands, wai_createUnitRequest(context, aiPlayer, worker, 2));
@@ -116,9 +116,9 @@ void wai_initAIPlayers(WarContext* context)
 
 bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType)
 {
-    if (isDudeUnitType(unitType))
+    if (wun_isDudeUnitType(unitType))
     {
-        WarUnitStats stats = getUnitStats(unitType);
+        WarUnitStats stats = wun_getUnitStats(unitType);
         if (!went_enoughPlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
         {
             // there is not enough resources to create the unit
@@ -132,7 +132,7 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
             return false;
         }
 
-        WarUnitType producerType = getProducerUnitOfType(unitType);
+        WarUnitType producerType = wun_getProducerUnitOfType(unitType);
         if (isValidUnitType(producerType))
         {
             WarEntityList* units = went_getUnitsOfType(context, producerType);
@@ -160,7 +160,7 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
         return false;
     }
 
-    if (isBuildingUnitType(unitType))
+    if (wun_isBuildingUnitType(unitType))
     {
         // find a free worker
         // find a place to build
@@ -198,7 +198,7 @@ bool wai_executeWaitAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarA
 {
     command->status = WAR_AI_COMMAND_STATUS_STARTED;
 
-    s32 numberOfUnits = getNumberOfUnitsOfType(context, aiPlayer->index, command->wait.unitType);
+    s32 numberOfUnits = wun_getNumberOfUnitsOfType(context, aiPlayer->index, command->wait.unitType);
     if (numberOfUnits >= command->wait.count)
     {
         command->status = WAR_AI_COMMAND_STATUS_COMPLETED;

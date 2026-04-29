@@ -970,7 +970,7 @@ typedef struct
     WarClickHandler clickHandler;
 } WarUnitCommandData;
 
-WarUnitData getUnitData(WarUnitType type)
+WarUnitData wun_getUnitData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(unitsData);
@@ -981,7 +981,7 @@ WarUnitData getUnitData(WarUnitType type)
     return unitsData[index];
 }
 
-WarWorkerData getWorkerData(WarUnitType type)
+WarWorkerData wun_getWorkerData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(workersData);
@@ -992,7 +992,7 @@ WarWorkerData getWorkerData(WarUnitType type)
     return workersData[index];
 }
 
-WarBuildingData getBuildingData(WarUnitType type)
+WarBuildingData wun_getBuildingData(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(buildingsData);
@@ -1003,7 +1003,7 @@ WarBuildingData getBuildingData(WarUnitType type)
     return buildingsData[index];
 }
 
-WarRoadData getRoadData(WarRoadPieceType type)
+WarRoadData wun_getRoadData(WarRoadPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(roadsData);
@@ -1014,7 +1014,7 @@ WarRoadData getRoadData(WarRoadPieceType type)
     return roadsData[index];
 }
 
-WarWallData getWallData(WarWallPieceType type)
+WarWallData wun_getWallData(WarWallPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(wallsData);
@@ -1025,7 +1025,7 @@ WarWallData getWallData(WarWallPieceType type)
     return wallsData[index];
 }
 
-WarRuinData getRuinData(WarRuinPieceType type)
+WarRuinData wun_getRuinData(WarRuinPieceType type)
 {
     s32 index = 0;
     s32 length = arrayLength(ruinsData);
@@ -1036,7 +1036,7 @@ WarRuinData getRuinData(WarRuinPieceType type)
     return ruinsData[index];
 }
 
-WarTreeData getTreeData(WarTreeTileType type)
+WarTreeData wun_getTreeData(WarTreeTileType type)
 {
     s32 index = 0;
     s32 length = arrayLength(treesData);
@@ -1047,7 +1047,7 @@ WarTreeData getTreeData(WarTreeTileType type)
     return treesData[index];
 }
 
-WarUpgradeData getUpgradeData(WarUpgradeType type)
+WarUpgradeData wun_getUpgradeData(WarUpgradeType type)
 {
     s32 index = 0;
     s32 length = arrayLength(upgradesData);
@@ -1058,7 +1058,7 @@ WarUpgradeData getUpgradeData(WarUpgradeType type)
     return upgradesData[index];
 }
 
-WarSpellData getSpellData(WarSpellType type)
+WarSpellData wun_getSpellData(WarSpellType type)
 {
     s32 index = 0;
     s32 length = arrayLength(spellData);
@@ -1069,7 +1069,7 @@ WarSpellData getSpellData(WarSpellType type)
     return spellData[index];
 }
 
-WarUnitStats getUnitStats(WarUnitType type)
+WarUnitStats wun_getUnitStats(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(unitStats);
@@ -1080,7 +1080,7 @@ WarUnitStats getUnitStats(WarUnitType type)
     return unitStats[index];
 }
 
-WarBuildingStats getBuildingStats(WarUnitType type)
+WarBuildingStats wun_getBuildingStats(WarUnitType type)
 {
     s32 index = 0;
     s32 length = arrayLength(buildingStats);
@@ -1091,7 +1091,7 @@ WarBuildingStats getBuildingStats(WarUnitType type)
     return buildingStats[index];
 }
 
-WarUpgradeStats getUpgradeStats(WarUpgradeType type)
+WarUpgradeStats wun_getUpgradeStats(WarUpgradeType type)
 {
     s32 index = 0;
     s32 length = arrayLength(upgradeStats);
@@ -1102,7 +1102,7 @@ WarUpgradeStats getUpgradeStats(WarUpgradeType type)
     return upgradeStats[index];
 }
 
-WarSpellStats getSpellStats(WarSpellType type)
+WarSpellStats wun_getSpellStats(WarSpellType type)
 {
     s32 index = 0;
     s32 length = arrayLength(spellStats);
@@ -1113,7 +1113,7 @@ WarSpellStats getSpellStats(WarSpellType type)
     return spellStats[index];
 }
 
-WarSpellMapping getSpellMapping(WarSpellType type)
+WarSpellMapping wun_getSpellMapping(WarSpellType type)
 {
     s32 index = 0;
     s32 length = arrayLength(spellMappings);
@@ -1124,7 +1124,7 @@ WarSpellMapping getSpellMapping(WarSpellType type)
     return spellMappings[index];
 }
 
-WarUnitCommandBaseData getCommandBaseData(WarUnitCommandType type)
+WarUnitCommandBaseData wun_getCommandBaseData(WarUnitCommandType type)
 {
     s32 index = 0;
     s32 length = arrayLength(commandsBaseData);
@@ -1135,7 +1135,7 @@ WarUnitCommandBaseData getCommandBaseData(WarUnitCommandType type)
     return commandsBaseData[index];
 }
 
-WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)
+WarUnitCommandMapping wun_getCommandMapping(WarUnitCommandType type)
 {
     s32 index = 0;
     s32 length = arrayLength(commandMappings);
@@ -1146,7 +1146,7 @@ WarUnitCommandMapping getCommandMapping(WarUnitCommandType type)
     return commandMappings[index];
 }
 
-WarUnitCommandMapping getCommandMappingFromUnitType(WarUnitType unitType)
+WarUnitCommandMapping wun_getCommandMappingFromUnitType(WarUnitType unitType)
 {
     s32 index = 0;
     s32 length = index + 30;
@@ -1157,7 +1157,7 @@ WarUnitCommandMapping getCommandMappingFromUnitType(WarUnitType unitType)
     return commandMappings[index];
 }
 
-WarUnitCommandMapping getCommandMappingFromUpgradeType(WarUpgradeType upgradeType)
+WarUnitCommandMapping wun_getCommandMappingFromUpgradeType(WarUpgradeType upgradeType)
 {
     s32 index = 30;
     s32 length = index + 20;
@@ -1168,7 +1168,7 @@ WarUnitCommandMapping getCommandMappingFromUpgradeType(WarUpgradeType upgradeTyp
     return commandMappings[index];
 }
 
-WarUnitCommandMapping getCommandMappingFromSpellType(WarSpellType spellType)
+WarUnitCommandMapping wun_getCommandMappingFromSpellType(WarSpellType spellType)
 {
     s32 index = 50;
     s32 length = arrayLength(commandMappings);
@@ -1185,7 +1185,7 @@ WarUnitCommandMapping getCommandMappingFromSpellType(WarSpellType spellType)
 #define isWall(entity) ((entity)->type == WAR_ENTITY_TYPE_WALL)
 #define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
 
-bool isDudeUnitType(WarUnitType type)
+bool wun_isDudeUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1225,7 +1225,7 @@ bool isDudeUnitType(WarUnitType type)
     }
 }
 
-bool isBuildingUnitType(WarUnitType type)
+bool wun_isBuildingUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1255,7 +1255,7 @@ bool isBuildingUnitType(WarUnitType type)
     }
 }
 
-bool isWorkerUnitType(WarUnitType type)
+bool wun_isWorkerUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1268,7 +1268,7 @@ bool isWorkerUnitType(WarUnitType type)
     }
 }
 
-bool isWarriorUnitType(WarUnitType type)
+bool wun_isWarriorUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1304,7 +1304,7 @@ bool isWarriorUnitType(WarUnitType type)
     }
 }
 
-bool isRangeUnitType(WarUnitType type)
+bool wun_isRangeUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1325,7 +1325,7 @@ bool isRangeUnitType(WarUnitType type)
     }
 }
 
-bool isMeleeUnitType(WarUnitType type)
+bool wun_isMeleeUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1350,7 +1350,7 @@ bool isMeleeUnitType(WarUnitType type)
     }
 }
 
-bool isFistUnitType(WarUnitType type)
+bool wun_isFistUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1366,7 +1366,7 @@ bool isFistUnitType(WarUnitType type)
     }
 }
 
-bool isSwordUnitType(WarUnitType type)
+bool wun_isSwordUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1385,7 +1385,7 @@ bool isSwordUnitType(WarUnitType type)
     }
 }
 
-bool isMagicUnitType(WarUnitType type)
+bool wun_isMagicUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1405,7 +1405,7 @@ bool isMagicUnitType(WarUnitType type)
     }
 }
 
-bool isCorpseUnitType(WarUnitType type)
+bool wun_isCorpseUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1418,7 +1418,7 @@ bool isCorpseUnitType(WarUnitType type)
     }
 }
 
-bool isCatapultUnitType(WarUnitType type)
+bool wun_isCatapultUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1431,7 +1431,7 @@ bool isCatapultUnitType(WarUnitType type)
     }
 }
 
-bool isConjurerOrWarlockUnitType(WarUnitType type)
+bool wun_isConjurerOrWarlockUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1444,7 +1444,7 @@ bool isConjurerOrWarlockUnitType(WarUnitType type)
     }
 }
 
-bool isClericOrNecrolyteUnitType(WarUnitType type)
+bool wun_isClericOrNecrolyteUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1457,7 +1457,7 @@ bool isClericOrNecrolyteUnitType(WarUnitType type)
     }
 }
 
-bool isSummonUnitType(WarUnitType type)
+bool wun_isSummonUnitType(WarUnitType type)
 {
     switch (type)
     {
@@ -1474,82 +1474,82 @@ bool isSummonUnitType(WarUnitType type)
 }
 
 
-bool isDudeUnit(WarEntity* entity)
+bool wun_isDudeUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isDudeUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isDudeUnitType(entity->unit.type);
 }
 
-bool isBuildingUnit(WarEntity* entity)
+bool wun_isBuildingUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isBuildingUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isBuildingUnitType(entity->unit.type);
 }
 
-bool isWorkerUnit(WarEntity* entity)
+bool wun_isWorkerUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isWorkerUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isWorkerUnitType(entity->unit.type);
 }
 
-bool isWarriorUnit(WarEntity* entity)
+bool wun_isWarriorUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isWarriorUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isWarriorUnitType(entity->unit.type);
 }
 
-bool isRangeUnit(WarEntity* entity)
+bool wun_isRangeUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isRangeUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isRangeUnitType(entity->unit.type);
 }
 
-bool isMeleeUnit(WarEntity* entity)
+bool wun_isMeleeUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isMeleeUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isMeleeUnitType(entity->unit.type);
 }
 
-bool isFistUnit(WarEntity* entity)
+bool wun_isFistUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isFistUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isFistUnitType(entity->unit.type);
 }
 
-bool isSwordUnit(WarEntity* entity)
+bool wun_isSwordUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isSwordUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isSwordUnitType(entity->unit.type);
 }
 
-bool isMagicUnit(WarEntity* entity)
+bool wun_isMagicUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isMagicUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isMagicUnitType(entity->unit.type);
 }
 
-bool isCorpseUnit(WarEntity* entity)
+bool wun_isCorpseUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isCorpseUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isCorpseUnitType(entity->unit.type);
 }
 
-bool isCatapultUnit(WarEntity* entity)
+bool wun_isCatapultUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isCatapultUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isCatapultUnitType(entity->unit.type);
 }
 
-bool isConjurerOrWarlockUnit(WarEntity* entity)
+bool wun_isConjurerOrWarlockUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isConjurerOrWarlockUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isConjurerOrWarlockUnitType(entity->unit.type);
 }
 
-bool isClericOrNecrolyteUnit(WarEntity* entity)
+bool wun_isClericOrNecrolyteUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isClericOrNecrolyteUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isClericOrNecrolyteUnitType(entity->unit.type);
 }
 
-bool isSummonUnit(WarEntity* entity)
+bool wun_isSummonUnit(WarEntity* entity)
 {
-    return isUnit(entity) && isSummonUnitType(entity->unit.type);
+    return isUnit(entity) && wun_isSummonUnitType(entity->unit.type);
 }
 
-bool isSkeletonUnit(WarEntity* entity)
+bool wun_isSkeletonUnit(WarEntity* entity)
 {
     return isUnit(entity) && entity->unit.type == WAR_UNIT_SKELETON;
 }
 
-WarRace getUnitTypeRace(WarUnitType type)
+WarRace wun_getUnitTypeRace(WarUnitType type)
 {
     switch (type)
     {
@@ -1607,23 +1607,23 @@ WarRace getUnitTypeRace(WarUnitType type)
     }
 }
 
-WarRace getUnitRace(WarEntity* entity)
+WarRace wun_getUnitRace(WarEntity* entity)
 {
     if (!isUnit(entity))
         return WAR_RACE_NEUTRAL;
 
-    return getUnitTypeRace(entity->unit.type);
+    return wun_getUnitTypeRace(entity->unit.type);
 }
 
-#define isHumanUnit(entity) (getUnitRace(entity) == WAR_RACE_HUMANS)
-#define isOrcUnit(entity) (getUnitRace(entity) == WAR_RACE_ORCS)
-#define isNeutralUnit(entity) (getUnitRace(entity) == WAR_RACE_NEUTRAL)
+#define isHumanUnit(entity) (wun_getUnitRace(entity) == WAR_RACE_HUMANS)
+#define isOrcUnit(entity) (wun_getUnitRace(entity) == WAR_RACE_ORCS)
+#define isNeutralUnit(entity) (wun_getUnitRace(entity) == WAR_RACE_NEUTRAL)
 
-WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race);
+WarUnitType wun_getUnitTypeForRace(WarUnitType type, WarRace race);
 
-WarProjectileType getProjectileType(WarUnitType type)
+WarProjectileType wun_getProjectileType(WarUnitType type)
 {
-    assert(isRangeUnitType(type));
+    assert(wun_isRangeUnitType(type));
 
     switch (type)
     {
@@ -1661,12 +1661,12 @@ WarProjectileType getProjectileType(WarUnitType type)
     }
 }
 
-bool isFriendlyUnit(WarContext* context, WarEntity* entity);
-bool isEnemyUnit(WarContext* context, WarEntity* entity);
-bool areEnemies(WarContext* context, WarEntity* entity, WarEntity* other);
-bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
+bool wun_isFriendlyUnit(WarContext* context, WarEntity* entity);
+bool wun_isEnemyUnit(WarContext* context, WarEntity* entity);
+bool wun_areEnemies(WarContext* context, WarEntity* entity, WarEntity* other);
+bool wun_canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
 
-WarUnitType getTownHallOfRace(WarRace race)
+WarUnitType wun_getTownHallOfRace(WarRace race)
 {
     switch (race)
     {
@@ -1676,7 +1676,7 @@ WarUnitType getTownHallOfRace(WarRace race)
     }
 }
 
-WarUnitType getProducerUnitOfType(WarUnitType type)
+WarUnitType wun_getProducerUnitOfType(WarUnitType type)
 {
     switch (type)
     {
@@ -1714,7 +1714,7 @@ WarUnitType getProducerUnitOfType(WarUnitType type)
     }
 }
 
-vec2 getUnitSize(WarEntity* entity)
+vec2 wun_getUnitSize(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -1722,18 +1722,18 @@ vec2 getUnitSize(WarEntity* entity)
     return vec2i(unit->sizex, unit->sizey);
 }
 
-vec2 getUnitFrameSize(WarEntity* entity)
+vec2 wun_getUnitFrameSize(WarEntity* entity)
 {
     WarSpriteComponent* sprite = &entity->sprite;
     return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
 }
 
-rect getUnitFrameRect(WarEntity* entity)
+rect wun_getUnitFrameRect(WarEntity* entity)
 {
-    return rectv(VEC2_ZERO, getUnitFrameSize(entity));
+    return rectv(VEC2_ZERO, wun_getUnitFrameSize(entity));
 }
 
-vec2 getUnitSpriteSize(WarEntity* entity)
+vec2 wun_getUnitSpriteSize(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -1741,45 +1741,45 @@ vec2 getUnitSpriteSize(WarEntity* entity)
     return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
 }
 
-rect getUnitSpriteRect(WarEntity* entity)
+rect wun_getUnitSpriteRect(WarEntity* entity)
 {
-    vec2 frameSize = getUnitFrameSize(entity);
-    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 frameSize = wun_getUnitFrameSize(entity);
+    vec2 unitSize = wun_getUnitSpriteSize(entity);
     vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
     return rectv(pos, unitSize);
 }
 
-vec2 getUnitSpriteCenter(WarEntity* entity)
+vec2 wun_getUnitSpriteCenter(WarEntity* entity)
 {
-    vec2 frameSize = getUnitFrameSize(entity);
-    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 frameSize = wun_getUnitFrameSize(entity);
+    vec2 unitSize = wun_getUnitSpriteSize(entity);
     vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
     return vec2Addv(pos, vec2Half(unitSize));
 }
 
-rect getUnitRect(WarEntity* entity)
+rect wun_getUnitRect(WarEntity* entity)
 {
     assert(isUnit(entity));
 
-    return rectv(entity->transform.position, getUnitSpriteSize(entity));
+    return rectv(entity->transform.position, wun_getUnitSpriteSize(entity));
 }
 
-vec2 getUnitPosition(WarEntity* entity, bool inTiles)
+vec2 wun_getUnitPosition(WarEntity* entity, bool inTiles)
 {
     vec2 position = entity->transform.position;
     return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
 }
 
-vec2 getUnitCenterPosition(WarEntity* entity, bool inTiles)
+vec2 wun_getUnitCenterPosition(WarEntity* entity, bool inTiles)
 {
     WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = getUnitSpriteSize(entity);
+    vec2 spriteSize = wun_getUnitSpriteSize(entity);
     vec2 unitCenter = vec2Half(spriteSize);
     vec2 position = vec2Addv(transform->position, unitCenter);
     return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
 }
 
-void setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
+void wun_setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
@@ -1789,7 +1789,7 @@ void setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
     entity->transform.position = position;
 }
 
-void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
+void wun_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
@@ -1797,19 +1797,19 @@ void setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
     }
 
     WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = getUnitSpriteSize(entity);
+    vec2 spriteSize = wun_getUnitSpriteSize(entity);
     vec2 unitCenter = vec2Half(spriteSize);
     transform->position = vec2Subv(position, unitCenter);
 }
 
-WarUnitDirection getUnitDirection(WarEntity* entity)
+WarUnitDirection wun_getUnitDirection(WarEntity* entity)
 {
     assert(isUnit(entity));
 
     return entity->unit.direction;
 }
 
-WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
+WarUnitDirection wun_getDirectionFromDiff(f32 x, f32 y)
 {
     if (x < 0 && y < 0)
         return WAR_DIRECTION_NORTH_WEST;
@@ -1833,22 +1833,22 @@ WarUnitDirection getDirectionFromDiff(f32 x, f32 y)
     return WAR_DIRECTION_NORTH;
 }
 
-void setUnitDirection(WarEntity* entity, WarUnitDirection direction)
+void wun_setUnitDirection(WarEntity* entity, WarUnitDirection direction)
 {
     assert(isUnit(entity));
 
     entity->unit.direction = direction;
 }
 
-void setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
+void wun_setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
 {
     assert(isUnit(entity));
 
-    WarUnitDirection direction = getDirectionFromDiff(dx, dy);
-    setUnitDirection(entity, direction);
+    WarUnitDirection direction = wun_getDirectionFromDiff(dx, dy);
+    wun_setUnitDirection(entity, direction);
 }
 
-f32 getUnitActionScale(WarEntity* entity)
+f32 wun_getUnitActionScale(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -1862,57 +1862,57 @@ f32 getUnitActionScale(WarEntity* entity)
     return 1 - entity->unit.speed * 0.1f;
 }
 
-vec2 unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
+vec2 wun_unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
 {
     assert(isUnit(entity));
     assert(isUnit(targetEntity));
 
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 position = wun_getUnitCenterPosition(entity, true);
 
     vec2 targetPosition = wmap_vec2MapToTileCoordinates(targetEntity->transform.position);
-    vec2 unitSize = getUnitSize(targetEntity);
+    vec2 unitSize = wun_getUnitSize(targetEntity);
     rect unitRect = rectv(targetPosition, unitSize);
 
     return getClosestPointOnRect(position, unitRect);
 }
 
-s32 entityTileDistance(WarEntity* entity, vec2 targetPosition)
+s32 wun_entityTileDistance(WarEntity* entity, vec2 targetPosition)
 {
     assert(isUnit(entity));
 
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 position = wun_getUnitCenterPosition(entity, true);
     f32 distance = vec2DistanceInTiles(position, targetPosition);
     return (s32)distance;
 }
 
-bool tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
+bool wun_tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
 {
     assert(range >= 0);
 
-    s32 distance = entityTileDistance(entity, targetTile);
+    s32 distance = wun_entityTileDistance(entity, targetTile);
     return distance <= range;
 }
 
-s32 unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
+s32 wun_unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
 {
     assert(isUnit(entity));
     assert(isUnit(targetEntity));
 
-    vec2 pointOnTarget = unitPointOnTarget(entity, targetEntity);
-    return entityTileDistance(entity, pointOnTarget);
+    vec2 pointOnTarget = wun_unitPointOnTarget(entity, targetEntity);
+    return wun_entityTileDistance(entity, pointOnTarget);
 }
 
-bool unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
+bool wun_unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
 {
     assert(isUnit(entity));
     assert(isUnit(targetEntity));
     assert(range >= 0);
 
-    s32 distance = unitDistanceInTiles(entity, targetEntity);
+    s32 distance = wun_unitDistanceInTiles(entity, targetEntity);
     return distance <= range;
 }
 
-bool isCarryingResources(WarEntity* entity)
+bool wun_isCarryingResources(WarEntity* entity)
 {
     assert(entity);
     assert(isUnit(entity));
@@ -1925,41 +1925,41 @@ bool isCarryingResources(WarEntity* entity)
     }
 }
 
-s32 getUnitSightRange(WarEntity* entity)
+s32 wun_getUnitSightRange(WarEntity* entity)
 {
     assert(isUnit(entity));
 
     s32 sight = 0;
 
-    if (isBuildingUnit(entity))
+    if (wun_isBuildingUnit(entity))
     {
-        WarBuildingStats stats = getBuildingStats(entity->unit.type);
+        WarBuildingStats stats = wun_getBuildingStats(entity->unit.type);
         sight = stats.sight;
     }
     else
     {
-        WarUnitStats stats = getUnitStats(entity->unit.type);
+        WarUnitStats stats = wun_getUnitStats(entity->unit.type);
         sight = stats.sight;
     }
 
     return sight;
 }
 
-bool displayUnitOnMinimap(WarEntity* entity);
-WarColor getUnitColorOnMinimap(WarEntity* entity);
+bool wun_displayUnitOnMinimap(WarEntity* entity);
+WarColor wun_getUnitColorOnMinimap(WarEntity* entity);
 
-s32 getTotalNumberOfDudes(WarContext* context, u8 player);
-s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt);
-s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitType, bool alreadyBuilt);
-s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType);
-s32 getTotalNumberOfUnits(WarContext* context, u8 player);
+s32 wun_getTotalNumberOfDudes(WarContext* context, u8 player);
+s32 wun_getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt);
+s32 wun_getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitType, bool alreadyBuilt);
+s32 wun_getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType);
+s32 wun_getTotalNumberOfUnits(WarContext* context, u8 player);
 
-#define playerHasUnit(context, player, unitType) (getNumberOfUnitsOfType(context, player, unitType) > 0)
-#define playerHasBuilding(context, player, unitType) (getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
+#define playerHasUnit(context, player, unitType) (wun_getNumberOfUnitsOfType(context, player, unitType) > 0)
+#define playerHasBuilding(context, player, unitType) (wun_getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
 
 #define isValidUnitType(type) inRange(type, WAR_UNIT_FOOTMAN, WAR_UNIT_COUNT)
 
-void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
-void getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
-void getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
-WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType);
+void wun_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
+void wun_getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
+void wun_getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
+WarUnitCommandData wun_getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType);

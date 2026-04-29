@@ -24,7 +24,7 @@ void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
@@ -32,7 +32,7 @@ void enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
     went_removeSpriteComponent(context, entity);
 
     // ...and add the sprite for the construction of the building
-    WarBuildingData buildingData = getBuildingData(entity->unit.type);
+    WarBuildingData buildingData = wun_getBuildingData(entity->unit.type);
     went_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.buildingResource));
 
     // set the action to NONE because the sprite changes will be handled by this state
@@ -49,7 +49,7 @@ void leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
@@ -99,15 +99,15 @@ void updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
         assert(worker);
 
         // ...find an empty position to put it
-        vec2 position = getUnitCenterPosition(entity, true);
+        vec2 position = wun_getUnitCenterPosition(entity, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(worker, spawnPosition, true);
+        wun_setUnitCenterPosition(worker, spawnPosition, true);
 
         // remove the building sprite...
         went_removeSpriteComponent(context, entity);
 
         // ...and add the normal sprite of the building
-        WarUnitData buildingData = getUnitData(entity->unit.type);
+        WarUnitData buildingData = wun_getUnitData(entity->unit.type);
         went_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.resourceIndex));
 
         if (!changeStateNextState(context, entity, state))

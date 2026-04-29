@@ -19,7 +19,7 @@ void enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
@@ -34,7 +34,7 @@ void leaveTrainState(WarContext* context, WarEntity* entity, WarState* state)
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
@@ -76,9 +76,9 @@ void updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
         WarEntity* unitToBuild = went_createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
 
         // ...find an empty position to put it
-        vec2 position = getUnitCenterPosition(entity, true);
+        vec2 position = wun_getUnitCenterPosition(entity, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(unitToBuild, spawnPosition, true);
+        wun_setUnitCenterPosition(unitToBuild, spawnPosition, true);
 
         if (!changeStateNextState(context, entity, state))
         {

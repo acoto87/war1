@@ -82,7 +82,7 @@ void doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splash
         for (s32 i = 0; i < nearUnits->count; i++)
         {
             WarEntity* targetEntity = nearUnits->items[i];
-            if (targetEntity && canAttack(context, sourceEntity, targetEntity))
+            if (targetEntity && wun_canAttack(context, sourceEntity, targetEntity))
             {
                 went_meleeAttack(context, sourceEntity, targetEntity);
             }

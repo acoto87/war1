@@ -73,7 +73,7 @@ void went_addUnitComponent(WarContext* context,
 {
     NOT_USED(context);
 
-    WarUnitData unitData = getUnitData(type);
+    WarUnitData unitData = wun_getUnitData(type);
 
     entity->unit = (WarUnitComponent){0};
     entity->unit.enabled = true;
@@ -494,7 +494,7 @@ WarEntity* went_createUnit(WarContext* context,
     went_addUnitComponent(context, entity, type, x, y, player, resourceKind, amount);
     went_addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
 
-    WarUnitData unitData = getUnitData(type);
+    WarUnitData unitData = wun_getUnitData(type);
 
     s32 spriteIndex = unitData.resourceIndex;
     if (spriteIndex == 0)
@@ -508,14 +508,14 @@ WarEntity* went_createUnit(WarContext* context,
     went_addAnimationsComponent(context, entity);
     went_addStateMachineComponent(context, entity);
 
-    if (isDudeUnit(entity))
+    if (wun_isDudeUnit(entity))
     {
-        WarUnitStats stats = getUnitStats(type);
+        WarUnitStats stats = wun_getUnitStats(type);
 
         entity->unit.maxhp = stats.hp;
         entity->unit.hp = stats.hp;
         entity->unit.maxMana = stats.mana;
-        entity->unit.mana = isSummonUnit(entity) ? stats.mana : 100;
+        entity->unit.mana = wun_isSummonUnit(entity) ? stats.mana : 100;
         entity->unit.armor = stats.armor;
         entity->unit.range = stats.range;
         entity->unit.minDamage = stats.minDamage;
@@ -523,16 +523,16 @@ WarEntity* went_createUnit(WarContext* context,
         entity->unit.decay = stats.decay;
         entity->unit.manaTime = 1;
     }
-    else if(isBuildingUnit(entity))
+    else if(wun_isBuildingUnit(entity))
     {
-        WarBuildingStats stats = getBuildingStats(type);
+        WarBuildingStats stats = wun_getBuildingStats(type);
 
         entity->unit.maxhp = stats.hp;
         entity->unit.hp = stats.hp;
         entity->unit.armor = stats.armor;
     }
 
-    WarState* idleState = createIdleState(context, entity, isDudeUnit(entity));
+    WarState* idleState = createIdleState(context, entity, wun_isDudeUnit(entity));
     changeNextState(context, entity, idleState, true, true);
 
     if (addToMap)
@@ -552,7 +552,7 @@ WarEntity* went_createDude(WarContext* context,
                       u8 player,
                       bool isGoingToTrain)
 {
-    assert(isDudeUnitType(type));
+    assert(wun_isDudeUnitType(type));
 
     return went_createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, !isGoingToTrain);
 }
@@ -564,13 +564,13 @@ WarEntity* went_createBuilding(WarContext* context,
                           u8 player,
                           bool isGoingToBuild)
 {
-    assert(isBuildingUnitType(type));
+    assert(wun_isBuildingUnitType(type));
 
     WarEntity* entity = went_createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, true);
 
     if (isGoingToBuild)
     {
-        WarBuildingStats stats = getBuildingStats(type);
+        WarBuildingStats stats = wun_getBuildingStats(type);
         WarState* buildState = createBuildState(context, entity, (f32)stats.buildTime);
         changeNextState(context, entity, buildState, true, true);
     }
@@ -597,7 +597,7 @@ WarEntity* went_findClosestUnitOfType(WarContext* context, WarEntity* entity, Wa
         WarEntity* target = units->items[i];
         if (isUnitOfType(target, type))
         {
-            s32 dst = unitDistanceInTiles(entity, target);
+            s32 dst = wun_unitDistanceInTiles(entity, target);
             if (dst < minDst)
             {
                 result = target;
@@ -648,7 +648,7 @@ WarEntity* went_findEntityUnderCursor(WarContext* context, bool includeTrees, bo
             if (unit->enabled)
             {
                 // don't change the cursor for dead units or corpses
-                if (isDead(entity) || isGoingToDie(entity) || isCorpseUnit(entity))
+                if (isDead(entity) || isGoingToDie(entity) || wun_isCorpseUnit(entity))
                 {
                     continue;
                 }
@@ -666,7 +666,7 @@ WarEntity* went_findEntityUnderCursor(WarContext* context, bool includeTrees, bo
                 }
             }
 
-            rect unitRect = getUnitRect(entity);
+            rect unitRect = wun_getUnitRect(entity);
             if (rectContainsf(unitRect, targetPoint.x, targetPoint.y))
             {
                 entityUnderCursor = entity;
@@ -920,8 +920,8 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
     assert(isUnit(e1));
     assert(isUnit(e2));
 
-    bool isDead1 = isCorpseUnit((WarEntity*)e1) || isDead((WarEntity*)e1) || isGoingToDie((WarEntity*)e1);
-    bool isDead2 = isCorpseUnit((WarEntity*)e2) || isDead((WarEntity*)e2) || isGoingToDie((WarEntity*)e2);
+    bool isDead1 = wun_isCorpseUnit((WarEntity*)e1) || isDead((WarEntity*)e1) || isGoingToDie((WarEntity*)e1);
+    bool isDead2 = wun_isCorpseUnit((WarEntity*)e2) || isDead((WarEntity*)e2) || isGoingToDie((WarEntity*)e2);
 
     if (isDead1 && !isDead2)
         return -1;
@@ -929,8 +929,8 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
     if (!isDead1 && isDead2)
         return 1;
 
-    vec2 p1 = getUnitPosition((WarEntity*)e1, false);
-    vec2 p2 = getUnitPosition((WarEntity*)e2, false);
+    vec2 p1 = wun_getUnitPosition((WarEntity*)e1, false);
+    vec2 p2 = wun_getUnitPosition((WarEntity*)e2, false);
 
     return (s32)(p1.y - p2.y);
 }
@@ -984,7 +984,7 @@ void renderRoad(WarContext* context, WarEntity* entity)
         {
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRoadData roadData = getRoadData(pieces->items[i].type);
+            WarRoadData roadData = wun_getRoadData(pieces->items[i].type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
                 ? roadData.tileIndexForest : roadData.tileIndexSwamp;
@@ -1028,7 +1028,7 @@ void renderWall(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarWallData wallData = getWallData(piece->type);
+            WarWallData wallData = wun_getWallData(piece->type);
 
             s32 tileIndex = 0;
 
@@ -1090,7 +1090,7 @@ void renderRuin(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRuinData ruinData = getRuinData(piece->type);
+            WarRuinData ruinData = wun_getRuinData(piece->type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
                 ? ruinData.tileIndexForest : ruinData.tileIndexSwamp;
@@ -1133,7 +1133,7 @@ void renderForest(WarContext* context, WarEntity* entity)
             if (tree->type == WAR_TREE_NONE)
                 continue;
 
-            WarTreeData data = getTreeData(tree->type);
+            WarTreeData data = wun_getTreeData(tree->type);
 
             // the position in the world of the wood tile
             s32 x = tree->tilex;
@@ -1167,10 +1167,10 @@ void renderUnit(WarContext* context, WarEntity* entity)
     vec2 scale = transform->scale;
 
     // size of the original sprite
-    vec2 frameSize = getUnitFrameSize(entity);
+    vec2 frameSize = wun_getUnitFrameSize(entity);
 
     // size of the unit
-    vec2 unitSize = getUnitSpriteSize(entity);
+    vec2 unitSize = wun_getUnitSpriteSize(entity);
 
     // the unit is visible if it's partially on the clear areas of the fog
     bool isVisible = isUnitPartiallyVisible(map, entity);
@@ -1180,9 +1180,9 @@ void renderUnit(WarContext* context, WarEntity* entity)
     wrend_renderTranslate(context, position.x, position.y);
 
 #ifdef DEBUG_RENDER_UNIT_INFO
-    wrend_renderFillRect(context, getUnitFrameRect(entity), WAR_COLOR_RGBA(0, 0, 128, 128));
-    wrend_renderFillRect(context, getUnitSpriteRect(entity), WAR_COLOR_GRAY_TRANSPARENT);
-    wrend_renderFillRect(context, rectv(getUnitSpriteCenter(entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
+    wrend_renderFillRect(context, wun_getUnitFrameRect(entity), WAR_COLOR_RGBA(0, 0, 128, 128));
+    wrend_renderFillRect(context, wun_getUnitSpriteRect(entity), WAR_COLOR_GRAY_TRANSPARENT);
+    wrend_renderFillRect(context, rectv(wun_getUnitSpriteCenter(entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
 #endif
 
 #ifdef DEBUG_RENDER_UNIT_STATS
@@ -1194,7 +1194,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
     {
         wrend_renderSave(context);
 
-        if (isDudeUnit(entity))
+        if (wun_isDudeUnit(entity))
         {
             WarUnitComponent* unitComponent = &entity->unit;
 
@@ -1205,7 +1205,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
 
             if (unitComponent->invulnerable)
             {
-                rect unitRect = getUnitSpriteRect(entity);
+                rect unitRect = wun_getUnitSpriteRect(entity);
                 unitRect = rectExpand(unitRect, -1, -1);
                 wrend_renderStrokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
             }
@@ -1480,12 +1480,12 @@ void renderMinimap(WarContext* context, WarEntity* entity)
             WarUnitComponent* unit = &unitEntity->unit;
             WarTransformComponent* transform = &unitEntity->transform;
 
-            if (displayUnitOnMinimap(unitEntity) && (isUnitPartiallyVisible(map, unitEntity) || unitEntity->unit.hasBeenSeen))
+            if (wun_displayUnitOnMinimap(unitEntity) && (isUnitPartiallyVisible(map, unitEntity) || unitEntity->unit.hasBeenSeen))
             {
                 s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                 s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
 
-                WarColor color = getUnitColorOnMinimap(unitEntity);
+                WarColor color = wun_getUnitColorOnMinimap(unitEntity);
 
                 for(s32 y = 0; y < unit->sizey; y++)
                 {
@@ -1660,10 +1660,10 @@ void went_renderUnitSelection(WarContext* context)
             if (sprite->enabled)
             {
                 // size of the original sprite
-                vec2 frameSize = getUnitFrameSize(entity);
+                vec2 frameSize = wun_getUnitFrameSize(entity);
 
                 // size of the unit
-                vec2 unitSize = getUnitSpriteSize(entity);
+                vec2 unitSize = wun_getUnitSpriteSize(entity);
 
                 // position of the unit in the map
                 vec2 position = transform->position;
@@ -1675,9 +1675,9 @@ void went_renderUnitSelection(WarContext* context)
 
                 rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
                 WarColor color = WAR_COLOR_WHITE_SELECTION;
-                if (isFriendlyUnit(context, entity))
+                if (wun_isFriendlyUnit(context, entity))
                     color = WAR_COLOR_GREEN_SELECTION;
-                else if (isEnemyUnit(context, entity))
+                else if (wun_isEnemyUnit(context, entity))
                     color = WAR_COLOR_RED_SELECTION;
                 wrend_renderStrokeRect(context, selr, color, 1.0f);
 
@@ -1755,7 +1755,7 @@ void went_increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUp
                 WarEntity* entity = units->items[i];
                 if (entity && entity->unit.player == player->index)
                 {
-                    if (isDudeUnit(entity))
+                    if (wun_isDudeUnit(entity))
                     {
                         entity->unit.speed++;
                     }
@@ -1884,11 +1884,11 @@ void went_increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 
 bool went_enoughFarmFood(WarContext* context, WarPlayerInfo* player)
 {
-    WarUnitType farmType = getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, player->race);
-    s32 farmCount = getNumberOfBuildingsOfType(context, player->index, farmType, true);
+    WarUnitType farmType = wun_getUnitTypeForRace(WAR_UNIT_FARM_HUMANS, player->race);
+    s32 farmCount = wun_getNumberOfBuildingsOfType(context, player->index, farmType, true);
     s32 foodCount = farmCount * 4 + 1;
 
-    s32 dudesCount = getTotalNumberOfDudes(context, player->index);
+    s32 dudesCount = wun_getTotalNumberOfDudes(context, player->index);
     return dudesCount + 1 <= foodCount;
 }
 
@@ -1928,7 +1928,7 @@ bool went_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
 
 bool went_checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y)
 {
-    WarUnitData data = getUnitData(buildingToBuild);
+    WarUnitData data = wun_getUnitData(buildingToBuild);
 
     if (!went_checkRectToBuild(context, x, y, data.sizex, data.sizey))
     {
@@ -1962,7 +1962,7 @@ WarEntityList* went_getNearUnits(WarContext* context, vec2 tilePosition, s32 dis
         WarEntity* other = units->items[i];
         if (other)
         {
-            if (tileInRange(other, tilePosition, distance))
+            if (wun_tileInRange(other, tilePosition, distance))
             {
                 WarEntityListAdd(nearUnits, other);
             }
@@ -1976,13 +1976,13 @@ WarEntityList* went_getNearUnits(WarContext* context, vec2 tilePosition, s32 dis
 WarEntity* went_getNearEnemy(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "GetNearEnemy", 1);
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 position = wun_getUnitCenterPosition(entity, true);
 
     WarEntityList* entities = went_getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity* other = entities->items[i];
-        if (other && areEnemies(context, entity, other) && canAttack(context, entity, other))
+        if (other && wun_areEnemies(context, entity, other) && wun_canAttack(context, entity, other))
         {
             if (isUnit(other))
             {
@@ -1990,7 +1990,7 @@ WarEntity* went_getNearEnemy(WarContext* context, WarEntity* entity)
                     continue;
             }
 
-            if (tileInRange(other, position, NEAR_ENEMY_RADIUS))
+            if (wun_tileInRange(other, position, NEAR_ENEMY_RADIUS))
             {
                 TracyCZoneEnd(ctx);
                 return other;
@@ -2084,7 +2084,7 @@ void went_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 
 
     if (unit->hp == 0)
     {
-        if (isBuildingUnit(entity))
+        if (wun_isBuildingUnit(entity))
         {
             WarState* collapseState = createCollapseState(context, entity);
             changeNextState(context, entity, collapseState, true, true);
@@ -2093,7 +2093,7 @@ void went_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 
         }
         else
         {
-            vec2 position = getUnitCenterPosition(entity, false);
+            vec2 position = wun_getUnitCenterPosition(entity, false);
 
             WarState* deathState = createDeathState(context, entity);
             changeNextState(context, entity, deathState, true, true);
@@ -2115,7 +2115,7 @@ void went_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 
             }
         }
     }
-    else if (isBuildingUnit(entity))
+    else if (wun_isBuildingUnit(entity))
     {
         s32 hpPercent = percentabi(unit->hp, unit->maxhp);
         if(hpPercent <= 33)
@@ -2154,15 +2154,15 @@ void went_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetE
 
     WarUnitComponent* unit = &entity->unit;
 
-    if (isMagicUnit(entity))
+    if (wun_isMagicUnit(entity))
     {
         // Since the attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
         if (went_decreaseUnitMana(context, entity, 2))
         {
-            vec2 origin = getUnitCenterPosition(entity, false);
-            vec2 target = getUnitCenterPosition(targetEntity, false);
-            WarProjectileType projectileType = getProjectileType(unit->type);
+            vec2 origin = wun_getUnitCenterPosition(entity, false);
+            vec2 target = wun_getUnitCenterPosition(targetEntity, false);
+            WarProjectileType projectileType = wun_getProjectileType(unit->type);
             createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
         else
@@ -2174,9 +2174,9 @@ void went_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetE
     }
     else
     {
-        vec2 origin = getUnitCenterPosition(entity, false);
-        vec2 target = getUnitCenterPosition(targetEntity, false);
-        WarProjectileType projectileType = getProjectileType(unit->type);
+        vec2 origin = wun_getUnitCenterPosition(entity, false);
+        vec2 target = wun_getUnitCenterPosition(targetEntity, false);
+        WarProjectileType projectileType = wun_getProjectileType(unit->type);
         createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }
 }
@@ -2187,15 +2187,15 @@ void went_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* tar
 
     WarUnitComponent* unit = &entity->unit;
 
-    if (isMagicUnit(entity))
+    if (wun_isMagicUnit(entity))
     {
         // Since the attack of magic units are considered "kind of spells"
         // it will consume mana, at 2 per shot.
         if (went_decreaseUnitMana(context, entity, 2))
         {
-            vec2 origin = getUnitCenterPosition(entity, false);
+            vec2 origin = wun_getUnitCenterPosition(entity, false);
             vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
-            WarProjectileType projectileType = getProjectileType(unit->type);
+            WarProjectileType projectileType = wun_getProjectileType(unit->type);
             createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
         else
@@ -2207,9 +2207,9 @@ void went_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* tar
     }
     else
     {
-        vec2 origin = getUnitCenterPosition(entity, false);
+        vec2 origin = wun_getUnitCenterPosition(entity, false);
         vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
-        WarProjectileType projectileType = getProjectileType(unit->type);
+        WarProjectileType projectileType = wun_getProjectileType(unit->type);
         createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }
 }
@@ -2223,7 +2223,7 @@ void went_meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetE
     WarUnitComponent* unit = &entity->unit;
 
     // every unit has a 20 percent chance to miss (except catapults)
-    if (isCatapultUnit(entity) || chance(80))
+    if (wun_isCatapultUnit(entity) || chance(80))
     {
         s32 minDamage = unit->minDamage;
         s32 rndDamage = unit->rndDamage;
@@ -2247,7 +2247,7 @@ void went_meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* tar
     WarUnitComponent* unit = &entity->unit;
 
     // every unit has a 20 percent chance to miss (except catapults)
-    if (isCatapultUnit(entity) || chance(80))
+    if (wun_isCatapultUnit(entity) || chance(80))
     {
         s32 minDamage = unit->minDamage;
         s32 rndDamage = unit->rndDamage;

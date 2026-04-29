@@ -223,7 +223,7 @@ WarSpriteAnimation* wani_createDamageAnimation(WarContext* context, WarEntity* e
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(resourceIndex);
     WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = wani_createAnimation(context, name, sprite, 0.2f, true);
-    anim->offset = vec2Subv(getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+    anim->offset = vec2Subv(wun_getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
 
     for(s32 i = 0; i < 4; i++)
         wani_addAnimationFrame(anim, i);
@@ -235,8 +235,8 @@ WarSpriteAnimation* wani_createDamageAnimation(WarContext* context, WarEntity* e
 
 WarSpriteAnimation* wani_createCollapseAnimation(WarContext* context, WarEntity* entity, String name)
 {
-    vec2 unitFrameSize = getUnitFrameSize(entity);
-    vec2 unitSpriteSize = getUnitSpriteSize(entity);
+    vec2 unitFrameSize = wun_getUnitFrameSize(entity);
+    vec2 unitSpriteSize = wun_getUnitSpriteSize(entity);
 
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_BUILDING_COLLAPSE_RESOURCE);
     WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);

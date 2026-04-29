@@ -13,7 +13,7 @@ WarState* createCollapseState(WarContext* context, WarEntity* entity)
 void enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
 
     wani_removeAnimation(context, entity, wsv_fromCString("littleDamage"));

@@ -17,12 +17,12 @@ void enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 unitSize = wun_getUnitSize(entity);
+    vec2 position = wun_getUnitCenterPosition(entity, true);
     vec2 treePosition = state->chop.position;
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    setUnitDirectionFromDiff(entity, treePosition.x - position.x, treePosition.y - position.y);
+    wun_setUnitDirectionFromDiff(entity, treePosition.x - position.x, treePosition.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 }
 
@@ -75,13 +75,13 @@ void updateChoppingState(WarContext* context, WarEntity* entity, WarState* state
         if (unit->amount == UNIT_MAX_CARRY_WOOD)
         {
             // set the carrying gold sprites
-            WarWorkerData workerData = getWorkerData(unit->type);
+            WarWorkerData workerData = wun_getWorkerData(unit->type);
             went_removeSpriteComponent(context, entity);
             went_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingWoodResource));
 
             // find the closest town hall to deliver the gold
-            WarRace race = getUnitRace(entity);
-            WarUnitType townHallType = getTownHallOfRace(race);
+            WarRace race = wun_getUnitRace(entity);
+            WarUnitType townHallType = wun_getTownHallOfRace(race);
             WarEntity* townHall = went_findClosestUnitOfType(context, entity, townHallType);
 
             // if the town hall doesn't exists (it could be under attack and get destroyed), go idle

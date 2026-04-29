@@ -1,6 +1,6 @@
 #include "war_units.h"
 
-bool isFriendlyUnit(WarContext* context, WarEntity* entity)
+bool wun_isFriendlyUnit(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -8,7 +8,7 @@ bool isFriendlyUnit(WarContext* context, WarEntity* entity)
     return isUnit(entity) && entity->unit.player == player->index;
 }
 
-bool isEnemyUnit(WarContext* context, WarEntity* entity)
+bool wun_isEnemyUnit(WarContext* context, WarEntity* entity)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -23,7 +23,7 @@ bool isEnemyUnit(WarContext* context, WarEntity* entity)
     return !isNeutralPlayer(otherPlayer);
 }
 
-bool areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
+bool wun_areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 {
     WarMap* map = context->map;
 
@@ -40,17 +40,17 @@ bool areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
     return !isNeutralPlayer(otherPlayer);
 }
 
-bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
+bool wun_canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
     NOT_USED(context);
 
-    if (isWarriorUnit(entity) && !isDead(entity) && !isGoingToDie(entity))
+    if (wun_isWarriorUnit(entity) && !isDead(entity) && !isGoingToDie(entity))
     {
         if (isUnit(targetEntity))
         {
             if (!isDead(targetEntity) &&
                 !isGoingToDie(targetEntity) &&
-                !isCorpseUnit(targetEntity) &&
+                !wun_isCorpseUnit(targetEntity) &&
                 !isCollapsing(entity) &&
                 !isGoingToCollapse(entity))
             {
@@ -64,11 +64,11 @@ bool canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
     return false;
 }
 
-bool displayUnitOnMinimap(WarEntity* entity)
+bool wun_displayUnitOnMinimap(WarEntity* entity)
 {
     assert(isUnit(entity));
 
-    if (isCorpseUnit(entity))
+    if (wun_isCorpseUnit(entity))
         return false;
 
     if (isDead(entity) || isGoingToDie(entity))
@@ -80,7 +80,7 @@ bool displayUnitOnMinimap(WarEntity* entity)
     return true;
 }
 
-WarColor getUnitColorOnMinimap(WarEntity* entity)
+WarColor wun_getUnitColorOnMinimap(WarEntity* entity)
 {
     assert(isUnit(entity));
 
@@ -105,7 +105,7 @@ WarColor getUnitColorOnMinimap(WarEntity* entity)
     return WAR_COLOR_RGB(r, g, b);
 }
 
-s32 getTotalNumberOfUnits(WarContext* context, u8 player)
+s32 wun_getTotalNumberOfUnits(WarContext* context, u8 player)
 {
     s32 count = 0;
 
@@ -125,7 +125,7 @@ s32 getTotalNumberOfUnits(WarContext* context, u8 player)
     return count;
 }
 
-s32 getTotalNumberOfDudes(WarContext* context, u8 player)
+s32 wun_getTotalNumberOfDudes(WarContext* context, u8 player)
 {
     s32 count = 0;
 
@@ -133,7 +133,7 @@ s32 getTotalNumberOfDudes(WarContext* context, u8 player)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity && isDudeUnit(entity) && !isSummonUnit(entity) && !isSkeletonUnit(entity))
+        if (entity && wun_isDudeUnit(entity) && !wun_isSummonUnit(entity) && !wun_isSkeletonUnit(entity))
         {
             if (entity->unit.player == player)
             {
@@ -145,7 +145,7 @@ s32 getTotalNumberOfDudes(WarContext* context, u8 player)
     return count;
 }
 
-s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt)
+s32 wun_getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt)
 {
     s32 count = 0;
 
@@ -155,7 +155,7 @@ s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt)
         WarEntity* entity = units->items[i];
         if (entity)
         {
-            if (entity->unit.player == player && isBuildingUnit(entity))
+            if (entity->unit.player == player && wun_isBuildingUnit(entity))
             {
                 if (alreadyBuilt && (isBuilding(entity) || isGoingToBuild(entity)))
                     continue;
@@ -168,9 +168,9 @@ s32 getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt)
     return count;
 }
 
-s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitType, bool alreadyBuilt)
+s32 wun_getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitType, bool alreadyBuilt)
 {
-    assert(isBuildingUnitType(unitType));
+    assert(wun_isBuildingUnitType(unitType));
 
     s32 count = 0;
 
@@ -194,7 +194,7 @@ s32 getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType unitT
     return count;
 }
 
-s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
+s32 wun_getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
 {
     s32 count = 0;
 
@@ -215,7 +215,7 @@ s32 getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType)
     return count;
 }
 
-WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race)
+WarUnitType wun_getUnitTypeForRace(WarUnitType type, WarRace race)
 {
     if (race == WAR_RACE_HUMANS)
     {
@@ -277,7 +277,7 @@ WarUnitType getUnitTypeForRace(WarUnitType type, WarRace race)
     return type;
 }
 
-void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[])
+void wun_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[])
 {
     assert(entity);
     assert(isUnit(entity));
@@ -288,7 +288,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
 
     WarUnitComponent* unit = &entity->unit;
 
-    if (player->race != getUnitRace(entity))
+    if (player->race != wun_getUnitRace(entity))
     {
         return;
     }
@@ -358,7 +358,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_MOVE;
                 commands[1] = WAR_COMMAND_STOP;
                 commands[2] = WAR_COMMAND_REPAIR;
-                commands[3] = !isCarryingResources(entity)
+                commands[3] = !wun_isCarryingResources(entity)
                     ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
 
                 commands[4] = WAR_COMMAND_BUILD_BASIC;
@@ -405,7 +405,7 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
                 commands[0] = WAR_COMMAND_MOVE;
                 commands[1] = WAR_COMMAND_STOP;
                 commands[2] = WAR_COMMAND_REPAIR;
-                commands[3] = !isCarryingResources(entity)
+                commands[3] = !wun_isCarryingResources(entity)
                     ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
 
                 commands[4] = WAR_COMMAND_BUILD_BASIC;
@@ -903,12 +903,12 @@ void getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType 
     }
 }
 
-WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType)
+WarUnitCommandData wun_getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    WarUnitCommandBaseData commandBaseData = getCommandBaseData(commandType);
+    WarUnitCommandBaseData commandBaseData = wun_getCommandBaseData(commandType);
 
     WarUnitCommandData data = (WarUnitCommandData){0};
     data.type = commandType;
@@ -1118,9 +1118,9 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_TRAIN_CLERIC:
         case WAR_COMMAND_TRAIN_NECROLYTE:
         {
-            WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
-            WarUnitData unitData = getUnitData(commandMapping.mappedType);
-            WarUnitStats stats = getUnitStats(commandMapping.mappedType);
+            WarUnitCommandMapping commandMapping = wun_getCommandMapping(commandType);
+            WarUnitData unitData = wun_getUnitData(commandMapping.mappedType);
+            WarUnitStats stats = wun_getUnitStats(commandMapping.mappedType);
 
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
@@ -1145,9 +1145,9 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
         case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
-            WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
-            WarUnitData unitData = getUnitData(commandMapping.mappedType);
-            WarBuildingStats stats = getBuildingStats(commandMapping.mappedType);
+            WarUnitCommandMapping commandMapping = wun_getCommandMapping(commandType);
+            WarUnitData unitData = wun_getUnitData(commandMapping.mappedType);
+            WarBuildingStats stats = wun_getBuildingStats(commandMapping.mappedType);
 
             data.gold = stats.goldCost;
             data.wood = stats.woodCost;
@@ -1190,12 +1190,12 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_UPGRADE_INVISIBILITY:
         case WAR_COMMAND_UPGRADE_UNHOLY_ARMOR:
         {
-            WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
+            WarUnitCommandMapping commandMapping = wun_getCommandMapping(commandType);
 
             assert(hasRemainingUpgrade(player, commandMapping.mappedType));
 
-            WarUpgradeData upgradeData = getUpgradeData(commandMapping.mappedType);
-            WarUpgradeStats stats = getUpgradeStats(commandMapping.mappedType);
+            WarUpgradeData upgradeData = wun_getUpgradeData(commandMapping.mappedType);
+            WarUpgradeStats stats = wun_getUpgradeStats(commandMapping.mappedType);
             s32 upgradeLevel = getUpgradeLevel(player, commandMapping.mappedType);
 
             data.gold = stats.goldCost[upgradeLevel];
@@ -1216,8 +1216,8 @@ WarUnitCommandData getUnitCommandData(WarContext* context, WarEntity* entity, Wa
         case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
         case WAR_COMMAND_SPELL_POISON_CLOUD:
         {
-            WarUnitCommandMapping commandMapping = getCommandMapping(commandType);
-            WarSpellData spell = getSpellData(commandMapping.mappedType);
+            WarUnitCommandMapping commandMapping = wun_getCommandMapping(commandType);
+            WarSpellData spell = wun_getSpellData(commandMapping.mappedType);
 
             data.frameIndex = spell.portraitFrameIndex;
             break;

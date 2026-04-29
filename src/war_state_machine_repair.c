@@ -24,7 +24,7 @@ void leaveRepairState(WarContext* context, WarEntity* entity, WarState* state)
 void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarUnitComponent* unit = &entity->unit;
-    WarUnitStats stats = getUnitStats(unit->type);
+    WarUnitStats stats = wun_getUnitStats(unit->type);
 
     WarEntity* building = went_findEntity(context, state->repair.buildingId);
 
@@ -37,9 +37,9 @@ void updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     // if the building is not in range, go to it
-    if (!unitInRange(entity, building, stats.range))
+    if (!wun_unitInRange(entity, building, stats.range))
     {
-        vec2 targetTile = unitPointOnTarget(entity, building);
+        vec2 targetTile = wun_unitPointOnTarget(entity, building);
 
         WarState* followState = createFollowState(context, entity, building->id, targetTile, stats.range);
         followState->nextState = state;

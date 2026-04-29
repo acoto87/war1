@@ -33,10 +33,10 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 
     WarUnitComponent* unit = &entity->unit;
 
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
 
-    WarUnitStats stats = getUnitStats(unit->type);
+    WarUnitStats stats = wun_getUnitStats(unit->type);
 
     WarEntityId targetEntityId = (WarEntityId)state->attack.targetEntityId;
     WarEntity* targetEntity = went_findEntity(context, targetEntityId);
@@ -49,7 +49,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         // when going to an attacking point (where there is no target unit)
         // check if the attacking unit is in range 1, no matter if the range
         // of the attacking unit is greater
-        if(!tileInRange(entity, targetTile, 1))
+        if(!wun_tileInRange(entity, targetTile, 1))
         {
             WarState* moveState = createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
@@ -68,11 +68,11 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         // if the target entity is an unit the instead of using the tile where
         // the player click, use a point on the target unit that is closer to
         // the attacking unit
-        targetTile = unitPointOnTarget(entity, targetEntity);
+        targetTile = wun_unitPointOnTarget(entity, targetEntity);
     }
 
     // if the unit is not in range to attack, chase it
-    if (isUnit(targetEntity) && !unitInRange(entity, targetEntity, stats.range))
+    if (isUnit(targetEntity) && !wun_unitInRange(entity, targetEntity, stats.range))
     {
         WarState* followState = createFollowState(context, entity, targetEntityId, targetTile, stats.range);
         followState->nextState = state;
@@ -80,7 +80,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    if(isWall(targetEntity) && !tileInRange(entity, targetTile, stats.range))
+    if(isWall(targetEntity) && !wun_tileInRange(entity, targetTile, stats.range))
     {
         WarState* followState = createFollowState(context, entity, 0, targetTile, stats.range);
         followState->nextState = state;
@@ -99,7 +99,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
+    wun_setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
     setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
@@ -123,7 +123,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
             }
             else
             {
-                if (isRangeUnit(entity))
+                if (wun_isRangeUnit(entity))
                 {
                     went_rangeAttack(context, entity, targetEntity);
                 }
@@ -132,7 +132,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                     went_meleeAttack(context, entity, targetEntity);
                 }
 
-                vec2 targetPosition = getUnitCenterPosition(targetEntity, false);
+                vec2 targetPosition = wun_getUnitCenterPosition(targetEntity, false);
                 waud_playAttackSound(context, targetPosition, action->lastSoundStep);
             }
         }
@@ -151,7 +151,7 @@ void updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
                 }
                 else
                 {
-                    if (isRangeUnit(entity))
+                    if (wun_isRangeUnit(entity))
                     {
                         went_rangeWallAttack(context, entity, targetEntity, piece);
                     }

@@ -24,7 +24,7 @@ void leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* stat
 void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarUnitComponent* unit = &entity->unit;
-    WarUnitStats stats = getUnitStats(unit->type);
+    WarUnitStats stats = wun_getUnitStats(unit->type);
 
     WarEntity* goldmine = went_findEntity(context, (WarEntityId)state->gold.goldmineId);
 
@@ -39,7 +39,7 @@ void updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // if the goldmine is not in range, go to it
-    if (!unitInRange(entity, goldmine, stats.range))
+    if (!wun_unitInRange(entity, goldmine, stats.range))
     {
         WarState* followState = createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats.range);
         followState->nextState = state;

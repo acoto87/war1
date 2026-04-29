@@ -635,7 +635,7 @@ WarEntity* waud_playAttackSound(WarContext* context, vec2 position, WarUnitActio
 
 WarEntity* waud_playDudeSelectionSound(WarContext* context, WarEntity* entity)
 {
-    assert(isDudeUnit(entity));
+    assert(wun_isDudeUnit(entity));
 
     WarMap* map = context->map;
 
@@ -657,7 +657,7 @@ WarEntity* waud_playDudeSelectionSound(WarContext* context, WarEntity* entity)
 
 WarEntity* waud_playBuildingSelectionSound(WarContext* context, WarEntity* entity)
 {
-    assert(isBuildingUnit(entity));
+    assert(wun_isBuildingUnit(entity));
 
     if (isBuilding(entity) || isGoingToBuild(entity))
         return waud_createAudio(context, WAR_BUILDING, false);

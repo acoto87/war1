@@ -235,7 +235,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
             if (selectedEntity && isUnit(selectedEntity))
             {
                 WarUnitComponent* unit = &selectedEntity->unit;
-                WarUnitData unitData = getUnitData(unit->type);
+                WarUnitData unitData = wun_getUnitData(unit->type);
                 setUIImage(imgUnitPortraits[i], unitData.portraitFrameIndex);
                 wmui_setLifeBar(rectLifeBars[i], unit);
             }
@@ -249,9 +249,9 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
         {
             WarUnitComponent* unit = &selectedEntity->unit;
 
-            if (isDudeUnit(selectedEntity))
+            if (wun_isDudeUnit(selectedEntity))
             {
-                if (isMagicUnit(selectedEntity))
+                if (wun_isMagicUnit(selectedEntity))
                 {
                     setUIImage(imgUnitInfo, 1);
                     wmui_setManaBar(rectMagicBar, unit);
@@ -261,7 +261,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
                     setUIImage(imgUnitInfo, 0);
                 }
             }
-            else if (isBuildingUnit(selectedEntity))
+            else if (wun_isBuildingUnit(selectedEntity))
             {
                 if (unit->building)
                 {
@@ -274,7 +274,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
                 }
             }
 
-            WarUnitData unitData = getUnitData(unit->type);
+            WarUnitData unitData = wun_getUnitData(unit->type);
             setUIImage(imgUnitPortraits[0], unitData.portraitFrameIndex);
             setUIText(txtUnitName, wsv_toString(unitData.name));
             setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
@@ -419,7 +419,7 @@ void wmui_renderCommand(WarContext* context)
             position = wmap_vec2MapToTileCoordinates(position);
 
             WarUnitType buildingToBuild = command->build.buildingToBuild;
-            WarUnitData data = getUnitData(buildingToBuild);
+            WarUnitData data = wun_getUnitData(buildingToBuild);
 
             WarColor fillColor = went_checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;

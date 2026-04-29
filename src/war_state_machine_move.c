@@ -14,7 +14,7 @@ WarState* createMoveState(WarContext* context, WarEntity* entity, s32 positionCo
 void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
 
     if (state->move.positions.count <= 1)
     {
@@ -54,14 +54,14 @@ void enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
     setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
-    setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-    setAction(context, entity, WAR_ACTION_TYPE_WALK, false, getUnitActionScale(entity));
+    wun_setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+    setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wun_getUnitActionScale(entity));
 }
 
 void leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     WarMapPath* path = &state->move.path;
 
     if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
@@ -87,8 +87,8 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     assert(path->nodes.count > 1);
     assert(inRange(state->move.pathNodeIndex, 0, path->nodes.count - 1));
 
-    WarUnitStats stats = getUnitStats(entity->unit.type);
-    vec2 unitSize = getUnitSize(entity);
+    WarUnitStats stats = wun_getUnitStats(entity->unit.type);
+    vec2 unitSize = wun_getUnitSize(entity);
 
     vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
     vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
@@ -96,9 +96,9 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     if (state->move.checkForAttacks)
     {
         WarEntity* enemy = went_getAttacker(context, entity);
-        if (enemy && areEnemies(context, entity, enemy) && canAttack(context, entity, enemy))
+        if (enemy && wun_areEnemies(context, entity, enemy) && wun_canAttack(context, entity, enemy))
         {
-            vec2 enemyPosition = getUnitPosition(enemy, true);
+            vec2 enemyPosition = wun_getUnitPosition(enemy, true);
             WarState* attackState = createAttackState(context, entity, enemy->id, enemyPosition);
             changeNextState(context, entity, attackState, true, true);
 
@@ -145,11 +145,11 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
         }
 
         setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-        setAction(context, entity, WAR_ACTION_TYPE_WALK, false, getUnitActionScale(entity));
+        wun_setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+        setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wun_getUnitActionScale(entity));
     }
 
-    vec2 position = getUnitCenterPosition(entity, false);
+    vec2 position = wun_getUnitCenterPosition(entity, false);
     vec2 target = wmap_vec2TileToMapCoordinates(nextNode, true);
 
     vec2 direction = vec2Subv(target, position);
@@ -165,13 +165,13 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
     }
 
     vec2 newPosition = vec2Addv(position, step);
-    setUnitCenterPosition(entity, newPosition, false);
+    wun_setUnitCenterPosition(entity, newPosition, false);
 
     f32 distance = vec2Distance(newPosition, target);
     if (distance < MOVE_EPSILON)
     {
         newPosition = target;
-        setUnitCenterPosition(entity, newPosition, false);
+        wun_setUnitCenterPosition(entity, newPosition, false);
 
         setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
         setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
@@ -248,7 +248,7 @@ void updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
         }
 
         setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+        wun_setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
 }
 

@@ -391,13 +391,13 @@ WarLevelResult wcamp_checkMap01Objectives(WarContext* context)
     WarUnitType barracksType = isHumanPlayer(player)
         ? WAR_UNIT_BARRACKS_HUMANS : WAR_UNIT_BARRACKS_ORCS;
 
-    if (getNumberOfBuildingsOfType(context, player->index, farmType, true) >= 6 &&
-        getNumberOfBuildingsOfType(context, player->index, barracksType, true) >= 1)
+    if (wun_getNumberOfBuildingsOfType(context, player->index, farmType, true) >= 6 &&
+        wun_getNumberOfBuildingsOfType(context, player->index, barracksType, true) >= 1)
     {
         return WAR_LEVEL_RESULT_WIN;
     }
 
-    if (getTotalNumberOfUnits(context, player->index) == 0)
+    if (wun_getTotalNumberOfUnits(context, player->index) == 0)
     {
         return WAR_LEVEL_RESULT_LOSE;
     }
@@ -411,12 +411,12 @@ WarLevelResult wcamp_checkMap02Objectives(WarContext* context)
     WarPlayerInfo* player = &map->players[0];
     WarPlayerInfo* enemy = &map->players[1];
 
-    if (getTotalNumberOfDudes(context, enemy->index) == 0)
+    if (wun_getTotalNumberOfDudes(context, enemy->index) == 0)
     {
         return WAR_LEVEL_RESULT_WIN;
     }
 
-    if (getTotalNumberOfUnits(context, player->index) == 0)
+    if (wun_getTotalNumberOfUnits(context, player->index) == 0)
     {
         return WAR_LEVEL_RESULT_LOSE;
     }
@@ -430,12 +430,12 @@ WarLevelResult wcamp_checkCustomMapObjectives(WarContext* context)
     WarPlayerInfo* player = &map->players[0];
     WarPlayerInfo* enemy = &map->players[1];
 
-    if (getTotalNumberOfUnits(context, enemy->index) == 0)
+    if (wun_getTotalNumberOfUnits(context, enemy->index) == 0)
     {
         return WAR_LEVEL_RESULT_WIN;
     }
 
-    if (getTotalNumberOfUnits(context, player->index) == 0)
+    if (wun_getTotalNumberOfUnits(context, player->index) == 0)
     {
         return WAR_LEVEL_RESULT_LOSE;
     }

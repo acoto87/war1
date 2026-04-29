@@ -11,7 +11,7 @@ WarState* createDeathState(WarContext* context, WarEntity* entity)
 void enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = getUnitSize(entity);
+    vec2 unitSize = wun_getUnitSize(entity);
     vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
@@ -34,18 +34,18 @@ void updateDeathState(WarContext* context, WarEntity* entity, WarState* state)
 
     // when this state updates there will have pass the time of the death animation,
     // using the delay field of the states
-    if (!isCorpseUnit(entity) && !isCatapultUnit(entity) &&
-        !isSummonUnit(entity) && !isSkeletonUnit(entity))
+    if (!wun_isCorpseUnit(entity) && !wun_isCatapultUnit(entity) &&
+        !wun_isSummonUnit(entity) && !wun_isSkeletonUnit(entity))
     {
-        vec2 position = getUnitCenterPosition(entity, true);
+        vec2 position = wun_getUnitCenterPosition(entity, true);
 
-        WarUnitType corpseType = getUnitRace(entity) == WAR_RACE_ORCS
+        WarUnitType corpseType = wun_getUnitRace(entity) == WAR_RACE_ORCS
             ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
 
         WarEntity* corpse = went_createUnit(context, corpseType, (s32)position.x, (s32)position.y, 4,
                                        WAR_RESOURCE_NONE, 0, true);
 
-        setUnitDirection(corpse, getUnitDirection(entity));
+        wun_setUnitDirection(corpse, wun_getUnitDirection(entity));
 
         WarState* deathState = createDeathState(context, corpse);
         changeNextState(context, corpse, deathState, true, true);

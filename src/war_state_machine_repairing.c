@@ -53,12 +53,12 @@ void enterRepairingState(WarContext* context, WarEntity* entity, WarState* state
     }
     else
     {
-        vec2 unitSize = getUnitSize(entity);
-        vec2 position = getUnitCenterPosition(entity, true);
-        vec2 targetPosition = getUnitCenterPosition(building, true);
+        vec2 unitSize = wun_getUnitSize(entity);
+        vec2 position = wun_getUnitCenterPosition(entity, true);
+        vec2 targetPosition = wun_getUnitCenterPosition(building, true);
 
         setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
+        wun_setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
         setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
 }
@@ -69,8 +69,8 @@ void leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state
 
     WarMap* map = context->map;
 
-    vec2 unitSize = getUnitSize(entity);
-    vec2 position = getUnitCenterPosition(entity, true);
+    vec2 unitSize = wun_getUnitSize(entity);
+    vec2 position = wun_getUnitCenterPosition(entity, true);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 }
 
@@ -90,9 +90,9 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
             entity->sprite.enabled = true;
 
             // find a valid spawn position for the unit
-            vec2 position = getUnitCenterPosition(entity, true);
+            vec2 position = wun_getUnitCenterPosition(entity, true);
             vec2 spawnPosition = findEmptyPosition(map->finder, position);
-            setUnitCenterPosition(entity, spawnPosition, true);
+            wun_setUnitCenterPosition(entity, spawnPosition, true);
         }
 
         WarState* idleState = createIdleState(context, entity, true);
@@ -141,9 +141,9 @@ void updateRepairingState(WarContext* context, WarEntity* entity, WarState* stat
         entity->sprite.enabled = true;
 
         // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(entity, true);
+        vec2 position = wun_getUnitCenterPosition(entity, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(entity, spawnPosition, true);
+        wun_setUnitCenterPosition(entity, spawnPosition, true);
 
         WarState* idleState = createIdleState(context, entity, true);
         changeNextState(context, entity, idleState, true, true);

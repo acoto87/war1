@@ -41,9 +41,9 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
     if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
     {
         // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(goldmine, true);
+        vec2 position = wun_getUnitCenterPosition(goldmine, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(entity, spawnPosition, true);
+        wun_setUnitCenterPosition(entity, spawnPosition, true);
 
         WarState* idleState = createIdleState(context, entity, true);
         changeNextState(context, entity, idleState, true, true);
@@ -61,18 +61,18 @@ void updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
         }
 
         // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(goldmine, true);
+        vec2 position = wun_getUnitCenterPosition(goldmine, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(entity, spawnPosition, true);
+        wun_setUnitCenterPosition(entity, spawnPosition, true);
 
         // set the carrying gold sprites
-        WarWorkerData workerData = getWorkerData(unit->type);
+        WarWorkerData workerData = wun_getWorkerData(unit->type);
         went_removeSpriteComponent(context, entity);
         went_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingGoldResource));
 
         // find the closest town hall to deliver the gold
-        WarRace race = getUnitRace(entity);
-        WarUnitType townHallType = getTownHallOfRace(race);
+        WarRace race = wun_getUnitRace(entity);
+        WarUnitType townHallType = wun_getTownHallOfRace(race);
         WarEntity* townHall = went_findClosestUnitOfType(context, entity, townHallType);
 
         // if the town hall doesn't exists (it could be under attack and get destroyed), go idle

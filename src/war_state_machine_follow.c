@@ -29,7 +29,7 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
 
-    vec2 start = getUnitCenterPosition(entity, true);
+    vec2 start = wun_getUnitCenterPosition(entity, true);
     vec2 end = state->follow.targetTile;
 
     if (state->follow.targetEntityId)
@@ -41,11 +41,11 @@ void updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
             // if the target entity is an unit the instead of using the tile where
             // the player click, use a point on the target unit that is closer to
             // the following unit
-            end = unitPointOnTarget(entity, targetEntity);
+            end = wun_unitPointOnTarget(entity, targetEntity);
         }
         else
         {
-            end = getUnitCenterPosition(targetEntity, true);
+            end = wun_getUnitCenterPosition(targetEntity, true);
         }
     }
 

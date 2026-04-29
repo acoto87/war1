@@ -135,7 +135,7 @@ void wcheat_applySpellsCheat(WarContext* context, StringView argument)
 
     for (s32 i = 0; i < arrayLength(upgradeFeatures); i++)
     {
-        WarUpgradeData upgradeData = getUpgradeData(upgradeFeatures[i]);
+        WarUpgradeData upgradeData = wun_getUpgradeData(upgradeFeatures[i]);
         setUpgradeAllowed(player, upgradeFeatures[i], upgradeData.maxLevelAllowed);
         while (hasRemainingUpgrade(player, upgradeFeatures[i]))
         {
@@ -170,7 +170,7 @@ void wcheat_applyUpgradesCheat(WarContext* context, StringView argument)
 
     for (s32 i = 0; i < arrayLength(upgrades); i++)
     {
-        WarUpgradeData upgradeData = getUpgradeData(upgrades[i]);
+        WarUpgradeData upgradeData = wun_getUpgradeData(upgrades[i]);
         setUpgradeAllowed(player, upgrades[i], upgradeData.maxLevelAllowed);
         while (hasRemainingUpgrade(player, upgrades[i]))
         {

@@ -25,7 +25,7 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
     WarUnitComponent* unit = &entity->unit;
-    WarUnitStats stats = getUnitStats(unit->type);
+    WarUnitStats stats = wun_getUnitStats(unit->type);
 
     WarEntity* townHall = went_findEntity(context, (WarEntityId)state->deliver.townHallId);
 
@@ -37,9 +37,9 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
         return;
     }
 
-    if (!unitInRange(entity, townHall, stats.range))
+    if (!wun_unitInRange(entity, townHall, stats.range))
     {
-        vec2 targetTile = unitPointOnTarget(entity, townHall);
+        vec2 targetTile = wun_unitPointOnTarget(entity, townHall);
 
         WarState* followState = createFollowState(context, entity, townHall->id, targetTile, stats.range);
         followState->nextState = state;
@@ -50,11 +50,11 @@ void updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
     if (state->deliver.insideBuilding)
     {
         // find a valid spawn position for the unit
-        vec2 position = getUnitCenterPosition(townHall, true);
+        vec2 position = wun_getUnitCenterPosition(townHall, true);
         vec2 spawnPosition = findEmptyPosition(map->finder, position);
-        setUnitCenterPosition(entity, spawnPosition, true);
+        wun_setUnitCenterPosition(entity, spawnPosition, true);
 
-        WarUnitData unitData = getUnitData(unit->type);
+        WarUnitData unitData = wun_getUnitData(unit->type);
         went_removeSpriteComponent(context, entity);
         went_addSpriteComponentFromResource(context, entity, imageResourceRef(unitData.resourceIndex));
 
