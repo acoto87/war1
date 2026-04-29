@@ -7,7 +7,7 @@
 #include "war_ui.h"
 #include "war_units.h"
 
-void createMapUI(WarContext* context)
+void wmui_createMapUI(WarContext* context)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -40,7 +40,7 @@ void createMapUI(WarContext* context)
     createUIImage(context, wstr_fromCString("panelBottom"), imageResourceRefFromPlayer(player, 222, 223), bottomPanel);
 
     // minimap
-    createUIMinimap(context, wstr_fromCString("minimap"), minimapPanel);
+    wmui_createUIMinimap(context, wstr_fromCString("minimap"), minimapPanel);
 
     // top panel images
     createUIImage(context, wstr_fromCString("imgGold"), imageResourceRef(406), vec2Addv(topPanel, vec2i(201, 1)));
@@ -128,7 +128,7 @@ void createMapUI(WarContext* context)
     setUIButtonHotKey(uiEntity, WAR_KEY_F10);
 }
 
-WarEntity* createUIMinimap(WarContext* context, String name, vec2 position)
+WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
 {
     WarEntity* entity = createEntity(context, WAR_ENTITY_TYPE_MINIMAP, true);
     addTransformComponent(context, entity, position);
@@ -137,7 +137,7 @@ WarEntity* createUIMinimap(WarContext* context, String name, vec2 position)
     return entity;
 }
 
-void updateGoldText(WarContext* context)
+void wmui_updateGoldText(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -149,7 +149,7 @@ void updateGoldText(WarContext* context)
     setUITextHighlight(txtGold, NO_HIGHLIGHT, 0);
 }
 
-void updateWoodText(WarContext* context)
+void wmui_updateWoodText(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -161,7 +161,7 @@ void updateWoodText(WarContext* context)
     setUITextHighlight(txtWood, NO_HIGHLIGHT, 0);
 }
 
-void updateSelectedUnitsInfo(WarContext* context)
+void wmui_updateSelectedUnitsInfo(WarContext* context)
 {
     WarMap* map = context->map;
 
@@ -237,7 +237,7 @@ void updateSelectedUnitsInfo(WarContext* context)
                 WarUnitComponent* unit = &selectedEntity->unit;
                 WarUnitData unitData = getUnitData(unit->type);
                 setUIImage(imgUnitPortraits[i], unitData.portraitFrameIndex);
-                setLifeBar(rectLifeBars[i], unit);
+                wmui_setLifeBar(rectLifeBars[i], unit);
             }
         }
     }
@@ -254,7 +254,7 @@ void updateSelectedUnitsInfo(WarContext* context)
                 if (isMagicUnit(selectedEntity))
                 {
                     setUIImage(imgUnitInfo, 1);
-                    setManaBar(rectMagicBar, unit);
+                    wmui_setManaBar(rectMagicBar, unit);
                 }
                 else
                 {
@@ -266,7 +266,7 @@ void updateSelectedUnitsInfo(WarContext* context)
                 if (unit->building)
                 {
                     setUIImage(imgUnitInfo, 2);
-                    setPercentBar(rectPercentBar, rectPercentText, unit);
+                    wmui_setPercentBar(rectPercentBar, rectPercentText, unit);
                 }
                 else
                 {
@@ -278,12 +278,12 @@ void updateSelectedUnitsInfo(WarContext* context)
             setUIImage(imgUnitPortraits[0], unitData.portraitFrameIndex);
             setUIText(txtUnitName, wsv_toString(unitData.name));
             setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
-            setLifeBar(rectLifeBars[0], unit);
+            wmui_setLifeBar(rectLifeBars[0], unit);
         }
     }
 }
 
-void setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, String text)
+void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, String text)
 {
     WarEntity* txtStatus = findUIEntity(context, wsv_fromCString("txtStatus"));
     assert(txtStatus);
@@ -322,7 +322,7 @@ void setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 
     }
 }
 
-void setFlashStatus(WarContext* context, f32 duration, String text)
+void wmui_setFlashStatus(WarContext* context, f32 duration, String text)
 {
     WarMap* map = context->map;
     WarFlashStatus* flashStatus = &map->flashStatus;
@@ -337,7 +337,7 @@ void setFlashStatus(WarContext* context, f32 duration, String text)
     flashStatus->text = text;
 }
 
-void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
+void wmui_setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
 {
 #define LIFE_BAR_RED_THRESHOLD 0.35f
 #define LIFE_BAR_YELLOW_THRESHOLD 0.70f
@@ -355,7 +355,7 @@ void setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
     setUIRectWidth(rectLifeBar, (s32)(hpPercent * LIFE_BAR_WIDTH_PX));
 }
 
-void setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit)
+void wmui_setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit)
 {
 #define MAGIC_BAR_WIDTH_PX 27
 
@@ -363,7 +363,7 @@ void setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit)
     setUIRectWidth(rectMagicBar, (s32)(magicPercent * MAGIC_BAR_WIDTH_PX));
 }
 
-void setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUnitComponent* unit)
+void wmui_setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUnitComponent* unit)
 {
 #define PERCENT_BAR_WIDTH_PX 64
 
@@ -373,7 +373,7 @@ void setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUni
     setUIImage(rectPercentText, 0);
 }
 
-void renderSelectionRect(WarContext* context)
+void wmui_renderSelectionRect(WarContext* context)
 {
     wrend_renderSave(context);
 
@@ -387,7 +387,7 @@ void renderSelectionRect(WarContext* context)
     wrend_renderRestore(context);
 }
 
-void renderCommand(WarContext* context)
+void wmui_renderCommand(WarContext* context)
 {
     WarMap* map = context->map;
     WarUnitCommand* command = &map->command;
@@ -461,12 +461,12 @@ void renderCommand(WarContext* context)
     wrend_renderRestore(context);
 }
 
-void renderMapUI(WarContext* context)
+void wmui_renderMapUI(WarContext* context)
 {
     wrend_renderSave(context);
 
-    renderSelectionRect(context);
-    renderCommand(context);
+    wmui_renderSelectionRect(context);
+    wmui_renderCommand(context);
     renderUIEntities(context);
 
     wrend_renderRestore(context);

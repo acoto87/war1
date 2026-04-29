@@ -797,7 +797,7 @@ void wmap_enterMap(WarContext* context)
     wai_initAIPlayers(context);
 
     // add ui entities
-    createMapUI(context);
+    wmui_createMapUI(context);
     createMenu(context);
     createOptionsMenu(context);
     createObjectivesMenu(context);
@@ -1618,7 +1618,7 @@ void updateStatus(WarContext* context)
             StringView cheatStatusText = wstr_view(&cheatStatus->text);
 
             String statusText = wstr_concat(prefix, cheatStatusText);
-            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
+            wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
 
             WarFontParams params = {0};
             params.fontSize = statusTextUI->text.fontSize;
@@ -1646,7 +1646,7 @@ void updateStatus(WarContext* context)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            setStatus(context, NO_HIGHLIGHT, 0, 0, 0, flashStatus->text);
+            wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, flashStatus->text);
             return;
         }
 
@@ -1745,7 +1745,7 @@ void updateStatus(WarContext* context)
         }
     }
 
-    setStatus(context, highlightIndex, highlightCount, goldCost, woodCost, statusText);
+    wmui_setStatus(context, highlightIndex, highlightCount, goldCost, woodCost, statusText);
 }
 
 void updateMapCursor(WarContext* context)
@@ -2488,9 +2488,9 @@ void wmap_updateMap(WarContext* context)
     updateFoW(context);
     determineFoWTypes(context);
 
-    updateGoldText(context);
-    updateWoodText(context);
-    updateSelectedUnitsInfo(context);
+    wmui_updateGoldText(context);
+    wmui_updateWoodText(context);
+    wmui_updateSelectedUnitsInfo(context);
     updateCommandButtons(context);
 
     updateUIButtons(context, !cheatsEnabledAndVisible(map));
@@ -2751,5 +2751,5 @@ void renderMap(WarContext *context)
     renderMapPanel(context);
 
     // render ui
-    renderMapUI(context);
+    wmui_renderMapUI(context);
 }

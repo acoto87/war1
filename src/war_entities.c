@@ -1806,13 +1806,13 @@ bool decreasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 gol
 {
     if (player->gold < gold)
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH GOLD... MINE MORE GOLD"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH GOLD... MINE MORE GOLD"));
         return false;
     }
 
     if (player->wood < wood)
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH LUMBER... CHOP MORE TREES"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH LUMBER... CHOP MORE TREES"));
         return false;
     }
 
@@ -1864,7 +1864,7 @@ bool decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     WarUnitComponent* unit = &entity->unit;
     if (unit->mana < mana)
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH MANA"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH MANA"));
         return false;
     }
 
@@ -1896,7 +1896,7 @@ bool checkFarmFood(WarContext* context, WarPlayerInfo* player)
 {
     if (!enoughFarmFood(context, player))
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH FOOD... BUILD MORE FARMS"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("NOT ENOUGH FOOD... BUILD MORE FARMS"));
         return false;
     }
 
@@ -1932,7 +1932,7 @@ bool checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s
 
     if (!checkRectToBuild(context, x, y, data.sizex, data.sizey))
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
     }
 
@@ -1943,7 +1943,7 @@ bool checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
 {
     if (!checkRectToBuild(context, x, y, 1, 1))
     {
-        setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
+        wmui_setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
     }
 
