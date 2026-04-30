@@ -28,14 +28,9 @@ struct _WarRoadPiece
 #define WarRoadPieceEmpty (WarRoadPiece){0}
 #define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (u8)(player)})
 
-bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
-{
-    return r1.type == r2.type && r1.player == r2.player &&
-           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
-}
+bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2);
 
 shlDeclareList(WarRoadPieceList, WarRoadPiece)
-shlDefineList(WarRoadPieceList, WarRoadPiece)
 
 #define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL}
 
@@ -51,14 +46,9 @@ struct _WarWallPiece
 #define WarWallPieceEmpty (WarWallPiece){0}
 #define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (u8)(player)})
 
-bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
-{
-    return w1.type == w2.type && w1.player == w2.player &&
-           w1.tilex == w2.tilex && w1.tiley == w2.tiley;
-}
+bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2);
 
 shlDeclareList(WarWallPieceList, WarWallPiece)
-shlDefineList(WarWallPieceList, WarWallPiece)
 
 #define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, equalsWallPiece, NULL}
 
@@ -71,14 +61,9 @@ struct _WarRuinPiece
 #define WarRuinPieceEmpty (WarRuinPiece){0}
 #define createRuinPiece(x, y) ((WarRuinPiece){0, (x), (y)})
 
-bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
-{
-    return r1.type == r2.type &&
-           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
-}
+bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2);
 
 shlDeclareList(WarRuinPieceList, WarRuinPiece)
-shlDefineList(WarRuinPieceList, WarRuinPiece)
 
 #define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL}
 
@@ -92,19 +77,10 @@ struct _WarTree
 #define WarTreeEmpty (WarTree){0}
 #define createTree(x, y, amount) ((WarTree){0, (x), (y), (amount)})
 
-bool equalsTree(const WarTree t1, const WarTree t2)
-{
-    return t1.tilex == t2.tilex && t1.tiley == t2.tiley;
-}
-
-s32 compareTreesByPosition(const WarTree t1, const WarTree t2)
-{
-    // order by 'x' asc, then by 'y' desc
-    return t1.tilex == t2.tilex ? t2.tiley - t1.tiley : t1.tilex - t2.tilex;
-}
+bool equalsTree(const WarTree t1, const WarTree t2);
+s32 compareTreesByPosition(const WarTree t1, const WarTree t2);
 
 shlDeclareList(WarTreeList, WarTree)
-shlDefineList(WarTreeList, WarTree)
 
 #define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
 
@@ -113,12 +89,10 @@ shlDefineList(WarTreeList, WarTree)
 //
 
 shlDeclareList(WarEntityIdList, WarEntityId)
-shlDefineList(WarEntityIdList, WarEntityId)
 
 #define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL}
 
 shlDeclareSet(WarEntityIdSet, WarEntityId)
-shlDefineSet(WarEntityIdSet, WarEntityId)
 
 #define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, hashEntityId, equalsEntityId, NULL}
 
@@ -393,10 +367,7 @@ struct _WarEntity
     WarSightComponent sight;
 };
 
-bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
-{
-    return e1->id == e2->id;
-}
+bool equalsEntity(const WarEntity* e1, const WarEntity* e2);
 
 static inline void freeEntity(WarEntity* e)
 {
@@ -404,20 +375,12 @@ static inline void freeEntity(WarEntity* e)
 }
 
 shlDeclareList(WarEntityList, WarEntity*)
-shlDefineList(WarEntityList, WarEntity*)
 
 #define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, freeEntity}
 #define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity}
 
-uint32_t hashEntityType(const WarEntityType type)
-{
-    return type;
-}
-
-bool equalsEntityType(const WarEntityType t1, const WarEntityType t2)
-{
-    return t1 == t2;
-}
+uint32_t hashEntityType(const WarEntityType type);
+bool equalsEntityType(const WarEntityType t1, const WarEntityType t2);
 
 static inline void freeEntityList(WarEntityList* list)
 {
@@ -425,23 +388,13 @@ static inline void freeEntityList(WarEntityList* list)
 }
 
 shlDeclareMap(WarEntityMap, WarEntityType, WarEntityList*)
-shlDefineMap(WarEntityMap, WarEntityType, WarEntityList*)
 
-uint32_t hashUnitType(const WarUnitType type)
-{
-    return type;
-}
-
-bool equalsUnitType(const WarUnitType t1, const WarUnitType t2)
-{
-    return t1 == t2;
-}
+uint32_t hashUnitType(const WarUnitType type);
+bool equalsUnitType(const WarUnitType t1, const WarUnitType t2);
 
 shlDeclareMap(WarUnitMap, WarUnitType, WarEntityList*)
-shlDefineMap(WarUnitMap, WarUnitType, WarEntityList*)
 
 shlDeclareMap(WarEntityIdMap, WarEntityId, WarEntity*)
-shlDefineMap(WarEntityIdMap, WarEntityId, WarEntity*)
 
 struct _WarEntityManager
 {
@@ -610,295 +563,3 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
 void we_meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
 void we_meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece);
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount);
-
-//
-// Entity-using unit helper functions
-// (defined here because they need the complete WarEntity definition)
-//
-
-// Forward-declare wmap coordinate helpers (their full decls are in war_map.h)
-vec2 wmap_vec2MapToTileCoordinates(vec2 v);
-vec2 wmap_vec2TileToMapCoordinates(vec2 v, bool centeredInTile);
-
-bool wu_isDudeUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isDudeUnitType(entity->unit.type);
-}
-
-bool wu_isBuildingUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isBuildingUnitType(entity->unit.type);
-}
-
-bool wu_isWorkerUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isWorkerUnitType(entity->unit.type);
-}
-
-bool wu_isWarriorUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isWarriorUnitType(entity->unit.type);
-}
-
-bool wu_isRangeUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isRangeUnitType(entity->unit.type);
-}
-
-bool wu_isMeleeUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isMeleeUnitType(entity->unit.type);
-}
-
-bool wu_isFistUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isFistUnitType(entity->unit.type);
-}
-
-bool wu_isSwordUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isSwordUnitType(entity->unit.type);
-}
-
-bool wu_isMagicUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isMagicUnitType(entity->unit.type);
-}
-
-bool wu_isCorpseUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isCorpseUnitType(entity->unit.type);
-}
-
-bool wu_isCatapultUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isCatapultUnitType(entity->unit.type);
-}
-
-bool wu_isConjurerOrWarlockUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isConjurerOrWarlockUnitType(entity->unit.type);
-}
-
-bool wu_isClericOrNecrolyteUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isClericOrNecrolyteUnitType(entity->unit.type);
-}
-
-bool wu_isSummonUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isSummonUnitType(entity->unit.type);
-}
-
-bool wu_isSkeletonUnit(WarEntity* entity)
-{
-    return isUnit(entity) && entity->unit.type == WAR_UNIT_SKELETON;
-}
-
-WarRace wu_getUnitRace(WarEntity* entity)
-{
-    if (!isUnit(entity))
-        return WAR_RACE_NEUTRAL;
-
-    return wu_getUnitTypeRace(entity->unit.type);
-}
-
-vec2 wu_getUnitSize(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    WarUnitComponent* unit = &entity->unit;
-    return vec2i(unit->sizex, unit->sizey);
-}
-
-vec2 wu_getUnitFrameSize(WarEntity* entity)
-{
-    WarSpriteComponent* sprite = &entity->sprite;
-    return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-}
-
-rect wu_getUnitFrameRect(WarEntity* entity)
-{
-    return rectv(VEC2_ZERO, wu_getUnitFrameSize(entity));
-}
-
-vec2 wu_getUnitSpriteSize(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    WarUnitComponent* unit = &entity->unit;
-    return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
-}
-
-rect wu_getUnitSpriteRect(WarEntity* entity)
-{
-    vec2 frameSize = wu_getUnitFrameSize(entity);
-    vec2 unitSize = wu_getUnitSpriteSize(entity);
-    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
-    return rectv(pos, unitSize);
-}
-
-vec2 wu_getUnitSpriteCenter(WarEntity* entity)
-{
-    vec2 frameSize = wu_getUnitFrameSize(entity);
-    vec2 unitSize = wu_getUnitSpriteSize(entity);
-    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
-    return vec2Addv(pos, vec2Half(unitSize));
-}
-
-rect wu_getUnitRect(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    return rectv(entity->transform.position, wu_getUnitSpriteSize(entity));
-}
-
-vec2 wu_getUnitPosition(WarEntity* entity, bool inTiles)
-{
-    vec2 position = entity->transform.position;
-    return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
-}
-
-vec2 wu_getUnitCenterPosition(WarEntity* entity, bool inTiles)
-{
-    WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = wu_getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Half(spriteSize);
-    vec2 position = vec2Addv(transform->position, unitCenter);
-    return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
-}
-
-void wu_setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
-{
-    if (inTiles)
-    {
-        position = wmap_vec2TileToMapCoordinates(position, true);
-    }
-
-    entity->transform.position = position;
-}
-
-void wu_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
-{
-    if (inTiles)
-    {
-        position = wmap_vec2TileToMapCoordinates(position, true);
-    }
-
-    WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = wu_getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Half(spriteSize);
-    transform->position = vec2Subv(position, unitCenter);
-}
-
-WarUnitDirection wu_getUnitDirection(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    return entity->unit.direction;
-}
-
-void wu_setUnitDirection(WarEntity* entity, WarUnitDirection direction)
-{
-    assert(isUnit(entity));
-
-    entity->unit.direction = direction;
-}
-
-void wu_setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
-{
-    assert(isUnit(entity));
-
-    WarUnitDirection direction = wu_getDirectionFromDiff(dx, dy);
-    wu_setUnitDirection(entity, direction);
-}
-
-f32 wu_getUnitActionScale(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    return 1 - entity->unit.speed * 0.1f;
-}
-
-vec2 wu_unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
-{
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
-
-    vec2 position = wu_getUnitCenterPosition(entity, true);
-
-    vec2 targetPosition = wmap_vec2MapToTileCoordinates(targetEntity->transform.position);
-    vec2 unitSize = wu_getUnitSize(targetEntity);
-    rect unitRect = rectv(targetPosition, unitSize);
-
-    return getClosestPointOnRect(position, unitRect);
-}
-
-s32 wu_entityTileDistance(WarEntity* entity, vec2 targetPosition)
-{
-    assert(isUnit(entity));
-
-    vec2 position = wu_getUnitCenterPosition(entity, true);
-    f32 distance = vec2DistanceInTiles(position, targetPosition);
-    return (s32)distance;
-}
-
-bool wu_tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
-{
-    assert(range >= 0);
-
-    s32 distance = wu_entityTileDistance(entity, targetTile);
-    return distance <= range;
-}
-
-s32 wu_unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
-{
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
-
-    vec2 pointOnTarget = wu_unitPointOnTarget(entity, targetEntity);
-    return wu_entityTileDistance(entity, pointOnTarget);
-}
-
-bool wu_unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
-{
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
-    assert(range >= 0);
-
-    s32 distance = wu_unitDistanceInTiles(entity, targetEntity);
-    return distance <= range;
-}
-
-bool wu_isCarryingResources(WarEntity* entity)
-{
-    assert(entity);
-    assert(isUnit(entity));
-
-    switch (entity->unit.resourceKind)
-    {
-        case WAR_RESOURCE_GOLD: return entity->unit.amount == UNIT_MAX_CARRY_WOOD;
-        case WAR_RESOURCE_WOOD: return entity->unit.amount == UNIT_MAX_CARRY_GOLD;
-        default: return false;
-    }
-}
-
-s32 wu_getUnitSightRange(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    s32 sight = 0;
-
-    if (wu_isBuildingUnit(entity))
-    {
-        WarBuildingStats stats = wu_getBuildingStats(entity->unit.type);
-        sight = stats.sight;
-    }
-    else
-    {
-        WarUnitStats stats = wu_getUnitStats(entity->unit.type);
-        sight = stats.sight;
-    }
-
-    return sight;
-}

@@ -1,18 +1,84 @@
-#include "war_entities.h"
-
 #include <assert.h>
 #include <stdlib.h>
 
 #include "shl/wstr.h"
 
+#include "war_entities.h"
+
 #include "war_animations.h"
 #include "war_audio.h"
 #include "war_font.h"
+#include "war_map.h"
+#include "war_map_ui.h"
 #include "war_render.h"
 #include "war_sprites.h"
 #include "war_units.h"
-#include "war_map.h"
-#include "war_map_ui.h"
+
+shlDefineList(WarRoadPieceList, WarRoadPiece)
+shlDefineList(WarWallPieceList, WarWallPiece)
+shlDefineList(WarRuinPieceList, WarRuinPiece)
+shlDefineList(WarTreeList, WarTree)
+shlDefineList(WarEntityIdList, WarEntityId)
+shlDefineSet(WarEntityIdSet, WarEntityId)
+shlDefineList(WarEntityList, WarEntity*)
+shlDefineMap(WarEntityMap, WarEntityType, WarEntityList*)
+shlDefineMap(WarUnitMap, WarUnitType, WarEntityList*)
+shlDefineMap(WarEntityIdMap, WarEntityId, WarEntity*)
+
+bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
+{
+    return r1.type == r2.type && r1.player == r2.player &&
+           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
+}
+
+bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
+{
+    return w1.type == w2.type && w1.player == w2.player &&
+           w1.tilex == w2.tilex && w1.tiley == w2.tiley;
+}
+
+bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
+{
+    return r1.type == r2.type &&
+           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
+}
+
+bool equalsTree(const WarTree t1, const WarTree t2)
+{
+    return t1.tilex == t2.tilex && t1.tiley == t2.tiley;
+}
+
+s32 compareTreesByPosition(const WarTree t1, const WarTree t2)
+{
+    // order by 'x' asc, then by 'y' desc
+    return t1.tilex == t2.tilex ? t2.tiley - t1.tiley : t1.tilex - t2.tilex;
+}
+
+bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
+{
+    return e1->id == e2->id;
+}
+
+uint32_t hashEntityType(const WarEntityType type)
+{
+    return type;
+}
+
+bool equalsEntityType(const WarEntityType t1, const WarEntityType t2)
+{
+    return t1 == t2;
+}
+
+uint32_t hashUnitType(const WarUnitType type)
+{
+    return type;
+}
+
+bool equalsUnitType(const WarUnitType t1, const WarUnitType t2)
+{
+    return t1 == t2;
+}
+
 
 void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
