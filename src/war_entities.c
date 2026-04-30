@@ -54,6 +54,16 @@ s32 compareTreesByPosition(const WarTree t1, const WarTree t2)
     return t1.tilex == t2.tilex ? t2.tiley - t1.tiley : t1.tilex - t2.tilex;
 }
 
+bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
+{
+    return id1 == id2;
+}
+
+uint32_t hashEntityId(const WarEntityId id)
+{
+    return id;
+}
+
 bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
 {
     return e1->id == e2->id;

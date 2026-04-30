@@ -80,6 +80,9 @@ shlDeclareList(WarTreeList, WarTree)
 
 #define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
 
+bool equalsEntityId(const WarEntityId id1, const WarEntityId id2);
+uint32_t hashEntityId(const WarEntityId id);
+
 shlDeclareList(WarEntityIdList, WarEntityId)
 
 #define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL}

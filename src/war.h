@@ -120,16 +120,6 @@
 
 #define MAX_RENDER_STATE_STACK 32
 
-bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
-{
-    return id1 == id2;
-}
-
-uint32_t hashEntityId(const WarEntityId id)
-{
-    return id;
-}
-
 #define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
 #define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)
 
