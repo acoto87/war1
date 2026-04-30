@@ -50,7 +50,7 @@ static s32 compareGScore(const WarMapNode node1, const WarMapNode node2)
 
 static s32 manhattanDistance(const WarMapNode node1, const WarMapNode node2)
 {
-    return abs(node1.x - node2.x) + abs(node1.y - node2.y);
+    return ABS(node1.x - node2.x) + ABS(node1.y - node2.y);
 }
 
 static s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
@@ -410,8 +410,8 @@ bool wpath_reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s3
 
     if (newPath.nodes.count > 1)
     {
-        s32 minIndex = min(fromIndex, toIndex);
-        s32 maxIndex = max(fromIndex, toIndex);
+        s32 minIndex = MIN(fromIndex, toIndex);
+        s32 maxIndex = MAX(fromIndex, toIndex);
 
         // remove the nodes in the range [fromIndex, toIndex] or [toIndex, fromIndex] from current to last remaining nodes of the current path
         vec2ListRemoveAtRange(&path->nodes, minIndex, maxIndex - minIndex + 1);

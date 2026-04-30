@@ -220,7 +220,7 @@ void wui_updateUICursor(WarContext* context)
     WarEntity* entity = we_findUIEntity(context, wsv_fromCString("cursor"));
     if (entity)
     {
-        entity->transform.position = vec2Subv(input->pos, entity->cursor.hot);
+        entity->transform.position = vec2_subv(input->pos, entity->cursor.hot);
         wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
     }
 }
@@ -284,7 +284,7 @@ void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
 
             vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
             rect buttonRect = rectv(transform->position, backgroundSize);
-            bool pointerInside = rectContainsf(buttonRect, input->pos.x, input->pos.y);
+            bool pointerInside = rect_containsf(buttonRect, input->pos.x, input->pos.y);
 
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {

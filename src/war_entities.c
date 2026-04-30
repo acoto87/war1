@@ -741,7 +741,7 @@ WarEntity* we_findEntityUnderCursor(WarContext* context, bool includeTrees, bool
             }
 
             rect unitRect = wu_getUnitRect(entity);
-            if (rectContainsf(unitRect, targetPoint.x, targetPoint.y))
+            if (rect_containsf(unitRect, targetPoint.x, targetPoint.y))
             {
                 entityUnderCursor = entity;
                 break;
@@ -1108,7 +1108,7 @@ void renderWall(WarContext* context, WarEntity* entity)
 
             s32 tileIndex = 0;
 
-            s32 hpPercent = percentabi(piece->hp, piece->maxhp);
+            s32 hpPercent = PERCENTABI(piece->hp, piece->maxhp);
             if (hpPercent <= 0)
             {
                 tileIndex = (tilesetType == MAP_TILESET_FOREST)
@@ -1251,8 +1251,8 @@ void renderUnit(WarContext* context, WarEntity* entity)
     // the unit is visible if it's partially on the clear areas of the fog
     bool isVisible = isUnitPartiallyVisible(map, entity);
 
-    wr_translate(context, -halff(frameSize.x), -halff(frameSize.y));
-    wr_translate(context, halff(unitSize.x), halff(unitSize.y));
+    wr_translate(context, -0.5f * frameSize.x, -0.5f * frameSize.y);
+    wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
     wr_translate(context, position.x, position.y);
 
 #ifdef DEBUG_RENDER_UNIT_INFO
@@ -1282,7 +1282,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
             if (unitComponent->invulnerable)
             {
                 rect unitRect = wu_getUnitSpriteRect(entity);
-                unitRect = rectExpand(unitRect, -1, -1);
+                unitRect = rect_expand(unitRect, -1, -1);
                 wr_strokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
             }
         }
@@ -1314,7 +1314,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
 #endif
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
-                animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+                animFrameIndex = CLAMP(animFrameIndex, 0, anim->frames.count - 1);
 
                 s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
                 WarSpriteFrame frame = wspr_getSpriteFrame(context, anim->sprite, spriteFrameIndex);
@@ -1410,10 +1410,10 @@ void renderButton(WarContext* context, WarEntity* entity)
             {
                 vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
                 vec2 foregroundSize = vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-                vec2 offset = vec2Half(vec2Subv(backgroundSize, foregroundSize));
+                vec2 offset = vec2_half(vec2_subv(backgroundSize, foregroundSize));
 
                 if (button->active)
-                    offset = vec2Addv(offset, vec2i(0, 1));
+                    offset = vec2_addv(offset, vec2i(0, 1));
 
                 wr_translate(context, offset.x, offset.y);
 
@@ -1466,7 +1466,7 @@ void renderProjectile(WarContext* context, WarEntity* entity)
         {
             wr_save(context);
 
-            wr_translate(context, -halfi(sprite->sprite.frameWidth),-halfi(sprite->sprite.frameHeight));
+            wr_translate(context, -sprite->sprite.frameWidth/2,-sprite->sprite.frameHeight/2);
             wr_translate(context, position.x, position.y);
 
             rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
@@ -1478,7 +1478,7 @@ void renderProjectile(WarContext* context, WarEntity* entity)
         {
             wr_save(context);
 
-            wr_translate(context, -halfi(frame.w),-halfi(frame.h));
+            wr_translate(context, -frame.w/2,-frame.h/2);
             wr_translate(context, position.x, position.y);
 
             rect r = rectf(0, 0, frame.w, frame.h);
@@ -1501,7 +1501,7 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 #endif
 
         wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
-        wr_translate(context, -halff(frame.w), -halff(frame.h));
+        wr_translate(context, -0.5f * frame.w, -0.5f * frame.h);
         wr_translate(context, position.x, position.y);
 
         wspr_updateSpriteImage(context, sprite->sprite, frame.data);
@@ -1613,7 +1613,7 @@ void renderAnimation(WarContext* context, WarEntity* entity)
                 wr_scale(context, anim->scale.x, anim->scale.y);
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
-                animFrameIndex = clamp(animFrameIndex, 0, anim->frames.count - 1);
+                animFrameIndex = CLAMP(animFrameIndex, 0, anim->frames.count - 1);
 
                 s32 spriteFrameIndex = anim->frames.items[animFrameIndex];
                 WarSpriteFrame frame = wspr_getSpriteFrame(context, anim->sprite, spriteFrameIndex);
@@ -1745,11 +1745,11 @@ void we_renderUnitSelection(WarContext* context)
                 vec2 position = transform->position;
 
                 wr_save(context);
-                wr_translate(context, -halff(frameSize.x), -halff(frameSize.y));
-                wr_translate(context, halff(unitSize.x), halff(unitSize.y));
+                wr_translate(context, -0.5f * frameSize.x, -0.5f * frameSize.y);
+                wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
                 wr_translate(context, position.x, position.y);
 
-                rect selr = rectf(halff(frameSize.x - unitSize.x), halff(frameSize.y - unitSize.y), unitSize.x, unitSize.y);
+                rect selr = rectf(0.5f * (frameSize.x - unitSize.x), 0.5f * (frameSize.y - unitSize.y), unitSize.x, unitSize.y);
                 WarColor color = WAR_COLOR_WHITE_SELECTION;
                 if (wu_isFriendlyUnit(context, entity))
                     color = WAR_COLOR_GREEN_SELECTION;
@@ -1914,7 +1914,7 @@ bool we_increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
     WarUnitComponent* unit = &entity->unit;
 
     unit->hp += hp;
-    unit->hp = min(unit->hp, unit->maxhp);
+    unit->hp = MIN(unit->hp, unit->maxhp);
 
     return true;
 }
@@ -1928,7 +1928,7 @@ bool we_decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
     WarUnitComponent* unit = &entity->unit;
 
     unit->hp -= hp;
-    unit->hp = max(unit->hp, 0);
+    unit->hp = MAX(unit->hp, 0);
 
     return true;
 }
@@ -1944,7 +1944,7 @@ bool we_decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
         return false;
     }
 
-    unit->mana = max(unit->mana - mana, 0);
+    unit->mana = MAX(unit->mana - mana, 0);
     return true;
 }
 
@@ -1955,7 +1955,7 @@ void we_increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
     assert(isUnit(entity));
 
     WarUnitComponent* unit = &entity->unit;
-    unit->mana = clamp(unit->mana + mana, 0, unit->maxMana);
+    unit->mana = CLAMP(unit->mana + mana, 0, unit->maxMana);
 }
 
 bool we_enoughFarmFood(WarContext* context, WarPlayerInfo* player)
@@ -2137,7 +2137,7 @@ WarEntity* we_getAttackTarget(WarContext* context, WarEntity* entity)
 
 s32 we_getTotalDamage(s32 minDamage, s32 rndDamage, s32 armor)
 {
-    return minDamage + max(rndDamage - armor, 0);
+    return minDamage + MAX(rndDamage - armor, 0);
 }
 
 void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rndDamage)
@@ -2193,7 +2193,7 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
     }
     else if (wu_isBuildingUnit(entity))
     {
-        s32 hpPercent = percentabi(unit->hp, unit->maxhp);
+        s32 hpPercent = PERCENTABI(unit->hp, unit->maxhp);
         if(hpPercent <= 33)
         {
             if (!wanim_containsAnimation(context, entity, wsv_fromCString("hugeDamage")))
@@ -2221,7 +2221,7 @@ void we_takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* pie
     // Minimal damage + [Random damage - Enemy's Armor]
     s32 damage = we_getTotalDamage(minDamage, rndDamage, 0);
     piece->hp -= damage;
-    piece->hp = max(piece->hp, 0);
+    piece->hp = MAX(piece->hp, 0);
 }
 
 void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
@@ -2349,7 +2349,7 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
         amount = unit->amount;
 
     unit->amount -= amount;
-    unit->amount = max(unit->amount, 0);
+    unit->amount = MAX(unit->amount, 0);
 
     if (unit->amount == 0)
     {

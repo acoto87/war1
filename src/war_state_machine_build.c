@@ -122,7 +122,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         return;
     }
 
-    unit->buildPercent = percentabf01(state->build.buildTime, state->build.totalBuildTime);
+    unit->buildPercent = PERCENTF01(state->build.buildTime, state->build.totalBuildTime);
 
     // update the sprite of the building to show the construction steps
     //

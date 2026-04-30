@@ -239,7 +239,7 @@ s32 we_chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amoun
         amount = tree->amount;
 
     tree->amount -= amount;
-    tree->amount = max(tree->amount, 0);
+    tree->amount = MAX(tree->amount, 0);
 
     if (tree->amount == 0)
     {

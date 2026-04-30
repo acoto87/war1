@@ -326,7 +326,7 @@ void wg_setWindowSize(WarContext* context, s32 width, s32 height)
 
 void wg_setGlobalScale(WarContext* context, f32 scale)
 {
-    context->globalScale = max(scale, 1.0f);
+    context->globalScale = MAX(scale, 1.0f);
     logDebug("set global scale to: %.2f", context->globalScale);
 
     s32 newWidth = (s32)(context->originalWindowWidth * context->globalScale);
@@ -341,7 +341,7 @@ void wg_changeGlobalScale(WarContext* context, f32 deltaScale)
 
 void wg_setGlobalSpeed(WarContext* context, f32 speed)
 {
-    context->globalSpeed = max(speed, 1.0f);
+    context->globalSpeed = MAX(speed, 1.0f);
     logDebug("set global speed to: %.2f", context->globalSpeed);
 }
 
@@ -352,7 +352,7 @@ void wg_changeGlobalSpeed(WarContext* context, f32 deltaSpeed)
 
 void wg_setMusicVolume(WarContext* context, f32 volume)
 {
-    context->musicVolume = clamp(volume, 0.0f, 1.0f);
+    context->musicVolume = CLAMP(volume, 0.0f, 1.0f);
     logDebug("set music volume to: %.2f", context->musicVolume);
 }
 
@@ -363,7 +363,7 @@ void wg_changeMusicVolume(WarContext* context, f32 deltaVolume)
 
 void wg_setSoundVolume(WarContext* context, f32 volume)
 {
-    context->soundVolume = clamp(volume, 0.0f, 1.0f);
+    context->soundVolume = CLAMP(volume, 0.0f, 1.0f);
     logDebug("set sound volume to: %.2f", context->soundVolume);
 }
 
@@ -583,7 +583,7 @@ void wg_updateGame(WarContext* context)
 
     if (context->transitionDelay > 0)
     {
-        context->transitionDelay = max(context->transitionDelay - context->deltaTime, 0.0f);
+        context->transitionDelay = MAX(context->transitionDelay - context->deltaTime, 0.0f);
         return;
     }
 
@@ -639,30 +639,10 @@ void wg_presentGame(WarContext *context)
     f32 currentTime = SDL_GetTicks() / 1000.0f;
     context->deltaTime = (currentTime - context->time);
 
-    // This code is good in theory, but the sleep resolution on different OSes
-    // varies, so Sleep in Windows may take a longer time than specified.
-    //
-    // On Linux I should do a do {..} while (); using the nanosleep function
-    // and check for interrutions that wake up the thread before.
-    //
-    // SDL_Delay((s32)((SECONDS_PER_FRAME - context->deltaTime) * 1000));
-    // currentTime = SDL_GetTicks() / 1000.0f;
-    // context->deltaTime = (currentTime - context->time);
-
-    // This was the previous code that wait until the end of the frame
-    // but this burn too much CPU, so it's better the alternative of
-    // sleep the process and save CPU usage and battery.
-    //
-    // Going back to this code for now, until we get a consistent game loop with sleep.
-    {
-        TracyCZoneN(waitCtx, "FrameWait", 1);
-        while (context->deltaTime <= SECONDS_PER_FRAME)
-        {
-            currentTime = SDL_GetTicks() / 1000.0f;
-            context->deltaTime = (currentTime - context->time);
-        }
-        TracyCZoneEnd(waitCtx);
-    }
+    TracyCZoneN(waitCtx, "FrameWait", 1);
+    // sleep until the end of the frame to save CPU and battery, but only if we have time left in the frame
+    SDL_Delay((s32)(MAX(0.0f, SECONDS_PER_FRAME - context->deltaTime) * 1000));
+    TracyCZoneEnd(waitCtx);
 
     context->time = currentTime;
     context->fps = (u32)(1.0f / context->deltaTime);

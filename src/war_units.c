@@ -1348,7 +1348,7 @@ rect wu_getUnitSpriteRect(WarEntity* entity)
 {
     vec2 frameSize = wu_getUnitFrameSize(entity);
     vec2 unitSize = wu_getUnitSpriteSize(entity);
-    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
+    vec2 pos = vec2_half(vec2_subv(frameSize, unitSize));
     return rectv(pos, unitSize);
 }
 
@@ -1356,8 +1356,8 @@ vec2 wu_getUnitSpriteCenter(WarEntity* entity)
 {
     vec2 frameSize = wu_getUnitFrameSize(entity);
     vec2 unitSize = wu_getUnitSpriteSize(entity);
-    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
-    return vec2Addv(pos, vec2Half(unitSize));
+    vec2 pos = vec2_half(vec2_subv(frameSize, unitSize));
+    return vec2_addv(pos, vec2_half(unitSize));
 }
 
 rect wu_getUnitRect(WarEntity* entity)
@@ -1377,8 +1377,8 @@ vec2 wu_getUnitCenterPosition(WarEntity* entity, bool inTiles)
 {
     WarTransformComponent* transform = &entity->transform;
     vec2 spriteSize = wu_getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Half(spriteSize);
-    vec2 position = vec2Addv(transform->position, unitCenter);
+    vec2 unitCenter = vec2_half(spriteSize);
+    vec2 position = vec2_addv(transform->position, unitCenter);
     return inTiles ? wmap_mapToTileCoordinatesV(position) : position;
 }
 
@@ -1401,8 +1401,8 @@ void wu_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
 
     WarTransformComponent* transform = &entity->transform;
     vec2 spriteSize = wu_getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Half(spriteSize);
-    transform->position = vec2Subv(position, unitCenter);
+    vec2 unitCenter = vec2_half(spriteSize);
+    transform->position = vec2_subv(position, unitCenter);
 }
 
 WarUnitDirection wu_getUnitDirection(WarEntity* entity)
@@ -1476,7 +1476,7 @@ vec2 wu_unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
     vec2 unitSize = wu_getUnitSize(targetEntity);
     rect unitRect = rectv(targetPosition, unitSize);
 
-    return getClosestPointOnRect(position, unitRect);
+    return get_closestPointOnRect(position, unitRect);
 }
 
 s32 wu_entityTileDistance(WarEntity* entity, vec2 targetPosition)
@@ -1484,7 +1484,7 @@ s32 wu_entityTileDistance(WarEntity* entity, vec2 targetPosition)
     assert(isUnit(entity));
 
     vec2 position = wu_getUnitCenterPosition(entity, true);
-    f32 distance = vec2DistanceInTiles(position, targetPosition);
+    f32 distance = vec2_distanceInTiles(position, targetPosition);
     return (s32)distance;
 }
 

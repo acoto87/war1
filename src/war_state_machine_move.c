@@ -152,22 +152,22 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
     vec2 position = wu_getUnitCenterPosition(entity, false);
     vec2 target = wmap_tileToMapCoordinatesV(nextNode, true);
 
-    vec2 direction = vec2Subv(target, position);
-    f32 directionLength = vec2Length(direction);
+    vec2 direction = vec2_subv(target, position);
+    f32 directionLength = vec2_length(direction);
 
     f32 speed = wmap_getMapScaledSpeed(context, (f32)stats.speeds[entity->unit.speed]);
-    vec2 step = vec2Mulf(vec2Normalize(direction), speed * context->deltaTime);
-    f32 stepLength = vec2Length(step);
+    vec2 step = vec2_mulf(vec2_normalize(direction), speed * context->deltaTime);
+    f32 stepLength = vec2_length(step);
 
     if (directionLength < stepLength)
     {
         step = direction;
     }
 
-    vec2 newPosition = vec2Addv(position, step);
+    vec2 newPosition = vec2_addv(position, step);
     wu_setUnitCenterPosition(entity, newPosition, false);
 
-    f32 distance = vec2Distance(newPosition, target);
+    f32 distance = vec2_distance(newPosition, target);
     if (distance < MOVE_EPSILON)
     {
         newPosition = target;

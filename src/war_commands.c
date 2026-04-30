@@ -51,8 +51,8 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
     }
 
     rect targetbbox = rectf(
-        targetPoint.x - halff(bbox.width),
-        targetPoint.y - halff(bbox.height),
+        targetPoint.x - 0.5f * bbox.width,
+        targetPoint.y - 0.5f * bbox.height,
         bbox.width,
         bbox.height);
 
@@ -63,8 +63,8 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
         assert(entity);
 
         vec2 position = vec2f(
-            rs[i].x + halff(rs[i].width),
-            rs[i].y + halff(rs[i].height));
+            rs[i].x + 0.5f * rs[i].width,
+            rs[i].y + 0.5f * rs[i].height);
 
         position = wmap_mapToTileCoordinatesV(position);
 
@@ -75,8 +75,8 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
             rs[i].height);
 
         vec2 target = vec2f(
-            targetRect.x + halff(targetRect.width),
-            targetRect.y + halff(targetRect.height));
+            targetRect.x + 0.5f * targetRect.width,
+            targetRect.y + 0.5f * targetRect.height);
 
         target = wmap_mapToTileCoordinatesV(target);
 
@@ -592,7 +592,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
 
@@ -601,7 +601,7 @@ bool wcmd_executeCommand(WarContext* context)
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
-                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
@@ -627,7 +627,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -685,7 +685,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -712,7 +712,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -740,7 +740,7 @@ bool wcmd_executeCommand(WarContext* context)
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
-                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeAttackCommand(context, NULL, targetTile);
@@ -852,7 +852,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     assert(map->selectedEntities.count > 0);
 
@@ -893,7 +893,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     assert(map->selectedEntities.count > 0);
 
@@ -941,7 +941,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     assert(map->selectedEntities.count > 0);
 
@@ -998,7 +998,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1008,7 +1008,7 @@ bool wcmd_executeCommand(WarContext* context)
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
-                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeRainOfFireCommand(context, targetTile);
@@ -1025,7 +1025,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1035,7 +1035,7 @@ bool wcmd_executeCommand(WarContext* context)
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
-                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executePoisonCloudCommand(context, targetTile);
@@ -1052,7 +1052,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1074,7 +1074,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1096,7 +1096,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1118,7 +1118,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1138,7 +1138,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (wasButtonPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1148,7 +1148,7 @@ bool wcmd_executeCommand(WarContext* context)
                     command->type = WAR_COMMAND_NONE;
                     return true;
                 }
-                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeSightCommand(context, targetTile);

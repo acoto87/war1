@@ -254,12 +254,12 @@ vec2 wfont_getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment
         }
         case WAR_TEXT_ALIGN_CENTER:
         {
-            offset.x = ceilf(halff(boundings.x - textSize.x));
+            offset.x = ceilf(0.5f * (boundings.x - textSize.x));
             break;
         }
         case WAR_TEXT_ALIGN_RIGHT:
         {
-            offset.x = ceilf(boundings.x - textSize.x);
+            offset.x = ceilf(0.5f * (boundings.x - textSize.x));
             break;
         }
         default:
@@ -278,7 +278,7 @@ vec2 wfont_getAlignmentOffset(WarTextAlignment horizontalAlign, WarTextAlignment
         }
         case WAR_TEXT_ALIGN_MIDDLE:
         {
-            offset.y = ceilf(halff(boundings.y) - halff(textSize.y));
+            offset.y = ceilf(0.5f * (boundings.y - textSize.y));
             break;
         }
         case WAR_TEXT_ALIGN_BOTTOM:
@@ -309,7 +309,7 @@ f32 wfont_getLineAlignmentOffset(WarTextAlignment lineAlign, f32 width, f32 line
         }
         case WAR_TEXT_ALIGN_CENTER:
         {
-            offset = ceilf(halff(width - lineWidth));
+            offset = ceilf(0.5f * (width - lineWidth));
             break;
         }
         case WAR_TEXT_ALIGN_RIGHT:
@@ -482,7 +482,7 @@ vec2 wfont_measureSingleSpriteText(StringView text, s32 length, WarFontParams pa
             rect rs = params.fontData.data[getCharIndex(c)];
 
             size.x += (rs.width + params.fontData.advance) * scale;
-            size.y = max(size.y, rs.height * scale);
+            size.y = MAX(size.y, rs.height * scale);
         }
     }
 
@@ -503,7 +503,7 @@ vec2 wfont_measureMultiSpriteText(StringView text, f32 width, WarFontParams para
 
     for (s32 i = 0; i < linesCount; i++)
     {
-        size.x = max(size.x, lines[i].width);
+        size.x = MAX(size.x, lines[i].width);
         size.y += lineHeight * scale;
     }
 
@@ -586,7 +586,7 @@ void wfont_renderSingleSpriteText(WarContext* context, StringView text, f32 x, f
     wr_save(context);
     wr_translate(context, x, y);
 
-    if (!vec2IsZero(params.boundings))
+    if (!VEC2_IS_ZERO(params.boundings))
     {
         vec2 textOffset = wfont_getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
         wr_translate(context, textOffset.x, textOffset.y);
@@ -695,7 +695,7 @@ void wfont_renderMultiSpriteText(WarContext* context, StringView text, f32 x, f3
         if (params.highlightIndex >= lineStartIndex && params.highlightIndex < lineStartIndex + lineLength)
         {
             s32 highlightIndex = params.highlightIndex - lineStartIndex;
-            s32 highlightCount = min(params.highlightCount, lineLength - highlightIndex);
+            s32 highlightCount = MIN(params.highlightCount, lineLength - highlightIndex);
 
             x = wfont_renderSingleSpriteTextSpan(context, lineView,
                                         0, highlightIndex,
@@ -728,7 +728,7 @@ void wfont_renderMultiSpriteText(WarContext* context, StringView text, f32 x, f3
         else if (params.highlightIndex < lineStartIndex &&
                  params.highlightIndex + params.highlightCount >= lineStartIndex)
         {
-            s32 highlightCount = min(params.highlightIndex + params.highlightCount - lineStartIndex, lineLength);
+            s32 highlightCount = MIN(params.highlightIndex + params.highlightCount - lineStartIndex, lineLength);
 
             x = wfont_renderSingleSpriteTextSpan(context, lineView,
                                         0, highlightCount,
