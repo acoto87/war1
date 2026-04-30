@@ -119,6 +119,9 @@ typedef enum _WarFogPieceType WarFogPieceType;
 enum _WarFogBoundaryType;
 typedef enum _WarFogBoundaryType WarFogBoundaryType;
 
+enum _WarUnitPortraits;
+typedef enum _WarUnitPortraits WarUnitPortraits;
+
 enum _WarMapTileState;
 typedef enum _WarMapTileState WarMapTileState;
 
@@ -205,6 +208,57 @@ typedef struct _WarUnitActionDef WarUnitActionDef;
 
 struct _WarUnitAction;
 typedef struct _WarUnitAction WarUnitAction;
+
+struct _WarUnitData;
+typedef struct _WarUnitData WarUnitData;
+
+struct _WarWorkerData;
+typedef struct _WarWorkerData WarWorkerData;
+
+struct _WarBuildingData;
+typedef struct _WarBuildingData WarBuildingData;
+
+struct _WarRoadData;
+typedef struct _WarRoadData WarRoadData;
+
+struct _WarWallData;
+typedef struct _WarWallData WarWallData;
+
+struct _WarRuinData;
+typedef struct _WarRuinData WarRuinData;
+
+struct _WarTreeData;
+typedef struct _WarTreeData WarTreeData;
+
+struct _WarUnitStats;
+typedef struct _WarUnitStats WarUnitStats;
+
+struct _WarBuildingStats;
+typedef struct _WarBuildingStats WarBuildingStats;
+
+struct _WarUpgradeData;
+typedef struct _WarUpgradeData WarUpgradeData;
+
+struct _WarUpgradeStats;
+typedef struct _WarUpgradeStats WarUpgradeStats;
+
+struct _WarSpellData;
+typedef struct _WarSpellData WarSpellData;
+
+struct _WarSpellStats;
+typedef struct _WarSpellStats WarSpellStats;
+
+struct _WarSpellMapping;
+typedef struct _WarSpellMapping WarSpellMapping;
+
+struct _WarUnitCommandBaseData;
+typedef struct _WarUnitCommandBaseData WarUnitCommandBaseData;
+
+struct _WarUnitCommandMapping;
+typedef struct _WarUnitCommandMapping WarUnitCommandMapping;
+
+struct _WarUnitCommandData;
+typedef struct _WarUnitCommandData WarUnitCommandData;
 
 struct _WarMapPath;
 typedef struct _WarMapPath WarMapPath;
