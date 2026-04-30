@@ -20,7 +20,7 @@ void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
@@ -35,7 +35,7 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;

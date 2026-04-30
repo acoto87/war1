@@ -2,6 +2,19 @@
 
 #include <assert.h>
 
+bool wai_equalsAICommand(const WarAICommand* command1, const WarAICommand* command2)
+{
+    return command1->id == command2->id;
+}
+
+void wai_freeAICommand(WarAICommand* command)
+{
+    wm_free((void*)command);
+}
+
+shlDefineQueue(WarAICommandQueue, WarAICommand*)
+shlDefineList(WarAICommandList, WarAICommand*)
+
 WarAI* wai_createAI(WarContext* context)
 {
     NOT_USED(context);

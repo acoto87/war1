@@ -1,6 +1,6 @@
 #pragma once
 
-#include "war_types.h"
+#include "war.h"
 
 void wmui_createMapUI(WarContext* context);
 

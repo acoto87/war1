@@ -1,30 +1,30 @@
 #pragma once
 
-#include "war_types.h"
+#include "war.h"
 
-void wsm_enterSceneMainMenu(WarContext* context);
+void wsc_enterSceneMainMenu(WarContext* context);
 
-void wsm_createMainMenu(WarContext* context);
-void wsm_createSinglePlayerMenu(WarContext* context);
-void wsm_createLoadMenu(WarContext* context);
-void wsm_createCustomGameMenu(WarContext* context);
+void wsc_createMainMenu(WarContext* context);
+void wsc_createSinglePlayerMenu(WarContext* context);
+void wsc_createLoadMenu(WarContext* context);
+void wsc_createCustomGameMenu(WarContext* context);
 
-void wsm_showOrHideMainMenu(WarContext* context, bool status);
-void wsm_showOrHideSinglePlayer(WarContext* context, bool status);
-void wsm_showOrHideCustomGame(WarContext* context, bool status);
+void wsc_showOrHideMainMenu(WarContext* context, bool status);
+void wsc_showOrHideSinglePlayer(WarContext* context, bool status);
+void wsc_showOrHideCustomGame(WarContext* context, bool status);
 
 // menu button handlers
-void wsm_handleMenuSinglePlayer(WarContext* context, WarEntity* entity);
-void wsm_handleMenuQuit(WarContext* context, WarEntity* entity);
+void wsc_handleMenuSinglePlayer(WarContext* context, WarEntity* entity);
+void wsc_handleMenuQuit(WarContext* context, WarEntity* entity);
 
-void wsm_handleSinglePlayerOrc(WarContext* context, WarEntity* entity);
-void wsm_handleSinglePlayerHuman(WarContext* context, WarEntity* entity);
-void wsm_handleCustomGame(WarContext* context, WarEntity* entity);
-void wsm_handleSinglePlayerCancel(WarContext* context, WarEntity* entity);
-void wsm_handleYourRaceLeft(WarContext* context, WarEntity* entity);
-void wsm_handleYourRaceRight(WarContext* context, WarEntity* entity);
-void wsm_handleEnemyRaceLeft(WarContext* context, WarEntity* entity);
-void wsm_handleEnemyRaceRight(WarContext* context, WarEntity* entity);
-void wsm_handleMapLeft(WarContext* context, WarEntity* entity);
-void wsm_handleMapRight(WarContext* context, WarEntity* entity);
-void wsm_handleCustomGameOk(WarContext* context, WarEntity* entity);
+void wsc_handleSinglePlayerOrc(WarContext* context, WarEntity* entity);
+void wsc_handleSinglePlayerHuman(WarContext* context, WarEntity* entity);
+void wsc_handleCustomGame(WarContext* context, WarEntity* entity);
+void wsc_handleSinglePlayerCancel(WarContext* context, WarEntity* entity);
+void wsc_handleYourRaceLeft(WarContext* context, WarEntity* entity);
+void wsc_handleYourRaceRight(WarContext* context, WarEntity* entity);
+void wsc_handleEnemyRaceLeft(WarContext* context, WarEntity* entity);
+void wsc_handleEnemyRaceRight(WarContext* context, WarEntity* entity);
+void wsc_handleMapLeft(WarContext* context, WarEntity* entity);
+void wsc_handleMapRight(WarContext* context, WarEntity* entity);
+void wsc_handleCustomGameOk(WarContext* context, WarEntity* entity);

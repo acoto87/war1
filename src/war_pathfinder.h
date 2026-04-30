@@ -1,6 +1,31 @@
 #pragma once
 
-#include "war_types.h"
+#include "war_math.h"
+
+struct _WarMapPath
+{
+    vec2List nodes;
+};
+
+enum _PathFindingType
+{
+    PATH_FINDING_BFS,
+    PATH_FINDING_ASTAR
+};
+
+enum _WarPathFinderDataType
+{
+    PATH_FINDER_DATA_EMPTY = 0,
+    PATH_FINDER_DATA_STATIC = 1,
+    PATH_FINDER_DATA_DYNAMIC = 2,
+};
+
+struct _WarPathFinder
+{
+    PathFindingType type;
+    s32 width, height;
+    u16* data;
+};
 
 // this value is the distance squared to avoid dynamic units
 // so if the dynamic entity at a distance squared less than this value,

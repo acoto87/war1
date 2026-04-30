@@ -1,6 +1,6 @@
 #pragma once
 
-#include "war_types.h"
+#include "war.h"
 
-void wsbr_enterSceneBriefing(WarContext* context);
-void wsbr_updateSceneBriefing(WarContext* context);
+void wsc_enterSceneBriefing(WarContext* context);
+void wsc_updateSceneBriefing(WarContext* context);

@@ -767,7 +767,7 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     {
         char path[32];
         StringView fp = wsv_fromCStringFormat(path, sizeof(path), "tileset_%d.png", index);
-        stbi_write_png(wstr_cstr(&fp), TILESET_WIDTH, TILESET_HEIGHT, 4, resource->tilesetData.data, TILESET_WIDTH * 4);
+        stbi_write_png(wsv_data(fp), TILESET_WIDTH, TILESET_HEIGHT, 4, resource->tilesetData.data, TILESET_WIDTH * 4);
     }
     #endif
 

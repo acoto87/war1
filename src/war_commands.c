@@ -66,7 +66,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
             rs[i].x + halff(rs[i].width),
             rs[i].y + halff(rs[i].height));
 
-        position = wmap_vec2MapToTileCoordinates(position);
+        position = wmap_mapToTileCoordinatesV(position);
 
         rect targetRect = rectf(
             targetbbox.x + (rs[i].x - bbox.x),
@@ -78,7 +78,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
             targetRect.x + halff(targetRect.width),
             targetRect.y + halff(targetRect.height));
 
-        target = wmap_vec2MapToTileCoordinates(target);
+        target = wmap_mapToTileCoordinatesV(target);
 
         if (wu_isDudeUnit(entity) && wu_isFriendlyUnit(context, entity))
         {
@@ -363,7 +363,7 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
                                 (s32)unitSize.x, (s32)unitSize.y, summonedUnit->id);
 
                 WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                wanim_createSpellAnimation(context, animEntity, wmap_vec2TileToMapCoordinates(spawnPosition, true));
+                wanim_createSpellAnimation(context, animEntity, wmap_tileToMapCoordinatesV(spawnPosition, true));
 
                 casted = true;
             }
@@ -594,7 +594,7 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
 
                     wcmd_executeMoveCommand(context, targetPoint);
 
@@ -603,8 +603,8 @@ bool wcmd_executeCommand(WarContext* context)
                 }
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
-                    vec2 targetPoint = wmap_vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
                     wcmd_executeMoveCommand(context, targetPoint);
 
                     command->type = WAR_COMMAND_NONE;
@@ -629,8 +629,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
@@ -687,8 +687,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
                     if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
                         isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                     {
@@ -714,8 +714,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
@@ -742,7 +742,7 @@ bool wcmd_executeCommand(WarContext* context)
                 }
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
+                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeAttackCommand(context, NULL, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
@@ -860,8 +860,8 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntity* worker = we_findEntity(context, workerId);
                     assert(worker);
 
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     WarUnitType buildingToBuild = command->build.buildingToBuild;
 
@@ -903,8 +903,8 @@ bool wcmd_executeCommand(WarContext* context)
                     WarUnitType townHallType = wu_getTownHallOfRace(player->race);
                     assert(isUnitOfType(townHall, townHallType));
 
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     if (we_checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
                     {
@@ -951,8 +951,8 @@ bool wcmd_executeCommand(WarContext* context)
                     WarUnitType townHallType = wu_getTownHallOfRace(player->race);
                     assert(isUnitOfType(townHall, townHallType));
 
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     if (we_checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
                     {
@@ -1000,8 +1000,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     wcmd_executeRainOfFireCommand(context, targetTile);
 
@@ -1010,7 +1010,7 @@ bool wcmd_executeCommand(WarContext* context)
                 }
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
+                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeRainOfFireCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
@@ -1027,8 +1027,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     wcmd_executePoisonCloudCommand(context, targetTile);
 
@@ -1037,7 +1037,7 @@ bool wcmd_executeCommand(WarContext* context)
                 }
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
+                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executePoisonCloudCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;
@@ -1054,8 +1054,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
@@ -1076,8 +1076,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
@@ -1098,8 +1098,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
@@ -1120,8 +1120,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     wcmd_executeRaiseDeadCommand(context, targetTile);
 
@@ -1140,8 +1140,8 @@ bool wcmd_executeCommand(WarContext* context)
             {
                 if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-                    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     wcmd_executeSightCommand(context, targetTile);
 
@@ -1150,7 +1150,7 @@ bool wcmd_executeCommand(WarContext* context)
                 }
                 else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetTile = wmap_vec2ScreenToMinimapCoordinates(context, input->pos);
+                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeSightCommand(context, targetTile);
 
                     command->type = WAR_COMMAND_NONE;

@@ -1,17 +1,87 @@
-#include "war_entities.h"
-
 #include <assert.h>
 #include <stdlib.h>
 
 #include "shl/wstr.h"
 
+#include "war_entities.h"
+
 #include "war_animations.h"
 #include "war_audio.h"
 #include "war_font.h"
+#include "war_map.h"
+#include "war_map_ui.h"
 #include "war_render.h"
 #include "war_sprites.h"
 #include "war_units.h"
-#include "war_map.h"
+
+shlDefineList(WarRoadPieceList, WarRoadPiece)
+shlDefineList(WarWallPieceList, WarWallPiece)
+shlDefineList(WarRuinPieceList, WarRuinPiece)
+shlDefineList(WarTreeList, WarTree)
+shlDefineList(WarEntityIdList, WarEntityId)
+shlDefineSet(WarEntityIdSet, WarEntityId)
+shlDefineList(WarEntityList, WarEntity*)
+shlDefineMap(WarEntityMap, WarEntityType, WarEntityList*)
+shlDefineMap(WarUnitMap, WarUnitType, WarEntityList*)
+shlDefineMap(WarEntityIdMap, WarEntityId, WarEntity*)
+
+bool we_equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
+{
+    return r1.type == r2.type && r1.player == r2.player &&
+           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
+}
+
+bool we_equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
+{
+    return w1.type == w2.type && w1.player == w2.player &&
+           w1.tilex == w2.tilex && w1.tiley == w2.tiley;
+}
+
+bool we_equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
+{
+    return r1.type == r2.type &&
+           r1.tilex == r2.tilex && r1.tiley == r2.tiley;
+}
+
+bool we_equalsTree(const WarTree t1, const WarTree t2)
+{
+    return t1.tilex == t2.tilex && t1.tiley == t2.tiley;
+}
+
+bool we_equalsEntityId(const WarEntityId id1, const WarEntityId id2)
+{
+    return id1 == id2;
+}
+
+uint32_t we_hashEntityId(const WarEntityId id)
+{
+    return id;
+}
+
+bool we_equalsEntity(const WarEntity* e1, const WarEntity* e2)
+{
+    return e1->id == e2->id;
+}
+
+void we_freeEntity(WarEntity* e)
+{
+    wm_free(e);
+}
+
+uint32_t we_hashEntityType(const WarEntityType type)
+{
+    return type;
+}
+
+bool we_equalsEntityType(const WarEntityType t1, const WarEntityType t2)
+{
+    return t1 == t2;
+}
+
+void we_freeEntityList(WarEntityList* list)
+{
+    WarEntityListFree(list);
+}
 
 void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
@@ -62,14 +132,15 @@ void we_removeSpriteComponent(WarContext* context, WarEntity* entity)
     entity->sprite = (WarSpriteComponent){0};
 }
 
-void we_addUnitComponent(WarContext* context,
-                      WarEntity* entity,
-                      WarUnitType type,
-                      s32 x,
-                      s32 y,
-                      u8 player,
-                      WarResourceKind resourceKind,
-                      u32 amount)
+void we_addUnitComponent(
+    WarContext* context,
+    WarEntity* entity,
+    WarUnitType type,
+    s32 x,
+    s32 y,
+    u8 player,
+    WarResourceKind resourceKind,
+    u32 amount)
 {
     NOT_USED(context);
 
@@ -479,14 +550,15 @@ WarEntity* we_createEntity(WarContext* context, WarEntityType type, bool addToSc
     return entity;
 }
 
-WarEntity* we_createUnit(WarContext* context,
-                      WarUnitType type,
-                      s32 x,
-                      s32 y,
-                      u8 player,
-                      WarResourceKind resourceKind,
-                      u32 amount,
-                      bool addToMap)
+WarEntity* we_createUnit(
+    WarContext* context,
+    WarUnitType type,
+    s32 x,
+    s32 y,
+    u8 player,
+    WarResourceKind resourceKind,
+    u32 amount,
+    bool addToMap)
 {
     WarMap* map = context->map;
 
@@ -545,24 +617,26 @@ WarEntity* we_createUnit(WarContext* context,
     return entity;
 }
 
-WarEntity* we_createDude(WarContext* context,
-                      WarUnitType type,
-                      s32 x,
-                      s32 y,
-                      u8 player,
-                      bool isGoingToTrain)
+WarEntity* we_createDude(
+    WarContext* context,
+    WarUnitType type,
+    s32 x,
+    s32 y,
+    u8 player,
+    bool isGoingToTrain)
 {
     assert(wu_isDudeUnitType(type));
 
     return we_createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, !isGoingToTrain);
 }
 
-WarEntity* we_createBuilding(WarContext* context,
-                          WarUnitType type,
-                          s32 x,
-                          s32 y,
-                          u8 player,
-                          bool isGoingToBuild)
+WarEntity* we_createBuilding(
+    WarContext* context,
+    WarUnitType type,
+    s32 x,
+    s32 y,
+    u8 player,
+    bool isGoingToBuild)
 {
     assert(wu_isBuildingUnitType(type));
 
@@ -633,8 +707,8 @@ WarEntity* we_findEntityUnderCursor(WarContext* context, bool includeTrees, bool
     WarMap* map = context->map;
     assert(map);
 
-    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
     WarEntity* entityUnderCursor = NULL;
 
@@ -842,9 +916,9 @@ void we_initEntityManager(WarContext* context, WarEntityManager* manager)
     // initialize entity by type map
     WarEntityMapOptions entitiesByTypeOptions = (WarEntityMapOptions){0};
     entitiesByTypeOptions.defaultValue = NULL;
-    entitiesByTypeOptions.hashFn = hashEntityType;
-    entitiesByTypeOptions.equalsFn = equalsEntityType;
-    entitiesByTypeOptions.freeFn = freeEntityList;
+    entitiesByTypeOptions.hashFn = we_hashEntityType;
+    entitiesByTypeOptions.equalsFn = we_equalsEntityType;
+    entitiesByTypeOptions.freeFn = we_freeEntityList;
     WarEntityMapInit(&manager->entitiesByType, entitiesByTypeOptions);
     for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
     {
@@ -856,9 +930,9 @@ void we_initEntityManager(WarContext* context, WarEntityManager* manager)
     // initialize unit by type map
     WarUnitMapOptions unitsByTypeOptions = (WarUnitMapOptions){0};
     unitsByTypeOptions.defaultValue = NULL;
-    unitsByTypeOptions.hashFn = hashUnitType;
-    unitsByTypeOptions.equalsFn = equalsUnitType;
-    unitsByTypeOptions.freeFn = freeEntityList;
+    unitsByTypeOptions.hashFn = wu_hashUnitType;
+    unitsByTypeOptions.equalsFn = wu_equalsUnitType;
+    unitsByTypeOptions.freeFn = we_freeEntityList;
     WarUnitMapInit(&manager->unitsByType, unitsByTypeOptions);
     for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
     {
@@ -870,8 +944,8 @@ void we_initEntityManager(WarContext* context, WarEntityManager* manager)
     // initialize the entities by id map
     WarEntityIdMapOptions entitiesByIdOptions = (WarEntityIdMapOptions){0};
     entitiesByIdOptions.defaultValue = NULL;
-    entitiesByIdOptions.hashFn = hashEntityId;
-    entitiesByIdOptions.equalsFn = equalsEntityId;
+    entitiesByIdOptions.hashFn = we_hashEntityId;
+    entitiesByIdOptions.equalsFn = we_equalsEntityId;
     WarEntityIdMapInit(&manager->entitiesById, entitiesByIdOptions);
 
     // initialize ui entities list
@@ -2194,7 +2268,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
         if (we_decreaseUnitMana(context, entity, 2))
         {
             vec2 origin = wu_getUnitCenterPosition(entity, false);
-            vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+            vec2 target = wmap_tileToMapCoordinatesV(vec2i(piece->tilex, piece->tiley), true);
             WarProjectileType projectileType = wu_getProjectileType(unit->type);
             wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
@@ -2208,7 +2282,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
     else
     {
         vec2 origin = wu_getUnitCenterPosition(entity, false);
-        vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+        vec2 target = wmap_tileToMapCoordinatesV(vec2i(piece->tilex, piece->tiley), true);
         WarProjectileType projectileType = wu_getProjectileType(unit->type);
         wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }

@@ -1,6 +1,70 @@
 #pragma once
 
-#include "war_types.h"
+#include "shl/queue.h"
+
+#include "war_units.h"
+
+enum _WarAICommandStatus
+{
+    WAR_AI_COMMAND_STATUS_CREATED,
+    WAR_AI_COMMAND_STATUS_STARTED,
+    WAR_AI_COMMAND_STATUS_COMPLETED,
+};
+
+enum _WarAICommandType
+{
+    WAR_AI_COMMAND_REQUEST,
+    WAR_AI_COMMAND_WAIT,
+    WAR_AI_COMMAND_ATTACK,
+    WAR_AI_COMMAND_DEFEND,
+    WAR_AI_COMMAND_SLEEP,
+
+    WAR_AI_COMMAND_COUNT
+};
+
+struct _WarAICommand
+{
+    u32 id;
+    WarAICommandType type;
+    WarAICommandStatus status;
+
+    union
+    {
+        struct
+        {
+            WarUnitType unitType;
+            s32 count;
+        } request;
+
+        struct
+        {
+            WarUnitType unitType;
+            s32 count;
+        } wait;
+
+        struct
+        {
+            f32 time;
+        } sleep;
+    };
+};
+
+bool wai_equalsAICommand(const WarAICommand* command1, const WarAICommand* command2);
+void wai_freeAICommand(WarAICommand* command);
+
+shlDeclareQueue(WarAICommandQueue, WarAICommand*)
+shlDeclareList(WarAICommandList, WarAICommand*)
+
+#define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, wai_equalsAICommand, wai_freeAICommand})
+#define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, wai_equalsAICommand, wai_freeAICommand})
+
+struct _WarAI
+{
+    u32 staticCommandId;
+    WarAICommandList currentCommands;
+    WarAICommandQueue nextCommands;
+    void* customData;
+};
 
 WarAI* wai_createAI(WarContext* context);
 WarAICommand* wai_createAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommandType type);

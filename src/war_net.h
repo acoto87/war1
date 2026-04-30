@@ -19,7 +19,7 @@ typedef int WarSocket;
 #define RESPONSE_READ_SIZE 2048
 #define RESPONSE_MAX_SIZE (5 * 1024 * 1024) // 5MB
 
-#include "war_types.h"
+#include "war.h"
 
 bool wnet_initNetwork(void);
 bool wnet_cleanNetwork(void);

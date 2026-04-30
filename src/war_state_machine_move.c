@@ -150,7 +150,7 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
     }
 
     vec2 position = wu_getUnitCenterPosition(entity, false);
-    vec2 target = wmap_vec2TileToMapCoordinates(nextNode, true);
+    vec2 target = wmap_tileToMapCoordinatesV(nextNode, true);
 
     vec2 direction = vec2Subv(target, position);
     f32 directionLength = vec2Length(direction);

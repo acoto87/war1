@@ -83,19 +83,21 @@
 #define SHL_CALLOC(n, sz) wm_calloc((n), (sz))
 #define SHL_REALLOC(p, sz) wm_realloc((p), (sz))
 #define SHL_FREE(p) wm_free(p)
-
 #include "shl/list.h"
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
 #include "shl/map.h"
 #include "shl/set.h"
+
 #define SHL_MEMORY_BUFFER_IMPLEMENTATION
 #define MB_MALLOC(sz) wm_alloc(sz)
 #define MB_CALLOC(n, sz) wm_calloc((n), (sz))
 #define MB_FREE(p) wm_free(p)
 #include "shl/memory_buffer.h"
+
 #define SHL_WAV_IMPLEMENTATION
 #include "shl/wav.h"
+
 #define WSTR_MALLOC(sz)       wm_alloc(sz)
 #define WSTR_REALLOC(p, sz)   wm_realloc((p), (sz))
 #define WSTR_FREE(p)          wm_free(p)
@@ -103,26 +105,7 @@
 #include "shl/wstr.h"
 
 #include "war_log.h"
-#include "common.h"
-#include "war_color.h"
-#include "war_math.h"
-#include "war_types.h"
 #include "war.h"
-#include "war_net.h"
-#include "war_database.h"
-#include "war_cheats.h"
-#include "war_map_menu.h"
-#include "war_map_ui.h"
-#include "war_map.h"
-#include "war_commands.h"
-#include "war_units.h"
-#include "war_entities.h"
-#include "war_pathfinder.h"
-#include "war_state_machine.h"
-#include "war_scene_menu.h"
-#include "war_scenes.h"
-#include "war_ui.h"
-#include "war_ai.h"
 #include "war_game.h"
 
 #define PERM_SIZE (536870912ULL) // 512 MB
@@ -143,28 +126,38 @@ int main(void)
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
         logError("Error initializing SDL: %s", SDL_GetError());
+        wm_allocFree();
         return -1;
     }
 
-    WarContext context = {0};
-    if (!wg_initGame(&context))
+    WarContext* context = (WarContext*)wm_alloc(sizeof(WarContext));
+    if (!context)
+    {
+        logError("Failed to allocate WarContext!");
+        wm_allocFree();
+        SDL_Quit();
+        return -1;
+    }
+
+    if (!wg_initGame(context))
     {
         logError("Can't initialize the game!");
+        wm_allocFree();
+        SDL_Quit();
         return -1;
     }
 
     u32 frameCount = 0;
-
     bool running = true;
 
     while (running)
     {
-        wg_beginInputFrame(&context);
+        wg_beginInputFrame(context);
 
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            wg_processGameEvent(&context, &event);
+            wg_processGameEvent(context, &event);
 
             if (event.type == SDL_EVENT_QUIT)
             {
@@ -172,24 +165,25 @@ int main(void)
             }
         }
 
-        wstr_setFormat(&context.windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context.time, context.fps, context.deltaTime, frameCount);
-        SDL_SetWindowTitle(context.window, wstr_cstr(&context.windowTitle));
+        wstr_setFormat(&context->windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context->time, context->fps, context->deltaTime, frameCount);
+        SDL_SetWindowTitle(context->window, wstr_cstr(&context->windowTitle));
 
-        wg_updateGame(&context);
-        wg_renderGame(&context);
-        wg_presentGame(&context);
+        wg_updateGame(context);
+        wg_renderGame(context);
+        wg_presentGame(context);
         TracyCFrameMark
 
         frameCount++;
     }
 
-    wg_quitGame(&context);
+    wg_quitGame(context);
     wm_allocFree();
 	return 0;
 }
 
 #include "war_log.c"
 #include "war_alloc.c"
+#include "war_math.c"
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_net.c"

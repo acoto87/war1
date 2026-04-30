@@ -1,8 +1,365 @@
 ﻿#pragma once
 
-#include "war_types.h"
+#include "shl/memzone.h"
+#include "shl/set.h"
+
+#include "common.h"
+#include "war.h"
+#include "war_animations.h"
+#include "war_audio.h"
+#include "war_font.h"
+#include "war_state_machine.h"
+#include "war_units.h"
+#include "war_resources.h"
 
 #define isEntityOfType(entity, entityType) ((entity)->type == (entityType))
+
+struct _WarRoadPiece
+{
+    WarRoadPieceType type;
+    s32 tilex, tiley;
+    u8 player;
+};
+
+struct _WarWallPiece
+{
+    WarWallPieceType type;
+    s32 hp;
+    s32 maxhp;
+    s32 tilex, tiley;
+    u8 player;
+};
+
+struct _WarRuinPiece
+{
+    WarRuinPieceType type;
+    s32 tilex, tiley;
+};
+
+struct _WarTree
+{
+    WarTreeTileType type;
+    s32 tilex, tiley;
+    s32 amount;
+};
+
+enum _WarEntityType
+{
+    WAR_ENTITY_TYPE_NONE,
+    WAR_ENTITY_TYPE_IMAGE,
+    WAR_ENTITY_TYPE_UNIT,
+    WAR_ENTITY_TYPE_ROAD,
+    WAR_ENTITY_TYPE_WALL,
+    WAR_ENTITY_TYPE_RUIN,
+    WAR_ENTITY_TYPE_FOREST,
+    WAR_ENTITY_TYPE_TEXT,
+    WAR_ENTITY_TYPE_RECT,
+    WAR_ENTITY_TYPE_BUTTON,
+    WAR_ENTITY_TYPE_CURSOR,
+    WAR_ENTITY_TYPE_AUDIO,
+    WAR_ENTITY_TYPE_PROJECTILE,
+    WAR_ENTITY_TYPE_RAIN_OF_FIRE,
+    WAR_ENTITY_TYPE_POISON_CLOUD,
+    WAR_ENTITY_TYPE_SIGHT,
+    WAR_ENTITY_TYPE_MINIMAP,
+    WAR_ENTITY_TYPE_ANIMATION,
+
+    WAR_ENTITY_TYPE_COUNT
+};
+
+enum _WarCursorType
+{
+    WAR_CURSOR_ARROW = 263,
+    WAR_CURSOR_INVALID = 264,
+    WAR_CURSOR_YELLOW_CROSSHAIR = 265,
+    WAR_CURSOR_RED_CROSSHAIR = 266,
+    WAR_CURSOR_YELLOW_CROSSHAIR_2 = 267,
+    WAR_CURSOR_MAGNIFYING_GLASS = 268,
+    WAR_CURSOR_GREEN_CROSSHAIR = 269,
+    WAR_CURSOR_WATCH = 270,
+    WAR_CURSOR_ARROW_UP = 271,
+    WAR_CURSOR_ARROW_UP_RIGHT = 272,
+    WAR_CURSOR_ARROW_RIGHT = 273,
+    WAR_CURSOR_ARROW_BOTTOM_RIGHT = 274,
+    WAR_CURSOR_ARROW_BOTTOM = 275,
+    WAR_CURSOR_ARROW_BOTTOM_LEFT = 276,
+    WAR_CURSOR_ARROW_LEFT = 277,
+    WAR_CURSOR_ARROW_UP_LEFT = 278
+};
+
+#define WarRoadPieceEmpty (WarRoadPiece){0}
+#define WarWallPieceEmpty (WarWallPiece){0}
+#define WarRuinPieceEmpty (WarRuinPiece){0}
+#define WarTreeEmpty (WarTree){0}
+
+#define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (u8)(player)})
+#define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (u8)(player)})
+#define createRuinPiece(x, y) ((WarRuinPiece){0, (x), (y)})
+#define createTree(x, y, amount) ((WarTree){0, (x), (y), (amount)})
+
+shlDeclareList(WarRoadPieceList, WarRoadPiece)
+shlDeclareList(WarWallPieceList, WarWallPiece)
+shlDeclareList(WarRuinPieceList, WarRuinPiece)
+shlDeclareList(WarTreeList, WarTree)
+shlDeclareList(WarEntityIdList, WarEntityId)
+shlDeclareSet(WarEntityIdSet, WarEntityId)
+shlDeclareList(WarEntityList, WarEntity*)
+shlDeclareMap(WarEntityMap, WarEntityType, WarEntityList*)
+shlDeclareMap(WarUnitMap, WarUnitType, WarEntityList*)
+shlDeclareMap(WarEntityIdMap, WarEntityId, WarEntity*)
+
+bool we_equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2);
+bool we_equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2);
+bool we_equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2);
+bool we_equalsTree(const WarTree t1, const WarTree t2);
+bool we_equalsEntity(const WarEntity* e1, const WarEntity* e2);
+bool we_equalsEntityType(const WarEntityType t1, const WarEntityType t2);
+bool we_equalsEntityId(const WarEntityId id1, const WarEntityId id2);
+
+u32 we_hashEntityType(const WarEntityType type);
+u32 we_hashEntityId(const WarEntityId id);
+
+void we_freeEntity(WarEntity* e);
+void we_freeEntityList(WarEntityList* list);
+
+#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, we_equalsRoadPiece, NULL}
+#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, we_equalsWallPiece, NULL}
+#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, we_equalsRuinPiece, NULL}
+#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, we_equalsTree, NULL}
+#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, we_equalsEntityId, NULL}
+#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, we_hashEntityId, we_equalsEntityId, NULL}
+#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, we_equalsEntity, we_freeEntity}
+#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, we_equalsEntity}
+
+struct _WarTransformComponent
+{
+    bool enabled;
+    vec2 position;
+    vec2 rotation;
+    vec2 scale;
+};
+
+struct _WarSpriteComponent
+{
+    bool enabled;
+    s32 resourceIndex;
+    s32 frameIndex;
+    WarSprite sprite;
+};
+
+struct _WarUnitComponent
+{
+    bool enabled;
+    WarUnitType type;
+    WarUnitDirection direction;
+
+    // position in tiles
+    s32 tilex, tiley;
+    // size in tiles
+    s32 sizex, sizey;
+
+    // index of the player this unit belongs to
+    u8 player;
+
+    // the units that can carry resources are
+    // peasants, peons, goldmines and trees
+    WarResourceKind resourceKind;
+    s32 amount;
+
+    // indicate if the unit is building something
+    bool building;
+    f32 buildPercent;
+
+    // hit points, magic and armor
+    s32 maxhp;
+    s32 hp;
+    s32 maxMana;
+    s32 mana;
+    s32 armor;
+    s32 range;
+    s32 minDamage;
+    s32 rndDamage;
+    s32 decay;
+    bool invisible;
+    bool invulnerable;
+    bool hasBeenSeen;
+
+    // index of the array of speeds of the unit
+    s32 speed;
+
+    // the current action index and per-unit mutable action states
+    WarUnitActionType actionType;
+    WarUnitAction actions[WAR_ACTION_TYPE_COUNT];
+
+    // time remainder (in seconds) until mana is affected
+    f32 manaTime;
+    // time remainder (in seconds) until the unit invisiblity ceases
+    f32 invisibilityTime;
+    // time remainder (in seconds) until the unit invulnerability ceases
+    f32 invulnerabilityTime;
+};
+
+struct _WarAnimationsComponent
+{
+    bool enabled;
+    WarSpriteAnimationList animations;
+};
+
+struct _WarRoadComponent
+{
+    bool enabled;
+    WarRoadPieceList pieces;
+};
+
+struct _WarWallComponent
+{
+    bool enabled;
+    WarWallPieceList pieces;
+};
+
+struct _WarRuinComponent
+{
+    bool enabled;
+    WarRuinPieceList pieces;
+};
+
+struct _WarForestComponent
+{
+    bool enabled;
+    WarTreeList trees;
+};
+
+struct _WarStateMachineComponent
+{
+    bool enabled;
+    WarState* currentState;
+    WarState* nextState;
+    bool wst_leaveState;
+    bool wst_enterState;
+};
+
+struct _WarUIComponent
+{
+    bool enabled;
+    String name;
+};
+
+struct _WarTextComponent
+{
+    bool enabled;
+    String text;
+    s32 fontIndex;
+    f32 fontSize;
+    f32 lineHeight;
+    WarColor fontColor;
+    WarColor highlightColor;
+    s32 highlightIndex;
+    s32 highlightCount;
+    vec2 boundings;
+    WarTextAlignment horizontalAlign;
+    WarTextAlignment verticalAlign;
+    WarTextAlignment lineAlign;
+    WarTextWrapping wrapping;
+    WarTextTrimming trimming;
+    bool multiline;
+};
+
+struct _WarRectComponent
+{
+    bool enabled;
+    vec2 size;
+    WarColor color;
+};
+
+struct _WarButtonComponent
+{
+    bool enabled;
+    bool interactive;
+    bool hot;
+    bool active;
+    WarKeys hotKey;
+    s32 highlightIndex;
+    s32 highlightCount;
+    String tooltip;
+    s32 gold;
+    s32 wood;
+    WarSprite normalSprite;
+    WarSprite pressedSprite;
+    WarClickHandler clickHandler;
+};
+
+struct _WarCursorComponent
+{
+    bool enabled;
+    WarCursorType type;
+    vec2 hot;
+};
+
+struct _WarProjectileComponent
+{
+    bool enabled;
+    WarProjectileType type;
+    WarEntityId sourceEntityId;
+    WarEntityId targetEntityId;
+    vec2 origin;
+    vec2 target;
+    s32 speed;
+};
+
+struct _WarPoisonCloudComponent
+{
+    bool enabled;
+    vec2 position;
+    f32 time; // time in seconds left of the spell
+    f32 damageTime; // time in seconds left to inflict damage
+    String animName;
+};
+
+struct _WarSightComponent
+{
+    bool enabled;
+    vec2 position;
+    f32 time; // time in seconds left of the spell
+};
+
+typedef void (*WarRenderFunc)(WarContext* context, WarEntity* entity);
+typedef s32 (*WarRenderCompareFunc)(const WarEntity* e1, const WarEntity* e2);
+
+struct _WarEntity
+{
+    bool enabled;
+    WarEntityId id;
+    WarEntityType type;
+    WarTransformComponent transform;
+    WarSpriteComponent sprite;
+    WarRoadComponent road;
+    WarWallComponent wall;
+    WarRuinComponent ruin;
+    WarForestComponent forest;
+    WarUnitComponent unit;
+    WarStateMachineComponent stateMachine;
+    WarAnimationsComponent animations;
+    WarUIComponent ui;
+    WarTextComponent text;
+    WarRectComponent rect;
+    WarButtonComponent button;
+    WarAudioComponent audio;
+    WarCursorComponent cursor;
+    WarProjectileComponent projectile;
+    WarPoisonCloudComponent poisonCloud;
+    WarSightComponent sight;
+};
+
+struct _WarEntityManager
+{
+    s32 staticEntityId;
+
+    WarEntityList entities;
+    WarEntityMap entitiesByType;
+    WarUnitMap unitsByType;
+    WarEntityIdMap entitiesById;
+    WarEntityList uiEntities;
+};
 
 void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);
 void we_removeTransformComponent(WarContext* context, WarEntity* entity);

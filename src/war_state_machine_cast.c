@@ -37,7 +37,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
 
     WarSpellType spellType = state->cast.spellType;
     WarEntityId targetEntityId = state->cast.targetEntityId;
@@ -111,7 +111,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
             {
                 if (we_decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
 
                     WarEntity* sight = we_createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
                     we_addSightComponent(context, sight, targetTile, stats.time);
@@ -159,7 +159,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
             {
                 if (we_decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetTilePosition = wmap_vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetTilePosition = wmap_tileToMapCoordinatesV(targetTile, true);
                     s32 radius = 2 * MEGA_TILE_WIDTH;
 
                     s32 projectilesCount = 5;
@@ -252,7 +252,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
             {
                 if (we_decreaseUnitMana(context, entity, stats.manaCost))
                 {
-                    vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
 
                     WarEntity* poisonCloud = we_createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
                     we_addPoisonCloudComponent(context, poisonCloud, targetTile, stats.time);

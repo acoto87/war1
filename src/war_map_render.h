@@ -1,5 +1,5 @@
 #pragma once
 
-#include "war_types.h"
+#include "war.h"
 
 void renderMap(WarContext* context);

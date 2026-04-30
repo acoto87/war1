@@ -1,5 +1,3 @@
-#include "war_alloc.h"
-
 #include <assert.h>
 
 #define SHL_MZ_IMPLEMENTATION
@@ -10,6 +8,7 @@
 #   include "shl/memzone.h"
 #endif
 
+#include "war_alloc.h"
 #include "war_log.h"
 
 memzone_t* permanentZone = NULL;

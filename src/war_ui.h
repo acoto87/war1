@@ -4,7 +4,7 @@
 
 #include "shl/wstr.h"
 
-#include "war_types.h"
+#include "war.h"
 
 bool wui_isUIEntity(WarEntity* entity);
 

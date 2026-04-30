@@ -6,7 +6,7 @@
 #include "war_scenes.h"
 #include "war_ui.h"
 
-void wsbl_enterSceneBlizzard(WarContext* context)
+void wsc_enterSceneBlizzard(WarContext* context)
 {
     WarScene* scene = context->scene;
     scene->blizzard.time = 3.0f;
@@ -15,7 +15,7 @@ void wsbl_enterSceneBlizzard(WarContext* context)
     wa_createAudio(context, WAR_LOGO, true);
 }
 
-void wsbl_updateSceneBlizzard(WarContext* context)
+void wsc_updateSceneBlizzard(WarContext* context)
 {
     WarScene* scene = context->scene;
 

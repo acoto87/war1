@@ -1,6 +1,6 @@
 #pragma once
 
-#include "war_types.h"
+#include "war.h"
 
 void wmm_createMenu(WarContext* context);
 void wmm_createOptionsMenu(WarContext* context);
