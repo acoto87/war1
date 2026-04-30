@@ -1,26 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "war.h"
-
-typedef enum
-{
-    DB_ENTRY_TYPE_UNKNOWN,
-    DB_ENTRY_TYPE_IMAGE,
-    DB_ENTRY_TYPE_PALETTE,
-    DB_ENTRY_TYPE_XMID,
-    DB_ENTRY_TYPE_CURSOR,
-    DB_ENTRY_TYPE_UI,
-    DB_ENTRY_TYPE_TEXT,
-    DB_ENTRY_TYPE_LEVEL_INFO,
-    DB_ENTRY_TYPE_LEVEL_VISUAL,
-    DB_ENTRY_TYPE_LEVEL_PASSABLE,
-    DB_ENTRY_TYPE_SPRITE,
-    DB_ENTRY_TYPE_WAVE,
-    DB_ENTRY_TYPE_VOC,
-    DB_ENTRY_TYPE_TILESET,
-    DB_ENTRY_TYPE_TILES
-} DatabaseEntryType;
+#include "war_fwd.h"
 
 typedef struct
 {

@@ -97,5 +97,6 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 
 void wst_freeTrainState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

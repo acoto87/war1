@@ -47,6 +47,8 @@ bool wst_isInsideBuilding(WarEntity* entity)
 
 WarState* wst_createState(WarContext* context, WarEntity* entity, WarStateType type)
 {
+    NOT_USED(context);
+
     WarState* state = (WarState*)wm_alloc(sizeof(WarState));
     state->type = type;
     state->entityId = entity->id;

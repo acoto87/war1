@@ -89,5 +89,6 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
 
 void wst_freeUpgradeState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

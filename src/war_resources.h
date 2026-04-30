@@ -15,13 +15,6 @@ struct _WarRawResource
     u8 *data;
 };
 
-enum _WarFileType
-{
-    WAR_FILE_TYPE_UNKNOWN,
-    WAR_FILE_TYPE_DEMO,
-    WAR_FILE_TYPE_RETAIL
-};
-
 struct _WarFile
 {
     // File Header
@@ -41,33 +34,6 @@ struct _WarFile
     WarRawResource resources[MAX_RESOURCES_COUNT];
 };
 
-enum _WarResourceType
-{
-    WAR_RESOURCE_TYPE_UNKNOWN,
-    WAR_RESOURCE_TYPE_IMAGE,
-    WAR_RESOURCE_TYPE_PALETTE,
-    WAR_RESOURCE_TYPE_XMID,
-    WAR_RESOURCE_TYPE_CURSOR,
-    WAR_RESOURCE_TYPE_UI,
-    WAR_RESOURCE_TYPE_TEXT,
-    WAR_RESOURCE_TYPE_LEVEL_INFO,
-    WAR_RESOURCE_TYPE_LEVEL_VISUAL,
-    WAR_RESOURCE_TYPE_LEVEL_PASSABLE,
-    WAR_RESOURCE_TYPE_SPRITE,
-    WAR_RESOURCE_TYPE_WAVE,
-    WAR_RESOURCE_TYPE_VOC,
-    WAR_RESOURCE_TYPE_TILESET,
-    WAR_RESOURCE_TYPE_TILES
-};
-
-enum _WarLevelInfoType
-{
-    WAR_LEVEL_TYPE_UNKOWN,
-    WAR_LEVEL_TYPE_1,
-    WAR_LEVEL_TYPE_2,
-    WAR_LEVEL_TYPE_3
-};
-
 struct _WarLevelUnit
 {
     u8 x, y;
@@ -75,13 +41,6 @@ struct _WarLevelUnit
     u8 player;
     WarResourceKind resourceKind;
     u16 amount;
-};
-
-enum _WarConstructType
-{
-    WAR_CONSTRUCT_UNKOWN,
-    WAR_CONSTRUCT_ROAD,
-    WAR_CONSTRUCT_WALL
 };
 
 struct _WarLevelConstruct

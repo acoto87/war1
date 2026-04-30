@@ -283,5 +283,6 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
 
 void wst_freeCastState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

@@ -105,5 +105,6 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
 
 void wst_freeChoppingState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

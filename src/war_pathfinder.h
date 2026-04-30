@@ -7,19 +7,6 @@ struct _WarMapPath
     vec2List nodes;
 };
 
-enum _PathFindingType
-{
-    PATH_FINDING_BFS,
-    PATH_FINDING_ASTAR
-};
-
-enum _WarPathFinderDataType
-{
-    PATH_FINDER_DATA_EMPTY = 0,
-    PATH_FINDER_DATA_STATIC = 1,
-    PATH_FINDER_DATA_DYNAMIC = 2,
-};
-
 struct _WarPathFinder
 {
     PathFindingType type;

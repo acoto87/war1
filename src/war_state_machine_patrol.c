@@ -66,5 +66,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
 
 void wst_freePatrolState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
+
     vec2ListFree(&state->patrol.positions);
 }

@@ -75,5 +75,6 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
 
 void wst_freeGatherWoodState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

@@ -183,6 +183,13 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Check behavior of invisible units when are under attack (it maybe work with workers, to stop the attack on it)
 * [ ] Zoom feature
 * [ ] Rewrite `appendCheatTextInput` and `downloadFileFromUrl` to use more String/StringView friendly implementation.
+* [ ] Add tests
+  * [ ] Pathfinding (A\* correctness with known maps)
+  * [ ] Damage calculation
+  * [ ] Resource cost enforcement
+  * [ ] State machine transitions
+  * [ ] DATA.WAR file parsing
+* [ ] Use SLD_rand instead of rand
 
 ## Gameplay
 

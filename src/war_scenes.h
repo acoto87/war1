@@ -4,26 +4,6 @@
 #include "war_cheats.h"
 #include "war_entities.h"
 
-enum _WarSceneType
-{
-    WAR_SCENE_DOWNLOAD,
-    WAR_SCENE_BLIZZARD,
-    WAR_SCENE_MAIN_MENU,
-    WAR_SCENE_BRIEFING,
-
-    WAR_SCENE_COUNT
-};
-
-enum _WarSceneDownloadState
-{
-    WAR_SCENE_DOWNLOAD_DOWNLOAD,
-    WAR_SCENE_DOWNLOAD_CONFIRM,
-    WAR_SCENE_DOWNLOAD_DOWNLOADING,
-    WAR_SCENE_DOWNLOAD_DOWNLOADED,
-    WAR_SCENE_DOWNLOAD_FILE_LOADED,
-    WAR_SCENE_DOWNLOAD_FAILED,
-};
-
 struct _WarScene
 {
     WarSceneType type;
@@ -59,15 +39,13 @@ struct _WarScene
     };
 };
 
-typedef void (*WarSceneFunc)(WarContext* context);
-
-typedef struct
+struct _WarSceneDescriptor
 {
     WarSceneType type;
     WarSceneFunc enterSceneFunc;
     WarSceneFunc leaveSceneFunc;
     WarSceneFunc updateSceneFunc;
-} WarSceneDescriptor;
+};
 
 WarScene* wsc_createScene(WarContext* context, WarSceneType type);
 void wsc_freeScene(WarScene* scene);

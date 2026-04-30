@@ -59,14 +59,6 @@
 #ifndef SHL_MZ_H
 #define SHL_MZ_H
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -125,6 +117,15 @@ float mz_fragmentation(const memzone_t* zone);
 
 #ifdef SHL_MZ_IMPLEMENTATION
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdalign.h>
+#include <string.h>
+#include <math.h>
+
 #ifndef SHL_MZ_MALLOC
 #define SHL_MZ_MALLOC(sz) malloc(sz)
 #endif
@@ -162,7 +163,7 @@ struct memzone_s
 #endif
 
 #define MZ__POINTER_OFFSET(t, p, o) ((t*)((uint8_t*)(p) + (o)))
-#define MZ__ALIGNOF(type) offsetof(struct { char c; type value; }, value)
+#define MZ__ALIGNOF(type) alignof(type)
 #define MZ__MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MZ__DEFAULT_ALIGNMENT MZ__MAX(MZ__ALIGNOF(memblock_t), MZ__MAX(MZ__ALIGNOF(void*), MZ__ALIGNOF(size_t)))
 #define MZ__IS_BLOCK_EMPTY(block) ((block)->user == NULL)

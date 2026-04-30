@@ -353,6 +353,8 @@ static WarUnitActionDef createDefaultIdleActionDef(s32 waitTime, bool directiona
 
 static WarUnitActionDef createSpiderScorpionDeathActionDef(s32 framesCount, s32 frames[], bool directional, s32 waitTime)
 {
+    assert(framesCount == 5);
+
     // Scorpions and Spiders have distinct wait times than other units,
     // so a custom death action is built for those cases
     WarUnitActionDef deathDef = createUnitActionDef(WAR_ACTION_TYPE_DEATH, directional, true);

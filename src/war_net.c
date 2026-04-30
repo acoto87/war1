@@ -233,6 +233,8 @@ s32 wnet_readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLe
 
 bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView filePath)
 {
+    NOT_USED(context);
+
     const char* urlStr = wsv_data(url);
     const char* filePathStr = wsv_data(filePath);
 

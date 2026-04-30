@@ -43,6 +43,7 @@ void wst_leaveCollapseState(WarContext* context, WarEntity* entity, WarState* st
 
 void wst_updateCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 
     we_removeEntityById(context, entity->id);
@@ -50,5 +51,6 @@ void wst_updateCollapseState(WarContext* context, WarEntity* entity, WarState* s
 
 void wst_freeCollapseState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

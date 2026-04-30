@@ -1,147 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-
-enum _WarMouseButtons;
-typedef enum _WarMouseButtons WarMouseButtons;
-
-enum _WarKeys;
-typedef enum _WarKeys WarKeys;
-
-enum _WarFileType;
-typedef enum _WarFileType WarFileType;
-
-enum _WarResourceType;
-typedef enum _WarResourceType WarResourceType;
-
-enum _WarLevelInfoType;
-typedef enum _WarLevelInfoType WarLevelInfoType;
-
-enum _WarRace;
-typedef enum _WarRace WarRace;
-
-enum _WarUnitDirection;
-typedef enum _WarUnitDirection WarUnitDirection;
-
-enum _WarUnitType;
-typedef enum _WarUnitType WarUnitType;
-
-enum _WarAnimationStatus;
-typedef enum _WarAnimationStatus WarAnimationStatus;
-
-enum _WarResourceKind;
-typedef enum _WarResourceKind WarResourceKind;
-
-enum _WarConstructType;
-typedef enum _WarConstructType WarConstructType;
-
-enum _WarCampaignMapType;
-typedef enum _WarCampaignMapType WarCampaignMapType;
-
-enum _WarLevelResult;
-typedef enum _WarLevelResult WarLevelResult;
-
-enum _WarFeatureType;
-typedef enum _WarFeatureType WarFeatureType;
-
-enum _WarUpgradeType;
-typedef enum _WarUpgradeType WarUpgradeType;
-
-enum _WarSpellType;
-typedef enum _WarSpellType WarSpellType;
-
-enum _WarUnitCommandType;
-typedef enum _WarUnitCommandType WarUnitCommandType;
-
-enum _WarEntityType;
-typedef enum _WarEntityType WarEntityType;
-
-enum _WarRoadPieceType;
-typedef enum _WarRoadPieceType WarRoadPieceType;
-
-enum _WarWallPieceType;
-typedef enum _WarWallPieceType WarWallPieceType;
-
-enum _WarRuinPieceType;
-typedef enum _WarRuinPieceType WarRuinPieceType;
-
-enum _WarTreeTileType;
-typedef enum _WarTreeTileType WarTreeTileType;
-
-enum _WarUnitActionStepType;
-typedef enum _WarUnitActionStepType WarUnitActionStepType;
-
-enum _WarUnbreakableParam;
-typedef enum _WarUnbreakableParam WarUnbreakableParam;
-
-enum _WarUnitActionType;
-typedef enum _WarUnitActionType WarUnitActionType;
-
-enum _WarUnitActionStatus;
-typedef enum _WarUnitActionStatus WarUnitActionStatus;
-
-enum _PathFindingType;
-typedef enum _PathFindingType PathFindingType;
-
-enum _WarPathFinderDataType;
-typedef enum _WarPathFinderDataType WarPathFinderDataType;
-
-enum _WarStateType;
-typedef enum _WarStateType WarStateType;
-
-enum _WarTextAlignment;
-typedef enum _WarTextAlignment WarTextAlignment;
-
-enum _WarTextWrapping;
-typedef enum _WarTextWrapping WarTextWrapping;
-
-enum _WarTextTrimming;
-typedef enum _WarTextTrimming WarTextTrimming;
-
-enum _WarAudioId;
-typedef enum _WarAudioId WarAudioId;
-
-enum _WarAudioType;
-typedef enum _WarAudioType WarAudioType;
-
-enum _WarCursorType;
-typedef enum _WarCursorType WarCursorType;
-
-enum _WarProjectileType;
-typedef enum _WarProjectileType WarProjectileType;
-
-enum _WarMapTilesetType;
-typedef enum _WarMapTilesetType WarMapTilesetType;
-
-enum _WarFogPieceType;
-typedef enum _WarFogPieceType WarFogPieceType;
-
-enum _WarFogBoundaryType;
-typedef enum _WarFogBoundaryType WarFogBoundaryType;
-
-enum _WarUnitPortraits;
-typedef enum _WarUnitPortraits WarUnitPortraits;
-
-enum _WarMapTileState;
-typedef enum _WarMapTileState WarMapTileState;
-
-enum _WarAICommandStatus;
-typedef enum _WarAICommandStatus WarAICommandStatus;
-
-enum _WarAICommandType;
-typedef enum _WarAICommandType WarAICommandType;
-
-enum _WarCheat;
-typedef enum _WarCheat WarCheat;
-
-enum _WarMapSpeed;
-typedef enum _WarMapSpeed WarMapSpeed;
-
-enum _WarSceneType;
-typedef enum _WarSceneType WarSceneType;
-
-enum _WarSceneDownloadState;
-typedef enum _WarSceneDownloadState WarSceneDownloadState;
+#include "war_enums.h"
 
 struct _WarKeyButtonState;
 typedef struct _WarKeyButtonState WarKeyButtonState;
@@ -269,8 +129,8 @@ typedef struct _WarPathFinder WarPathFinder;
 struct _WarState;
 typedef struct _WarState WarState;
 
-struct _WarTransformComponent;
-typedef struct _WarTransformComponent WarTransformComponent;
+struct _WarCampaignMapData;
+typedef struct _WarCampaignMapData WarCampaignMapData;
 
 struct _WarSpriteComponent;
 typedef struct _WarSpriteComponent WarSpriteComponent;
@@ -359,6 +219,15 @@ typedef struct _WarMap WarMap;
 struct _WarScene;
 typedef struct _WarScene WarScene;
 
+struct _WarCheatDescriptor;
+typedef struct _WarCheatDescriptor WarCheatDescriptor;
+
+struct _WarSceneDescriptor;
+typedef struct _WarSceneDescriptor WarSceneDescriptor;
+
+struct _WarTransformComponent;
+typedef struct _WarTransformComponent WarTransformComponent;
+
 struct _WarRenderState;
 typedef struct _WarRenderState WarRenderState;
 
@@ -371,3 +240,7 @@ typedef void (*WarClickHandler)(struct _WarContext* context, struct _WarEntity* 
 typedef void (*WarRenderFunc)(struct _WarContext* context, struct _WarEntity* entity);
 typedef int32_t (*WarRenderCompareFunc)(const struct _WarEntity* e1, const struct _WarEntity* e2);
 typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
+typedef void (*WarCheatFunc)(WarContext* context, StringView argument);
+typedef void (*WarRenderFunc)(WarContext* context, WarEntity* entity);
+typedef int32_t (*WarRenderCompareFunc)(const WarEntity* e1, const WarEntity* e2);
+typedef void (*WarSceneFunc)(WarContext* context);

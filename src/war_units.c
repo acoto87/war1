@@ -8,11 +8,6 @@
 // Build time in seconds: (t program cycles) * 80 seconds / 1000 cycles
 #define __bts(t) ((t)*80/1000)
 
-// Brace-only StringView initializer for use in file-scope const arrays.
-// Unlike WSV_LITERAL, this does not use a compound literal cast so it
-// satisfies -Wpedantic's "initializer element is not constant" requirement.
-#define WSV_INIT(s) { s, sizeof(s) - 1 }
-
 const StringView features[MAX_FEATURES_COUNT * 2] = {
 	// Units. 0 - 6
 	WSV_INIT("unit-footman"),             WSV_INIT("unit-grunt"),
@@ -42,6 +37,7 @@ const StringView features[MAX_FEATURES_COUNT * 2] = {
 	// Roads and walls. 21 - 22
 	WSV_INIT("unit-road"),                WSV_INIT("unit-wall")
 };
+static_assert(arrayLength(features) == MAX_FEATURES_COUNT * 2, "features array size does not match MAX_FEATURES_COUNT");
 
 const StringView upgradeNames[MAX_UPGRADES_COUNT * 2] =
 {
@@ -59,6 +55,7 @@ const StringView upgradeNames[MAX_UPGRADES_COUNT * 2] =
     // Shield upgrades
     WSV_INIT("upgrade-orc-shield"),   WSV_INIT("upgrade-human-shield")
 };
+static_assert(arrayLength(upgradeNames) == MAX_UPGRADES_COUNT * 2, "upgradeNames array size does not match MAX_UPGRADES_COUNT");
 
 const WarUnitData unitsData[] =
 {
@@ -120,6 +117,7 @@ const WarUnitData unitsData[] =
     { WAR_UNIT_HUMAN_CORPSE,        326, 0,                               1, 1, WSV_INIT("CORPSE")          },
     { WAR_UNIT_ORC_CORPSE,          326, 0,                               1, 1, WSV_INIT("CORPSE")          }
 };
+static_assert(arrayLength(unitsData) == 50, "unitsData array size does not match WAR_UNIT_COUNT");
 
 const WarWorkerData workersData[] =
 {
@@ -127,6 +125,7 @@ const WarWorkerData workersData[] =
     { WAR_UNIT_PEASANT,                   327, 329 },
     { WAR_UNIT_PEON,                      328, 330 },
 };
+static_assert(arrayLength(workersData) == 2, "workersData array size does not match number of worker unit types");
 
 const WarBuildingData buildingsData[] =
 {
@@ -147,6 +146,7 @@ const WarBuildingData buildingsData[] =
     { WAR_UNIT_BLACKSMITH_HUMANS,         345 },
     { WAR_UNIT_BLACKSMITH_ORCS,           346 },
 };
+static_assert(arrayLength(buildingsData) == 16, "buildingsData array size does not match number of building unit types");
 
 const WarRoadData roadsData[] =
 {
@@ -166,6 +166,7 @@ const WarRoadData roadsData[] =
     { WAR_ROAD_PIECE_T_TOP,               69, 70 },
     { WAR_ROAD_PIECE_TOP_RIGHT,           70, 71 },
 };
+static_assert(arrayLength(roadsData) == 15, "roadsData array size does not match WAR_ROAD_PIECE_COUNT");
 
 const WarWallData wallsData[] =
 {
@@ -185,6 +186,7 @@ const WarWallData wallsData[] =
     { WAR_WALL_PIECE_T_TOP,               19, 31, 37, 19, 31, 37 },
     { WAR_WALL_PIECE_TOP_RIGHT,           20, 32, 35, 20, 32, 35 },
 };
+static_assert(arrayLength(wallsData) == 15, "wallsData array size does not match WAR_WALL_PIECE_COUNT");
 
 const WarRuinData ruinsData[] =
 {
@@ -204,6 +206,7 @@ const WarRuinData ruinsData[] =
     { WAR_RUIN_PIECE_DIAG_1,              55, 56 },
     { WAR_RUIN_PIECE_DIAG_2,              54, 55 },
 };
+static_assert(arrayLength(ruinsData) == 15, "ruinsData array size does not match WAR_RUIN_PIECE_COUNT");
 
 const WarTreeData treesData[] =
 {
@@ -228,6 +231,7 @@ const WarTreeData treesData[] =
     { WAR_TREE_DIAG_2,              82, 83 },
     { WAR_TREE_CHOPPED,             95, 96 },
 };
+static_assert(arrayLength(treesData) == 20, "treesData array size does not match WAR_TREE_TILE_TYPE_COUNT");
 
 const WarUnitStats unitStats[] =
 {
@@ -261,6 +265,7 @@ const WarUnitStats unitStats[] =
     { WAR_UNIT_DAEMON,            1,     2,     0,    300,  255,     0,     65,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
     { WAR_UNIT_WATER_ELEMENTAL,   3,     4,     0,    250,  255,    40,      0,            -1,     -1,     -1,     45,   { 17.936f, 17.936f, 17.936f } },
 };
+static_assert(arrayLength(unitStats) == 28, "unitStats array size does not match WAR_UNIT_COUNT");
 
 const WarBuildingStats buildingStats[] =
 {
@@ -285,6 +290,7 @@ const WarBuildingStats buildingStats[] =
     { WAR_UNIT_BLACKROCK,                 0,      4,      5000,              -1,     -1,     -1 },
     { WAR_UNIT_GOLDMINE,                  0,      3,     25500,              -1,     -1,     -1 },
 };
+static_assert(arrayLength(buildingStats) == 19, "buildingStats array size does not match WAR_UNIT_COUNT");
 
 const WarUpgradeData upgradesData[] =
 {
@@ -308,6 +314,7 @@ const WarUpgradeData upgradesData[] =
     { WAR_UPGRADE_UNHOLY_ARMOR,     1, { WAR_PORTRAIT_UNHOLY_ARMOR,     WAR_PORTRAIT_UNHOLY_ARMOR    } },
     { WAR_UPGRADE_SHIELD,           2, { WAR_PORTRAIT_SHIELD_2_HUMANS,  WAR_PORTRAIT_SHIELD_3_HUMANS } },
 };
+static_assert(arrayLength(upgradesData) == 19, "upgradesData array size does not match WAR_UPGRADE_COUNT");
 
 const WarUpgradeStats upgradeStats[] =
 {
@@ -331,6 +338,7 @@ const WarUpgradeStats upgradeStats[] =
     { WAR_UPGRADE_UNHOLY_ARMOR,     __bts(1600), { 3000,    0 } },
     { WAR_UPGRADE_SHIELD,           __bts(1600), {  750, 1500 } },
 };
+static_assert(arrayLength(upgradeStats) == 19, "upgradeStats array size does not match WAR_UPGRADE_COUNT");
 
 const WarSpellData spellData[] =
 {
@@ -350,6 +358,7 @@ const WarSpellData spellData[] =
     { WAR_SPELL_UNHOLY_ARMOR,       WAR_PORTRAIT_UNHOLY_ARMOR       },
     { WAR_SPELL_POISON_CLOUD,       WAR_PORTRAIT_POISON_CLOUD       },
 };
+static_assert(arrayLength(spellData) == 12, "spellData array size does not match WAR_SPELL_COUNT");
 
 const WarSpellStats spellStats[] =
 {
@@ -369,6 +378,7 @@ const WarSpellStats spellStats[] =
     { WAR_SPELL_UNHOLY_ARMOR,       100, 13,  6 },
     { WAR_SPELL_POISON_CLOUD,       100, 10, 12 },
 };
+static_assert(arrayLength(spellStats) == 12, "spellStats array size does not match WAR_SPELL_COUNT");
 
 const WarSpellMapping spellMappings[] =
 {
@@ -378,6 +388,7 @@ const WarSpellMapping spellMappings[] =
     { WAR_SUMMON_DAEMON,            WAR_UNIT_DAEMON             },
     { WAR_SUMMON_WATER_ELEMENTAL,   WAR_UNIT_WATER_ELEMENTAL    },
 };
+static_assert(arrayLength(spellMappings) == 4, "spellMappings array size does not match WAR_SUMMON_COUNT");
 
 const WarUnitCommandBaseData commandsBaseData[] =
 {
@@ -470,6 +481,7 @@ const WarUnitCommandBaseData commandsBaseData[] =
     // wcmd_cancel
     { WAR_COMMAND_CANCEL,                   wcmd_cancel,                 WAR_KEY_ESC,        0, 3, WSV_INIT("ESC - CANCEL"),                 WSV_INIT("")                          }
 };
+static_assert(arrayLength(commandsBaseData) == 74, "commandsBaseData array size does not match WAR_COMMAND_COUNT");
 
 const WarUnitCommandMapping commandMappings[] =
 {
@@ -545,18 +557,21 @@ const WarUnitCommandMapping commandMappings[] =
     { WAR_COMMAND_SPELL_UNHOLY_ARMOR,       WAR_SPELL_UNHOLY_ARMOR      },
     { WAR_COMMAND_SPELL_POISON_CLOUD,       WAR_SPELL_POISON_CLOUD      },
 };
+static_assert(arrayLength(commandMappings) == 62, "commandMappings array size does not match expected number of commands with mappings");
 
 const WarRoadPieceType roadTileTypeMap[16] =
 {
     // 0-15
     0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10,
 };
+static_assert(arrayLength(roadTileTypeMap) == 16, "roadTileTypeMap array size does not match expected size of 16");
 
 const WarWallPieceType wallTileTypeMap[16] =
 {
     // 0-15
     0, 3, 0, 4, 1, 5, 11, 7, 2, 6, 12, 8, 14, 9, 13, 10,
 };
+static_assert(arrayLength(wallTileTypeMap) == 16, "wallTileTypeMap array size does not match expected size of 16");
 
 const WarRuinPieceType ruinTileTypeMap[256] =
 {
@@ -593,6 +608,7 @@ const WarRuinPieceType ruinTileTypeMap[256] =
     // 240-255
     3, 3, 3, 6, 3, 3, 3, 6, 2, 2, 2, 12, 2, 2, 13, 5,
 };
+static_assert(arrayLength(ruinTileTypeMap) == 256, "ruinTileTypeMap array size does not match expected size of 256");
 
 const WarTreeTileType treeTileTypeMap[256] =
 {
@@ -629,6 +645,7 @@ const WarTreeTileType treeTileTypeMap[256] =
     // 240-255
     3, 3, 6, 6, 3, 3, 6, 6, 2, 2, 5, 12, 2, 2, 13, 5,
 };
+static_assert(arrayLength(treeTileTypeMap) == 256, "treeTileTypeMap array size does not match expected size of 256");
 
 const WarFogPieceType fogTileTypeMap[256] =
 {
@@ -665,6 +682,7 @@ const WarFogPieceType fogTileTypeMap[256] =
     // 240-255
     3, 3, 3, 6, 3, 3, 3, 6, 2, 2, 0, 0, 2, 2, 0, 5,
 };
+static_assert(arrayLength(fogTileTypeMap) == 256, "fogTileTypeMap array size does not match expected size of 256");
 
 u32 wu_hashUnitType(const WarUnitType type)
 {

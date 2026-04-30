@@ -43,50 +43,6 @@ struct _WarTree
     s32 amount;
 };
 
-enum _WarEntityType
-{
-    WAR_ENTITY_TYPE_NONE,
-    WAR_ENTITY_TYPE_IMAGE,
-    WAR_ENTITY_TYPE_UNIT,
-    WAR_ENTITY_TYPE_ROAD,
-    WAR_ENTITY_TYPE_WALL,
-    WAR_ENTITY_TYPE_RUIN,
-    WAR_ENTITY_TYPE_FOREST,
-    WAR_ENTITY_TYPE_TEXT,
-    WAR_ENTITY_TYPE_RECT,
-    WAR_ENTITY_TYPE_BUTTON,
-    WAR_ENTITY_TYPE_CURSOR,
-    WAR_ENTITY_TYPE_AUDIO,
-    WAR_ENTITY_TYPE_PROJECTILE,
-    WAR_ENTITY_TYPE_RAIN_OF_FIRE,
-    WAR_ENTITY_TYPE_POISON_CLOUD,
-    WAR_ENTITY_TYPE_SIGHT,
-    WAR_ENTITY_TYPE_MINIMAP,
-    WAR_ENTITY_TYPE_ANIMATION,
-
-    WAR_ENTITY_TYPE_COUNT
-};
-
-enum _WarCursorType
-{
-    WAR_CURSOR_ARROW = 263,
-    WAR_CURSOR_INVALID = 264,
-    WAR_CURSOR_YELLOW_CROSSHAIR = 265,
-    WAR_CURSOR_RED_CROSSHAIR = 266,
-    WAR_CURSOR_YELLOW_CROSSHAIR_2 = 267,
-    WAR_CURSOR_MAGNIFYING_GLASS = 268,
-    WAR_CURSOR_GREEN_CROSSHAIR = 269,
-    WAR_CURSOR_WATCH = 270,
-    WAR_CURSOR_ARROW_UP = 271,
-    WAR_CURSOR_ARROW_UP_RIGHT = 272,
-    WAR_CURSOR_ARROW_RIGHT = 273,
-    WAR_CURSOR_ARROW_BOTTOM_RIGHT = 274,
-    WAR_CURSOR_ARROW_BOTTOM = 275,
-    WAR_CURSOR_ARROW_BOTTOM_LEFT = 276,
-    WAR_CURSOR_ARROW_LEFT = 277,
-    WAR_CURSOR_ARROW_UP_LEFT = 278
-};
-
 #define WarRoadPieceEmpty (WarRoadPiece){0}
 #define WarWallPieceEmpty (WarWallPiece){0}
 #define WarRuinPieceEmpty (WarRuinPiece){0}
@@ -321,9 +277,6 @@ struct _WarSightComponent
     vec2 position;
     f32 time; // time in seconds left of the spell
 };
-
-typedef void (*WarRenderFunc)(WarContext* context, WarEntity* entity);
-typedef s32 (*WarRenderCompareFunc)(const WarEntity* e1, const WarEntity* e2);
 
 struct _WarEntity
 {

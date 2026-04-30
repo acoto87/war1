@@ -4,31 +4,6 @@
 #include "war_units.h"
 #include "war_pathfinder.h"
 
-enum _WarStateType
-{
-    WAR_STATE_IDLE,
-    WAR_STATE_MOVE,
-    WAR_STATE_PATROL,
-    WAR_STATE_FOLLOW,
-    WAR_STATE_ATTACK,
-    WAR_STATE_GOLD,
-    WAR_STATE_MINING,
-    WAR_STATE_WOOD,
-    WAR_STATE_CHOPPING,
-    WAR_STATE_DELIVER,
-    WAR_STATE_DEATH,
-    WAR_STATE_COLLAPSE,
-    WAR_STATE_TRAIN,
-    WAR_STATE_UPGRADE,
-    WAR_STATE_BUILD,
-    WAR_STATE_REPAIR,
-    WAR_STATE_REPAIRING,
-    WAR_STATE_CAST,
-    WAR_STATE_WAIT,
-
-    WAR_STATE_COUNT
-};
-
 struct _WarState
 {
     WarStateType type;

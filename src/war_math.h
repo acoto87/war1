@@ -143,6 +143,6 @@ shlDeclareList(rectList, rect)
 
 #define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wt_equalsRect, NULL}
 
-shlDeclareMap(StringViewMap, StringView, String);
+shlDeclareMap(StringViewMap, StringView, String)
 
 #define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free}
