@@ -21,15 +21,6 @@ struct _WarRoadPiece
     u8 player;
 };
 
-#define WarRoadPieceEmpty (WarRoadPiece){0}
-#define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (u8)(player)})
-
-bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2);
-
-shlDeclareList(WarRoadPieceList, WarRoadPiece)
-
-#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, equalsRoadPiece, NULL}
-
 struct _WarWallPiece
 {
     WarWallPieceType type;
@@ -39,29 +30,11 @@ struct _WarWallPiece
     u8 player;
 };
 
-#define WarWallPieceEmpty (WarWallPiece){0}
-#define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (u8)(player)})
-
-bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2);
-
-shlDeclareList(WarWallPieceList, WarWallPiece)
-
-#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, equalsWallPiece, NULL}
-
 struct _WarRuinPiece
 {
     WarRuinPieceType type;
     s32 tilex, tiley;
 };
-
-#define WarRuinPieceEmpty (WarRuinPiece){0}
-#define createRuinPiece(x, y) ((WarRuinPiece){0, (x), (y)})
-
-bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2);
-
-shlDeclareList(WarRuinPieceList, WarRuinPiece)
-
-#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, equalsRuinPiece, NULL}
 
 struct _WarTree
 {
@@ -69,27 +42,6 @@ struct _WarTree
     s32 tilex, tiley;
     s32 amount;
 };
-
-#define WarTreeEmpty (WarTree){0}
-#define createTree(x, y, amount) ((WarTree){0, (x), (y), (amount)})
-
-bool equalsTree(const WarTree t1, const WarTree t2);
-s32 compareTreesByPosition(const WarTree t1, const WarTree t2);
-
-shlDeclareList(WarTreeList, WarTree)
-
-#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
-
-bool equalsEntityId(const WarEntityId id1, const WarEntityId id2);
-uint32_t hashEntityId(const WarEntityId id);
-
-shlDeclareList(WarEntityIdList, WarEntityId)
-
-#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL}
-
-shlDeclareSet(WarEntityIdSet, WarEntityId)
-
-#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, hashEntityId, equalsEntityId, NULL}
 
 enum _WarEntityType
 {
@@ -135,9 +87,49 @@ enum _WarCursorType
     WAR_CURSOR_ARROW_UP_LEFT = 278
 };
 
-//
-// Components
-//
+#define WarRoadPieceEmpty (WarRoadPiece){0}
+#define WarWallPieceEmpty (WarWallPiece){0}
+#define WarRuinPieceEmpty (WarRuinPiece){0}
+#define WarTreeEmpty (WarTree){0}
+
+#define createRoadPiece(x, y, player) ((WarRoadPiece){0, (x), (y), (u8)(player)})
+#define createWallPiece(x, y, player) ((WarWallPiece){0, 0, 0, (x), (y), (u8)(player)})
+#define createRuinPiece(x, y) ((WarRuinPiece){0, (x), (y)})
+#define createTree(x, y, amount) ((WarTree){0, (x), (y), (amount)})
+
+shlDeclareList(WarRoadPieceList, WarRoadPiece)
+shlDeclareList(WarWallPieceList, WarWallPiece)
+shlDeclareList(WarRuinPieceList, WarRuinPiece)
+shlDeclareList(WarTreeList, WarTree)
+shlDeclareList(WarEntityIdList, WarEntityId)
+shlDeclareSet(WarEntityIdSet, WarEntityId)
+shlDeclareList(WarEntityList, WarEntity*)
+shlDeclareMap(WarEntityMap, WarEntityType, WarEntityList*)
+shlDeclareMap(WarUnitMap, WarUnitType, WarEntityList*)
+shlDeclareMap(WarEntityIdMap, WarEntityId, WarEntity*)
+
+bool we_equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2);
+bool we_equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2);
+bool we_equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2);
+bool we_equalsTree(const WarTree t1, const WarTree t2);
+bool we_equalsEntity(const WarEntity* e1, const WarEntity* e2);
+bool we_equalsEntityType(const WarEntityType t1, const WarEntityType t2);
+bool we_equalsEntityId(const WarEntityId id1, const WarEntityId id2);
+
+u32 we_hashEntityType(const WarEntityType type);
+u32 we_hashEntityId(const WarEntityId id);
+
+void we_freeEntity(WarEntity* e);
+void we_freeEntityList(WarEntityList* list);
+
+#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, we_equalsRoadPiece, NULL}
+#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, we_equalsWallPiece, NULL}
+#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, we_equalsRuinPiece, NULL}
+#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, we_equalsTree, NULL}
+#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, we_equalsEntityId, NULL}
+#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, we_hashEntityId, we_equalsEntityId, NULL}
+#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, we_equalsEntity, we_freeEntity}
+#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, we_equalsEntity}
 
 struct _WarTransformComponent
 {
@@ -330,8 +322,8 @@ struct _WarSightComponent
     f32 time; // time in seconds left of the spell
 };
 
-typedef void (*WarRenderFunc)(struct _WarContext* context, struct _WarEntity* entity);
-typedef s32 (*WarRenderCompareFunc)(const struct _WarEntity* e1, const struct _WarEntity* e2);
+typedef void (*WarRenderFunc)(WarContext* context, WarEntity* entity);
+typedef s32 (*WarRenderCompareFunc)(const WarEntity* e1, const WarEntity* e2);
 
 struct _WarEntity
 {
@@ -357,35 +349,6 @@ struct _WarEntity
     WarPoisonCloudComponent poisonCloud;
     WarSightComponent sight;
 };
-
-bool equalsEntity(const WarEntity* e1, const WarEntity* e2);
-
-static inline void freeEntity(WarEntity* e)
-{
-    wm_free(e);
-}
-
-shlDeclareList(WarEntityList, WarEntity*)
-
-#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, equalsEntity, freeEntity}
-#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, equalsEntity}
-
-uint32_t hashEntityType(const WarEntityType type);
-bool equalsEntityType(const WarEntityType t1, const WarEntityType t2);
-
-static inline void freeEntityList(WarEntityList* list)
-{
-    WarEntityListFree(list);
-}
-
-shlDeclareMap(WarEntityMap, WarEntityType, WarEntityList*)
-
-uint32_t hashUnitType(const WarUnitType type);
-bool equalsUnitType(const WarUnitType t1, const WarUnitType t2);
-
-shlDeclareMap(WarUnitMap, WarUnitType, WarEntityList*)
-
-shlDeclareMap(WarEntityIdMap, WarEntityId, WarEntity*)
 
 struct _WarEntityManager
 {

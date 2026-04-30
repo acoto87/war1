@@ -666,6 +666,16 @@ const WarFogPieceType fogTileTypeMap[256] =
     3, 3, 3, 6, 3, 3, 3, 6, 2, 2, 0, 0, 2, 2, 0, 5,
 };
 
+u32 wu_hashUnitType(const WarUnitType type)
+{
+    return type;
+}
+
+bool wu_equalsUnitType(const WarUnitType t1, const WarUnitType t2)
+{
+    return t1 == t2;
+}
+
 #define FIND_BY_TYPE(array, type) \
     s32 index = 0; \
     s32 length = arrayLength(array); \

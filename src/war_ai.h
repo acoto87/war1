@@ -49,21 +49,11 @@ struct _WarAICommand
     };
 };
 
+bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2);
+void aiCommandFree(WarAICommand* command);
+
 shlDeclareQueue(WarAICommandQueue, WarAICommand*)
-shlDefineQueue(WarAICommandQueue, WarAICommand*)
-
 shlDeclareList(WarAICommandList, WarAICommand*)
-shlDefineList(WarAICommandList, WarAICommand*)
-
-bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
-{
-    return command1->id == command2->id;
-}
-
-static inline void aiCommandFree(WarAICommand* command)
-{
-    wm_free((void*)command);
-}
 
 #define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
 #define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})

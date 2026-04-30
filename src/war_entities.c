@@ -25,70 +25,63 @@ shlDefineMap(WarEntityMap, WarEntityType, WarEntityList*)
 shlDefineMap(WarUnitMap, WarUnitType, WarEntityList*)
 shlDefineMap(WarEntityIdMap, WarEntityId, WarEntity*)
 
-bool equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
+bool we_equalsRoadPiece(const WarRoadPiece r1, const WarRoadPiece r2)
 {
     return r1.type == r2.type && r1.player == r2.player &&
            r1.tilex == r2.tilex && r1.tiley == r2.tiley;
 }
 
-bool equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
+bool we_equalsWallPiece(const WarWallPiece w1, const WarWallPiece w2)
 {
     return w1.type == w2.type && w1.player == w2.player &&
            w1.tilex == w2.tilex && w1.tiley == w2.tiley;
 }
 
-bool equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
+bool we_equalsRuinPiece(const WarRuinPiece r1, const WarRuinPiece r2)
 {
     return r1.type == r2.type &&
            r1.tilex == r2.tilex && r1.tiley == r2.tiley;
 }
 
-bool equalsTree(const WarTree t1, const WarTree t2)
+bool we_equalsTree(const WarTree t1, const WarTree t2)
 {
     return t1.tilex == t2.tilex && t1.tiley == t2.tiley;
 }
 
-s32 compareTreesByPosition(const WarTree t1, const WarTree t2)
-{
-    // order by 'x' asc, then by 'y' desc
-    return t1.tilex == t2.tilex ? t2.tiley - t1.tiley : t1.tilex - t2.tilex;
-}
-
-bool equalsEntityId(const WarEntityId id1, const WarEntityId id2)
+bool we_equalsEntityId(const WarEntityId id1, const WarEntityId id2)
 {
     return id1 == id2;
 }
 
-uint32_t hashEntityId(const WarEntityId id)
+uint32_t we_hashEntityId(const WarEntityId id)
 {
     return id;
 }
 
-bool equalsEntity(const WarEntity* e1, const WarEntity* e2)
+bool we_equalsEntity(const WarEntity* e1, const WarEntity* e2)
 {
     return e1->id == e2->id;
 }
 
-uint32_t hashEntityType(const WarEntityType type)
+void we_freeEntity(WarEntity* e)
+{
+    wm_free(e);
+}
+
+uint32_t we_hashEntityType(const WarEntityType type)
 {
     return type;
 }
 
-bool equalsEntityType(const WarEntityType t1, const WarEntityType t2)
+bool we_equalsEntityType(const WarEntityType t1, const WarEntityType t2)
 {
     return t1 == t2;
 }
 
-uint32_t hashUnitType(const WarUnitType type)
+void we_freeEntityList(WarEntityList* list)
 {
-    return type;
+    WarEntityListFree(list);
 }
-
-bool equalsUnitType(const WarUnitType t1, const WarUnitType t2)
-{
-    return t1 == t2;
-}
-
 
 void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {
@@ -923,9 +916,9 @@ void we_initEntityManager(WarContext* context, WarEntityManager* manager)
     // initialize entity by type map
     WarEntityMapOptions entitiesByTypeOptions = (WarEntityMapOptions){0};
     entitiesByTypeOptions.defaultValue = NULL;
-    entitiesByTypeOptions.hashFn = hashEntityType;
-    entitiesByTypeOptions.equalsFn = equalsEntityType;
-    entitiesByTypeOptions.freeFn = freeEntityList;
+    entitiesByTypeOptions.hashFn = we_hashEntityType;
+    entitiesByTypeOptions.equalsFn = we_equalsEntityType;
+    entitiesByTypeOptions.freeFn = we_freeEntityList;
     WarEntityMapInit(&manager->entitiesByType, entitiesByTypeOptions);
     for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
     {
@@ -937,9 +930,9 @@ void we_initEntityManager(WarContext* context, WarEntityManager* manager)
     // initialize unit by type map
     WarUnitMapOptions unitsByTypeOptions = (WarUnitMapOptions){0};
     unitsByTypeOptions.defaultValue = NULL;
-    unitsByTypeOptions.hashFn = hashUnitType;
-    unitsByTypeOptions.equalsFn = equalsUnitType;
-    unitsByTypeOptions.freeFn = freeEntityList;
+    unitsByTypeOptions.hashFn = wu_hashUnitType;
+    unitsByTypeOptions.equalsFn = wu_equalsUnitType;
+    unitsByTypeOptions.freeFn = we_freeEntityList;
     WarUnitMapInit(&manager->unitsByType, unitsByTypeOptions);
     for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
     {
@@ -951,8 +944,8 @@ void we_initEntityManager(WarContext* context, WarEntityManager* manager)
     // initialize the entities by id map
     WarEntityIdMapOptions entitiesByIdOptions = (WarEntityIdMapOptions){0};
     entitiesByIdOptions.defaultValue = NULL;
-    entitiesByIdOptions.hashFn = hashEntityId;
-    entitiesByIdOptions.equalsFn = equalsEntityId;
+    entitiesByIdOptions.hashFn = we_hashEntityId;
+    entitiesByIdOptions.equalsFn = we_equalsEntityId;
     WarEntityIdMapInit(&manager->entitiesById, entitiesByIdOptions);
 
     // initialize ui entities list

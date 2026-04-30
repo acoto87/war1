@@ -551,10 +551,10 @@ void wmap_freeMap(WarContext* context, WarMap* map)
     WarEntityIdListFree(&map->selectedEntities);
 
     // these are already free when the lists and maps are
-    // freeEntity(map->forest);
-    // freeEntity(map->wall);
-    // freeEntity(map->road);
-    // freeEntity(map->ruin);
+    // we_freeEntity(map->forest);
+    // we_freeEntity(map->wall);
+    // we_freeEntity(map->road);
+    // we_freeEntity(map->ruin);
 
     wm_free(map->finder.data);
 }

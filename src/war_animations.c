@@ -1,12 +1,16 @@
-﻿#include "war_animations.h"
+﻿#include "shl/wstr.h"
 
-#include <stdlib.h>
-
-#include "shl/wstr.h"
-
+#include "war_animations.h"
 #include "war_sprites.h"
 
 #define ANIM_NAME_MAX_LENGTH 50
+
+bool wanim_equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
+{
+    return wsv_equals(wstr_view(&anim1->name), wstr_view(&anim2->name));
+}
+
+shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
 
 WarSpriteAnimation* wanim_createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop)
 {

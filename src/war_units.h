@@ -651,6 +651,9 @@ struct _WarUnitCommandData
     WarClickHandler clickHandler;
 };
 
+u32 wu_hashUnitType(const WarUnitType type);
+bool wu_equalsUnitType(const WarUnitType t1, const WarUnitType t2);
+
 WarUnitData wu_getUnitData(WarUnitType type);
 WarWorkerData wu_getWorkerData(WarUnitType type);
 WarBuildingData wu_getBuildingData(WarUnitType type);
@@ -710,7 +713,6 @@ bool wu_isSummonUnit(WarEntity* entity);
 bool wu_isSkeletonUnit(WarEntity* entity);
 
 WarRace wu_getUnitTypeRace(WarUnitType type);
-
 WarRace wu_getUnitRace(WarEntity* entity);
 
 #define isHumanUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_HUMANS)
@@ -737,7 +739,6 @@ bool wu_areEnemies(WarContext* context, WarEntity* entity, WarEntity* other);
 bool wu_canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
 
 WarUnitType wu_getTownHallOfRace(WarRace race);
-
 WarUnitType wu_getProducerUnitOfType(WarUnitType type);
 
 // Entity geometry / property functions (bodies defined in war_entities.h)
@@ -752,8 +753,8 @@ vec2 wu_getUnitPosition(WarEntity* entity, bool inTiles);
 vec2 wu_getUnitCenterPosition(WarEntity* entity, bool inTiles);
 void wu_setUnitPosition(WarEntity* entity, vec2 position, bool inTiles);
 void wu_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles);
-WarUnitDirection wu_getUnitDirection(WarEntity* entity);
 
+WarUnitDirection wu_getUnitDirection(WarEntity* entity);
 WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y);
 
 void wu_setUnitDirection(WarEntity* entity, WarUnitDirection direction);
