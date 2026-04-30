@@ -49,14 +49,14 @@ struct _WarAICommand
     };
 };
 
-bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2);
-void aiCommandFree(WarAICommand* command);
+bool wai_equalsAICommand(const WarAICommand* command1, const WarAICommand* command2);
+void wai_freeAICommand(WarAICommand* command);
 
 shlDeclareQueue(WarAICommandQueue, WarAICommand*)
 shlDeclareList(WarAICommandList, WarAICommand*)
 
-#define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, aiCommandEquals, aiCommandFree})
-#define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, aiCommandEquals, aiCommandFree})
+#define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, wai_equalsAICommand, wai_freeAICommand})
+#define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, wai_equalsAICommand, wai_freeAICommand})
 
 struct _WarAI
 {

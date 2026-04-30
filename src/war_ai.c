@@ -2,12 +2,12 @@
 
 #include <assert.h>
 
-bool aiCommandEquals(const WarAICommand* command1, const WarAICommand* command2)
+bool wai_equalsAICommand(const WarAICommand* command1, const WarAICommand* command2)
 {
     return command1->id == command2->id;
 }
 
-void aiCommandFree(WarAICommand* command)
+void wai_freeAICommand(WarAICommand* command)
 {
     wm_free((void*)command);
 }
