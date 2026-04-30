@@ -174,5 +174,6 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
 void wst_freeAttackState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

@@ -91,6 +91,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
 
 void wst_freeMiningState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }
 

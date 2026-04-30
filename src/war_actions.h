@@ -3,29 +3,6 @@
 #include "war_fwd.h"
 #include "war_math.h"
 
-enum _WarUnitActionStepType
-{
-    WAR_ACTION_STEP_NONE,
-    WAR_ACTION_STEP_UNBREAKABLE,
-    WAR_ACTION_STEP_FRAME,
-    WAR_ACTION_STEP_WAIT,
-    WAR_ACTION_STEP_MOVE,
-    WAR_ACTION_STEP_ATTACK,
-    WAR_ACTION_STEP_SOUND_SWORD,
-    WAR_ACTION_STEP_SOUND_FIST,
-    WAR_ACTION_STEP_SOUND_FIREBALL,
-    WAR_ACTION_STEP_SOUND_CHOPPING,
-    WAR_ACTION_STEP_SOUND_CATAPULT,
-    WAR_ACTION_STEP_SOUND_ARROW,
-    WAR_ACTION_STEP_SOUND_LIGHTNING,
-};
-
-enum _WarUnbreakableParam
-{
-    WAR_UNBREAKABLE_BEGIN,
-    WAR_UNBREAKABLE_END,
-};
-
 struct _WarUnitActionStep
 {
     WarUnitActionStepType type;
@@ -43,28 +20,6 @@ shlDeclareList(WarUnitActionStepList, WarUnitActionStep)
 shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 
 #define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, equalsActionStep, NULL}
-
-enum _WarUnitActionType
-{
-    WAR_ACTION_TYPE_NONE = -1,
-
-    WAR_ACTION_TYPE_IDLE,
-    WAR_ACTION_TYPE_WALK,
-    WAR_ACTION_TYPE_ATTACK,
-    WAR_ACTION_TYPE_DEATH,
-    WAR_ACTION_TYPE_HARVEST,
-    WAR_ACTION_TYPE_REPAIR,
-    WAR_ACTION_TYPE_BUILD,
-
-    WAR_ACTION_TYPE_COUNT
-};
-
-enum _WarUnitActionStatus
-{
-    WAR_ACTION_NOT_STARTED,
-    WAR_ACTION_RUNNING,
-    WAR_ACTION_FINISHED,
-};
 
 struct _WarUnitActionDef
 {

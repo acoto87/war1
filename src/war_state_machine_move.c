@@ -254,6 +254,8 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
 
 void wst_freeMoveState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
+
     vec2ListFree(&state->move.positions);
     wpath_freePath(state->move.path);
 }

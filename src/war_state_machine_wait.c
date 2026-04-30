@@ -46,5 +46,6 @@ void wst_updateWaitState(WarContext* context, WarEntity* entity, WarState* state
 
 void wst_freeWaitState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

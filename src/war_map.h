@@ -6,20 +6,6 @@
 #include "war_entities.h"
 #include "war_resources.h"
 
-enum _WarMapTilesetType
-{
-    MAP_TILESET_FOREST,
-    MAP_TILESET_SWAMP,
-    MAP_TILESET_DUNGEON
-};
-
-enum _WarMapTileState
-{
-    MAP_TILE_STATE_UNKOWN = 1,
-    MAP_TILE_STATE_FOG = 2,
-    MAP_TILE_STATE_VISIBLE = 4
-};
-
 struct _WarMapTile
 {
     WarMapTileState state;
@@ -67,15 +53,6 @@ struct _WarPlayerInfo
 
 #define imageResourceRefFromPlayer(player, hIdx, oIdx) imageResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx))
 #define spriteResourceRefFromPlayer(player, hIdx, oIdx, spriteIndex) createSpriteResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx), 1, arrayArg(s32, (spriteIndex)))
-
-enum _WarMapSpeed
-{
-    WAR_SPEED_SLOWEST,
-    WAR_SPEED_SLOW,
-    WAR_SPEED_NORMAL,
-    WAR_SPEED_FASTER,
-    WAR_SPEED_FASTEST
-};
 
 struct _WarMapSettings
 {

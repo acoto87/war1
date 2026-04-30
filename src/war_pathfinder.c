@@ -343,6 +343,8 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
 
 WarPathFinder wpath_initPathFinder(WarContext* context, PathFindingType type, s32 width, s32 height, u16 data[])
 {
+    NOT_USED(context);
+
     WarPathFinder finder = (WarPathFinder){0};
     finder.type = type;
     finder.width = width;

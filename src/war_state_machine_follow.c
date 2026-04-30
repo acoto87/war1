@@ -88,5 +88,6 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
 
 void wst_freeFollowState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

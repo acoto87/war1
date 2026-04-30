@@ -145,5 +145,6 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
 void wst_freeBuildState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

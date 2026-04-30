@@ -54,6 +54,7 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
 
 void wst_freeRepairState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }
 

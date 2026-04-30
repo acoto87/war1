@@ -199,6 +199,8 @@ WarSpriteFrame wspr_getSpriteFrame(WarContext* context, WarSprite sprite, s32 fr
 
 void wspr_freeSprite(WarContext* context, WarSprite sprite)
 {
+    NOT_USED(context);
+
     if (!sprite.texture)
     {
         logWarning("Trying to free a sprite with no texture");

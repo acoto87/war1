@@ -96,6 +96,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
 void wst_freeDeliverState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }
 

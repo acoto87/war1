@@ -1,42 +1,11 @@
 ﻿#pragma once
 
 #include "war_math.h"
+#include "war_fwd.h"
 
 #define STATUS_TEXT_MAX_LENGTH 40
 #define CHEAT_TEXT_MAX_LENGTH 32
 #define CHEAT_FEEDBACK_TEXT_MAX_LENGTH 50
-
-enum _WarCheat
-{
-    WAR_CHEAT_NONE,
-
-    // original cheats
-    WAR_CHEAT_GOLD,
-    WAR_CHEAT_SPELLS,
-    WAR_CHEAT_UPGRADES,
-    WAR_CHEAT_END,
-    WAR_CHEAT_ENABLE,
-    WAR_CHEAT_GOD_MODE,
-    WAR_CHEAT_WIN,
-    WAR_CHEAT_LOSS,
-    WAR_CHEAT_FOG,
-    WAR_CHEAT_SKIP_HUMAN,
-    WAR_CHEAT_SKIP_ORC,
-    WAR_CHEAT_SPEED,
-
-    // custom cheats
-    WAR_CHEAT_MUSIC,
-    WAR_CHEAT_SOUND,
-    WAR_CHEAT_MUSIC_VOL,
-    WAR_CHEAT_SOUND_VOL,
-    WAR_CHEAT_GLOBAL_SCALE,
-    WAR_CHEAT_GLOBAL_SPEED,
-    WAR_CHEAT_EDIT,
-    WAR_CHEAT_ADD_UNIT,
-    WAR_CHEAT_RAIN_OF_FIRE,
-
-    WAR_CHEAT_COUNT
-};
 
 struct _WarFlashStatus
 {
@@ -63,15 +32,13 @@ struct _WarCheatStatus
 
 #define CHEAT_FEEDBACK_WASCALLY_WABBIT "cheat enabled you wascally wabbit"
 
-typedef void (*WarCheatFunc)(WarContext* context, StringView argument);
-
-typedef struct
+struct _WarCheatDescriptor
 {
     WarCheat cheat;
     char text[CHEAT_TEXT_MAX_LENGTH];
     bool argument;
     WarCheatFunc cheatFunc;
-} WarCheatDescriptor;
+};
 
 void wcheat_applyCheat(WarContext* context, StringView text);
 

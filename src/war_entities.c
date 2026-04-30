@@ -908,6 +908,8 @@ bool we_isStaticEntity(WarEntity* entity)
 
 void we_initEntityManager(WarContext* context, WarEntityManager* manager)
 {
+    NOT_USED(context);
+
     manager->staticEntityId = 0;
 
     // initialize entities list

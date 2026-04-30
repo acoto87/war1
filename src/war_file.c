@@ -4,6 +4,8 @@
 
 WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
 {
+    NOT_USED(context);
+
     SDL_IOStream *stream = SDL_IOFromFile(wsv_data(filePath), "rb");
     if (!stream)
     {

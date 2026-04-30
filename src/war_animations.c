@@ -14,6 +14,8 @@ shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
 
 WarSpriteAnimation* wanim_createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop)
 {
+    NOT_USED(context);
+
     WarSpriteAnimation* anim = (WarSpriteAnimation*)wm_alloc(sizeof(WarSpriteAnimation));
 
     anim->name = name;

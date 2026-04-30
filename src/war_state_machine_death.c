@@ -56,5 +56,6 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
 
 void wst_freeDeathState(WarContext* context, WarState* state)
 {
+    NOT_USED(context);
     NOT_USED(state);
 }

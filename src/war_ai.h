@@ -4,24 +4,6 @@
 
 #include "war_units.h"
 
-enum _WarAICommandStatus
-{
-    WAR_AI_COMMAND_STATUS_CREATED,
-    WAR_AI_COMMAND_STATUS_STARTED,
-    WAR_AI_COMMAND_STATUS_COMPLETED,
-};
-
-enum _WarAICommandType
-{
-    WAR_AI_COMMAND_REQUEST,
-    WAR_AI_COMMAND_WAIT,
-    WAR_AI_COMMAND_ATTACK,
-    WAR_AI_COMMAND_DEFEND,
-    WAR_AI_COMMAND_SLEEP,
-
-    WAR_AI_COMMAND_COUNT
-};
-
 struct _WarAICommand
 {
     u32 id;

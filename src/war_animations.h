@@ -3,13 +3,6 @@
 #include "common.h"
 #include "war_sprites.h"
 
-enum _WarAnimationStatus
-{
-    WAR_ANIM_STATUS_NOT_STARTED,
-    WAR_ANIM_STATUS_RUNNING,
-    WAR_ANIM_STATUS_FINISHED
-};
-
 struct _WarSpriteAnimation
 {
     String name;

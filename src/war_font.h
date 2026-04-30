@@ -20,31 +20,6 @@ struct _WarFontData
     rect data[95];
 };
 
-enum _WarTextAlignment
-{
-    WAR_TEXT_ALIGN_LEFT,
-    WAR_TEXT_ALIGN_CENTER,
-    WAR_TEXT_ALIGN_RIGHT,
-    WAR_TEXT_ALIGN_TOP,
-    WAR_TEXT_ALIGN_MIDDLE,
-    WAR_TEXT_ALIGN_BOTTOM,
-
-    WAR_TEXT_ALIGN_COUNT
-};
-
-enum _WarTextWrapping
-{
-    WAR_TEXT_WRAP_NONE,
-    WAR_TEXT_WRAP_CHAR
-};
-
-enum _WarTextTrimming
-{
-    WAR_TEXT_TRIM_NONE,
-    WAR_TEXT_TRIM_SPACES,
-    WAR_TEXT_TRIM_ALL
-};
-
 typedef struct
 {
     s32 fontIndex;
