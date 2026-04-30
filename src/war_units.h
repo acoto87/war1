@@ -652,41 +652,23 @@ struct _WarUnitCommandData
 };
 
 WarUnitData wu_getUnitData(WarUnitType type);
-
 WarWorkerData wu_getWorkerData(WarUnitType type);
-
 WarBuildingData wu_getBuildingData(WarUnitType type);
-
 WarRoadData wu_getRoadData(WarRoadPieceType type);
-
 WarWallData wu_getWallData(WarWallPieceType type);
-
 WarRuinData wu_getRuinData(WarRuinPieceType type);
-
 WarTreeData wu_getTreeData(WarTreeTileType type);
-
 WarUpgradeData wu_getUpgradeData(WarUpgradeType type);
-
 WarSpellData wu_getSpellData(WarSpellType type);
-
 WarUnitStats wu_getUnitStats(WarUnitType type);
-
 WarBuildingStats wu_getBuildingStats(WarUnitType type);
-
 WarUpgradeStats wu_getUpgradeStats(WarUpgradeType type);
-
 WarSpellStats wu_getSpellStats(WarSpellType type);
-
 WarSpellMapping wu_getSpellMapping(WarSpellType type);
-
 WarUnitCommandBaseData wu_getCommandBaseData(WarUnitCommandType type);
-
 WarUnitCommandMapping wu_getCommandMapping(WarUnitCommandType type);
-
 WarUnitCommandMapping wu_getCommandMappingFromUnitType(WarUnitType unitType);
-
 WarUnitCommandMapping wu_getCommandMappingFromUpgradeType(WarUpgradeType upgradeType);
-
 WarUnitCommandMapping wu_getCommandMappingFromSpellType(WarSpellType spellType);
 
 #define isUnit(entity) ((entity)->type == WAR_ENTITY_TYPE_UNIT)
@@ -696,33 +678,19 @@ WarUnitCommandMapping wu_getCommandMappingFromSpellType(WarSpellType spellType);
 #define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
 
 bool wu_isDudeUnitType(WarUnitType type);
-
 bool wu_isBuildingUnitType(WarUnitType type);
-
 bool wu_isWorkerUnitType(WarUnitType type);
-
 bool wu_isWarriorUnitType(WarUnitType type);
-
 bool wu_isRangeUnitType(WarUnitType type);
-
 bool wu_isMeleeUnitType(WarUnitType type);
-
 bool wu_isFistUnitType(WarUnitType type);
-
 bool wu_isSwordUnitType(WarUnitType type);
-
 bool wu_isMagicUnitType(WarUnitType type);
-
 bool wu_isCorpseUnitType(WarUnitType type);
-
 bool wu_isCatapultUnitType(WarUnitType type);
-
 bool wu_isConjurerOrWarlockUnitType(WarUnitType type);
-
 bool wu_isClericOrNecrolyteUnitType(WarUnitType type);
-
 bool wu_isSummonUnitType(WarUnitType type);
-
 
 // Entity-level unit-type queries (bodies defined in war_entities.h after WarEntity is complete)
 bool wu_isDudeUnit(WarEntity* entity);
