@@ -207,7 +207,7 @@ s32 wnet_readResponse(WarSocket sck, char responseBuffer[], s32 responseBufferLe
 
     do
     {
-        size32 sizeToRead = min(RESPONSE_READ_SIZE, responseBufferLength - responseLength);
+        size32 sizeToRead = MIN(RESPONSE_READ_SIZE, responseBufferLength - responseLength);
         if (sizeToRead <= 0)
             break;
 
@@ -408,7 +408,7 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
                 break;
             }
 
-            s32 sizeToWrite = min(chunkSize, responseLength);
+            s32 sizeToWrite = MIN(chunkSize, responseLength);
             SDL_WriteIO(stream, responsePtr, sizeToWrite);
 
             responsePtr += sizeToWrite + 2;

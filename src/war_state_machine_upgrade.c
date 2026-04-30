@@ -84,7 +84,7 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
         return;
     }
 
-    unit->buildPercent = percentabf01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
+    unit->buildPercent = PERCENTF01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
 }
 
 void wst_freeUpgradeState(WarContext* context, WarState* state)

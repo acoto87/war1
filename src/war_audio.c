@@ -196,7 +196,7 @@ bool wa_playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* o
     while (sampleCount)
     {
         //We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
-        u32 sampleBlock = min(TSF_RENDER_EFFECTSAMPLEBLOCK, sampleCount);
+        u32 sampleBlock = MIN(TSF_RENDER_EFFECTSAMPLEBLOCK, sampleCount);
         audio->playbackTime += sampleBlock * (1000.0f / PLAYBACK_FREQ);
 
         //Loop through all MIDI messages which need to be played up until the current playback time
@@ -302,7 +302,7 @@ bool wa_playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* o
 
         u8* waveData = &resource->audio.data[audio->sampleIndex];
 
-        u32 sampleBlock = min(sampleCount, (u32)(waveLength - audio->sampleIndex));
+        u32 sampleBlock = MIN(sampleCount, (u32)(waveLength - audio->sampleIndex));
         for (u32 i = 0; i < sampleBlock; i++)
         {
             s32 value = *waveData;
@@ -310,7 +310,7 @@ bool wa_playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* o
             value = value << 8;
             value = (s32)(value * volume);
             value += *outputStream;
-            value = clamp(value, INT16_MIN, INT16_MAX);
+            value = CLAMP(value, INT16_MIN, INT16_MAX);
             *outputStream = (s16)value;
 
             waveData++;
@@ -409,10 +409,10 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                             vec2 position = transform->position;
 
                             rect viewport = map->viewport;
-                            if (!rectContainsf(viewport, position.x, position.y))
+                            if (!rect_containsf(viewport, position.x, position.y))
                             {
-                                vec2 viewportCenter = rectCenter(viewport);
-                                f32 distance = vec2Distance(position, viewportCenter);
+                                vec2 viewportCenter = rect_center(viewport);
+                                f32 distance = vec2_distance(position, viewportCenter);
 
                                 // approximately the distances from the center of the viewport
                                 // begin at 120 pixels, I'm going to set an audible range of 120-200
@@ -422,7 +422,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                                 // > 120 && < 200   ->  interpolate range 120-200 to range 0.75-0
                                 // >= 200           ->  0
                                 volume = 0.75f * (1 - ((distance - 120) / 80));
-                                volume = max(volume, 0);
+                                volume = MAX(volume, 0);
                             }
                         }
 
@@ -662,7 +662,7 @@ WarEntity* wa_playBuildingSelectionSound(WarContext* context, WarEntity* entity)
     if (isBuilding(entity) || isGoingToBuild(entity))
         return wa_createAudio(context, WAR_BUILDING, false);
 
-    s32 hpPercent = percentabi(entity->unit.hp, entity->unit.maxhp);
+    s32 hpPercent = PERCENTABI(entity->unit.hp, entity->unit.maxhp);
     if(hpPercent <= 33)
         return wa_createAudio(context, WAR_FIRE_CRACKLING, false);
 

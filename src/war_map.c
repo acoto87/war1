@@ -58,7 +58,7 @@ vec2 wmap_getDirFromArrowKeys(WarContext* context)
     else if (isKeyPressed(input, WAR_KEY_UP))
         dir.y = -1;
 
-    dir = vec2Normalize(dir);
+    dir = vec2_normalize(dir);
     return dir;
 }
 
@@ -78,7 +78,7 @@ vec2 wmap_getDirFromMousePos(WarContext* context)
     else if (input->pos.y > context->originalWindowHeight - MAP_EDGE_SCROLL_GAP)
         dir.y = 1;
 
-    dir = vec2Normalize(dir);
+    dir = vec2_normalize(dir);
     return dir;
 }
 
@@ -89,8 +89,8 @@ vec2 wmap_screenToMapCoordinatesV(WarContext* context, vec2 v)
     rect mapPanel = map->mapPanel;
     rect viewport = map->viewport;
 
-    v = vec2Translatef(v, -mapPanel.x, -mapPanel.y);
-    v = vec2Translatef(v, viewport.x, viewport.y);
+    v = vec2_translatef(v, -mapPanel.x, -mapPanel.y);
+    v = vec2_translatef(v, viewport.x, viewport.y);
     return v;
 }
 
@@ -100,7 +100,7 @@ vec2 wmap_screenToMinimapCoordinatesV(WarContext* context, vec2 v)
 
     rect minimapPanel = map->minimapPanel;
 
-    v = vec2Translatef(v, -minimapPanel.x, -minimapPanel.y);
+    v = vec2_translatef(v, -minimapPanel.x, -minimapPanel.y);
     return v;
 }
 
@@ -111,8 +111,8 @@ rect wmap_screenToMapCoordinatesR(WarContext* context, rect r)
     rect mapPanel = map->mapPanel;
     rect viewport = map->viewport;
 
-    r = rectTranslatef(r, -mapPanel.x, -mapPanel.y);
-    r = rectTranslatef(r, viewport.x, viewport.y);
+    r = rect_translatef(r, -mapPanel.x, -mapPanel.y);
+    r = rect_translatef(r, viewport.x, viewport.y);
     return r;
 }
 
@@ -120,8 +120,8 @@ vec2 wmap_mapToScreenCoordinatesV(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
 
-    v = vec2Translatef(v, -map->viewport.x, -map->viewport.y);
-    v = vec2Translatef(v, map->mapPanel.x, map->mapPanel.y);
+    v = vec2_translatef(v, -map->viewport.x, -map->viewport.y);
+    v = vec2_translatef(v, map->mapPanel.x, map->mapPanel.y);
     return v;
 }
 
@@ -129,8 +129,8 @@ rect wmap_mapToScreenCoordinatesR(WarContext* context, rect r)
 {
     WarMap* map = context->map;
 
-    r = rectTranslatef(r, -map->viewport.x, -map->viewport.y);
-    r = rectTranslatef(r, map->mapPanel.x, map->mapPanel.y);
+    r = rect_translatef(r, -map->viewport.x, -map->viewport.y);
+    r = rect_translatef(r, map->mapPanel.x, map->mapPanel.y);
     return r;
 }
 
@@ -148,8 +148,8 @@ vec2 wmap_tileToMapCoordinatesV(vec2 v, bool centeredInTile)
 
     if (centeredInTile)
     {
-        v.x += halfi(MEGA_TILE_WIDTH);
-        v.y += halfi(MEGA_TILE_HEIGHT);
+        v.x += MEGA_TILE_WIDTH/2;
+        v.y += MEGA_TILE_HEIGHT/2;
     }
 
     return v;
@@ -164,8 +164,8 @@ vec2 wmap_minimapToViewportCoordinatesV(WarContext* context, vec2 v)
 
     vec2 minimapViewportSize = vec2f(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
 
-    v = vec2Translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
-    v = vec2Clampv(v, VEC2_ZERO, vec2Subv(minimapPanelSize, minimapViewportSize));
+    v = vec2_translatef(v, -minimapViewportSize.x / 2, -minimapViewportSize.y / 2);
+    v = vec2_clampv(v, VEC2_ZERO, vec2_subv(minimapPanelSize, minimapViewportSize));
     return v;
 }
 
@@ -215,7 +215,7 @@ void wmap_setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState ti
     vec2 position = wu_getUnitPosition(entity, true);
     vec2 unitSize = wu_getUnitSize(entity);
     rect unitRect = rectv(position, unitSize);
-    unitRect = rectExpand(unitRect, (f32)sight, (f32)sight);
+    unitRect = rect_expand(unitRect, (f32)sight, (f32)sight);
 
     wmap_setMapTileState(map, (s32)unitRect.x, (s32)unitRect.y, (s32)unitRect.width, (s32)unitRect.height, tileState);
 }
@@ -876,7 +876,7 @@ void updateViewport(WarContext *context)
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
         // check if the click is inside the minimap panel
-        if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
         {
             vec2 minimapSize = vec2i(MINIMAP_WIDTH, MINIMAP_HEIGHT);
             vec2 offset = wmap_screenToMinimapCoordinatesV(context, input->pos);
@@ -906,7 +906,7 @@ void updateViewport(WarContext *context)
         }
     }
 
-    map->isScrolling = !vec2IsZero(dir);
+    map->isScrolling = !VEC2_IS_ZERO(dir);
     if (map->isScrolling)
     {
         assert(mouseScroll || keyScroll);
@@ -918,10 +918,10 @@ void updateViewport(WarContext *context)
             scrollSpeed = getMapScrollSpeed(map->settings.keyScrollSpeed);
 
         map->viewport.x += scrollSpeed * dir.x * context->deltaTime;
-        map->viewport.x = clamp(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
+        map->viewport.x = CLAMP(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
 
         map->viewport.y += scrollSpeed * dir.y * context->deltaTime;
-        map->viewport.y = clamp(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
+        map->viewport.y = CLAMP(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
     }
     else
     {
@@ -946,7 +946,7 @@ void updateDragRect(WarContext* context)
 
     if (isButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if(rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             if (!input->isDragging)
             {
@@ -977,7 +977,7 @@ void updateSelection(WarContext* context)
         if (!map->wasScrolling)
         {
             // check if the click is inside the map panel
-            if(input->wasDragging || rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+            if(input->wasDragging || rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
             {
                 WarEntityList newSelectedEntities;
                 WarEntityListInit(&newSelectedEntities, WarEntityListNonFreeOptions);
@@ -1019,7 +1019,7 @@ void updateSelection(WarContext* context)
                             }
 
                             rect unitRect = wu_getUnitRect(entity);
-                            if (rectIntersects(pointerRect, unitRect))
+                            if (rect_intersects(pointerRect, unitRect))
                             {
                                 WarEntityListAdd(&newSelectedEntities, entity);
                             }
@@ -1113,7 +1113,7 @@ void updateSelection(WarContext* context)
                 wmap_clearSelection(context);
 
                 // and add the new selection
-                s32 selectedEntitiesCount = min(newSelectedEntities.count, 4);
+                s32 selectedEntitiesCount = MIN(newSelectedEntities.count, 4);
                 for (s32 i = 0; i < selectedEntitiesCount; i++)
                 {
                     WarEntity* entity = newSelectedEntities.items[i];
@@ -1136,7 +1136,7 @@ void updateTreesEdit(WarContext* context)
 
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1176,7 +1176,7 @@ void updateRoadsEdit(WarContext* context)
 
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1211,7 +1211,7 @@ void updateWallsEdit(WarContext* context)
 
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1251,7 +1251,7 @@ void updateRuinsEdit(WarContext* context)
 
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1286,7 +1286,7 @@ void updateRainOfFireEdit(WarContext* context)
 
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             rect viewport = map->viewport;
 
@@ -1309,7 +1309,7 @@ void updateAddUnit(WarContext* context)
 
     if (wasButtonPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1460,7 +1460,7 @@ void updateCommandFromRightClick(WarContext* context)
             if (selEntitiesCount > 0)
             {
                 // if the right click was on the map
-                if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+                if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1539,7 +1539,7 @@ void updateCommandFromRightClick(WarContext* context)
                     }
                 }
                 // if the right click was on the minimap
-                else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 offset = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     vec2 targetPoint = wmap_tileToMapCoordinatesV(offset, true);
@@ -1796,7 +1796,7 @@ void updateMapCursor(WarContext* context)
     WarEntity* entity = we_findUIEntity(context, wsv_fromCString("cursor"));
     if (entity)
     {
-        entity->transform.position = vec2Subv(input->pos, entity->cursor.hot);
+        entity->transform.position = vec2_subv(input->pos, entity->cursor.hot);
 
         if (!map->playing)
         {
@@ -1810,7 +1810,7 @@ void updateMapCursor(WarContext* context)
             return;
         }
 
-        if (rectContainsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
             WarUnitCommand* command = &map->command;
             switch (command->type)
@@ -1941,7 +1941,7 @@ void updateMapCursor(WarContext* context)
                 }
             }
         }
-        else if (rectContainsf(map->minimapPanel, input->pos.x, input->pos.y))
+        else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
         {
             WarUnitCommand* command = &map->command;
             switch (command->type)
@@ -2054,7 +2054,7 @@ void updateMagic(WarContext* context)
             {
                 if (wu_isSummonUnit(entity))
                 {
-                    unit->mana = max(unit->mana - 1, 0);
+                    unit->mana = MAX(unit->mana - 1, 0);
 
                     // when the mana runs out the summoned units will die
                     if (unit->mana == 0)
@@ -2075,7 +2075,7 @@ void updateMagic(WarContext* context)
                 {
                     // the magic units have a mana regeneration rate of roughly 1 point/sec
                     // so a magic unit will spend almost 4 minutes to fill its mana when its rans out
-                    unit->mana = min(unit->mana + 1, unit->maxMana);
+                    unit->mana = MIN(unit->mana + 1, unit->maxMana);
                 }
 
                 unit->manaTime = 1.0f;
@@ -2216,7 +2216,7 @@ void updateFoW(WarContext* context)
         {
             WarSightComponent* sight = &entity->sight;
 
-            rect r = rectExpand(rectv(sight->position, VEC2_ONE), 3, 3);
+            rect r = rect_expand(rectv(sight->position, VEC2_ONE), 3, 3);
             wmap_setMapTileState(map, (s32)r.x, (s32)r.y, (s32)r.width, (s32)r.height, MAP_TILE_STATE_VISIBLE);
         }
     }
@@ -2680,7 +2680,7 @@ void renderUnitPaths(WarContext* context)
                 for(s32 k = moveState->move.positionIndex; k < positions.count; k++)
                 {
                     vec2 pos = wmap_tileToMapCoordinatesV(positions.items[k], true);
-                    pos = vec2Subv(pos, vec2i(2, 2));
+                    pos = vec2_subv(pos, vec2i(2, 2));
                     wr_fillRect(context, rectv(pos, vec2i(4, 4)), wr_getColorFromList(entity->id));
                 }
 

@@ -405,7 +405,7 @@ void wcheat_applyMusicVolCheat(WarContext* context, StringView argument)
     s32 musicVol;
     if (wsv_tryParseS32(argument, &musicVol))
     {
-        musicVol = clamp(musicVol, 0, 100);
+        musicVol = CLAMP(musicVol, 0, 100);
 
         // round the argument to a value multiple of 5
         switch (musicVol % 5)
@@ -437,7 +437,7 @@ void wcheat_applySoundVolCheat(WarContext* context, StringView argument)
     s32 sfxVol;
     if (wsv_tryParseS32(argument, &sfxVol))
     {
-        sfxVol = clamp(sfxVol, 0, 100);
+        sfxVol = CLAMP(sfxVol, 0, 100);
 
         // round the argument to a value multiple of 5
         switch (sfxVol % 5)
@@ -469,7 +469,7 @@ void wcheat_applyGlobalScaleCheat(WarContext* context, StringView argument)
     s32 scale;
     if (wsv_tryParseS32(argument, &scale))
     {
-        scale = clamp(scale, 1, 5);
+        scale = CLAMP(scale, 1, 5);
         wg_setGlobalScale(context, (f32)scale);
         wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Global scale set to %d", scale));
     }
@@ -483,7 +483,7 @@ void wcheat_applyGlobalSpeedCheat(WarContext* context, StringView argument)
     s32 speed;
     if (wsv_tryParseS32(argument, &speed))
     {
-        speed = clamp(speed, 1, 5);
+        speed = CLAMP(speed, 1, 5);
         wg_setGlobalSpeed(context, (f32)speed);
         wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Global speed set to %d", speed));
     }

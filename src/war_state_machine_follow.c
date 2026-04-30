@@ -49,7 +49,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         }
     }
 
-    f32 distance = vec2DistanceInTiles(start, end);
+    f32 distance = vec2_distanceInTiles(start, end);
 
     // if the unit is already in distance, go to idle
     if (distance <= state->follow.distance)

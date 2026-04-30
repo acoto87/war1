@@ -80,10 +80,10 @@ void we_addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *constru
     u8 player = construct->player;
 
     s32 dx = x2 - x1;
-    dx = sign(dx);
+    dx = SIGN(dx);
 
     s32 dy = y2 - y1;
-    dy = sign(dy);
+    dy = SIGN(dy);
 
     s32 x = x1;
     s32 y = y1;

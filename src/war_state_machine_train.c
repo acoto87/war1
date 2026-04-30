@@ -92,7 +92,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         return;
     }
 
-    unit->buildPercent = percentabf01(state->train.buildTime, state->train.totalBuildTime);
+    unit->buildPercent = PERCENTF01(state->train.buildTime, state->train.totalBuildTime);
 }
 
 void wst_freeTrainState(WarContext* context, WarState* state)

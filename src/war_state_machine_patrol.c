@@ -42,7 +42,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     vec2 actualPosition = wmap_mapToTileCoordinatesV(entity->transform.position);
     vec2 shouldBeAt = positions.items[positions.count - 1];
 
-    f32 distance = vec2Distance(actualPosition, shouldBeAt);
+    f32 distance = vec2_distance(actualPosition, shouldBeAt);
     if (distance >= MOVE_EPSILON)
     {
         WarState* idleState = wst_createIdleState(context, entity, true);

@@ -4,6 +4,14 @@
 #include "war_units.h"
 #include "war_database.h"
 
+#define WAR_BUILDING_DAMAGE_1_RESOURCE 352
+#define WAR_BUILDING_DAMAGE_2_RESOURCE 353
+#define WAR_BUILDING_COLLAPSE_RESOURCE 356
+#define WAR_EXPLOSION_RESOURCE 354
+#define WAR_RAIN_OF_FIRE_EXPLOSION_RESOURCE 351
+#define WAR_SPELL_RESOURCE 355
+#define WAR_POISON_CLOUD_RESOURCE 350
+
 struct _WarRawResource
 {
     bool placeholder;

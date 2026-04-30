@@ -78,7 +78,7 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
         for(s32 i = 0; i < wall->pieces.count; i++)
         {
             WarWallPiece* piece = &wall->pieces.items[i];
-            s32 hpPercent = percentabi(piece->hp, piece->maxhp);
+            s32 hpPercent = PERCENTABI(piece->hp, piece->maxhp);
             if (hpPercent <= 0)
                 setFreeTiles(map->finder, piece->tilex, piece->tiley, 1, 1);
             else

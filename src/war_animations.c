@@ -2,6 +2,7 @@
 
 #include "war_animations.h"
 #include "war_sprites.h"
+#include "war_resources.h"
 
 #define ANIM_NAME_MAX_LENGTH 50
 
@@ -229,7 +230,7 @@ WarSpriteAnimation* wanim_createDamageAnimation(WarContext* context, WarEntity* 
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(resourceIndex);
     WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = wanim_createAnimation(context, name, sprite, 0.2f, true);
-    anim->offset = vec2Subv(wu_getUnitSpriteCenter(entity), vec2i(halfi(sprite.frameWidth), sprite.frameHeight));
+    anim->offset = vec2_subv(wu_getUnitSpriteCenter(entity), vec2i(sprite.frameWidth/2, sprite.frameHeight));
 
     for(s32 i = 0; i < 4; i++)
         wanim_addAnimationFrame(anim, i);
@@ -255,8 +256,8 @@ WarSpriteAnimation* wanim_createCollapseAnimation(WarContext* context, WarEntity
 
     // if the offset is based on the size of the frame, and it's scaled, then the offset must take into
     // account the scale to make the calculations
-    f32 offsetx = halff(unitFrameSize.x - unitSpriteSize.x);
-    f32 offsety = halff(unitFrameSize.y - unitSpriteSize.y) - (animFrameSize.y * animScale - unitSpriteSize.y);
+    f32 offsetx = 0.5f * (unitFrameSize.x - unitSpriteSize.x);
+    f32 offsety = 0.5f * (unitFrameSize.y - unitSpriteSize.y) - (animFrameSize.y * animScale - unitSpriteSize.y);
 
     anim->scale = vec2f(animScale, animScale);
     anim->offset = vec2f(offsetx, offsety);
@@ -278,8 +279,8 @@ WarSpriteAnimation* wanim_createExplosionAnimation(WarContext* context, WarEntit
     wstr_appendFormat(&name, "explosion_%.2f_%.2f", position.x, position.y);
     WarSpriteAnimation* anim = wanim_createAnimation(context, name, sprite, 0.1f, false);
 
-    f32 offsetx = position.x - halff(sprite.frameWidth);
-    f32 offsety = position.y - halff(sprite.frameHeight);
+    f32 offsetx = position.x - 0.5f * sprite.frameWidth;
+    f32 offsety = position.y - 0.5f * sprite.frameHeight;
     anim->offset = vec2f(offsetx, offsety);
 
     for(s32 i = 0; i < 6; i++)
@@ -299,8 +300,8 @@ WarSpriteAnimation* wanim_createRainOfFireExplosionAnimation(WarContext* context
     wstr_appendFormat(&name, "explosion_%.2f_%.2f", position.x, position.y);
     WarSpriteAnimation* anim = wanim_createAnimation(context, name, sprite, 0.1f, false);
 
-    f32 offsetx = position.x - halff(sprite.frameWidth);
-    f32 offsety = position.y - halff(sprite.frameHeight);
+    f32 offsetx = position.x - 0.5f * sprite.frameWidth;
+    f32 offsety = position.y - 0.5f * sprite.frameHeight;
     anim->offset = vec2f(offsetx, offsety);
 
     for(s32 i = 3; i < 6; i++)
@@ -320,8 +321,8 @@ WarSpriteAnimation* wanim_createSpellAnimation(WarContext* context, WarEntity* e
     wstr_appendFormat(&name, "spell_%.2f_%.2f", position.x, position.y);
     WarSpriteAnimation* anim = wanim_createAnimation(context, name, sprite, 0.4f, false);
 
-    f32 offsetx = position.x - halff(sprite.frameWidth);
-    f32 offsety = position.y - halff(sprite.frameHeight);
+    f32 offsetx = position.x - 0.5f * sprite.frameWidth;
+    f32 offsety = position.y - 0.5f * sprite.frameHeight;
     anim->offset = vec2f(offsetx, offsety);
 
     for(s32 i = 0; i < 6; i++)
@@ -341,8 +342,8 @@ WarSpriteAnimation* wanim_createPoisonCloudAnimation(WarContext* context, WarEnt
     wstr_appendFormat(&name, "poison_cloud_%.2f_%.2f", position.x, position.y);
     WarSpriteAnimation* anim = wanim_createAnimation(context, name, sprite, 0.5f, true);
 
-    f32 offsetx = position.x - halff(sprite.frameWidth);
-    f32 offsety = position.y - halff(sprite.frameHeight);
+    f32 offsetx = position.x - 0.5f * sprite.frameWidth;
+    f32 offsety = position.y - 0.5f * sprite.frameHeight;
     anim->offset = vec2f(offsetx, offsety);
 
     for(s32 i = 0; i < 4; i++)

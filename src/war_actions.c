@@ -1164,18 +1164,18 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
                     // super complicated math here:
                     //
                     // d               d
-                    // N:  4 - abs(4 - 0) = 4 - 4 = 0
-                    // NE: 4 - abs(4 - 1) = 4 - 3 = 1
-                    // E:  4 - abs(4 - 2) = 4 - 2 = 2
-                    // SW: 4 - abs(4 - 3) = 4 - 1 = 3
-                    // S:  4 - abs(4 - 4) = 4 - 0 = 4
-                    // SW: 4 - abs(4 - 5) = 4 - 1 = 3
-                    // W:  4 - abs(4 - 6) = 4 - 2 = 2
-                    // NW: 4 - abs(4 - 7) = 4 - 3 = 1
+                    // N:  4 - ABS(4 - 0) = 4 - 4 = 0
+                    // NE: 4 - ABS(4 - 1) = 4 - 3 = 1
+                    // E:  4 - ABS(4 - 2) = 4 - 2 = 2
+                    // SW: 4 - ABS(4 - 3) = 4 - 1 = 3
+                    // S:  4 - ABS(4 - 4) = 4 - 0 = 4
+                    // SW: 4 - ABS(4 - 5) = 4 - 1 = 3
+                    // W:  4 - ABS(4 - 6) = 4 - 2 = 2
+                    // NW: 4 - ABS(4 - 7) = 4 - 3 = 1
                     //
-                    // ... 4 - abs(4 - d)
+                    // ... 4 - ABS(4 - d)
 
-                    frameIndex += (4 - abs(4 - (s32)unit->direction));
+                    frameIndex += (4 - ABS(4 - (s32)unit->direction));
 
                     transform->scale.x = inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT) ? -1.0f : 1.0f;
                 }

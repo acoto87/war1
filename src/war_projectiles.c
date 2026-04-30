@@ -99,7 +99,7 @@ void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 
             {
                 WarWallPiece* piece = &pieces->items[k];
                 vec2 piecePosition = vec2i(piece->tilex, piece->tiley);
-                if (vec2DistanceInTiles(targetTile, piecePosition) <= splashRadius)
+                if (vec2_distanceInTiles(targetTile, piecePosition) <= splashRadius)
                 {
                     we_meleeWallAttack(context, sourceEntity, targetEntity, piece);
                 }
@@ -137,7 +137,7 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
         {
             WarWallPiece* piece = &pieces->items[k];
             vec2 piecePosition = vec2i(piece->tilex, piece->tiley);
-            if (vec2DistanceInTiles(targetTile, piecePosition) <= splashRadius)
+            if (vec2_distanceInTiles(targetTile, piecePosition) <= splashRadius)
             {
                 we_takeWallDamage(context, targetEntity, piece, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
             }
@@ -156,19 +156,19 @@ bool wproj_updateProjectilePosition(WarContext* context, WarEntity* entity)
     f32 speed = (f32)projectile->speed;
     speed = wmap_getMapScaledSpeed(context, speed);
 
-    vec2 direction = vec2Subv(target, position);
-    f32 directionLength = vec2Length(direction);
+    vec2 direction = vec2_subv(target, position);
+    f32 directionLength = vec2_length(direction);
 
-    vec2 step = vec2Mulf(vec2Normalize(direction), speed * context->deltaTime);
-    f32 stepLength = vec2Length(step);
+    vec2 step = vec2_mulf(vec2_normalize(direction), speed * context->deltaTime);
+    f32 stepLength = vec2_length(step);
 
     if (directionLength < stepLength)
     {
         step = direction;
     }
 
-    vec2 newPosition = vec2Addv(position, step);
-    f32 distance = vec2Distance(newPosition, target);
+    vec2 newPosition = vec2_addv(position, step);
+    f32 distance = vec2_distance(newPosition, target);
 
     transform->position = newPosition;
 
@@ -189,15 +189,15 @@ void wproj_updateProjectileSprite(WarContext* context, WarEntity* entity)
     vec2 origin = projectile->origin;
     vec2 target = projectile->target;
 
-    f32 totalDistance = vec2Distance(origin, target);
+    f32 totalDistance = vec2_distance(origin, target);
 
-    vec2 direction = vec2Subv(target, position);
-    f32 directionLength = vec2Length(direction);
+    vec2 direction = vec2_subv(target, position);
+    f32 directionLength = vec2_length(direction);
 
     f32 travelDistance = totalDistance - directionLength;
-    f32 travelPercent = percentabf(travelDistance, totalDistance);
+    f32 travelPercent = PERCENTABF(travelDistance, totalDistance);
 
-    f32 angle = vec2ClockwiseAngle(VEC2_RIGHT, direction);
+    f32 angle = vec2_angleClockwise(VEC2_RIGHT, direction);
 
     // these are the angles at wich the frame index of the arrow
     // sprite needs to change and also where the x-scale needs to
@@ -212,8 +212,8 @@ void wproj_updateProjectileSprite(WarContext* context, WarEntity* entity)
     // find the current frame index and scale
     for (s32 i = 0; i < arrayLength(controlAngles); i++)
     {
-        if (angle >= controlAngles[i] - halff(45) &&
-            angle < controlAngles[i] + halff(45))
+        if (angle >= controlAngles[i] - 0.5f * 45 &&
+            angle < controlAngles[i] + 0.5f * 45)
         {
             newFrameIndex = frameIndices[i];
             newScale.x *= frameScales[i];
@@ -267,13 +267,13 @@ void wproj_updateRainOfFireProjectileSprite(WarContext* context, WarEntity* enti
     vec2 target = projectile->target;
     s32 frameCount = data.frameCount;
 
-    f32 totalDistance = vec2Distance(origin, target);
+    f32 totalDistance = vec2_distance(origin, target);
 
-    vec2 direction = vec2Subv(target, position);
-    f32 directionLength = vec2Length(direction);
+    vec2 direction = vec2_subv(target, position);
+    f32 directionLength = vec2_length(direction);
 
     f32 travelDistance = totalDistance - directionLength;
-    f32 travelPercent = percentabf(travelDistance, totalDistance);
+    f32 travelPercent = PERCENTABF(travelDistance, totalDistance);
 
     // the new frame index have to be changed for some projectiles
     // based on the travel percent of the projectile

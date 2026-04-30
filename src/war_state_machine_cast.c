@@ -83,7 +83,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     s32 hpToRestore = unit->mana / stats.manaCost;
 
                     // take in reality how much hp needs to be restored
-                    hpToRestore = min(hpToRestore, targetUnit->maxhp - targetUnit->hp);
+                    hpToRestore = MIN(hpToRestore, targetUnit->maxhp - targetUnit->hp);
 
                     // recalculate how much mana the cleric need to spend
                     s32 manaToSpend = hpToRestore * stats.manaCost;
@@ -167,7 +167,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     {
                         f32 offsetx = randomf(-radius, radius);
                         f32 offsety = randomf(-radius, radius);
-                        vec2 target = vec2Addv(targetTilePosition, vec2f(offsetx, offsety));
+                        vec2 target = vec2_addv(targetTilePosition, vec2f(offsetx, offsety));
 
                         offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
                         vec2 origin = vec2f(target.x, map->viewport.y - offsety);
@@ -227,7 +227,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
 
                     if (we_decreaseUnitMana(context, entity, stats.manaCost))
                     {
-                        we_decreaseUnitHp(context, targetEntity, halfi(targetUnit->hp));
+                        we_decreaseUnitHp(context, targetEntity, targetUnit->hp/2);
 
                         targetUnit->invulnerable = true;
                         targetUnit->invulnerabilityTime = stats.time;

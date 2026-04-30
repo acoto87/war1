@@ -13,14 +13,6 @@
 #include "war_log.h"
 #include "war_audio.h"
 
-#define WAR_BUILDING_DAMAGE_1_RESOURCE 352
-#define WAR_BUILDING_DAMAGE_2_RESOURCE 353
-#define WAR_BUILDING_COLLAPSE_RESOURCE 356
-#define WAR_EXPLOSION_RESOURCE 354
-#define WAR_RAIN_OF_FIRE_EXPLOSION_RESOURCE 351
-#define WAR_SPELL_RESOURCE 355
-#define WAR_POISON_CLOUD_RESOURCE 350
-
 #define readu8(arr, index) (arr[index])
 #define reads16(arr, index) (*(s16*)((arr) + (index)))
 #define readu16(arr, index) (*(u16*)((arr) + (index)))

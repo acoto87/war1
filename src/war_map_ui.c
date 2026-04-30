@@ -12,12 +12,12 @@ void wmui_createMapUI(WarContext* context)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    vec2 leftTopPanel = rectTopLeft(map->leftTopPanel);
-    vec2 leftBottomPanel = rectTopLeft(map->leftBottomPanel);
-    vec2 topPanel = rectTopLeft(map->topPanel);
-    vec2 rightPanel = rectTopLeft(map->rightPanel);
-    vec2 bottomPanel = rectTopLeft(map->bottomPanel);
-    vec2 minimapPanel = rectTopLeft(map->minimapPanel);
+    vec2 leftTopPanel = RECT_TOP_LEFT(map->leftTopPanel);
+    vec2 leftBottomPanel = RECT_TOP_LEFT(map->leftBottomPanel);
+    vec2 topPanel = RECT_TOP_LEFT(map->topPanel);
+    vec2 rightPanel = RECT_TOP_LEFT(map->rightPanel);
+    vec2 bottomPanel = RECT_TOP_LEFT(map->bottomPanel);
+    vec2 minimapPanel = RECT_TOP_LEFT(map->minimapPanel);
 
     WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef normalRef = imageResourceRef(364);
@@ -43,86 +43,86 @@ void wmui_createMapUI(WarContext* context)
     wmui_createUIMinimap(context, wstr_fromCString("minimap"), minimapPanel);
 
     // top panel images
-    wui_createUIImage(context, wstr_fromCString("imgGold"), imageResourceRef(406), vec2Addv(topPanel, vec2i(201, 1)));
-    wui_createUIImage(context, wstr_fromCString("imgLumber"), imageResourceRef(407), vec2Addv(topPanel, vec2i(102, 0)));
+    wui_createUIImage(context, wstr_fromCString("imgGold"), imageResourceRef(406), vec2_addv(topPanel, vec2i(201, 1)));
+    wui_createUIImage(context, wstr_fromCString("imgLumber"), imageResourceRef(407), vec2_addv(topPanel, vec2i(102, 0)));
 
     // top panel texts
-    wui_createUIText(context, wstr_fromCString("txtGold"), 0, 6, wstr_make(), vec2Addv(topPanel, vec2i(135, 2)));
-    wui_createUIText(context, wstr_fromCString("txtWood"), 0, 6, wstr_make(), vec2Addv(topPanel, vec2i(24, 2)));
+    wui_createUIText(context, wstr_fromCString("txtGold"), 0, 6, wstr_make(), vec2_addv(topPanel, vec2i(135, 2)));
+    wui_createUIText(context, wstr_fromCString("txtWood"), 0, 6, wstr_make(), vec2_addv(topPanel, vec2i(24, 2)));
 
     // status text
-    wui_createUIText(context, wstr_fromCString("txtStatus"), 0, 6, wstr_make(), vec2Addv(bottomPanel, vec2i(2, 5)));
-    wui_createUIImage(context, wstr_fromCString("imgStatusWood"), imageResourceRef(407), vec2Addv(bottomPanel, vec2i(163, 3)));
-    wui_createUIImage(context, wstr_fromCString("imgStatusGold"), imageResourceRef(406), vec2Addv(bottomPanel, vec2i(200, 5)));
-    wui_createUIText(context, wstr_fromCString("txtStatusWood"), 0, 6, wstr_make(), vec2Addv(bottomPanel, vec2i(179, 5)));
-    wui_createUIText(context, wstr_fromCString("txtStatusGold"), 0, 6, wstr_make(), vec2Addv(bottomPanel, vec2i(218, 5)));
-    wui_createUIRect(context, wstr_fromCString("txtStatusCursor"), vec2Addv(bottomPanel, vec2i(2, 4)), vec2i(1, 7), WAR_COLOR_WHITE);
+    wui_createUIText(context, wstr_fromCString("txtStatus"), 0, 6, wstr_make(), vec2_addv(bottomPanel, vec2i(2, 5)));
+    wui_createUIImage(context, wstr_fromCString("imgStatusWood"), imageResourceRef(407), vec2_addv(bottomPanel, vec2i(163, 3)));
+    wui_createUIImage(context, wstr_fromCString("imgStatusGold"), imageResourceRef(406), vec2_addv(bottomPanel, vec2i(200, 5)));
+    wui_createUIText(context, wstr_fromCString("txtStatusWood"), 0, 6, wstr_make(), vec2_addv(bottomPanel, vec2i(179, 5)));
+    wui_createUIText(context, wstr_fromCString("txtStatusGold"), 0, 6, wstr_make(), vec2_addv(bottomPanel, vec2i(218, 5)));
+    wui_createUIRect(context, wstr_fromCString("txtStatusCursor"), vec2_addv(bottomPanel, vec2i(2, 4)), vec2i(1, 7), WAR_COLOR_WHITE);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), 1, 8, wstr_make(), vec2Addv(bottomPanel, vec2i(15, -20)));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), 1, 8, wstr_make(), vec2_addv(bottomPanel, vec2i(15, -20)));
     setUITextColor(uiEntity, WAR_COLOR_YELLOW);
     setUIEntityStatus(uiEntity, false);
 
     // selected unit(s) info
-    wui_createUIImage(context, wstr_fromCString("imgUnitInfo"), imageResourceRefFromPlayer(player, 360, 359), vec2Addv(leftBottomPanel, vec2i(2, 0)));
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait0"), portraitsRef, vec2Addv(leftBottomPanel, vec2i(6, 4)));
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait1"), portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 1)));
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait2"), portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 1)));
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait3"), portraitsRef, vec2Addv(leftBottomPanel, vec2i(4, 23)));
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait4"), portraitsRef, vec2Addv(leftBottomPanel, vec2i(38, 23)));
-    wui_createUIImage(context, wstr_fromCString("imgUnitInfoLife"), imageResourceRefFromPlayer(player, 360, 359), vec2Addv(leftBottomPanel, vec2i(3, 16)));
-    wui_createUIText(context, wstr_fromCString("txtUnitName"), 0, 6, wstr_make(), vec2Addv(leftBottomPanel, vec2i(6, 26)));
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar0"), vec2Addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), WAR_COLOR_GREEN);
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar1"), vec2Addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), WAR_COLOR_GREEN);
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar2"), vec2Addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), WAR_COLOR_GREEN);
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar3"), vec2Addv(leftBottomPanel, vec2i(4, 39)), vec2i(27, 3), WAR_COLOR_GREEN);
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar4"), vec2Addv(leftBottomPanel, vec2i(38, 39)), vec2i(27, 3), WAR_COLOR_GREEN);
-    wui_createUIRect(context, wstr_fromCString("rectMagicBar"), vec2Addv(leftBottomPanel, vec2i(37, 9)), vec2i(27, 3), WAR_COLOR_GREEN);
-    wui_createUIRect(context, wstr_fromCString("rectPercentBar"), vec2Addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), WAR_COLOR_GREEN);
-    wui_createUIImage(context, wstr_fromCString("rectPercentText"), imageResourceRef(410), vec2Addv(leftBottomPanel, vec2i(15, 37)));
+    wui_createUIImage(context, wstr_fromCString("imgUnitInfo"), imageResourceRefFromPlayer(player, 360, 359), vec2_addv(leftBottomPanel, vec2i(2, 0)));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait0"), portraitsRef, vec2_addv(leftBottomPanel, vec2i(6, 4)));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait1"), portraitsRef, vec2_addv(leftBottomPanel, vec2i(4, 1)));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait2"), portraitsRef, vec2_addv(leftBottomPanel, vec2i(38, 1)));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait3"), portraitsRef, vec2_addv(leftBottomPanel, vec2i(4, 23)));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait4"), portraitsRef, vec2_addv(leftBottomPanel, vec2i(38, 23)));
+    wui_createUIImage(context, wstr_fromCString("imgUnitInfoLife"), imageResourceRefFromPlayer(player, 360, 359), vec2_addv(leftBottomPanel, vec2i(3, 16)));
+    wui_createUIText(context, wstr_fromCString("txtUnitName"), 0, 6, wstr_make(), vec2_addv(leftBottomPanel, vec2i(6, 26)));
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar0"), vec2_addv(leftBottomPanel, vec2i(37, 20)), vec2i(27, 3), WAR_COLOR_GREEN);
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar1"), vec2_addv(leftBottomPanel, vec2i(4, 17)), vec2i(27, 3), WAR_COLOR_GREEN);
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar2"), vec2_addv(leftBottomPanel, vec2i(38, 17)), vec2i(27, 3), WAR_COLOR_GREEN);
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar3"), vec2_addv(leftBottomPanel, vec2i(4, 39)), vec2i(27, 3), WAR_COLOR_GREEN);
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar4"), vec2_addv(leftBottomPanel, vec2i(38, 39)), vec2i(27, 3), WAR_COLOR_GREEN);
+    wui_createUIRect(context, wstr_fromCString("rectMagicBar"), vec2_addv(leftBottomPanel, vec2i(37, 9)), vec2i(27, 3), WAR_COLOR_GREEN);
+    wui_createUIRect(context, wstr_fromCString("rectPercentBar"), vec2_addv(leftBottomPanel, vec2i(4, 37)), vec2i(62, 5), WAR_COLOR_GREEN);
+    wui_createUIImage(context, wstr_fromCString("rectPercentText"), imageResourceRef(410), vec2_addv(leftBottomPanel, vec2i(15, 37)));
 
     // texts in the command area
-    wui_createUIText(context, wstr_fromCString("txtCommand0"), 0, 6, wstr_make(), vec2Addv(leftBottomPanel, vec2i(3, 46)));
-    wui_createUIText(context, wstr_fromCString("txtCommand1"), 0, 6, wstr_make(), vec2Addv(leftBottomPanel, vec2i(3, 56)));
-    wui_createUIText(context, wstr_fromCString("txtCommand2"), 0, 6, wstr_make(), vec2Addv(leftBottomPanel, vec2i(7, 64)));
-    wui_createUIText(context, wstr_fromCString("txtCommand3"), 0, 6, wstr_make(), vec2Addv(leftBottomPanel, vec2i(11, 54)));
+    wui_createUIText(context, wstr_fromCString("txtCommand0"), 0, 6, wstr_make(), vec2_addv(leftBottomPanel, vec2i(3, 46)));
+    wui_createUIText(context, wstr_fromCString("txtCommand1"), 0, 6, wstr_make(), vec2_addv(leftBottomPanel, vec2i(3, 56)));
+    wui_createUIText(context, wstr_fromCString("txtCommand2"), 0, 6, wstr_make(), vec2_addv(leftBottomPanel, vec2i(7, 64)));
+    wui_createUIText(context, wstr_fromCString("txtCommand3"), 0, 6, wstr_make(), vec2_addv(leftBottomPanel, vec2i(11, 54)));
 
     // command buttons
     wui_createUIImageButton(
         context, wstr_fromCString("btnCommand0"),
         normalRef, pressedRef, portraitsRef,
-        vec2Addv(leftBottomPanel, vec2i(2, 44)));
+        vec2_addv(leftBottomPanel, vec2i(2, 44)));
 
     wui_createUIImageButton(
         context, wstr_fromCString("btnCommand1"),
         normalRef, pressedRef, portraitsRef,
-        vec2Addv(leftBottomPanel, vec2i(36, 44)));
+        vec2_addv(leftBottomPanel, vec2i(36, 44)));
 
     wui_createUIImageButton(
         context, wstr_fromCString("btnCommand2"),
         normalRef, pressedRef, portraitsRef,
-        vec2Addv(leftBottomPanel, vec2i(2, 67)));
+        vec2_addv(leftBottomPanel, vec2i(2, 67)));
 
     wui_createUIImageButton(
         context, wstr_fromCString("btnCommand3"),
         normalRef, pressedRef, portraitsRef,
-        vec2Addv(leftBottomPanel, vec2i(36, 67)));
+        vec2_addv(leftBottomPanel, vec2i(36, 67)));
 
     wui_createUIImageButton(
         context, wstr_fromCString("btnCommand4"),
         normalRef, pressedRef, portraitsRef,
-        vec2Addv(leftBottomPanel, vec2i(2, 90)));
+        vec2_addv(leftBottomPanel, vec2i(2, 90)));
 
     wui_createUIImageButton(
         context, wstr_fromCString("btnCommand5"),
         normalRef, pressedRef, portraitsRef,
-        vec2Addv(leftBottomPanel, vec2i(36, 90)));
+        vec2_addv(leftBottomPanel, vec2i(36, 90)));
 
     uiEntity = wui_createUIImageButton(
         context, wstr_fromCString("btnMenu"),
         imageResourceRef(362),
         imageResourceRef(363),
         invalidRef,
-        vec2Addv(leftBottomPanel, vec2i(3, 116)));
+        vec2_addv(leftBottomPanel, vec2i(3, 116)));
     wui_setUITooltip(uiEntity, 6, 3, wstr_fromCString("MENU (F10)"));
     setUIButtonClickHandler(uiEntity, wmm_handleMenu);
     setUIButtonHotKey(uiEntity, WAR_KEY_F10);
@@ -219,7 +219,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     //
     // TODO: the max number of selected entities shouldn't greater than 4 but
     // that's not implemented right now, so put a min call to guard for that.
-    s32 selectedEntitiesCount = min(map->selectedEntities.count, 4);
+    s32 selectedEntitiesCount = MIN(map->selectedEntities.count, 4);
     if (selectedEntitiesCount > 1)
     {
         // for 4 units selected -> frame indices 5, 8
@@ -343,7 +343,7 @@ void wmui_setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
 #define LIFE_BAR_YELLOW_THRESHOLD 0.70f
 #define LIFE_BAR_WIDTH_PX 27
 
-    f32 hpPercent = percentabf01(unit->hp, unit->maxhp);
+    f32 hpPercent = PERCENTF01(unit->hp, unit->maxhp);
 
     if (hpPercent <= LIFE_BAR_RED_THRESHOLD)
         rectLifeBar->rect.color = WAR_COLOR_RED;
@@ -359,7 +359,7 @@ void wmui_setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit)
 {
 #define MAGIC_BAR_WIDTH_PX 27
 
-    f32 magicPercent = percentabf01(unit->mana, unit->maxMana);
+    f32 magicPercent = PERCENTF01(unit->mana, unit->maxMana);
     wui_setUIRectWidth(rectMagicBar, (s32)(magicPercent * MAGIC_BAR_WIDTH_PX));
 }
 
