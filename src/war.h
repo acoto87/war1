@@ -3,15 +3,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "SDL3/SDL.h"
-#include "shl/list.h"
-#include "shl/queue.h"
-#include "shl/binary_heap.h"
-#include "shl/map.h"
-#include "shl/set.h"
-#include "shl/wstr.h"
-#include "shl/memzone.h"
-
 #include "war_color.h"
 #include "war_math.h"
 #include "war_fwd.h"

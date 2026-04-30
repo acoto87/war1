@@ -1,11 +1,8 @@
 #pragma once
 
 #include <stdbool.h>
-#include <math.h>
 
 #include "common.h"
-#include "war.h"
-#include "war_log.h"
 
 #ifdef min
 #undef min
@@ -53,211 +50,42 @@ typedef struct
 #define vec2IsZero(v) ((v).x == 0.0f && (v).y == 0.0f)
 #define vec2IsOne(v) ((v).x == 1.0f && (v).y == 1.0f)
 
-vec2 vec2f(f32 x, f32 y)
-{
-    return (vec2){x, y};
-}
-
-vec2 vec2i(s32 x, s32 y)
-{
-    return (vec2){(f32)x, (f32)y};
-}
-
-vec2 vec2Addv(vec2 a, vec2 b)
-{
-    return (vec2){a.x + b.x, a.y + b.y};
-}
-
-vec2 vec2Addi(vec2 v, s32 x)
-{
-    return (vec2){v.x + x, v.y + x};
-}
-
-vec2 vec2Addf(vec2 v, f32 x)
-{
-    return (vec2){v.x + x, v.y + x};
-}
-
-vec2 vec2Subv(vec2 a, vec2 b)
-{
-    return (vec2){a.x - b.x, a.y - b.y};
-}
-
-vec2 vec2Subi(vec2 v, s32 x)
-{
-    return (vec2){v.x - x, v.y - x};
-}
-
-vec2 vec2Subf(vec2 v, f32 x)
-{
-    return (vec2){v.x - x, v.y - x};
-}
-
-vec2 vec2Mulf(vec2 v, f32 a)
-{
-    return (vec2){v.x * a, v.y * a};
-}
-
-vec2 vec2Muli(vec2 v, s32 a)
-{
-    return (vec2){v.x * (f32)a, v.y * (f32)a};
-}
-
-vec2 vec2Mulv(vec2 a, vec2 b)
-{
-    return (vec2){a.x * b.x, a.y * b.y};
-}
-
-vec2 vec2Half(vec2 a)
-{
-    return (vec2){a.x * 0.5f, a.y * 0.5f};
-}
-
-vec2 vec2Translatef(vec2 v, f32 x, f32 y)
-{
-    return (vec2){v.x + x, v.y + y};
-}
-
-vec2 vec2Translatei(vec2 v, s32 x, s32 y)
-{
-    return (vec2){v.x + (f32)x, v.y + (f32)y};
-}
-
-vec2 vec2Scalef(vec2 v, f32 scale)
-{
-    return (vec2){v.x * scale, v.y * scale};
-}
-
-vec2 vec2Scalei(vec2 v, s32 scale)
-{
-    return (vec2){v.x * (f32)scale, v.y * (f32)scale};
-}
-
-vec2 vec2Scalev(vec2 v, vec2 scale)
-{
-    return (vec2){v.x * scale.x, v.y * scale.y};
-}
-
-vec2 vec2Inverse(vec2 v)
-{
-    return (vec2){-v.x, -v.y};
-}
-
-f32 vec2LengthSqr(vec2 v)
-{
-    return v.x * v.x + v.y * v.y;
-}
-
-f32 vec2Length(vec2 v)
-{
-    return sqrtf(vec2LengthSqr(v));
-}
-
-f32 vec2DistanceSqr(vec2 v1, vec2 v2)
-{
-    f32 xx = (v1.x - v2.x);
-    f32 yy = (v1.y - v2.y);
-    return xx * xx + yy * yy;
-}
-
-f32 vec2Distance(vec2 v1, vec2 v2)
-{
-    return sqrtf(vec2DistanceSqr(v1, v2));
-}
-
-f32 vec2DistanceInTiles(vec2 v1, vec2 v2)
-{
-    vec2 diff = vec2Subv(v1, v2);
-    return max(abs(diff.x), abs(diff.y));
-}
-
-vec2 vec2Normalize(vec2 v)
-{
-    f32 len = vec2Length(v);
-    return len != 0 ? vec2Scalef(v, 1 / len) : VEC2_ZERO;
-}
-
-f32 vec2Dot(vec2 v1, vec2 v2)
-{
-    return v1.x * v2.x + v1.y * v2.y;
-}
-
-f32 vec2Determinant(vec2 v1, vec2 v2)
-{
-    return v1.x * v2.x - v1.y * v2.y;
-}
-
-s32 vec2Orientation(vec2 v1, vec2 v2)
-{
-    return v1.x * v2.y - v1.y * v2.x >= 0 ? 1 : -1;
-}
-
-f32 vec2Angle(vec2 v1, vec2 v2)
-{
-    f32 v1Length = vec2Length(v1);
-    f32 v2Length = vec2Length(v2);
-    if (v1Length == 0 || v2Length == 0)
-        return 0;
-
-    f32 dot = vec2Dot(v1, v2);
-    f32 angleRad = acosf(dot / (v1Length * v2Length));
-    return rad2Deg(angleRad);
-}
-
-f32 vec2ClockwiseAngle(vec2 v1, vec2 v2)
-{
-    f32 v1Length = vec2Length(v1);
-    f32 v2Length = vec2Length(v2);
-    if (v1Length == 0 || v2Length == 0)
-        return 0;
-
-    s32 orientation = vec2Orientation(v1, v2);
-
-    f32 dot = vec2Dot(v1, v2);
-    f32 angleRad = acosf(dot / (v1Length * v2Length));
-
-    // if the two vectors are in counter-clockwise orientation
-    // take the larger angle between the two vectors
-    if (orientation < 0)
-        angleRad = 2 * PI - angleRad;
-
-    return rad2Deg(angleRad);
-}
-
-vec2 vec2Clampf(vec2 v, f32 a, f32 b)
-{
-    return (vec2){clamp(v.x, a, b), clamp(v.y, a, b)};
-}
-
-vec2 vec2Clampi(vec2 v, s32 a, s32 b)
-{
-    return (vec2){clamp(v.x, (f32)a, (f32)b), clamp(v.y, (f32)a, (f32)b)};
-}
-
-vec2 vec2Clampv(vec2 v, vec2 a, vec2 b)
-{
-    return (vec2){clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y)};
-}
-
-vec2 vec2Floor(vec2 v)
-{
-    return (vec2){floorf(v.x), floorf(v.y)};
-}
-
-vec2 vec2Ceil(vec2 v)
-{
-    return (vec2){ceilf(v.x), ceilf(v.y)};
-}
-
-vec2 vec2Round(vec2 v)
-{
-    return (vec2){roundf(v.x), roundf(v.y)};
-}
-
-void vec2Print(vec2 v)
-{
-    logDebug("(%f, %f)", v.x, v.y);
-}
+vec2 vec2f(f32 x, f32 y);
+vec2 vec2i(s32 x, s32 y);
+vec2 vec2Addv(vec2 a, vec2 b);
+vec2 vec2Addi(vec2 v, s32 x);
+vec2 vec2Addf(vec2 v, f32 x);
+vec2 vec2Subv(vec2 a, vec2 b);
+vec2 vec2Subi(vec2 v, s32 x);
+vec2 vec2Subf(vec2 v, f32 x);
+vec2 vec2Mulf(vec2 v, f32 a);
+vec2 vec2Muli(vec2 v, s32 a);
+vec2 vec2Mulv(vec2 a, vec2 b);
+vec2 vec2Half(vec2 a);
+vec2 vec2Translatef(vec2 v, f32 x, f32 y);
+vec2 vec2Translatei(vec2 v, s32 x, s32 y);
+vec2 vec2Scalef(vec2 v, f32 scale);
+vec2 vec2Scalei(vec2 v, s32 scale);
+vec2 vec2Scalev(vec2 v, vec2 scale);
+vec2 vec2Inverse(vec2 v);
+f32 vec2LengthSqr(vec2 v);
+f32 vec2Length(vec2 v);
+f32 vec2DistanceSqr(vec2 v1, vec2 v2);
+f32 vec2Distance(vec2 v1, vec2 v2);
+f32 vec2DistanceInTiles(vec2 v1, vec2 v2);
+vec2 vec2Normalize(vec2 v);
+f32 vec2Dot(vec2 v1, vec2 v2);
+f32 vec2Determinant(vec2 v1, vec2 v2);
+s32 vec2Orientation(vec2 v1, vec2 v2);
+f32 vec2Angle(vec2 v1, vec2 v2);
+f32 vec2ClockwiseAngle(vec2 v1, vec2 v2);
+vec2 vec2Clampf(vec2 v, f32 a, f32 b);
+vec2 vec2Clampi(vec2 v, s32 a, s32 b);
+vec2 vec2Clampv(vec2 v, vec2 a, vec2 b);
+vec2 vec2Floor(vec2 v);
+vec2 vec2Ceil(vec2 v);
+vec2 vec2Round(vec2 v);
+void vec2Print(vec2 v);
 
 /*
  * rect types and functions
@@ -275,120 +103,19 @@ typedef struct
 #define rectBottomRight(r) vec2f(r.x + r.width, r.y + r.height)
 #define rectSize(r) vec2f(r.width, r.height)
 
-rect rectf(f32 x, f32 y, f32 width, f32 height)
-{
-    return (rect){x, y, width, height};
-}
-
-rect recti(s32 x, s32 y, s32 width, s32 height)
-{
-    return (rect){(f32)x, (f32)y, (f32)width, (f32)height};
-}
-
-rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2)
-{
-    return rectf(min(x1, x2), min(y1, y2), abs(x1 - x2), abs(y1 - y2));
-}
-
-rect rectv(vec2 pos, vec2 size)
-{
-    return (rect){pos.x, pos.y, size.x, size.y};
-}
-
-rect rects(vec2 size)
-{
-    return (rect){0.0f, 0.0f, size.x, size.y};
-}
-
-bool rectContainsf(rect r, f32 x, f32 y)
-{
-    return x >= r.x && x <= r.x + r.width &&
-           y >= r.y && y <= r.y + r.height;
-}
-
-bool rectIntersects(rect r1, rect r2)
-{
-    return !(r1.x + r1.width < r2.x || r1.x > r2.x + r2.width ||
-             r1.y + r1.height < r2.y || r1.y > r2.y + r2.height);
-}
-
-rect rectScalef(rect r, f32 scale)
-{
-    r.x *= scale;
-    r.y *= scale;
-    r.width *= scale;
-    r.height *= scale;
-    return r;
-}
-
-rect rectTranslatef(rect r, f32 x, f32 y)
-{
-    r.x += x;
-    r.y += y;
-    return r;
-}
-
-vec2 rectCenter(rect r)
-{
-    return vec2f(r.x + halff(r.width), r.y + halff(r.height));
-}
-
-rect rectExpand(rect r, f32 dx, f32 dy)
-{
-    r.x -= dx;
-    r.y -= dy;
-    r.width += dx * 2;
-    r.height += dy * 2;
-    return r;
-}
-
-vec2 getClosestPointOnRect(vec2 p, rect r)
-{
-    f32 left = r.x;
-    f32 top = r.y;
-    f32 right = r.x + r.width - 1;
-    f32 bottom = r.y + r.height - 1;
-
-    // top-left
-    if (p.x < left && p.y < top)
-        return vec2f(left, top);
-
-    // top-center
-    if (p.x >= left && p.x <= right && p.y < top)
-        return vec2f(p.x, top);
-
-    // top-right
-    if (p.x > right && p.y < top)
-        return vec2f(right, top);
-
-    // middle-right
-    if (p.x > right && p.y >= top && p.y <= bottom)
-        return vec2f(right, p.y);
-
-    // bottom-right
-    if (p.x > right && p.y > bottom)
-        return vec2f(right, bottom);
-
-    // bottom-center
-    if (p.x >= left && p.x <= right && p.y > bottom)
-        return vec2f(p.x, bottom);
-
-    // bottom-left
-    if (p.x < left && p.y > bottom)
-        return vec2f(left, bottom);
-
-    // middle-left
-    if (p.x < left && p.y >= top && p.y <= bottom)
-        return vec2f(left, p.y);
-
-    // the point is inside the rect
-    return p;
-}
-
-void rectPrint(rect r)
-{
-    logDebug("(%f, %f, %f, %f)", r.x, r.y, r.width, r.height);
-}
+rect rectf(f32 x, f32 y, f32 width, f32 height);
+rect recti(s32 x, s32 y, s32 width, s32 height);
+rect rectpf(f32 x1, f32 y1, f32 x2, f32 y2);
+rect rectv(vec2 pos, vec2 size);
+rect rects(vec2 size);
+bool rectContainsf(rect r, f32 x, f32 y);
+bool rectIntersects(rect r1, rect r2);
+rect rectScalef(rect r, f32 scale);
+rect rectTranslatef(rect r, f32 x, f32 y);
+vec2 rectCenter(rect r);
+rect rectExpand(rect r, f32 dx, f32 dy);
+vec2 getClosestPointOnRect(vec2 p, rect r);
+void rectPrint(rect r);
 
 /*
  * shl list/map types
@@ -397,43 +124,25 @@ void rectPrint(rect r)
 #include "shl/map.h"
 #include "shl/wstr.h"
 
-static inline bool wt_equalsS32(const s32 a, const s32 b)
-{
-    return a == b;
-}
-
-static inline bool wt_compareS32(const s32 a, const s32 b)
-{
-    return a - b;
-}
+bool wt_equalsS32(const s32 a, const s32 b);
+bool wt_compareS32(const s32 a, const s32 b);
 
 shlDeclareList(s32List, s32)
-shlDefineList(s32List, s32)
 
 #define s32ListDefaultOptions (s32ListOptions){0, wt_equalsS32, NULL}
 
-static inline bool wt_equalsVec2(const vec2 v1, const vec2 v2)
-{
-    return v1.x == v2.x && v1.y == v2.y;
-}
+bool wt_equalsVec2(const vec2 v1, const vec2 v2);
 
 shlDeclareList(vec2List, vec2)
-shlDefineList(vec2List, vec2)
 
 #define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wt_equalsVec2, NULL}
 
-static inline bool wt_equalsRect(const rect r1, const rect r2)
-{
-    return r1.x == r2.x && r1.y == r2.y &&
-           r1.width == r2.width && r1.height == r2.height;
-}
+bool wt_equalsRect(const rect r1, const rect r2);
 
 shlDeclareList(rectList, rect)
-shlDefineList(rectList, rect)
 
 #define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wt_equalsRect, NULL}
 
-shlDeclareMap(StringViewMap, StringView, String)
-shlDefineMap(StringViewMap, StringView, String)
+shlDeclareMap(StringViewMap, StringView, String);
 
 #define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free}
