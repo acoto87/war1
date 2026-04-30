@@ -34,7 +34,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     WarUnitComponent* unit = &entity->unit;
 
     vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
 
     WarUnitStats stats = wu_getUnitStats(unit->type);
 
@@ -160,7 +160,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                         we_meleeWallAttack(context, entity, targetEntity, piece);
                     }
 
-                    vec2 targetPosition = wmap_vec2TileToMapCoordinates(targetTile, true);
+                    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
                     wa_playAttackSound(context, targetPosition, action->lastSoundStep);
                 }
             }

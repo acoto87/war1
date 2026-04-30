@@ -46,7 +46,7 @@ void wproj_doProjectileTargetDamage(WarContext* context, WarEntity* entity)
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
-    vec2 position = wmap_vec2MapToTileCoordinates(projectile->target);
+    vec2 position = wmap_mapToTileCoordinatesV(projectile->target);
 
     WarEntity* sourceEntity = we_findEntity(context, projectile->sourceEntityId);
     WarEntity* targetEntity = we_findEntity(context, projectile->targetEntityId);
@@ -73,7 +73,7 @@ void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
-    vec2 targetTile = wmap_vec2MapToTileCoordinates(projectile->target);
+    vec2 targetTile = wmap_mapToTileCoordinatesV(projectile->target);
 
     WarEntity* sourceEntity = we_findEntity(context, projectile->sourceEntityId);
     if (sourceEntity)
@@ -112,7 +112,7 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
 {
     WarProjectileComponent* projectile = &entity->projectile;
 
-    vec2 targetTile = wmap_vec2MapToTileCoordinates(projectile->target);
+    vec2 targetTile = wmap_mapToTileCoordinatesV(projectile->target);
 
     WarEntityList* nearUnits = we_getNearUnits(context, targetTile, splashRadius);
     for (s32 i = 0; i < nearUnits->count; i++)

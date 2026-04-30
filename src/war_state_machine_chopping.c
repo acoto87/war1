@@ -68,7 +68,7 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
 
         if (action->lastSoundStep == WAR_ACTION_STEP_SOUND_CHOPPING)
         {
-            vec2 targetPosition = wmap_vec2TileToMapCoordinates(treePosition, true);
+            vec2 targetPosition = wmap_tileToMapCoordinatesV(treePosition, true);
             wa_createAudioRandomWithPosition(context, WAR_TREE_CHOPPING_1, WAR_TREE_CHOPPING_4, targetPosition, false);
         }
 

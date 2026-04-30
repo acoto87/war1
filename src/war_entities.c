@@ -129,14 +129,15 @@ void we_removeSpriteComponent(WarContext* context, WarEntity* entity)
     entity->sprite = (WarSpriteComponent){0};
 }
 
-void we_addUnitComponent(WarContext* context,
-                      WarEntity* entity,
-                      WarUnitType type,
-                      s32 x,
-                      s32 y,
-                      u8 player,
-                      WarResourceKind resourceKind,
-                      u32 amount)
+void we_addUnitComponent(
+    WarContext* context,
+    WarEntity* entity,
+    WarUnitType type,
+    s32 x,
+    s32 y,
+    u8 player,
+    WarResourceKind resourceKind,
+    u32 amount)
 {
     NOT_USED(context);
 
@@ -546,14 +547,15 @@ WarEntity* we_createEntity(WarContext* context, WarEntityType type, bool addToSc
     return entity;
 }
 
-WarEntity* we_createUnit(WarContext* context,
-                      WarUnitType type,
-                      s32 x,
-                      s32 y,
-                      u8 player,
-                      WarResourceKind resourceKind,
-                      u32 amount,
-                      bool addToMap)
+WarEntity* we_createUnit(
+    WarContext* context,
+    WarUnitType type,
+    s32 x,
+    s32 y,
+    u8 player,
+    WarResourceKind resourceKind,
+    u32 amount,
+    bool addToMap)
 {
     WarMap* map = context->map;
 
@@ -612,24 +614,26 @@ WarEntity* we_createUnit(WarContext* context,
     return entity;
 }
 
-WarEntity* we_createDude(WarContext* context,
-                      WarUnitType type,
-                      s32 x,
-                      s32 y,
-                      u8 player,
-                      bool isGoingToTrain)
+WarEntity* we_createDude(
+    WarContext* context,
+    WarUnitType type,
+    s32 x,
+    s32 y,
+    u8 player,
+    bool isGoingToTrain)
 {
     assert(wu_isDudeUnitType(type));
 
     return we_createUnit(context, type, x, y, player, WAR_RESOURCE_NONE, 0, !isGoingToTrain);
 }
 
-WarEntity* we_createBuilding(WarContext* context,
-                          WarUnitType type,
-                          s32 x,
-                          s32 y,
-                          u8 player,
-                          bool isGoingToBuild)
+WarEntity* we_createBuilding(
+    WarContext* context,
+    WarUnitType type,
+    s32 x,
+    s32 y,
+    u8 player,
+    bool isGoingToBuild)
 {
     assert(wu_isBuildingUnitType(type));
 
@@ -700,8 +704,8 @@ WarEntity* we_findEntityUnderCursor(WarContext* context, bool includeTrees, bool
     WarMap* map = context->map;
     assert(map);
 
-    vec2 targetPoint = wmap_vec2ScreenToMapCoordinates(context, input->pos);
-    vec2 targetTile = wmap_vec2MapToTileCoordinates(targetPoint);
+    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
     WarEntity* entityUnderCursor = NULL;
 
@@ -2261,7 +2265,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
         if (we_decreaseUnitMana(context, entity, 2))
         {
             vec2 origin = wu_getUnitCenterPosition(entity, false);
-            vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+            vec2 target = wmap_tileToMapCoordinatesV(vec2i(piece->tilex, piece->tiley), true);
             WarProjectileType projectileType = wu_getProjectileType(unit->type);
             wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
@@ -2275,7 +2279,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
     else
     {
         vec2 origin = wu_getUnitCenterPosition(entity, false);
-        vec2 target = wmap_vec2TileToMapCoordinates(vec2i(piece->tilex, piece->tiley), true);
+        vec2 target = wmap_tileToMapCoordinatesV(vec2i(piece->tilex, piece->tiley), true);
         WarProjectileType projectileType = wu_getProjectileType(unit->type);
         wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }

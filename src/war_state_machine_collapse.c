@@ -14,7 +14,7 @@ void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* st
 {
     WarMap* map = context->map;
     vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
 
     wanim_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
     wanim_removeAnimation(context, entity, wsv_fromCString("hugeDamage"));

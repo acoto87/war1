@@ -12,7 +12,7 @@ void wst_enterDeathState(WarContext* context, WarEntity* entity, WarState* state
 {
     WarMap* map = context->map;
     vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_vec2MapToTileCoordinates(entity->transform.position);
+    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
     wmap_removeEntityFromSelection(context, entity->id);

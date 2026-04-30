@@ -14,10 +14,6 @@
 
 #define isEntityOfType(entity, entityType) ((entity)->type == (entityType))
 
-//
-// Piece structs and lists
-//
-
 struct _WarRoadPiece
 {
     WarRoadPieceType type;
@@ -84,10 +80,6 @@ shlDeclareList(WarTreeList, WarTree)
 
 #define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, equalsTree, NULL}
 
-//
-// Entity ID collections
-//
-
 shlDeclareList(WarEntityIdList, WarEntityId)
 
 #define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, equalsEntityId, NULL}
@@ -95,10 +87,6 @@ shlDeclareList(WarEntityIdList, WarEntityId)
 shlDeclareSet(WarEntityIdSet, WarEntityId)
 
 #define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, hashEntityId, equalsEntityId, NULL}
-
-//
-// Entity type
-//
 
 enum _WarEntityType
 {

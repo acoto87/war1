@@ -162,14 +162,16 @@ void wmap_addEntityToSelection(WarContext* context, WarEntityId id);
 void wmap_removeEntityFromSelection(WarContext* context, WarEntityId id);
 void wmap_clearSelection(WarContext* context);
 
-vec2 wmap_vec2ScreenToMapCoordinates(WarContext* context, vec2 v);
-vec2 wmap_vec2ScreenToMinimapCoordinates(WarContext* context, vec2 v);
-rect wmap_rectScreenToMapCoordinates(WarContext* context, rect r);
-vec2 wmap_vec2MapToScreenCoordinates(WarContext* context, vec2 v);
-rect wmap_rectMapToScreenCoordinates(WarContext* context, rect r);
-vec2 wmap_vec2MapToTileCoordinates(vec2 v);
-vec2 wmap_vec2TileToMapCoordinates(vec2 v, bool centeredInTile);
-vec2 wmap_vec2MinimapToViewportCoordinates(WarContext* context, vec2 v);
+vec2 wmap_getDirFromArrowKeys(WarContext* context);
+vec2 wmap_getDirFromMousePos(WarContext* context);
+vec2 wmap_screenToMapCoordinatesV(WarContext* context, vec2 v);
+vec2 wmap_screenToMinimapCoordinatesV(WarContext* context, vec2 v);
+rect wmap_screenToMapCoordinatesR(WarContext* context, rect r);
+vec2 wmap_mapToScreenCoordinatesV(WarContext* context, vec2 v);
+rect wmap_mapToScreenCoordinatesR(WarContext* context, rect r);
+vec2 wmap_mapToTileCoordinatesV(vec2 v);
+vec2 wmap_tileToMapCoordinatesV(vec2 v, bool centeredInTile);
+vec2 wmap_minimapToViewportCoordinatesV(WarContext* context, vec2 v);
 
 WarColor wmap_getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y);
 void wmap_updateMinimapTile(WarContext* context, WarResource* levelVisual, WarResource* tileset, s32 x, s32 y);

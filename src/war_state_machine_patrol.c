@@ -39,7 +39,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     vec2List positions = state->patrol.positions;
 
     // if the unit isn't where is suppose to be, then there must have been a problem in the move, so abort and go idle
-    vec2 actualPosition = wmap_vec2MapToTileCoordinates(entity->transform.position);
+    vec2 actualPosition = wmap_mapToTileCoordinatesV(entity->transform.position);
     vec2 shouldBeAt = positions.items[positions.count - 1];
 
     f32 distance = vec2Distance(actualPosition, shouldBeAt);

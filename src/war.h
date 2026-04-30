@@ -16,8 +16,6 @@
 #include "war_math.h"
 #include "war_fwd.h"
 
-
-
 #define FRAMES_PER_SECONDS 60
 #define SECONDS_PER_FRAME (1.0f/FRAMES_PER_SECONDS)
 
@@ -369,46 +367,6 @@ void wg_setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay);
 void wg_setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
 
 bool wg_loadDataFile(WarContext* context);
-
-vec2 wg_getDirFromArrowKeys(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    vec2 dir = VEC2_ZERO;
-
-    if (isKeyPressed(input, WAR_KEY_LEFT))
-        dir.x = -1;
-    else if (isKeyPressed(input, WAR_KEY_RIGHT))
-        dir.x = 1;
-
-    if (isKeyPressed(input, WAR_KEY_DOWN))
-        dir.y = 1;
-    else if (isKeyPressed(input, WAR_KEY_UP))
-        dir.y = -1;
-
-    dir = vec2Normalize(dir);
-    return dir;
-}
-
-vec2 wg_getDirFromMousePos(WarContext* context)
-{
-    WarInput* input = &context->input;
-
-    vec2 dir = VEC2_ZERO;
-
-    if (input->pos.x < MAP_EDGE_SCROLL_GAP)
-        dir.x = -1;
-    else if (input->pos.x > context->originalWindowWidth - MAP_EDGE_SCROLL_GAP)
-        dir.x = 1;
-
-    if (input->pos.y < MAP_EDGE_SCROLL_GAP)
-        dir.y = -1;
-    else if (input->pos.y > context->originalWindowHeight - MAP_EDGE_SCROLL_GAP)
-        dir.y = 1;
-
-    dir = vec2Normalize(dir);
-    return dir;
-}
 
 #include "war_map.h"
 #include "war_scenes.h"
