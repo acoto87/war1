@@ -12,6 +12,7 @@
 #include "war_sprites.h"
 #include "war_units.h"
 #include "war_map.h"
+#include "war_map_ui.h"
 
 void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 position)
 {

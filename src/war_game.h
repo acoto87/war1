@@ -3,8 +3,7 @@
 #include "SDL3/SDL_events.h"
 #include "shl/memzone.h"
 
-#include "common.h"
-#include "war_types.h"
+#include "war.h"
 
 bool wg_initGame(WarContext* context);
 void wg_quitGame(WarContext* context);

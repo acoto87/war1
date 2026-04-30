@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "common.h"
+#include "war.h"
 #include "war_log.h"
 
 #ifdef min
@@ -388,3 +389,51 @@ void rectPrint(rect r)
 {
     logDebug("(%f, %f, %f, %f)", r.x, r.y, r.width, r.height);
 }
+
+/*
+ * shl list/map types
+*/
+#include "shl/list.h"
+#include "shl/map.h"
+#include "shl/wstr.h"
+
+static inline bool wt_equalsS32(const s32 a, const s32 b)
+{
+    return a == b;
+}
+
+static inline bool wt_compareS32(const s32 a, const s32 b)
+{
+    return a - b;
+}
+
+shlDeclareList(s32List, s32)
+shlDefineList(s32List, s32)
+
+#define s32ListDefaultOptions (s32ListOptions){0, wt_equalsS32, NULL}
+
+static inline bool wt_equalsVec2(const vec2 v1, const vec2 v2)
+{
+    return v1.x == v2.x && v1.y == v2.y;
+}
+
+shlDeclareList(vec2List, vec2)
+shlDefineList(vec2List, vec2)
+
+#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, wt_equalsVec2, NULL}
+
+static inline bool wt_equalsRect(const rect r1, const rect r2)
+{
+    return r1.x == r2.x && r1.y == r2.y &&
+           r1.width == r2.width && r1.height == r2.height;
+}
+
+shlDeclareList(rectList, rect)
+shlDefineList(rectList, rect)
+
+#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, wt_equalsRect, NULL}
+
+shlDeclareMap(StringViewMap, StringView, String)
+shlDefineMap(StringViewMap, StringView, String)
+
+#define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free}

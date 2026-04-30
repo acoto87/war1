@@ -92,12 +92,12 @@ static void wsm_setCustomMapValueByName(WarContext* context, StringView name, s3
     }
 }
 
-void wsm_enterSceneMainMenu(WarContext* context)
+void wsc_enterSceneMainMenu(WarContext* context)
 {
-    wsm_createMainMenu(context);
-    wsm_createSinglePlayerMenu(context);
-    wsm_createLoadMenu(context);
-    wsm_createCustomGameMenu(context);
+    wsc_createMainMenu(context);
+    wsc_createSinglePlayerMenu(context);
+    wsc_createLoadMenu(context);
+    wsc_createCustomGameMenu(context);
     wcheatp_createCheatsPanel(context);
 
     wui_createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
@@ -106,7 +106,7 @@ void wsm_enterSceneMainMenu(WarContext* context)
         wa_createAudio(context, WAR_MUSIC_00, true);
 }
 
-void wsm_createMainMenu(WarContext* context)
+void wsc_createMainMenu(WarContext* context)
 {
     WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
@@ -123,7 +123,7 @@ void wsm_createMainMenu(WarContext* context)
         mediumPressedRef,
         invalidRef,
         vec2i(104, 85));
-    setUIButtonClickHandler(uiEntity, wsm_handleMenuSinglePlayer);
+    setUIButtonClickHandler(uiEntity, wsc_handleMenuSinglePlayer);
     setUIButtonHotKey(uiEntity, WAR_KEY_S);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -154,12 +154,12 @@ void wsm_createMainMenu(WarContext* context)
         mediumPressedRef,
         invalidRef,
         vec2i(104, 165));
-    setUIButtonClickHandler(uiEntity, wsm_handleMenuQuit);
+    setUIButtonClickHandler(uiEntity, wsc_handleMenuQuit);
     setUIButtonHotKey(uiEntity, WAR_KEY_Q);
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void wsm_createSinglePlayerMenu(WarContext* context)
+void wsc_createSinglePlayerMenu(WarContext* context)
 {
     WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
@@ -177,7 +177,7 @@ void wsm_createSinglePlayerMenu(WarContext* context)
         invalidRef,
         vec2i(104, 85));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleSinglePlayerOrc);
+    setUIButtonClickHandler(uiEntity, wsc_handleSinglePlayerOrc);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -189,7 +189,7 @@ void wsm_createSinglePlayerMenu(WarContext* context)
         invalidRef,
         vec2i(104, 105));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleSinglePlayerHuman);
+    setUIButtonClickHandler(uiEntity, wsc_handleSinglePlayerHuman);
     setUIButtonHotKey(uiEntity, WAR_KEY_H);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -201,7 +201,7 @@ void wsm_createSinglePlayerMenu(WarContext* context)
         invalidRef,
         vec2i(104, 125));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleCustomGame);
+    setUIButtonClickHandler(uiEntity, wsc_handleCustomGame);
     setUIButtonHotKey(uiEntity, WAR_KEY_U);
     setUITextHighlight(uiEntity, 1, 1);
 
@@ -213,17 +213,17 @@ void wsm_createSinglePlayerMenu(WarContext* context)
         invalidRef,
         vec2i(133, 165));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleSinglePlayerCancel);
+    setUIButtonClickHandler(uiEntity, wsc_handleSinglePlayerCancel);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void wsm_createLoadMenu(WarContext* context)
+void wsc_createLoadMenu(WarContext* context)
 {
     NOT_USED(context);
 }
 
-void wsm_createCustomGameMenu(WarContext* context)
+void wsc_createCustomGameMenu(WarContext* context)
 {
     WarEntity* uiEntity;
 
@@ -296,7 +296,7 @@ void wsm_createCustomGameMenu(WarContext* context)
         invalidRef,
         vec2i(160, 103));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleYourRaceLeft);
+    setUIButtonClickHandler(uiEntity, wsc_handleYourRaceLeft);
 
     uiEntity = wui_createUIImageButton(
         context, wstr_fromCString("btnYourRaceRight"),
@@ -305,7 +305,7 @@ void wsm_createCustomGameMenu(WarContext* context)
         invalidRef,
         vec2i(235, 103));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleYourRaceRight);
+    setUIButtonClickHandler(uiEntity, wsc_handleYourRaceRight);
 
     uiEntity = wui_createUIImageButton(
         context, wstr_fromCString("btnEnemyRaceLeft"),
@@ -314,7 +314,7 @@ void wsm_createCustomGameMenu(WarContext* context)
         invalidRef,
         vec2i(160, 123));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleEnemyRaceLeft);
+    setUIButtonClickHandler(uiEntity, wsc_handleEnemyRaceLeft);
 
     uiEntity = wui_createUIImageButton(
         context, wstr_fromCString("btnEnemyRaceRight"),
@@ -323,7 +323,7 @@ void wsm_createCustomGameMenu(WarContext* context)
         invalidRef,
         vec2i(235, 123));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleEnemyRaceRight);
+    setUIButtonClickHandler(uiEntity, wsc_handleEnemyRaceRight);
 
     uiEntity = wui_createUIImageButton(
         context, wstr_fromCString("btnMapLeft"),
@@ -332,7 +332,7 @@ void wsm_createCustomGameMenu(WarContext* context)
         invalidRef,
         vec2i(160, 143));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleMapLeft);
+    setUIButtonClickHandler(uiEntity, wsc_handleMapLeft);
 
     uiEntity = wui_createUIImageButton(
         context, wstr_fromCString("btnMapRight"),
@@ -341,7 +341,7 @@ void wsm_createCustomGameMenu(WarContext* context)
         invalidRef,
         vec2i(235, 143));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleMapRight);
+    setUIButtonClickHandler(uiEntity, wsc_handleMapRight);
 
     uiEntity = wui_createUITextButton(
         context, wstr_fromCString("btnCustomGameOk"),
@@ -351,7 +351,7 @@ void wsm_createCustomGameMenu(WarContext* context)
         invalidRef,
         vec2i(100, 165));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleCustomGameOk);
+    setUIButtonClickHandler(uiEntity, wsc_handleCustomGameOk);
     setUIButtonHotKey(uiEntity, WAR_KEY_O);
     setUITextHighlight(uiEntity, 0, 1);
 
@@ -363,12 +363,12 @@ void wsm_createCustomGameMenu(WarContext* context)
         invalidRef,
         vec2i(180, 165));
     setUIEntityStatus(uiEntity, false);
-    setUIButtonClickHandler(uiEntity, wsm_handleMenuSinglePlayer);
+    setUIButtonClickHandler(uiEntity, wsc_handleMenuSinglePlayer);
     setUIButtonHotKey(uiEntity, WAR_KEY_C);
     setUITextHighlight(uiEntity, 0, 1);
 }
 
-void wsm_showOrHideMainMenu(WarContext* context, bool status)
+void wsc_showOrHideMainMenu(WarContext* context, bool status)
 {
     wui_setUIEntityStatusByName(context, wsv_fromCString("btnMenuSinglePlayer"), status);
     wui_setUIEntityStatusByName(context, wsv_fromCString("btnMenuLoad"), status);
@@ -376,7 +376,7 @@ void wsm_showOrHideMainMenu(WarContext* context, bool status)
     wui_setUIEntityStatusByName(context, wsv_fromCString("btnMenuQuit"), status);
 }
 
-void wsm_showOrHideSinglePlayer(WarContext* context, bool status)
+void wsc_showOrHideSinglePlayer(WarContext* context, bool status)
 {
     wui_setUIEntityStatusByName(context, wsv_fromCString("btnSinglePlayerOrc"), status);
     wui_setUIEntityStatusByName(context, wsv_fromCString("btnSinglePlayerHuman"), status);
@@ -384,7 +384,7 @@ void wsm_showOrHideSinglePlayer(WarContext* context, bool status)
     wui_setUIEntityStatusByName(context, wsv_fromCString("btnSinglePlayerCancel"), status);
 }
 
-void wsm_showOrHideCustomGame(WarContext* context, bool status)
+void wsc_showOrHideCustomGame(WarContext* context, bool status)
 {
     WarScene* scene = context->scene;
 
@@ -416,16 +416,16 @@ void wsm_showOrHideCustomGame(WarContext* context, bool status)
 }
 
 // menu button handlers
-void wsm_handleMenuSinglePlayer(WarContext* context, WarEntity* entity)
+void wsc_handleMenuSinglePlayer(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
-    wsm_showOrHideMainMenu(context, false);
-    wsm_showOrHideSinglePlayer(context, true);
-    wsm_showOrHideCustomGame(context, false);
+    wsc_showOrHideMainMenu(context, false);
+    wsc_showOrHideSinglePlayer(context, true);
+    wsc_showOrHideCustomGame(context, false);
 }
 
-void wsm_handleMenuQuit(WarContext* context, WarEntity* entity)
+void wsc_handleMenuQuit(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
     NOT_USED(entity);
@@ -433,7 +433,7 @@ void wsm_handleMenuQuit(WarContext* context, WarEntity* entity)
     SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
 }
 
-void wsm_handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
+void wsc_handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -443,7 +443,7 @@ void wsm_handleSinglePlayerOrc(WarContext* context, WarEntity* entity)
     wg_setNextScene(context, scene, 1.0f);
 }
 
-void wsm_handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
+void wsc_handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -453,25 +453,25 @@ void wsm_handleSinglePlayerHuman(WarContext* context, WarEntity* entity)
     wg_setNextScene(context, scene, 1.0f);
 }
 
-void wsm_handleCustomGame(WarContext* context, WarEntity* entity)
+void wsc_handleCustomGame(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
-    wsm_showOrHideMainMenu(context, false);
-    wsm_showOrHideSinglePlayer(context, false);
-    wsm_showOrHideCustomGame(context, true);
+    wsc_showOrHideMainMenu(context, false);
+    wsc_showOrHideSinglePlayer(context, false);
+    wsc_showOrHideCustomGame(context, true);
 }
 
-void wsm_handleSinglePlayerCancel(WarContext* context, WarEntity* entity)
+void wsc_handleSinglePlayerCancel(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
-    wsm_showOrHideMainMenu(context, true);
-    wsm_showOrHideSinglePlayer(context, false);
-    wsm_showOrHideCustomGame(context, false);
+    wsc_showOrHideMainMenu(context, true);
+    wsc_showOrHideSinglePlayer(context, false);
+    wsc_showOrHideCustomGame(context, false);
 }
 
-void wsm_handleYourRaceLeft(WarContext* context, WarEntity* entity)
+void wsc_handleYourRaceLeft(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -484,7 +484,7 @@ void wsm_handleYourRaceLeft(WarContext* context, WarEntity* entity)
     }
 }
 
-void wsm_handleYourRaceRight(WarContext* context, WarEntity* entity)
+void wsc_handleYourRaceRight(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -497,7 +497,7 @@ void wsm_handleYourRaceRight(WarContext* context, WarEntity* entity)
     }
 }
 
-void wsm_handleEnemyRaceLeft(WarContext* context, WarEntity* entity)
+void wsc_handleEnemyRaceLeft(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -510,7 +510,7 @@ void wsm_handleEnemyRaceLeft(WarContext* context, WarEntity* entity)
     }
 }
 
-void wsm_handleEnemyRaceRight(WarContext* context, WarEntity* entity)
+void wsc_handleEnemyRaceRight(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -523,7 +523,7 @@ void wsm_handleEnemyRaceRight(WarContext* context, WarEntity* entity)
     }
 }
 
-void wsm_handleMapLeft(WarContext* context, WarEntity* entity)
+void wsc_handleMapLeft(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -536,7 +536,7 @@ void wsm_handleMapLeft(WarContext* context, WarEntity* entity)
     }
 }
 
-void wsm_handleMapRight(WarContext* context, WarEntity* entity)
+void wsc_handleMapRight(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
@@ -549,7 +549,7 @@ void wsm_handleMapRight(WarContext* context, WarEntity* entity)
     }
 }
 
-void wsm_handleCustomGameOk(WarContext* context, WarEntity* entity)
+void wsc_handleCustomGameOk(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 

@@ -1,6 +1,161 @@
 #pragma once
 
-#include "war_types.h"
+#include "war_math.h"
+#include "war_units.h"
+#include "war_pathfinder.h"
+
+enum _WarStateType
+{
+    WAR_STATE_IDLE,
+    WAR_STATE_MOVE,
+    WAR_STATE_PATROL,
+    WAR_STATE_FOLLOW,
+    WAR_STATE_ATTACK,
+    WAR_STATE_GOLD,
+    WAR_STATE_MINING,
+    WAR_STATE_WOOD,
+    WAR_STATE_CHOPPING,
+    WAR_STATE_DELIVER,
+    WAR_STATE_DEATH,
+    WAR_STATE_COLLAPSE,
+    WAR_STATE_TRAIN,
+    WAR_STATE_UPGRADE,
+    WAR_STATE_BUILD,
+    WAR_STATE_REPAIR,
+    WAR_STATE_REPAIRING,
+    WAR_STATE_CAST,
+    WAR_STATE_WAIT,
+
+    WAR_STATE_COUNT
+};
+
+struct _WarState
+{
+    WarStateType type;
+    s32 entityId;
+    f32 nextUpdateTime;
+    f32 delay;
+    struct _WarState* nextState;
+
+    union
+    {
+        struct
+        {
+            bool lookAround;
+        } idle;
+
+        struct
+        {
+            s32 positionIndex;
+            vec2List positions;
+
+            s32 pathNodeIndex;
+            WarMapPath path;
+
+            s32 waitCount;
+            bool checkForAttacks;
+        } move;
+
+        struct
+        {
+            s32 positionIndex;
+            vec2List positions;
+            s32 dir;
+        } patrol;
+
+        struct
+        {
+            // the follow state can follow an entity or a point
+            s32 targetEntityId;
+            vec2 targetTile;
+
+            // the range distance (in tiles) in which the follower stops
+            s32 distance;
+        } follow;
+
+        struct
+        {
+            f32 waitTime;
+        } wait;
+
+        struct
+        {
+            s32 targetEntityId;
+            vec2 targetTile;
+        } attack;
+
+        struct
+        {
+            s32 goldmineId;
+        } gold;
+
+        struct
+        {
+            s32 goldmineId;
+            f32 miningTime;
+        } mine;
+
+        struct
+        {
+            s32 forestId;
+            vec2 position;
+        } wood;
+
+        struct
+        {
+            s32 forestId;
+            vec2 position;
+        } chop;
+
+        struct
+        {
+            s32 townHallId;
+            bool insideBuilding;
+        } deliver;
+
+        struct
+        {
+            WarUnitType unitToBuild;
+            f32 buildTime;
+            f32 totalBuildTime;
+            bool cancelled;
+        } train;
+
+        struct
+        {
+            WarUpgradeType upgradeToBuild;
+            f32 buildTime;
+            f32 totalBuildTime;
+            bool cancelled;
+        } upgrade;
+
+        struct
+        {
+            WarEntityId workerId;
+            f32 buildTime;
+            f32 totalBuildTime;
+            bool cancelled;
+        } build;
+
+        struct
+        {
+            WarEntityId buildingId;
+        } repair;
+
+        struct
+        {
+            WarEntityId buildingId;
+            bool insideBuilding;
+        } repairing;
+
+        struct
+        {
+            WarSpellType spellType;
+            WarEntityId targetEntityId;
+            vec2 targetTile;
+        } cast;
+    };
+};
 
 typedef struct
 {

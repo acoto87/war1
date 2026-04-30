@@ -2,7 +2,9 @@
 
 #include "SDL3/SDL.h"
 
-#include "war_types.h"
+#include "war.h"
+#include "war_color.h"
+#include "war_math.h"
 
 void wr_init(WarContext* context);
 void wr_save(WarContext* context);

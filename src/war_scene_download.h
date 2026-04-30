@@ -1,6 +1,6 @@
 #pragma once
 
-#include "war_types.h"
+#include "war.h"
 
-void wsd_enterSceneDownload(WarContext* context);
-void wsd_updateSceneDownload(WarContext* context);
+void wsc_enterSceneDownload(WarContext* context);
+void wsc_updateSceneDownload(WarContext* context);

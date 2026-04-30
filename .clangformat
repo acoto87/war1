@@ -1,0 +1,72 @@
+# ClangFormat configuration for war1-c
+# Style: Allman braces, 4-space indent, no tabs, C99/C11
+
+Language: Cpp
+BasedOnStyle: LLVM
+
+# ── Indentation ────────────────────────────────────────────────
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+
+# ── Brace placement — Allman style ─────────────────────────────
+BreakBeforeBraces: Allman
+
+# ── Braces / short forms — keep nothing on one line ────────────
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# ── Line length ─────────────────────────────────────────────────
+ColumnLimit: 120
+
+# ── Pointer / reference alignment ──────────────────────────────
+# WarContext* context  (pointer attached to type)
+PointerAlignment: Right
+
+# ── Includes ────────────────────────────────────────────────────
+SortIncludes: false
+IncludeBlocks: Preserve
+
+# ── Spaces ──────────────────────────────────────────────────────
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeSquareBrackets: false
+
+# ── Operators ───────────────────────────────────────────────────
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+
+# ── Function call / declaration alignment ──────────────────────
+AlignAfterOpenBracket: Align
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# ── Trailing commas ─────────────────────────────────────────────
+InsertTrailingCommas: None
+
+# ── Blank lines ─────────────────────────────────────────────────
+MaxEmptyLinesToKeep: 2
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# ── Comments ────────────────────────────────────────────────────
+ReflowComments: false
+SpacesBeforeTrailingComments: 1
+
+# ── Switch/case ─────────────────────────────────────────────────
+IndentCaseLabels: true
+IndentCaseBlocks: false
+
+# ── Misc ────────────────────────────────────────────────────────
+DeriveLineEnding: false
+UseCRLF: false
+InsertNewlineAtEOF: true

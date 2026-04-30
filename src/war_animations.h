@@ -1,6 +1,42 @@
 ﻿#pragma once
 
-#include "war_types.h"
+#include "war_math.h"
+#include "war_sprites.h"
+
+enum _WarAnimationStatus
+{
+    WAR_ANIM_STATUS_NOT_STARTED,
+    WAR_ANIM_STATUS_RUNNING,
+    WAR_ANIM_STATUS_FINISHED
+};
+
+struct _WarSpriteAnimation
+{
+    String name;
+    bool loop;
+    f32 loopDelay;
+
+    vec2 offset;
+    vec2 scale;
+
+    f32 frameDelay;
+    s32List frames;
+    WarSprite sprite;
+
+    f32 animTime;
+    f32 loopTime;
+    WarAnimationStatus status;
+};
+
+static inline bool equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2)
+{
+    return wsv_equals(wstr_view(&anim1->name), wstr_view(&anim2->name));
+}
+
+shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
+shlDefineList(WarSpriteAnimationList, WarSpriteAnimation*)
+
+#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, equalsSpriteAnimation, wanim_freeAnimation}
 
 WarSpriteAnimation* wanim_createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop);
 WarSpriteAnimation* wanim_createAnimationFromResourceIndex(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, f32 frameDelay, bool loop);

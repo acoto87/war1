@@ -1,12 +1,305 @@
 #pragma once
 
 #include <assert.h>
-
+#include "common.h"
+#include "war_math.h"
 #include "war_log.h"
-#include "war_color.h"
-#include "war_types.h"
 #include "war.h"
+#include "war_color.h"
+#include "war_math.h"
+
+enum _WarRace
+{
+    WAR_RACE_NEUTRAL,
+    WAR_RACE_HUMANS,
+    WAR_RACE_ORCS
+};
+
+enum _WarUnitDirection
+{
+    WAR_DIRECTION_NORTH,
+    WAR_DIRECTION_NORTH_EAST,
+    WAR_DIRECTION_EAST,
+    WAR_DIRECTION_SOUTH_EAST,
+    WAR_DIRECTION_SOUTH,
+    WAR_DIRECTION_SOUTH_WEST,
+    WAR_DIRECTION_WEST,
+    WAR_DIRECTION_NORTH_WEST,
+
+    WAR_DIRECTION_COUNT
+};
+
+#define directionByIndex(i) ((WarUnitDirection)(WAR_DIRECTION_NORTH + i))
+
+enum _WarUnitType
+{
+    // units
+    WAR_UNIT_FOOTMAN,
+    WAR_UNIT_GRUNT,
+    WAR_UNIT_PEASANT,
+    WAR_UNIT_PEON,
+    WAR_UNIT_CATAPULT_HUMANS,
+    WAR_UNIT_CATAPULT_ORCS,
+    WAR_UNIT_KNIGHT,
+    WAR_UNIT_RAIDER,
+    WAR_UNIT_ARCHER,
+    WAR_UNIT_SPEARMAN,
+    WAR_UNIT_CONJURER,
+    WAR_UNIT_WARLOCK,
+    WAR_UNIT_CLERIC,
+    WAR_UNIT_NECROLYTE,
+    WAR_UNIT_MEDIVH,
+    WAR_UNIT_LOTHAR,
+    WAR_UNIT_WOUNDED,
+    WAR_UNIT_GRIZELDA,
+    WAR_UNIT_GARONA,
+    WAR_UNIT_OGRE,
+    WAR_UNIT_SPIDER,
+    WAR_UNIT_SLIME,
+    WAR_UNIT_FIRE_ELEMENTAL,
+    WAR_UNIT_SCORPION,
+    WAR_UNIT_BRIGAND,
+    WAR_UNIT_THE_DEAD,
+    WAR_UNIT_SKELETON,
+    WAR_UNIT_DAEMON,
+    WAR_UNIT_WATER_ELEMENTAL,
+    WAR_UNIT_DRAGON_CYCLOPS_GIANT,
+    WAR_UNIT_26,
+    WAR_UNIT_30,
+
+    // buildings
+    WAR_UNIT_FARM_HUMANS,
+    WAR_UNIT_FARM_ORCS,
+    WAR_UNIT_BARRACKS_HUMANS,
+    WAR_UNIT_BARRACKS_ORCS,
+    WAR_UNIT_CHURCH,
+    WAR_UNIT_TEMPLE,
+    WAR_UNIT_TOWER_HUMANS,
+    WAR_UNIT_TOWER_ORCS,
+    WAR_UNIT_TOWNHALL_HUMANS,
+    WAR_UNIT_TOWNHALL_ORCS,
+    WAR_UNIT_LUMBERMILL_HUMANS,
+    WAR_UNIT_LUMBERMILL_ORCS,
+    WAR_UNIT_STABLE,
+    WAR_UNIT_KENNEL,
+    WAR_UNIT_BLACKSMITH_HUMANS,
+    WAR_UNIT_BLACKSMITH_ORCS,
+    WAR_UNIT_STORMWIND,
+    WAR_UNIT_BLACKROCK,
+
+    // neutral
+    WAR_UNIT_GOLDMINE,
+
+	WAR_UNIT_51,
+
+    // others
+    WAR_UNIT_HUMAN_CORPSE,
+    WAR_UNIT_ORC_CORPSE,
+
+    WAR_UNIT_COUNT
+};
+
+enum _WarFeatureType
+{
+    WAR_FEATURE_UNIT_FOOTMAN,
+    WAR_FEATURE_UNIT_GRUNT,
+    WAR_FEATURE_UNIT_PEASANT,
+    WAR_FEATURE_UNIT_PEON,
+    WAR_FEATURE_UNIT_CATAPULT_HUMANS,
+    WAR_FEATURE_UNIT_CATAPULT_ORCS,
+    WAR_FEATURE_UNIT_KNIGHT,
+    WAR_FEATURE_UNIT_RAIDER,
+    WAR_FEATURE_UNIT_ARCHER,
+    WAR_FEATURE_UNIT_SPEARMAN,
+    WAR_FEATURE_UNIT_CONJURER,
+    WAR_FEATURE_UNIT_WARLOCK,
+    WAR_FEATURE_UNIT_CLERIC,
+    WAR_FEATURE_UNIT_NECROLYTE,
+    WAR_FEATURE_UNIT_FARM_HUMANS,
+    WAR_FEATURE_UNIT_FARM_ORCS,
+    WAR_FEATURE_UNIT_BARRACKS_HUMANS,
+    WAR_FEATURE_UNIT_BARRACKS_ORCS,
+    WAR_FEATURE_UNIT_CHURCH,
+    WAR_FEATURE_UNIT_TEMPLE,
+    WAR_FEATURE_UNIT_TOWER_HUMANS,
+    WAR_FEATURE_UNIT_TOWER_ORCS,
+    WAR_FEATURE_UNIT_TOWN_HALL_HUMANS,
+    WAR_FEATURE_UNIT_TOWN_HALL_ORCS,
+    WAR_FEATURE_UNIT_LUMBER_MILL_HUMANS,
+    WAR_FEATURE_UNIT_LUMBER_MILL_ORCS,
+    WAR_FEATURE_UNIT_STABLE,
+    WAR_FEATURE_UNIT_KENNEL,
+    WAR_FEATURE_UNIT_BLACKSMITH_HUMANS,
+    WAR_FEATURE_UNIT_BLACKSMITH_ORCS,
+    WAR_FEATURE_SPELL_HEALING,
+    WAR_FEATURE_SPELL_RAISE_DEAD,
+    WAR_FEATURE_SPELL_FAR_SIGHT,
+    WAR_FEATURE_SPELL_DARK_VISION,
+    WAR_FEATURE_SPELL_INVISIBILITY,
+    WAR_FEATURE_SPELL_UNHOLY_ARMOR,
+    WAR_FEATURE_SPELL_SCORPION,
+    WAR_FEATURE_SPELL_SPIDER,
+    WAR_FEATURE_SPELL_RAIN_OF_FIRE,
+    WAR_FEATURE_SPELL_POISON_CLOUD,
+    WAR_FEATURE_SPELL_WATER_ELEMENTAL,
+    WAR_FEATURE_SPELL_DAEMON,
+    WAR_FEATURE_UNIT_ROAD,
+    WAR_FEATURE_UNIT_WALL,
+};
+
+enum _WarUpgradeType
+{
+    WAR_UPGRADE_ARROWS,
+    WAR_UPGRADE_SPEARS,
+    WAR_UPGRADE_SWORDS,
+    WAR_UPGRADE_AXES,
+    WAR_UPGRADE_HORSES,
+    WAR_UPGRADE_WOLVES,
+    WAR_UPGRADE_SCORPIONS,
+    WAR_UPGRADE_SPIDERS,
+    WAR_UPGRADE_RAIN_OF_FIRE,
+    WAR_UPGRADE_POISON_CLOUD,
+    WAR_UPGRADE_WATER_ELEMENTAL,
+    WAR_UPGRADE_DAEMON,
+    WAR_UPGRADE_HEALING,
+    WAR_UPGRADE_RAISE_DEAD,
+    WAR_UPGRADE_FAR_SIGHT,
+    WAR_UPGRADE_DARK_VISION,
+    WAR_UPGRADE_INVISIBILITY,
+    WAR_UPGRADE_UNHOLY_ARMOR,
+    WAR_UPGRADE_SHIELD,
+};
+
+enum _WarSpellType
+{
+    // spells
+    WAR_SPELL_HEALING,
+    WAR_SPELL_FAR_SIGHT,
+    WAR_SPELL_INVISIBILITY,
+    WAR_SPELL_RAIN_OF_FIRE,
+    WAR_SPELL_POISON_CLOUD,
+    WAR_SPELL_RAISE_DEAD,
+    WAR_SPELL_DARK_VISION,
+    WAR_SPELL_UNHOLY_ARMOR,
+
+    // summons
+    WAR_SUMMON_SPIDER,
+    WAR_SUMMON_SCORPION,
+    WAR_SUMMON_DAEMON,
+    WAR_SUMMON_WATER_ELEMENTAL,
+};
+
 #include "war_commands.h"
+
+enum _WarResourceKind
+{
+    WAR_RESOURCE_NONE,
+    WAR_RESOURCE_GOLD,
+    WAR_RESOURCE_WOOD
+};
+
+enum _WarRoadPieceType
+{
+    WAR_ROAD_PIECE_LEFT,
+    WAR_ROAD_PIECE_TOP,
+    WAR_ROAD_PIECE_RIGHT,
+    WAR_ROAD_PIECE_BOTTOM,
+    WAR_ROAD_PIECE_BOTTOM_LEFT,
+    WAR_ROAD_PIECE_VERTICAL,
+    WAR_ROAD_PIECE_BOTTOM_RIGHT,
+    WAR_ROAD_PIECE_T_LEFT,
+    WAR_ROAD_PIECE_T_BOTTOM,
+    WAR_ROAD_PIECE_T_RIGHT,
+    WAR_ROAD_PIECE_CROSS,
+    WAR_ROAD_PIECE_TOP_LEFT,
+    WAR_ROAD_PIECE_HORIZONTAL,
+    WAR_ROAD_PIECE_T_TOP,
+    WAR_ROAD_PIECE_TOP_RIGHT,
+};
+
+enum _WarWallPieceType
+{
+    WAR_WALL_PIECE_LEFT,
+    WAR_WALL_PIECE_TOP,
+    WAR_WALL_PIECE_RIGHT,
+    WAR_WALL_PIECE_BOTTOM,
+    WAR_WALL_PIECE_BOTTOM_LEFT,
+    WAR_WALL_PIECE_VERTICAL,
+    WAR_WALL_PIECE_BOTTOM_RIGHT,
+    WAR_WALL_PIECE_T_LEFT,
+    WAR_WALL_PIECE_T_BOTTOM,
+    WAR_WALL_PIECE_T_RIGHT,
+    WAR_WALL_PIECE_CROSS,
+    WAR_WALL_PIECE_TOP_LEFT,
+    WAR_WALL_PIECE_HORIZONTAL,
+    WAR_WALL_PIECE_T_TOP,
+    WAR_WALL_PIECE_TOP_RIGHT,
+};
+
+enum _WarRuinPieceType
+{
+    WAR_RUIN_PIECE_NONE,
+    WAR_RUIN_PIECE_TOP_LEFT,
+    WAR_RUIN_PIECE_TOP,
+    WAR_RUIN_PIECE_TOP_RIGHT,
+    WAR_RUIN_PIECE_LEFT,
+    WAR_RUIN_PIECE_CENTER,
+    WAR_RUIN_PIECE_RIGHT,
+    WAR_RUIN_PIECE_BOTTOM_LEFT,
+    WAR_RUIN_PIECE_BOTTOM,
+    WAR_RUIN_PIECE_BOTTOM_RIGHT,
+    WAR_RUIN_PIECE_TOP_LEFT_INSIDE,
+    WAR_RUIN_PIECE_TOP_RIGHT_INSIDE,
+    WAR_RUIN_PIECE_BOTTOM_LEFT_INSIDE,
+    WAR_RUIN_PIECE_BOTTOM_RIGHT_INSIDE,
+    WAR_RUIN_PIECE_DIAG_1,
+    WAR_RUIN_PIECE_DIAG_2,
+};
+
+enum _WarTreeTileType
+{
+    WAR_TREE_NONE,
+    WAR_TREE_TOP_LEFT,
+    WAR_TREE_TOP,
+    WAR_TREE_TOP_RIGHT,
+    WAR_TREE_LEFT,
+    WAR_TREE_CENTER,
+    WAR_TREE_RIGHT,
+    WAR_TREE_BOTTOM_LEFT,
+    WAR_TREE_BOTTOM,
+    WAR_TREE_BOTTOM_RIGHT,
+    WAR_TREE_TOP_LEFT_INSIDE,
+    WAR_TREE_TOP_RIGHT_INSIDE,
+    WAR_TREE_BOTTOM_LEFT_INSIDE,
+    WAR_TREE_BOTTOM_RIGHT_INSIDE,
+    WAR_TREE_TOP_END,
+    WAR_TREE_BOTTOM_END,
+    WAR_TREE_VERTICAL,
+    WAR_TREE_DIAG_1,
+    WAR_TREE_DIAG_2,
+    WAR_TREE_CHOPPED,
+};
+
+enum _WarFogPieceType
+{
+    WAR_FOG_PIECE_NONE,
+    WAR_FOG_PIECE_TOP_LEFT,
+    WAR_FOG_PIECE_TOP,
+    WAR_FOG_PIECE_TOP_RIGHT,
+    WAR_FOG_PIECE_LEFT,
+    WAR_FOG_PIECE_CENTER,
+    WAR_FOG_PIECE_RIGHT,
+    WAR_FOG_PIECE_BOTTOM_LEFT,
+    WAR_FOG_PIECE_BOTTOM,
+    WAR_FOG_PIECE_BOTTOM_RIGHT
+};
+
+enum _WarFogBoundaryType
+{
+    WAR_FOG_BOUNDARY_NONE,
+    WAR_FOG_BOUNDARY_UNKOWN,
+    WAR_FOG_BOUNDARY_FOG,
+};
 
 // Brace-only StringView initializer for use in file-scope const arrays.
 // Unlike WSV_LITERAL, this does not use a compound literal cast so it
@@ -1474,80 +1767,22 @@ bool wu_isSummonUnitType(WarUnitType type)
 }
 
 
-bool wu_isDudeUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isDudeUnitType(entity->unit.type);
-}
-
-bool wu_isBuildingUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isBuildingUnitType(entity->unit.type);
-}
-
-bool wu_isWorkerUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isWorkerUnitType(entity->unit.type);
-}
-
-bool wu_isWarriorUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isWarriorUnitType(entity->unit.type);
-}
-
-bool wu_isRangeUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isRangeUnitType(entity->unit.type);
-}
-
-bool wu_isMeleeUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isMeleeUnitType(entity->unit.type);
-}
-
-bool wu_isFistUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isFistUnitType(entity->unit.type);
-}
-
-bool wu_isSwordUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isSwordUnitType(entity->unit.type);
-}
-
-bool wu_isMagicUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isMagicUnitType(entity->unit.type);
-}
-
-bool wu_isCorpseUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isCorpseUnitType(entity->unit.type);
-}
-
-bool wu_isCatapultUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isCatapultUnitType(entity->unit.type);
-}
-
-bool wu_isConjurerOrWarlockUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isConjurerOrWarlockUnitType(entity->unit.type);
-}
-
-bool wu_isClericOrNecrolyteUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isClericOrNecrolyteUnitType(entity->unit.type);
-}
-
-bool wu_isSummonUnit(WarEntity* entity)
-{
-    return isUnit(entity) && wu_isSummonUnitType(entity->unit.type);
-}
-
-bool wu_isSkeletonUnit(WarEntity* entity)
-{
-    return isUnit(entity) && entity->unit.type == WAR_UNIT_SKELETON;
-}
+// Entity-level unit-type queries (bodies defined in war_entities.h after WarEntity is complete)
+bool wu_isDudeUnit(WarEntity* entity);
+bool wu_isBuildingUnit(WarEntity* entity);
+bool wu_isWorkerUnit(WarEntity* entity);
+bool wu_isWarriorUnit(WarEntity* entity);
+bool wu_isRangeUnit(WarEntity* entity);
+bool wu_isMeleeUnit(WarEntity* entity);
+bool wu_isFistUnit(WarEntity* entity);
+bool wu_isSwordUnit(WarEntity* entity);
+bool wu_isMagicUnit(WarEntity* entity);
+bool wu_isCorpseUnit(WarEntity* entity);
+bool wu_isCatapultUnit(WarEntity* entity);
+bool wu_isConjurerOrWarlockUnit(WarEntity* entity);
+bool wu_isClericOrNecrolyteUnit(WarEntity* entity);
+bool wu_isSummonUnit(WarEntity* entity);
+bool wu_isSkeletonUnit(WarEntity* entity);
 
 WarRace wu_getUnitTypeRace(WarUnitType type)
 {
@@ -1607,19 +1842,23 @@ WarRace wu_getUnitTypeRace(WarUnitType type)
     }
 }
 
-WarRace wu_getUnitRace(WarEntity* entity)
-{
-    if (!isUnit(entity))
-        return WAR_RACE_NEUTRAL;
-
-    return wu_getUnitTypeRace(entity->unit.type);
-}
+WarRace wu_getUnitRace(WarEntity* entity);
 
 #define isHumanUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_HUMANS)
 #define isOrcUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_ORCS)
 #define isNeutralUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_NEUTRAL)
 
 WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race);
+
+enum _WarProjectileType
+{
+    WAR_PROJECTILE_ARROW,
+    WAR_PROJECTILE_CATAPULT,
+    WAR_PROJECTILE_FIREBALL,
+    WAR_PROJECTILE_FIREBALL_2,
+    WAR_PROJECTILE_WATER_ELEMENTAL,
+    WAR_PROJECTILE_RAIN_OF_FIRE
+};
 
 WarProjectileType wu_getProjectileType(WarUnitType type)
 {
@@ -1714,100 +1953,19 @@ WarUnitType wu_getProducerUnitOfType(WarUnitType type)
     }
 }
 
-vec2 wu_getUnitSize(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    WarUnitComponent* unit = &entity->unit;
-    return vec2i(unit->sizex, unit->sizey);
-}
-
-vec2 wu_getUnitFrameSize(WarEntity* entity)
-{
-    WarSpriteComponent* sprite = &entity->sprite;
-    return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-}
-
-rect wu_getUnitFrameRect(WarEntity* entity)
-{
-    return rectv(VEC2_ZERO, wu_getUnitFrameSize(entity));
-}
-
-vec2 wu_getUnitSpriteSize(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    WarUnitComponent* unit = &entity->unit;
-    return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
-}
-
-rect wu_getUnitSpriteRect(WarEntity* entity)
-{
-    vec2 frameSize = wu_getUnitFrameSize(entity);
-    vec2 unitSize = wu_getUnitSpriteSize(entity);
-    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
-    return rectv(pos, unitSize);
-}
-
-vec2 wu_getUnitSpriteCenter(WarEntity* entity)
-{
-    vec2 frameSize = wu_getUnitFrameSize(entity);
-    vec2 unitSize = wu_getUnitSpriteSize(entity);
-    vec2 pos = vec2Half(vec2Subv(frameSize, unitSize));
-    return vec2Addv(pos, vec2Half(unitSize));
-}
-
-rect wu_getUnitRect(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    return rectv(entity->transform.position, wu_getUnitSpriteSize(entity));
-}
-
-vec2 wu_getUnitPosition(WarEntity* entity, bool inTiles)
-{
-    vec2 position = entity->transform.position;
-    return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
-}
-
-vec2 wu_getUnitCenterPosition(WarEntity* entity, bool inTiles)
-{
-    WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = wu_getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Half(spriteSize);
-    vec2 position = vec2Addv(transform->position, unitCenter);
-    return inTiles ? wmap_vec2MapToTileCoordinates(position) : position;
-}
-
-void wu_setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
-{
-    if (inTiles)
-    {
-        position = wmap_vec2TileToMapCoordinates(position, true);
-    }
-
-    entity->transform.position = position;
-}
-
-void wu_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
-{
-    if (inTiles)
-    {
-        position = wmap_vec2TileToMapCoordinates(position, true);
-    }
-
-    WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = wu_getUnitSpriteSize(entity);
-    vec2 unitCenter = vec2Half(spriteSize);
-    transform->position = vec2Subv(position, unitCenter);
-}
-
-WarUnitDirection wu_getUnitDirection(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    return entity->unit.direction;
-}
+// Entity geometry / property functions (bodies defined in war_entities.h)
+vec2 wu_getUnitSize(WarEntity* entity);
+vec2 wu_getUnitFrameSize(WarEntity* entity);
+rect wu_getUnitFrameRect(WarEntity* entity);
+vec2 wu_getUnitSpriteSize(WarEntity* entity);
+rect wu_getUnitSpriteRect(WarEntity* entity);
+vec2 wu_getUnitSpriteCenter(WarEntity* entity);
+rect wu_getUnitRect(WarEntity* entity);
+vec2 wu_getUnitPosition(WarEntity* entity, bool inTiles);
+vec2 wu_getUnitCenterPosition(WarEntity* entity, bool inTiles);
+void wu_setUnitPosition(WarEntity* entity, vec2 position, bool inTiles);
+void wu_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles);
+WarUnitDirection wu_getUnitDirection(WarEntity* entity);
 
 WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
 {
@@ -1833,117 +1991,16 @@ WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
     return WAR_DIRECTION_NORTH;
 }
 
-void wu_setUnitDirection(WarEntity* entity, WarUnitDirection direction)
-{
-    assert(isUnit(entity));
-
-    entity->unit.direction = direction;
-}
-
-void wu_setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
-{
-    assert(isUnit(entity));
-
-    WarUnitDirection direction = wu_getDirectionFromDiff(dx, dy);
-    wu_setUnitDirection(entity, direction);
-}
-
-f32 wu_getUnitActionScale(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    // this is the scale of the animation, for walking
-    // the lower the less time is the transition between the frames
-    // thus the animation goes faster.
-    //
-    // speed 0 -> 1.0f
-    // speed 1 -> 0.9f
-    // speed 2 -> 0.8f
-    return 1 - entity->unit.speed * 0.1f;
-}
-
-vec2 wu_unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
-{
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
-
-    vec2 position = wu_getUnitCenterPosition(entity, true);
-
-    vec2 targetPosition = wmap_vec2MapToTileCoordinates(targetEntity->transform.position);
-    vec2 unitSize = wu_getUnitSize(targetEntity);
-    rect unitRect = rectv(targetPosition, unitSize);
-
-    return getClosestPointOnRect(position, unitRect);
-}
-
-s32 wu_entityTileDistance(WarEntity* entity, vec2 targetPosition)
-{
-    assert(isUnit(entity));
-
-    vec2 position = wu_getUnitCenterPosition(entity, true);
-    f32 distance = vec2DistanceInTiles(position, targetPosition);
-    return (s32)distance;
-}
-
-bool wu_tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
-{
-    assert(range >= 0);
-
-    s32 distance = wu_entityTileDistance(entity, targetTile);
-    return distance <= range;
-}
-
-s32 wu_unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
-{
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
-
-    vec2 pointOnTarget = wu_unitPointOnTarget(entity, targetEntity);
-    return wu_entityTileDistance(entity, pointOnTarget);
-}
-
-bool wu_unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
-{
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
-    assert(range >= 0);
-
-    s32 distance = wu_unitDistanceInTiles(entity, targetEntity);
-    return distance <= range;
-}
-
-bool wu_isCarryingResources(WarEntity* entity)
-{
-    assert(entity);
-    assert(isUnit(entity));
-
-    switch (entity->unit.resourceKind)
-    {
-        case WAR_RESOURCE_GOLD: return entity->unit.amount == UNIT_MAX_CARRY_WOOD;
-        case WAR_RESOURCE_WOOD: return entity->unit.amount == UNIT_MAX_CARRY_GOLD;
-        default: return false;
-    }
-}
-
-s32 wu_getUnitSightRange(WarEntity* entity)
-{
-    assert(isUnit(entity));
-
-    s32 sight = 0;
-
-    if (wu_isBuildingUnit(entity))
-    {
-        WarBuildingStats stats = wu_getBuildingStats(entity->unit.type);
-        sight = stats.sight;
-    }
-    else
-    {
-        WarUnitStats stats = wu_getUnitStats(entity->unit.type);
-        sight = stats.sight;
-    }
-
-    return sight;
-}
+void wu_setUnitDirection(WarEntity* entity, WarUnitDirection direction);
+void wu_setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy);
+f32 wu_getUnitActionScale(WarEntity* entity);
+vec2 wu_unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity);
+s32 wu_entityTileDistance(WarEntity* entity, vec2 targetPosition);
+bool wu_tileInRange(WarEntity* entity, vec2 targetTile, s32 range);
+s32 wu_unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity);
+bool wu_unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range);
+bool wu_isCarryingResources(WarEntity* entity);
+s32 wu_getUnitSightRange(WarEntity* entity);
 
 bool wu_displayUnitOnMinimap(WarEntity* entity);
 WarColor wu_getUnitColorOnMinimap(WarEntity* entity);
@@ -1960,6 +2017,4 @@ s32 wu_getTotalNumberOfUnits(WarContext* context, u8 player);
 #define isValidUnitType(type) inRange(type, WAR_UNIT_FOOTMAN, WAR_UNIT_COUNT)
 
 void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
-void wu_getBuildBasicCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
-void wu_getBuildAdvancedCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
 WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType);

@@ -7,6 +7,7 @@
 #include "war_game.h"
 #include "war_scenes.h"
 #include "war_units.h"
+#include "war_map_menu.h"
 
 const WarCheatDescriptor cheatDescriptors[] =
 {

@@ -9,7 +9,7 @@
 #include "war_net.h"
 #include "war_ui.h"
 
-void wsd_enterSceneDownload(WarContext* context)
+void wsc_enterSceneDownload(WarContext* context)
 {
     WarScene* scene = context->scene;
 
@@ -45,7 +45,7 @@ void wsd_enterSceneDownload(WarContext* context)
     setUIEntityStatus(downloadingText, false);
 }
 
-void wsd_updateSceneDownload(WarContext* context)
+void wsc_updateSceneDownload(WarContext* context)
 {
     WarInput* input = &context->input;
     WarScene* scene = context->scene;
