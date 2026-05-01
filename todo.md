@@ -170,10 +170,10 @@ This was the result of deleting the entity and the engine trying to free the spr
         * [x] Add unit cheat
     * [x] Make feedback for the cheats (the wascally wabbit notification?)
 * [x] Make sounds and music volume settings globally. That will allow to set volumes through cheats in any scene or map and mantain the setting through changing scenes.
+* [x] Make a profiler system.
+* [x] Remove global __log__ and move it to WarContext. How could I access the `__log__` inside `WarContext` in the `glfwErrorCallback` callback? C/ GLFW was changed by SLD3 and now log system uses SDL_log functions.
 * [ ] Write a detailed description of the actions system, maybe as comments in the `war_actions.c` file?
 * [ ] Manage components with a dictionary and not each entity having all the components.
-* [ ] Make a profiler system.
-* [ ] Remove global __log__ and move it to WarContext. How could I access the `__log__` inside `WarContext` in the `glfwErrorCallback` callback?
 * [ ] Make so that entities can have multiple sprites.
 * [ ] Add a `renderAnimations` function to render the animations above everything else and move the corresponding code in `renderUnit` to the new function.
 * [ ] Add animation for the gold and lumber numbers when they change.
@@ -307,7 +307,7 @@ This was the result of deleting the entity and the engine trying to free the spr
     * [x] Arrows
     * [x] Fireballs
     * [x] Rain of fire
-* [ ] Move actions system to animations, again? :| The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only.
+* [x] Move actions system to animations, again? :| The problem is, for example in the move action, that the state machine does the moving, the wait between action steps are almost the same within the actions, and what is needed in reality is the changing frame, maybe the unbreakable markers and the sounds. I don't know maybe keep it, but removing the moving steps only. C/ For now the actions system was simplified to remove the unbrakable and move steps, as they didn't represents anything meaninful in the code.
 
 ## State machine
 

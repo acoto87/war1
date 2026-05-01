@@ -80,8 +80,6 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
 
     s32 halfIndex = nframes % 2 == 0 ? nframes / 2 : (nframes + 1) / 2;
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
-
     // This code convert the frames sequence in this WAR_ACTION_STEP_FRAME sequence.
     // (this code is ported from the War1gus project, built with the Stratagus engine)
     //
@@ -121,7 +119,6 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
         for(s32 i = 0; i < halfIndex; i++)
         {
             addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
-            addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
             addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
             actionFrames--;
         }
@@ -129,20 +126,17 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
         for(s32 i = halfIndex - 2; i >= 0; i--)
         {
             addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
-            addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
             addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
             actionFrames--;
         }
 
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
-        addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
         actionFrames--;
 
         for(s32 i = 0; i < halfIndex; i++)
         {
             addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[nframes - 1 - i]);
-            addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
             addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
             actionFrames--;
         }
@@ -150,18 +144,15 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
         for(s32 i = 1 + nframes - halfIndex; i < nframes; i++)
         {
             addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
-            addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
             addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
             actionFrames--;
         }
 
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
-        addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
         actionFrames--;
     }
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
@@ -172,16 +163,13 @@ static WarUnitActionDef createWalkActionDef(s32 nframes, s32 frames[], s32 walkS
 static WarUnitActionDef createLinearWalkActionDef(s32 framesCount, s32 frames[], bool directional, s32 walkSpeed)
 {
     WarUnitActionDef def = createUnitActionDef(WAR_ACTION_TYPE_WALK, directional, true);
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
 
     for(s32 i = 0; i < framesCount; i++)
     {
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
-        addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
     }
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
@@ -194,8 +182,6 @@ static WarUnitActionDef createAttackActionDef(s32 nframes, s32 frames[], s32 att
 
     s32 halfIndex = nframes%2 == 0 ? nframes/2 : (nframes+1)/2;
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
-
     for(s32 i = 0; i < nframes; i++)
     {
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
@@ -213,8 +199,6 @@ static WarUnitActionDef createAttackActionDef(s32 nframes, s32 frames[], s32 att
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * attackSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);
-
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
@@ -227,8 +211,6 @@ static WarUnitActionDef createRepairActionDef(s32 nframes, s32 frames[], s32 att
 
     s32 halfIndex = nframes%2 == 0 ? nframes/2 : (nframes+1)/2;
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
-
     for(s32 i = 0; i < nframes; i++)
     {
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
@@ -246,8 +228,6 @@ static WarUnitActionDef createRepairActionDef(s32 nframes, s32 frames[], s32 att
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * attackSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);
-
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
@@ -260,7 +240,6 @@ static WarUnitActionDef createHarvestActionDef(s32 nframes, s32 frames[], s32 ha
 
     s32 halfIndex = nframes%2 == 0 ? nframes/2 : (nframes+1)/2;
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 5);
 
     for(s32 i = 0; i < nframes; i++)
@@ -280,8 +259,6 @@ static WarUnitActionDef createHarvestActionDef(s32 nframes, s32 frames[], s32 ha
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, (5 - nframes) * harvestSpeed);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, coolOffTime);
-
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
@@ -292,8 +269,6 @@ static WarUnitActionDef createDeathActionDef(s32 nframes, s32 frames[], s32 wait
 {
     WarUnitActionDef def = createUnitActionDef(WAR_ACTION_TYPE_DEATH, directional, true);
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
-
     for(s32 i = 0; i < nframes; i++)
     {
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
@@ -303,7 +278,6 @@ static WarUnitActionDef createDeathActionDef(s32 nframes, s32 frames[], s32 wait
     if (doWait101Step)
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 101);
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
     return def;
@@ -313,15 +287,12 @@ static WarUnitActionDef createBuildActionDef(s32 nframes, s32 frames[], s32 wait
 {
     WarUnitActionDef def = createUnitActionDef(WAR_ACTION_TYPE_BUILD, false, false);
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
-
     for(s32 i = 0; i < nframes; i++)
     {
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, waitTime);
     }
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
     return def;
@@ -331,15 +302,12 @@ static WarUnitActionDef createIdleActionDef(s32 nframes, s32 frames[], s32 waitT
 {
     WarUnitActionDef def = createUnitActionDef(WAR_ACTION_TYPE_IDLE, directional, true);
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
-
     for(s32 i = 0; i < nframes; i++)
     {
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, frames[i]);
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, waitTime);
     }
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
     return def;
@@ -358,7 +326,6 @@ static WarUnitActionDef createSpiderScorpionDeathActionDef(s32 framesCount, s32 
     // Scorpions and Spiders have distinct wait times than other units,
     // so a custom death action is built for those cases
     WarUnitActionDef deathDef = createUnitActionDef(WAR_ACTION_TYPE_DEATH, directional, true);
-    addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
     addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_FRAME, frames[0]);
     addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_WAIT, waitTime);
     addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_FRAME, frames[1]);
@@ -370,7 +337,6 @@ static WarUnitActionDef createSpiderScorpionDeathActionDef(s32 framesCount, s32 
     addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_FRAME, frames[4]);
     addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_WAIT, waitTime);
     addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_WAIT, 101);
-    addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&deathDef, WAR_ACTION_STEP_WAIT, 1);
     return deathDef;
 }
@@ -378,17 +344,14 @@ static WarUnitActionDef createSpiderScorpionDeathActionDef(s32 framesCount, s32 
 static WarUnitActionDef createSlimeWalkActionDef(bool directional, s32 walkSpeed)
 {
     WarUnitActionDef def = createUnitActionDef(WAR_ACTION_TYPE_WALK, directional, true);
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
 
     s32 walkFrames[] = {15, 30, 45, 55, 65, 0};
     for(s32 i = 0; i < arrayLength(walkFrames); i++)
     {
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, walkFrames[i]);
-        addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
     }
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 15);
 
@@ -399,17 +362,13 @@ static WarUnitActionDef createFireElementalWalkActionDef(bool directional, s32 w
 {
     WarUnitActionDef def = createUnitActionDef(WAR_ACTION_TYPE_WALK, directional, true);
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_BEGIN);
-
     s32 walkFrames[] = {10, 20, 30, 40, 50, 0};
     for(s32 i = 0; i < arrayLength(walkFrames); i++)
     {
         addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, walkFrames[i]);
-        addUnitActionDefStep(&def, WAR_ACTION_STEP_MOVE, 4);
         addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, walkSpeed);
     }
 
-    addUnitActionDefStep(&def, WAR_ACTION_STEP_UNBREAKABLE, WAR_UNBREAKABLE_END);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_FRAME, 0);
     addUnitActionDefStep(&def, WAR_ACTION_STEP_WAIT, 1);
 
@@ -1007,7 +966,14 @@ void wact_initUnitActionDefs(void)
     initOrcCorpseActionDefs();
 }
 
- void wact_addUnitActions(WarEntity* entity)
+bool wact_equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep step2)
+{
+    return step1.type == step2.type && step1.param == step2.param;
+}
+
+shlDefineList(WarUnitActionStepList, WarUnitActionStep)
+
+void wact_addUnitActions(WarEntity* entity)
 {
     WarUnitComponent* unit = &entity->unit;
 
@@ -1015,7 +981,6 @@ void wact_initUnitActionDefs(void)
     {
         WarUnitAction* action = &unit->actions[i];
         action->status = WAR_ACTION_NOT_STARTED;
-        action->unbreakable = false;
         action->scale = 1.0f;
         action->waitCount = 0;
         action->stepIndex = -1;
@@ -1145,16 +1110,6 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
     {
         switch (step.type)
         {
-            case WAR_ACTION_STEP_UNBREAKABLE:
-            {
-                if (step.param == WAR_UNBREAKABLE_BEGIN)
-                    action->unbreakable = true;
-                else if(step.param == WAR_UNBREAKABLE_END)
-                    action->unbreakable = false;
-
-                break;
-            }
-
             case WAR_ACTION_STEP_FRAME:
             {
                 s32 frameIndex = step.param;
@@ -1183,19 +1138,11 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
                 sprite->frameIndex = frameIndex;
                 break;
             }
-
-            case WAR_ACTION_STEP_MOVE:
-            {
-                action->lastActionStep = WAR_ACTION_STEP_MOVE;
-                break;
-            }
-
             case WAR_ACTION_STEP_ATTACK:
             {
                 action->lastActionStep = WAR_ACTION_STEP_ATTACK;
                 break;
             }
-
             case WAR_ACTION_STEP_SOUND_SWORD:
             case WAR_ACTION_STEP_SOUND_FIST:
             case WAR_ACTION_STEP_SOUND_FIREBALL:
@@ -1207,7 +1154,6 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
                 action->lastSoundStep = step.type;
                 break;
             }
-
             default:
             {
                 break;
