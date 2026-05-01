@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "shl/list.h"
+
 #include "common.h"
 #include "war_sprites.h"
 

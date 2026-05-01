@@ -1,7 +1,9 @@
 ﻿#pragma once
 
 #include "shl/memzone.h"
+#include "shl/list.h"
 #include "shl/set.h"
+#include "shl/map.h"
 
 #include "common.h"
 #include "war.h"

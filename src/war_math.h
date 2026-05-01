@@ -2,6 +2,9 @@
 
 #include <stdbool.h>
 
+#include "shl/list.h"
+#include "shl/map.h"
+
 #include "common.h"
 
 #define SIGN(x) ((x) < 0 ? -1 : 1)

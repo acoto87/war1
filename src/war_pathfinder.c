@@ -1,52 +1,6 @@
-#include "war_pathfinder.h"
-
 #include <assert.h>
 
-typedef struct
-{
-    // id of the node
-    s32 id;
-
-    // the coordinates of the node
-    s32 x, y;
-
-    // the length of the path from the start to this node
-    s32 level;
-
-    // the previous node in the path from start to end passing through this node
-    s32 parent;
-
-    // the cost from the start to this node
-    s32 gScore;
-
-    // the cost from start to end passing through this node
-    s32 fScore;
-} WarMapNode;
-
-#define WarMapNodeEmpty (WarMapNode){0}
-
-static bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
-{
-    return node1.x == node2.x && node1.y == node2.y;
-}
-
-static s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
-{
-    return node1.fScore - node2.fScore;
-}
-
-#ifdef __GNUC__
-// this is to silence GCC about this warning, I don't want to remove this function yet
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
-static s32 compareGScore(const WarMapNode node1, const WarMapNode node2)
-{
-    return node1.gScore - node2.gScore;
-}
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
+#include "war_pathfinder.h"
 
 static s32 manhattanDistance(const WarMapNode node1, const WarMapNode node2)
 {
@@ -60,28 +14,29 @@ static s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
     return xx * xx + yy * yy;
 }
 
-static u32 hashMapNode(const s32 key)
+bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
+{
+    return node1.x == node2.x && node1.y == node2.y;
+}
+
+s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
+{
+    return node1.fScore - node2.fScore;
+}
+
+u32 hashMapNode(const s32 key)
 {
     return (u32)key;
 }
 
-static bool equalsMapNodeId(const s32 key1, const s32 key2)
+bool equalsMapNodeId(const s32 key1, const s32 key2)
 {
     return key1 == key2;
 }
 
-shlDeclareList(WarMapNodeList, WarMapNode)
 shlDefineList(WarMapNodeList, WarMapNode)
-
-shlDeclareBinaryHeap(WarMapNodeHeap, WarMapNode)
 shlDefineBinaryHeap(WarMapNodeHeap, WarMapNode)
-
-shlDeclareMap(WarMapNodeMap, s32, WarMapNode)
 shlDefineMap(WarMapNodeMap, s32, WarMapNode)
-
-#define WarMapNodeListDefaultOptions (WarMapNodeListOptions){WarMapNodeEmpty, equalsMapNode}
-#define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareFScore}
-#define WarMapNodeMapDefaultOptions (WarMapNodeMapOptions){WarMapNodeEmpty, hashMapNode, equalsMapNodeId}
 
 static WarMapNode createNode(WarPathFinder finder, s32 x, s32 y)
 {

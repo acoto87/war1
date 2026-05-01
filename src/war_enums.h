@@ -597,10 +597,8 @@ typedef enum _WarTreeTileType
 typedef enum _WarUnitActionStepType
 {
     WAR_ACTION_STEP_NONE,
-    WAR_ACTION_STEP_UNBREAKABLE,
     WAR_ACTION_STEP_FRAME,
     WAR_ACTION_STEP_WAIT,
-    WAR_ACTION_STEP_MOVE,
     WAR_ACTION_STEP_ATTACK,
     WAR_ACTION_STEP_SOUND_SWORD,
     WAR_ACTION_STEP_SOUND_FIST,
@@ -610,12 +608,6 @@ typedef enum _WarUnitActionStepType
     WAR_ACTION_STEP_SOUND_ARROW,
     WAR_ACTION_STEP_SOUND_LIGHTNING,
 } WarUnitActionStepType;
-
-typedef enum _WarUnbreakableParam
-{
-    WAR_UNBREAKABLE_BEGIN,
-    WAR_UNBREAKABLE_END,
-} WarUnbreakableParam;
 
 typedef enum _WarUnitActionType
 {

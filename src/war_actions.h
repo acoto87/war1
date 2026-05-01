@@ -1,5 +1,7 @@
 #pragma once
 
+#include "shl/list.h"
+
 #include "war_fwd.h"
 #include "war_math.h"
 
@@ -11,15 +13,11 @@ struct _WarUnitActionStep
 
 #define WarUnitActionStepEmpty (WarUnitActionStep){WAR_ACTION_STEP_NONE}
 
-bool equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep step2)
-{
-    return step1.type == step2.type && step1.param == step2.param;
-}
+bool wact_equalsActionStep(const WarUnitActionStep step1, const WarUnitActionStep step2);
 
 shlDeclareList(WarUnitActionStepList, WarUnitActionStep)
-shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 
-#define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, equalsActionStep, NULL}
+#define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, wact_equalsActionStep, NULL}
 
 struct _WarUnitActionDef
 {
@@ -32,7 +30,6 @@ struct _WarUnitActionDef
 struct _WarUnitAction
 {
     WarUnitActionStatus status;
-    bool unbreakable;
     f32 scale;
     f32 waitCount;
     s32 stepIndex;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "shl/list.h"
 #include "shl/queue.h"
 
 #include "war_units.h"
