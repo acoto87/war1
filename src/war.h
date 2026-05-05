@@ -114,21 +114,24 @@
 #define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
 #define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)
 
-#define isButtonPressed(input, btn) (input->buttons[btn].pressed)
-#define wasButtonPressed(input, btn) (input->buttons[btn].wasPressed)
-#define isKeyPressed(input, key) (input->keys[key].pressed)
-#define wasKeyPressed(input, key) (input->keys[key].wasPressed)
+#define isButtonHeld(input, btn) ((input)->buttons[btn].held)
+#define isButtonJustPressed(input, btn) ((input)->buttons[btn].justPressed)
+#define isButtonJustReleased(input, btn) ((input)->buttons[btn].justReleased)
+
+#define isKeyHeld(input, key) ((input)->keys[key].held)
+#define isKeyJustPressed(input, key) ((input)->keys[key].justPressed)
+#define isKeyJustReleased(input, key) ((input)->keys[key].justReleased)
+
+#define isMapDragging(input) ((input)->mapDragActive)
 
 #define getScaledSpeed(context, t) ((t) * (context)->globalSpeed)
 #define getScaledTime(context, t) ((t) / (context)->globalSpeed)
 
-struct _WarKeyButtonState
+struct _WarInputState
 {
-    // indicates if the key is pressed in the current frame
-    bool pressed;
-
-    // indicate if the key was pressed in the previous frame
-    bool wasPressed;
+    bool held;
+    bool justPressed;
+    bool justReleased;
 };
 
 struct _WarInput
@@ -137,16 +140,18 @@ struct _WarInput
     vec2 pos;
 
     // state of the mouse buttons
-    WarKeyButtonState buttons[WAR_MOUSE_COUNT];
+    WarInputState buttons[WAR_MOUSE_COUNT];
 
     // state of the keys
-    WarKeyButtonState keys[WAR_KEY_COUNT];
+    WarInputState keys[WAR_KEY_COUNT];
 
-    // drag
-    bool isDragging;
-    bool wasDragging;
-    vec2 dragPos;
-    rect dragRect;
+    // button currently owning the mouse press
+    WarEntityId capturedUIButtonId;
+
+    // map selection drag that started inside mapPanel
+    bool mapDragActive;
+    vec2 mapDragStartPos;
+    rect mapDragRect;
 };
 
 struct _WarRenderState

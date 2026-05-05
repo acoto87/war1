@@ -228,14 +228,15 @@ void wui_updateUICursor(WarContext* context)
 void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
 {
     WarInput* input = &context->input;
-
     WarEntityList* buttons = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
+    WarEntity* hoveredButton = NULL;
+    WarEntity* capturedButton = NULL;
 
-    // store the buttons to update in this frame first
+    // NOTE: Store the buttons to update in this frame first
     // because the action of some buttons is to show other buttons
     // in their same location, and if the newly shown button is
     // after in the list, then it will update in this same frame
-    // which it shouldn't happen
+    // which shouldn't happen
     WarEntityIdSet buttonsToUpdate;
     WarEntityIdSetInit(&buttonsToUpdate, WarEntityIdSetDefaultOptions);
 
@@ -250,13 +251,42 @@ void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
             if (ui->enabled && button->enabled && button->interactive)
             {
                 WarEntityIdSetAdd(&buttonsToUpdate, entity->id);
+
+                WarTransformComponent* transform = &entity->transform;
+                vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
+                rect buttonRect = rectv(transform->position, backgroundSize);
+                if (rect_containsf(buttonRect, input->pos.x, input->pos.y))
+                {
+                    hoveredButton = entity;
+                }
             }
             else
             {
                 button->hot = false;
                 button->active = false;
+
+                if (input->capturedUIButtonId == entity->id)
+                {
+                    input->capturedUIButtonId = 0;
+                }
             }
         }
+    }
+
+    if (input->capturedUIButtonId)
+    {
+        capturedButton = we_findEntity(context, input->capturedUIButtonId);
+        if (!capturedButton || !WarEntityIdSetContains(&buttonsToUpdate, capturedButton->id))
+        {
+            input->capturedUIButtonId = 0;
+            capturedButton = NULL;
+        }
+    }
+
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT) && hoveredButton)
+    {
+        input->capturedUIButtonId = hoveredButton->id;
+        capturedButton = hoveredButton;
     }
 
     for(s32 i = 0; i < buttons->count; i++)
@@ -264,10 +294,14 @@ void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
         WarEntity* entity = buttons->items[i];
         if (entity && WarEntityIdSetContains(&buttonsToUpdate, entity->id))
         {
-            WarTransformComponent* transform = &entity->transform;
             WarButtonComponent* button = &entity->button;
+            bool isHovered = entity == hoveredButton;
+            bool isCaptured = entity == capturedButton;
 
-            if (hotKeysEnabled && wasKeyPressed(input, button->hotKey))
+            button->hot = isHovered;
+            button->active = isHovered && isCaptured && isButtonHeld(input, WAR_MOUSE_LEFT);
+
+            if (hotKeysEnabled && isKeyJustReleased(input, button->hotKey))
             {
                 if (button->clickHandler)
                 {
@@ -282,47 +316,16 @@ void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
                 }
             }
 
-            vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
-            rect buttonRect = rectv(transform->position, backgroundSize);
-            bool pointerInside = rect_containsf(buttonRect, input->pos.x, input->pos.y);
-
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustReleased(input, WAR_MOUSE_LEFT) && isCaptured)
             {
-                if (button->active)
+                if (isHovered && button->clickHandler)
                 {
-                    if (pointerInside && button->clickHandler)
-                    {
-                        button->clickHandler(context, entity);
-                        wa_createAudio(context, WAR_UI_CLICK, false);
-                    }
-
-                    button->active = false;
+                    button->clickHandler(context, entity);
+                    wa_createAudio(context, WAR_UI_CLICK, false);
                 }
 
-            }
-            else if (isButtonPressed(input, WAR_MOUSE_LEFT))
-            {
-                if (button->hot)
-                    button->active = true;
-            }
-            else if (pointerInside)
-            {
-                for(s32 j = 0; j < buttons->count; j++)
-                {
-                    WarEntity* otherButton = buttons->items[j];
-                    if (otherButton)
-                    {
-                        otherButton->button.hot = false;
-                        otherButton->button.active = false;
-                    }
-                }
-
-                button->hot = true;
-            }
-            else
-            {
-                button->hot = false;
                 button->active = false;
+                input->capturedUIButtonId = 0;
             }
         }
     }

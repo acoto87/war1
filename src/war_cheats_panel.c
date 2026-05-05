@@ -138,10 +138,10 @@ void wcheatp_updateCheatsPanel(WarContext* context)
 
     if (cheatStatus->visible)
     {
-        if (wasKeyPressed(input, WAR_KEY_ESC) ||
-            wasKeyPressed(input, WAR_KEY_ENTER))
+        if (isKeyJustReleased(input, WAR_KEY_ESC) ||
+            isKeyJustReleased(input, WAR_KEY_ENTER))
         {
-            if (wasKeyPressed(input, WAR_KEY_ENTER))
+            if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
                 wcheat_applyCheat(context, wstr_view(&cheatStatus->text));
             }
@@ -150,7 +150,7 @@ void wcheatp_updateCheatsPanel(WarContext* context)
             return;
         }
 
-        if (wasKeyPressed(input, WAR_KEY_TAB))
+        if (isKeyJustReleased(input, WAR_KEY_TAB))
         {
             s32 length = (s32)cheatStatus->text.length;
             if (TAB_WIDTH <= STATUS_TEXT_MAX_LENGTH - length)
@@ -159,7 +159,7 @@ void wcheatp_updateCheatsPanel(WarContext* context)
                 cheatStatus->position++;
             }
         }
-        else if (wasKeyPressed(input, WAR_KEY_BACKSPACE))
+        else if (isKeyJustReleased(input, WAR_KEY_BACKSPACE))
         {
             if (cheatStatus->position > 0)
             {
@@ -167,7 +167,7 @@ void wcheatp_updateCheatsPanel(WarContext* context)
                 cheatStatus->position--;
             }
         }
-        else if (wasKeyPressed(input, WAR_KEY_DELETE))
+        else if (isKeyJustReleased(input, WAR_KEY_DELETE))
         {
             s32 length = (s32)cheatStatus->text.length;
             if (cheatStatus->position < length)
@@ -175,7 +175,7 @@ void wcheatp_updateCheatsPanel(WarContext* context)
                 wstr_removeRange(&cheatStatus->text, cheatStatus->position, 1);
             }
         }
-        else if (wasKeyPressed(input, WAR_KEY_RIGHT))
+        else if (isKeyJustReleased(input, WAR_KEY_RIGHT))
         {
             s32 length = (s32)cheatStatus->text.length;
             if (cheatStatus->position < length)
@@ -183,18 +183,18 @@ void wcheatp_updateCheatsPanel(WarContext* context)
                 cheatStatus->position++;
             }
         }
-        else if (wasKeyPressed(input, WAR_KEY_LEFT))
+        else if (isKeyJustReleased(input, WAR_KEY_LEFT))
         {
             if (cheatStatus->position > 0)
             {
                 cheatStatus->position--;
             }
         }
-        else if (wasKeyPressed(input, WAR_KEY_HOME))
+        else if (isKeyJustReleased(input, WAR_KEY_HOME))
         {
             cheatStatus->position = 0;
         }
-        else if (wasKeyPressed(input, WAR_KEY_END))
+        else if (isKeyJustReleased(input, WAR_KEY_END))
         {
             s32 length = (s32)cheatStatus->text.length;
             cheatStatus->position = length;
@@ -224,7 +224,7 @@ void wcheatp_updateCheatsPanel(WarContext* context)
         setUIEntityStatus(cheatCursor, false);
         setUIEntityStatus(cheatText, false);
 
-        if (wasKeyPressed(input, WAR_KEY_ENTER))
+        if (isKeyJustReleased(input, WAR_KEY_ENTER))
         {
             wcheatp_setCheatsPanelVisible(context, true);
         }

@@ -387,17 +387,35 @@ void wg_setNextMap(WarContext* context, WarMap* map, f32 transitionDelay)
 void wg_setInputButton(WarContext* context, s32 button, bool pressed)
 {
     WarInput* input = &context->input;
+    WarInputState* state = &input->buttons[button];
 
-    input->buttons[button].wasPressed = input->buttons[button].pressed && !pressed;
-    input->buttons[button].pressed = pressed;
+    if (pressed && !state->held)
+    {
+        state->justPressed = true;
+    }
+    else if (!pressed && state->held)
+    {
+        state->justReleased = true;
+    }
+
+    state->held = pressed;
 }
 
 void wg_setInputKey(WarContext* context, s32 key, bool pressed)
 {
     WarInput* input = &context->input;
+    WarInputState* state = &input->keys[key];
 
-    input->keys[key].wasPressed = input->keys[key].pressed && !pressed;
-    input->keys[key].pressed = pressed;
+    if (pressed && !state->held)
+    {
+        state->justPressed = true;
+    }
+    else if (!pressed && state->held)
+    {
+        state->justReleased = true;
+    }
+
+    state->held = pressed;
 }
 
 void wg_beginInputFrame(WarContext* context)
@@ -406,19 +424,21 @@ void wg_beginInputFrame(WarContext* context)
 
     for (s32 i = 0; i < WAR_MOUSE_COUNT; ++i)
     {
-        input->buttons[i].wasPressed = false;
+        input->buttons[i].justPressed = false;
+        input->buttons[i].justReleased = false;
     }
 
     for (s32 i = 0; i < WAR_KEY_COUNT; ++i)
     {
-        input->keys[i].wasPressed = false;
+        input->keys[i].justPressed = false;
+        input->keys[i].justReleased = false;
     }
-
-    input->wasDragging = false;
 }
 
 void wg_processGameEvent(WarContext* context, SDL_Event* event)
 {
+    WarInput* input = &context->input;
+
     // NOTE: Convert event coordinates from window space to logical render space (320x200).
     // SDL_SetRenderLogicalPresentation does NOT do this automatically in SDL3.
     SDL_ConvertEventToRenderCoordinates(context->renderer, event);
@@ -427,25 +447,22 @@ void wg_processGameEvent(WarContext* context, SDL_Event* event)
     {
         case SDL_EVENT_MOUSE_MOTION:
         {
-            vec2 pos = vec2f((f32)floorf(event->motion.x), (f32)floorf(event->motion.y));
-            context->input.pos = pos;
+            input->pos = vec2f((f32)floorf(event->motion.x), (f32)floorf(event->motion.y));
             break;
         }
 
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         case SDL_EVENT_MOUSE_BUTTON_UP:
         {
-            vec2 pos = vec2f((f32)floorf(event->button.x), (f32)floorf(event->button.y));
-            context->input.pos = pos;
+            input->pos = vec2f((f32)floorf(event->button.x), (f32)floorf(event->button.y));
 
-            bool pressed = event->button.down;
             if (event->button.button == SDL_BUTTON_LEFT)
             {
-                wg_setInputButton(context, WAR_MOUSE_LEFT, pressed);
+                wg_setInputButton(context, WAR_MOUSE_LEFT, event->button.down);
             }
             else if (event->button.button == SDL_BUTTON_RIGHT)
             {
-                wg_setInputButton(context, WAR_MOUSE_RIGHT, pressed);
+                wg_setInputButton(context, WAR_MOUSE_RIGHT, event->button.down);
             }
             break;
         }
@@ -482,28 +499,40 @@ void wg_processGameEvent(WarContext* context, SDL_Event* event)
             wg_appendCheatTextInput(context, wsv_fromCString(event->text.text));
             break;
 
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+            if (!SDL_SetWindowMouseGrab(context->window, true))
+            {
+                logError("Error setting window mouse grab: %s", SDL_GetError());
+            }
+            break;
+
         case SDL_EVENT_WINDOW_FOCUS_LOST:
         case SDL_EVENT_WINDOW_MINIMIZED:
         case SDL_EVENT_WINDOW_HIDDEN:
         {
-            WarInput* input = &context->input;
-
             for (s32 i = 0; i < WAR_MOUSE_COUNT; ++i)
             {
-                input->buttons[i].pressed = false;
-                input->buttons[i].wasPressed = false;
+                input->buttons[i].held = false;
+                input->buttons[i].justPressed = false;
+                input->buttons[i].justReleased = false;
             }
 
             for (s32 i = 0; i < WAR_KEY_COUNT; ++i)
             {
-                input->keys[i].pressed = false;
-                input->keys[i].wasPressed = false;
+                input->keys[i].held = false;
+                input->keys[i].justPressed = false;
+                input->keys[i].justReleased = false;
             }
 
-            input->isDragging = false;
-            input->wasDragging = false;
-            input->dragPos = VEC2_ZERO;
-            input->dragRect = RECT_EMPTY;
+            input->capturedUIButtonId = 0;
+            input->mapDragActive = false;
+            input->mapDragStartPos = VEC2_ZERO;
+            input->mapDragRect = RECT_EMPTY;
+
+            if (!SDL_SetWindowMouseGrab(context->window, false))
+            {
+                logError("Error setting window mouse grab: %s", SDL_GetError());
+            }
             break;
         }
 
@@ -537,8 +566,8 @@ void wg_updateGame(WarContext* context)
 
     WarInput* input = &context->input;
 
-    if (isKeyPressed(input, WAR_KEY_CTRL) &&
-        wasKeyPressed(input, WAR_KEY_P))
+    if (isKeyHeld(input, WAR_KEY_CTRL) &&
+        isKeyJustReleased(input, WAR_KEY_P))
     {
         context->paused = !context->paused;
     }

@@ -82,7 +82,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
 
         if (wu_isDudeUnit(entity) && wu_isFriendlyUnit(context, entity))
         {
-            if (isKeyPressed(input, WAR_KEY_SHIFT))
+            if (isKeyHeld(input, WAR_KEY_SHIFT))
             {
                 if (isPatrolling(entity))
                 {
@@ -590,7 +590,7 @@ bool wcmd_executeCommand(WarContext* context)
     {
         case WAR_COMMAND_MOVE:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -625,7 +625,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_HARVEST:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -683,7 +683,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_REPAIR:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -710,7 +710,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_ATTACK:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -850,7 +850,7 @@ bool wcmd_executeCommand(WarContext* context)
         case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
         case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -891,7 +891,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_BUILD_WALL:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -939,7 +939,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_BUILD_ROAD:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -996,7 +996,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -1023,7 +1023,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_SPELL_POISON_CLOUD:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -1050,7 +1050,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_SPELL_HEALING:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -1072,7 +1072,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_SPELL_INVISIBILITY:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -1094,7 +1094,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -1116,7 +1116,7 @@ bool wcmd_executeCommand(WarContext* context)
 
         case WAR_COMMAND_SPELL_RAISE_DEAD:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {
@@ -1136,7 +1136,7 @@ bool wcmd_executeCommand(WarContext* context)
         case WAR_COMMAND_SPELL_FAR_SIGHT:
         case WAR_COMMAND_SPELL_DARK_VISION:
         {
-            if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
                 if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
                 {

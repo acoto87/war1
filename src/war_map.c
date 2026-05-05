@@ -21,6 +21,8 @@
 #include "war_units.h"
 #include "war_pathfinder.h"
 
+#define MAP_SELECTION_DRAG_THRESHOLD 3.0f
+
 void wmap_addEntityToSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
@@ -48,14 +50,14 @@ vec2 wmap_getDirFromArrowKeys(WarContext* context)
 
     vec2 dir = VEC2_ZERO;
 
-    if (isKeyPressed(input, WAR_KEY_LEFT))
+    if (isKeyHeld(input, WAR_KEY_LEFT))
         dir.x = -1;
-    else if (isKeyPressed(input, WAR_KEY_RIGHT))
+    else if (isKeyHeld(input, WAR_KEY_RIGHT))
         dir.x = 1;
 
-    if (isKeyPressed(input, WAR_KEY_DOWN))
+    if (isKeyHeld(input, WAR_KEY_DOWN))
         dir.y = 1;
-    else if (isKeyPressed(input, WAR_KEY_UP))
+    else if (isKeyHeld(input, WAR_KEY_UP))
         dir.y = -1;
 
     dir = vec2_normalize(dir);
@@ -860,7 +862,7 @@ void wmap_leaveMap(WarContext* context)
     }
 }
 
-void updateViewport(WarContext *context)
+static void updateViewport(WarContext *context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -873,7 +875,7 @@ void updateViewport(WarContext *context)
     bool keyScroll = false;
 
     // if there was a click in the minimap, then update the position of the viewport
-    if (isButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonHeld(input, WAR_MOUSE_LEFT))
     {
         // check if the click is inside the minimap panel
         if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
@@ -885,20 +887,20 @@ void updateViewport(WarContext *context)
             map->viewport.x = offset.x * MAP_WIDTH / minimapSize.x;
             map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
         }
-        // check if it was at the edge of the map to scroll also and update the position of the viewport
-        else if(!input->isDragging)
-        {
-            dir = wmap_getDirFromMousePos(context);
-            mouseScroll = true;
-        }
     }
     // check for the arrows keys and update the position of the viewport
     else
     {
+        if (!isMapDragging(input))
+        {
+            dir = wmap_getDirFromMousePos(context);
+            mouseScroll = !VEC2_IS_ZERO(dir);
+        }
+
         // don't scroll with arrow keys if Control or Shift are pressed
         // don't scroll with arrow keys if the cheat status is active
-        if (!isKeyPressed(input, WAR_KEY_CTRL) &&
-            !isKeyPressed(input, WAR_KEY_SHIFT) &&
+        if (!isKeyHeld(input, WAR_KEY_CTRL) &&
+            !isKeyHeld(input, WAR_KEY_SHIFT) &&
             !cheatsEnabledAndVisible(map))
         {
             dir = wmap_getDirFromArrowKeys(context);
@@ -934,35 +936,116 @@ void updateDragRect(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    input->wasDragging = false;
-    input->dragRect = RECT_EMPTY;
-
     if (map->isScrolling)
     {
-        input->isDragging = false;
-        input->dragPos = VEC2_ZERO;
+        input->mapDragActive = false;
+        input->mapDragStartPos = VEC2_ZERO;
+        input->mapDragRect = RECT_EMPTY;
         return;
     }
 
-    if (isButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
-        if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (!input->capturedUIButtonId && rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
-            if (!input->isDragging)
+            input->mapDragActive = true;
+            input->mapDragStartPos = input->pos;
+            input->mapDragRect = rectv(input->pos, VEC2_ZERO);
+        }
+    }
+    else if (input->mapDragActive && isButtonHeld(input, WAR_MOUSE_LEFT))
+    {
+        input->mapDragRect = rectpf(input->mapDragStartPos.x, input->mapDragStartPos.y, input->pos.x, input->pos.y);
+    }
+}
+
+static bool isMapSelectionDrag(rect dragRect)
+{
+    return dragRect.width >= MAP_SELECTION_DRAG_THRESHOLD ||
+           dragRect.height >= MAP_SELECTION_DRAG_THRESHOLD;
+}
+
+static void updateSelectionFromList(WarContext* context, WarEntityList* newSelectedEntities)
+{
+    WarMap* map = context->map;
+
+    bool areDudesSelected = false;
+    bool areBuildingSelected = false;
+
+    // calculate the number of dudes and buildings in the selection
+    for (s32 i = 0; i < newSelectedEntities->count; i++)
+    {
+        WarEntity* entity = newSelectedEntities->items[i];
+        if (wu_isDudeUnit(entity))
+            areDudesSelected = true;
+        else if (wu_isBuildingUnit(entity))
+            areBuildingSelected = true;
+    }
+
+    if (areDudesSelected)
+    {
+        // remove all new selected buildings
+        for (s32 i = newSelectedEntities->count - 1; i >= 0; i--)
+        {
+            WarEntity* entity = newSelectedEntities->items[i];
+            if (wu_isBuildingUnit(entity))
+                WarEntityListRemoveAt(newSelectedEntities, i);
+        }
+    }
+    else if (areBuildingSelected)
+    {
+        // remove all other new selected buildings
+        WarEntityListRemoveAtRange(newSelectedEntities, 1, newSelectedEntities->count - 1);
+    }
+
+    if (areDudesSelected)
+    {
+        if (newSelectedEntities->count == 1)
+        {
+            WarEntity* newSelectedEntity = newSelectedEntities->items[0];
+            if (wu_isFriendlyUnit(context, newSelectedEntity))
             {
-                input->dragPos = input->pos;
-                input->isDragging = true;
+                wa_playDudeSelectionSound(context, newSelectedEntity);
+            }
+            else
+            {
+                wa_createAudio(context, WAR_UI_CLICK, false);
             }
         }
     }
-    else if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    else if (areBuildingSelected)
     {
-        if (input->isDragging)
+        WarEntity* newSelectedEntity = newSelectedEntities->items[0];
+        if (wu_isFriendlyUnit(context, newSelectedEntity))
         {
-            input->isDragging = false;
-            input->wasDragging = true;
-            input->dragRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
+            wa_playBuildingSelectionSound(context, newSelectedEntity);
         }
+    }
+
+    // if the new selected entity is the same one, don't clear the command, otherwise do
+    if (newSelectedEntities->count == 1 && map->selectedEntities.count == 1)
+    {
+        WarEntity* newSelectedEntity = newSelectedEntities->items[0];
+        WarEntityId selectedEntityId = map->selectedEntities.items[0];
+        if (selectedEntityId != newSelectedEntity->id)
+        {
+            map->command.type = WAR_COMMAND_NONE;
+        }
+    }
+    else
+    {
+        map->command.type = WAR_COMMAND_NONE;
+    }
+
+    // clear the current selection
+    wmap_clearSelection(context);
+
+    // and add the new selection
+    s32 selectedEntitiesCount = MIN(newSelectedEntities->count, 4);
+    for (s32 i = 0; i < selectedEntitiesCount; i++)
+    {
+        WarEntity* entity = newSelectedEntities->items[i];
+        wmap_addEntityToSelection(context, entity->id);
     }
 }
 
@@ -971,22 +1054,23 @@ void updateSelection(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if(wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonJustReleased(input, WAR_MOUSE_LEFT) && input->mapDragActive)
     {
         // if it was scrolling last frame, don't perform any selection this frame
         if (!map->wasScrolling)
         {
-            // check if the click is inside the map panel
-            if(input->wasDragging || rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
-            {
-                WarEntityList newSelectedEntities;
-                WarEntityListInit(&newSelectedEntities, WarEntityListNonFreeOptions);
+            input->mapDragRect = rectpf(input->mapDragStartPos.x, input->mapDragStartPos.y, input->pos.x, input->pos.y);
 
-                rect pointerRect = wmap_screenToMapCoordinatesR(context, input->dragRect);
+            WarEntityList newSelectedEntities;
+            WarEntityListInit(&newSelectedEntities, WarEntityListNonFreeOptions);
+
+            if (isMapSelectionDrag(input->mapDragRect))
+            {
+                rect pointerRect = wmap_screenToMapCoordinatesR(context, input->mapDragRect);
 
                 // select the entities inside the dragging rect
                 WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-                for(s32 i = 0; i < units->count; i++)
+                for (s32 i = 0; i < units->count; i++)
                 {
                     WarEntity* entity = units->items[i];
                     if (entity)
@@ -1026,103 +1110,48 @@ void updateSelection(WarContext* context)
                         }
                     }
                 }
-
-                // include the already selected entities if the Ctrl key is pressed
-                if (isKeyPressed(input, WAR_KEY_CTRL))
-                {
-                    // the max number of selected entities is 4, so there is no much
-                    // throuble looking for the actual entities here, it will also
-                    // improve when a hash is make for looking up the entities
-                    for (s32 i = 0; i < map->selectedEntities.count; i++)
-                    {
-                        WarEntity* entity = we_findEntity(context, map->selectedEntities.items[i]);
-                        if (entity)
-                            WarEntityListAdd(&newSelectedEntities, entity);
-                    }
-                }
-
-                bool areDudesSelected = false;
-                bool areBuildingSelected = false;
-
-                // calculate the number of dudes and buildings in the selection
-                for (s32 i = 0; i < newSelectedEntities.count; i++)
-                {
-                    WarEntity* entity = newSelectedEntities.items[i];
-                    if (wu_isDudeUnit(entity))
-                        areDudesSelected = true;
-                    else if (wu_isBuildingUnit(entity))
-                        areBuildingSelected = true;
-                }
-
-                if (areDudesSelected)
-                {
-                    // remove all new selected buildings
-                    for (s32 i = newSelectedEntities.count - 1; i >= 0; i--)
-                    {
-                        WarEntity* entity = newSelectedEntities.items[i];
-                        if (wu_isBuildingUnit(entity))
-                            WarEntityListRemoveAt(&newSelectedEntities, i);
-                    }
-                }
-                else if (areBuildingSelected)
-                {
-                    // remove all other new selected buildings
-                    WarEntityListRemoveAtRange(&newSelectedEntities, 1, newSelectedEntities.count - 1);
-                }
-
-                if (areDudesSelected)
-                {
-                    if (newSelectedEntities.count == 1)
-                    {
-                        WarEntity* newSelectedEntity = newSelectedEntities.items[0];
-                        if (wu_isFriendlyUnit(context, newSelectedEntity))
-                        {
-                            wa_playDudeSelectionSound(context, newSelectedEntity);
-                        }
-                        else
-                        {
-                            wa_createAudio(context, WAR_UI_CLICK, false);
-                        }
-                    }
-                }
-                else if (areBuildingSelected)
-                {
-                    WarEntity* newSelectedEntity = newSelectedEntities.items[0];
-                    if (wu_isFriendlyUnit(context, newSelectedEntity))
-                    {
-                        wa_playBuildingSelectionSound(context, newSelectedEntity);
-                    }
-                }
-
-                // if the new selected entity is the same one, don't clear the command, otherwise do
-                if (newSelectedEntities.count == 1 && map->selectedEntities.count == 1)
-                {
-                    WarEntity* newSelectedEntity = newSelectedEntities.items[0];
-                    WarEntityId selectedEntityId = map->selectedEntities.items[0];
-                    if (selectedEntityId != newSelectedEntity->id)
-                    {
-                        map->command.type = WAR_COMMAND_NONE;
-                    }
-                }
-                else
-                {
-                    map->command.type = WAR_COMMAND_NONE;
-                }
-
-                // clear the current selection
-                wmap_clearSelection(context);
-
-                // and add the new selection
-                s32 selectedEntitiesCount = MIN(newSelectedEntities.count, 4);
-                for (s32 i = 0; i < selectedEntitiesCount; i++)
-                {
-                    WarEntity* entity = newSelectedEntities.items[i];
-                    wmap_addEntityToSelection(context, entity->id);
-                }
-
-                WarEntityListFree(&newSelectedEntities);
             }
+            else
+            {
+                WarEntity* entityUnderCursor = we_findEntityUnderCursor(context, false, false);
+                if (entityUnderCursor)
+                {
+                    WarUnitComponent* unit = &entityUnderCursor->unit;
+                    if (unit->enabled &&
+                        !isDead(entityUnderCursor) &&
+                        !isGoingToDie(entityUnderCursor) &&
+                        !wu_isCorpseUnit(entityUnderCursor) &&
+                        !isCollapsing(entityUnderCursor) &&
+                        !isGoingToCollapse(entityUnderCursor) &&
+                        !(wu_isWorkerUnit(entityUnderCursor) && wst_isInsideBuilding(entityUnderCursor)) &&
+                        isUnitPartiallyVisible(map, entityUnderCursor))
+                    {
+                        WarEntityListAdd(&newSelectedEntities, entityUnderCursor);
+                    }
+                }
+            }
+
+            // include the already selected entities if the Ctrl key is pressed
+            if (isKeyHeld(input, WAR_KEY_CTRL))
+            {
+                // the max number of selected entities is 4, so there is no much
+                // throuble looking for the actual entities here, it will also
+                // improve when a hash is make for looking up the entities
+                for (s32 i = 0; i < map->selectedEntities.count; i++)
+                {
+                    WarEntity* entity = we_findEntity(context, map->selectedEntities.items[i]);
+                    if (entity)
+                        WarEntityListAdd(&newSelectedEntities, entity);
+                }
+            }
+
+            updateSelectionFromList(context, &newSelectedEntities);
+            WarEntityListFree(&newSelectedEntities);
         }
+
+        input->mapDragActive = false;
+        input->mapDragStartPos = VEC2_ZERO;
+        input->mapDragRect = RECT_EMPTY;
     }
 }
 
@@ -1134,7 +1163,7 @@ void updateTreesEdit(WarContext* context)
     if (!map->editingTrees)
         return;
 
-    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
         if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
@@ -1174,7 +1203,7 @@ void updateRoadsEdit(WarContext* context)
     if (!map->editingRoads)
         return;
 
-    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
         if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
@@ -1209,7 +1238,7 @@ void updateWallsEdit(WarContext* context)
     if (!map->editingWalls)
         return;
 
-    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
         if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
@@ -1249,7 +1278,7 @@ void updateRuinsEdit(WarContext* context)
     if (!map->editingRuins)
         return;
 
-    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
         if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
@@ -1284,7 +1313,7 @@ void updateRainOfFireEdit(WarContext* context)
     if (!map->editingRainOfFire)
         return;
 
-    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
         if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
@@ -1307,7 +1336,7 @@ void updateAddUnit(WarContext* context)
     if (!map->addingUnit)
         return;
 
-    if (wasButtonPressed(input, WAR_MOUSE_LEFT))
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
         if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
         {
@@ -1452,7 +1481,7 @@ void updateCommandFromRightClick(WarContext* context)
     WarUnitCommand* command = &map->command;
     WarInput* input = &context->input;
 
-    if (wasButtonPressed(input, WAR_MOUSE_RIGHT))
+    if (isButtonJustPressed(input, WAR_MOUSE_RIGHT))
     {
         if (command->type == WAR_COMMAND_NONE)
         {
@@ -1592,10 +1621,10 @@ void updateStatus(WarContext* context)
 
         if (cheatStatus->visible)
         {
-            if (wasKeyPressed(input, WAR_KEY_ESC) ||
-                wasKeyPressed(input, WAR_KEY_ENTER))
+            if (isKeyJustReleased(input, WAR_KEY_ESC) ||
+                isKeyJustReleased(input, WAR_KEY_ENTER))
             {
-                if (wasKeyPressed(input, WAR_KEY_ENTER))
+                if (isKeyJustReleased(input, WAR_KEY_ENTER))
                 {
                     wcheat_applyCheat(context, wsv_fromString(&cheatStatus->text));
                 }
@@ -1604,7 +1633,7 @@ void updateStatus(WarContext* context)
                 return;
             }
 
-            if (wasKeyPressed(input, WAR_KEY_TAB))
+            if (isKeyJustReleased(input, WAR_KEY_TAB))
             {
                 s32 length = (s32)cheatStatus->text.length;
                 if (TAB_WIDTH <= STATUS_TEXT_MAX_LENGTH - length)
@@ -1613,7 +1642,7 @@ void updateStatus(WarContext* context)
                     cheatStatus->position++;
                 }
             }
-            else if (wasKeyPressed(input, WAR_KEY_BACKSPACE))
+            else if (isKeyJustReleased(input, WAR_KEY_BACKSPACE))
             {
                 if (cheatStatus->position > 0)
                 {
@@ -1621,7 +1650,7 @@ void updateStatus(WarContext* context)
                     cheatStatus->position--;
                 }
             }
-            else if (wasKeyPressed(input, WAR_KEY_DELETE))
+            else if (isKeyJustReleased(input, WAR_KEY_DELETE))
             {
                 s32 length = (s32)cheatStatus->text.length;
                 if (cheatStatus->position < length)
@@ -1629,7 +1658,7 @@ void updateStatus(WarContext* context)
                     wstr_removeRange(&cheatStatus->text, cheatStatus->position, 1);
                 }
             }
-            else if (wasKeyPressed(input, WAR_KEY_RIGHT))
+            else if (isKeyJustReleased(input, WAR_KEY_RIGHT))
             {
                 s32 length = (s32)cheatStatus->text.length;
                 if (cheatStatus->position < length)
@@ -1637,18 +1666,18 @@ void updateStatus(WarContext* context)
                     cheatStatus->position++;
                 }
             }
-            else if (wasKeyPressed(input, WAR_KEY_LEFT))
+            else if (isKeyJustReleased(input, WAR_KEY_LEFT))
             {
                 if (cheatStatus->position > 0)
                 {
                     cheatStatus->position--;
                 }
             }
-            else if (wasKeyPressed(input, WAR_KEY_HOME))
+            else if (isKeyJustReleased(input, WAR_KEY_HOME))
             {
                 cheatStatus->position = 0;
             }
-            else if (wasKeyPressed(input, WAR_KEY_END))
+            else if (isKeyJustReleased(input, WAR_KEY_END))
             {
                 s32 length = (s32)cheatStatus->text.length;
                 cheatStatus->position = length;
@@ -1675,7 +1704,7 @@ void updateStatus(WarContext* context)
         {
             setUIEntityStatus(statusCursor, false);
 
-            if (wasKeyPressed(input, WAR_KEY_ENTER))
+            if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
                 wcheatp_setCheatsPanelVisible(context, true);
             }
@@ -1804,7 +1833,7 @@ void updateMapCursor(WarContext* context)
             return;
         }
 
-        if (input->isDragging)
+        if (isMapDragging(input))
         {
             wui_changeCursorType(context, entity, WAR_CURSOR_GREEN_CROSSHAIR);
             return;
@@ -2496,15 +2525,20 @@ void wmap_updateMap(WarContext* context)
 {
     WarMap* map = context->map;
 
-    updateViewport(context);
-    updateDragRect(context);
-
     if (!map->playing)
     {
+        WarInput* input = &context->input;
+        input->mapDragActive = false;
+        input->mapDragStartPos = VEC2_ZERO;
+        input->mapDragRect = RECT_EMPTY;
+
         wui_updateUIButtons(context, true);
         updateMapCursor(context);
         return;
     }
+
+    updateViewport(context);
+    updateDragRect(context);
 
     if (!wcmd_executeCommand(context))
     {
