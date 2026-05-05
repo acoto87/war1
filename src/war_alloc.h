@@ -18,8 +18,15 @@ void wm_allocFree(void);
 void wm_setZone(memzone_t* zone);
 void wm_resetZone(void); // restores to permanentZone
 
-void* wm_alloc(size_t sz);
-void* wm_allocFrame(size_t sz);
-void* wm_calloc(size_t n, size_t sz);
-void* wm_realloc(void* p, size_t sz);
-void  wm_free(void* p);
+// Internal macro targets; prefer the wm_* macros below.
+void* wm__alloc(size_t sz, const char* file, int line);
+void* wm__allocFrame(size_t sz, const char* file, int line);
+void* wm__calloc(size_t n, size_t sz, const char* file, int line);
+void* wm__realloc(void* p, size_t sz, const char* file, int line);
+void  wm__free(void* p, const char* file, int line);
+
+#define wm_alloc(sz)          wm__alloc((sz), __FILE__, __LINE__)
+#define wm_allocFrame(sz)     wm__allocFrame((sz), __FILE__, __LINE__)
+#define wm_calloc(n, sz)      wm__calloc((n), (sz), __FILE__, __LINE__)
+#define wm_realloc(p, sz)     wm__realloc((p), (sz), __FILE__, __LINE__)
+#define wm_free(p)            wm__free((p), __FILE__, __LINE__)

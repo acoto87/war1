@@ -100,11 +100,11 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Selection rectangle are missing
 * [x] Progress rectangle is missing
 * [x] Cursor is too sensitive, and usually out of window area
-* [ ] Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right now the OS cursor shows up when the user move the game cursor outside the window. That's no good.
+* [x] Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right now the OS cursor shows up when the user move the game cursor outside the window. That's no good.
+* [x] Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
 * [ ] When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
 * [ ] Check for memory leaks in the removing animations functionality.
 * [ ] Check why the changing of the global scale renders with the previous global scale after a change (only on Linux, on Windows it doesn't happen).
-* [ ] Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
 * [ ] When a unit attacks a unit that is attacking a building, the second unit should stop the attack on the building and attack the first unit.
 * [ ] If an unit is attacked when idle, the unit respond the attack.
 * [ ] Instead of Holy Sight/Dark Vision create an object, make the fog of war cells have more states like `MAP_STATE_ALWAYS_VISIBLE` and `MAP_STATE_TIMED_VISIBLE`.

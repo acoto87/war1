@@ -54,7 +54,7 @@ void wsc_updateSceneDownload(WarContext* context)
     {
         case WAR_SCENE_DOWNLOAD_DOWNLOAD:
         {
-            if (wasKeyPressed(input, WAR_KEY_ENTER))
+            if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
                 static const char confirm[] = "The DEMO DATA.WAR doesn't have all assets.\n"
                                               "\n"
@@ -76,7 +76,7 @@ void wsc_updateSceneDownload(WarContext* context)
         }
         case WAR_SCENE_DOWNLOAD_CONFIRM:
         {
-            if (wasKeyPressed(input, WAR_KEY_ENTER))
+            if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
                 WarEntity* downloadingText = we_findUIEntity(context, wsv_fromCString("txtDownloading"));
                 setUIEntityStatus(downloadingText, true);
@@ -108,7 +108,7 @@ void wsc_updateSceneDownload(WarContext* context)
         }
         case WAR_SCENE_DOWNLOAD_DOWNLOADED:
         {
-            if (wasKeyPressed(input, WAR_KEY_ENTER))
+            if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
                 // load DATA.WAR file
                 if (wg_loadDataFile(context))
@@ -132,7 +132,7 @@ void wsc_updateSceneDownload(WarContext* context)
         }
         case WAR_SCENE_DOWNLOAD_FAILED:
         {
-            if (wasKeyPressed(input, WAR_KEY_ENTER))
+            if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
                 SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
             }

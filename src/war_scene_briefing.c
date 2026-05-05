@@ -151,9 +151,9 @@ void wsc_updateSceneBriefing(WarContext* context)
     wanim_updateAnimations(context);
 
     if (scene->briefing.time <= 0 ||
-        wasButtonPressed(input, WAR_MOUSE_LEFT) ||
-        wasKeyPressed(input, WAR_KEY_ENTER) ||
-        wasKeyPressed(input, WAR_KEY_SPACE))
+        isButtonJustPressed(input, WAR_MOUSE_LEFT) ||
+        isKeyJustPressed(input, WAR_KEY_ENTER) ||
+        isKeyJustPressed(input, WAR_KEY_SPACE))
     {
         WarMap* map = wmap_createMap(context, scene->briefing.mapType);
         wg_setNextMap(context, map, 1.0f);

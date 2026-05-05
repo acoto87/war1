@@ -378,9 +378,9 @@ void wmui_renderSelectionRect(WarContext* context)
     wr_save(context);
 
     WarInput* input = &context->input;
-    if (input->isDragging)
+    if (isMapDragging(input))
     {
-        rect pointerRect = rectpf(input->dragPos.x, input->dragPos.y, input->pos.x, input->pos.y);
+        rect pointerRect = rectpf(input->mapDragStartPos.x, input->mapDragStartPos.y, input->pos.x, input->pos.y);
         wr_strokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
     }
 

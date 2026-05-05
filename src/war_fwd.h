@@ -3,11 +3,11 @@
 #include <stdint.h>
 #include "war_enums.h"
 
-struct _WarKeyButtonState;
-typedef struct _WarKeyButtonState WarKeyButtonState;
-
 struct _WarInput;
 typedef struct _WarInput WarInput;
+
+struct _WarInputState;
+typedef struct _WarInputState WarInputState;
 
 struct _WarFontData;
 typedef struct _WarFontData WarFontData;
