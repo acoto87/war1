@@ -134,6 +134,7 @@ void wmap_freeMap(WarContext* context, WarMap* map);
 void wmap_enterMap(WarContext* context);
 void wmap_updateMap(WarContext* context);
 void wmap_leaveMap(WarContext* context);
+void wmap_renderMap(WarContext* context);
 
 void wmap_addEntityToSelection(WarContext* context, WarEntityId id);
 void wmap_removeEntityFromSelection(WarContext* context, WarEntityId id);

@@ -128,7 +128,6 @@ void we_addSpriteComponentFromResource(WarContext* context, WarEntity* entity, W
 void we_removeSpriteComponent(WarContext* context, WarEntity* entity)
 {
     wspr_freeSprite(context, entity->sprite.sprite);
-
     entity->sprite = (WarSpriteComponent){0};
 }
 
@@ -1669,6 +1668,7 @@ void we_renderEntity(WarContext* context, WarEntity* entity)
 void we_renderEntitiesOfType(WarContext* context, WarEntityType type)
 {
     TracyCZoneN(ctx, "RenderEntities", 1);
+
     static WarRenderCompareFunc renderCompareFuncs[WAR_ENTITY_TYPE_COUNT] =
     {
         NULL,                       // WAR_ENTITY_TYPE_NONE,
@@ -1716,11 +1716,13 @@ void we_renderEntitiesOfType(WarContext* context, WarEntityType type)
             we_renderEntity(context, entity);
         }
     }
+
     TracyCZoneEnd(ctx);
 }
 
 void we_renderUnitSelection(WarContext* context)
 {
+    TracyCZoneN(ctx, "RenderUnitSelection", 1);
     WarMap* map = context->map;
 
     WarEntityIdList* selectedEntities = &map->selectedEntities;
@@ -1761,6 +1763,7 @@ void we_renderUnitSelection(WarContext* context)
             }
         }
     }
+    TracyCZoneEnd(ctx);
 }
 
 void we_increaseUpgradeLevel(WarContext* context, WarPlayerInfo* player, WarUpgradeType upgrade)

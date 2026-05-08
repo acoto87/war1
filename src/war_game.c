@@ -22,7 +22,7 @@
 #include "war_file.h"
 #include "war_font.h"
 #include "war.h"
-#include "war_map_render.h"
+#include "war_map.h"
 #include "war_resources.h"
 #include "war_scenes.h"
 
@@ -574,6 +574,7 @@ void wg_updateGame(WarContext* context)
 
     if (context->paused)
     {
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -613,6 +614,7 @@ void wg_updateGame(WarContext* context)
     if (context->transitionDelay > 0)
     {
         context->transitionDelay = MAX(context->transitionDelay - context->deltaTime, 0.0f);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -643,6 +645,7 @@ void wg_renderGame(WarContext *context)
     // don't render anything if it's transitioning
     if (context->transitionDelay > 0)
     {
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -655,7 +658,7 @@ void wg_renderGame(WarContext *context)
     }
     else if (context->map)
     {
-        renderMap(context);
+        wmap_renderMap(context);
     }
 
     TracyCZoneEnd(ctx);
