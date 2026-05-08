@@ -53,11 +53,14 @@ void wsc_enterScene(WarContext* context)
 
 void wsc_updateScene(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateScene", 1);
+
     WarScene* scene = context->scene;
 
     if (!inRange(scene->type, WAR_SCENE_DOWNLOAD, WAR_SCENE_COUNT))
     {
         logError("Unkown scene type: %d", scene->type);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -73,6 +76,8 @@ void wsc_updateScene(WarContext* context)
         wui_updateUICursor(context);
         wanim_updateAnimations(context);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wsc_leaveScene(WarContext* context)
@@ -101,6 +106,8 @@ void wsc_leaveScene(WarContext* context)
 
 void wsc_renderScene(WarContext* context)
 {
+    TracyCZoneN(ctx, "RenderScene", 1);
+
     WarEntityList* uiEntities = we_getEntities(context);
     for (s32 i = 0; i < uiEntities->count; i++)
     {
@@ -110,4 +117,6 @@ void wsc_renderScene(WarContext* context)
             we_renderEntity(context, entity);
         }
     }
+
+    TracyCZoneEnd(ctx);
 }

@@ -1365,6 +1365,8 @@ void updateAddUnit(WarContext* context)
 
 void updateCommandButtons(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateCommandButtons", 1);
+
     WarMap* map = context->map;
 
     WarEntity* commandButtons[6] =
@@ -1393,7 +1395,10 @@ void updateCommandButtons(WarContext* context)
 
     s32 selectedEntitiesCount = map->selectedEntities.count;
     if (selectedEntitiesCount == 0)
+    {
+        TracyCZoneEnd(ctx);
         return;
+    }
 
     WarEntity* entity = we_findEntity(context, map->selectedEntities.items[0]);
     assert(entity && isUnit(entity));
@@ -1416,7 +1421,7 @@ void updateCommandButtons(WarContext* context)
             setUITextHighlight(commandTexts[1], NO_HIGHLIGHT, 0);
             wui_setUIText(commandTexts[2], wstr_fromCStringFormat(" USED %d", dudesCount));
             setUITextHighlight(commandTexts[2], NO_HIGHLIGHT, 0);
-
+            TracyCZoneEnd(ctx);
             return;
         }
     }
@@ -1431,6 +1436,7 @@ void updateCommandButtons(WarContext* context)
         setUITextHighlight(commandTexts[0], NO_HIGHLIGHT, 0);
         wui_setUIText(commandTexts[3], wstr_fromCStringFormat("%d", gold));
         setUITextHighlight(commandTexts[3], NO_HIGHLIGHT, 0);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -1473,10 +1479,14 @@ void updateCommandButtons(WarContext* context)
             commandButtons[i]->button.clickHandler = commandData.clickHandler;
         }
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void updateCommandFromRightClick(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateCommandFromRightClick", 1);
+
     WarMap* map = context->map;
     WarUnitCommand* command = &map->command;
     WarInput* input = &context->input;
@@ -1582,10 +1592,14 @@ void updateCommandFromRightClick(WarContext* context)
             wcmd_cancel(context, NULL);
         }
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void updateStatus(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateStatus", 1);
+
     WarMap* map = context->map;
     WarInput* input = &context->input;
     WarCheatStatus* cheatStatus = &map->cheatStatus;
@@ -1630,6 +1644,7 @@ void updateStatus(WarContext* context)
                 }
 
                 wcheatp_setCheatsPanelVisible(context, false);
+                TracyCZoneEnd(ctx);
                 return;
             }
 
@@ -1698,6 +1713,7 @@ void updateStatus(WarContext* context)
             statusCursor->transform.position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
 
             setUIEntityStatus(statusCursor, true);
+            TracyCZoneEnd(ctx);
             return;
         }
         else
@@ -1716,6 +1732,7 @@ void updateStatus(WarContext* context)
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
             wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, flashStatus->text);
+            TracyCZoneEnd(ctx);
             return;
         }
 
@@ -1815,10 +1832,14 @@ void updateStatus(WarContext* context)
     }
 
     wmui_setStatus(context, highlightIndex, highlightCount, goldCost, woodCost, statusText);
+
+    TracyCZoneEnd(ctx);
 }
 
 void updateMapCursor(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateMapCursor", 1);
+
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
@@ -1830,12 +1851,14 @@ void updateMapCursor(WarContext* context)
         if (!map->playing)
         {
             wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
+            TracyCZoneEnd(ctx);
             return;
         }
 
         if (isMapDragging(input))
         {
             wui_changeCursorType(context, entity, WAR_CURSOR_GREEN_CROSSHAIR);
+            TracyCZoneEnd(ctx);
             return;
         }
 
@@ -2021,11 +2044,14 @@ void updateMapCursor(WarContext* context)
                 wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
         }
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void updateStateMachines(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateStateMachines", 1);
+
     WarEntityList* entities = we_getEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
@@ -2035,12 +2061,14 @@ void updateStateMachines(WarContext* context)
             wst_updateStateMachine(context, entity);
         }
     }
+
     TracyCZoneEnd(ctx);
 }
 
 void updateActions(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateActions", 1);
+
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
@@ -2050,11 +2078,14 @@ void updateActions(WarContext* context)
             wact_updateAction(context, entity);
         }
     }
+
     TracyCZoneEnd(ctx);
 }
 
 void updateProjectiles(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateProjectiles", 1);
+
     WarEntityList* projectiles = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
     for (s32 i = 0; i < projectiles->count; i++)
     {
@@ -2064,10 +2095,14 @@ void updateProjectiles(WarContext* context)
             wproj_updateProjectile(context, entity);
         }
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void updateMagic(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateMagic", 1);
+
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
@@ -2115,6 +2150,8 @@ void updateMagic(WarContext* context)
             }
         }
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 bool updatePoisonCloud(WarContext* context, WarEntity* entity)
@@ -2154,6 +2191,8 @@ bool updateSight(WarContext* context, WarEntity* entity)
 
 void updateSpells(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateSpells", 1);
+
     WarEntityIdList spellsToRemove;
     WarEntityIdListInit(&spellsToRemove, WarEntityIdListDefaultOptions);
 
@@ -2219,11 +2258,14 @@ void updateSpells(WarContext* context)
     }
 
     WarEntityIdListFree(&spellsToRemove);
+
+    TracyCZoneEnd(ctx);
 }
 
 void updateFoW(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateFoW", 1);
+
     WarMap* map = context->map;
 
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
@@ -2345,12 +2387,14 @@ void updateFoW(WarContext* context)
             }
         }
     }
+
     TracyCZoneEnd(ctx);
 }
 
 void determineFoWTypes(WarContext* context)
 {
     TracyCZoneN(ctx, "DetermineFoWTypes", 1);
+
     WarMap* map = context->map;
 
     if (!map->fowEnabled)
@@ -2466,6 +2510,7 @@ void determineFoWTypes(WarContext* context)
             }
         }
     }
+
     TracyCZoneEnd(ctx);
 }
 
@@ -2498,11 +2543,14 @@ WarLevelResult checkObjectives(WarContext* context)
 
 void updateObjectives(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateObjectives", 1);
+
     WarMap* map = context->map;
 
     if (map->result == WAR_LEVEL_RESULT_NONE)
     {
         map->result = checkObjectives(context);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -2519,10 +2567,14 @@ void updateObjectives(WarContext* context)
     {
         wmm_showOrHideGameOverMenu(context, true);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wmap_updateMap(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateMap", 1);
+
     WarMap* map = context->map;
 
     if (!map->playing)
@@ -2534,6 +2586,7 @@ void wmap_updateMap(WarContext* context)
 
         wui_updateUIButtons(context, true);
         updateMapCursor(context);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -2582,11 +2635,14 @@ void wmap_updateMap(WarContext* context)
     updateAddUnit(context);
 
     updateObjectives(context);
+
+    TracyCZoneEnd(ctx);
 }
 
-void renderTerrain(WarContext* context)
+static void renderTerrain(WarContext* context)
 {
     TracyCZoneN(ctx, "RenderTerrain", 1);
+
     WarMap *map = context->map;
 
     WarResource* levelInfo = wres_getOrCreateResource(context, map->levelInfoIndex);
@@ -2622,12 +2678,14 @@ void renderTerrain(WarContext* context)
             }
         }
     }
+
     TracyCZoneEnd(ctx);
 }
 
-void renderFoW(WarContext* context)
+static void renderFoW(WarContext* context)
 {
     TracyCZoneN(ctx, "RenderFoW", 1);
+
     WarMap* map = context->map;
 
     if (!map->fowEnabled)
@@ -2696,10 +2754,11 @@ void renderFoW(WarContext* context)
     }
 
     wr_restore(context);
+
     TracyCZoneEnd(ctx);
 }
 
-void renderUnitPaths(WarContext* context)
+static void renderUnitPaths(WarContext* context)
 {
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
@@ -2741,7 +2800,7 @@ void renderUnitPaths(WarContext* context)
     }
 }
 
-void renderPassableInfo(WarContext* context)
+static void renderPassableInfo(WarContext* context)
 {
     WarMap *map = context->map;
 
@@ -2765,7 +2824,7 @@ void renderPassableInfo(WarContext* context)
     }
 }
 
-void renderMapGrid(WarContext* context)
+static void renderMapGrid(WarContext* context)
 {
     for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
     {
@@ -2782,8 +2841,10 @@ void renderMapGrid(WarContext* context)
     }
 }
 
-void renderMapPanel(WarContext *context)
+static void renderMapPanel(WarContext *context)
 {
+    TracyCZoneN(ctx, "RenderMapPanel", 1);
+
     WarMap *map = context->map;
 
     wr_save(context);
@@ -2817,13 +2878,19 @@ void renderMapPanel(WarContext *context)
     renderFoW(context);
 
     wr_restore(context);
+
+    TracyCZoneEnd(ctx);
 }
 
-void renderMap(WarContext *context)
+void wmap_renderMap(WarContext *context)
 {
+    TracyCZoneN(ctx, "RenderMap", 1);
+
     // render map
     renderMapPanel(context);
 
     // render ui
     wmui_renderMapUI(context);
+
+    TracyCZoneEnd(ctx);
 }

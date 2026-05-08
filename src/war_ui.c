@@ -227,6 +227,8 @@ void wui_updateUICursor(WarContext* context)
 
 void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
 {
+    TracyCZoneN(ctx, "UpdateUIButtons", 1);
+
     WarInput* input = &context->input;
     WarEntityList* buttons = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_BUTTON);
     WarEntity* hoveredButton = NULL;
@@ -331,10 +333,14 @@ void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
     }
 
     WarEntityIdSetFree(&buttonsToUpdate);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wui_renderUIEntities(WarContext* context)
 {
+    TracyCZoneN(ctx, "RenderUIEntities", 1);
+
     WarEntityList* entities = we_getUIEntities(context);
     for(s32 i = 0; i < entities->count; i++)
     {
@@ -344,4 +350,6 @@ void wui_renderUIEntities(WarContext* context)
             we_renderEntity(context, entity);
         }
     }
+
+    TracyCZoneEnd(ctx);
 }

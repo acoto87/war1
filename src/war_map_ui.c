@@ -139,6 +139,8 @@ WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
 
 void wmui_updateGoldText(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateGoldText", 1);
+
     WarMap* map = context->map;
 
     WarEntity* txtGold = we_findUIEntity(context, wsv_fromCString("txtGold"));
@@ -147,10 +149,14 @@ void wmui_updateGoldText(WarContext* context)
     s32 gold = map->players[0].gold;
     wui_setUIText(txtGold, wstr_fromCStringFormat("GOLD:%*d", 6, gold));
     setUITextHighlight(txtGold, NO_HIGHLIGHT, 0);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wmui_updateWoodText(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateWoodText", 1);
+
     WarMap* map = context->map;
 
     WarEntity* txtWood = we_findUIEntity(context, wsv_fromCString("txtWood"));
@@ -159,10 +165,14 @@ void wmui_updateWoodText(WarContext* context)
     s32 wood = map->players[0].wood;
     wui_setUIText(txtWood, wstr_fromCStringFormat("LUMBER:%*d", 6, wood));
     setUITextHighlight(txtWood, NO_HIGHLIGHT, 0);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wmui_updateSelectedUnitsInfo(WarContext* context)
 {
+    TracyCZoneN(ctx, "UpdateSelectedUnitsInfo", 1);
+
     WarMap* map = context->map;
 
     // retrieve entities of sprites of unit info/portraits
@@ -281,6 +291,8 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
             wmui_setLifeBar(rectLifeBars[0], unit);
         }
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, String text)
@@ -375,6 +387,8 @@ void wmui_setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, W
 
 void wmui_renderSelectionRect(WarContext* context)
 {
+    TracyCZoneN(ctx, "RenderSelectionRect", 1);
+
     wr_save(context);
 
     WarInput* input = &context->input;
@@ -385,10 +399,14 @@ void wmui_renderSelectionRect(WarContext* context)
     }
 
     wr_restore(context);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wmui_renderCommand(WarContext* context)
 {
+    TracyCZoneN(ctx, "RenderCommand", 1);
+
     WarMap* map = context->map;
     WarUnitCommand* command = &map->command;
 
@@ -459,10 +477,14 @@ void wmui_renderCommand(WarContext* context)
     }
 
     wr_restore(context);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wmui_renderMapUI(WarContext* context)
 {
+    TracyCZoneN(ctx, "RenderMapUI", 1);
+
     wr_save(context);
 
     wmui_renderSelectionRect(context);
@@ -470,4 +492,6 @@ void wmui_renderMapUI(WarContext* context)
     wui_renderUIEntities(context);
 
     wr_restore(context);
+
+    TracyCZoneEnd(ctx);
 }
