@@ -14,8 +14,12 @@ void wst_enterWaitState(WarContext* context, WarEntity* entity, WarState* state)
     NOT_USED(state);
 
     WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
 }
@@ -25,8 +29,12 @@ void wst_leaveWaitState(WarContext* context, WarEntity* entity, WarState* state)
     NOT_USED(state);
 
     WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 }
 

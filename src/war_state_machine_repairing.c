@@ -43,7 +43,10 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
         }
 
         // disable the sprite to simulate the building process
-        entity->sprite.enabled = false;
+        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+        assert(sprite);
+
+        sprite->enabled = false;
 
         // set the unit as inside the building
         state->repairing.insideBuilding = true;
@@ -53,12 +56,12 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
     }
     else
     {
-        vec2 unitSize = wu_getUnitSize(entity);
-        vec2 position = wu_getUnitCenterPosition(entity, true);
-        vec2 targetPosition = wu_getUnitCenterPosition(building, true);
+        vec2 unitSize = wu_getUnitSize(context, entity);
+        vec2 position = wu_getUnitCenterPosition(context, entity, true);
+        vec2 targetPosition = wu_getUnitCenterPosition(context, building, true);
 
         setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(entity, targetPosition.x - position.x, targetPosition.y - position.y);
+        wu_setUnitDirectionFromDiff(context, entity, targetPosition.x - position.x, targetPosition.y - position.y);
         wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
 }
@@ -69,8 +72,8 @@ void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* s
 
     WarMap* map = context->map;
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wu_getUnitCenterPosition(entity, true);
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wu_getUnitCenterPosition(context, entity, true);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 }
 
@@ -78,7 +81,8 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
     WarEntity* building = we_findEntity(context, state->repairing.buildingId);
 
@@ -87,12 +91,15 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
     {
         if (state->repairing.insideBuilding)
         {
-            entity->sprite.enabled = true;
+            WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+            assert(sprite);
+
+            sprite->enabled = true;
 
             // find a valid spawn position for the unit
-            vec2 position = wu_getUnitCenterPosition(entity, true);
+            vec2 position = wu_getUnitCenterPosition(context, entity, true);
             vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-            wu_setUnitCenterPosition(entity, spawnPosition, true);
+            wu_setUnitCenterPosition(context, entity, spawnPosition, true);
         }
 
         WarState* idleState = wst_createIdleState(context, entity, true);
@@ -123,11 +130,14 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
             // when repairing each second the amount of wood and gold decrease
             // in 1, so for each we need to increase the hp in the proportional
             // amount, in this case is 1 * 100 / 12 = 8.33 (rounding to 9 here)
-            building->unit.hp += 9;
+            WarUnitComponent* buildingUnit = we_getUnitComponent(context, building);
+            assert(buildingUnit);
 
-            if (building->unit.hp >= building->unit.maxhp)
+            buildingUnit->hp += 9;
+
+            if (buildingUnit->hp >= buildingUnit->maxhp)
             {
-                building->unit.hp = building->unit.maxhp;
+                buildingUnit->hp = buildingUnit->maxhp;
 
                 WarState* idleState = wst_createIdleState(context, entity, true);
                 wst_changeNextState(context, entity, idleState, true, true);
@@ -138,12 +148,15 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
     }
     else if (!isBuilding(building) && !isGoingToBuild(building))
     {
-        entity->sprite.enabled = true;
+        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+        assert(sprite);
+
+        sprite->enabled = true;
 
         // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(entity, true);
+        vec2 position = wu_getUnitCenterPosition(context, entity, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wu_setUnitCenterPosition(entity, spawnPosition, true);
+        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);

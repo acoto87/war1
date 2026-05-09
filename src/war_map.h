@@ -158,19 +158,19 @@ void wmap_setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile);
 
 WarMapTile* wmap_getMapTileState(WarMap* map, s32 x, s32 y);
 void wmap_setMapTileState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState tileState);
-void wmap_setUnitMapTileState(WarMap* map, WarEntity* entity, WarMapTileState tileState);
+void wmap_setUnitMapTileState(WarContext* context, WarMap* map, WarEntity* entity, WarMapTileState tileState);
 bool wmap_isTileInState(WarMap* map, s32 x, s32 y, WarMapTileState state);
 bool wmap_isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state);
-bool wmap_isAnyUnitTileInStates(WarMap* map, WarEntity* entity, WarMapTileState state);
+bool wmap_isAnyUnitTileInStates(WarContext* context, WarMap* map, WarEntity* entity, WarMapTileState state);
 bool wmap_areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state);
-bool wmap_areAllUnitTilesInState(WarMap* map, WarEntity* entity, WarMapTileState state);
+bool wmap_areAllUnitTilesInState(WarContext* context, WarMap* map, WarEntity* entity, WarMapTileState state);
 
-#define isUnitPartiallyVisible(map, entity) wmap_isAnyUnitTileInStates(map, entity, MAP_TILE_STATE_VISIBLE)
-#define isUnitVisible(map, entity) wmap_areAllUnitTilesInState(map, entity, MAP_TILE_STATE_VISIBLE)
-#define isUnitPartiallyFog(map, entity) wmap_isAnyUnitTileInStates(map, entity, MAP_TILE_STATE_FOG)
-#define isUnitFog(map, entity) wmap_areAllUnitTilesInState(map, entity, MAP_TILE_STATE_FOG)
-#define isUnitPartiallyUnkown(map, entity) wmap_isAnyUnitTileInStates(map, entity, MAP_TILE_STATE_UNKOWN)
-#define isUnitUnknown(map, entity) wmap_areAllUnitTilesInState(map, entity, MAP_TILE_STATE_UNKOWN)
+#define isUnitPartiallyVisible(map, entity) wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_VISIBLE)
+#define isUnitVisible(map, entity) wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_VISIBLE)
+#define isUnitPartiallyFog(map, entity) wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_FOG)
+#define isUnitFog(map, entity) wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_FOG)
+#define isUnitPartiallyUnkown(map, entity) wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_UNKOWN)
+#define isUnitUnknown(map, entity) wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_UNKOWN)
 
 #define isTileUnkown(map, x, y) wmap_isTileInState(map, x, y, MAP_TILE_STATE_UNKOWN)
 #define isTileFog(map, x, y) wmap_isTileInState(map, x, y, MAP_TILE_STATE_FOG)

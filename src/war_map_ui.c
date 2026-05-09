@@ -1,4 +1,6 @@
-﻿#include "war_map_ui.h"
+#include "war_map_ui.h"
+
+#include <assert.h>
 
 #include "shl/wstr.h"
 
@@ -59,8 +61,8 @@ void wmui_createMapUI(WarContext* context)
     wui_createUIRect(context, wstr_fromCString("txtStatusCursor"), vec2_addv(bottomPanel, vec2i(2, 4)), vec2i(1, 7), WAR_COLOR_WHITE);
 
     uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), 1, 8, wstr_make(), vec2_addv(bottomPanel, vec2i(15, -20)));
-    setUITextColor(uiEntity, WAR_COLOR_YELLOW);
-    setUIEntityStatus(uiEntity, false);
+    setUITextColor(context, uiEntity, WAR_COLOR_YELLOW);
+    setUIEntityStatus(context, uiEntity, false);
 
     // selected unit(s) info
     wui_createUIImage(context, wstr_fromCString("imgUnitInfo"), imageResourceRefFromPlayer(player, 360, 359), vec2_addv(leftBottomPanel, vec2i(2, 0)));
@@ -123,9 +125,9 @@ void wmui_createMapUI(WarContext* context)
         imageResourceRef(363),
         invalidRef,
         vec2_addv(leftBottomPanel, vec2i(3, 116)));
-    wui_setUITooltip(uiEntity, 6, 3, wstr_fromCString("MENU (F10)"));
-    setUIButtonClickHandler(uiEntity, wmm_handleMenu);
-    setUIButtonHotKey(uiEntity, WAR_KEY_F10);
+    wui_setUITooltip(context, uiEntity, 6, 3, wstr_fromCString("MENU (F10)"));
+    setUIButtonClickHandler(context, uiEntity, wmm_handleMenu);
+    setUIButtonHotKey(context, uiEntity, WAR_KEY_F10);
 }
 
 WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
@@ -147,8 +149,8 @@ void wmui_updateGoldText(WarContext* context)
     assert(txtGold);
 
     s32 gold = map->players[0].gold;
-    wui_setUIText(txtGold, wstr_fromCStringFormat("GOLD:%*d", 6, gold));
-    setUITextHighlight(txtGold, NO_HIGHLIGHT, 0);
+    wui_setUIText(context, txtGold, wstr_fromCStringFormat("GOLD:%*d", 6, gold));
+    setUITextHighlight(context, txtGold, NO_HIGHLIGHT, 0);
 
     TracyCZoneEnd(ctx);
 }
@@ -163,8 +165,8 @@ void wmui_updateWoodText(WarContext* context)
     assert(txtWood);
 
     s32 wood = map->players[0].wood;
-    wui_setUIText(txtWood, wstr_fromCStringFormat("LUMBER:%*d", 6, wood));
-    setUITextHighlight(txtWood, NO_HIGHLIGHT, 0);
+    wui_setUIText(context, txtWood, wstr_fromCStringFormat("LUMBER:%*d", 6, wood));
+    setUITextHighlight(context, txtWood, NO_HIGHLIGHT, 0);
 
     TracyCZoneEnd(ctx);
 }
@@ -209,20 +211,20 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     assert(txtUnitName);
 
     // reset frame index of the sprites of unit info/portraits
-    wui_setUIImage(imgUnitInfo, -1);
-    wui_setUIImage(imgUnitInfoLife, -1);
+    wui_setUIImage(context, imgUnitInfo, -1);
+    wui_setUIImage(context, imgUnitInfoLife, -1);
 
     for (s32 i = 0; i < 5; i++)
     {
-        wui_setUIImage(imgUnitPortraits[i], -1);
-        wui_setUIRectWidth(rectLifeBars[i], 0);
+        wui_setUIImage(context, imgUnitPortraits[i], -1);
+        wui_setUIRectWidth(context, rectLifeBars[i], 0);
     }
 
-    wui_setUIRectWidth(rectMagicBar, 0);
-    wui_setUIRectWidth(rectPercentBar, 0);
-    wui_setUIImage(rectPercentText, -1);
-    wui_setUIText(txtUnitName, wstr_make());
-    setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
+    wui_setUIRectWidth(context, rectMagicBar, 0);
+    wui_setUIRectWidth(context, rectPercentBar, 0);
+    wui_setUIImage(context, rectPercentText, -1);
+    wui_setUIText(context, txtUnitName, wstr_make());
+    setUITextHighlight(context, txtUnitName, NO_HIGHLIGHT, 0);
 
     // update the frame index of unit info/portraits
     // based on the number of entities selected
@@ -235,8 +237,8 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
         // for 4 units selected -> frame indices 5, 8
         // for 3 units selected -> frame indices 4, 7
         // for 2 units selected -> frame indices 3, 6
-        wui_setUIImage(imgUnitInfo, selectedEntitiesCount + 1);
-        wui_setUIImage(imgUnitInfoLife, selectedEntitiesCount + 4);
+        wui_setUIImage(context, imgUnitInfo, selectedEntitiesCount + 1);
+        wui_setUIImage(context, imgUnitInfoLife, selectedEntitiesCount + 4);
 
         for (s32 i = 1; i <= selectedEntitiesCount; i++)
         {
@@ -244,10 +246,12 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
             WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
             if (selectedEntity && isUnit(selectedEntity))
             {
-                WarUnitComponent* unit = &selectedEntity->unit;
+                WarUnitComponent* unit = we_getUnitComponent(context, selectedEntity);
+                assert(unit);
+
                 WarUnitData unitData = wu_getUnitData(unit->type);
-                wui_setUIImage(imgUnitPortraits[i], unitData.portraitFrameIndex);
-                wmui_setLifeBar(rectLifeBars[i], unit);
+                wui_setUIImage(context, imgUnitPortraits[i], unitData.portraitFrameIndex);
+                wmui_setLifeBar(context, rectLifeBars[i], unit);
             }
         }
     }
@@ -257,38 +261,39 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
         WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
         if (selectedEntity && isUnit(selectedEntity))
         {
-            WarUnitComponent* unit = &selectedEntity->unit;
+            WarUnitComponent* unit = we_getUnitComponent(context, selectedEntity);
+            assert(unit);
 
-            if (wu_isDudeUnit(selectedEntity))
+            if (wu_isDudeUnit(context, selectedEntity))
             {
-                if (wu_isMagicUnit(selectedEntity))
+                if (wu_isMagicUnit(context, selectedEntity))
                 {
-                    wui_setUIImage(imgUnitInfo, 1);
-                    wmui_setManaBar(rectMagicBar, unit);
+                    wui_setUIImage(context, imgUnitInfo, 1);
+                    wmui_setManaBar(context, rectMagicBar, unit);
                 }
                 else
                 {
-                    wui_setUIImage(imgUnitInfo, 0);
+                    wui_setUIImage(context, imgUnitInfo, 0);
                 }
             }
-            else if (wu_isBuildingUnit(selectedEntity))
+            else if (wu_isBuildingUnit(context, selectedEntity))
             {
                 if (unit->building)
                 {
-                    wui_setUIImage(imgUnitInfo, 2);
-                    wmui_setPercentBar(rectPercentBar, rectPercentText, unit);
+                    wui_setUIImage(context, imgUnitInfo, 2);
+                    wmui_setPercentBar(context, rectPercentBar, rectPercentText, unit);
                 }
                 else
                 {
-                    wui_setUIImage(imgUnitInfo, 0);
+                    wui_setUIImage(context, imgUnitInfo, 0);
                 }
             }
 
             WarUnitData unitData = wu_getUnitData(unit->type);
-            wui_setUIImage(imgUnitPortraits[0], unitData.portraitFrameIndex);
-            wui_setUIText(txtUnitName, wsv_toString(unitData.name));
-            setUITextHighlight(txtUnitName, NO_HIGHLIGHT, 0);
-            wmui_setLifeBar(rectLifeBars[0], unit);
+            wui_setUIImage(context, imgUnitPortraits[0], unitData.portraitFrameIndex);
+            wui_setUIText(context, txtUnitName, wsv_toString(unitData.name));
+            setUITextHighlight(context, txtUnitName, NO_HIGHLIGHT, 0);
+            wmui_setLifeBar(context, rectLifeBars[0], unit);
         }
     }
 
@@ -312,25 +317,37 @@ void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount,
     WarEntity* txtStatusGold = we_findUIEntity(context, wsv_fromCString("txtStatusGold"));
     assert(txtStatusGold);
 
-    wui_setUIText(txtStatus, text);
+    wui_setUIText(context, txtStatus, text);
 
-    setUITextHighlight(txtStatus, highlightIndex, highlightCount);
+    setUITextHighlight(context, txtStatus, highlightIndex, highlightCount);
 
     if (gold == 0 && wood == 0)
     {
-        imgStatusWood->sprite.enabled = false;
-        imgStatusGold->sprite.enabled = false;
-        wui_clearUIText(txtStatusWood);
-        wui_clearUIText(txtStatusGold);
+        WarSpriteComponent* spriteWood = we_getSpriteComponent(context, imgStatusWood);
+        assert(spriteWood);
+
+        WarSpriteComponent* spriteGold = we_getSpriteComponent(context, imgStatusGold);
+        assert(spriteGold);
+
+        spriteWood->enabled = false;
+        spriteGold->enabled = false;
+        wui_clearUIText(context, txtStatusWood);
+        wui_clearUIText(context, txtStatusGold);
     }
     else
     {
-        imgStatusWood->sprite.enabled = true;
-        imgStatusGold->sprite.enabled = true;
-        wui_setUIText(txtStatusWood, wstr_fromCStringFormat("%d", wood));
-        setUITextHighlight(txtStatusWood, NO_HIGHLIGHT, 0);
-        wui_setUIText(txtStatusGold, wstr_fromCStringFormat("%d", gold));
-        setUITextHighlight(txtStatusGold, NO_HIGHLIGHT, 0);
+        WarSpriteComponent* spriteWood = we_getSpriteComponent(context, imgStatusWood);
+        assert(spriteWood);
+
+        WarSpriteComponent* spriteGold = we_getSpriteComponent(context, imgStatusGold);
+        assert(spriteGold);
+
+        spriteWood->enabled = true;
+        spriteGold->enabled = true;
+        wui_setUIText(context, txtStatusWood, wstr_fromCStringFormat("%d", wood));
+        setUITextHighlight(context, txtStatusWood, NO_HIGHLIGHT, 0);
+        wui_setUIText(context, txtStatusGold, wstr_fromCStringFormat("%d", gold));
+        setUITextHighlight(context, txtStatusGold, NO_HIGHLIGHT, 0);
     }
 }
 
@@ -349,7 +366,7 @@ void wmui_setFlashStatus(WarContext* context, f32 duration, String text)
     flashStatus->text = text;
 }
 
-void wmui_setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
+void wmui_setLifeBar(WarContext* context, WarEntity* rectLifeBar, WarUnitComponent* unit)
 {
 #define LIFE_BAR_RED_THRESHOLD 0.35f
 #define LIFE_BAR_YELLOW_THRESHOLD 0.70f
@@ -357,32 +374,35 @@ void wmui_setLifeBar(WarEntity* rectLifeBar, WarUnitComponent* unit)
 
     f32 hpPercent = PERCENTF01(unit->hp, unit->maxhp);
 
-    if (hpPercent <= LIFE_BAR_RED_THRESHOLD)
-        rectLifeBar->rect.color = WAR_COLOR_RED;
-    else if (hpPercent <= LIFE_BAR_YELLOW_THRESHOLD)
-        rectLifeBar->rect.color = WAR_COLOR_YELLOW;
-    else
-        rectLifeBar->rect.color = WAR_COLOR_GREEN;
+    WarRectComponent* lifeBarRect = we_getRectComponent(context, rectLifeBar);
+    assert(lifeBarRect);
 
-    wui_setUIRectWidth(rectLifeBar, (s32)(hpPercent * LIFE_BAR_WIDTH_PX));
+    if (hpPercent <= LIFE_BAR_RED_THRESHOLD)
+        lifeBarRect->color = WAR_COLOR_RED;
+    else if (hpPercent <= LIFE_BAR_YELLOW_THRESHOLD)
+        lifeBarRect->color = WAR_COLOR_YELLOW;
+    else
+        lifeBarRect->color = WAR_COLOR_GREEN;
+
+    wui_setUIRectWidth(context, rectLifeBar, (s32)(hpPercent * LIFE_BAR_WIDTH_PX));
 }
 
-void wmui_setManaBar(WarEntity* rectMagicBar, WarUnitComponent* unit)
+void wmui_setManaBar(WarContext* context, WarEntity* rectMagicBar, WarUnitComponent* unit)
 {
 #define MAGIC_BAR_WIDTH_PX 27
 
     f32 magicPercent = PERCENTF01(unit->mana, unit->maxMana);
-    wui_setUIRectWidth(rectMagicBar, (s32)(magicPercent * MAGIC_BAR_WIDTH_PX));
+    wui_setUIRectWidth(context, rectMagicBar, (s32)(magicPercent * MAGIC_BAR_WIDTH_PX));
 }
 
-void wmui_setPercentBar(WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUnitComponent* unit)
+void wmui_setPercentBar(WarContext* context, WarEntity* rectPercentBar, WarEntity* rectPercentText, WarUnitComponent* unit)
 {
 #define PERCENT_BAR_WIDTH_PX 64
 
     f32 percent = unit->buildPercent;
 
-    wui_setUIRectWidth(rectPercentBar, (s32)(percent * PERCENT_BAR_WIDTH_PX));
-    wui_setUIImage(rectPercentText, 0);
+    wui_setUIRectWidth(context, rectPercentBar, (s32)(percent * PERCENT_BAR_WIDTH_PX));
+    wui_setUIImage(context, rectPercentText, 0);
 }
 
 void wmui_renderSelectionRect(WarContext* context)

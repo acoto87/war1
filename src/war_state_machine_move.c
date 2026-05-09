@@ -14,7 +14,7 @@ WarState* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positi
 void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 unitSize = wu_getUnitSize(context, entity);
 
     if (state->move.positions.count <= 1)
     {
@@ -54,14 +54,14 @@ void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
     vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
     setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
-    wu_setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-    wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(entity));
+    wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(context, entity));
 }
 
 void wst_leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(entity);
+    vec2 unitSize = wu_getUnitSize(context, entity);
     WarMapPath* path = &state->move.path;
 
     if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
@@ -87,8 +87,11 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
     assert(path->nodes.count > 1);
     assert(inRange(state->move.pathNodeIndex, 0, path->nodes.count - 1));
 
-    WarUnitStats stats = wu_getUnitStats(entity->unit.type);
-    vec2 unitSize = wu_getUnitSize(entity);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    WarUnitStats stats = wu_getUnitStats(unit->type);
+    vec2 unitSize = wu_getUnitSize(context, entity);
 
     vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
     vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
@@ -98,7 +101,7 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
         WarEntity* enemy = we_getAttacker(context, entity);
         if (enemy && wu_areEnemies(context, entity, enemy) && wu_canAttack(context, entity, enemy))
         {
-            vec2 enemyPosition = wu_getUnitPosition(enemy, true);
+            vec2 enemyPosition = wu_getUnitPosition(context, enemy, true);
             WarState* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
             wst_changeNextState(context, entity, attackState, true, true);
 
@@ -145,17 +148,17 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
         }
 
         setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-        wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(entity));
+        wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+        wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(context, entity));
     }
 
-    vec2 position = wu_getUnitCenterPosition(entity, false);
+    vec2 position = wu_getUnitCenterPosition(context, entity, false);
     vec2 target = wmap_tileToMapCoordinatesV(nextNode, true);
 
     vec2 direction = vec2_subv(target, position);
     f32 directionLength = vec2_length(direction);
 
-    f32 speed = wmap_getMapScaledSpeed(context, (f32)stats.speeds[entity->unit.speed]);
+    f32 speed = wmap_getMapScaledSpeed(context, (f32)stats.speeds[unit->speed]);
     vec2 step = vec2_mulf(vec2_normalize(direction), speed * context->deltaTime);
     f32 stepLength = vec2_length(step);
 
@@ -165,13 +168,13 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
     }
 
     vec2 newPosition = vec2_addv(position, step);
-    wu_setUnitCenterPosition(entity, newPosition, false);
+    wu_setUnitCenterPosition(context, entity, newPosition, false);
 
     f32 distance = vec2_distance(newPosition, target);
     if (distance < MOVE_EPSILON)
     {
         newPosition = target;
-        wu_setUnitCenterPosition(entity, newPosition, false);
+        wu_setUnitCenterPosition(context, entity, newPosition, false);
 
         setFreeTiles(map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
         setFreeTiles(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
@@ -248,7 +251,7 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
         }
 
         setDynamicEntity(map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+        wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
 }
 

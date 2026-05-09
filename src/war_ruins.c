@@ -1,8 +1,13 @@
 ﻿#include "war_entities.h"
 
-bool we_hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
+#include <assert.h>
+
+bool we_hasRuinPieceAtPosition(WarContext* context, WarEntity* ruins, s32 x, s32 y)
 {
-    WarRuinPieceList* pieces = &ruins->ruin.pieces;
+    WarRuinComponent* ruin = we_getRuinComponent(context, ruins);
+    assert(ruin);
+
+    WarRuinPieceList* pieces = &ruin->pieces;
     for (s32 i = 0; i < pieces->count; i++)
     {
         WarRuinPiece* piece = &pieces->items[i];
@@ -13,9 +18,12 @@ bool we_hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
     return false;
 }
 
-WarRuinPiece* we_getRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y)
+WarRuinPiece* we_getRuinPieceAtPosition(WarContext* context, WarEntity* ruins, s32 x, s32 y)
 {
-    WarRuinPieceList* pieces = &ruins->ruin.pieces;
+    WarRuinComponent* ruin = we_getRuinComponent(context, ruins);
+    assert(ruin);
+
+    WarRuinPieceList* pieces = &ruin->pieces;
     for (s32 i = 0; i < pieces->count; i++)
     {
         WarRuinPiece* piece = &pieces->items[i];
@@ -33,7 +41,10 @@ void we_determineRuinTypes(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    WarRuinPieceList* pieces = &entity->ruin.pieces;
+    WarRuinComponent* ruinComp = we_getRuinComponent(context, entity);
+    assert(ruinComp);
+
+    WarRuinPieceList* pieces = &ruinComp->pieces;
 
     const s32 dirC = 8;
     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
@@ -52,19 +63,19 @@ void we_determineRuinTypes(WarContext* context, WarEntity* entity)
         {
             s32 xx = pi->tilex + dirX[d];
             s32 yy = pi->tiley + dirY[d];
-            
-            if (!wpath_isInside(map->finder, xx, yy) || we_hasRuinPieceAtPosition(entity, xx, yy))
+
+            if (!wpath_isInside(map->finder, xx, yy) || we_hasRuinPieceAtPosition(context, entity, xx, yy))
             {
                 index = index | (1 << d);
             }
         }
-        
+
         pi->type = ruinTileTypeMap[index];
 
         if (pi->type == WAR_RUIN_PIECE_NONE)
             s32ListAdd(&invalidPieces, i);
     }
-    
+
     for (s32 i = invalidPieces.count - 1; i >= 0; i--)
         WarRuinPieceListRemoveAt(pieces, invalidPieces.items[i]);
 
@@ -87,25 +98,29 @@ WarEntity* we_createRuins(WarContext* context)
 
 void we_addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim)
 {
-    NOT_USED(context);
-
     assert(entity);
     assert(entity->type == WAR_ENTITY_TYPE_RUIN);
 
-    WarRuinPieceList* pieces = &entity->ruin.pieces;
+    WarRuinComponent* ruinComp = we_getRuinComponent(context, entity);
+    assert(ruinComp);
+
+    WarRuinPieceList* pieces = &ruinComp->pieces;
 
     for(s32 yy = 0; yy < dim; yy++)
     {
         for(s32 xx = 0; xx < dim; xx++)
         {
-            if (!we_hasRuinPieceAtPosition(entity, x + xx, y + yy))
+            if (!we_hasRuinPieceAtPosition(context, entity, x + xx, y + yy))
                 WarRuinPieceListAdd(pieces, createRuinPiece(x + xx, y + yy));
         }
     }
 }
 
-void we_removeRuinPiece(WarEntity* entity, WarRuinPiece* piece)
+void we_removeRuinPiece(WarContext* context, WarEntity* entity, WarRuinPiece* piece)
 {
-    WarRuinPieceList* pieces = &entity->ruin.pieces;
+    WarRuinComponent* ruinComp = we_getRuinComponent(context, entity);
+    assert(ruinComp);
+
+    WarRuinPieceList* pieces = &ruinComp->pieces;
     WarRuinPieceListRemove(pieces, *piece);
 }

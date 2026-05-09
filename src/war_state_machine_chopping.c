@@ -17,12 +17,12 @@ void wst_enterChoppingState(WarContext* context, WarEntity* entity, WarState* st
 {
     WarMap* map = context->map;
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wu_getUnitCenterPosition(entity, true);
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wu_getUnitCenterPosition(context, entity, true);
     vec2 treePosition = state->chop.position;
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    wu_setUnitDirectionFromDiff(entity, treePosition.x - position.x, treePosition.y - position.y);
+    wu_setUnitDirectionFromDiff(context, entity, treePosition.x - position.x, treePosition.y - position.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 }
 
@@ -35,7 +35,8 @@ void wst_leaveChoppingState(WarContext* context, WarEntity* entity, WarState* st
 
 void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
     WarEntity* forest = we_findEntity(context, (WarEntityId)state->chop.forestId);
 
@@ -48,7 +49,7 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
     }
 
     vec2 treePosition = state->chop.position;
-    WarTree* tree = we_getTreeAtPosition(forest, (s32)treePosition.x, (s32)treePosition.y);
+    WarTree* tree = we_getTreeAtPosition(context, forest, (s32)treePosition.x, (s32)treePosition.y);
 
     if (!tree || tree->amount == 0)
     {
@@ -80,7 +81,7 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
             we_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingWoodResource));
 
             // find the closest town hall to deliver the gold
-            WarRace race = wu_getUnitRace(entity);
+            WarRace race = wu_getUnitRace(context, entity);
             WarUnitType townHallType = wu_getTownHallOfRace(race);
             WarEntity* townHall = we_findClosestUnitOfType(context, entity, townHallType);
 

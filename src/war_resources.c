@@ -755,13 +755,13 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
         resource->tilesetData.data[i * 4 + 3] = data[i] > 0 ? 255 : 0;
     }
 
-    #if __DEBUG__
-    {
-        char path[32];
-        StringView fp = wsv_fromCStringFormat(path, sizeof(path), "tileset_%d.png", index);
-        stbi_write_png(wsv_data(fp), TILESET_WIDTH, TILESET_HEIGHT, 4, resource->tilesetData.data, TILESET_WIDTH * 4);
-    }
-    #endif
+    // #if __DEBUG__
+    // {
+    //     char path[32];
+    //     StringView fp = wsv_fromCStringFormat(path, sizeof(path), "tileset_%d.png", index);
+    //     stbi_write_png(wsv_data(fp), TILESET_WIDTH, TILESET_HEIGHT, 4, resource->tilesetData.data, TILESET_WIDTH * 4);
+    // }
+    // #endif
 
     mz_destroy(scratch);
 }

@@ -147,6 +147,8 @@ int main(void)
         return -1;
     }
 
+    logInfo("WarEntity size: %zu bytes", sizeof(WarEntity));
+
     u32 frameCount = 0;
     bool running = true;
 

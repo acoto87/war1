@@ -111,6 +111,11 @@
 
 #define MAX_RENDER_STATE_STACK 32
 
+// --- ECS Inline-Index constants ---
+#define MAX_ENTITIES       1024
+#define MAX_COMPONENTS     30
+#define INVALID_COMP_INDEX 0
+
 #define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
 #define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)
 

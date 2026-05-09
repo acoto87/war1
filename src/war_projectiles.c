@@ -44,7 +44,8 @@ WarProjectileData wproj_getProjectileData(WarProjectileType type)
 
 void wproj_doProjectileTargetDamage(WarContext* context, WarEntity* entity)
 {
-    WarProjectileComponent* projectile = &entity->projectile;
+    WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+    assert(projectile);
 
     vec2 position = wmap_mapToTileCoordinatesV(projectile->target);
 
@@ -56,7 +57,7 @@ void wproj_doProjectileTargetDamage(WarContext* context, WarEntity* entity)
     {
         if (isWall(targetEntity))
         {
-            WarWallPiece* piece = we_getWallPieceAtPosition(targetEntity, (s32)position.x, (s32)position.y);
+            WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)position.x, (s32)position.y);
             if (piece)
             {
                 we_meleeWallAttack(context, sourceEntity, targetEntity, piece);
@@ -71,7 +72,8 @@ void wproj_doProjectileTargetDamage(WarContext* context, WarEntity* entity)
 
 void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
 {
-    WarProjectileComponent* projectile = &entity->projectile;
+    WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+    assert(projectile);
 
     vec2 targetTile = wmap_mapToTileCoordinatesV(projectile->target);
 
@@ -94,7 +96,10 @@ void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 
         {
             WarEntity* targetEntity = walls->items[i];
 
-            WarWallPieceList* pieces = &targetEntity->wall.pieces;
+            WarWallComponent* wall = we_getWallComponent(context, targetEntity);
+            assert(wall);
+
+            WarWallPieceList* pieces = &wall->pieces;
             for (s32 k = 0; k < pieces->count; k++)
             {
                 WarWallPiece* piece = &pieces->items[k];
@@ -110,7 +115,8 @@ void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 
 
 void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 splashRadius)
 {
-    WarProjectileComponent* projectile = &entity->projectile;
+    WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+    assert(projectile);
 
     vec2 targetTile = wmap_mapToTileCoordinatesV(projectile->target);
 
@@ -132,7 +138,10 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
     {
         WarEntity* targetEntity = walls->items[i];
 
-        WarWallPieceList* pieces = &targetEntity->wall.pieces;
+        WarWallComponent* wall = we_getWallComponent(context, targetEntity);
+        assert(wall);
+
+        WarWallPieceList* pieces = &wall->pieces;
         for (s32 k = 0; k < pieces->count; k++)
         {
             WarWallPiece* piece = &pieces->items[k];
@@ -147,8 +156,11 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
 
 bool wproj_updateProjectilePosition(WarContext* context, WarEntity* entity)
 {
-    WarTransformComponent* transform = &entity->transform;
-    WarProjectileComponent* projectile = &entity->projectile;
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+    assert(projectile);
 
     vec2 position = transform->position;
     vec2 target = projectile->target;
@@ -179,9 +191,14 @@ void wproj_updateProjectileSprite(WarContext* context, WarEntity* entity)
 {
     NOT_USED(context);
 
-    WarTransformComponent* transform = &entity->transform;
-    WarSpriteComponent* sprite = &entity->sprite;
-    WarProjectileComponent* projectile = &entity->projectile;
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+    assert(sprite);
+
+    WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+    assert(projectile);
 
     WarProjectileData data = wproj_getProjectileData(projectile->type);
 
@@ -256,9 +273,14 @@ void wproj_updateRainOfFireProjectileSprite(WarContext* context, WarEntity* enti
 {
     NOT_USED(context);
 
-    WarTransformComponent* transform = &entity->transform;
-    WarSpriteComponent* sprite = &entity->sprite;
-    WarProjectileComponent* projectile = &entity->projectile;
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+    assert(sprite);
+
+    WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+    assert(projectile);
 
     WarProjectileData data = wproj_getProjectileData(projectile->type);
 
@@ -294,8 +316,11 @@ void wproj_updateRainOfFireProjectileSprite(WarContext* context, WarEntity* enti
 
 void wproj_updateProjectile(WarContext* context, WarEntity* entity)
 {
-    WarSpriteComponent* sprite = &entity->sprite;
-    WarProjectileComponent* projectile = &entity->projectile;
+    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+    assert(sprite);
+
+    WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+    assert(projectile);
 
     if (sprite->enabled && projectile->enabled)
     {

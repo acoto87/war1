@@ -1,5 +1,7 @@
 ﻿#include "shl/wstr.h"
 
+#include <assert.h>
+
 #include "war_animations.h"
 #include "war_sprites.h"
 #include "war_resources.h"
@@ -44,9 +46,11 @@ WarSpriteAnimation* wanim_createAnimationFromResourceIndex(WarContext* context,
     return wanim_createAnimation(context, name, sprite, frameDelay, loop);
 }
 
-void wanim_addAnimation(WarEntity* entity, WarSpriteAnimation* animation)
+void wanim_addAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation* animation)
 {
-    WarAnimationsComponent* animations = &entity->animations;
+    WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
+    assert(animations);
+
     WarSpriteAnimationListAdd(&animations->animations, animation);
 }
 
@@ -103,7 +107,9 @@ s32 wanim_findAnimationIndex(WarContext* context, WarEntity* entity, StringView 
 
     s32 index = -1;
 
-    WarAnimationsComponent* animations = &entity->animations;
+    WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
+    assert(animations);
+
     for(s32 i = 0; i < animations->animations.count; i++)
     {
         WarSpriteAnimation* anim = animations->animations.items[i];
@@ -124,7 +130,9 @@ void wanim_removeAnimation(WarContext* context, WarEntity* entity, StringView na
     s32 index = wanim_findAnimationIndex(context, entity, name);
     if (index >= 0)
     {
-        WarAnimationsComponent* animations = &entity->animations;
+        WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
+        assert(animations);
+
         WarSpriteAnimationListRemoveAt(&animations->animations, index);
     }
 }
@@ -188,7 +196,9 @@ void wanim_updateAnimations(WarContext* context)
         WarEntity* entity = entities->items[i];
         if (entity)
         {
-            WarAnimationsComponent* animations = &entity->animations;
+            WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
+            assert(animations);
+
             if (animations->enabled)
             {
                 for(s32 k = 0; k < animations->animations.count; k++)
@@ -206,7 +216,9 @@ WarSpriteAnimation* wanim_findAnimation(WarContext* context, WarEntity* entity, 
 {
     NOT_USED(context);
 
-    WarAnimationsComponent* animations = &entity->animations;
+    WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
+    assert(animations);
+
     for(s32 i = 0; i < animations->animations.count; i++)
     {
         WarSpriteAnimation* anim = animations->animations.items[i];
@@ -230,20 +242,20 @@ WarSpriteAnimation* wanim_createDamageAnimation(WarContext* context, WarEntity* 
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(resourceIndex);
     WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
     WarSpriteAnimation* anim = wanim_createAnimation(context, name, sprite, 0.2f, true);
-    anim->offset = vec2_subv(wu_getUnitSpriteCenter(entity), vec2i(sprite.frameWidth/2, sprite.frameHeight));
+    anim->offset = vec2_subv(wu_getUnitSpriteCenter(context, entity), vec2i(sprite.frameWidth/2, sprite.frameHeight));
 
     for(s32 i = 0; i < 4; i++)
         wanim_addAnimationFrame(anim, i);
 
-    wanim_addAnimation(entity, anim);
+    wanim_addAnimation(context, entity, anim);
 
     return anim;
 }
 
 WarSpriteAnimation* wanim_createCollapseAnimation(WarContext* context, WarEntity* entity, String name)
 {
-    vec2 unitFrameSize = wu_getUnitFrameSize(entity);
-    vec2 unitSpriteSize = wu_getUnitSpriteSize(entity);
+    vec2 unitFrameSize = wu_getUnitFrameSize(context, entity);
+    vec2 unitSpriteSize = wu_getUnitSpriteSize(context, entity);
 
     WarSpriteResourceRef spriteResourceRef = imageResourceRef(WAR_BUILDING_COLLAPSE_RESOURCE);
     WarSprite sprite = wspr_createSpriteFromResourceIndex(context, spriteResourceRef);
@@ -265,7 +277,7 @@ WarSpriteAnimation* wanim_createCollapseAnimation(WarContext* context, WarEntity
     for(s32 i = 0; i < 17; i++)
         wanim_addAnimationFrame(anim, i);
 
-    wanim_addAnimation(entity, anim);
+    wanim_addAnimation(context, entity, anim);
 
     return anim;
 }
@@ -286,7 +298,7 @@ WarSpriteAnimation* wanim_createExplosionAnimation(WarContext* context, WarEntit
     for(s32 i = 0; i < 6; i++)
         wanim_addAnimationFrame(anim, i);
 
-    wanim_addAnimation(entity, anim);
+    wanim_addAnimation(context, entity, anim);
 
     return anim;
 }
@@ -307,7 +319,7 @@ WarSpriteAnimation* wanim_createRainOfFireExplosionAnimation(WarContext* context
     for(s32 i = 3; i < 6; i++)
         wanim_addAnimationFrame(anim, i);
 
-    wanim_addAnimation(entity, anim);
+    wanim_addAnimation(context, entity, anim);
 
     return anim;
 }
@@ -328,7 +340,7 @@ WarSpriteAnimation* wanim_createSpellAnimation(WarContext* context, WarEntity* e
     for(s32 i = 0; i < 6; i++)
         wanim_addAnimationFrame(anim, i);
 
-    wanim_addAnimation(entity, anim);
+    wanim_addAnimation(context, entity, anim);
 
     return anim;
 }
@@ -349,7 +361,7 @@ WarSpriteAnimation* wanim_createPoisonCloudAnimation(WarContext* context, WarEnt
     for(s32 i = 0; i < 4; i++)
         wanim_addAnimationFrame(anim, i);
 
-    wanim_addAnimation(entity, anim);
+    wanim_addAnimation(context, entity, anim);
 
     return anim;
 }

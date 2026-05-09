@@ -5,38 +5,39 @@
 #include "shl/wstr.h"
 
 #include "war.h"
+#include "war_entities.h"
 
 bool wui_isUIEntity(WarEntity* entity);
 
-void wui_clearUIText(WarEntity* uiText);
-void wui_setUIText(WarEntity* uiText, String text);
+void wui_clearUIText(WarContext* context, WarEntity* uiText);
+void wui_setUIText(WarContext* context, WarEntity* uiText, String text);
 
-void wui_setUIImage(WarEntity* uiImage, s32 frameIndex);
-void wui_setUIRectWidth(WarEntity* uiRect, s32 width);
+void wui_setUIImage(WarContext* context, WarEntity* uiImage, s32 frameIndex);
+void wui_setUIRectWidth(WarContext* context, WarEntity* uiRect, s32 width);
 
-void wui_clearUITooltip(WarEntity* uiButton);
-void wui_setUITooltip(WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text);
+void wui_clearUITooltip(WarContext* context, WarEntity* uiButton);
+void wui_setUITooltip(WarContext* context, WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text);
 
-#define setUIEntityStatus(uiEntity, value) ((uiEntity)->ui.enabled = (value))
+#define setUIEntityStatus(ctx, uiEntity, value) (we_getUIComponent((ctx), (uiEntity))->enabled = (value))
 
-#define setUITextBoundings(uiEntity, value) ((uiEntity)->text.boundings = (value))
-#define setUITextHorizontalAlign(uiEntity, value) ((uiEntity)->text.horizontalAlign = (value))
-#define setUITextVerticalAlign(uiEntity, value) ((uiEntity)->text.verticalAlign = (value))
-#define setUITextLineAlign(uiEntity, value) ((uiEntity)->text.lineAlign = (value))
-#define setUITextWrapping(uiEntity, value) ((uiEntity)->text.wrapping = (value))
-#define setUITextColor(uiEntity, value) ((uiEntity)->text.fontColor = (value))
-#define setUITextHighlight(uiEntity, index, count) \
-    do { ((uiEntity)->text.highlightIndex = (index)); \
-       ((uiEntity)->text.highlightCount = (count)); } while (0)
-#define setUITextHighlightColor(uiEntity, color) ((uiEntity)->text.highlightColor = (color))
-#define setUITextMultiline(uiEntity, value) ((uiEntity)->text.multiline = (value))
-#define setUITextLineHeight(uiEntity, value) ((uiEntity)->text.lineHeight = (value))
-#define setUITextTrimming(uiEntity, value) ((uiEntity)->text.trimming = (value))
+#define setUITextBoundings(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->boundings = (value))
+#define setUITextHorizontalAlign(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->horizontalAlign = (value))
+#define setUITextVerticalAlign(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->verticalAlign = (value))
+#define setUITextLineAlign(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->lineAlign = (value))
+#define setUITextWrapping(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->wrapping = (value))
+#define setUITextColor(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->fontColor = (value))
+#define setUITextHighlight(ctx, uiEntity, index, count) \
+    do { (we_getTextComponent((ctx), (uiEntity))->highlightIndex = (index)); \
+       (we_getTextComponent((ctx), (uiEntity))->highlightCount = (count)); } while (0)
+#define setUITextHighlightColor(ctx, uiEntity, color) (we_getTextComponent((ctx), (uiEntity))->highlightColor = (color))
+#define setUITextMultiline(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->multiline = (value))
+#define setUITextLineHeight(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->lineHeight = (value))
+#define setUITextTrimming(ctx, uiEntity, value) (we_getTextComponent((ctx), (uiEntity))->trimming = (value))
 
-#define setUIButtonStatus(uiEntity, value) ((uiEntity)->button.enabled = (value))
-#define setUIButtonInteractive(uiEntity, value) ((uiEntity)->button.interactive = (value))
-#define setUIButtonHotKey(uiEntity, key) ((uiEntity)->button.hotKey = (key))
-#define setUIButtonClickHandler(uiEntity, handler) ((uiEntity)->button.clickHandler = (handler))
+#define setUIButtonStatus(ctx, uiEntity, value) (we_getButtonComponent((ctx), (uiEntity))->enabled = (value))
+#define setUIButtonInteractive(ctx, uiEntity, value) (we_getButtonComponent((ctx), (uiEntity))->interactive = (value))
+#define setUIButtonHotKey(ctx, uiEntity, key) (we_getButtonComponent((ctx), (uiEntity))->hotKey = (key))
+#define setUIButtonClickHandler(ctx, uiEntity, handler) (we_getButtonComponent((ctx), (uiEntity))->clickHandler = (handler))
 
 void wui_setUIButtonStatusByName(WarContext* context, StringView name, bool enabled);
 void wui_setUIButtonInteractiveByName(WarContext* context, StringView name, bool interactive);

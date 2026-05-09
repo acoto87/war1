@@ -13,14 +13,21 @@ WarState* wst_createCollapseState(WarContext* context, WarEntity* entity)
 void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(context, entity);
+
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
 
     wanim_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
     wanim_removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
 
     // disable the sprite component to just render the animation
-    entity->sprite.enabled = false;
+    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+    assert(sprite);
+
+    sprite->enabled = false;
 
     WarSpriteAnimation* collapseAnim = wanim_createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
 

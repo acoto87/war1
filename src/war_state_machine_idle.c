@@ -18,8 +18,8 @@ void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
     if (isUnit(entity))
     {
         WarMap* map = context->map;
-        vec2 unitSize = wu_getUnitSize(entity);
-        vec2 position = wu_getUnitPosition(entity, true);
+        vec2 unitSize = wu_getUnitSize(context, entity);
+        vec2 position = wu_getUnitPosition(context, entity, true);
         setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
@@ -32,8 +32,8 @@ void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
     if (isUnit(entity))
     {
         WarMap* map = context->map;
-        vec2 unitSize = wu_getUnitSize(entity);
-        vec2 position = wu_getUnitPosition(entity, true);
+        vec2 unitSize = wu_getUnitSize(context, entity);
+        vec2 position = wu_getUnitPosition(context, entity, true);
         setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     }
 }
@@ -48,7 +48,9 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
         {
             if (chance(20))
             {
-                WarUnitComponent* unit = &entity->unit;
+                WarUnitComponent* unit = we_getUnitComponent(context, entity);
+                assert(unit);
+
                 unit->direction += randomi(-1, 2);
                 if (unit->direction < 0)
                     unit->direction = WAR_DIRECTION_NORTH_WEST;
@@ -58,12 +60,12 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
         }
 
         // look for foe units to attack them if they are in range
-        if (wu_isWarriorUnit(entity))
+        if (wu_isWarriorUnit(context, entity))
         {
             WarEntity* enemy = we_getNearEnemy(context, entity);
             if (enemy)
             {
-                vec2 enemyPosition = wu_getUnitPosition(enemy, true);
+                vec2 enemyPosition = wu_getUnitPosition(context, enemy, true);
                 WarState* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
                 wst_changeNextState(context, entity, attackState, true, true);
             }
@@ -74,7 +76,9 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
     }
     else if(isWall(entity))
     {
-        WarWallComponent* wall = &entity->wall;
+        WarWallComponent* wall = we_getWallComponent(context, entity);
+        assert(wall);
+
         for(s32 i = 0; i < wall->pieces.count; i++)
         {
             WarWallPiece* piece = &wall->pieces.items[i];

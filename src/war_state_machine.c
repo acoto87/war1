@@ -61,7 +61,9 @@ void wst_changeNextState(WarContext* context, WarEntity* entity, WarState* state
 {
     NOT_USED(context);
 
-    WarStateMachineComponent* stateMachine = &entity->stateMachine;
+    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
+    assert(stateMachine);
+
     stateMachine->nextState = state;
     stateMachine->wst_leaveState = wst_leaveState;
     stateMachine->wst_enterState = wst_enterState;
@@ -81,7 +83,9 @@ bool wst_changeStateNextState(WarContext* context, WarEntity* entity, WarState* 
 
 WarState* wst_getState(WarEntity* entity, WarStateType type)
 {
-    WarStateMachineComponent* stateMachine = &entity->stateMachine;
+    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(NULL, entity);
+    assert(stateMachine);
+
     WarState* state = stateMachine->currentState;
     while (state && state->type != type)
         state = state->nextState;
@@ -90,14 +94,18 @@ WarState* wst_getState(WarEntity* entity, WarStateType type)
 
 WarState* wst_getDirectState(WarEntity* entity, WarStateType type)
 {
-    WarStateMachineComponent* stateMachine = &entity->stateMachine;
+    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(NULL, entity);
+    assert(stateMachine);
+
     WarState* state = stateMachine->currentState;
     return state && state->type == type ? state : NULL;
 }
 
 WarState* wst_getNextState(WarEntity* entity, WarStateType type)
 {
-    WarStateMachineComponent* stateMachine = &entity->stateMachine;
+    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(NULL, entity);
+    assert(stateMachine);
+
     WarState* state = stateMachine->nextState;
     return state && state->type == type ? state : NULL;
 }
@@ -147,7 +155,9 @@ void wst_leaveState(WarContext* context, WarEntity* entity, WarState* state)
 
 void wst_updateStateMachine(WarContext* context, WarEntity* entity)
 {
-    WarStateMachineComponent* stateMachine = &entity->stateMachine;
+    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
+    assert(stateMachine);
+
     if (stateMachine->enabled)
     {
         // the wst_enterState could potentially change state if it determine that is not ready to start the current state

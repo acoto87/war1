@@ -15,10 +15,14 @@ void wst_enterUpgradeState(WarContext* context, WarEntity* entity, WarState* sta
     NOT_USED(state);
 
     WarMap* map = context->map;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
@@ -30,10 +34,14 @@ void wst_leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* sta
     NOT_USED(state);
 
     WarMap* map = context->map;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
@@ -43,7 +51,8 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
     if (state->upgrade.cancelled)
     {

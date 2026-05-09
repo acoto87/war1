@@ -1,4 +1,4 @@
-﻿#include "war_scene_download.h"
+#include "war_scene_download.h"
 
 #include "SDL3/SDL.h"
 
@@ -26,23 +26,23 @@ void wsc_enterSceneDownload(WarContext* context)
                                "Enjoy the game!";
 
     WarEntity* downloadText = wui_createUIText(context, wstr_fromCString("txtDownload"), 1, 10, wstr_fromCString(text), vec2i(10, 10));
-    setUITextColor(downloadText, WAR_COLOR_RGB(255, 215, 138));
-    setUITextMultiline(downloadText, true);
-    setUITextBoundings(downloadText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
-    setUITextHorizontalAlign(downloadText, WAR_TEXT_ALIGN_LEFT);
-    setUITextVerticalAlign(downloadText, WAR_TEXT_ALIGN_TOP);
-    setUITextLineAlign(downloadText, WAR_TEXT_ALIGN_LEFT);
-    setUITextWrapping(downloadText, WAR_TEXT_WRAP_CHAR);
-    setUITextLineHeight(downloadText, 120);
+    setUITextColor(context, downloadText, WAR_COLOR_RGB(255, 215, 138));
+    setUITextMultiline(context, downloadText, true);
+    setUITextBoundings(context, downloadText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
+    setUITextHorizontalAlign(context, downloadText, WAR_TEXT_ALIGN_LEFT);
+    setUITextVerticalAlign(context, downloadText, WAR_TEXT_ALIGN_TOP);
+    setUITextLineAlign(context, downloadText, WAR_TEXT_ALIGN_LEFT);
+    setUITextWrapping(context, downloadText, WAR_TEXT_WRAP_CHAR);
+    setUITextLineHeight(context, downloadText, 120);
 
     WarEntity* downloadingText = wui_createUIText(context, wstr_fromCString("txtDownloading"), 1, 10, wstr_fromCString("Downloading..."), vec2i(10, 10));
-    setUITextColor(downloadingText, WAR_COLOR_RGB(255, 215, 138));
-    setUITextMultiline(downloadingText, false);
-    setUITextBoundings(downloadingText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
-    setUITextHorizontalAlign(downloadingText, WAR_TEXT_ALIGN_LEFT);
-    setUITextVerticalAlign(downloadingText, WAR_TEXT_ALIGN_BOTTOM);
-    setUITextLineAlign(downloadingText, WAR_TEXT_ALIGN_LEFT);
-    setUIEntityStatus(downloadingText, false);
+    setUITextColor(context, downloadingText, WAR_COLOR_RGB(255, 215, 138));
+    setUITextMultiline(context, downloadingText, false);
+    setUITextBoundings(context, downloadingText, vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)));
+    setUITextHorizontalAlign(context, downloadingText, WAR_TEXT_ALIGN_LEFT);
+    setUITextVerticalAlign(context, downloadingText, WAR_TEXT_ALIGN_BOTTOM);
+    setUITextLineAlign(context, downloadingText, WAR_TEXT_ALIGN_LEFT);
+    setUIEntityStatus(context, downloadingText, false);
 }
 
 void wsc_updateSceneDownload(WarContext* context)
@@ -67,7 +67,7 @@ void wsc_updateSceneDownload(WarContext* context)
                                               "DEMO DATA.WAR file";
 
                 WarEntity* downloadText = we_findUIEntity(context, wsv_fromCString("txtDownload"));
-                wui_setUIText(downloadText, wstr_fromCString(confirm));
+                wui_setUIText(context, downloadText, wstr_fromCString(confirm));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_CONFIRM;
             }
@@ -79,7 +79,7 @@ void wsc_updateSceneDownload(WarContext* context)
             if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
                 WarEntity* downloadingText = we_findUIEntity(context, wsv_fromCString("txtDownloading"));
-                setUIEntityStatus(downloadingText, true);
+                setUIEntityStatus(context, downloadingText, true);
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_DOWNLOADING;
             }
@@ -92,14 +92,14 @@ void wsc_updateSceneDownload(WarContext* context)
             if (success)
             {
                 WarEntity* downloadingText = we_findUIEntity(context, wsv_fromCString("txtDownloading"));
-                wui_setUIText(downloadingText, wstr_fromCString("Downloading... Done. Press Enter to start the game."));
+                wui_setUIText(context, downloadingText, wstr_fromCString("Downloading... Done. Press Enter to start the game."));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_DOWNLOADED;
             }
             else
             {
                 WarEntity* downloadingText = we_findUIEntity(context, wsv_fromCString("txtDownloading"));
-                wui_setUIText(downloadingText, wstr_fromCString("Downloading... Failed. Press Enter to quit the game."));
+                wui_setUIText(context, downloadingText, wstr_fromCString("Downloading... Failed. Press Enter to quit the game."));
 
                 scene->download.status = WAR_SCENE_DOWNLOAD_FAILED;
             }

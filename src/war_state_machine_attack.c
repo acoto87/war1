@@ -31,10 +31,14 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 {
     WarMap* map = context->map;
 
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
 
     WarUnitStats stats = wu_getUnitStats(unit->type);
 
@@ -49,7 +53,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // when going to an attacking point (where there is no target unit)
         // check if the attacking unit is in range 1, no matter if the range
         // of the attacking unit is greater
-        if(!wu_tileInRange(entity, targetTile, 1))
+        if(!wu_tileInRange(context, entity, targetTile, 1))
         {
             WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             moveState->nextState = state;
@@ -68,11 +72,11 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // if the target entity is an unit the instead of using the tile where
         // the player click, use a point on the target unit that is closer to
         // the attacking unit
-        targetTile = wu_unitPointOnTarget(entity, targetEntity);
+        targetTile = wu_unitPointOnTarget(context, entity, targetEntity);
     }
 
     // if the unit is not in range to attack, chase it
-    if (isUnit(targetEntity) && !wu_unitInRange(entity, targetEntity, stats.range))
+    if (isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats.range))
     {
         WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
         followState->nextState = state;
@@ -80,7 +84,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    if(isWall(targetEntity) && !wu_tileInRange(entity, targetTile, stats.range))
+    if(isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats.range))
     {
         WarState* followState = wst_createFollowState(context, entity, 0, targetTile, stats.range);
         followState->nextState = state;
@@ -99,7 +103,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    wu_setUnitDirectionFromDiff(entity, targetTile.x - position.x, targetTile.y - position.y);
+    wu_setUnitDirectionFromDiff(context, entity, targetTile.x - position.x, targetTile.y - position.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
@@ -123,7 +127,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             }
             else
             {
-                if (wu_isRangeUnit(entity))
+                if (wu_isRangeUnit(context, entity))
                 {
                     we_rangeAttack(context, entity, targetEntity);
                 }
@@ -132,13 +136,13 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                     we_meleeAttack(context, entity, targetEntity);
                 }
 
-                vec2 targetPosition = wu_getUnitCenterPosition(targetEntity, false);
+                vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
                 wa_playAttackSound(context, targetPosition, action->lastSoundStep);
             }
         }
         else if(isWall(targetEntity))
         {
-                WarWallPiece* piece = we_getWallPieceAtPosition(targetEntity, (s32)targetTile.x, (s32)targetTile.y);
+                WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
             if (piece)
             {
                 // if the piece of the wall the unit is attacking has no more hit points, go to idle.
@@ -151,7 +155,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 }
                 else
                 {
-                    if (wu_isRangeUnit(entity))
+                    if (wu_isRangeUnit(context, entity))
                     {
                         we_rangeWallAttack(context, entity, targetEntity, piece);
                     }

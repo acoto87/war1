@@ -27,7 +27,6 @@ WarScene* wsc_createScene(WarContext* context, WarSceneType type)
 void wsc_freeScene(WarScene* scene)
 {
     WarEntityManager* manager = &scene->entityManager;
-    WarEntityListFree(&manager->entities);
     WarEntityMapFree(&manager->entitiesByType);
     WarUnitMapFree(&manager->unitsByType);
     WarEntityIdMapFree(&manager->entitiesById);

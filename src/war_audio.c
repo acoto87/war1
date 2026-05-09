@@ -190,7 +190,9 @@ WarAudioData wa_getAudioData(WarAudioId audioId)
 
 bool wa_playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream, f32 volume)
 {
-    WarAudioComponent* audio = &entity->audio;
+    WarAudioComponent* audio = we_getAudioComponent(context, entity);
+    assert(audio);
+
     tsf* soundFont = context->soundFont;
 
     while (sampleCount)
@@ -281,7 +283,8 @@ bool wa_playMidi(WarContext* context, WarEntity* entity, u32 sampleCount, s16* o
 
 bool wa_playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* outputStream, f32 volume)
 {
-    WarAudioComponent* audio = &entity->audio;
+    WarAudioComponent* audio = we_getAudioComponent(context, entity);
+    assert(audio);
 
     WarResource* resource = context->resources[audio->resourceIndex];
     if (!resource)
@@ -377,7 +380,9 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
         WarEntity* entity = audios->items[i];
         if (entity)
         {
-            WarAudioComponent* audio = &entity->audio;
+            WarAudioComponent* audio = we_getAudioComponent(context, entity);
+            assert(audio);
+
             if (audio->enabled)
             {
                 switch (audio->type)
@@ -398,7 +403,9 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                     {
                         f32 volume = soundVolume;
 
-                        WarTransformComponent* transform = &entity->transform;
+                        WarTransformComponent* transform = we_getTransformComponent(context, entity);
+                        assert(transform);
+
                         if (transform->enabled)
                         {
                             // does positional audios only makes sense on maps?
@@ -552,7 +559,9 @@ void wa_removeAudiosOfType(WarContext* context, WarAudioType type)
         WarEntity* entity = audios->items[i];
         if (entity)
         {
-            WarAudioComponent* audio = &entity->audio;
+            WarAudioComponent* audio = we_getAudioComponent(context, entity);
+            assert(audio);
+
             if (audio->type == type)
             {
                 WarEntityIdListAdd(&toRemove, entity->id);
@@ -635,7 +644,7 @@ WarEntity* wa_playAttackSound(WarContext* context, vec2 position, WarUnitActionS
 
 WarEntity* wa_playDudeSelectionSound(WarContext* context, WarEntity* entity)
 {
-    assert(wu_isDudeUnit(entity));
+    assert(wu_isDudeUnit(context, entity));
 
     WarMap* map = context->map;
 
@@ -644,29 +653,32 @@ WarEntity* wa_playDudeSelectionSound(WarContext* context, WarEntity* entity)
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
         if (selectedEntityId == entity->id)
         {
-            return isHumanUnit(entity)
+            return isHumanUnit(context, entity)
                 ? wa_createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false)
                 : wa_createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
         }
     }
 
-    return isHumanUnit(entity)
+    return isHumanUnit(context, entity)
         ? wa_createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false)
         : wa_createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
 }
 
 WarEntity* wa_playBuildingSelectionSound(WarContext* context, WarEntity* entity)
 {
-    assert(wu_isBuildingUnit(entity));
+    assert(wu_isBuildingUnit(context, entity));
 
     if (isBuilding(entity) || isGoingToBuild(entity))
         return wa_createAudio(context, WAR_BUILDING, false);
 
-    s32 hpPercent = PERCENTABI(entity->unit.hp, entity->unit.maxhp);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    s32 hpPercent = PERCENTABI(unit->hp, unit->maxhp);
     if(hpPercent <= 33)
         return wa_createAudio(context, WAR_FIRE_CRACKLING, false);
 
-    switch (entity->unit.type)
+    switch (unit->type)
     {
         case WAR_UNIT_CHURCH:
             return wa_createAudio(context, WAR_HUMAN_CHURCH, false);

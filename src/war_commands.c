@@ -33,7 +33,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        rs[i] = wu_getUnitRect(entity);
+        rs[i] = wu_getUnitRect(context, entity);
     }
 
     rect bbox = rs[0];
@@ -80,7 +80,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
 
         target = wmap_mapToTileCoordinatesV(target);
 
-        if (wu_isDudeUnit(entity) && wu_isFriendlyUnit(context, entity))
+        if (wu_isDudeUnit(context, entity) && wu_isFriendlyUnit(context, entity))
         {
             if (isKeyHeld(input, WAR_KEY_SHIFT))
             {
@@ -178,7 +178,7 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    assert(isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE) ||
+    assert(isUnitOfType(context, targetEntity, WAR_UNIT_GOLDMINE) ||
            isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST));
 
     bool goingToHarvest = false;
@@ -192,12 +192,12 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
 
         if (wu_isFriendlyUnit(context, entity))
         {
-            if (wu_isWorkerUnit(entity))
+            if (wu_isWorkerUnit(context, entity))
             {
-                if (wu_isCarryingResources(entity))
+                if (wu_isCarryingResources(context, entity))
                 {
                     // find the closest town hall to deliver the gold
-                    WarRace race = wu_getUnitRace(entity);
+                    WarRace race = wu_getUnitRace(context, entity);
                     WarUnitType townHallType = wu_getTownHallOfRace(race);
                     WarEntity* townHall = we_findClosestUnitOfType(context, entity, townHallType);
                     if (townHall)
@@ -221,9 +221,9 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
 
                 goingToHarvest = true;
             }
-            else if (wu_isDudeUnit(entity))
+            else if (wu_isDudeUnit(context, entity))
             {
-                vec2 position = wu_getUnitCenterPosition(entity, true);
+                vec2 position = wu_getUnitCenterPosition(context, entity, true);
                 WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position,  targetTile));
                 wst_changeNextState(context, entity, moveState, true, true);
 
@@ -257,20 +257,20 @@ void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
             WarEntity* townHall = targetEntity;
             if (!townHall)
             {
-                WarRace race = wu_getUnitRace(entity);
+                WarRace race = wu_getUnitRace(context, entity);
                 WarUnitType townHallType = wu_getTownHallOfRace(race);
                 townHall = we_findClosestUnitOfType(context, entity, townHallType);
                 assert(townHall);
             }
 
-            if (wu_isWorkerUnit(entity) && wu_isCarryingResources(entity))
+            if (wu_isWorkerUnit(context, entity) && wu_isCarryingResources(context, entity))
             {
                 WarState* deliverState = wst_createDeliverState(context, entity, townHall->id);
                 wst_changeNextState(context, entity, deliverState, true, true);
 
                 goingToDeliver = true;
             }
-            else if (wu_isDudeUnit(entity))
+            else if (wu_isDudeUnit(context, entity))
             {
                 WarState* followState = wst_createFollowState(context, entity, townHall->id, VEC2_ZERO, 1);
                 wst_changeNextState(context, entity, followState, true, true);
@@ -308,7 +308,7 @@ void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
                 continue;
             }
 
-            if (wu_isWorkerUnit(entity))
+            if (wu_isWorkerUnit(context, entity))
             {
                 WarState* repairState = wst_createRepairState(context, entity, targetEntity->id);
                 wst_changeNextState(context, entity, repairState, true, true);
@@ -337,9 +337,9 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isConjurerOrWarlockUnit(entity))
+        if (wu_isConjurerOrWarlockUnit(context, entity))
         {
-            WarUnitComponent* unit = &entity->unit;
+            WarUnitComponent* unit = we_getUnitComponent(context, entity);
 
             // when the unit summon another unit, it is not invisible anymore
             unit->invisible = false;
@@ -351,14 +351,14 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
 
             while (we_decreaseUnitMana(context, entity, stats.manaCost))
             {
-                vec2 position = wu_getUnitCenterPosition(entity, true);
+                vec2 position = wu_getUnitCenterPosition(context, entity, true);
                 vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
 
                 WarEntity* summonedUnit = we_createUnit(context, spellMapping.mappedType,
                                                      (s32)spawnPosition.x, (s32)spawnPosition.y,
                                                      unit->player, WAR_RESOURCE_NONE, 0, true);
 
-                vec2 unitSize = wu_getUnitSize(summonedUnit);
+                vec2 unitSize = wu_getUnitSize(context, summonedUnit);
                 setStaticEntity(map->finder, (s32)spawnPosition.x, (s32)spawnPosition.y,
                                 (s32)unitSize.x, (s32)unitSize.y, summonedUnit->id);
 
@@ -387,7 +387,7 @@ void wcmd_executeRainOfFireCommand(WarContext* context, vec2 targetTile)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isConjurerOrWarlockUnit(entity))
+        if (wu_isConjurerOrWarlockUnit(context, entity))
         {
             WarState* castState = wst_createCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetTile);
             wst_changeNextState(context, entity, castState, true, true);
@@ -406,7 +406,7 @@ void wcmd_executePoisonCloudCommand(WarContext* context, vec2 targetTile)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isConjurerOrWarlockUnit(entity))
+        if (wu_isConjurerOrWarlockUnit(context, entity))
         {
             WarState* castState = wst_createCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetTile);
             wst_changeNextState(context, entity, castState, true, true);
@@ -418,7 +418,7 @@ void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, ve
 {
     WarMap* map = context->map;
 
-    if (targetEntity && wu_isDudeUnit(targetEntity))
+    if (targetEntity && wu_isDudeUnit(context, targetEntity))
     {
         s32 selEntitiesCount = map->selectedEntities.count;
         for(s32 i = 0; i < selEntitiesCount; i++)
@@ -427,7 +427,7 @@ void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, ve
             WarEntity* entity = we_findEntity(context, entityId);
             assert(entity);
 
-            if (wu_isClericOrNecrolyteUnit(entity))
+            if (wu_isClericOrNecrolyteUnit(context, entity))
             {
                 // the unit can't heal itself
                 if (entity->id != targetEntity->id)
@@ -444,7 +444,7 @@ void wcmd_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity
 {
     WarMap* map = context->map;
 
-    if (targetEntity && wu_isDudeUnit(targetEntity))
+    if (targetEntity && wu_isDudeUnit(context, targetEntity))
     {
         s32 selEntitiesCount = map->selectedEntities.count;
         for(s32 i = 0; i < selEntitiesCount; i++)
@@ -453,7 +453,7 @@ void wcmd_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity
             WarEntity* entity = we_findEntity(context, entityId);
             assert(entity);
 
-            if (wu_isClericOrNecrolyteUnit(entity))
+            if (wu_isClericOrNecrolyteUnit(context, entity))
             {
                 WarState* castState = wst_createCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetTile);
                 wst_changeNextState(context, entity, castState, true, true);
@@ -466,7 +466,7 @@ void wcmd_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity
 {
     WarMap* map = context->map;
 
-    if (targetEntity && wu_isDudeUnit(targetEntity))
+    if (targetEntity && wu_isDudeUnit(context, targetEntity))
     {
         s32 selEntitiesCount = map->selectedEntities.count;
         for(s32 i = 0; i < selEntitiesCount; i++)
@@ -475,7 +475,7 @@ void wcmd_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity
             WarEntity* entity = we_findEntity(context, entityId);
             assert(entity);
 
-            if (wu_isClericOrNecrolyteUnit(entity))
+            if (wu_isClericOrNecrolyteUnit(context, entity))
             {
                 WarState* castState = wst_createCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetTile);
                 wst_changeNextState(context, entity, castState, true, true);
@@ -495,7 +495,7 @@ void wcmd_executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isClericOrNecrolyteUnit(entity))
+        if (wu_isClericOrNecrolyteUnit(context, entity))
         {
             WarState* castState = wst_createCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetTile);
             wst_changeNextState(context, entity, castState, true, true);
@@ -514,9 +514,9 @@ void wcmd_executeSightCommand(WarContext* context, vec2 targetTile)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isClericOrNecrolyteUnit(entity))
+        if (wu_isClericOrNecrolyteUnit(context, entity))
         {
-            WarSpellType spellType = isHumanUnit(entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
+            WarSpellType spellType = isHumanUnit(context, entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
             WarState* castState = wst_createCastState(context, entity, spellType, 0, targetTile);
             wst_changeNextState(context, entity, castState, true, true);
         }
@@ -551,7 +551,7 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
 
                         playSound = true;
                     }
-                    else if (wu_isWorkerUnit(entity))
+                    else if (wu_isWorkerUnit(context, entity))
                     {
                         WarState* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, 1);
                         wst_changeNextState(context, entity, followState, true, true);
@@ -636,7 +636,7 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
-                        if (isUnitOfType(targetEntity, WAR_UNIT_GOLDMINE))
+                        if (isUnitOfType(context, targetEntity, WAR_UNIT_GOLDMINE))
                         {
                             if (!isUnitUnknown(map, targetEntity))
                                 wcmd_executeHarvestCommand(context, targetEntity, targetTile);
@@ -694,7 +694,7 @@ bool wcmd_executeCommand(WarContext* context)
                     {
                         WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                         WarEntity* targetEntity = we_findEntity(context, targetEntityId);
-                        if (targetEntity && wu_isBuildingUnit(targetEntity))
+                        if (targetEntity && wu_isBuildingUnit(context, targetEntity))
                         {
                             wcmd_executeRepairCommand(context, targetEntity);
                         }
@@ -774,8 +774,13 @@ bool wcmd_executeCommand(WarContext* context)
             assert(map->selectedEntities.count == 1);
 
             WarEntity* selectedEntity = we_findEntity(context, map->selectedEntities.items[0]);
-            assert(selectedEntity && wu_isBuildingUnit(selectedEntity));
-            assert(selectedEntity->unit.type == buildingUnit);
+            assert(selectedEntity && wu_isBuildingUnit(context, selectedEntity));
+
+            WarUnitComponent* selectedUnit = we_getUnitComponent(context, selectedEntity);
+            assert(selectedUnit);
+            assert(selectedUnit->type == buildingUnit);
+            NOT_USED(buildingUnit);
+            NOT_USED(selectedUnit);
 
             WarUnitStats stats = wu_getUnitStats(unitToTrain);
             if (we_checkFarmFood(context, player) &&
@@ -816,8 +821,13 @@ bool wcmd_executeCommand(WarContext* context)
             assert(map->selectedEntities.count == 1);
 
             WarEntity* selectedEntity = we_findEntity(context, map->selectedEntities.items[0]);
-            assert(selectedEntity && wu_isBuildingUnit(selectedEntity));
-            assert(selectedEntity->unit.type == buildingUnit);
+            assert(selectedEntity && wu_isBuildingUnit(context, selectedEntity));
+
+            WarUnitComponent* selectedUnit = we_getUnitComponent(context, selectedEntity);
+            assert(selectedUnit);
+            assert(selectedUnit->type == buildingUnit);
+            NOT_USED(buildingUnit);
+            NOT_USED(selectedUnit);
 
             assert(hasRemainingUpgrade(player, upgradeToBuild));
 
@@ -899,9 +909,12 @@ bool wcmd_executeCommand(WarContext* context)
 
                     WarEntityId townHallId = map->selectedEntities.items[0];
                     WarEntity* townHall = we_findEntity(context, townHallId);
+                    assert(townHall);
 
                     WarUnitType townHallType = wu_getTownHallOfRace(player->race);
-                    assert(isUnitOfType(townHall, townHallType));
+                    assert(isUnitOfType(context, townHall, townHallType));
+                    NOT_USED(townHall);
+                    NOT_USED(townHallType);
 
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -911,7 +924,7 @@ bool wcmd_executeCommand(WarContext* context)
                         if (we_decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
                         {
                             WarEntity* wall = map->wall;
-                            WarWallPiece* piece = we_addWallPiece(wall, (s32)targetTile.x, (s32)targetTile.y, 0);
+                            WarWallPiece* piece = we_addWallPiece(context, wall, (s32)targetTile.x, (s32)targetTile.y, 0);
                             piece->hp = WAR_WALL_MAX_HP;
                             piece->maxhp = WAR_WALL_MAX_HP;
 
@@ -947,9 +960,12 @@ bool wcmd_executeCommand(WarContext* context)
 
                     WarEntityId townHallId = map->selectedEntities.items[0];
                     WarEntity* townHall = we_findEntity(context, townHallId);
+                    assert(townHall);
 
                     WarUnitType townHallType = wu_getTownHallOfRace(player->race);
-                    assert(isUnitOfType(townHall, townHallType));
+                    assert(isUnitOfType(context, townHall, townHallType));
+                    NOT_USED(townHall);
+                    NOT_USED(townHallType);
 
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -959,7 +975,7 @@ bool wcmd_executeCommand(WarContext* context)
                         if (we_decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
                         {
                             WarEntity* road = map->road;
-                            we_addRoadPiece(road, (s32)targetTile.x, (s32)targetTile.y, 0);
+                            we_addRoadPiece(context, road, (s32)targetTile.x, (s32)targetTile.y, 0);
 
                             we_determineRoadTypes(context, road);
 
@@ -1415,11 +1431,14 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
         WarEntityId selectedEntityId = map->selectedEntities.items[i];
         WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
 
-        if (wu_isBuildingUnit(selectedEntity))
+        if (wu_isBuildingUnit(context, selectedEntity))
         {
+            WarUnitComponent* unit =  we_getUnitComponent(context, selectedEntity);
+            assert(unit);
+
             if (isBuilding(selectedEntity) || isGoingToBuild(selectedEntity))
             {
-                WarBuildingStats stats = wu_getBuildingStats(selectedEntity->unit.type);
+                WarBuildingStats stats = wu_getBuildingStats(unit->type);
                 we_increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
 
                 WarState* collapseState = wst_createCollapseState(context, selectedEntity);
@@ -1427,7 +1446,7 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
 
                 wa_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
             }
-            else if (selectedEntity->unit.building)
+            else if (unit->building)
             {
                 if (isTraining(selectedEntity) || isGoingToTrain(selectedEntity))
                 {

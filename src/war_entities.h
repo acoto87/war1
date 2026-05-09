@@ -282,39 +282,193 @@ struct _WarSightComponent
 
 struct _WarEntity
 {
-    bool enabled;
-    WarEntityId id;
-    WarEntityType type;
-    WarTransformComponent transform;
-    WarSpriteComponent sprite;
-    WarRoadComponent road;
-    WarWallComponent wall;
-    WarRuinComponent ruin;
-    WarForestComponent forest;
-    WarUnitComponent unit;
-    WarStateMachineComponent stateMachine;
-    WarAnimationsComponent animations;
-    WarUIComponent ui;
-    WarTextComponent text;
-    WarRectComponent rect;
-    WarButtonComponent button;
-    WarAudioComponent audio;
-    WarCursorComponent cursor;
-    WarProjectileComponent projectile;
-    WarPoisonCloudComponent poisonCloud;
-    WarSightComponent sight;
+    u16 id;
+    u16 type;                       // WarEntityType cast to u16
+    u16 components[MAX_COMPONENTS]; // INVALID_COMP_INDEX = absent
 };
+static_assert(sizeof(WarEntity) == 64, "WarEntity must be 64 bytes");
+
+// --- Per-component dense storage structs ---
+
+typedef struct
+{
+    WarTransformComponent dense[MAX_ENTITIES];
+    WarEntityId           owners[MAX_ENTITIES];
+    uint32_t              count;
+} WarTransformStorage;
+
+typedef struct
+{
+    WarSpriteComponent dense[MAX_ENTITIES];
+    WarEntityId        owners[MAX_ENTITIES];
+    uint32_t           count;
+} WarSpriteStorage;
+
+typedef struct
+{
+    WarUnitComponent dense[MAX_ENTITIES];
+    WarEntityId      owners[MAX_ENTITIES];
+    uint32_t         count;
+} WarUnitStorage;
+
+typedef struct
+{
+    WarAnimationsComponent dense[MAX_ENTITIES];
+    WarEntityId            owners[MAX_ENTITIES];
+    uint32_t               count;
+} WarAnimationsStorage;
+
+typedef struct
+{
+    WarRoadComponent dense[MAX_ENTITIES];
+    WarEntityId      owners[MAX_ENTITIES];
+    uint32_t         count;
+} WarRoadStorage;
+
+typedef struct
+{
+    WarWallComponent dense[MAX_ENTITIES];
+    WarEntityId      owners[MAX_ENTITIES];
+    uint32_t         count;
+} WarWallStorage;
+
+typedef struct
+{
+    WarRuinComponent dense[MAX_ENTITIES];
+    WarEntityId      owners[MAX_ENTITIES];
+    uint32_t         count;
+} WarRuinStorage;
+
+typedef struct
+{
+    WarForestComponent dense[MAX_ENTITIES];
+    WarEntityId        owners[MAX_ENTITIES];
+    uint32_t           count;
+} WarForestStorage;
+
+typedef struct
+{
+    WarStateMachineComponent dense[MAX_ENTITIES];
+    WarEntityId              owners[MAX_ENTITIES];
+    uint32_t                 count;
+} WarStateMachineStorage;
+
+typedef struct
+{
+    WarUIComponent dense[MAX_ENTITIES];
+    WarEntityId    owners[MAX_ENTITIES];
+    uint32_t       count;
+} WarUIStorage;
+
+typedef struct
+{
+    WarTextComponent dense[MAX_ENTITIES];
+    WarEntityId      owners[MAX_ENTITIES];
+    uint32_t         count;
+} WarTextStorage;
+
+typedef struct
+{
+    WarRectComponent dense[MAX_ENTITIES];
+    WarEntityId      owners[MAX_ENTITIES];
+    uint32_t         count;
+} WarRectStorage;
+
+typedef struct
+{
+    WarButtonComponent dense[MAX_ENTITIES];
+    WarEntityId        owners[MAX_ENTITIES];
+    uint32_t           count;
+} WarButtonStorage;
+
+typedef struct
+{
+    WarAudioComponent dense[MAX_ENTITIES];
+    WarEntityId       owners[MAX_ENTITIES];
+    uint32_t          count;
+} WarAudioStorage;
+
+typedef struct
+{
+    WarCursorComponent dense[MAX_ENTITIES];
+    WarEntityId        owners[MAX_ENTITIES];
+    uint32_t           count;
+} WarCursorStorage;
+
+typedef struct
+{
+    WarProjectileComponent dense[MAX_ENTITIES];
+    WarEntityId            owners[MAX_ENTITIES];
+    uint32_t               count;
+} WarProjectileStorage;
+
+typedef struct
+{
+    WarPoisonCloudComponent dense[MAX_ENTITIES];
+    WarEntityId             owners[MAX_ENTITIES];
+    uint32_t                count;
+} WarPoisonCloudStorage;
+
+typedef struct
+{
+    WarSightComponent dense[MAX_ENTITIES];
+    WarEntityId       owners[MAX_ENTITIES];
+    uint32_t          count;
+} WarSightStorage;
 
 struct _WarEntityManager
 {
-    s32 staticEntityId;
+    // --- Entity pool (flat array, slot 0 reserved/empty) ---
+    WarEntity entities[MAX_ENTITIES];
+    uint32_t  entityCount;
+    s32       nextEntityId; // monotonic; replaces staticEntityId
 
-    WarEntityList entities;
-    WarEntityMap entitiesByType;
-    WarUnitMap unitsByType;
-    WarEntityIdMap entitiesById;
-    WarEntityList uiEntities;
+    // --- Secondary indices (kept for O(1) typed queries) ---
+    WarEntityMap   entitiesByType; // WarEntityType  -> WarEntityList*
+    WarUnitMap     unitsByType;    // WarUnitType    -> WarEntityList*
+    WarEntityIdMap entitiesById;   // WarEntityId    -> WarEntity*
+    WarEntityList  uiEntities;     // subset of entities with COMP_UI present
+
+    // --- Per-component dense storage ---
+    WarTransformStorage    transforms;
+    WarSpriteStorage       sprites;
+    WarUnitStorage         units;
+    WarAnimationsStorage   animations;
+    WarRoadStorage         roads;
+    WarWallStorage         walls;
+    WarRuinStorage         ruins;
+    WarForestStorage       forests;
+    WarStateMachineStorage stateMachines;
+    WarUIStorage           uis;
+    WarTextStorage         texts;
+    WarRectStorage         rects;
+    WarButtonStorage       buttons;
+    WarAudioStorage        audios;
+    WarCursorStorage       cursors;
+    WarProjectileStorage   projectiles;
+    WarPoisonCloudStorage  poisonClouds;
+    WarSightStorage        sights;
 };
+
+// Component getters — return NULL if component is absent
+WarTransformComponent*    we_getTransformComponent(WarContext* context, WarEntity* entity);
+WarSpriteComponent*       we_getSpriteComponent(WarContext* context, WarEntity* entity);
+WarUnitComponent*         we_getUnitComponent(WarContext* context, WarEntity* entity);
+WarAnimationsComponent*   we_getAnimationsComponent(WarContext* context, WarEntity* entity);
+WarRoadComponent*         we_getRoadComponent(WarContext* context, WarEntity* entity);
+WarWallComponent*         we_getWallComponent(WarContext* context, WarEntity* entity);
+WarRuinComponent*         we_getRuinComponent(WarContext* context, WarEntity* entity);
+WarForestComponent*       we_getForestComponent(WarContext* context, WarEntity* entity);
+WarStateMachineComponent* we_getStateMachineComponent(WarContext* context, WarEntity* entity);
+WarUIComponent*           we_getUIComponent(WarContext* context, WarEntity* entity);
+WarTextComponent*         we_getTextComponent(WarContext* context, WarEntity* entity);
+WarRectComponent*         we_getRectComponent(WarContext* context, WarEntity* entity);
+WarButtonComponent*       we_getButtonComponent(WarContext* context, WarEntity* entity);
+WarAudioComponent*        we_getAudioComponent(WarContext* context, WarEntity* entity);
+WarCursorComponent*       we_getCursorComponent(WarContext* context, WarEntity* entity);
+WarProjectileComponent*   we_getProjectileComponent(WarContext* context, WarEntity* entity);
+WarPoisonCloudComponent*  we_getPoisonCloudComponent(WarContext* context, WarEntity* entity);
+WarSightComponent*        we_getSightComponent(WarContext* context, WarEntity* entity);
 
 void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);
 void we_removeTransformComponent(WarContext* context, WarEntity* entity);
@@ -386,33 +540,34 @@ void we_removeSightComponent(WarContext* context, WarEntity* entity);
 
 // Roads
 WarEntity* we_createRoad(WarContext* context);
-void we_addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player);
-void we_addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct);
-bool we_hasRoadPieceAtPosition(WarEntity* entity, s32 x, s32 y);
-WarRoadPiece* we_getRoadPieceAtPosition(WarEntity* entity, s32 x, s32 y);
-void we_removeRoadPiece(WarEntity* entity, WarRoadPiece* piece);
+void we_addRoadPiece(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 player);
+void we_addRoadPiecesFromConstruct(WarContext* context, WarEntity* entity, WarLevelConstruct *construct);
+bool we_hasRoadPieceAtPosition(WarContext* context, WarEntity* entity, s32 x, s32 y);
+WarRoadPiece* we_getRoadPieceAtPosition(WarContext* context, WarEntity* entity, s32 x, s32 y);
+void we_removeRoadPiece(WarContext* context, WarEntity* entity, WarRoadPiece* piece);
 void we_determineRoadTypes(WarContext* context, WarEntity* entity);
 
 // Walls
 WarEntity* we_createWall(WarContext* context);
-WarWallPiece* we_addWallPiece(WarEntity* entity, s32 x, s32 y, s32 player);
-void we_addWallPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct);
-bool we_hasWallPieceAtPosition(WarEntity* entity, s32 x, s32 y);
-WarWallPiece* we_getWallPieceAtPosition(WarEntity* entity, s32 x, s32 y);
-void we_removeWallPiece(WarEntity* entity, WarWallPiece* piece);
+WarWallPiece* we_addWallPiece(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 player);
+void we_addWallPiecesFromConstruct(WarContext* context, WarEntity* entity, WarLevelConstruct *construct);
+bool we_hasWallPieceAtPosition(WarContext* context, WarEntity* entity, s32 x, s32 y);
+WarWallPiece* we_getWallPieceAtPosition(WarContext* context, WarEntity* entity, s32 x, s32 y);
+void we_removeWallPiece(WarContext* context, WarEntity* entity, WarWallPiece* piece);
 void we_determineWallTypes(WarContext* context, WarEntity* entity);
 void we_takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage);
 
 // Ruins
 WarEntity* we_createRuins(WarContext* context);
 void we_addRuinsPieces(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 dim);
-bool we_hasRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y);
-WarRuinPiece* we_getRuinPieceAtPosition(WarEntity* ruins, s32 x, s32 y);
+bool we_hasRuinPieceAtPosition(WarContext* context, WarEntity* ruins, s32 x, s32 y);
+WarRuinPiece* we_getRuinPieceAtPosition(WarContext* context, WarEntity* ruins, s32 x, s32 y);
+void we_removeRuinPiece(WarContext* context, WarEntity* entity, WarRuinPiece* piece);
 void we_determineRuinTypes(WarContext* context, WarEntity* entity);
 
 // Trees
-bool we_hasTreeAtPosition(WarEntity* forest, s32 x, s32 y);
-WarTree* we_getTreeAtPosition(WarEntity* forest, s32 x, s32 y);
+bool we_hasTreeAtPosition(WarContext* context, WarEntity* forest, s32 x, s32 y);
+WarTree* we_getTreeAtPosition(WarContext* context, WarEntity* forest, s32 x, s32 y);
 void we_determineTreeTiles(WarContext* context, WarEntity* forest);
 void we_determineAllTreeTiles(WarContext* context);
 WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position);
