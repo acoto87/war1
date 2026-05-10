@@ -36,7 +36,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     {
         WarEntity* targetEntity = we_findEntity(context, (WarEntityId)state->follow.targetEntityId);
 
-        if (isUnit(targetEntity))
+        if (wu_isUnit(targetEntity))
         {
             // if the target entity is an unit the instead of using the tile where
             // the player click, use a point on the target unit that is closer to

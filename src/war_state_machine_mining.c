@@ -30,7 +30,7 @@ void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* stat
 
     // NOTE: if the goldmine doesn't exists (it could ran out of gold, or other units destroyed it), or it's collapsing or going to collapse,
     // restore back the sprite component to the worker, so it should be visible again
-    if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
+    if (!goldmine || wst_isCollapsing(context, goldmine) || wst_isGoingToCollapse(context, goldmine))
     {
         WarUnitComponent* unit = we_getUnitComponent(context, entity);
         assert(unit);
@@ -70,7 +70,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    if (isCollapsing(goldmine) || isGoingToCollapse(goldmine))
+    if (wst_isCollapsing(context, goldmine) || wst_isGoingToCollapse(context, goldmine))
     {
         // find a valid spawn position for the unit
         vec2 position = wu_getUnitCenterPosition(context, goldmine, true);

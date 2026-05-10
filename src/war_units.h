@@ -286,11 +286,11 @@ WarUnitCommandMapping wu_getCommandMappingFromUnitType(WarUnitType unitType);
 WarUnitCommandMapping wu_getCommandMappingFromUpgradeType(WarUpgradeType upgradeType);
 WarUnitCommandMapping wu_getCommandMappingFromSpellType(WarSpellType spellType);
 
-#define isUnit(entity) ((entity)->type == WAR_ENTITY_TYPE_UNIT)
-#define isUnitOfType(ctx, entity, unitType) (isUnit(entity) && we_getUnitComponent((ctx), (entity)) && we_getUnitComponent((ctx), (entity))->type == (unitType))
-#define isRoad(entity) ((entity)->type == WAR_ENTITY_TYPE_ROAD)
-#define isWall(entity) ((entity)->type == WAR_ENTITY_TYPE_WALL)
-#define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
+bool wu_isUnit(const WarEntity* entity);
+bool wu_isUnitOfType(WarContext* ctx, const WarEntity* entity, WarUnitType unitType);
+bool wu_isRoad(const WarEntity* entity);
+bool wu_isWall(const WarEntity* entity);
+bool wu_isRuin(const WarEntity* entity);
 
 bool wu_isDudeUnitType(WarUnitType type);
 bool wu_isBuildingUnitType(WarUnitType type);
@@ -327,9 +327,9 @@ bool wu_isSkeletonUnit(WarContext* context, WarEntity* entity);
 WarRace wu_getUnitTypeRace(WarUnitType type);
 WarRace wu_getUnitRace(WarContext* context, WarEntity* entity);
 
-#define isHumanUnit(ctx, entity) (wu_getUnitRace((ctx), (entity)) == WAR_RACE_HUMANS)
-#define isOrcUnit(ctx, entity) (wu_getUnitRace((ctx), (entity)) == WAR_RACE_ORCS)
-#define isNeutralUnit(ctx, entity) (wu_getUnitRace((ctx), (entity)) == WAR_RACE_NEUTRAL)
+bool wu_isHumanUnit(WarContext* context, WarEntity* entity);
+bool wu_isOrcUnit(WarContext* context, WarEntity* entity);
+bool wu_isNeutralUnit(WarContext* context, WarEntity* entity);
 
 WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race);
 
@@ -379,10 +379,10 @@ s32 wu_getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType un
 s32 wu_getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType);
 s32 wu_getTotalNumberOfUnits(WarContext* context, u8 player);
 
-#define playerHasUnit(context, player, unitType) (wu_getNumberOfUnitsOfType(context, player, unitType) > 0)
-#define playerHasBuilding(context, player, unitType) (wu_getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
+bool wu_playerHasUnit(WarContext* context, u8 player, WarUnitType unitType);
+bool wu_playerHasBuilding(WarContext* context, u8 player, WarUnitType unitType);
 
-#define isValidUnitType(type) inRange(type, WAR_UNIT_FOOTMAN, WAR_UNIT_COUNT)
+bool wu_isValidUnitType(WarUnitType type);
 
 void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
 WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType);

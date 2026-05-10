@@ -19,7 +19,7 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
     WarEntity* building = we_findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
-    if (!building || isCollapsing(building) || isGoingToCollapse(building))
+    if (!building || wst_isCollapsing(context, building) || wst_isGoingToCollapse(context, building))
     {
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
@@ -28,9 +28,9 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
     }
 
     // if the building needs to be built, enter the building and build it
-    if (isBuilding(building) || isGoingToBuild(building))
+    if (wst_isBuilding(context, building) || wst_isGoingToBuild(context, building))
     {
-        WarState* buildState = getBuildState(building);
+        WarState* buildState = wst_getBuildState(context, building);
         assert(buildState);
 
         // if there is already someone building it, go idle
@@ -87,7 +87,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
     WarEntity* building = we_findEntity(context, state->repairing.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
-    if (!building || isCollapsing(building) || isGoingToCollapse(building))
+    if (!building || wst_isCollapsing(context, building) || wst_isGoingToCollapse(context, building))
     {
         if (state->repairing.insideBuilding)
         {
@@ -146,7 +146,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
             action->lastActionStep = WAR_ACTION_STEP_NONE;
         }
     }
-    else if (!isBuilding(building) && !isGoingToBuild(building))
+    else if (!wst_isBuilding(context, building) && !wst_isGoingToBuild(context, building))
     {
         WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
         assert(sprite);

@@ -146,7 +146,7 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
         }
 
         WarUnitType producerType = wu_getProducerUnitOfType(unitType);
-        if (isValidUnitType(producerType))
+        if (wu_isValidUnitType(producerType))
         {
             WarEntityList* units = we_getUnitsOfType(context, producerType);
             for (s32 i = 0; i < units->count; i++)
@@ -159,7 +159,7 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
 
                     if (unit->player == aiPlayer->index)
                     {
-                        if (!isTraining(entity) && !isUpgrading(entity))
+                        if (!wst_isTraining(context, entity) && !wst_isUpgrading(context, entity))
                         {
                             if (we_decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
                             {

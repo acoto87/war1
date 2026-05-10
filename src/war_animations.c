@@ -190,11 +190,14 @@ void wanim_updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnim
 void wanim_updateAnimations(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateAnimations", 1);
-    WarEntityList* entities = we_getEntities(context);
-    for(s32 i = 0; i < entities->count; i++)
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
+
+    for(s32 i = 0; i < manager->entityCount; i++)
     {
-        WarEntity* entity = entities->items[i];
-        if (entity)
+        WarEntity* entity = &manager->entities[i];
+        if (entity->id != 0)
         {
             WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
             assert(animations);
@@ -209,6 +212,7 @@ void wanim_updateAnimations(WarContext* context)
             }
         }
     }
+
     TracyCZoneEnd(ctx);
 }
 

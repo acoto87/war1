@@ -95,7 +95,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
-        WarAudioId audioId = isHumanUnit(context, unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
+        WarAudioId audioId = wu_isHumanUnit(context, unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
         wa_createAudio(context, audioId, false);
 
         return;

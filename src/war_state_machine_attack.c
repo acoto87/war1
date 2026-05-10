@@ -67,7 +67,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    if (isUnit(targetEntity))
+    if (wu_isUnit(targetEntity))
     {
         // if the target entity is an unit the instead of using the tile where
         // the player click, use a point on the target unit that is closer to
@@ -76,7 +76,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // if the unit is not in range to attack, chase it
-    if (isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats.range))
+    if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats.range))
     {
         WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
         followState->nextState = state;
@@ -84,7 +84,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    if(isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats.range))
+    if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats.range))
     {
         WarState* followState = wst_createFollowState(context, entity, 0, targetTile, stats.range);
         followState->nextState = state;
@@ -94,7 +94,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
     // if the unit is attacking a worker that is currently gathering and inside of the goldmine or the townhall,
     // wcmd_stop the attacking for a moment until the unit come out again
-    if (wst_isInsideBuilding(targetEntity))
+    if (wst_isInsideBuilding(context, targetEntity))
     {
         WarState* waitState = wst_createWaitState(context, entity, 1.0f);
         waitState->nextState = state;
@@ -114,13 +114,13 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         unit->invisibilityTime = 0;
 
         // do damage
-        if (isUnit(targetEntity))
+        if (wu_isUnit(targetEntity))
         {
             // if the target entity is dead or is collapsing (in case of buildings), go to idle
             // do this check before apply damage in case of multiple units attacking.
             // one of them could cause the unit to die, so the other should wcmd_stop doing further damage.
-            if (isDead(targetEntity) || isGoingToDie(targetEntity) ||
-                isCollapsing(targetEntity) || isGoingToCollapse(targetEntity))
+            if (wst_isDead(context, targetEntity) || wst_isGoingToDie(context, targetEntity) ||
+                wst_isCollapsing(context, targetEntity) || wst_isGoingToCollapse(context, targetEntity))
             {
                 WarState* idleState = wst_createIdleState(context, entity, true);
                 wst_changeNextState(context, entity, idleState, true, true);
@@ -140,7 +140,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 wa_playAttackSound(context, targetPosition, action->lastSoundStep);
             }
         }
-        else if(isWall(targetEntity))
+        else if(wu_isWall(targetEntity))
         {
                 WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
             if (piece)

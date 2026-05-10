@@ -22,7 +22,7 @@ void wst_enterDeathState(WarContext* context, WarEntity* entity, WarState* state
     wmap_removeEntityFromSelection(context, entity->id);
 
     s32 deathDuration = wact_getActionDuration(context, entity, WAR_ACTION_TYPE_DEATH);
-    setDelay(state, wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration)));
+    state->delay = wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration));
 }
 
 void wst_leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)

@@ -653,13 +653,13 @@ WarEntity* wa_playDudeSelectionSound(WarContext* context, WarEntity* entity)
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
         if (selectedEntityId == entity->id)
         {
-            return isHumanUnit(context, entity)
+            return wu_isHumanUnit(context, entity)
                 ? wa_createAudioRandom(context, WAR_HUMAN_ANNOYED_1, WAR_HUMAN_ANNOYED_3, false)
                 : wa_createAudioRandom(context, WAR_ORC_ANNOYED_1, WAR_ORC_ANNOYED_3, false);
         }
     }
 
-    return isHumanUnit(context, entity)
+    return wu_isHumanUnit(context, entity)
         ? wa_createAudioRandom(context, WAR_HUMAN_SELECTED_1, WAR_HUMAN_SELECTED_5, false)
         : wa_createAudioRandom(context, WAR_ORC_SELECTED_1, WAR_ORC_SELECTED_5, false);
 }
@@ -668,7 +668,7 @@ WarEntity* wa_playBuildingSelectionSound(WarContext* context, WarEntity* entity)
 {
     assert(wu_isBuildingUnit(context, entity));
 
-    if (isBuilding(entity) || isGoingToBuild(entity))
+    if (wst_isBuilding(context, entity) || wst_isGoingToBuild(context, entity))
         return wa_createAudio(context, WAR_BUILDING, false);
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -757,8 +757,9 @@ typedef struct _MidiToken
     u8  data;
 } MidiToken;
 
-static s32 wa_compareTokens(const MidiToken left, const MidiToken right)
+static s32 wa_compareTokens(const MidiToken left, const MidiToken right, void* userdata)
 {
+    NOT_USED(userdata);
     return left.time - right.time;
 }
 
@@ -971,7 +972,7 @@ u8* wa_transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, siz
         return NULL;
     }
 
-    MidiTokenListSort(&lstTokens, wa_compareTokens);
+    MidiTokenListSort(&lstTokens, wa_compareTokens, NULL);
 
     tokenTime = 0;
     tokenType = 0;

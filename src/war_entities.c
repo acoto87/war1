@@ -85,7 +85,7 @@ void we_freeEntityList(WarEntityList* list)
     WarEntityListFree(list);
 }
 
-WarTransformComponent* we_getTransformComponent(WarContext* context, WarEntity* entity)
+WarTransformComponent* we_getTransformComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_TRANSFORM];
@@ -94,7 +94,7 @@ WarTransformComponent* we_getTransformComponent(WarContext* context, WarEntity* 
     return &manager->transforms.dense[idx];
 }
 
-WarSpriteComponent* we_getSpriteComponent(WarContext* context, WarEntity* entity)
+WarSpriteComponent* we_getSpriteComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_SPRITE];
@@ -103,7 +103,7 @@ WarSpriteComponent* we_getSpriteComponent(WarContext* context, WarEntity* entity
     return &manager->sprites.dense[idx];
 }
 
-WarUnitComponent* we_getUnitComponent(WarContext* context, WarEntity* entity)
+WarUnitComponent* we_getUnitComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_UNIT];
@@ -112,7 +112,7 @@ WarUnitComponent* we_getUnitComponent(WarContext* context, WarEntity* entity)
     return &manager->units.dense[idx];
 }
 
-WarAnimationsComponent* we_getAnimationsComponent(WarContext* context, WarEntity* entity)
+WarAnimationsComponent* we_getAnimationsComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_ANIMATIONS];
@@ -121,7 +121,7 @@ WarAnimationsComponent* we_getAnimationsComponent(WarContext* context, WarEntity
     return &manager->animations.dense[idx];
 }
 
-WarRoadComponent* we_getRoadComponent(WarContext* context, WarEntity* entity)
+WarRoadComponent* we_getRoadComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_ROAD];
@@ -130,7 +130,7 @@ WarRoadComponent* we_getRoadComponent(WarContext* context, WarEntity* entity)
     return &manager->roads.dense[idx];
 }
 
-WarWallComponent* we_getWallComponent(WarContext* context, WarEntity* entity)
+WarWallComponent* we_getWallComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_WALL];
@@ -139,7 +139,7 @@ WarWallComponent* we_getWallComponent(WarContext* context, WarEntity* entity)
     return &manager->walls.dense[idx];
 }
 
-WarRuinComponent* we_getRuinComponent(WarContext* context, WarEntity* entity)
+WarRuinComponent* we_getRuinComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_RUIN];
@@ -148,7 +148,7 @@ WarRuinComponent* we_getRuinComponent(WarContext* context, WarEntity* entity)
     return &manager->ruins.dense[idx];
 }
 
-WarForestComponent* we_getForestComponent(WarContext* context, WarEntity* entity)
+WarForestComponent* we_getForestComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_FOREST];
@@ -157,7 +157,7 @@ WarForestComponent* we_getForestComponent(WarContext* context, WarEntity* entity
     return &manager->forests.dense[idx];
 }
 
-WarStateMachineComponent* we_getStateMachineComponent(WarContext* context, WarEntity* entity)
+WarStateMachineComponent* we_getStateMachineComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_STATE_MACHINE];
@@ -166,7 +166,7 @@ WarStateMachineComponent* we_getStateMachineComponent(WarContext* context, WarEn
     return &manager->stateMachines.dense[idx];
 }
 
-WarUIComponent* we_getUIComponent(WarContext* context, WarEntity* entity)
+WarUIComponent* we_getUIComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_UI];
@@ -175,7 +175,7 @@ WarUIComponent* we_getUIComponent(WarContext* context, WarEntity* entity)
     return &manager->uis.dense[idx];
 }
 
-WarTextComponent* we_getTextComponent(WarContext* context, WarEntity* entity)
+WarTextComponent* we_getTextComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_TEXT];
@@ -184,7 +184,7 @@ WarTextComponent* we_getTextComponent(WarContext* context, WarEntity* entity)
     return &manager->texts.dense[idx];
 }
 
-WarRectComponent* we_getRectComponent(WarContext* context, WarEntity* entity)
+WarRectComponent* we_getRectComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_RECT];
@@ -193,7 +193,7 @@ WarRectComponent* we_getRectComponent(WarContext* context, WarEntity* entity)
     return &manager->rects.dense[idx];
 }
 
-WarButtonComponent* we_getButtonComponent(WarContext* context, WarEntity* entity)
+WarButtonComponent* we_getButtonComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_BUTTON];
@@ -202,7 +202,7 @@ WarButtonComponent* we_getButtonComponent(WarContext* context, WarEntity* entity
     return &manager->buttons.dense[idx];
 }
 
-WarAudioComponent* we_getAudioComponent(WarContext* context, WarEntity* entity)
+WarAudioComponent* we_getAudioComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_AUDIO];
@@ -211,7 +211,7 @@ WarAudioComponent* we_getAudioComponent(WarContext* context, WarEntity* entity)
     return &manager->audios.dense[idx];
 }
 
-WarCursorComponent* we_getCursorComponent(WarContext* context, WarEntity* entity)
+WarCursorComponent* we_getCursorComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_CURSOR];
@@ -220,7 +220,7 @@ WarCursorComponent* we_getCursorComponent(WarContext* context, WarEntity* entity
     return &manager->cursors.dense[idx];
 }
 
-WarProjectileComponent* we_getProjectileComponent(WarContext* context, WarEntity* entity)
+WarProjectileComponent* we_getProjectileComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_PROJECTILE];
@@ -229,7 +229,7 @@ WarProjectileComponent* we_getProjectileComponent(WarContext* context, WarEntity
     return &manager->projectiles.dense[idx];
 }
 
-WarPoisonCloudComponent* we_getPoisonCloudComponent(WarContext* context, WarEntity* entity)
+WarPoisonCloudComponent* we_getPoisonCloudComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_POISON_CLOUD];
@@ -238,7 +238,7 @@ WarPoisonCloudComponent* we_getPoisonCloudComponent(WarContext* context, WarEnti
     return &manager->poisonClouds.dense[idx];
 }
 
-WarSightComponent* we_getSightComponent(WarContext* context, WarEntity* entity)
+WarSightComponent* we_getSightComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
     u16 idx = entity->components[COMP_SIGHT];
@@ -1442,7 +1442,7 @@ WarEntity* we_findClosestUnitOfType(WarContext* context, WarEntity* entity, WarU
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* target = units->items[i];
-        if (isUnitOfType(context, target, type))
+        if (wu_isUnitOfType(context, target, type))
         {
             s32 dst = wu_unitDistanceInTiles(context, entity, target);
             if (dst < minDst)
@@ -1510,19 +1510,19 @@ WarEntity* we_findEntityUnderCursor(WarContext* context, bool includeTrees, bool
             if (unit)
             {
                 // don't change the cursor for dead units or corpses
-                if (isDead(entity) || isGoingToDie(entity) || wu_isCorpseUnit(context, entity))
+                if (wst_isDead(context, entity) || wst_isGoingToDie(context, entity) || wu_isCorpseUnit(context, entity))
                 {
                     continue;
                 }
 
                 // don't change the cursor for collased buildings
-                if (isCollapsing(entity) || isGoingToCollapse(entity))
+                if (wst_isCollapsing(context, entity) || wst_isGoingToCollapse(context, entity))
                 {
                     continue;
                 }
 
                 // don't change the cursor for non-visible units
-                if (!isUnitPartiallyVisible(map, entity))
+                if (!wmap_isUnitPartiallyVisible(context, map, entity))
                 {
                     continue;
                 }
@@ -1622,7 +1622,7 @@ void we_removeEntity(WarContext* context, WarEntity* entity)
 
     // Cache secondary-index metadata BEFORE any component is stripped.
     bool           isUI        = wui_isUIEntity(entity);
-    bool           isUnitEnt   = isUnit(entity);
+    bool           isUnitEnt   = wu_isUnit(entity);
     WarEntityType  entityType  = (WarEntityType)entity->type;
     WarEntityId    entityId    = entity->id;
     WarUnitType    unitType    = WAR_UNIT_FOOTMAN; // safe default
@@ -1690,26 +1690,6 @@ void we_removeEntityById(WarContext* context, WarEntityId id)
     }
 
     TracyCZoneEnd(ctx);
-}
-
-bool we_isStaticEntity(WarEntity* entity)
-{
-    if (isUnit(entity))
-    {
-        // NOTE: we_isStaticEntity has no context param; access type via unit component index directly.
-        // This function is called in contexts where unit component is guaranteed present.
-        // Use a workaround: check entity type field directly (unit type is stored in component,
-        // but we need context). Since this function signature cannot change, callers must ensure
-        // the unit component exists. For now preserve the pattern by checking entity->type field.
-        // Actually we cannot access entity->unit.type anymore. We need context.
-        // This function's signature is bool we_isStaticEntity(WarEntity*) - no context.
-        // We leave a note: callers should migrate to we_isStaticEntityCtx(context, entity).
-        // For now, always return false as a safe fallback.
-        NOT_USED(entity);
-        return false;
-    }
-
-    return false;
 }
 
 void we_initEntityManager(WarContext* context, WarEntityManager* manager)
@@ -1797,15 +1777,6 @@ WarEntityManager* we_getEntityManager(WarContext* context)
     return NULL;
 }
 
-WarEntityList* we_getEntities(WarContext* context)
-{
-    // PHASE 3 TODO: manager->entities is now WarEntity[MAX_ENTITIES] (flat pool),
-    // not a WarEntityList.  Callers must be migrated to iterate the flat array
-    // directly (skip slots where entity->id == 0) or use we_getEntitiesOfType.
-    NOT_USED(context);
-    return NULL;
-}
-
 WarEntityList* we_getEntitiesOfType(WarContext* context, WarEntityType type)
 {
     TracyCZoneN(ctx, "we_getEntitiesOfType", 1);
@@ -1830,19 +1801,16 @@ WarEntityList* we_getUIEntities(WarContext* context)
     return &manager->uiEntities;
 }
 
-// File-static context pointer used only during qsort comparator calls.
-// Set s_sortContext = context before calling qsort, clear after.
-static WarContext* s_sortContext = NULL;
-
 // Render entities
-s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
+s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2, void* userdata)
 {
-    assert(isUnit(e1));
-    assert(isUnit(e2));
-    assert(s_sortContext != NULL);
+    WarContext* context = (WarContext*)userdata;
+    assert(context != NULL);
+    assert(wu_isUnit(e1));
+    assert(wu_isUnit(e2));
 
-    bool isDead1 = wu_isCorpseUnit(s_sortContext, (WarEntity*)e1) || isDead((WarEntity*)e1) || isGoingToDie((WarEntity*)e1);
-    bool isDead2 = wu_isCorpseUnit(s_sortContext, (WarEntity*)e2) || isDead((WarEntity*)e2) || isGoingToDie((WarEntity*)e2);
+    bool isDead1 = wu_isCorpseUnit(context, (WarEntity*)e1) || wst_isDead(context, (WarEntity*)e1) || wst_isGoingToDie(context, (WarEntity*)e1);
+    bool isDead2 = wu_isCorpseUnit(context, (WarEntity*)e2) || wst_isDead(context, (WarEntity*)e2) || wst_isGoingToDie(context, (WarEntity*)e2);
 
     if (isDead1 && !isDead2)
         return -1;
@@ -1850,18 +1818,19 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2)
     if (!isDead1 && isDead2)
         return 1;
 
-    vec2 p1 = wu_getUnitPosition(s_sortContext, (WarEntity*)e1, false);
-    vec2 p2 = wu_getUnitPosition(s_sortContext, (WarEntity*)e2, false);
+    vec2 p1 = wu_getUnitPosition(context, (WarEntity*)e1, false);
+    vec2 p2 = wu_getUnitPosition(context, (WarEntity*)e2, false);
 
     return (s32)(p1.y - p2.y);
 }
 
-s32 renderCompareProjectiles(const WarEntity* e1, const WarEntity* e2)
+s32 renderCompareProjectiles(const WarEntity* e1, const WarEntity* e2, void* userdata)
 {
-    assert(s_sortContext != NULL);
+    WarContext* context = (WarContext*)userdata;
+    assert(context != NULL);
 
-    WarTransformComponent* t1 = we_getTransformComponent(s_sortContext, (WarEntity*)e1);
-    WarTransformComponent* t2 = we_getTransformComponent(s_sortContext, (WarEntity*)e2);
+    WarTransformComponent* t1 = we_getTransformComponent(context, (WarEntity*)e1);
+    WarTransformComponent* t2 = we_getTransformComponent(context, (WarEntity*)e2);
 
     vec2 p1 = t1 ? t1->position : VEC2_ZERO;
     vec2 p2 = t2 ? t2->position : VEC2_ZERO;
@@ -2128,7 +2097,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
     vec2 unitSize = wu_getUnitSpriteSize(context, entity);
 
     // the unit is visible if it's partially on the clear areas of the fog
-    bool isVisible = isUnitPartiallyVisible(map, entity);
+    bool isVisible = wmap_isUnitPartiallyVisible(context, map, entity);
 
     wr_translate(context, -0.5f * frameSize.x, -0.5f * frameSize.y);
     wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
@@ -2464,7 +2433,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
             WarUnitComponent* unit = we_getUnitComponent(context, unitEntity);
             WarTransformComponent* transform = we_getTransformComponent(context, unitEntity);
 
-            if (unit && transform && wu_displayUnitOnMinimap(context, unitEntity) && (isUnitPartiallyVisible(map, unitEntity) || unit->hasBeenSeen))
+            if (unit && transform && wu_displayUnitOnMinimap(context, unitEntity) && (wmap_isUnitPartiallyVisible(context, map, unitEntity) || unit->hasBeenSeen))
             {
                 s32 tileX = (s32)(transform->position.x / MEGA_TILE_WIDTH);
                 s32 tileY = (s32)(transform->position.y / MEGA_TILE_HEIGHT);
@@ -2624,9 +2593,7 @@ void we_renderEntitiesOfType(WarContext* context, WarEntityType type)
             // for instance, corpses need to render before every other unit
             // and then render units by the `y` position on the map
 
-            s_sortContext = context;
-            WarEntityListSort(entities, compareFunc);
-            s_sortContext = NULL;
+            WarEntityListSort(entities, compareFunc, context);
         }
     }
 
@@ -2840,7 +2807,7 @@ void we_increasePlayerResources(WarContext* context, WarPlayerInfo* player, s32 
 
 bool we_increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -2853,7 +2820,7 @@ bool we_increaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 
 bool we_decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -2866,7 +2833,7 @@ bool we_decreaseUnitHp(WarContext* context, WarEntity* entity, s32 hp)
 
 bool we_decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -2883,7 +2850,7 @@ bool we_decreaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 
 void we_increaseUnitMana(WarContext* context, WarEntity* entity, s32 mana)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -2923,7 +2890,7 @@ bool we_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
             s32 yy = y + dy;
             if (inRange(xx, 0, MAP_TILES_WIDTH) && inRange(yy, 0, MAP_TILES_HEIGHT))
             {
-                if (!isEmpty(map->finder, xx, yy) || isTileUnkown(map, xx, yy))
+                if (!isEmpty(map->finder, xx, yy) || wmap_isTileUnkown(map, xx, yy))
                 {
                     return false;
                 }
@@ -2994,7 +2961,7 @@ WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity)
         WarEntity* other = units->items[i];
         if (other && wu_areEnemies(context, entity, other) && wu_canAttack(context, entity, other))
         {
-            if (isUnit(other))
+            if (wu_isUnit(other))
             {
                 WarUnitComponent* uc = we_getUnitComponent(context, other);
                 if (uc && uc->invisible)
@@ -3013,11 +2980,11 @@ WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity)
     return NULL;
 }
 
-bool we_isBeingAttackedBy(WarEntity* entity, WarEntity* other)
+bool we_isBeingAttackedBy(WarContext* context, WarEntity* entity, WarEntity* other)
 {
-    if (!isFollowing(other) && !isMoving(other))
+    if (!wst_isFollowing(context, other) && !wst_isMoving(context, other))
     {
-        WarState* attackState = getAttackState(other);
+        WarState* attackState = wst_getAttackState(context, other);
         return attackState && attackState->attack.targetEntityId == entity->id;
     }
 
@@ -3034,7 +3001,7 @@ bool we_isBeingAttacked(WarContext* context, WarEntity* entity)
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
-        if (we_isBeingAttackedBy(entity, other))
+        if (we_isBeingAttackedBy(context, entity, other))
         {
             result = true;
             break;
@@ -3056,7 +3023,7 @@ WarEntity* we_getAttacker(WarContext* context, WarEntity* entity)
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
-        if (other && we_isBeingAttackedBy(entity, other))
+        if (other && we_isBeingAttackedBy(context, entity, other))
         {
             result = other;
             break;
@@ -3070,9 +3037,9 @@ WarEntity* we_getAttacker(WarContext* context, WarEntity* entity)
 
 WarEntity* we_getAttackTarget(WarContext* context, WarEntity* entity)
 {
-    if (!isFollowing(entity) && !isMoving(entity))
+    if (!wst_isFollowing(context, entity) && !wst_isMoving(context, entity))
     {
-        WarState* attackState = getAttackState(entity);
+        WarState* attackState = wst_getAttackState(context, entity);
         if (attackState)
         {
             WarEntityId targetEntityId = (WarEntityId)attackState->attack.targetEntityId;
@@ -3092,7 +3059,7 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
 {
     WarMap* map = context->map;
 
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -3136,7 +3103,7 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
             }
             else
             {
-                WarAudioId audioId = isHumanUnit(context, entity)? WAR_HUMAN_DEAD : WAR_ORC_DEAD;
+                WarAudioId audioId = wu_isHumanUnit(context, entity)? WAR_HUMAN_DEAD : WAR_ORC_DEAD;
                 wa_createAudioWithPosition(context, audioId, position, false);
             }
         }
@@ -3166,7 +3133,7 @@ void we_takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* pie
 {
     NOT_USED(context);
 
-    assert(isWall(entity));
+    assert(wu_isWall(entity));
 
     // Minimal damage + [Random damage - Enemy's Armor]
     s32 damage = we_getTotalDamage(minDamage, rndDamage, 0);
@@ -3176,7 +3143,7 @@ void we_takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* pie
 
 void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -3210,7 +3177,7 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
 
 void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntity, WarWallPiece* piece)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -3246,7 +3213,7 @@ void we_meleeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
 {
     WarMap* map = context->map;
 
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -3271,7 +3238,7 @@ void we_meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
 {
     WarMap* map = context->map;
 
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -3295,7 +3262,7 @@ void we_meleeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
 s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
 {
     assert(goldmine);
-    assert(isUnit(goldmine));
+    assert(wu_isUnit(goldmine));
 
     WarUnitComponent* unit = we_getUnitComponent(context, goldmine);
     assert(unit);
@@ -3308,7 +3275,7 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
 
     if (unit->amount == 0)
     {
-        if (!isCollapsing(goldmine) && !isGoingToCollapse(goldmine))
+        if (!wst_isCollapsing(context, goldmine) && !wst_isGoingToCollapse(context, goldmine))
         {
             WarState* collapseState = wst_createCollapseState(context, goldmine);
             wst_changeNextState(context, goldmine, collapseState, true, true);

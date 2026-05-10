@@ -31,7 +31,7 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
     WarEntity* building = we_findEntity(context, state->repair.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
-    if (!building || isCollapsing(building) || isGoingToCollapse(building))
+    if (!building || wst_isCollapsing(context, building) || wst_isGoingToCollapse(context, building))
     {
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);

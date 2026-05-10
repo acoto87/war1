@@ -130,8 +130,8 @@ WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 posit
         {
             bool isTreeAccessible = wpath_isPositionAccesible(map->finder, position);
             bool isTreeVisibleOrFog =
-                isTileVisible(map, (s32)position.x, (s32)position.y) ||
-                isTileFog(map, (s32)position.x, (s32)position.y);
+                wmap_isTileVisible(map, (s32)position.x, (s32)position.y) ||
+                wmap_isTileFog(map, (s32)position.x, (s32)position.y);
 
             if (isTreeAccessible && isTreeVisibleOrFog && tree->amount > 0)
             {
@@ -158,10 +158,10 @@ WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 posit
     return result;
 }
 
-void we_plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
+void we_plantTree(WarContext* context, WarEntity* entity, s32 x, s32 y)
 {
-    assert(forest);
-    assert(forest->type == WAR_ENTITY_TYPE_FOREST);
+    assert(entity);
+    assert(entity->type == WAR_ENTITY_TYPE_FOREST);
 
     WarMap* map = context->map;
 
@@ -169,30 +169,31 @@ void we_plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y)
     if (!isEmpty(map->finder, x, y))
         return;
 
-    WarForestComponent* fc = we_getForestComponent(context, forest);
+    WarForestComponent* forest = we_getForestComponent(context, entity);
+    assert(forest);
 
     // only plant a tree in the top border of the map, if there are one below
     if (!wpath_isInside(map->finder, x, y - 1))
     {
-        WarTree* belowTree = we_getTreeAtPosition(context, forest, x, y + 1);
+        WarTree* belowTree = we_getTreeAtPosition(context, entity, x, y + 1);
         if (belowTree)
         {
             WarTree tree1 = createTree(x, y, TREE_MAX_WOOD);
-            WarTreeListAdd(&fc->trees, tree1);
-            setStaticEntity(map->finder, x, y, 1, 1, forest->id);
+            WarTreeListAdd(&forest->trees, tree1);
+            setStaticEntity(map->finder, x, y, 1, 1, entity->id);
         }
     }
     else
     {
         WarTree tree1 = createTree(x, y, TREE_MAX_WOOD);
-        WarTreeListAdd(&fc->trees, tree1);
-        setStaticEntity(map->finder, x, y, 1, 1, forest->id);
+        WarTreeListAdd(&forest->trees, tree1);
+        setStaticEntity(map->finder, x, y, 1, 1, entity->id);
 
         if (isEmpty(map->finder, x, y - 1))
         {
             WarTree tree2 = createTree(x, y - 1, TREE_MAX_WOOD);
-            WarTreeListAdd(&fc->trees, tree2);
-            setStaticEntity(map->finder, x, y - 1, 1, 1, forest->id);
+            WarTreeListAdd(&forest->trees, tree2);
+            setStaticEntity(map->finder, x, y - 1, 1, 1, entity->id);
         }
     }
 }

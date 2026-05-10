@@ -55,7 +55,7 @@ void wproj_doProjectileTargetDamage(WarContext* context, WarEntity* entity)
     // check if the attacker and the victim exists because it could be eliminated by other unit
     if (sourceEntity && targetEntity)
     {
-        if (isWall(targetEntity))
+        if (wu_isWall(targetEntity))
         {
             WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)position.x, (s32)position.y);
             if (piece)
@@ -125,8 +125,8 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
     {
         WarEntity* targetEntity = nearUnits->items[i];
         if (targetEntity &&
-            !isDead(targetEntity) && !isGoingToDie(targetEntity) &&
-            !isCollapsing(targetEntity) && !isGoingToCollapse(targetEntity))
+            !wst_isDead(context, targetEntity) && !wst_isGoingToDie(context, targetEntity) &&
+            !wst_isCollapsing(context, targetEntity) && !wst_isGoingToCollapse(context, targetEntity))
         {
             we_takeDamage(context, targetEntity, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
         }

@@ -241,9 +241,9 @@ typedef uint16_t WarEntityId;
 
 typedef void (*WarClickHandler)(struct _WarContext* context, struct _WarEntity* entity);
 typedef void (*WarRenderFunc)(struct _WarContext* context, struct _WarEntity* entity);
-typedef int32_t (*WarRenderCompareFunc)(const struct _WarEntity* e1, const struct _WarEntity* e2);
+typedef int32_t (*WarRenderCompareFunc)(const struct _WarEntity* e1, const struct _WarEntity* e2, void* userdata);
 typedef WarLevelResult (*WarCheckObjectivesFunc)(struct _WarContext* context);
 typedef void (*WarCheatFunc)(WarContext* context, StringView argument);
 typedef void (*WarRenderFunc)(WarContext* context, WarEntity* entity);
-typedef int32_t (*WarRenderCompareFunc)(const WarEntity* e1, const WarEntity* e2);
+typedef int32_t (*WarRenderCompareFunc)(const WarEntity* e1, const WarEntity* e2, void* userdata);
 typedef void (*WarSceneFunc)(WarContext* context);

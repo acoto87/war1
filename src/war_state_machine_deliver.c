@@ -97,7 +97,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     wmap_removeEntityFromSelection(context, entity->id);
 
     // simulate the time inside the townhall
-    setDelay(state, wmap_getMapScaledTime(context, 1.0f));
+    state->delay = wmap_getMapScaledTime(context, 1.0f);
 }
 
 void wst_freeDeliverState(WarContext* context, WarState* state)

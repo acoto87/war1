@@ -15,7 +15,7 @@ void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
-    if (isUnit(entity))
+    if (wu_isUnit(entity))
     {
         WarMap* map = context->map;
         vec2 unitSize = wu_getUnitSize(context, entity);
@@ -29,7 +29,7 @@ void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
     NOT_USED(state);
 
-    if (isUnit(entity))
+    if (wu_isUnit(entity))
     {
         WarMap* map = context->map;
         vec2 unitSize = wu_getUnitSize(context, entity);
@@ -42,7 +42,7 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
 {
     WarMap* map = context->map;
 
-    if (isUnit(entity))
+    if (wu_isUnit(entity))
     {
         if (state->idle.lookAround)
         {
@@ -74,7 +74,7 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
         // this is a way to tell the state machine engine to not update this state for the specified amount of time
         state->delay = 1.0f;
     }
-    else if(isWall(entity))
+    else if(wu_isWall(entity))
     {
         WarWallComponent* wall = we_getWallComponent(context, entity);
         assert(wall);

@@ -23,22 +23,22 @@ WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
     { WAR_STATE_WAIT,       wst_enterWaitState,       wst_leaveWaitState,       wst_updateWaitState,       wst_freeWaitState       },
 };
 
-bool wst_isInsideBuilding(WarEntity* entity)
+bool wst_isInsideBuilding(WarContext* context, WarEntity* entity)
 {
-    if (isMining(entity))
+    if (wst_isMining(context, entity))
     {
         return true;
     }
 
-    if(isDelivering(entity))
+    if(wst_isDelivering(context, entity))
     {
-        WarState* deliver = getDeliverState(entity);
+        WarState* deliver = wst_getDeliverState(context, entity);
         return deliver->deliver.insideBuilding;
     }
 
-    if (isRepairing2(entity))
+    if (wst_isRepairing2(context, entity))
     {
-        WarState* repairing = getRepairingState(entity);
+        WarState* repairing = wst_getRepairingState(context, entity);
         return repairing->repairing.insideBuilding;
     }
 
@@ -81,9 +81,9 @@ bool wst_changeStateNextState(WarContext* context, WarEntity* entity, WarState* 
     return false;
 }
 
-WarState* wst_getState(WarEntity* entity, WarStateType type)
+WarState* wst_getState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(NULL, entity);
+    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
     assert(stateMachine);
 
     WarState* state = stateMachine->currentState;
@@ -92,38 +92,95 @@ WarState* wst_getState(WarEntity* entity, WarStateType type)
     return state;
 }
 
-WarState* wst_getDirectState(WarEntity* entity, WarStateType type)
+WarState* wst_getDirectState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(NULL, entity);
+    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
     assert(stateMachine);
 
     WarState* state = stateMachine->currentState;
     return state && state->type == type ? state : NULL;
 }
 
-WarState* wst_getNextState(WarEntity* entity, WarStateType type)
+WarState* wst_getNextState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(NULL, entity);
+    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
     assert(stateMachine);
 
     WarState* state = stateMachine->nextState;
     return state && state->type == type ? state : NULL;
 }
 
-bool wst_hasState(WarEntity* entity, WarStateType type)
+WarState* wst_getIdleState(WarContext* context, WarEntity* entity) { return wst_getDirectState(context, entity, WAR_STATE_IDLE); }
+WarState* wst_getMoveState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_MOVE); }
+WarState* wst_getPatrolState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_PATROL); }
+WarState* wst_getFollowState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_FOLLOW); }
+WarState* wst_getAttackState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_ATTACK); }
+WarState* wst_getDeathState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_DEATH); }
+WarState* wst_getCollapseState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_COLLAPSE); }
+WarState* wst_getGatherGoldState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_GOLD); }
+WarState* wst_getMiningState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_MINING); }
+WarState* wst_getGatherWoodState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_WOOD); }
+WarState* wst_getChoppingState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_CHOPPING); }
+WarState* wst_getDeliverState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_DELIVER); }
+WarState* wst_getTrainState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_TRAIN); }
+WarState* wst_getUpgradeState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_UPGRADE); }
+WarState* wst_getBuildState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_BUILD); }
+WarState* wst_getRepairState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_REPAIR); }
+WarState* wst_getRepairingState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_REPAIRING); }
+WarState* wst_getCastState(WarContext* context, WarEntity* entity) { return wst_getState(context, entity, WAR_STATE_CAST); }
+
+bool wst_hasState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    return wst_getState(entity, type) != NULL;
+    return wst_getState(context, entity, type) != NULL;
 }
 
-bool wst_hasDirectState(WarEntity* entity, WarStateType type)
+bool wst_hasDirectState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    return wst_getDirectState(entity, type) != NULL;
+    return wst_getDirectState(context, entity, type) != NULL;
 }
 
-bool wst_hasNextState(WarEntity* entity, WarStateType type)
+bool wst_hasNextState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    return wst_getNextState(entity, type) != NULL;
+    return wst_getNextState(context, entity, type) != NULL;
 }
+
+bool wst_isIdle(WarContext* context, WarEntity* entity) { return wst_hasDirectState(context, entity, WAR_STATE_IDLE); }
+bool wst_isMoving(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_MOVE); }
+bool wst_isPatrolling(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_PATROL); }
+bool wst_isFollowing(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_FOLLOW); }
+bool wst_isAttacking(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_ATTACK); }
+bool wst_isDead(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_DEATH); }
+bool wst_isCollapsing(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_COLLAPSE); }
+bool wst_isGatheringGold(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_GOLD); }
+bool wst_isMining(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_MINING); }
+bool wst_isGatheringWood(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_WOOD); }
+bool wst_isChopping(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_CHOPPING); }
+bool wst_isDelivering(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_DELIVER); }
+bool wst_isTraining(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_TRAIN); }
+bool wst_isUpgrading(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_UPGRADE); }
+bool wst_isBuilding(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_BUILD); }
+bool wst_isRepairing(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_REPAIR); }
+bool wst_isRepairing2(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_REPAIRING); }
+bool wst_isCasting(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_CAST); }
+
+bool wst_isGoingToIdle(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_IDLE); }
+bool wst_isGoingToMove(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_MOVE); }
+bool wst_isGoingToPatrol(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_PATROL); }
+bool wst_isGoingToFollow(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_FOLLOW); }
+bool wst_isGoingToAttack(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_ATTACK); }
+bool wst_isGoingToDie(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_DEATH); }
+bool wst_isGoingToCollapse(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_COLLAPSE); }
+bool wst_isGoingToGatherGold(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_GOLD); }
+bool wst_isGoingToMine(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_MINING); }
+bool wst_isGoingToGatherWood(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_WOOD); }
+bool wst_isGoingToChop(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_CHOPPING); }
+bool wst_isGoingToDeliver(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_DELIVER); }
+bool wst_isGoingToTrain(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_TRAIN); }
+bool wst_isGoingToUpgrade(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_UPGRADE); }
+bool wst_isGoingToBuild(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_BUILD); }
+bool wst_isGoingToRepair(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_REPAIR); }
+bool wst_isGoingToRepair2(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_REPAIRING); }
+bool wst_isGoingToCast(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_CAST); }
 
 void wst_enterState(WarContext* context, WarEntity* entity, WarState* state)
 {

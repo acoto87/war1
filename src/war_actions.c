@@ -991,14 +991,14 @@ void wact_addUnitActions(WarContext* context, WarEntity* entity)
 
 s32 wact_getActionDuration(WarContext* context, WarEntity* entity, WarUnitActionType type)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     if (type == WAR_ACTION_TYPE_NONE)
-    {
         return 0;
-    }
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
     WarUnitActionDef* actionDef = &gUnitActionDefs[unit->type][type];
 
     s32 duration = 0;
@@ -1023,7 +1023,7 @@ void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType ty
 {
     NOT_USED(context);
 
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
 

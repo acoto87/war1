@@ -84,20 +84,20 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
         {
             if (isKeyHeld(input, WAR_KEY_SHIFT))
             {
-                if (isPatrolling(entity))
+                if (wst_isPatrolling(context, entity))
                 {
-                    if(isMoving(entity))
+                    if(wst_isMoving(context, entity))
                     {
-                        WarState* moveState = getMoveState(entity);
+                        WarState* moveState = wst_getMoveState(context, entity);
                         vec2ListAdd(&moveState->move.positions, target);
                     }
 
-                    WarState* patrolState = getPatrolState(entity);
+                    WarState* patrolState = wst_getPatrolState(context, entity);
                     vec2ListAdd(&patrolState->patrol.positions, target);
                 }
-                else if(isMoving(entity) && !isAttacking(entity))
+                else if(wst_isMoving(context, entity) && !wst_isAttacking(context, entity))
                 {
-                    WarState* moveState = getMoveState(entity);
+                    WarState* moveState = wst_getMoveState(context, entity);
                     vec2ListAdd(&moveState->move.positions, target);
                 }
                 else
@@ -178,7 +178,7 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    assert(isUnitOfType(context, targetEntity, WAR_UNIT_GOLDMINE) ||
+    assert(wu_isUnitOfType(context, targetEntity, WAR_UNIT_GOLDMINE) ||
            isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST));
 
     bool goingToHarvest = false;
@@ -516,7 +516,7 @@ void wcmd_executeSightCommand(WarContext* context, vec2 targetTile)
 
         if (wu_isClericOrNecrolyteUnit(context, entity))
         {
-            WarSpellType spellType = isHumanUnit(context, entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
+            WarSpellType spellType = wu_isHumanUnit(context, entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
             WarState* castState = wst_createCastState(context, entity, spellType, 0, targetTile);
             wst_changeNextState(context, entity, castState, true, true);
         }
@@ -636,16 +636,16 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
-                        if (isUnitOfType(context, targetEntity, WAR_UNIT_GOLDMINE))
+                        if (wu_isUnitOfType(context, targetEntity, WAR_UNIT_GOLDMINE))
                         {
-                            if (!isUnitUnknown(map, targetEntity))
+                            if (!wmap_isUnitUnknown(context, map, targetEntity))
                                 wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             else
                                 wcmd_executeMoveCommand(context, targetPoint);
                         }
                         else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
-                            if (!isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y))
+                            if (!wmap_isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
                                 wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             }
@@ -689,8 +689,8 @@ bool wcmd_executeCommand(WarContext* context)
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-                    if (isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
-                        isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
+                    if (wmap_isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
+                        wmap_isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                     {
                         WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
                         WarEntity* targetEntity = we_findEntity(context, targetEntityId);
@@ -721,16 +721,16 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
-                        if (isUnit(targetEntity))
+                        if (wu_isUnit(targetEntity))
                         {
                             // if the target entity is not visible or partially visible, just attack to the point
-                            if (isUnitUnknown(map, targetEntity))
+                            if (wmap_isUnitUnknown(context, map, targetEntity))
                                 targetEntity = NULL;
                         }
-                        else if (isWall(targetEntity))
+                        else if (wu_isWall(targetEntity))
                         {
                             // if the target wall piece is not visible, just attack to the point
-                            if (!isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
+                            if (!wmap_isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y))
                                 targetEntity = NULL;
                         }
                     }
@@ -912,7 +912,7 @@ bool wcmd_executeCommand(WarContext* context)
                     assert(townHall);
 
                     WarUnitType townHallType = wu_getTownHallOfRace(player->race);
-                    assert(isUnitOfType(context, townHall, townHallType));
+                    assert(wu_isUnitOfType(context, townHall, townHallType));
                     NOT_USED(townHall);
                     NOT_USED(townHallType);
 
@@ -963,7 +963,7 @@ bool wcmd_executeCommand(WarContext* context)
                     assert(townHall);
 
                     WarUnitType townHallType = wu_getTownHallOfRace(player->race);
-                    assert(isUnitOfType(context, townHall, townHallType));
+                    assert(wu_isUnitOfType(context, townHall, townHallType));
                     NOT_USED(townHall);
                     NOT_USED(townHallType);
 
@@ -1436,7 +1436,7 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
             WarUnitComponent* unit =  we_getUnitComponent(context, selectedEntity);
             assert(unit);
 
-            if (isBuilding(selectedEntity) || isGoingToBuild(selectedEntity))
+            if (wst_isBuilding(context, selectedEntity) || wst_isGoingToBuild(context, selectedEntity))
             {
                 WarBuildingStats stats = wu_getBuildingStats(unit->type);
                 we_increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
@@ -1448,17 +1448,17 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
             }
             else if (unit->building)
             {
-                if (isTraining(selectedEntity) || isGoingToTrain(selectedEntity))
+                if (wst_isTraining(context, selectedEntity) || wst_isGoingToTrain(context, selectedEntity))
                 {
-                    WarState* trainState = getTrainState(selectedEntity);
+                    WarState* trainState = wst_getTrainState(context, selectedEntity);
                     WarUnitType unitToBuild = trainState->train.unitToBuild;
 
                     WarUnitStats stats = wu_getUnitStats(unitToBuild);
                     we_increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
                 }
-                else if (isUpgrading(selectedEntity) || isGoingToUpgrade(selectedEntity))
+                else if (wst_isUpgrading(context, selectedEntity) || wst_isGoingToUpgrade(context, selectedEntity))
                 {
-                    WarState* upgradeState = getUpgradeState(selectedEntity);
+                    WarState* upgradeState = wst_getUpgradeState(context, selectedEntity);
                     WarUpgradeType upgradeToBuild = upgradeState->upgrade.upgradeToBuild;
                     assert(hasRemainingUpgrade(player, upgradeToBuild));
 

@@ -165,16 +165,16 @@ bool wmap_isAnyUnitTileInStates(WarContext* context, WarMap* map, WarEntity* ent
 bool wmap_areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state);
 bool wmap_areAllUnitTilesInState(WarContext* context, WarMap* map, WarEntity* entity, WarMapTileState state);
 
-#define isUnitPartiallyVisible(map, entity) wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_VISIBLE)
-#define isUnitVisible(map, entity) wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_VISIBLE)
-#define isUnitPartiallyFog(map, entity) wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_FOG)
-#define isUnitFog(map, entity) wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_FOG)
-#define isUnitPartiallyUnkown(map, entity) wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_UNKOWN)
-#define isUnitUnknown(map, entity) wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_UNKOWN)
+bool wmap_isUnitPartiallyVisible(WarContext* context, WarMap* map, WarEntity* entity);
+bool wmap_isUnitVisible(WarContext* context, WarMap* map, WarEntity* entity);
+bool wmap_isUnitPartiallyFog(WarContext* context, WarMap* map, WarEntity* entity);
+bool wmap_isUnitFog(WarContext* context, WarMap* map, WarEntity* entity);
+bool wmap_isUnitPartiallyUnkown(WarContext* context, WarMap* map, WarEntity* entity);
+bool wmap_isUnitUnknown(WarContext* context, WarMap* map, WarEntity* entity);
 
-#define isTileUnkown(map, x, y) wmap_isTileInState(map, x, y, MAP_TILE_STATE_UNKOWN)
-#define isTileFog(map, x, y) wmap_isTileInState(map, x, y, MAP_TILE_STATE_FOG)
-#define isTileVisible(map, x, y) wmap_isTileInState(map, x, y, MAP_TILE_STATE_VISIBLE)
+bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y);
+bool wmap_isTileFog(WarMap* map, s32 x, s32 y);
+bool wmap_isTileVisible(WarMap* map, s32 x, s32 y);
 
 void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
 

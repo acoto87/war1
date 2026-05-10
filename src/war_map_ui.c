@@ -244,7 +244,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
         {
             WarEntityId selectedEntityId = map->selectedEntities.items[i - 1];
             WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
-            if (selectedEntity && isUnit(selectedEntity))
+            if (selectedEntity && wu_isUnit(selectedEntity))
             {
                 WarUnitComponent* unit = we_getUnitComponent(context, selectedEntity);
                 assert(unit);
@@ -259,7 +259,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     {
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
         WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
-        if (selectedEntity && isUnit(selectedEntity))
+        if (selectedEntity && wu_isUnit(selectedEntity))
         {
             WarUnitComponent* unit = we_getUnitComponent(context, selectedEntity);
             assert(unit);

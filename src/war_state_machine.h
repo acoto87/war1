@@ -165,74 +165,72 @@ WarState* wst_createCastState(WarContext* context, WarEntity* entity, WarSpellTy
 void wst_changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool wst_leaveState, bool wst_enterState);
 bool wst_changeStateNextState(WarContext* context, WarEntity* entity, WarState* state);
 
-WarState* wst_getState(WarEntity* entity, WarStateType type);
-WarState* wst_getDirectState(WarEntity* entity, WarStateType type);
-WarState* wst_getNextState(WarEntity* entity, WarStateType type);
+WarState* wst_getState(WarContext* context, WarEntity* entity, WarStateType type);
+WarState* wst_getDirectState(WarContext* context, WarEntity* entity, WarStateType type);
+WarState* wst_getNextState(WarContext* context, WarEntity* entity, WarStateType type);
 
-#define getIdleState(entity) wst_getDirectState(entity, WAR_STATE_IDLE)
-#define getMoveState(entity) wst_getState(entity, WAR_STATE_MOVE)
-#define getPatrolState(entity) wst_getState(entity, WAR_STATE_PATROL)
-#define getFollowState(entity) wst_getState(entity, WAR_STATE_FOLLOW)
-#define getAttackState(entity) wst_getState(entity, WAR_STATE_ATTACK)
-#define getDeathState(entity) wst_getState(entity, WAR_STATE_DEATH)
-#define getCollapseState(entity) wst_getState(entity, WAR_STATE_COLLAPSE)
-#define getGatherGoldState(entity) wst_getState(entity, WAR_STATE_GOLD)
-#define getMiningState(entity) wst_getState(entity, WAR_STATE_MINING)
-#define getGatherWoodState(entity) wst_getState(entity, WAR_STATE_WOOD)
-#define getChoppingState(entity) wst_getState(entity, WAR_STATE_CHOP)
-#define getDeliverState(entity) wst_getState(entity, WAR_STATE_DELIVER)
-#define getTrainState(entity) wst_getState(entity, WAR_STATE_TRAIN)
-#define getUpgradeState(entity) wst_getState(entity, WAR_STATE_UPGRADE)
-#define getBuildState(entity) wst_getState(entity, WAR_STATE_BUILD)
-#define getRepairState(entity) wst_getState(entity, WAR_STATE_REPAIR)
-#define getRepairingState(entity) wst_getState(entity, WAR_STATE_REPAIRING)
-#define getCastState(entity) wst_getState(entity, WAR_STATE_CAST)
+WarState* wst_getIdleState(WarContext* context, WarEntity* entity);
+WarState* wst_getMoveState(WarContext* context, WarEntity* entity);
+WarState* wst_getPatrolState(WarContext* context, WarEntity* entity);
+WarState* wst_getFollowState(WarContext* context, WarEntity* entity);
+WarState* wst_getAttackState(WarContext* context, WarEntity* entity);
+WarState* wst_getDeathState(WarContext* context, WarEntity* entity);
+WarState* wst_getCollapseState(WarContext* context, WarEntity* entity);
+WarState* wst_getGatherGoldState(WarContext* context, WarEntity* entity);
+WarState* wst_getMiningState(WarContext* context, WarEntity* entity);
+WarState* wst_getGatherWoodState(WarContext* context, WarEntity* entity);
+WarState* wst_getChoppingState(WarContext* context, WarEntity* entity);
+WarState* wst_getDeliverState(WarContext* context, WarEntity* entity);
+WarState* wst_getTrainState(WarContext* context, WarEntity* entity);
+WarState* wst_getUpgradeState(WarContext* context, WarEntity* entity);
+WarState* wst_getBuildState(WarContext* context, WarEntity* entity);
+WarState* wst_getRepairState(WarContext* context, WarEntity* entity);
+WarState* wst_getRepairingState(WarContext* context, WarEntity* entity);
+WarState* wst_getCastState(WarContext* context, WarEntity* entity);
 
-bool wst_hasState(WarEntity* entity, WarStateType type);
-bool wst_hasDirectState(WarEntity* entity, WarStateType type);
-bool wst_hasNextState(WarEntity* entity, WarStateType type);
+bool wst_hasState(WarContext* context, WarEntity* entity, WarStateType type);
+bool wst_hasDirectState(WarContext* context, WarEntity* entity, WarStateType type);
+bool wst_hasNextState(WarContext* context, WarEntity* entity, WarStateType type);
 
-#define isIdle(entity) wst_hasDirectState(entity, WAR_STATE_IDLE)
-#define isMoving(entity) wst_hasState(entity, WAR_STATE_MOVE)
-#define isPatrolling(entity) wst_hasState(entity, WAR_STATE_PATROL)
-#define isFollowing(entity) wst_hasState(entity, WAR_STATE_FOLLOW)
-#define isAttacking(entity) wst_hasState(entity, WAR_STATE_ATTACK)
-#define isDead(entity) wst_hasState(entity, WAR_STATE_DEATH)
-#define isCollapsing(entity) wst_hasState(entity, WAR_STATE_COLLAPSE)
-#define isGatheringGold(entity) wst_hasState(entity, WAR_STATE_GOLD)
-#define isMining(entity) wst_hasState(entity, WAR_STATE_MINING)
-#define isGatheringWood(entity) wst_hasState(entity, WAR_STATE_WOOD)
-#define isChopping(entity) wst_hasState(entity, WAR_STATE_CHOP)
-#define isDelivering(entity) wst_hasState(entity, WAR_STATE_DELIVER)
-#define isTraining(entity) wst_hasState(entity, WAR_STATE_TRAIN)
-#define isUpgrading(entity) wst_hasState(entity, WAR_STATE_UPGRADE)
-#define isBuilding(entity) wst_hasState(entity, WAR_STATE_BUILD)
-#define isRepairing(entity) wst_hasState(entity, WAR_STATE_REPAIR)
-#define isRepairing2(entity) wst_hasState(entity, WAR_STATE_REPAIRING)
-#define isCasting(entity) wst_hasState(entity, WAR_STATE_CAST)
+bool wst_isIdle(WarContext* context, WarEntity* entity);
+bool wst_isMoving(WarContext* context, WarEntity* entity);
+bool wst_isPatrolling(WarContext* context, WarEntity* entity);
+bool wst_isFollowing(WarContext* context, WarEntity* entity);
+bool wst_isAttacking(WarContext* context, WarEntity* entity);
+bool wst_isDead(WarContext* context, WarEntity* entity);
+bool wst_isCollapsing(WarContext* context, WarEntity* entity);
+bool wst_isGatheringGold(WarContext* context, WarEntity* entity);
+bool wst_isMining(WarContext* context, WarEntity* entity);
+bool wst_isGatheringWood(WarContext* context, WarEntity* entity);
+bool wst_isChopping(WarContext* context, WarEntity* entity);
+bool wst_isDelivering(WarContext* context, WarEntity* entity);
+bool wst_isTraining(WarContext* context, WarEntity* entity);
+bool wst_isUpgrading(WarContext* context, WarEntity* entity);
+bool wst_isBuilding(WarContext* context, WarEntity* entity);
+bool wst_isRepairing(WarContext* context, WarEntity* entity);
+bool wst_isRepairing2(WarContext* context, WarEntity* entity);
+bool wst_isCasting(WarContext* context, WarEntity* entity);
 
-#define isGoingToIdle(entity) wst_hasNextState(entity, WAR_STATE_IDLE)
-#define isGoingToMove(entity) wst_hasNextState(entity, WAR_STATE_MOVE)
-#define isGoingToPatrol(entity) wst_hasNextState(entity, WAR_STATE_PATROL)
-#define isGoingToFollow(entity) wst_hasNextState(entity, WAR_STATE_FOLLOW)
-#define isGoingToAttack(entity) wst_hasNextState(entity, WAR_STATE_ATTACK)
-#define isGoingToDie(entity) wst_hasNextState(entity, WAR_STATE_DEATH)
-#define isGoingToCollapse(entity) wst_hasNextState(entity, WAR_STATE_COLLAPSE)
-#define isGoingToGatherGold(entity) wst_hasNextState(entity, WAR_STATE_GOLD)
-#define isGoingToMine(entity) wst_hasNextState(entity, WAR_STATE_MINING)
-#define isGoingToGatherWood(entity) wst_hasNextState(entity, WAR_STATE_WOOD)
-#define isGoingToChop(entity) wst_hasNextState(entity, WAR_STATE_CHOP)
-#define isGoingToDeliver(entity) wst_hasNextState(entity, WAR_STATE_DELIVER)
-#define isGoingToTrain(entity) wst_hasNextState(entity, WAR_STATE_TRAIN)
-#define isGoingToUpgrade(entity) wst_hasNextState(entity, WAR_STATE_UPGRADE)
-#define isGoingToBuild(entity) wst_hasNextState(entity, WAR_STATE_BUILD)
-#define isGoingToRepair(entity) wst_hasNextState(entity, WAR_STATE_REPAIR)
-#define isGoingToRepair2(entity) wst_hasNextState(entity, WAR_STATE_REPAIRING)
-#define isGoingToCast(entity) wst_hasNextState(entity, WAR_STATE_CAST)
+bool wst_isGoingToIdle(WarContext* context, WarEntity* entity);
+bool wst_isGoingToMove(WarContext* context, WarEntity* entity);
+bool wst_isGoingToPatrol(WarContext* context, WarEntity* entity);
+bool wst_isGoingToFollow(WarContext* context, WarEntity* entity);
+bool wst_isGoingToAttack(WarContext* context, WarEntity* entity);
+bool wst_isGoingToDie(WarContext* context, WarEntity* entity);
+bool wst_isGoingToCollapse(WarContext* context, WarEntity* entity);
+bool wst_isGoingToGatherGold(WarContext* context, WarEntity* entity);
+bool wst_isGoingToMine(WarContext* context, WarEntity* entity);
+bool wst_isGoingToGatherWood(WarContext* context, WarEntity* entity);
+bool wst_isGoingToChop(WarContext* context, WarEntity* entity);
+bool wst_isGoingToDeliver(WarContext* context, WarEntity* entity);
+bool wst_isGoingToTrain(WarContext* context, WarEntity* entity);
+bool wst_isGoingToUpgrade(WarContext* context, WarEntity* entity);
+bool wst_isGoingToBuild(WarContext* context, WarEntity* entity);
+bool wst_isGoingToRepair(WarContext* context, WarEntity* entity);
+bool wst_isGoingToRepair2(WarContext* context, WarEntity* entity);
+bool wst_isGoingToCast(WarContext* context, WarEntity* entity);
 
-#define setDelay(state, seconds) ((state)->delay = (seconds))
-
-bool wst_isInsideBuilding(WarEntity* entity);
+bool wst_isInsideBuilding(WarContext* context, WarEntity* entity);
 
 void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state);
 void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state);

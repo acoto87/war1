@@ -31,7 +31,7 @@ void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* st
 
     WarSpriteAnimation* collapseAnim = wanim_createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
 
-    setDelay(state, wmap_getMapScaledTime(context, wanim_getAnimationDuration(collapseAnim)));
+    state->delay = wmap_getMapScaledTime(context, wanim_getAnimationDuration(collapseAnim));
 
     WarEntity* ruins = map->ruin;
     we_addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
