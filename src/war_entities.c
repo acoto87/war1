@@ -255,7 +255,7 @@ void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 posit
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarTransformStorage* store = &manager->transforms;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarTransformComponent* comp = &store->dense[idx];
@@ -303,7 +303,7 @@ void we_addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite spr
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarSpriteStorage* store = &manager->sprites;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarSpriteComponent* comp = &store->dense[idx];
@@ -382,7 +382,7 @@ void we_addUnitComponent(
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarUnitStorage* store = &manager->units;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     WarUnitData unitData = wu_getUnitData(type);
 
@@ -450,7 +450,7 @@ void we_addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceLis
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarRoadStorage* store = &manager->roads;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarRoadComponent* comp = &store->dense[idx];
@@ -498,7 +498,7 @@ void we_addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceLis
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarWallStorage* store = &manager->walls;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarWallComponent* comp = &store->dense[idx];
@@ -546,7 +546,7 @@ void we_addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceLis
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarRuinStorage* store = &manager->ruins;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarRuinComponent* comp = &store->dense[idx];
@@ -594,7 +594,7 @@ void we_addForestComponent(WarContext* context, WarEntity* entity, WarTreeList t
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarForestStorage* store = &manager->forests;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarForestComponent* comp = &store->dense[idx];
@@ -642,7 +642,7 @@ void we_addStateMachineComponent(WarContext* context, WarEntity* entity)
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarStateMachineStorage* store = &manager->stateMachines;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarStateMachineComponent* comp = &store->dense[idx];
@@ -698,7 +698,7 @@ void we_addAnimationsComponent(WarContext* context, WarEntity* entity)
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarAnimationsStorage* store = &manager->animations;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarAnimationsComponent* comp = &store->dense[idx];
@@ -746,7 +746,7 @@ void we_addUIComponent(WarContext* context, WarEntity* entity, String name)
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarUIStorage* store = &manager->uis;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarUIComponent* comp = &store->dense[idx];
@@ -792,7 +792,7 @@ void we_addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, 
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarTextStorage* store = &manager->texts;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarTextComponent* comp = &store->dense[idx];
@@ -854,7 +854,7 @@ void we_addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarC
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarRectStorage* store = &manager->rects;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarRectComponent* comp = &store->dense[idx];
@@ -901,7 +901,7 @@ void we_addButtonComponent(WarContext* context, WarEntity* entity, WarSprite nor
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarButtonStorage* store = &manager->buttons;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarButtonComponent* comp = &store->dense[idx];
@@ -986,7 +986,7 @@ void we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType t
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarAudioStorage* store = &manager->audios;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarAudioComponent* comp = &store->dense[idx];
@@ -1061,7 +1061,7 @@ void we_addProjectileComponent(WarContext* context, WarEntity* entity, WarProjec
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarProjectileStorage* store = &manager->projectiles;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarProjectileComponent* comp = &store->dense[idx];
@@ -1112,7 +1112,7 @@ void we_addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarCursorStorage* store = &manager->cursors;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarCursorComponent* comp = &store->dense[idx];
@@ -1159,7 +1159,7 @@ void we_addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 pos
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarPoisonCloudStorage* store = &manager->poisonClouds;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarPoisonCloudComponent* comp = &store->dense[idx];
@@ -1207,7 +1207,7 @@ void we_addSightComponent(WarContext* context, WarEntity* entity, vec2 position,
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarSightStorage* store = &manager->sights;
-    assert(store->count < MAX_ENTITIES);
+    assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarSightComponent* comp = &store->dense[idx];
@@ -1255,7 +1255,7 @@ WarEntity* we_createEntity(WarContext* context, WarEntityType type, bool addToSc
 
     // Find first empty slot (id == 0 means unused; slot 0 is permanently reserved)
     WarEntity* entity = NULL;
-    for (u32 i = 1; i < MAX_ENTITIES; i++)
+    for (u32 i = 1; i < MAX_ENTITIES_COUNT; i++)
     {
         if (manager->entities[i].id == 0)
         {
@@ -1265,12 +1265,11 @@ WarEntity* we_createEntity(WarContext* context, WarEntityType type, bool addToSc
     }
     if (!entity)
     {
-        logError("Entity pool exhausted (MAX_ENTITIES=%d)", MAX_ENTITIES);
+        logError("Entity pool exhausted (MAX_ENTITIES_COUNT=%d)", MAX_ENTITIES_COUNT);
         TracyCZoneEnd(ctx);
         return NULL;
     }
 
-    assert(manager->nextEntityId < MAX_ENTITIES);
     entity->id   = (u16)++manager->nextEntityId;
     entity->type = (u16)type;
 
@@ -1414,7 +1413,7 @@ WarEntity* we_findEntity(WarContext* context, WarEntityId id)
     if (id != 0)
     {
         WarEntityManager* manager = we_getEntityManager(context);
-        for (u32 i = 1; i < MAX_ENTITIES; i++)
+        for (u32 i = 1; i < MAX_ENTITIES_COUNT; i++)
         {
             if (manager->entities[i].id == id)
             {

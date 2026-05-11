@@ -283,15 +283,15 @@ struct _WarSightComponent
 struct _WarEntity
 {
     WarEntityId id;
-    u16 type;                       // WarEntityType cast to u16
-    u16 components[MAX_COMPONENTS]; // INVALID_COMP_INDEX = absent
+    u16 type;                             // WarEntityType cast to u16
+    u16 components[MAX_COMPONENTS_COUNT]; // INVALID_COMP_INDEX = absent
 };
 static_assert(sizeof(WarEntity) == 64, "WarEntity must be 64 bytes");
 
 #define DEFINE_COMPONENT_STORAGE(name, type) typedef struct \
 { \
-    type dense[MAX_ENTITIES]; \
-    WarEntityId owners[MAX_ENTITIES]; \
+    type dense[MAX_ENTITIES_COUNT]; \
+    WarEntityId owners[MAX_ENTITIES_COUNT]; \
     s32 count; \
 } name
 
@@ -317,7 +317,7 @@ DEFINE_COMPONENT_STORAGE(WarSightStorage, WarSightComponent);
 struct _WarEntityManager
 {
     // --- Entity pool (flat array, slot 0 reserved/empty) ---
-    WarEntity entities[MAX_ENTITIES];
+    WarEntity entities[MAX_ENTITIES_COUNT];
     s32 entityCount;
     s32 nextEntityId; // monotonic; replaces staticEntityId
 

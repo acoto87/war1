@@ -590,11 +590,12 @@ static bool build_with_msvc(const Build_Options *options)
 static bool build_project(const Build_Options *options)
 {
     nob_log(NOB_INFO,
-            "Building target=%s toolchain=%s mode=%s%s",
+            "Building target=%s toolchain=%s mode=%s%s build=%s",
             target_name(options->target),
             toolchain_name(options->toolchain),
             options->check_only ? "check" : "build",
-            options->profile ? " +profile" : "");
+            options->profile ? " +profile" : "",
+            options->debug ? "debug" : "release");
 
     switch (options->toolchain) {
         case TOOLCHAIN_GCC:

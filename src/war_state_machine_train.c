@@ -1,4 +1,6 @@
-﻿#include "war_state_machine.h"
+﻿#include <assert.h>
+
+#include "war_state_machine.h"
 
 #include "war_audio.h"
 

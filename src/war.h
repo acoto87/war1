@@ -43,7 +43,9 @@
 // Counts
 #define MAX_RESOURCES_COUNT 583
 #define MAX_TEXTURES_COUNT 583
-#define MAX_ENTITIES_COUNT 100
+#define MAX_ENTITIES_COUNT 1024
+#define MAX_COMPONENTS_COUNT 30
+#define INVALID_COMP_INDEX 0
 #define MAX_SPRITE_FRAME_COUNT 100
 #define MAX_CONSTRUCTS_COUNT 100
 #define MAX_CUSTOM_MAP_GOLDMINES_COUNT 10
@@ -110,11 +112,6 @@
 #define AUDIO_REMOVE_PENDING_MAX 64
 
 #define MAX_RENDER_STATE_STACK 32
-
-// --- ECS Inline-Index constants ---
-#define MAX_ENTITIES       1024
-#define MAX_COMPONENTS     30
-#define INVALID_COMP_INDEX 0
 
 #define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
 #define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)

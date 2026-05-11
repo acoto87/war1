@@ -194,7 +194,7 @@ void wanim_updateAnimations(WarContext* context)
     WarEntityManager* manager = we_getEntityManager(context);
     assert(manager);
 
-    for(s32 i = 0; i < manager->entityCount; i++)
+    for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
     {
         WarEntity* entity = &manager->entities[i];
         if (entity->id != 0)
