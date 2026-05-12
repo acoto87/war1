@@ -316,14 +316,11 @@ void wproj_updateRainOfFireProjectileSprite(WarContext* context, WarEntity* enti
 
 void wproj_updateProjectile(WarContext* context, WarEntity* entity)
 {
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-    assert(sprite);
-
-    WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
-    assert(projectile);
-
-    if (sprite->enabled && projectile->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_SPRITE) &&
+        we_isComponentEnabled(context, entity, COMP_PROJECTILE))
     {
+        WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+
         if (projectile->type == WAR_PROJECTILE_RAIN_OF_FIRE)
         {
             if (!wproj_updateProjectilePosition(context, entity))
@@ -383,7 +380,14 @@ WarEntity* wproj_createProjectile(WarContext* context, WarProjectileType type,
     WarEntity* projectile = we_createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
     we_addTransformComponent(context, projectile, origin);
     we_addSpriteComponentFromResource(context, projectile, imageResourceRef(data.resourceIndex));
-    we_addProjectileComponent(context, projectile, type, sourceEntityId, targetEntityId, origin, target, data.speed);
+    we_addProjectileComponent(context, projectile, WAR_PROJECTILE_COMPONENT_INIT(
+        .type           = type,
+        .sourceEntityId = sourceEntityId,
+        .targetEntityId = targetEntityId,
+        .origin         = origin,
+        .target         = target,
+        .speed          = data.speed,
+    ));
 
     return projectile;
 }

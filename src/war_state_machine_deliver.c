@@ -86,11 +86,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     // then need go back to the goldmine/trees.
     state->deliver.insideBuilding = true;
 
-    // for this the sprite is turn off for the depositing time
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-    assert(sprite);
-
-    sprite->enabled = false;
+    we_disableComponent(context, entity, COMP_SPRITE);
 
     // remove the unit from selection to avoid the player giving it orders
     // while inside the townhall

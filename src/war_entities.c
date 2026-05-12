@@ -85,6 +85,96 @@ void we_freeEntityList(WarEntityList* list)
     WarEntityListFree(list);
 }
 
+bool we_isComponentEnabled(WarContext* context, WarEntity* entity, WarComponentType componentType)
+{
+    assert(context);
+    assert(entity);
+    assert(componentType >= 0 && componentType < COMP_COUNT);
+
+    u16 idx = entity->components[(s32)componentType];
+    if (idx == INVALID_COMP_INDEX)
+    {
+        // Component not present;
+        return false;
+    }
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
+
+    switch (componentType)
+    {
+        case COMP_TRANSFORM: return manager->transforms.enabled[idx];
+        case COMP_SPRITE: return manager->sprites.enabled[idx];
+        case COMP_UNIT: return manager->units.enabled[idx];
+        case COMP_ANIMATIONS: return manager->animations.enabled[idx];
+        case COMP_ROAD: return manager->roads.enabled[idx];
+        case COMP_WALL: return manager->walls.enabled[idx];
+        case COMP_RUIN: return manager->ruins.enabled[idx];
+        case COMP_FOREST: return manager->forests.enabled[idx];
+        case COMP_STATE_MACHINE: return manager->stateMachines.enabled[idx];
+        case COMP_UI: return manager->uis.enabled[idx];
+        case COMP_TEXT: return manager->texts.enabled[idx];
+        case COMP_RECT: return manager->rects.enabled[idx];
+        case COMP_BUTTON: return manager->buttons.enabled[idx];
+        case COMP_AUDIO: return manager->audios.enabled[idx];
+        case COMP_CURSOR: return manager->cursors.enabled[idx];
+        case COMP_PROJECTILE: return manager->projectiles.enabled[idx];
+        case COMP_POISON_CLOUD: return manager->poisonClouds.enabled[idx];
+        case COMP_SIGHT: return manager->sights.enabled[idx];
+        default: assert(false && "Invalid component type"); return false; break;
+    }
+}
+
+void we_setComponentEnabled(WarContext* context, WarEntity* entity, WarComponentType componentType, bool enabled)
+{
+    assert(context);
+    assert(entity);
+    assert(componentType >= 0 && componentType < COMP_COUNT);
+
+    u16 idx = entity->components[(s32)componentType];
+    if (idx == INVALID_COMP_INDEX)
+    {
+        // Component not present; nothing to enable/disable
+        return;
+    }
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
+
+    switch (componentType)
+    {
+        case COMP_TRANSFORM: manager->transforms.enabled[idx] = enabled; break;
+        case COMP_SPRITE: manager->sprites.enabled[idx] = enabled; break;
+        case COMP_UNIT: manager->units.enabled[idx] = enabled; break;
+        case COMP_ANIMATIONS: manager->animations.enabled[idx] = enabled; break;
+        case COMP_ROAD: manager->roads.enabled[idx] = enabled; break;
+        case COMP_WALL: manager->walls.enabled[idx] = enabled; break;
+        case COMP_RUIN: manager->ruins.enabled[idx] = enabled; break;
+        case COMP_FOREST: manager->forests.enabled[idx] = enabled; break;
+        case COMP_STATE_MACHINE: manager->stateMachines.enabled[idx] = enabled; break;
+        case COMP_UI: manager->uis.enabled[idx] = enabled; break;
+        case COMP_TEXT: manager->texts.enabled[idx] = enabled; break;
+        case COMP_RECT: manager->rects.enabled[idx] = enabled; break;
+        case COMP_BUTTON: manager->buttons.enabled[idx] = enabled; break;
+        case COMP_AUDIO: manager->audios.enabled[idx] = enabled; break;
+        case COMP_CURSOR: manager->cursors.enabled[idx] = enabled; break;
+        case COMP_PROJECTILE: manager->projectiles.enabled[idx] = enabled; break;
+        case COMP_POISON_CLOUD: manager->poisonClouds.enabled[idx] = enabled; break;
+        case COMP_SIGHT: manager->sights.enabled[idx] = enabled; break;
+        default: assert(false && "Invalid component type"); break;
+    }
+}
+
+void we_enableComponent(WarContext* context, WarEntity* entity, WarComponentType componentType)
+{
+    we_setComponentEnabled(context, entity, componentType, true);
+}
+
+void we_disableComponent(WarContext* context, WarEntity* entity, WarComponentType componentType)
+{
+    we_setComponentEnabled(context, entity, componentType, false);
+}
+
 WarTransformComponent* we_getTransformComponent(WarContext* context, const WarEntity* entity)
 {
     if (!entity) return NULL;
@@ -254,6 +344,8 @@ void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 posit
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
+
     WarTransformStorage* store = &manager->transforms;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -264,6 +356,7 @@ void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 posit
     comp->rotation = VEC2_ZERO;
     comp->scale    = VEC2_ONE;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_TRANSFORM] = idx;
@@ -278,12 +371,15 @@ void we_removeTransformComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
+
     WarTransformStorage* store = &manager->transforms;
     u16 lastIdx = (u16)(store->count - 1);
 
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -291,6 +387,8 @@ void we_removeTransformComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_TRANSFORM] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_TRANSFORM] = INVALID_COMP_INDEX;
 }
@@ -302,6 +400,7 @@ void we_addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite spr
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarSpriteStorage* store = &manager->sprites;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -312,6 +411,7 @@ void we_addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite spr
     comp->resourceIndex  = 0;
     comp->sprite         = sprite;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_SPRITE] = idx;
@@ -347,6 +447,7 @@ void we_removeSpriteComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarSpriteStorage* store = &manager->sprites;
 
     wspr_freeSprite(context, store->dense[idx].sprite);
@@ -355,6 +456,7 @@ void we_removeSpriteComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -362,55 +464,28 @@ void we_removeSpriteComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_SPRITE] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_SPRITE] = INVALID_COMP_INDEX;
 }
 
-void we_addUnitComponent(
-    WarContext* context,
-    WarEntity* entity,
-    WarUnitType type,
-    s32 x,
-    s32 y,
-    u8 player,
-    WarResourceKind resourceKind,
-    u32 amount)
+void we_addUnitComponent(WarContext* context, WarEntity* entity, WarUnitComponent params)
 {
     TracyCZoneN(ctx, "we_addUnitComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarUnitStorage* store = &manager->units;
     assert(store->count < MAX_ENTITIES_COUNT);
 
-    WarUnitData unitData = wu_getUnitData(type);
-
     u16 idx = (u16)store->count;
     WarUnitComponent* comp = &store->dense[idx];
-    *comp = (WarUnitComponent){0};
-    comp->type           = type;
-    comp->direction      = rand() % WAR_DIRECTION_COUNT;
-    comp->tilex          = x;
-    comp->tiley          = y;
-    comp->sizex          = unitData.sizex;
-    comp->sizey          = unitData.sizey;
-    comp->player         = player;
-    comp->resourceKind   = resourceKind;
-    comp->amount         = amount;
-    comp->speed          = 0;
-    comp->hp             = 0;
-    comp->maxhp          = 0;
-    comp->armor          = 0;
-    comp->range          = 0;
-    comp->minDamage      = 0;
-    comp->rndDamage      = 0;
-    comp->decay          = 0;
-    comp->invisible      = false;
-    comp->invulnerable   = false;
-    comp->hasBeenSeen    = false;
-    comp->actionType     = WAR_ACTION_TYPE_IDLE;
+    *comp = params;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_UNIT] = idx;
@@ -425,12 +500,14 @@ void we_removeUnitComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarUnitStorage* store = &manager->units;
     u16 lastIdx = (u16)(store->count - 1);
 
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -438,6 +515,8 @@ void we_removeUnitComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_UNIT] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_UNIT] = INVALID_COMP_INDEX;
 }
@@ -449,6 +528,7 @@ void we_addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceLis
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarRoadStorage* store = &manager->roads;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -457,6 +537,7 @@ void we_addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceLis
     *comp = (WarRoadComponent){0};
     comp->pieces = pieces;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_ROAD] = idx;
@@ -471,6 +552,7 @@ void we_removeRoadComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarRoadStorage* store = &manager->roads;
 
     WarRoadPieceListFree(&store->dense[idx].pieces);
@@ -479,6 +561,7 @@ void we_removeRoadComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -486,6 +569,8 @@ void we_removeRoadComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_ROAD] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_ROAD] = INVALID_COMP_INDEX;
 }
@@ -497,6 +582,7 @@ void we_addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceLis
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarWallStorage* store = &manager->walls;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -505,6 +591,7 @@ void we_addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceLis
     *comp = (WarWallComponent){0};
     comp->pieces = pieces;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_WALL] = idx;
@@ -519,6 +606,7 @@ void we_removeWallComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarWallStorage* store = &manager->walls;
 
     WarWallPieceListFree(&store->dense[idx].pieces);
@@ -527,6 +615,7 @@ void we_removeWallComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -534,6 +623,8 @@ void we_removeWallComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_WALL] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_WALL] = INVALID_COMP_INDEX;
 }
@@ -545,6 +636,7 @@ void we_addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceLis
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarRuinStorage* store = &manager->ruins;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -553,6 +645,7 @@ void we_addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceLis
     *comp = (WarRuinComponent){0};
     comp->pieces = pieces;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_RUIN] = idx;
@@ -567,6 +660,7 @@ void we_removeRuinComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarRuinStorage* store = &manager->ruins;
 
     WarRuinPieceListFree(&store->dense[idx].pieces);
@@ -575,6 +669,7 @@ void we_removeRuinComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -582,6 +677,8 @@ void we_removeRuinComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_RUIN] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_RUIN] = INVALID_COMP_INDEX;
 }
@@ -593,6 +690,7 @@ void we_addForestComponent(WarContext* context, WarEntity* entity, WarTreeList t
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarForestStorage* store = &manager->forests;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -601,6 +699,7 @@ void we_addForestComponent(WarContext* context, WarEntity* entity, WarTreeList t
     *comp = (WarForestComponent){0};
     comp->trees = trees;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_FOREST] = idx;
@@ -615,6 +714,7 @@ void we_removeForestComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarForestStorage* store = &manager->forests;
 
     WarTreeListFree(&store->dense[idx].trees);
@@ -623,6 +723,7 @@ void we_removeForestComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -630,6 +731,8 @@ void we_removeForestComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_FOREST] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_FOREST] = INVALID_COMP_INDEX;
 }
@@ -641,6 +744,7 @@ void we_addStateMachineComponent(WarContext* context, WarEntity* entity)
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarStateMachineStorage* store = &manager->stateMachines;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -652,6 +756,7 @@ void we_addStateMachineComponent(WarContext* context, WarEntity* entity)
     comp->wst_leaveState = false;
     comp->wst_enterState = false;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_STATE_MACHINE] = idx;
@@ -666,6 +771,7 @@ void we_removeStateMachineComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarStateMachineStorage* store = &manager->stateMachines;
     WarStateMachineComponent* comp = &store->dense[idx];
 
@@ -679,6 +785,7 @@ void we_removeStateMachineComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -686,6 +793,8 @@ void we_removeStateMachineComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_STATE_MACHINE] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_STATE_MACHINE] = INVALID_COMP_INDEX;
 }
@@ -697,6 +806,7 @@ void we_addAnimationsComponent(WarContext* context, WarEntity* entity)
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarAnimationsStorage* store = &manager->animations;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -705,6 +815,7 @@ void we_addAnimationsComponent(WarContext* context, WarEntity* entity)
     *comp = (WarAnimationsComponent){0};
     WarSpriteAnimationListInit(&comp->animations, WarSpriteAnimationListDefaultOptions);
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_ANIMATIONS] = idx;
@@ -719,6 +830,7 @@ void we_removeAnimationsComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarAnimationsStorage* store = &manager->animations;
 
     WarSpriteAnimationListFree(&store->dense[idx].animations);
@@ -727,6 +839,7 @@ void we_removeAnimationsComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -734,6 +847,8 @@ void we_removeAnimationsComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_ANIMATIONS] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_ANIMATIONS] = INVALID_COMP_INDEX;
 }
@@ -745,6 +860,7 @@ void we_addUIComponent(WarContext* context, WarEntity* entity, String name)
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarUIStorage* store = &manager->uis;
     assert(store->count < MAX_ENTITIES_COUNT);
 
@@ -753,6 +869,7 @@ void we_addUIComponent(WarContext* context, WarEntity* entity, String name)
     *comp = (WarUIComponent){0};
     comp->name = name;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_UI] = idx;
@@ -767,12 +884,14 @@ void we_removeUIComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarUIStorage* store = &manager->uis;
 
     u16 lastIdx = (u16)(store->count - 1);
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -780,42 +899,34 @@ void we_removeUIComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_UI] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_UI] = INVALID_COMP_INDEX;
 }
 
-void we_addTextComponent(WarContext* context, WarEntity* entity, s32 fontIndex, f32 fontSize, String text)
+void we_addTextComponent(WarContext* context, WarEntity* entity, WarTextComponent params)
 {
     TracyCZoneN(ctx, "we_addTextComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarTextStorage* store = &manager->texts;
     assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarTextComponent* comp = &store->dense[idx];
-    *comp = (WarTextComponent){0};
-    comp->fontIndex       = fontIndex;
-    comp->fontSize        = fontSize;
-    comp->lineHeight      = 0;
-    comp->fontColor       = FONT_NORMAL_COLOR;
-    comp->highlightColor  = FONT_HIGHLIGHT_COLOR;
-    comp->highlightIndex  = NO_HIGHLIGHT;
-    comp->highlightCount  = 0;
-    comp->boundings       = VEC2_ZERO;
-    comp->horizontalAlign = WAR_TEXT_ALIGN_LEFT;
-    comp->verticalAlign   = WAR_TEXT_ALIGN_TOP;
-    comp->lineAlign       = WAR_TEXT_ALIGN_LEFT;
-    comp->wrapping        = WAR_TEXT_WRAP_NONE;
-    comp->multiline       = false;
+    *comp = params;
+    comp->text = wstr_make();  // text ownership is transferred via wui_setUIText below
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_TEXT] = idx;
 
-    wui_setUIText(context, entity, text);
+    wui_setUIText(context, entity, params.text);
 
     TracyCZoneEnd(ctx);
 }
@@ -827,6 +938,7 @@ void we_removeTextComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarTextStorage* store = &manager->texts;
 
     wui_clearUIText(context, entity);
@@ -835,6 +947,7 @@ void we_removeTextComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -842,26 +955,28 @@ void we_removeTextComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_TEXT] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_TEXT] = INVALID_COMP_INDEX;
 }
 
-void we_addRectComponent(WarContext* context, WarEntity* entity, vec2 size, WarColor color)
+void we_addRectComponent(WarContext* context, WarEntity* entity, WarRectComponent params)
 {
     TracyCZoneN(ctx, "we_addRectComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarRectStorage* store = &manager->rects;
     assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarRectComponent* comp = &store->dense[idx];
-    *comp = (WarRectComponent){0};
-    comp->size  = size;
-    comp->color = color;
+    *comp = params;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_RECT] = idx;
@@ -876,12 +991,14 @@ void we_removeRectComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarRectStorage* store = &manager->rects;
     u16 lastIdx = (u16)(store->count - 1);
 
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -889,32 +1006,28 @@ void we_removeRectComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_RECT] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_RECT] = INVALID_COMP_INDEX;
 }
 
-void we_addButtonComponent(WarContext* context, WarEntity* entity, WarSprite normalSprite, WarSprite pressedSprite)
+void we_addButtonComponent(WarContext* context, WarEntity* entity, WarButtonComponent params)
 {
     TracyCZoneN(ctx, "we_addButtonComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarButtonStorage* store = &manager->buttons;
     assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarButtonComponent* comp = &store->dense[idx];
-    *comp = (WarButtonComponent){0};
-    comp->interactive    = true;
-    comp->hot            = false;
-    comp->active         = false;
-    comp->hotKey         = WAR_KEY_NONE;
-    comp->highlightIndex = NO_HIGHLIGHT;
-    comp->normalSprite   = normalSprite;
-    comp->pressedSprite  = pressedSprite;
-    comp->clickHandler   = NULL;
+    *comp = params;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_BUTTON] = idx;
@@ -945,7 +1058,10 @@ void we_addButtonComponentFromResource(WarContext* context,
 
     WarSprite normalSprite = wspr_createSpriteFromResourceIndex(context, normalRef);
     WarSprite pressedSprite = wspr_createSpriteFromResourceIndex(context, pressedRef);
-    we_addButtonComponent(context, entity, normalSprite, pressedSprite);
+    we_addButtonComponent(context, entity, WAR_BUTTON_COMPONENT_INIT(
+        .normalSprite  = normalSprite,
+        .pressedSprite = pressedSprite,
+    ));
     TracyCZoneEnd(ctx);
 }
 
@@ -956,6 +1072,7 @@ void we_removeButtonComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarButtonStorage* store = &manager->buttons;
     WarButtonComponent* comp = &store->dense[idx];
 
@@ -967,6 +1084,7 @@ void we_removeButtonComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -974,30 +1092,30 @@ void we_removeButtonComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_BUTTON] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_BUTTON] = INVALID_COMP_INDEX;
 }
 
-void we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType type, s32 resourceIndex, bool loop)
+void we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioComponent params)
 {
     TracyCZoneN(ctx, "we_addAudioComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarAudioStorage* store = &manager->audios;
     assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarAudioComponent* comp = &store->dense[idx];
-    *comp = (WarAudioComponent){0};
-    comp->type          = type;
-    comp->resourceIndex = resourceIndex;
-    comp->loop          = loop;
+    *comp = params;
 
-    if (type == WAR_AUDIO_MIDI)
+    if (comp->type == WAR_AUDIO_MIDI)
     {
-        WarResource* resource = context->resources[resourceIndex];
+        WarResource* resource = context->resources[comp->resourceIndex];
         u8* midiData   = resource->audio.data;
         s32 midiLength = resource->audio.length;
 
@@ -1005,10 +1123,11 @@ void we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioType t
         comp->currentMessage = comp->firstMessage;
         if (!comp->firstMessage)
         {
-            logError("Could not load MIDI from resource: %d", resourceIndex);
+            logError("Could not load MIDI from resource: %d", comp->resourceIndex);
         }
     }
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_AUDIO] = idx;
@@ -1025,6 +1144,7 @@ void we_removeAudioComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarAudioStorage* store = &manager->audios;
     WarAudioComponent* comp = &store->dense[idx];
 
@@ -1040,6 +1160,7 @@ void we_removeAudioComponent(WarContext* context, WarEntity* entity)
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -1047,32 +1168,28 @@ void we_removeAudioComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_AUDIO] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_AUDIO] = INVALID_COMP_INDEX;
 }
 
-void we_addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileType type,
-                            WarEntityId sourceEntityId, WarEntityId targetEntityId,
-                            vec2 origin, vec2 target, s32 speed)
+void we_addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileComponent params)
 {
     TracyCZoneN(ctx, "we_addProjectileComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarProjectileStorage* store = &manager->projectiles;
     assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarProjectileComponent* comp = &store->dense[idx];
-    *comp = (WarProjectileComponent){0};
-    comp->type           = type;
-    comp->sourceEntityId = sourceEntityId;
-    comp->targetEntityId = targetEntityId;
-    comp->origin         = origin;
-    comp->target         = target;
-    comp->speed          = speed;
+    *comp = params;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_PROJECTILE] = idx;
@@ -1087,12 +1204,14 @@ void we_removeProjectileComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarProjectileStorage* store = &manager->projectiles;
     u16 lastIdx = (u16)(store->count - 1);
 
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -1100,26 +1219,28 @@ void we_removeProjectileComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_PROJECTILE] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_PROJECTILE] = INVALID_COMP_INDEX;
 }
 
-void we_addCursorComponent(WarContext* context, WarEntity* entity, WarCursorType type, vec2 hot)
+void we_addCursorComponent(WarContext* context, WarEntity* entity, WarCursorComponent params)
 {
     TracyCZoneN(ctx, "we_addCursorComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarCursorStorage* store = &manager->cursors;
     assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarCursorComponent* comp = &store->dense[idx];
-    *comp = (WarCursorComponent){0};
-    comp->type = type;
-    comp->hot  = hot;
+    *comp = params;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_CURSOR] = idx;
@@ -1134,12 +1255,14 @@ void we_removeCursorComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarCursorStorage* store = &manager->cursors;
     u16 lastIdx = (u16)(store->count - 1);
 
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -1147,27 +1270,28 @@ void we_removeCursorComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_CURSOR] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_CURSOR] = INVALID_COMP_INDEX;
 }
 
-void we_addPoisonCloudComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
+void we_addPoisonCloudComponent(WarContext* context, WarEntity* entity, WarPoisonCloudComponent params)
 {
     TracyCZoneN(ctx, "we_addPoisonCloudComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarPoisonCloudStorage* store = &manager->poisonClouds;
     assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarPoisonCloudComponent* comp = &store->dense[idx];
-    *comp = (WarPoisonCloudComponent){0};
-    comp->position   = position;
-    comp->time       = time;
-    comp->damageTime = 0;
+    *comp = params;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_POISON_CLOUD] = idx;
@@ -1182,12 +1306,14 @@ void we_removePoisonCloudComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarPoisonCloudStorage* store = &manager->poisonClouds;
     u16 lastIdx = (u16)(store->count - 1);
 
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -1195,26 +1321,28 @@ void we_removePoisonCloudComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_POISON_CLOUD] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_POISON_CLOUD] = INVALID_COMP_INDEX;
 }
 
-void we_addSightComponent(WarContext* context, WarEntity* entity, vec2 position, f32 time)
+void we_addSightComponent(WarContext* context, WarEntity* entity, WarSightComponent params)
 {
     TracyCZoneN(ctx, "we_addSightComponent", 1);
 
     if (!entity) { TracyCZoneEnd(ctx); return; }
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarSightStorage* store = &manager->sights;
     assert(store->count < MAX_ENTITIES_COUNT);
 
     u16 idx = (u16)store->count;
     WarSightComponent* comp = &store->dense[idx];
-    *comp = (WarSightComponent){0};
-    comp->position = position;
-    comp->time     = time;
+    *comp = params;
 
+    store->enabled[idx] = true;
     store->owners[idx] = entity->id;
     store->count++;
     entity->components[COMP_SIGHT] = idx;
@@ -1229,12 +1357,14 @@ void we_removeSightComponent(WarContext* context, WarEntity* entity)
     if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
     WarSightStorage* store = &manager->sights;
     u16 lastIdx = (u16)(store->count - 1);
 
     if (idx != lastIdx)
     {
         store->dense[idx]  = store->dense[lastIdx];
+        store->enabled[idx] = store->enabled[lastIdx];
         store->owners[idx] = store->owners[lastIdx];
 
         WarEntity* movedEntity = we_findEntity(context, store->owners[idx]);
@@ -1242,6 +1372,8 @@ void we_removeSightComponent(WarContext* context, WarEntity* entity)
         movedEntity->components[COMP_SIGHT] = idx;
     }
 
+    store->enabled[lastIdx] = false;
+    store->owners[lastIdx] = 0;
     store->count--;
     entity->components[COMP_SIGHT] = INVALID_COMP_INDEX;
 }
@@ -1307,11 +1439,21 @@ WarEntity* we_createUnit(
 
     WarMap* map = context->map;
 
-    WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
-    we_addUnitComponent(context, entity, type, x, y, player, resourceKind, amount);
-    we_addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
-
     WarUnitData unitData = wu_getUnitData(type);
+
+    WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
+    we_addUnitComponent(context, entity, WAR_UNIT_COMPONENT_INIT(
+        .type         = type,
+        .direction    = rand() % WAR_DIRECTION_COUNT,
+        .tilex        = x,
+        .tiley        = y,
+        .sizex        = unitData.sizex,
+        .sizey        = unitData.sizey,
+        .player       = player,
+        .resourceKind = resourceKind,
+        .amount       = amount,
+    ));
+    we_addTransformComponent(context, entity, vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT));
 
     s32 spriteIndex = unitData.resourceIndex;
     if (spriteIndex == 0)
@@ -1844,26 +1986,33 @@ void renderImage(WarContext* context, WarEntity* entity)
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
 
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-    assert(transform);
-
-    WarUIComponent* ui = we_getUIComponent(context, entity);
-    if (ui && ui->enabled && sprite && sprite->enabled && sprite->frameIndex >= 0)
+    if (we_isComponentEnabled(context, entity, COMP_UI) &&
+        we_isComponentEnabled(context, entity, COMP_SPRITE))
     {
-        wr_save(context);
+        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+        assert(sprite);
 
-        if (sprite->sprite.framesCount > 1)
+        WarUIComponent* ui = we_getUIComponent(context, entity);
+        assert(ui);
+
+        if (sprite->frameIndex >= 0)
         {
-            WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
-            wspr_updateSpriteImage(context, sprite->sprite, frame.data);
+            wr_save(context);
 
-            wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
+            if (sprite->sprite.framesCount > 1)
+            {
+                WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
+                wspr_updateSpriteImage(context, sprite->sprite, frame.data);
+
+                wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
+            }
+
+            wr_translate(context, transform->position.x, transform->position.y);
+            wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
+            wr_restore(context);
         }
-
-        wr_translate(context, transform->position.x, transform->position.y);
-        wspr_renderSprite(context, sprite->sprite, VEC2_ZERO, VEC2_ONE);
-        wr_restore(context);
     }
+
 
     TracyCZoneEnd(ctx);
 }
@@ -1872,17 +2021,17 @@ void renderRoad(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "renderRoad", 1);
 
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-    WarRoadComponent* road = we_getRoadComponent(context, entity);
-
-    // the roads are only for forest and swamp maps
-    WarMapTilesetType tilesetType = context->map->tilesetType;
-    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
-
-    if (sprite && sprite->enabled && road && road->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_SPRITE) &&
+        we_isComponentEnabled(context, entity, COMP_ROAD))
     {
-        WarRoadPieceList* pieces = &road->pieces;
+        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+        WarRoadComponent* road = we_getRoadComponent(context, entity);
 
+        // the roads are only for forest and swamp maps
+        WarMapTilesetType tilesetType = context->map->tilesetType;
+        assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
+        WarRoadPieceList* pieces = &road->pieces;
         for (s32 i = 0; i < pieces->count; i++)
         {
             // get the index of the tile in the spritesheet of the map,
@@ -1918,17 +2067,17 @@ void renderWall(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "renderWall", 1);
 
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-    WarWallComponent* wall = we_getWallComponent(context, entity);
-
-    // the walls are only for forest and swamp maps
-    WarMapTilesetType tilesetType = context->map->tilesetType;
-    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
-
-    if (sprite && sprite->enabled && wall && wall->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_SPRITE) &&
+        we_isComponentEnabled(context, entity, COMP_WALL))
     {
-        WarWallPieceList* pieces = &wall->pieces;
+        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+        WarWallComponent* wall = we_getWallComponent(context, entity);
 
+        // the walls are only for forest and swamp maps
+        WarMapTilesetType tilesetType = context->map->tilesetType;
+        assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
+        WarWallPieceList* pieces = &wall->pieces;
         for (s32 i = 0; i < pieces->count; i++)
         {
             WarWallPiece* piece = &pieces->items[i];
@@ -1982,17 +2131,17 @@ void renderRuin(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "renderRuin", 1);
 
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-    WarRuinComponent* ruin = we_getRuinComponent(context, entity);
-
-    // the walls are only for forest and swamp maps
-    WarMapTilesetType tilesetType = context->map->tilesetType;
-    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
-
-    if (sprite && sprite->enabled && ruin && ruin->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_SPRITE) &&
+        we_isComponentEnabled(context, entity, COMP_RUIN))
     {
-        WarRuinPieceList* pieces = &ruin->pieces;
+        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+        WarRuinComponent* ruin = we_getRuinComponent(context, entity);
 
+        // the walls are only for forest and swamp maps
+        WarMapTilesetType tilesetType = context->map->tilesetType;
+        assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
+        WarRuinPieceList* pieces = &ruin->pieces;
         for (s32 i = 0; i < ruin->pieces.count; i++)
         {
             WarRuinPiece* piece = &pieces->items[i];
@@ -2032,14 +2181,14 @@ void renderForest(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "renderForest", 1);
 
-    WarForestComponent* forest = we_getForestComponent(context, entity);
-
-    // the wood are only for forest and swamp maps
-    WarMapTilesetType tilesetType = context->map->tilesetType;
-    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
-
-    if (forest && forest->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_FOREST))
     {
+        WarForestComponent* forest = we_getForestComponent(context, entity);
+
+        // the wood are only for forest and swamp maps
+        WarMapTilesetType tilesetType = context->map->tilesetType;
+        assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
+
         WarTreeList* trees = &forest->trees;
         for (s32 i = 0; i < trees->count; i++)
         {
@@ -2113,7 +2262,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
     // Use sprite text if needed in the future.
 #endif
 
-    if (sprite && sprite->enabled && (isVisible || unit->hasBeenSeen))
+    if (we_isComponentEnabled(context, entity, COMP_SPRITE) && (isVisible || unit->hasBeenSeen))
     {
         wr_save(context);
 
@@ -2139,7 +2288,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
         wr_restore(context);
     }
 
-    if (animations && animations->enabled && isVisible)
+    if (we_isComponentEnabled(context, entity, COMP_ANIMATIONS) && isVisible)
     {
         for (s32 i = 0; i < animations->animations.count; i++)
         {
@@ -2179,14 +2328,14 @@ void renderText(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "renderText", 1);
 
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    WarUIComponent* ui = we_getUIComponent(context, entity);
-    WarTextComponent* text = we_getTextComponent(context, entity);
-
-    if (ui && ui->enabled && text && text->enabled && text->text.data)
+    if (we_isComponentEnabled(context, entity, COMP_UI) &&
+        we_isComponentEnabled(context, entity, COMP_TEXT))
     {
+        WarTransformComponent* transform = we_getTransformComponent(context, entity);
+        assert(transform);
+
+        WarTextComponent* text = we_getTextComponent(context, entity);
+
         wr_save(context);
         wr_translate(context, transform->position.x, transform->position.y);
         wr_scale(context, transform->scale.x, transform->scale.y);
@@ -2223,14 +2372,14 @@ void renderRect(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "renderRect", 1);
 
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    WarUIComponent* ui = we_getUIComponent(context, entity);
-    WarRectComponent* rectComp = we_getRectComponent(context, entity);
-
-    if (ui && ui->enabled && rectComp && rectComp->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_UI) &&
+        we_isComponentEnabled(context, entity, COMP_RECT))
     {
+        WarTransformComponent* transform = we_getTransformComponent(context, entity);
+        assert(transform);
+
+        WarRectComponent* rectComp = we_getRectComponent(context, entity);
+
         wr_save(context);
         wr_translate(context, transform->position.x, transform->position.y);
         wr_scale(context, transform->scale.x, transform->scale.y);
@@ -2250,12 +2399,12 @@ void renderButton(WarContext* context, WarEntity* entity)
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
 
-    WarUIComponent* ui = we_getUIComponent(context, entity);
     WarButtonComponent* button = we_getButtonComponent(context, entity);
     WarTextComponent* text = we_getTextComponent(context, entity);
     WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
 
-    if (ui && ui->enabled && button && button->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_UI) &&
+        we_isComponentEnabled(context, entity, COMP_BUTTON))
     {
         wr_save(context);
         wr_translate(context, transform->position.x, transform->position.y);
@@ -2269,7 +2418,7 @@ void renderButton(WarContext* context, WarEntity* entity)
 
         // render foreground
         {
-            if (sprite && sprite->enabled)
+            if (we_isComponentEnabled(context, entity, COMP_SPRITE))
             {
                 vec2 backgroundSize = vec2i(button->normalSprite.frameWidth, button->normalSprite.frameHeight);
                 vec2 foregroundSize = vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
@@ -2288,7 +2437,7 @@ void renderButton(WarContext* context, WarEntity* entity)
 
         // render text
         {
-            if (text && text->enabled)
+            if (we_isComponentEnabled(context, entity, COMP_TEXT))
             {
                 WarFontParams params;
                 params.fontIndex = text->fontIndex;
@@ -2319,16 +2468,16 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "renderProjectile", 1);
 
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-
-    vec2 position = transform->position;
-    vec2 scale = transform->scale;
-
-    if (sprite && sprite->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_SPRITE))
     {
+        WarTransformComponent* transform = we_getTransformComponent(context, entity);
+        assert(transform);
+
+        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+
+        vec2 position = transform->position;
+        vec2 scale = transform->scale;
+
         WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
 
 #ifdef DEBUG_RENDER_PROJECTILES
@@ -2473,16 +2622,16 @@ void renderAnimation(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "RenderAnimation", 1);
 
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
-
-    vec2 position = transform->position;
-    wr_translate(context, position.x, position.y);
-
-    if (animations && animations->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_ANIMATIONS))
     {
+        WarTransformComponent* transform = we_getTransformComponent(context, entity);
+        assert(transform);
+
+        WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
+
+        vec2 position = transform->position;
+        wr_translate(context, position.x, position.y);
+
         for (s32 i = 0; i < animations->animations.count; i++)
         {
             WarSpriteAnimation* anim = animations->animations.items[i];
@@ -2619,39 +2768,35 @@ void we_renderUnitSelection(WarContext* context)
     {
         WarEntityId entityId = selectedEntities->items[i];
         WarEntity* entity = we_findEntity(context, entityId);
-        if (entity)
+        if (entity &&
+            we_isComponentEnabled(context, entity, COMP_UNIT) &&
+            we_isComponentEnabled(context, entity, COMP_SPRITE))
         {
             WarTransformComponent* transform = we_getTransformComponent(context, entity);
-            assert(transform);
 
-            WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+            // size of the original sprite
+            vec2 frameSize = wu_getUnitFrameSize(context, entity);
 
-            if (sprite && sprite->enabled)
-            {
-                // size of the original sprite
-                vec2 frameSize = wu_getUnitFrameSize(context, entity);
+            // size of the unit
+            vec2 unitSize = wu_getUnitSpriteSize(context, entity);
 
-                // size of the unit
-                vec2 unitSize = wu_getUnitSpriteSize(context, entity);
+            // position of the unit in the map
+            vec2 position = transform->position;
 
-                // position of the unit in the map
-                vec2 position = transform->position;
+            wr_save(context);
+            wr_translate(context, -0.5f * frameSize.x, -0.5f * frameSize.y);
+            wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
+            wr_translate(context, position.x, position.y);
 
-                wr_save(context);
-                wr_translate(context, -0.5f * frameSize.x, -0.5f * frameSize.y);
-                wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
-                wr_translate(context, position.x, position.y);
+            rect selr = rectf(0.5f * (frameSize.x - unitSize.x), 0.5f * (frameSize.y - unitSize.y), unitSize.x, unitSize.y);
+            WarColor color = WAR_COLOR_WHITE_SELECTION;
+            if (wu_isFriendlyUnit(context, entity))
+                color = WAR_COLOR_GREEN_SELECTION;
+            else if (wu_isEnemyUnit(context, entity))
+                color = WAR_COLOR_RED_SELECTION;
+            wr_strokeRect(context, selr, color, 1.0f);
 
-                rect selr = rectf(0.5f * (frameSize.x - unitSize.x), 0.5f * (frameSize.y - unitSize.y), unitSize.x, unitSize.y);
-                WarColor color = WAR_COLOR_WHITE_SELECTION;
-                if (wu_isFriendlyUnit(context, entity))
-                    color = WAR_COLOR_GREEN_SELECTION;
-                else if (wu_isEnemyUnit(context, entity))
-                    color = WAR_COLOR_RED_SELECTION;
-                wr_strokeRect(context, selr, color, 1.0f);
-
-                wr_restore(context);
-            }
+            wr_restore(context);
         }
     }
 

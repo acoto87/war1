@@ -23,11 +23,7 @@ void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* st
     wanim_removeAnimation(context, entity, wsv_fromCString("littleDamage"));
     wanim_removeAnimation(context, entity, wsv_fromCString("hugeDamage"));
 
-    // disable the sprite component to just render the animation
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-    assert(sprite);
-
-    sprite->enabled = false;
+    we_disableComponent(context, entity, COMP_SPRITE);
 
     WarSpriteAnimation* collapseAnim = wanim_createCollapseAnimation(context, entity, wstr_fromCString("collapse"));
 

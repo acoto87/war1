@@ -119,7 +119,10 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
 
                     WarEntity* sight = we_createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
-                    we_addSightComponent(context, sight, targetTile, stats.time);
+                    we_addSightComponent(context, sight, WAR_SIGHT_COMPONENT_INIT(
+                        .position = targetTile,
+                        .time     = stats.time,
+                    ));
                     we_addAnimationsComponent(context, sight);
 
                     wanim_createSpellAnimation(context, sight, targetPosition);
@@ -262,7 +265,10 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
 
                     WarEntity* poisonCloud = we_createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
-                    we_addPoisonCloudComponent(context, poisonCloud, targetTile, stats.time);
+                    we_addPoisonCloudComponent(context, poisonCloud, WAR_POISON_CLOUD_COMPONENT_INIT(
+                        .position = targetTile,
+                        .time     = stats.time,
+                    ));
                     we_addAnimationsComponent(context, poisonCloud);
 
                     wanim_createPoisonCloudAnimation(context, poisonCloud, targetPosition);

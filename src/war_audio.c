@@ -380,11 +380,10 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
         WarEntity* entity = audios->items[i];
         if (entity)
         {
-            WarAudioComponent* audio = we_getAudioComponent(context, entity);
-            assert(audio);
-
-            if (audio->enabled)
+            if (we_isComponentEnabled(context, entity, COMP_AUDIO))
             {
+                WarAudioComponent* audio = we_getAudioComponent(context, entity);
+
                 switch (audio->type)
                 {
                     case WAR_AUDIO_MIDI:
@@ -403,11 +402,10 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                     {
                         f32 volume = soundVolume;
 
-                        WarTransformComponent* transform = we_getTransformComponent(context, entity);
-                        assert(transform);
-
-                        if (transform->enabled)
+                        if (we_isComponentEnabled(context, entity, COMP_TRANSFORM))
                         {
+                            WarTransformComponent* transform = we_getTransformComponent(context, entity);
+
                             // does positional audios only makes sense on maps?
                             WarMap* map = context->map;
                             assert(map);
@@ -593,7 +591,11 @@ WarEntity* wa_createAudio(WarContext* context, WarAudioId audioId, bool loop)
     WarAudioType type = data.type;
 
     WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
-    we_addAudioComponent(context, entity, type, resourceIndex, loop);
+    we_addAudioComponent(context, entity, WAR_AUDIO_COMPONENT_INIT(
+        .type          = type,
+        .resourceIndex = resourceIndex,
+        .loop          = loop,
+    ));
 
     return entity;
 }
@@ -606,7 +608,11 @@ WarEntity* wa_createAudioWithPosition(WarContext* context, WarAudioId audioId, v
     WarAudioType type = data.type;
 
     WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_AUDIO, true);
-    we_addAudioComponent(context, entity, type, resourceIndex, loop);
+    we_addAudioComponent(context, entity, WAR_AUDIO_COMPONENT_INIT(
+        .type          = type,
+        .resourceIndex = resourceIndex,
+        .loop          = loop,
+    ));
     we_addTransformComponent(context, entity, position);
 
     return entity;

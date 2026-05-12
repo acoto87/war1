@@ -197,18 +197,13 @@ void wanim_updateAnimations(WarContext* context)
     for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
     {
         WarEntity* entity = &manager->entities[i];
-        if (entity->id != 0)
+        if (entity->id != 0 && we_isComponentEnabled(context, entity, COMP_ANIMATIONS))
         {
             WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
-            assert(animations);
-
-            if (animations->enabled)
+            for(s32 k = 0; k < animations->animations.count; k++)
             {
-                for(s32 k = 0; k < animations->animations.count; k++)
-                {
-                    WarSpriteAnimation* anim = animations->animations.items[k];
-                    wanim_updateAnimation(context, entity, anim);
-                }
+                WarSpriteAnimation* anim = animations->animations.items[k];
+                wanim_updateAnimation(context, entity, anim);
             }
         }
     }

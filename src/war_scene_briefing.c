@@ -18,7 +18,10 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
 
     scene->briefing.time = data.briefingDuration;
 
-    wui_createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(421), VEC2_ZERO);
+    wui_createUIImage(context, wstr_fromCString("imgBackground"), &(CreateUIImageArgs){
+        .spriteRef = imageResourceRef(421),
+        .position  = VEC2_ZERO,
+    });
 
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
@@ -46,15 +49,16 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
     wanim_addAnimationFramesRange(anim4, 0, 20);
     wanim_addAnimation(context, animEntity, anim4);
 
-    WarEntity* briefingText = wui_createUIText(context, wstr_fromCString("txtBriefing"), 1, 10, data.briefingText, vec2i(20, 160));
-    setUITextColor(context, briefingText, WAR_COLOR_RGB(255, 215, 138));
-    setUITextMultiline(context, briefingText, true);
-    setUITextBoundings(context, briefingText, vec2f((f32)(context->originalWindowWidth - 40), 200.0f));
-    setUITextHorizontalAlign(context, briefingText, WAR_TEXT_ALIGN_LEFT);
-    setUITextVerticalAlign(context, briefingText, WAR_TEXT_ALIGN_TOP);
-    setUITextLineAlign(context, briefingText, WAR_TEXT_ALIGN_LEFT);
-    setUITextWrapping(context, briefingText, WAR_TEXT_WRAP_CHAR);
-    setUITextLineHeight(context, briefingText, 150);
+    wui_createUIText(context, wstr_fromCString("txtBriefing"), &(CreateUITextArgs){
+        .position   = vec2i(20, 160),
+        .fontIndex  = 1,
+        .fontColor  = WAR_COLOR_RGB(255, 215, 138),
+        .multiline  = true,
+        .boundings  = vec2f((f32)(context->originalWindowWidth - 40), 200.0f),
+        .wrapping   = WAR_TEXT_WRAP_CHAR,
+        .lineHeight = 150,
+        .text       = data.briefingText,
+    });
 
     if (!isDemo(context))
         wa_createAudio(context, data.briefingAudioId, false);
@@ -68,7 +72,10 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
 
     scene->briefing.time = data.briefingDuration;
 
-    wui_createUIImage(context, wstr_fromCString("imgBackground"), imageResourceRef(422), VEC2_ZERO);
+    wui_createUIImage(context, wstr_fromCString("imgBackground"), &(CreateUIImageArgs){
+        .spriteRef = imageResourceRef(422),
+        .position  = VEC2_ZERO,
+    });
 
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
@@ -95,15 +102,16 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
         wanim_addAnimation(context, animEntity, anim3);
     }
 
-    WarEntity* briefingText = wui_createUIText(context, wstr_fromCString("txtBriefing"), 1, 10, data.briefingText, vec2i(20, 160));
-    setUITextColor(context, briefingText, WAR_COLOR_RGB(255, 215, 138));
-    setUITextMultiline(context, briefingText, true);
-    setUITextBoundings(context, briefingText, vec2f((f32)(context->originalWindowWidth - 40), 200.0f));
-    setUITextHorizontalAlign(context, briefingText, WAR_TEXT_ALIGN_LEFT);
-    setUITextVerticalAlign(context, briefingText, WAR_TEXT_ALIGN_TOP);
-    setUITextLineAlign(context, briefingText, WAR_TEXT_ALIGN_LEFT);
-    setUITextWrapping(context, briefingText, WAR_TEXT_WRAP_CHAR);
-    setUITextLineHeight(context, briefingText, 150);
+    wui_createUIText(context, wstr_fromCString("txtBriefing"), &(CreateUITextArgs){
+        .position   = vec2i(20, 160),
+        .fontIndex  = 1,
+        .fontColor  = WAR_COLOR_RGB(255, 215, 138),
+        .multiline  = true,
+        .boundings  = vec2f((f32)(context->originalWindowWidth - 40), 200.0f),
+        .wrapping   = WAR_TEXT_WRAP_CHAR,
+        .lineHeight = 150,
+        .text       = data.briefingText,
+    });
 
     if (!isDemo(context))
         wa_createAudio(context, data.briefingAudioId, false);

@@ -861,7 +861,10 @@ void wmap_enterMap(WarContext* context)
     wmm_createGameOverMenu(context);
     wmm_createQuitMenu(context);
     createDemoEndMenu(context);
-    wui_createUICursor(context, wstr_fromCString("cursor"), WAR_CURSOR_ARROW, VEC2_ZERO);
+    wui_createUICursor(context, wstr_fromCString("cursor"), &(CreateUICursorArgs){
+        .type     = WAR_CURSOR_ARROW,
+        .position = VEC2_ZERO,
+    });
 
     if (!isDemo(context))
         wa_createAudio(context, WAR_MUSIC_00, true);
@@ -1092,7 +1095,7 @@ void updateSelection(WarContext* context)
                         WarUnitComponent* unit = we_getUnitComponent(context, entity);
                         assert(unit);
 
-                        if (unit->enabled)
+                        if (we_isComponentEnabled(context, entity, COMP_UNIT))
                         {
                             // don't select dead units or corpses
                             if (wst_isDead(context, entity) || wst_isGoingToDie(context, entity) || wu_isCorpseUnit(context, entity))
@@ -1135,7 +1138,7 @@ void updateSelection(WarContext* context)
                     WarUnitComponent* unit = we_getUnitComponent(context, entityUnderCursor);
                     assert(unit);
 
-                    if (unit->enabled &&
+                    if (we_isComponentEnabled(context, entityUnderCursor, COMP_UNIT) &&
                         !wst_isDead(context, entityUnderCursor) &&
                         !wst_isGoingToDie(context, entityUnderCursor) &&
                         !wu_isCorpseUnit(context, entityUnderCursor) &&
@@ -1406,12 +1409,7 @@ void updateCommandButtons(WarContext* context)
     };
 
     for (s32 i = 0; i < arrayLength(commandButtons); i++)
-    {
-        WarButtonComponent* btn = we_getButtonComponent(context, commandButtons[i]);
-        assert(btn);
-
-        btn->enabled = false;
-    }
+        we_disableComponent(context, commandButtons[i], COMP_BUTTON);
 
     for (s32 i = 0; i < arrayLength(commandTexts); i++)
         wui_clearUIText(context, commandTexts[i]);
@@ -1500,7 +1498,7 @@ void updateCommandButtons(WarContext* context)
             WarUnitCommandData commandData = wu_getUnitCommandData(context, entity, commands[i]);
             wui_setUIImage(context, commandButtons[i], commandData.frameIndex);
             wui_setUITooltip(context, commandButtons[i], commandData.highlightIndex, commandData.highlightCount, wsv_toString(commandData.tooltip));
-            button->enabled = true;
+            we_enableComponent(context, commandButtons[i], COMP_BUTTON);
             button->gold = commandData.gold;
             button->wood = commandData.wood;
             button->hotKey = commandData.hotKey;
@@ -1855,15 +1853,12 @@ void updateStatus(WarContext* context)
         WarEntity* entity = buttons->items[i];
         if (entity)
         {
-            WarUIComponent* ui = we_getUIComponent(context, entity);
-            assert(ui);
-
-            if (ui->enabled)
+            if (we_isComponentEnabled(context, entity, COMP_UI) &&
+                we_isComponentEnabled(context, entity, COMP_BUTTON))
             {
                 WarButtonComponent* button = we_getButtonComponent(context, entity);
-                assert(button);
 
-                if (button->enabled && button->interactive && button->hot)
+                if (button->interactive && button->hot)
                 {
                     wstr_assign(&statusText, wstr_view(&button->tooltip));
                     goldCost = button->gold;

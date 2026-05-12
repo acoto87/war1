@@ -20,6 +20,19 @@ struct _WarAudioComponent
     tml_message* currentMessage;
 };
 
+#define WAR_AUDIO_COMPONENT_INIT_FIELDS(...) { \
+    .enabled        = false,                   \
+    .type           = 0,                       \
+    .resourceIndex  = -1,                      \
+    .loop           = false,                   \
+    .playbackTime   = 0,                       \
+    .sampleIndex    = 0,                       \
+    .firstMessage   = NULL,                    \
+    .currentMessage = NULL,                    \
+    __VA_ARGS__                                \
+}
+#define WAR_AUDIO_COMPONENT_INIT(...) ((WarAudioComponent)WAR_AUDIO_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+
 bool wa_initAudio(WarContext* context);
 void wa_removeAudiosOfType(WarContext* context, WarAudioType type);
 WarEntity* wa_createAudio(WarContext* context, WarAudioId audioId, bool loop);

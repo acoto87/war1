@@ -215,7 +215,7 @@ void wst_updateStateMachine(WarContext* context, WarEntity* entity)
     WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
     assert(stateMachine);
 
-    if (stateMachine->enabled)
+    if (we_isComponentEnabled(context, entity, COMP_SPRITE))
     {
         // the wst_enterState could potentially change state if it determine that is not ready to start the current state
         while (stateMachine->nextState)

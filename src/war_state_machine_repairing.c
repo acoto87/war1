@@ -42,11 +42,7 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
             return;
         }
 
-        // disable the sprite to simulate the building process
-        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-        assert(sprite);
-
-        sprite->enabled = false;
+        we_disableComponent(context, entity, COMP_SPRITE);
 
         // set the unit as inside the building
         state->repairing.insideBuilding = true;
@@ -91,10 +87,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
     {
         if (state->repairing.insideBuilding)
         {
-            WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-            assert(sprite);
-
-            sprite->enabled = true;
+            we_enableComponent(context, entity, COMP_SPRITE);
 
             // find a valid spawn position for the unit
             vec2 position = wu_getUnitCenterPosition(context, entity, true);
@@ -148,10 +141,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
     }
     else if (!wst_isBuilding(context, building) && !wst_isGoingToBuild(context, building))
     {
-        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-        assert(sprite);
-
-        sprite->enabled = true;
+        we_enableComponent(context, entity, COMP_SPRITE);
 
         // find a valid spawn position for the unit
         vec2 position = wu_getUnitCenterPosition(context, entity, true);
