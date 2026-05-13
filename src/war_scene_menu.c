@@ -100,82 +100,74 @@ void wsc_enterSceneMainMenu(WarContext* context)
     wsc_createCustomGameMenu(context);
     wcheatp_createCheatsPanel(context);
 
-    wui_createUICursor(context, wstr_fromCString("cursor"), &(CreateUICursorArgs){
+    wui_createUICursor(context, wstr_fromCString("cursor"), CREATE_UI_CURSOR_ARGS_INIT(
         .type     = WAR_CURSOR_ARROW,
         .position = VEC2_ZERO,
-    });
+    ));
 
     if (!isDemo(context))
-        wa_createAudio(context, WAR_MUSIC_00, true);
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_MUSIC_00, .loop=true));
 }
 
 void wsc_createMainMenu(WarContext* context)
 {
-    WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
     WarSpriteResourceRef mediumPressedRef = imageResourceRef(240);
 
-    WarEntity* uiEntity;
-
-    uiEntity = wui_createUIImage(context, wstr_fromCString("imgMenuBackground"), &(CreateUIImageArgs){
+    wui_createUIImage(context, wstr_fromCString("imgMenuBackground"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(261),
         .position  = VEC2_ZERO,
-    });
+    ));
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnMenuSinglePlayer"), &(CreateUITextButtonArgs){
+    wui_createUITextButton(context, wstr_fromCString("btnMenuSinglePlayer"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Start a new game"),
         .backgroundNormalRef  = mediumNormalRef,
         .backgroundPressedRef = mediumPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(104, 85),
-    });
-    setUIButtonClickHandler(context, uiEntity, wsc_handleMenuSinglePlayer);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_S);
-    setUITextHighlight(context, uiEntity, 0, 1);
+        .hotKey               = WAR_KEY_S,
+        .clickHandler         = wsc_handleMenuSinglePlayer,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnMenuLoad"), &(CreateUITextButtonArgs){
+    wui_createUITextButton(context, wstr_fromCString("btnMenuLoad"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Load existing game"),
         .backgroundNormalRef  = mediumNormalRef,
         .backgroundPressedRef = mediumPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(104, 105),
-    });
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_L);
-    setUITextHighlight(context, uiEntity, 0, 1);
+        .hotKey               = WAR_KEY_L,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnMenuReplayIntro"), &(CreateUITextButtonArgs){
+    wui_createUITextButton(context, wstr_fromCString("btnMenuReplayIntro"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Replay introduction"),
         .backgroundNormalRef  = mediumNormalRef,
         .backgroundPressedRef = mediumPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(104, 125),
-    });
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_R);
-    setUITextHighlight(context, uiEntity, 0, 1);
+        .hotKey               = WAR_KEY_R,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnMenuQuit"), &(CreateUITextButtonArgs){
+    wui_createUITextButton(context, wstr_fromCString("btnMenuQuit"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Quit"),
         .backgroundNormalRef  = mediumNormalRef,
         .backgroundPressedRef = mediumPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(104, 165),
-    });
-    setUIButtonClickHandler(context, uiEntity, wsc_handleMenuQuit);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_Q);
-    setUITextHighlight(context, uiEntity, 0, 1);
+        .hotKey               = WAR_KEY_Q,
+        .clickHandler         = wsc_handleMenuQuit,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
 }
 
 void wsc_createSinglePlayerMenu(WarContext* context)
 {
-    WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef mediumNormalRef = imageResourceRef(239);
     WarSpriteResourceRef mediumPressedRef = imageResourceRef(240);
     WarSpriteResourceRef smallNormalRef = imageResourceRef(241);
@@ -183,61 +175,57 @@ void wsc_createSinglePlayerMenu(WarContext* context)
 
     WarEntity* uiEntity;
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnSinglePlayerOrc"), &(CreateUITextButtonArgs){
+    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnSinglePlayerOrc"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Orc campaign"),
         .backgroundNormalRef  = mediumNormalRef,
         .backgroundPressedRef = mediumPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(104, 85),
-    });
+        .hotKey               = WAR_KEY_O,
+        .clickHandler         = wsc_handleSinglePlayerOrc,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleSinglePlayerOrc);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_O);
-    setUITextHighlight(context, uiEntity, 0, 1);
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnSinglePlayerHuman"), &(CreateUITextButtonArgs){
+    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnSinglePlayerHuman"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Human campaign"),
         .backgroundNormalRef  = mediumNormalRef,
         .backgroundPressedRef = mediumPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(104, 105),
-    });
+        .hotKey               = WAR_KEY_H,
+        .clickHandler         = wsc_handleSinglePlayerHuman,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleSinglePlayerHuman);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_H);
-    setUITextHighlight(context, uiEntity, 0, 1);
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnCustomGame"), &(CreateUITextButtonArgs){
+    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnCustomGame"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Custom game"),
         .backgroundNormalRef  = mediumNormalRef,
         .backgroundPressedRef = mediumPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(104, 125),
-    });
+        .hotKey               = WAR_KEY_U,
+        .clickHandler         = wsc_handleCustomGame,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleCustomGame);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_U);
-    setUITextHighlight(context, uiEntity, 1, 1);
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnSinglePlayerCancel"), &(CreateUITextButtonArgs){
+    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnSinglePlayerCancel"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Cancel"),
         .backgroundNormalRef  = smallNormalRef,
         .backgroundPressedRef = smallPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(133, 165),
-    });
+        .hotKey               = WAR_KEY_C,
+        .clickHandler         = wsc_handleSinglePlayerCancel,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleSinglePlayerCancel);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_C);
-    setUITextHighlight(context, uiEntity, 0, 1);
 }
 
 void wsc_createLoadMenu(WarContext* context)
@@ -248,8 +236,6 @@ void wsc_createLoadMenu(WarContext* context)
 void wsc_createCustomGameMenu(WarContext* context)
 {
     WarEntity* uiEntity;
-
-    WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef smallNormalRef = imageResourceRef(241);
     WarSpriteResourceRef smallPressedRef = imageResourceRef(242);
     WarSpriteResourceRef leftArrowNormalRef = imageResourceRef(244);
@@ -257,147 +243,139 @@ void wsc_createCustomGameMenu(WarContext* context)
     WarSpriteResourceRef rightArrowNormalRef = imageResourceRef(246);
     WarSpriteResourceRef rightArrowPressedRef = imageResourceRef(247);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtYourRaceLabel"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtYourRaceLabel"), CREATE_UI_TEXT_ARGS_INIT(
         .position        = vec2i(40, 105),
         .fontIndex       = 1,
         .boundings       = vec2f(100, 12),
         .horizontalAlign = WAR_TEXT_ALIGN_RIGHT,
         .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
         .text            = wstr_fromCString("Your race:"),
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtEnemyRaceLabel"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtEnemyRaceLabel"), CREATE_UI_TEXT_ARGS_INIT(
         .position        = vec2i(40, 125),
         .fontIndex       = 1,
         .boundings       = vec2f(100, 12),
         .horizontalAlign = WAR_TEXT_ALIGN_RIGHT,
         .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
         .text            = wstr_fromCString("Enemy race:"),
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtMapLabel"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtMapLabel"), CREATE_UI_TEXT_ARGS_INIT(
         .position        = vec2i(40, 145),
         .fontIndex       = 1,
         .boundings       = vec2f(100, 12),
         .horizontalAlign = WAR_TEXT_ALIGN_RIGHT,
         .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
         .text            = wstr_fromCString("Map:"),
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtYourRace"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtYourRace"), CREATE_UI_TEXT_ARGS_INIT(
         .position        = vec2i(180, 105),
         .fontIndex       = 1,
         .boundings       = vec2f(50, 12),
         .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
         .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
         .text            = wstr_fromCString("Human"),
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtEnemyRace"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtEnemyRace"), CREATE_UI_TEXT_ARGS_INIT(
         .position        = vec2i(180, 125),
         .fontIndex       = 1,
         .boundings       = vec2f(50, 12),
         .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
         .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
         .text            = wstr_fromCString("Orc"),
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtMap"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtMap"), CREATE_UI_TEXT_ARGS_INIT(
         .position        = vec2i(180, 145),
         .fontIndex       = 1,
         .boundings       = vec2f(50, 12),
         .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
         .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
         .text            = wstr_fromCString("147"),
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnYourRaceLeft"), &(CreateUIImageButtonArgs){
+    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnYourRaceLeft"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = leftArrowNormalRef,
         .backgroundPressedRef = leftArrowPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(160, 103),
-    });
+        .clickHandler         = wsc_handleYourRaceLeft
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleYourRaceLeft);
 
-    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnYourRaceRight"), &(CreateUIImageButtonArgs){
+    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnYourRaceRight"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = rightArrowNormalRef,
         .backgroundPressedRef = rightArrowPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(235, 103),
-    });
+        .clickHandler         = wsc_handleYourRaceRight
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleYourRaceRight);
 
-    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnEnemyRaceLeft"), &(CreateUIImageButtonArgs){
+    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnEnemyRaceLeft"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = leftArrowNormalRef,
         .backgroundPressedRef = leftArrowPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(160, 123),
-    });
+        .clickHandler         = wsc_handleEnemyRaceLeft,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleEnemyRaceLeft);
 
-    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnEnemyRaceRight"), &(CreateUIImageButtonArgs){
+    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnEnemyRaceRight"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = rightArrowNormalRef,
         .backgroundPressedRef = rightArrowPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(235, 123),
-    });
+        .clickHandler         = wsc_handleEnemyRaceRight,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleEnemyRaceRight);
 
-    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnMapLeft"), &(CreateUIImageButtonArgs){
+    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnMapLeft"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = leftArrowNormalRef,
         .backgroundPressedRef = leftArrowPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(160, 143),
-    });
+        .clickHandler         = wsc_handleMapLeft,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleMapLeft);
 
-    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnMapRight"), &(CreateUIImageButtonArgs){
+    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnMapRight"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = rightArrowNormalRef,
         .backgroundPressedRef = rightArrowPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(235, 143),
-    });
+        .clickHandler         = wsc_handleMapRight,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleMapRight);
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnCustomGameOk"), &(CreateUITextButtonArgs){
+    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnCustomGameOk"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Ok"),
         .backgroundNormalRef  = smallNormalRef,
         .backgroundPressedRef = smallPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(100, 165),
-    });
+        .hotKey               = WAR_KEY_O,
+        .clickHandler         = wsc_handleCustomGameOk,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleCustomGameOk);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_O);
-    setUITextHighlight(context, uiEntity, 0, 1);
 
-    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnCustomGameCancel"), &(CreateUITextButtonArgs){
+    uiEntity = wui_createUITextButton(context, wstr_fromCString("btnCustomGameCancel"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,
-        .fontSize             = 10,
         .text                 = wstr_fromCString("Cancel"),
         .backgroundNormalRef  = smallNormalRef,
         .backgroundPressedRef = smallPressedRef,
-        .foregroundRef        = invalidRef,
         .position             = vec2i(180, 165),
-    });
+        .hotKey               = WAR_KEY_C,
+        .clickHandler         = wsc_handleMenuSinglePlayer,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
+    ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wsc_handleMenuSinglePlayer);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_C);
-    setUITextHighlight(context, uiEntity, 0, 1);
 }
 
 void wsc_showOrHideMainMenu(WarContext* context, bool status)

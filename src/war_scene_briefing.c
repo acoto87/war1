@@ -18,10 +18,10 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
 
     scene->briefing.time = data.briefingDuration;
 
-    wui_createUIImage(context, wstr_fromCString("imgBackground"), &(CreateUIImageArgs){
+    wui_createUIImage(context, wstr_fromCString("imgBackground"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(421),
         .position  = VEC2_ZERO,
-    });
+    ));
 
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
@@ -49,7 +49,7 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
     wanim_addAnimationFramesRange(anim4, 0, 20);
     wanim_addAnimation(context, animEntity, anim4);
 
-    wui_createUIText(context, wstr_fromCString("txtBriefing"), &(CreateUITextArgs){
+    wui_createUIText(context, wstr_fromCString("txtBriefing"), CREATE_UI_TEXT_ARGS_INIT(
         .position   = vec2i(20, 160),
         .fontIndex  = 1,
         .fontColor  = WAR_COLOR_RGB(255, 215, 138),
@@ -58,10 +58,10 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
         .wrapping   = WAR_TEXT_WRAP_CHAR,
         .lineHeight = 150,
         .text       = data.briefingText,
-    });
+    ));
 
     if (!isDemo(context))
-        wa_createAudio(context, data.briefingAudioId, false);
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=data.briefingAudioId, .loop=false));
 }
 
 void wsbr_enterSceneBriefingOrcs(WarContext* context)
@@ -72,10 +72,10 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
 
     scene->briefing.time = data.briefingDuration;
 
-    wui_createUIImage(context, wstr_fromCString("imgBackground"), &(CreateUIImageArgs){
+    wui_createUIImage(context, wstr_fromCString("imgBackground"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(422),
         .position  = VEC2_ZERO,
-    });
+    ));
 
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
@@ -102,7 +102,7 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
         wanim_addAnimation(context, animEntity, anim3);
     }
 
-    wui_createUIText(context, wstr_fromCString("txtBriefing"), &(CreateUITextArgs){
+    wui_createUIText(context, wstr_fromCString("txtBriefing"), CREATE_UI_TEXT_ARGS_INIT(
         .position   = vec2i(20, 160),
         .fontIndex  = 1,
         .fontColor  = WAR_COLOR_RGB(255, 215, 138),
@@ -111,10 +111,10 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
         .wrapping   = WAR_TEXT_WRAP_CHAR,
         .lineHeight = 150,
         .text       = data.briefingText,
-    });
+    ));
 
     if (!isDemo(context))
-        wa_createAudio(context, data.briefingAudioId, false);
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=data.briefingAudioId, .loop=false));
 }
 
 void wsc_enterSceneBriefing(WarContext* context)

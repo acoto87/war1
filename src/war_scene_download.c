@@ -25,7 +25,7 @@ void wsc_enterSceneDownload(WarContext* context)
                                "\n"
                                "Enjoy the game!";
 
-    wui_createUIText(context, wstr_fromCString("txtDownload"), &(CreateUITextArgs){
+    wui_createUIText(context, wstr_fromCString("txtDownload"), CREATE_UI_TEXT_ARGS_INIT(
         .position   = vec2i(10, 10),
         .fontIndex  = 1,
         .fontColor  = WAR_COLOR_RGB(255, 215, 138),
@@ -34,16 +34,16 @@ void wsc_enterSceneDownload(WarContext* context)
         .wrapping   = WAR_TEXT_WRAP_CHAR,
         .lineHeight = 120,
         .text       = wstr_fromCString(text),
-    });
+    ));
 
-    WarEntity* downloadingText = wui_createUIText(context, wstr_fromCString("txtDownloading"), &(CreateUITextArgs){
+    WarEntity* downloadingText = wui_createUIText(context, wstr_fromCString("txtDownloading"), CREATE_UI_TEXT_ARGS_INIT(
         .position      = vec2i(10, 10),
         .fontIndex     = 1,
         .fontColor     = WAR_COLOR_RGB(255, 215, 138),
         .boundings     = vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)),
         .verticalAlign = WAR_TEXT_ALIGN_BOTTOM,
         .text          = wstr_fromCString("Downloading..."),
-    });
+    ));
     setUIEntityStatus(context, downloadingText, false);
 }
 

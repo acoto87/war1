@@ -65,8 +65,8 @@ void wst_changeNextState(WarContext* context, WarEntity* entity, WarState* state
     assert(stateMachine);
 
     stateMachine->nextState = state;
-    stateMachine->wst_leaveState = wst_leaveState;
-    stateMachine->wst_enterState = wst_enterState;
+    stateMachine->leaveState = wst_leaveState;
+    stateMachine->enterState = wst_enterState;
 }
 
 bool wst_changeStateNextState(WarContext* context, WarEntity* entity, WarState* state)
@@ -212,21 +212,21 @@ void wst_leaveState(WarContext* context, WarEntity* entity, WarState* state)
 
 void wst_updateStateMachine(WarContext* context, WarEntity* entity)
 {
-    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
-    assert(stateMachine);
-
-    if (we_isComponentEnabled(context, entity, COMP_SPRITE))
+    if (we_isComponentEnabled(context, entity, COMP_STATE_MACHINE))
     {
+        WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
+        assert(stateMachine);
+
         // the wst_enterState could potentially change state if it determine that is not ready to start the current state
         while (stateMachine->nextState)
         {
-            if (stateMachine->wst_leaveState)
+            if (stateMachine->leaveState)
                 wst_leaveState(context, entity, stateMachine->currentState);
 
             stateMachine->currentState = stateMachine->nextState;
             stateMachine->nextState = NULL;
 
-            if (stateMachine->wst_enterState)
+            if (stateMachine->enterState)
                 wst_enterState(context, entity, stateMachine->currentState);
         }
 

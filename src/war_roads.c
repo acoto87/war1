@@ -137,7 +137,9 @@ WarEntity* we_createRoad(WarContext* context)
 
     WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_ROAD, true);
     we_addRoadComponent(context, entity, pieces);
-    we_addSpriteComponent(context, entity, map->sprite);
+    we_addSpriteComponent(context, entity, WAR_SPRITE_COMPONENT_INIT(
+        .sprite = map->sprite
+    ));
 
     return entity;
 }

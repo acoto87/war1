@@ -75,32 +75,32 @@ void wcheatp_createCheatsPanel(WarContext* context)
 
     vec2 cheatSize = vec2f((f32)context->originalWindowWidth, 12.0f);
     WarColor cheatBackgroundColor = WAR_COLOR_RGBA(100, 100, 100, 160);
-    uiEntity = wui_createUIRect(context, wstr_fromCString("panelCheat"), &(CreateUIRectArgs){
+    uiEntity = wui_createUIRect(context, wstr_fromCString("panelCheat"), CREATE_UI_RECT_ARGS_INIT(
         .position = VEC2_ZERO,
         .size     = cheatSize,
         .color    = cheatBackgroundColor,
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheat"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheat"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2i(2, 4),
         .fontSize = 6,
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIRect(context, wstr_fromCString("cursorCheat"), &(CreateUIRectArgs){
+    uiEntity = wui_createUIRect(context, wstr_fromCString("cursorCheat"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2i(2, 3),
         .size     = vec2i(1, 7),
         .color    = WAR_COLOR_WHITE,
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), CREATE_UI_TEXT_ARGS_INIT(
         .position  = vec2i(10, 20),
         .fontIndex = 1,
         .fontSize  = 8,
         .fontColor = WAR_COLOR_YELLOW,
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 }
 

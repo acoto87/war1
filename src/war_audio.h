@@ -35,10 +35,31 @@ struct _WarAudioComponent
 
 bool wa_initAudio(WarContext* context);
 void wa_removeAudiosOfType(WarContext* context, WarAudioType type);
-WarEntity* wa_createAudio(WarContext* context, WarAudioId audioId, bool loop);
-WarEntity* wa_createAudioWithPosition(WarContext* context, WarAudioId audioId, vec2 position, bool loop);
-WarEntity* wa_createAudioRandom(WarContext* context, WarAudioId fromId, WarAudioId toId, bool loop);
-WarEntity* wa_createAudioRandomWithPosition(WarContext* context, WarAudioId fromId, WarAudioId toId, vec2 position, bool loop);
+
+typedef struct {
+    WarAudioId audioId;
+    WarAudioId randomFromId;
+    WarAudioId randomToId;
+    vec2 position;
+    bool hasPosition;
+    bool loop;
+} CreateAudioArgs;
+
+#define CREATE_AUDIO_ARGS_INIT_CONST(...) { \
+    .audioId = -1, \
+    .randomFromId = -1, \
+    .randomToId = -1, \
+    .hasPosition = false, \
+    .loop = false, \
+    __VA_ARGS__ \
+}
+#define CREATE_AUDIO_ARGS_INIT(...) (&(CreateAudioArgs)CREATE_AUDIO_ARGS_INIT_CONST(__VA_ARGS__))
+
+WarEntity* wa_createAudio(WarContext* context, const CreateAudioArgs* args);
+WarEntity* wa_createAudioWithPosition(WarContext* context, const CreateAudioArgs* args);
+WarEntity* wa_createAudioRandom(WarContext* context, const CreateAudioArgs* args);
+WarEntity* wa_createAudioRandomWithPosition(WarContext* context, const CreateAudioArgs* args);
+
 WarEntity* wa_playAttackSound(WarContext* context, vec2 position, WarUnitActionStepType soundStep);
 WarEntity* wa_playDudeSelectionSound(WarContext* context, WarEntity* entity);
 WarEntity* wa_playBuildingSelectionSound(WarContext* context, WarEntity* entity);

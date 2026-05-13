@@ -126,7 +126,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         }
 
         WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;
-        wa_createAudio(context, audioId, false);
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
 
         return;
     }

@@ -742,7 +742,9 @@ void wmap_enterMap(WarContext* context)
                 }
 
                 WarEntity* forest = we_createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
-                we_addSpriteComponent(context, forest, map->sprite);
+                we_addSpriteComponent(context, forest, WAR_SPRITE_COMPONENT_INIT(
+                    .sprite = map->sprite
+                ));
                 we_addForestComponent(context, forest, trees);
 
                 for (s32 treeIndex = 0; treeIndex < trees.count; treeIndex++)
@@ -844,8 +846,15 @@ void wmap_enterMap(WarContext* context)
         for (s32 i = 0; i < (s32)levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
-            we_createUnit(context, startUnit.type, startUnit.x, startUnit.y, startUnit.player,
-                       startUnit.resourceKind, startUnit.amount, true);
+            we_createUnit(context, CREATE_UNIT_ARGS_INIT(
+                .type=startUnit.type,
+                .x=startUnit.x,
+                .y=startUnit.y,
+                .player=startUnit.player,
+                .resourceKind=startUnit.resourceKind,
+                .amount=startUnit.amount,
+                .addToMap=true
+            ));
         }
     }
 
@@ -861,13 +870,13 @@ void wmap_enterMap(WarContext* context)
     wmm_createGameOverMenu(context);
     wmm_createQuitMenu(context);
     createDemoEndMenu(context);
-    wui_createUICursor(context, wstr_fromCString("cursor"), &(CreateUICursorArgs){
+    wui_createUICursor(context, wstr_fromCString("cursor"), CREATE_UI_CURSOR_ARGS_INIT(
         .type     = WAR_CURSOR_ARROW,
         .position = VEC2_ZERO,
-    });
+    ));
 
     if (!isDemo(context))
-        wa_createAudio(context, WAR_MUSIC_00, true);
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_MUSIC_00, .loop=true));
 }
 
 void wmap_leaveMap(WarContext* context)
@@ -1026,7 +1035,7 @@ static void updateSelectionFromList(WarContext* context, WarEntityList* newSelec
             }
             else
             {
-                wa_createAudio(context, WAR_UI_CLICK, false);
+                wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CLICK, .loop=false));
             }
         }
     }
@@ -1144,7 +1153,10 @@ void updateSelection(WarContext* context)
                         !wu_isCorpseUnit(context, entityUnderCursor) &&
                         !wst_isCollapsing(context, entityUnderCursor) &&
                         !wst_isGoingToCollapse(context, entityUnderCursor) &&
-                        !(wu_isWorkerUnit(context, entityUnderCursor) && wst_isInsideBuilding(context, entityUnderCursor)) &&
+                        !(
+                            wu_isWorkerUnit(context, entityUnderCursor) &&
+                            wst_isInsideBuilding(context, entityUnderCursor)
+                        ) &&
                         wmap_isUnitPartiallyVisible(context, map, entityUnderCursor))
                     {
                         WarEntityListAdd(&newSelectedEntities, entityUnderCursor);
@@ -1375,7 +1387,7 @@ void updateAddUnit(WarContext* context)
                 {
                     if (map->players[i].race == addingUnitRace)
                     {
-                        we_createUnit(context, map->addingUnitType, x, y, map->players[i].index, WAR_RESOURCE_NONE, 0, true);
+                        we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=map->addingUnitType, .x=x, .y=y, .player=map->players[i].index, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
                         break;
                     }
                 }
@@ -1857,6 +1869,7 @@ void updateStatus(WarContext* context)
                 we_isComponentEnabled(context, entity, COMP_BUTTON))
             {
                 WarButtonComponent* button = we_getButtonComponent(context, entity);
+                assert(button);
 
                 if (button->interactive && button->hot)
                 {
@@ -2179,7 +2192,7 @@ void updateMagic(WarContext* context)
 
                         if (unit->type == WAR_UNIT_SCORPION || unit->type == WAR_UNIT_SPIDER)
                         {
-                            wa_createAudioWithPosition(context, WAR_DEAD_SPIDER_SCORPION, position, false);
+                            wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_DEAD_SPIDER_SCORPION, .position=position, .hasPosition=true, .loop=false));
                         }
                     }
                 }

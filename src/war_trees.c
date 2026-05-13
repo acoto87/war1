@@ -277,7 +277,9 @@ WarEntity* we_createForest(WarContext* context)
     WarTreeListInit(&trees, WarTreeListDefaultOptions);
 
     WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
-    we_addSpriteComponent(context, entity, map->sprite);
+    we_addSpriteComponent(context, entity, WAR_SPRITE_COMPONENT_INIT(
+        .sprite = map->sprite
+    ));
     we_addForestComponent(context, entity, trees);
 
     return entity;

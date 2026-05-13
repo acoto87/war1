@@ -96,13 +96,13 @@ struct _WarTransformComponent
     vec2 scale;
 };
 
-#define WAR_TRANSFORM_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_TRANSFORM_COMPONENT_INIT_CONST(...) { \
     .position = {0},                               \
     .rotation = {0},                               \
-    .scale    = {0},                               \
+    .scale    = {1, 1},                            \
     __VA_ARGS__                                    \
 }
-#define WAR_TRANSFORM_COMPONENT_INIT(...) ((WarTransformComponent)WAR_TRANSFORM_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_TRANSFORM_COMPONENT_INIT(...) ((WarTransformComponent)WAR_TRANSFORM_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarSpriteComponent
 {
@@ -111,13 +111,13 @@ struct _WarSpriteComponent
     WarSprite sprite;
 };
 
-#define WAR_SPRITE_COMPONENT_INIT_FIELDS(...) { \
-    .resourceIndex = -1,                        \
+#define WAR_SPRITE_COMPONENT_INIT_CONST(...) { \
+    .resourceIndex = 0,                         \
     .frameIndex    = 0,                         \
     .sprite        = {0},                       \
     __VA_ARGS__                                 \
 }
-#define WAR_SPRITE_COMPONENT_INIT(...) ((WarSpriteComponent)WAR_SPRITE_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_SPRITE_COMPONENT_INIT(...) ((WarSpriteComponent)WAR_SPRITE_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarUnitComponent
 {
@@ -170,7 +170,7 @@ struct _WarUnitComponent
     f32 invulnerabilityTime;
 };
 
-#define WAR_UNIT_COMPONENT_INIT_FIELDS(...) {                  \
+#define WAR_UNIT_COMPONENT_INIT_CONST(...) {                  \
     .type                = 0,                              \
     .direction           = 0,                              \
     .tilex               = 0,                              \
@@ -201,7 +201,7 @@ struct _WarUnitComponent
     .invulnerabilityTime = 0,                              \
     __VA_ARGS__                                            \
 }
-#define WAR_UNIT_COMPONENT_INIT(...) ((WarUnitComponent)WAR_UNIT_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_UNIT_COMPONENT_INIT(...) ((WarUnitComponent)WAR_UNIT_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarAnimationsComponent
 {
@@ -232,18 +232,18 @@ struct _WarStateMachineComponent
 {
     WarState* currentState;
     WarState* nextState;
-    bool wst_leaveState;
-    bool wst_enterState;
+    bool leaveState;
+    bool enterState;
 };
 
-#define WAR_STATE_MACHINE_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_STATE_MACHINE_COMPONENT_INIT_CONST(...) { \
     .currentState   = NULL,                            \
     .nextState      = NULL,                            \
-    .wst_leaveState = false,                           \
-    .wst_enterState = false,                           \
+    .leaveState = false,                               \
+    .enterState = false,                               \
     __VA_ARGS__                                        \
 }
-#define WAR_STATE_MACHINE_COMPONENT_INIT(...) ((WarStateMachineComponent)WAR_STATE_MACHINE_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_STATE_MACHINE_COMPONENT_INIT(...) ((WarStateMachineComponent)WAR_STATE_MACHINE_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarUIComponent
 {
@@ -269,12 +269,7 @@ struct _WarTextComponent
     bool multiline;
 };
 
-// Compound-literal helper: fills in all defaults, then the caller's fields override
-// them (C99/C11 "last designated initialiser wins" rule).
-//
-// Usage:
-//   we_addTextComponent(ctx, e, WAR_TEXT_COMPONENT_INIT(.fontIndex = 1, .text = s));
-#define WAR_TEXT_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_TEXT_COMPONENT_INIT_CONST(...) { \
     .fontIndex       = 0,                                 \
     .fontSize        = 10,                                \
     .lineHeight      = 0,                                 \
@@ -291,7 +286,7 @@ struct _WarTextComponent
     .multiline       = false,                             \
     __VA_ARGS__                                           \
 }
-#define WAR_TEXT_COMPONENT_INIT(...) ((WarTextComponent)WAR_TEXT_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_TEXT_COMPONENT_INIT(...) ((WarTextComponent)WAR_TEXT_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarRectComponent
 {
@@ -299,12 +294,12 @@ struct _WarRectComponent
     WarColor color;
 };
 
-#define WAR_RECT_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_RECT_COMPONENT_INIT_CONST(...) { \
     .size  = {0},                             \
     .color = {0},                             \
     __VA_ARGS__                               \
 }
-#define WAR_RECT_COMPONENT_INIT(...) ((WarRectComponent)WAR_RECT_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_RECT_COMPONENT_INIT(...) ((WarRectComponent)WAR_RECT_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarButtonComponent
 {
@@ -322,7 +317,7 @@ struct _WarButtonComponent
     WarClickHandler clickHandler;
 };
 
-#define WAR_BUTTON_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_BUTTON_COMPONENT_INIT_CONST(...) { \
     .interactive    = true,                    \
     .hot            = false,                   \
     .active         = false,                   \
@@ -337,7 +332,7 @@ struct _WarButtonComponent
     .clickHandler   = NULL,                    \
     __VA_ARGS__                                \
 }
-#define WAR_BUTTON_COMPONENT_INIT(...) ((WarButtonComponent)WAR_BUTTON_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_BUTTON_COMPONENT_INIT(...) ((WarButtonComponent)WAR_BUTTON_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarCursorComponent
 {
@@ -345,12 +340,12 @@ struct _WarCursorComponent
     vec2 hot;
 };
 
-#define WAR_CURSOR_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_CURSOR_COMPONENT_INIT_CONST(...) { \
     .type = WAR_CURSOR_ARROW,                   \
     .hot  = {0},                                \
     __VA_ARGS__                                 \
 }
-#define WAR_CURSOR_COMPONENT_INIT(...) ((WarCursorComponent)WAR_CURSOR_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_CURSOR_COMPONENT_INIT(...) ((WarCursorComponent)WAR_CURSOR_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarProjectileComponent
 {
@@ -362,7 +357,7 @@ struct _WarProjectileComponent
     s32 speed;
 };
 
-#define WAR_PROJECTILE_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_PROJECTILE_COMPONENT_INIT_CONST(...) { \
     .type           = 0,                            \
     .sourceEntityId = 0,                            \
     .targetEntityId = 0,                            \
@@ -371,7 +366,7 @@ struct _WarProjectileComponent
     .speed          = 0,                            \
     __VA_ARGS__                                     \
 }
-#define WAR_PROJECTILE_COMPONENT_INIT(...) ((WarProjectileComponent)WAR_PROJECTILE_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_PROJECTILE_COMPONENT_INIT(...) ((WarProjectileComponent)WAR_PROJECTILE_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarPoisonCloudComponent
 {
@@ -381,14 +376,14 @@ struct _WarPoisonCloudComponent
     String animName;
 };
 
-#define WAR_POISON_CLOUD_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_POISON_CLOUD_COMPONENT_INIT_CONST(...) { \
     .position   = {0},                               \
     .time       = 0,                                 \
     .damageTime = 0,                                 \
     .animName   = {0},                               \
     __VA_ARGS__                                      \
 }
-#define WAR_POISON_CLOUD_COMPONENT_INIT(...) ((WarPoisonCloudComponent)WAR_POISON_CLOUD_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_POISON_CLOUD_COMPONENT_INIT(...) ((WarPoisonCloudComponent)WAR_POISON_CLOUD_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarSightComponent
 {
@@ -396,12 +391,12 @@ struct _WarSightComponent
     f32 time; // time in seconds left of the spell
 };
 
-#define WAR_SIGHT_COMPONENT_INIT_FIELDS(...) { \
+#define WAR_SIGHT_COMPONENT_INIT_CONST(...) { \
     .position = {0},                           \
     .time     = 0,                             \
     __VA_ARGS__                                \
 }
-#define WAR_SIGHT_COMPONENT_INIT(...) ((WarSightComponent)WAR_SIGHT_COMPONENT_INIT_FIELDS(__VA_ARGS__))
+#define WAR_SIGHT_COMPONENT_INIT(...) ((WarSightComponent)WAR_SIGHT_COMPONENT_INIT_CONST(__VA_ARGS__))
 
 struct _WarEntity
 {
@@ -496,63 +491,60 @@ WarProjectileComponent*   we_getProjectileComponent(WarContext* context, const W
 WarPoisonCloudComponent*  we_getPoisonCloudComponent(WarContext* context, const WarEntity* entity);
 WarSightComponent*        we_getSightComponent(WarContext* context, const WarEntity* entity);
 
-void we_addTransformComponent(WarContext* context, WarEntity* entity, vec2 position);
+WarTransformComponent* we_addTransformComponent(WarContext* context, WarEntity* entity, WarTransformComponent params);
 void we_removeTransformComponent(WarContext* context, WarEntity* entity);
 
-void we_addSpriteComponent(WarContext* context, WarEntity* entity, WarSprite sprite);
-void we_addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef);
+WarSpriteComponent* we_addSpriteComponent(WarContext* context, WarEntity* entity, WarSpriteComponent params);
+WarSpriteComponent* we_addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef);
 void we_removeSpriteComponent(WarContext* context, WarEntity* entity);
 
-void we_addUnitComponent(WarContext* context, WarEntity* entity, WarUnitComponent params);
+WarUnitComponent* we_addUnitComponent(WarContext* context, WarEntity* entity, WarUnitComponent params);
 void we_removeUnitComponent(WarContext* context, WarEntity* entity);
 
-void we_addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces);
+WarRoadComponent* we_addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces);
 void we_removeRoadComponent(WarContext* context, WarEntity* entity);
 
-void we_addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList pieces);
+WarWallComponent* we_addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList pieces);
 void we_removeWallComponent(WarContext* context, WarEntity* entity);
 
-void we_addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces);
+WarRuinComponent* we_addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces);
 void we_removeRuinComponent(WarContext* context, WarEntity* entity);
 
-void we_addForestComponent(WarContext* context, WarEntity* entity, WarTreeList trees);
+WarForestComponent* we_addForestComponent(WarContext* context, WarEntity* entity, WarTreeList trees);
 void we_removeForestComponent(WarContext* context, WarEntity* entity);
 
-void we_addStateMachineComponent(WarContext* context, WarEntity* entity);
+WarStateMachineComponent* we_addStateMachineComponent(WarContext* context, WarEntity* entity);
 void we_removeStateMachineComponent(WarContext* context, WarEntity* entity);
 
-void we_addAnimationsComponent(WarContext* context, WarEntity* entity);
+WarAnimationsComponent* we_addAnimationsComponent(WarContext* context, WarEntity* entity);
 void we_removeAnimationsComponent(WarContext* context, WarEntity* entity);
 
-void we_addUIComponent(WarContext* context, WarEntity* entity, String name);
+WarUIComponent* we_addUIComponent(WarContext* context, WarEntity* entity, String name);
 void we_removeUIComponent(WarContext* context, WarEntity* entity);
 
-void we_addTextComponent(WarContext* context, WarEntity* entity, WarTextComponent params);
+WarTextComponent* we_addTextComponent(WarContext* context, WarEntity* entity, WarTextComponent params);
 void we_removeTextComponent(WarContext* context, WarEntity* entity);
 
-void we_addRectComponent(WarContext* context, WarEntity* entity, WarRectComponent params);
+WarRectComponent* we_addRectComponent(WarContext* context, WarEntity* entity, WarRectComponent params);
 void we_removeRectComponent(WarContext* context, WarEntity* entity);
 
-void we_addButtonComponent(WarContext* context, WarEntity* entity, WarButtonComponent params);
-void we_addButtonComponentFromResource(WarContext* context,
-                                    WarEntity* entity,
-                                    WarSpriteResourceRef normalRef,
-                                    WarSpriteResourceRef pressedRef);
+WarButtonComponent* we_addButtonComponent(WarContext* context, WarEntity* entity, WarButtonComponent params);
+WarButtonComponent* we_addButtonComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef normalRef, WarSpriteResourceRef pressedRef);
 void we_removeButtonComponent(WarContext* context, WarEntity* entity);
 
-void we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioComponent params);
+WarAudioComponent* we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioComponent params);
 void we_removeAudioComponent(WarContext* context, WarEntity* entity);
 
-void we_addCursorComponent(WarContext* context, WarEntity* entity, WarCursorComponent params);
+WarCursorComponent* we_addCursorComponent(WarContext* context, WarEntity* entity, WarCursorComponent params);
 void we_removeCursorComponent(WarContext* context, WarEntity* entity);
 
-void we_addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileComponent params);
+WarProjectileComponent* we_addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileComponent params);
 void we_removeProjectileComponent(WarContext* context, WarEntity* entity);
 
-void we_addPoisonCloudComponent(WarContext* context, WarEntity* entity, WarPoisonCloudComponent params);
+WarPoisonCloudComponent* we_addPoisonCloudComponent(WarContext* context, WarEntity* entity, WarPoisonCloudComponent params);
 void we_removePoisonCloudComponent(WarContext* context, WarEntity* entity);
 
-void we_addSightComponent(WarContext* context, WarEntity* entity, WarSightComponent params);
+WarSightComponent* we_addSightComponent(WarContext* context, WarEntity* entity, WarSightComponent params);
 void we_removeSightComponent(WarContext* context, WarEntity* entity);
 
 // Roads
@@ -594,12 +586,37 @@ s32 we_chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amoun
 
 // Entities
 WarEntity* we_createEntity(WarContext* context, WarEntityType type, bool addToMap);
-WarEntity* we_createUnit(WarContext* context, WarUnitType type,
-                      s32 x, s32 y, u8 player,
-                      WarResourceKind resourceKind, u32 amount,
-                      bool addToMap);
-WarEntity* we_createDude(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToTrain);
-WarEntity* we_createBuilding(WarContext* context, WarUnitType type, s32 x, s32 y, u8 player, bool isGoingToBuild);
+
+typedef struct {
+    WarUnitType type;
+    s32 x;
+    s32 y;
+    u8 player;
+    WarResourceKind resourceKind;
+    u32 amount;
+    bool addToMap;
+    bool isGoingToTrain;
+    bool isGoingToBuild;
+} CreateUnitArgs;
+
+#define CREATE_UNIT_ARGS_INIT_CONST(...) { \
+    .type = 0, \
+    .x = 0, \
+    .y = 0, \
+    .player = 0, \
+    .resourceKind = WAR_RESOURCE_NONE, \
+    .amount = 0, \
+    .addToMap = true, \
+    .isGoingToTrain = false, \
+    .isGoingToBuild = false, \
+    __VA_ARGS__ \
+}
+#define CREATE_UNIT_ARGS_INIT(...) (&(CreateUnitArgs)CREATE_UNIT_ARGS_INIT_CONST(__VA_ARGS__))
+
+WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args);
+WarEntity* we_createDude(WarContext* context, const CreateUnitArgs* args);
+WarEntity* we_createBuilding(WarContext* context, const CreateUnitArgs* args);
+
 WarEntity* we_findEntity(WarContext* context, WarEntityId id);
 WarEntity* we_findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);
 WarEntity* we_findUIEntity(WarContext* context, StringView name);

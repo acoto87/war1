@@ -46,8 +46,15 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
         WarUnitType corpseType = wu_getUnitRace(context, entity) == WAR_RACE_ORCS
             ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
 
-        WarEntity* corpse = we_createUnit(context, corpseType, (s32)position.x, (s32)position.y, 4,
-                                       WAR_RESOURCE_NONE, 0, true);
+        WarEntity* corpse = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
+            .type=corpseType,
+            .x=(s32)position.x,
+            .y=(s32)position.y,
+            .player=4,
+            .resourceKind=WAR_RESOURCE_NONE,
+            .amount=0,
+            .addToMap=true
+        ));
 
         wu_setUnitDirection(context, corpse, wu_getUnitDirection(context, entity));
 

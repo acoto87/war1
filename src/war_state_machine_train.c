@@ -84,7 +84,12 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         unit->buildPercent = 1;
 
         // ...create the unit
-        WarEntity* unitToBuild = we_createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
+        WarEntity* unitToBuild = we_createDude(context, CREATE_UNIT_ARGS_INIT(
+            .type=state->train.unitToBuild,
+            .x=0, .y=0,
+            .player=unit->player,
+            .isGoingToTrain=false
+        ));
 
         // ...find an empty position to put it
         vec2 position = wu_getUnitCenterPosition(context, entity, true);
@@ -98,7 +103,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         }
 
         WarAudioId audioId = wu_isHumanUnit(context, unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
-        wa_createAudio(context, audioId, false);
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
 
         return;
     }

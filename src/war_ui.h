@@ -18,6 +18,11 @@ void wui_setUIRectWidth(WarContext* context, WarEntity* uiRect, s32 width);
 void wui_clearUITooltip(WarContext* context, WarEntity* uiButton);
 void wui_setUITooltip(WarContext* context, WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text);
 
+#define setUITextHighlight(ctx, uiEntity, index, count) \
+    do { (we_getTextComponent((ctx), (uiEntity))->highlightIndex = (index)); \
+       (we_getTextComponent((ctx), (uiEntity))->highlightCount = (count)); } while (0)
+
+
 void setUIEntityStatus(WarContext* ctx, WarEntity* uiEntity, bool value);
 
 void setUIButtonStatus(WarContext* ctx, WarEntity* uiEntity, bool value);
@@ -32,49 +37,84 @@ void wui_setUIEntityStatusByName(WarContext* context, StringView name, bool enab
 
 typedef struct
 {
-    vec2     position;
-    String   text;
-    s32      fontIndex;
-    f32      fontSize;
-    f32      lineHeight;
+    vec2 position;
+    vec2 rotation;
+    vec2 scale;
+    String text;
+    s32 fontIndex;
+    f32 fontSize;
+    f32 lineHeight;
     WarColor fontColor;
-    vec2     boundings;
+    WarColor highlightColor;
+    s32 highlightIndex;
+    s32 highlightCount;
+    vec2 boundings;
     WarTextAlignment horizontalAlign;
     WarTextAlignment verticalAlign;
     WarTextAlignment lineAlign;
     WarTextWrapping  wrapping;
     WarTextTrimming  trimming;
-    bool     multiline;
+    bool multiline;
 } CreateUITextArgs;
 
 typedef struct
 {
-    vec2     position;
-    vec2     size;
+    vec2 position;
+    vec2 rotation;
+    vec2 scale;
+    vec2 size;
     WarColor color;
 } CreateUIRectArgs;
 
 typedef struct
 {
     WarSpriteResourceRef spriteRef;
-    vec2                 position;
+    vec2 position;
+    vec2 rotation;
+    vec2 scale;
 } CreateUIImageArgs;
 
 typedef struct
 {
     WarCursorType type;
-    vec2          position;
+    vec2 position;
+    vec2 rotation;
+    vec2 scale;
+    s32 frameIndex;
 } CreateUICursorArgs;
 
 typedef struct
 {
-    s32                  fontIndex;
-    f32                  fontSize;
-    String               text;
+    vec2 position;
+    vec2 rotation;
+    vec2 scale;
+
+    s32 fontIndex;
+    f32 fontSize;
+    String text;
+    f32 lineHeight;
+    WarColor fontColor;
+    WarColor highlightColor;
+    s32 highlightIndex;
+    s32 highlightCount;
+    WarTextAlignment horizontalAlign;
+    WarTextAlignment verticalAlign;
+    WarTextAlignment lineAlign;
+    WarTextWrapping wrapping;
+    WarTextTrimming trimming;
+
     WarSpriteResourceRef backgroundNormalRef;
     WarSpriteResourceRef backgroundPressedRef;
     WarSpriteResourceRef foregroundRef;
-    vec2                 position;
+
+    bool interactive;
+    WarKeys hotKey;
+    String tooltip;
+    s32 tooltipHighlightIndex;
+    s32 tooltipHighlightCount;
+    s32 gold;
+    s32 wood;
+    WarClickHandler clickHandler;
 } CreateUITextButtonArgs;
 
 typedef struct
@@ -82,11 +122,79 @@ typedef struct
     WarSpriteResourceRef backgroundNormalRef;
     WarSpriteResourceRef backgroundPressedRef;
     WarSpriteResourceRef foregroundRef;
-    vec2                 position;
+    vec2 position;
+    vec2 rotation;
+    vec2 scale;
+
+    bool interactive;
+    WarKeys hotKey;
+    String tooltip;
+    s32 tooltipHighlightIndex;
+    s32 tooltipHighlightCount;
+    s32 gold;
+    s32 wood;
+    WarClickHandler clickHandler;
 } CreateUIImageButtonArgs;
 
-WarEntity* wui_createUIText(WarContext* context, String name, const CreateUITextArgs* args);
+#define CREATE_UI_TEXT_ARGS_INIT_CONST(...) { \
+    .scale          = {1, 1}, \
+    .fontSize       = 10, \
+    .fontColor      = FONT_NORMAL_COLOR_INIT, \
+    .highlightColor = FONT_HIGHLIGHT_COLOR_INIT, \
+    .highlightIndex = NO_HIGHLIGHT, \
+    .horizontalAlign = WAR_TEXT_ALIGN_LEFT, \
+    .verticalAlign   = WAR_TEXT_ALIGN_TOP, \
+    .lineAlign       = WAR_TEXT_ALIGN_LEFT, \
+    .wrapping         = WAR_TEXT_WRAP_NONE, \
+    __VA_ARGS__ \
+}
+#define CREATE_UI_TEXT_ARGS_INIT(...) (&(CreateUITextArgs)CREATE_UI_TEXT_ARGS_INIT_CONST(__VA_ARGS__))
 
+#define CREATE_UI_RECT_ARGS_INIT_CONST(...) { \
+    .scale = {1, 1}, \
+    __VA_ARGS__ \
+}
+#define CREATE_UI_RECT_ARGS_INIT(...) (&(CreateUIRectArgs)CREATE_UI_RECT_ARGS_INIT_CONST(__VA_ARGS__))
+
+#define CREATE_UI_IMAGE_ARGS_INIT_CONST(...) { \
+    .scale = {1, 1}, \
+    __VA_ARGS__ \
+}
+#define CREATE_UI_IMAGE_ARGS_INIT(...) (&(CreateUIImageArgs)CREATE_UI_IMAGE_ARGS_INIT_CONST(__VA_ARGS__))
+
+#define CREATE_UI_CURSOR_ARGS_INIT_CONST(...) { \
+    .scale = {1, 1}, \
+    __VA_ARGS__ \
+}
+#define CREATE_UI_CURSOR_ARGS_INIT(...) (&(CreateUICursorArgs)CREATE_UI_CURSOR_ARGS_INIT_CONST(__VA_ARGS__))
+
+#define CREATE_UI_TEXT_BUTTON_ARGS_INIT_CONST(...) { \
+    .scale                 = {1, 1}, \
+    .fontSize              = 10, \
+    .fontColor             = FONT_NORMAL_COLOR_INIT, \
+    .highlightColor        = FONT_HIGHLIGHT_COLOR_INIT, \
+    .highlightIndex        = NO_HIGHLIGHT, \
+    .foregroundRef         = { -1, 0, {0} }, \
+    .interactive           = true, \
+    .hotKey                = WAR_KEY_NONE, \
+    .tooltipHighlightIndex = NO_HIGHLIGHT, \
+    .horizontalAlign       = WAR_TEXT_ALIGN_CENTER, \
+    .verticalAlign         = WAR_TEXT_ALIGN_MIDDLE, \
+    __VA_ARGS__ \
+}
+#define CREATE_UI_TEXT_BUTTON_ARGS_INIT(...) (&(CreateUITextButtonArgs)CREATE_UI_TEXT_BUTTON_ARGS_INIT_CONST(__VA_ARGS__))
+
+#define CREATE_UI_IMAGE_BUTTON_ARGS_INIT_CONST(...) { \
+    .scale                 = {1, 1}, \
+    .foregroundRef         = { -1, 0, {0} }, \
+    .interactive           = true, \
+    .hotKey                = WAR_KEY_NONE, \
+    .tooltipHighlightIndex = NO_HIGHLIGHT, \
+    __VA_ARGS__ \
+}
+#define CREATE_UI_IMAGE_BUTTON_ARGS_INIT(...) (&(CreateUIImageButtonArgs)CREATE_UI_IMAGE_BUTTON_ARGS_INIT_CONST(__VA_ARGS__))
+
+WarEntity* wui_createUIText(WarContext* context, String name, const CreateUITextArgs* args);
 WarEntity* wui_createUIRect(WarContext* context, String name, const CreateUIRectArgs* args);
 WarEntity* wui_createUIImage(WarContext* context, String name, const CreateUIImageArgs* args);
 WarEntity* wui_createUICursor(WarContext* context, String name, const CreateUICursorArgs* args);

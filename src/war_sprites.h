@@ -30,7 +30,7 @@ struct _WarSpriteResourceRef
     s32 frameIndices[MAX_SPRITE_FRAME_COUNT];
 };
 
-WarSpriteResourceRef createSpriteResourceRef(s32 resourceIndex, s32 frameIndicesCount, s32 frameIndices[])
+WarSpriteResourceRef wspr_createSpriteResourceRef(s32 resourceIndex, s32 frameIndicesCount, s32 frameIndices[])
 {
     WarSpriteResourceRef spriteResourceRef = (WarSpriteResourceRef){0};
     spriteResourceRef.resourceIndex = resourceIndex;
@@ -42,9 +42,9 @@ WarSpriteResourceRef createSpriteResourceRef(s32 resourceIndex, s32 frameIndices
     return spriteResourceRef;
 }
 
-#define invalidResourceRef() createSpriteResourceRef(-1, 0, NULL)
-#define imageResourceRef(resourceIndex) createSpriteResourceRef((resourceIndex), 0, NULL)
-#define spriteResourceRef(resourceIndex, spriteIndex) createSpriteResourceRef((resourceIndex), 1, arrayArg(s32, (spriteIndex)))
+#define invalidResourceRef() wspr_createSpriteResourceRef(-1, 0, NULL)
+#define imageResourceRef(resourceIndex) wspr_createSpriteResourceRef((resourceIndex), 0, NULL)
+#define spriteResourceRef(resourceIndex, spriteIndex) wspr_createSpriteResourceRef((resourceIndex), 1, arrayArg(s32, (spriteIndex)))
 
 WarSprite wspr_createSprite(WarContext* context, u32 width, u32 height, u8 data[]);
 WarSprite wspr_createSpriteFromFrames(WarContext* context, u32 frameWidth, u32 frameHeight, u32 frameCount, WarSpriteFrame frames[]);

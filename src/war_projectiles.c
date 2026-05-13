@@ -320,6 +320,7 @@ void wproj_updateProjectile(WarContext* context, WarEntity* entity)
         we_isComponentEnabled(context, entity, COMP_PROJECTILE))
     {
         WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+        assert(projectile);
 
         if (projectile->type == WAR_PROJECTILE_RAIN_OF_FIRE)
         {
@@ -335,7 +336,7 @@ void wproj_updateProjectile(WarContext* context, WarEntity* entity)
                 we_addAnimationsComponent(context, animEntity);
 
                 wanim_createRainOfFireExplosionAnimation(context, animEntity, projectile->target);
-                wa_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
+                wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_CATAPULT_FIRE_EXPLOSION, .position=projectile->target, .hasPosition=true, .loop=false));
                 we_removeEntityById(context, entity->id);
             }
         }
@@ -355,14 +356,14 @@ void wproj_updateProjectile(WarContext* context, WarEntity* entity)
                     we_addAnimationsComponent(context, animEntity);
 
                     wanim_createExplosionAnimation(context, animEntity, projectile->target);
-                    wa_createAudioWithPosition(context, WAR_CATAPULT_FIRE_EXPLOSION, projectile->target, false);
+                    wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_CATAPULT_FIRE_EXPLOSION, .position=projectile->target, .hasPosition=true, .loop=false));
                 }
                 else
                 {
                     wproj_doProjectileTargetDamage(context, entity);
 
                     if (projectile->type == WAR_PROJECTILE_ARROW)
-                        wa_createAudioWithPosition(context, WAR_ARROW_SPEAR_HIT, projectile->target, false);
+                        wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_ARROW_SPEAR_HIT, .position=projectile->target, .hasPosition=true, .loop=false));
                 }
 
                 we_removeEntityById(context, entity->id);
@@ -378,7 +379,9 @@ WarEntity* wproj_createProjectile(WarContext* context, WarProjectileType type,
     WarProjectileData data = wproj_getProjectileData(type);
 
     WarEntity* projectile = we_createEntity(context, WAR_ENTITY_TYPE_PROJECTILE, true);
-    we_addTransformComponent(context, projectile, origin);
+    we_addTransformComponent(context, projectile, WAR_TRANSFORM_COMPONENT_INIT(
+        .position = origin,
+    ));
     we_addSpriteComponentFromResource(context, projectile, imageResourceRef(data.resourceIndex));
     we_addProjectileComponent(context, projectile, WAR_PROJECTILE_COMPONENT_INIT(
         .type           = type,

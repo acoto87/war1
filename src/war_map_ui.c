@@ -20,8 +20,6 @@ void wmui_createMapUI(WarContext* context)
     vec2 rightPanel = RECT_TOP_LEFT(map->rightPanel);
     vec2 bottomPanel = RECT_TOP_LEFT(map->bottomPanel);
     vec2 minimapPanel = RECT_TOP_LEFT(map->minimapPanel);
-
-    WarSpriteResourceRef invalidRef = invalidResourceRef();
     WarSpriteResourceRef normalRef = imageResourceRef(364);
     WarSpriteResourceRef pressedRef = imageResourceRef(365);
     WarSpriteResourceRef portraitsRef = imageResourceRef(361);
@@ -35,225 +33,224 @@ void wmui_createMapUI(WarContext* context)
     WarEntity* uiEntity;
 
     // panels
-    wui_createUIImage(context, wstr_fromCString("panelLeftTop"), &(CreateUIImageArgs){
+    wui_createUIImage(context, wstr_fromCString("panelLeftTop"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRefFromPlayer(player, 224, 225),
         .position  = leftTopPanel,
-    });
-    wui_createUIImage(context, wstr_fromCString("panelLeftBottom"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("panelLeftBottom"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRefFromPlayer(player, 226, 227),
         .position  = leftBottomPanel,
-    });
-    wui_createUIImage(context, wstr_fromCString("panelTop"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("panelTop"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRefFromPlayer(player, 218, 219),
         .position  = topPanel,
-    });
-    wui_createUIImage(context, wstr_fromCString("panelRight"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("panelRight"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRefFromPlayer(player, 220, 221),
         .position  = rightPanel,
-    });
-    wui_createUIImage(context, wstr_fromCString("panelBottom"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("panelBottom"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRefFromPlayer(player, 222, 223),
         .position  = bottomPanel,
-    });
+    ));
 
     // minimap
     wmui_createUIMinimap(context, wstr_fromCString("minimap"), minimapPanel);
 
     // top panel images
-    wui_createUIImage(context, wstr_fromCString("imgGold"), &(CreateUIImageArgs){
+    wui_createUIImage(context, wstr_fromCString("imgGold"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(406),
         .position  = vec2_addv(topPanel, vec2i(201, 1)),
-    });
-    wui_createUIImage(context, wstr_fromCString("imgLumber"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgLumber"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(407),
         .position  = vec2_addv(topPanel, vec2i(102, 0)),
-    });
+    ));
 
     // top panel texts
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtGold"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtGold"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(topPanel, vec2i(135, 2)),
         .fontSize = 6,
-    });
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtWood"), &(CreateUITextArgs){
+    ));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtWood"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(topPanel, vec2i(24, 2)),
         .fontSize = 6,
-    });
+    ));
 
     // status text
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtStatus"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtStatus"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(bottomPanel, vec2i(2, 5)),
         .fontSize = 6,
-    });
-    wui_createUIImage(context, wstr_fromCString("imgStatusWood"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgStatusWood"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(407),
         .position  = vec2_addv(bottomPanel, vec2i(163, 3)),
-    });
-    wui_createUIImage(context, wstr_fromCString("imgStatusGold"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgStatusGold"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(406),
         .position  = vec2_addv(bottomPanel, vec2i(200, 5)),
-    });
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtStatusWood"), &(CreateUITextArgs){
+    ));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtStatusWood"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(bottomPanel, vec2i(179, 5)),
         .fontSize = 6,
-    });
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtStatusGold"), &(CreateUITextArgs){
+    ));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtStatusGold"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(bottomPanel, vec2i(218, 5)),
         .fontSize = 6,
-    });
-    wui_createUIRect(context, wstr_fromCString("txtStatusCursor"), &(CreateUIRectArgs){
+    ));
+    wui_createUIRect(context, wstr_fromCString("txtStatusCursor"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2_addv(bottomPanel, vec2i(2, 4)),
         .size     = vec2i(1, 7),
         .color    = WAR_COLOR_WHITE,
-    });
+    ));
 
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), CREATE_UI_TEXT_ARGS_INIT(
         .position  = vec2_addv(bottomPanel, vec2i(15, -20)),
         .fontIndex = 1,
         .fontSize  = 8,
         .fontColor = WAR_COLOR_YELLOW,
-    });
+    ));
     setUIEntityStatus(context, uiEntity, false);
 
     // selected unit(s) info
-    wui_createUIImage(context, wstr_fromCString("imgUnitInfo"), &(CreateUIImageArgs){
+    wui_createUIImage(context, wstr_fromCString("imgUnitInfo"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRefFromPlayer(player, 360, 359),
         .position  = vec2_addv(leftBottomPanel, vec2i(2, 0)),
-    });
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait0"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait0"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = portraitsRef,
         .position  = vec2_addv(leftBottomPanel, vec2i(6, 4)),
-    });
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait1"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait1"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = portraitsRef,
         .position  = vec2_addv(leftBottomPanel, vec2i(4, 1)),
-    });
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait2"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait2"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = portraitsRef,
         .position  = vec2_addv(leftBottomPanel, vec2i(38, 1)),
-    });
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait3"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait3"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = portraitsRef,
         .position  = vec2_addv(leftBottomPanel, vec2i(4, 23)),
-    });
-    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait4"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgUnitPortrait4"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = portraitsRef,
         .position  = vec2_addv(leftBottomPanel, vec2i(38, 23)),
-    });
-    wui_createUIImage(context, wstr_fromCString("imgUnitInfoLife"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("imgUnitInfoLife"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRefFromPlayer(player, 360, 359),
         .position  = vec2_addv(leftBottomPanel, vec2i(3, 16)),
-    });
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtUnitName"), &(CreateUITextArgs){
+    ));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtUnitName"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(6, 26)),
         .fontSize = 6,
-    });
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar0"), &(CreateUIRectArgs){
+    ));
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar0"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(37, 20)),
         .size     = vec2i(27, 3),
         .color    = WAR_COLOR_GREEN,
-    });
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar1"), &(CreateUIRectArgs){
+    ));
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar1"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(4, 17)),
         .size     = vec2i(27, 3),
         .color    = WAR_COLOR_GREEN,
-    });
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar2"), &(CreateUIRectArgs){
+    ));
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar2"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(38, 17)),
         .size     = vec2i(27, 3),
         .color    = WAR_COLOR_GREEN,
-    });
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar3"), &(CreateUIRectArgs){
+    ));
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar3"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(4, 39)),
         .size     = vec2i(27, 3),
         .color    = WAR_COLOR_GREEN,
-    });
-    wui_createUIRect(context, wstr_fromCString("rectLifeBar4"), &(CreateUIRectArgs){
+    ));
+    wui_createUIRect(context, wstr_fromCString("rectLifeBar4"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(38, 39)),
         .size     = vec2i(27, 3),
         .color    = WAR_COLOR_GREEN,
-    });
-    wui_createUIRect(context, wstr_fromCString("rectMagicBar"), &(CreateUIRectArgs){
+    ));
+    wui_createUIRect(context, wstr_fromCString("rectMagicBar"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(37, 9)),
         .size     = vec2i(27, 3),
         .color    = WAR_COLOR_GREEN,
-    });
-    wui_createUIRect(context, wstr_fromCString("rectPercentBar"), &(CreateUIRectArgs){
+    ));
+    wui_createUIRect(context, wstr_fromCString("rectPercentBar"), CREATE_UI_RECT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(4, 37)),
         .size     = vec2i(62, 5),
         .color    = WAR_COLOR_GREEN,
-    });
-    wui_createUIImage(context, wstr_fromCString("rectPercentText"), &(CreateUIImageArgs){
+    ));
+    wui_createUIImage(context, wstr_fromCString("rectPercentText"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(410),
         .position  = vec2_addv(leftBottomPanel, vec2i(15, 37)),
-    });
+    ));
 
     // texts in the command area
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCommand0"), &(CreateUITextArgs){
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCommand0"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(3, 46)),
         .fontSize = 6,
-    });
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCommand1"), &(CreateUITextArgs){
+    ));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCommand1"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(3, 56)),
         .fontSize = 6,
-    });
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCommand2"), &(CreateUITextArgs){
+    ));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCommand2"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(7, 64)),
         .fontSize = 6,
-    });
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCommand3"), &(CreateUITextArgs){
+    ));
+    uiEntity = wui_createUIText(context, wstr_fromCString("txtCommand3"), CREATE_UI_TEXT_ARGS_INIT(
         .position = vec2_addv(leftBottomPanel, vec2i(11, 54)),
         .fontSize = 6,
-    });
+    ));
 
     // command buttons
-    wui_createUIImageButton(context, wstr_fromCString("btnCommand0"), &(CreateUIImageButtonArgs){
+    wui_createUIImageButton(context, wstr_fromCString("btnCommand0"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = normalRef,
         .backgroundPressedRef = pressedRef,
         .foregroundRef        = portraitsRef,
         .position             = vec2_addv(leftBottomPanel, vec2i(2, 44)),
-    });
+    ));
 
-    wui_createUIImageButton(context, wstr_fromCString("btnCommand1"), &(CreateUIImageButtonArgs){
+    wui_createUIImageButton(context, wstr_fromCString("btnCommand1"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = normalRef,
         .backgroundPressedRef = pressedRef,
         .foregroundRef        = portraitsRef,
         .position             = vec2_addv(leftBottomPanel, vec2i(36, 44)),
-    });
+    ));
 
-    wui_createUIImageButton(context, wstr_fromCString("btnCommand2"), &(CreateUIImageButtonArgs){
+    wui_createUIImageButton(context, wstr_fromCString("btnCommand2"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = normalRef,
         .backgroundPressedRef = pressedRef,
         .foregroundRef        = portraitsRef,
         .position             = vec2_addv(leftBottomPanel, vec2i(2, 67)),
-    });
+    ));
 
-    wui_createUIImageButton(context, wstr_fromCString("btnCommand3"), &(CreateUIImageButtonArgs){
+    wui_createUIImageButton(context, wstr_fromCString("btnCommand3"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = normalRef,
         .backgroundPressedRef = pressedRef,
         .foregroundRef        = portraitsRef,
         .position             = vec2_addv(leftBottomPanel, vec2i(36, 67)),
-    });
+    ));
 
-    wui_createUIImageButton(context, wstr_fromCString("btnCommand4"), &(CreateUIImageButtonArgs){
+    wui_createUIImageButton(context, wstr_fromCString("btnCommand4"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = normalRef,
         .backgroundPressedRef = pressedRef,
         .foregroundRef        = portraitsRef,
         .position             = vec2_addv(leftBottomPanel, vec2i(2, 90)),
-    });
+    ));
 
-    wui_createUIImageButton(context, wstr_fromCString("btnCommand5"), &(CreateUIImageButtonArgs){
+    wui_createUIImageButton(context, wstr_fromCString("btnCommand5"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = normalRef,
         .backgroundPressedRef = pressedRef,
         .foregroundRef        = portraitsRef,
         .position             = vec2_addv(leftBottomPanel, vec2i(36, 90)),
-    });
+    ));
 
-    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnMenu"), &(CreateUIImageButtonArgs){
+    uiEntity = wui_createUIImageButton(context, wstr_fromCString("btnMenu"), CREATE_UI_IMAGE_BUTTON_ARGS_INIT(
         .backgroundNormalRef  = imageResourceRef(362),
         .backgroundPressedRef = imageResourceRef(363),
-        .foregroundRef        = invalidRef,
         .position             = vec2_addv(leftBottomPanel, vec2i(3, 116)),
-    });
+    ));
     wui_setUITooltip(context, uiEntity, 6, 3, wstr_fromCString("MENU (F10)"));
     setUIButtonClickHandler(context, uiEntity, wmm_handleMenu);
     setUIButtonHotKey(context, uiEntity, WAR_KEY_F10);
@@ -262,7 +259,9 @@ void wmui_createMapUI(WarContext* context)
 WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
 {
     WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_MINIMAP, true);
-    we_addTransformComponent(context, entity, position);
+    we_addTransformComponent(context, entity, WAR_TRANSFORM_COMPONENT_INIT(
+        .position = position,
+    ));
     we_addUIComponent(context, entity, name);
 
     return entity;

@@ -102,7 +102,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     we_addAnimationsComponent(context, animEntity);
 
                     wanim_createSpellAnimation(context, animEntity, targetPosition);
-                    wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                    wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
                 }
 
                 WarState* idleState = wst_createIdleState(context, entity, true);
@@ -126,7 +126,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     we_addAnimationsComponent(context, sight);
 
                     wanim_createSpellAnimation(context, sight, targetPosition);
-                    wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                    wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
                 }
 
                 WarState* idleState = wst_createIdleState(context, entity, true);
@@ -154,7 +154,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         we_addAnimationsComponent(context, animEntity);
 
                         wanim_createSpellAnimation(context, animEntity, targetPosition);
-                        wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                        wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
                     }
                 }
 
@@ -204,8 +204,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         if (we_decreaseUnitMana(context, entity, stats.manaCost))
                         {
                             vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, true);
-                            we_createUnit(context, WAR_UNIT_SKELETON, (s32)targetPosition.x, (s32)targetPosition.y,
-                                       unit->player, WAR_RESOURCE_NONE, 0, true);
+                            we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=WAR_UNIT_SKELETON, .x=(s32)targetPosition.x, .y=(s32)targetPosition.y, .player=unit->player, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
 
                             targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
 
@@ -213,7 +212,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                             we_addAnimationsComponent(context, animEntity);
 
                             wanim_createSpellAnimation(context, animEntity, targetPosition);
-                            wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                            wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
 
                             we_removeEntityById(context, targetEntity->id);
                         }
@@ -248,7 +247,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         we_addAnimationsComponent(context, animEntity);
 
                         wanim_createSpellAnimation(context, animEntity, targetPosition);
-                        wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                        wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
                     }
                 }
 
@@ -272,7 +271,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     we_addAnimationsComponent(context, poisonCloud);
 
                     wanim_createPoisonCloudAnimation(context, poisonCloud, targetPosition);
-                    wa_createAudioWithPosition(context, WAR_NORMAL_SPELL, targetPosition, false);
+                    wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
                 }
 
                 WarState* idleState = wst_createIdleState(context, entity, true);

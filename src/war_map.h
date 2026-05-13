@@ -52,7 +52,7 @@ struct _WarPlayerInfo
     ((player)->upgrades[(upgrade)/2].allowed = (value))
 
 #define imageResourceRefFromPlayer(player, hIdx, oIdx) imageResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx))
-#define spriteResourceRefFromPlayer(player, hIdx, oIdx, spriteIndex) createSpriteResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx), 1, arrayArg(s32, (spriteIndex)))
+#define spriteResourceRefFromPlayer(player, hIdx, oIdx, spriteIndex) wspr_createSpriteResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx), 1, arrayArg(s32, (spriteIndex)))
 
 struct _WarMapSettings
 {

@@ -11,11 +11,11 @@ void wsc_enterSceneBlizzard(WarContext* context)
     WarScene* scene = context->scene;
     scene->blizzard.time = 3.0f;
 
-    wui_createUIImage(context, wstr_fromCString("imgBackground"), &(CreateUIImageArgs){
+    wui_createUIImage(context, wstr_fromCString("imgBackground"), CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRef(216),
         .position  = VEC2_ZERO,
-    });
-    wa_createAudio(context, WAR_LOGO, true);
+    ));
+    wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_LOGO, .loop=true));
 }
 
 void wsc_updateSceneBlizzard(WarContext* context)

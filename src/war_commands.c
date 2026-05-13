@@ -354,9 +354,15 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
                 vec2 position = wu_getUnitCenterPosition(context, entity, true);
                 vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
 
-                WarEntity* summonedUnit = we_createUnit(context, spellMapping.mappedType,
-                                                     (s32)spawnPosition.x, (s32)spawnPosition.y,
-                                                     unit->player, WAR_RESOURCE_NONE, 0, true);
+                WarEntity* summonedUnit = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
+                    .type=spellMapping.mappedType,
+                    .x=(s32)spawnPosition.x,
+                    .y=(s32)spawnPosition.y,
+                    .player=unit->player,
+                    .resourceKind=WAR_RESOURCE_NONE,
+                    .amount=0,
+                    .addToMap=true
+                ));
 
                 vec2 unitSize = wu_getUnitSize(context, summonedUnit);
                 setStaticEntity(map->finder, (s32)spawnPosition.x, (s32)spawnPosition.y,
@@ -372,7 +378,7 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
 
     if (casted)
     {
-        wa_createAudio(context, WAR_NORMAL_SPELL, false);
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .loop=false));
     }
 }
 
@@ -880,7 +886,13 @@ bool wcmd_executeCommand(WarContext* context)
                     {
                         if (we_decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
                         {
-                            WarEntity* building = we_createBuilding(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y, 0, true);
+                            WarEntity* building = we_createBuilding(context, CREATE_UNIT_ARGS_INIT(
+                                .type=buildingToBuild,
+                                .x=(s32)targetTile.x,
+                                .y=(s32)targetTile.y,
+                                .player=0,
+                                .isGoingToBuild=true
+                            ));
                             WarState* repairState = wst_createRepairState(context, worker, building->id);
                             wst_changeNextState(context, worker, repairState, true, true);
 
@@ -889,7 +901,7 @@ bool wcmd_executeCommand(WarContext* context)
                     }
                     else
                     {
-                        wa_createAudio(context, WAR_UI_CANCEL, false);
+                        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
                     }
 
                     return true;
@@ -935,12 +947,12 @@ bool wcmd_executeCommand(WarContext* context)
                             //
                             // command->type = WAR_COMMAND_NONE;
 
-                            wa_createAudio(context, WAR_BUILD_ROAD, false);
+                            wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_BUILD_ROAD, .loop=false));
                         }
                     }
                     else
                     {
-                        wa_createAudio(context, WAR_UI_CANCEL, false);
+                        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
                     }
 
                     return true;
@@ -984,12 +996,12 @@ bool wcmd_executeCommand(WarContext* context)
                             //
                             // command->type = WAR_COMMAND_NONE;
 
-                            wa_createAudio(context, WAR_BUILD_ROAD, false);
+                            wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_BUILD_ROAD, .loop=false));
                         }
                     }
                     else
                     {
-                        wa_createAudio(context, WAR_UI_CANCEL, false);
+                        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
                     }
 
                     return true;
@@ -1444,7 +1456,7 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
                 WarState* collapseState = wst_createCollapseState(context, selectedEntity);
                 wst_changeNextState(context, selectedEntity, collapseState, true, true);
 
-                wa_createAudioRandom(context, WAR_BUILDING_COLLAPSE_1, WAR_BUILDING_COLLAPSE_3, false);
+                wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_BUILDING_COLLAPSE_1, .randomToId=WAR_BUILDING_COLLAPSE_3, .loop=false));
             }
             else if (unit->building)
             {
