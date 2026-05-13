@@ -31,7 +31,7 @@ shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
 
 WarSpriteAnimation* wanim_createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop);
 WarSpriteAnimation* wanim_createAnimationFromResourceIndex(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, f32 frameDelay, bool loop);
-void wanim_addAnimation(WarEntity* entity, WarSpriteAnimation* animation);
+void wanim_addAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation* animation);
 void wanim_addAnimationFrame(WarSpriteAnimation* animation, s32 frameIndex);
 void wanim_addAnimationFrames(WarSpriteAnimation* animation, s32 count, s32 frameIndices[]);
 void wanim_addAnimationFramesRange(WarSpriteAnimation* animation, s32 from, s32 to);

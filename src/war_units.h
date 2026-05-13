@@ -286,11 +286,11 @@ WarUnitCommandMapping wu_getCommandMappingFromUnitType(WarUnitType unitType);
 WarUnitCommandMapping wu_getCommandMappingFromUpgradeType(WarUpgradeType upgradeType);
 WarUnitCommandMapping wu_getCommandMappingFromSpellType(WarSpellType spellType);
 
-#define isUnit(entity) ((entity)->type == WAR_ENTITY_TYPE_UNIT)
-#define isUnitOfType(entity, unitType) (isUnit(entity) && (entity)->unit.type == (unitType))
-#define isRoad(entity) ((entity)->type == WAR_ENTITY_TYPE_ROAD)
-#define isWall(entity) ((entity)->type == WAR_ENTITY_TYPE_WALL)
-#define isRuin(entity) ((entity)->type == WAR_ENTITY_TYPE_RUIN)
+bool wu_isUnit(const WarEntity* entity);
+bool wu_isUnitOfType(WarContext* ctx, const WarEntity* entity, WarUnitType unitType);
+bool wu_isRoad(const WarEntity* entity);
+bool wu_isWall(const WarEntity* entity);
+bool wu_isRuin(const WarEntity* entity);
 
 bool wu_isDudeUnitType(WarUnitType type);
 bool wu_isBuildingUnitType(WarUnitType type);
@@ -308,28 +308,28 @@ bool wu_isClericOrNecrolyteUnitType(WarUnitType type);
 bool wu_isSummonUnitType(WarUnitType type);
 
 // Entity-level unit-type queries (bodies defined in war_entities.h after WarEntity is complete)
-bool wu_isDudeUnit(WarEntity* entity);
-bool wu_isBuildingUnit(WarEntity* entity);
-bool wu_isWorkerUnit(WarEntity* entity);
-bool wu_isWarriorUnit(WarEntity* entity);
-bool wu_isRangeUnit(WarEntity* entity);
-bool wu_isMeleeUnit(WarEntity* entity);
-bool wu_isFistUnit(WarEntity* entity);
-bool wu_isSwordUnit(WarEntity* entity);
-bool wu_isMagicUnit(WarEntity* entity);
-bool wu_isCorpseUnit(WarEntity* entity);
-bool wu_isCatapultUnit(WarEntity* entity);
-bool wu_isConjurerOrWarlockUnit(WarEntity* entity);
-bool wu_isClericOrNecrolyteUnit(WarEntity* entity);
-bool wu_isSummonUnit(WarEntity* entity);
-bool wu_isSkeletonUnit(WarEntity* entity);
+bool wu_isDudeUnit(WarContext* context, WarEntity* entity);
+bool wu_isBuildingUnit(WarContext* context, WarEntity* entity);
+bool wu_isWorkerUnit(WarContext* context, WarEntity* entity);
+bool wu_isWarriorUnit(WarContext* context, WarEntity* entity);
+bool wu_isRangeUnit(WarContext* context, WarEntity* entity);
+bool wu_isMeleeUnit(WarContext* context, WarEntity* entity);
+bool wu_isFistUnit(WarContext* context, WarEntity* entity);
+bool wu_isSwordUnit(WarContext* context, WarEntity* entity);
+bool wu_isMagicUnit(WarContext* context, WarEntity* entity);
+bool wu_isCorpseUnit(WarContext* context, WarEntity* entity);
+bool wu_isCatapultUnit(WarContext* context, WarEntity* entity);
+bool wu_isConjurerOrWarlockUnit(WarContext* context, WarEntity* entity);
+bool wu_isClericOrNecrolyteUnit(WarContext* context, WarEntity* entity);
+bool wu_isSummonUnit(WarContext* context, WarEntity* entity);
+bool wu_isSkeletonUnit(WarContext* context, WarEntity* entity);
 
 WarRace wu_getUnitTypeRace(WarUnitType type);
-WarRace wu_getUnitRace(WarEntity* entity);
+WarRace wu_getUnitRace(WarContext* context, WarEntity* entity);
 
-#define isHumanUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_HUMANS)
-#define isOrcUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_ORCS)
-#define isNeutralUnit(entity) (wu_getUnitRace(entity) == WAR_RACE_NEUTRAL)
+bool wu_isHumanUnit(WarContext* context, WarEntity* entity);
+bool wu_isOrcUnit(WarContext* context, WarEntity* entity);
+bool wu_isNeutralUnit(WarContext* context, WarEntity* entity);
 
 WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race);
 
@@ -344,34 +344,34 @@ WarUnitType wu_getTownHallOfRace(WarRace race);
 WarUnitType wu_getProducerUnitOfType(WarUnitType type);
 
 // Entity geometry / property functions (bodies defined in war_entities.h)
-vec2 wu_getUnitSize(WarEntity* entity);
-vec2 wu_getUnitFrameSize(WarEntity* entity);
-rect wu_getUnitFrameRect(WarEntity* entity);
-vec2 wu_getUnitSpriteSize(WarEntity* entity);
-rect wu_getUnitSpriteRect(WarEntity* entity);
-vec2 wu_getUnitSpriteCenter(WarEntity* entity);
-rect wu_getUnitRect(WarEntity* entity);
-vec2 wu_getUnitPosition(WarEntity* entity, bool inTiles);
-vec2 wu_getUnitCenterPosition(WarEntity* entity, bool inTiles);
-void wu_setUnitPosition(WarEntity* entity, vec2 position, bool inTiles);
-void wu_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles);
+vec2 wu_getUnitSize(WarContext* context, WarEntity* entity);
+vec2 wu_getUnitFrameSize(WarContext* context, WarEntity* entity);
+rect wu_getUnitFrameRect(WarContext* context, WarEntity* entity);
+vec2 wu_getUnitSpriteSize(WarContext* context, WarEntity* entity);
+rect wu_getUnitSpriteRect(WarContext* context, WarEntity* entity);
+vec2 wu_getUnitSpriteCenter(WarContext* context, WarEntity* entity);
+rect wu_getUnitRect(WarContext* context, WarEntity* entity);
+vec2 wu_getUnitPosition(WarContext* context, WarEntity* entity, bool inTiles);
+vec2 wu_getUnitCenterPosition(WarContext* context, WarEntity* entity, bool inTiles);
+void wu_setUnitPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles);
+void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles);
 
-WarUnitDirection wu_getUnitDirection(WarEntity* entity);
+WarUnitDirection wu_getUnitDirection(WarContext* context, WarEntity* entity);
 WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y);
 
-void wu_setUnitDirection(WarEntity* entity, WarUnitDirection direction);
-void wu_setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy);
-f32 wu_getUnitActionScale(WarEntity* entity);
-vec2 wu_unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity);
-s32 wu_entityTileDistance(WarEntity* entity, vec2 targetPosition);
-bool wu_tileInRange(WarEntity* entity, vec2 targetTile, s32 range);
-s32 wu_unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity);
-bool wu_unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range);
-bool wu_isCarryingResources(WarEntity* entity);
-s32 wu_getUnitSightRange(WarEntity* entity);
+void wu_setUnitDirection(WarContext* context, WarEntity* entity, WarUnitDirection direction);
+void wu_setUnitDirectionFromDiff(WarContext* context, WarEntity* entity, f32 dx, f32 dy);
+f32 wu_getUnitActionScale(WarContext* context, WarEntity* entity);
+vec2 wu_unitPointOnTarget(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
+s32 wu_entityTileDistance(WarContext* context, WarEntity* entity, vec2 targetPosition);
+bool wu_tileInRange(WarContext* context, WarEntity* entity, vec2 targetTile, s32 range);
+s32 wu_unitDistanceInTiles(WarContext* context, WarEntity* entity, WarEntity* targetEntity);
+bool wu_unitInRange(WarContext* context, WarEntity* entity, WarEntity* targetEntity, s32 range);
+bool wu_isCarryingResources(WarContext* context, WarEntity* entity);
+s32 wu_getUnitSightRange(WarContext* context, WarEntity* entity);
 
-bool wu_displayUnitOnMinimap(WarEntity* entity);
-WarColor wu_getUnitColorOnMinimap(WarEntity* entity);
+bool wu_displayUnitOnMinimap(WarContext* context, WarEntity* entity);
+WarColor wu_getUnitColorOnMinimap(WarContext* context, WarEntity* entity);
 
 s32 wu_getTotalNumberOfDudes(WarContext* context, u8 player);
 s32 wu_getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBuilt);
@@ -379,10 +379,10 @@ s32 wu_getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType un
 s32 wu_getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitType);
 s32 wu_getTotalNumberOfUnits(WarContext* context, u8 player);
 
-#define playerHasUnit(context, player, unitType) (wu_getNumberOfUnitsOfType(context, player, unitType) > 0)
-#define playerHasBuilding(context, player, unitType) (wu_getNumberOfBuildingsOfType(context, player, unitType, true) > 0)
+bool wu_playerHasUnit(WarContext* context, u8 player, WarUnitType unitType);
+bool wu_playerHasBuilding(WarContext* context, u8 player, WarUnitType unitType);
 
-#define isValidUnitType(type) inRange(type, WAR_UNIT_FOOTMAN, WAR_UNIT_COUNT)
+bool wu_isValidUnitType(WarUnitType type);
 
 void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[]);
 WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType);

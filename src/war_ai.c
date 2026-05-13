@@ -146,23 +146,29 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
         }
 
         WarUnitType producerType = wu_getProducerUnitOfType(unitType);
-        if (isValidUnitType(producerType))
+        if (wu_isValidUnitType(producerType))
         {
             WarEntityList* units = we_getUnitsOfType(context, producerType);
             for (s32 i = 0; i < units->count; i++)
             {
                 WarEntity* entity = units->items[i];
-                if (entity && entity->unit.player == aiPlayer->index)
+                if (entity)
                 {
-                    if (!isTraining(entity) && !isUpgrading(entity))
-                    {
-                        if (we_decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
-                        {
-                            WarState* trainState = wst_createTrainState(context, entity, unitType, (f32)stats.buildTime);
-                            wst_changeNextState(context, entity, trainState, true, true);
-                        }
+                    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+                    assert(unit);
 
-                        return true;
+                    if (unit->player == aiPlayer->index)
+                    {
+                        if (!wst_isTraining(context, entity) && !wst_isUpgrading(context, entity))
+                        {
+                            if (we_decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+                            {
+                                WarState* trainState = wst_createTrainState(context, entity, unitType, (f32)stats.buildTime);
+                                wst_changeNextState(context, entity, trainState, true, true);
+                            }
+
+                            return true;
+                        }
                     }
                 }
             }

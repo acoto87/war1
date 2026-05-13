@@ -1,8 +1,13 @@
 ﻿#include "war_entities.h"
 
-bool we_hasRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
+#include <assert.h>
+
+bool we_hasRoadPieceAtPosition(WarContext* context, WarEntity* entity, s32 x, s32 y)
 {
-    WarRoadPieceList* pieces = &road->road.pieces;
+    WarRoadComponent* road = we_getRoadComponent(context, entity);
+    assert(road);
+
+    WarRoadPieceList* pieces = &road->pieces;
     for (s32 i = 0; i < pieces->count; i++)
     {
         WarRoadPiece* piece = &pieces->items[i];
@@ -13,9 +18,12 @@ bool we_hasRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
     return false;
 }
 
-WarRoadPiece* we_getRoadPieceAtPosition(WarEntity* road, s32 x, s32 y)
+WarRoadPiece* we_getRoadPieceAtPosition(WarContext* context, WarEntity* entity, s32 x, s32 y)
 {
-    WarRoadPieceList* pieces = &road->road.pieces;
+    WarRoadComponent* road = we_getRoadComponent(context, entity);
+    assert(road);
+
+    WarRoadPieceList* pieces = &road->pieces;
     for (s32 i = 0; i < pieces->count; i++)
     {
         WarRoadPiece* piece = &pieces->items[i];
@@ -32,14 +40,15 @@ void we_determineRoadTypes(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    WarRoadPieceList* pieces = &entity->road.pieces;
+    WarRoadComponent* roadComponent = we_getRoadComponent(context, entity);
+    assert(roadComponent);
 
     const s32 dirC = 4;
     const s32 dirX[] = {  0, 1, 0, -1 };
     const s32 dirY[] = { -1, 0, 1,  0 };
 
-    s32 count = pieces->count;
-    for(s32 i = 0; i < count; i++)
+    WarRoadPieceList* pieces = &roadComponent->pieces;
+    for(s32 i = 0; i < pieces->count; i++)
     {
         WarRoadPiece* pi = &pieces->items[i];
 
@@ -50,7 +59,7 @@ void we_determineRoadTypes(WarContext* context, WarEntity* entity)
             s32 xx = pi->tilex + dirX[d];
             s32 yy = pi->tiley + dirY[d];
 
-            if (!wpath_isInside(map->finder, xx, yy) || we_hasRoadPieceAtPosition(entity, xx, yy))
+            if (!wpath_isInside(map->finder, xx, yy) || we_hasRoadPieceAtPosition(context, entity, xx, yy))
             {
                 index = index | (1 << d);
             }
@@ -60,17 +69,23 @@ void we_determineRoadTypes(WarContext* context, WarEntity* entity)
     }
 }
 
-void we_addRoadPiece(WarEntity* entity, s32 x, s32 y, s32 player)
+void we_addRoadPiece(WarContext* context, WarEntity* entity, s32 x, s32 y, s32 player)
 {
-    WarRoadPieceList* pieces = &entity->road.pieces;
+    WarRoadComponent* road = we_getRoadComponent(context, entity);
+    assert(road);
+
+    WarRoadPieceList* pieces = &road->pieces;
     WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
 }
 
-void we_addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *construct)
+void we_addRoadPiecesFromConstruct(WarContext* context, WarEntity* entity, WarLevelConstruct *construct)
 {
     assert(entity->type == WAR_ENTITY_TYPE_ROAD);
 
-    WarRoadPieceList* pieces = &entity->road.pieces;
+    WarRoadComponent* road = we_getRoadComponent(context, entity);
+    assert(road);
+
+    WarRoadPieceList* pieces = &road->pieces;
 
     s32 x1 = construct->x1;
     s32 y1 = construct->y1;
@@ -104,9 +119,12 @@ void we_addRoadPiecesFromConstruct(WarEntity* entity, WarLevelConstruct *constru
     WarRoadPieceListAdd(pieces, createRoadPiece(x, y, player));
 }
 
-void we_removeRoadPiece(WarEntity* entity, WarRoadPiece* piece)
+void we_removeRoadPiece(WarContext* context, WarEntity* entity, WarRoadPiece* piece)
 {
-    WarRoadPieceList* pieces = &entity->road.pieces;
+    WarRoadComponent* road = we_getRoadComponent(context, entity);
+    assert(road);
+
+    WarRoadPieceList* pieces = &road->pieces;
     WarRoadPieceListRemove(pieces, *piece);
 }
 
@@ -119,7 +137,9 @@ WarEntity* we_createRoad(WarContext* context)
 
     WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_ROAD, true);
     we_addRoadComponent(context, entity, pieces);
-    we_addSpriteComponent(context, entity, map->sprite);
+    we_addSpriteComponent(context, entity, WAR_SPRITE_COMPONENT_INIT(
+        .sprite = map->sprite
+    ));
 
     return entity;
 }

@@ -815,6 +815,35 @@ WarUnitCommandMapping wu_getCommandMappingFromSpellType(WarSpellType spellType)
     return commandMappings[index];
 }
 
+bool wu_isUnit(const WarEntity* entity)
+{
+    return entity->type == WAR_ENTITY_TYPE_UNIT;
+}
+
+bool wu_isUnitOfType(WarContext* ctx, const WarEntity* entity, WarUnitType unitType)
+{
+    if (!wu_isUnit(entity))
+        return false;
+
+    WarUnitComponent* unit = we_getUnitComponent(ctx, entity);
+    return unit && unit->type == unitType;
+}
+
+bool wu_isRoad(const WarEntity* entity)
+{
+    return entity->type == WAR_ENTITY_TYPE_ROAD;
+}
+
+bool wu_isWall(const WarEntity* entity)
+{
+    return entity->type == WAR_ENTITY_TYPE_WALL;
+}
+
+bool wu_isRuin(const WarEntity* entity)
+{
+    return entity->type == WAR_ENTITY_TYPE_RUIN;
+}
+
 bool wu_isDudeUnitType(WarUnitType type)
 {
     switch (type)
@@ -1090,79 +1119,94 @@ bool wu_isSummonUnitType(WarUnitType type)
     }
 }
 
-bool wu_isDudeUnit(WarEntity* entity)
+bool wu_isDudeUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isDudeUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isDudeUnitType(unit->type);
 }
 
-bool wu_isBuildingUnit(WarEntity* entity)
+bool wu_isBuildingUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isBuildingUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isBuildingUnitType(unit->type);
 }
 
-bool wu_isWorkerUnit(WarEntity* entity)
+bool wu_isWorkerUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isWorkerUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isWorkerUnitType(unit->type);
 }
 
-bool wu_isWarriorUnit(WarEntity* entity)
+bool wu_isWarriorUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isWarriorUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isWarriorUnitType(unit->type);
 }
 
-bool wu_isRangeUnit(WarEntity* entity)
+bool wu_isRangeUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isRangeUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isRangeUnitType(unit->type);
 }
 
-bool wu_isMeleeUnit(WarEntity* entity)
+bool wu_isMeleeUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isMeleeUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isMeleeUnitType(unit->type);
 }
 
-bool wu_isFistUnit(WarEntity* entity)
+bool wu_isFistUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isFistUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isFistUnitType(unit->type);
 }
 
-bool wu_isSwordUnit(WarEntity* entity)
+bool wu_isSwordUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isSwordUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isSwordUnitType(unit->type);
 }
 
-bool wu_isMagicUnit(WarEntity* entity)
+bool wu_isMagicUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isMagicUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isMagicUnitType(unit->type);
 }
 
-bool wu_isCorpseUnit(WarEntity* entity)
+bool wu_isCorpseUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isCorpseUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isCorpseUnitType(unit->type);
 }
 
-bool wu_isCatapultUnit(WarEntity* entity)
+bool wu_isCatapultUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isCatapultUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isCatapultUnitType(unit->type);
 }
 
-bool wu_isConjurerOrWarlockUnit(WarEntity* entity)
+bool wu_isConjurerOrWarlockUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isConjurerOrWarlockUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isConjurerOrWarlockUnitType(unit->type);
 }
 
-bool wu_isClericOrNecrolyteUnit(WarEntity* entity)
+bool wu_isClericOrNecrolyteUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isClericOrNecrolyteUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isClericOrNecrolyteUnitType(unit->type);
 }
 
-bool wu_isSummonUnit(WarEntity* entity)
+bool wu_isSummonUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && wu_isSummonUnitType(entity->unit.type);
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && wu_isSummonUnitType(unit->type);
 }
 
-bool wu_isSkeletonUnit(WarEntity* entity)
+bool wu_isSkeletonUnit(WarContext* context, WarEntity* entity)
 {
-    return isUnit(entity) && entity->unit.type == WAR_UNIT_SKELETON;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && unit->type == WAR_UNIT_SKELETON;
 }
 
 WarRace wu_getUnitTypeRace(WarUnitType type)
@@ -1223,12 +1267,25 @@ WarRace wu_getUnitTypeRace(WarUnitType type)
     }
 }
 
-WarRace wu_getUnitRace(WarEntity* entity)
+WarRace wu_getUnitRace(WarContext* context, WarEntity* entity)
 {
-    if (!isUnit(entity))
-        return WAR_RACE_NEUTRAL;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit ? wu_getUnitTypeRace(unit->type) : WAR_RACE_NEUTRAL;
+}
 
-    return wu_getUnitTypeRace(entity->unit.type);
+bool wu_isHumanUnit(WarContext* context, WarEntity* entity)
+{
+    return wu_getUnitRace(context, entity) == WAR_RACE_HUMANS;
+}
+
+bool wu_isOrcUnit(WarContext* context, WarEntity* entity)
+{
+    return wu_getUnitRace(context, entity) == WAR_RACE_ORCS;
+}
+
+bool wu_isNeutralUnit(WarContext* context, WarEntity* entity)
+{
+    return wu_getUnitRace(context, entity) == WAR_RACE_NEUTRAL;
 }
 
 WarProjectileType wu_getProjectileType(WarUnitType type)
@@ -1317,99 +1374,121 @@ WarUnitType wu_getProducerUnitOfType(WarUnitType type)
     }
 }
 
-vec2 wu_getUnitSize(WarEntity* entity)
+vec2 wu_getUnitSize(WarContext* context, WarEntity* entity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
     return vec2i(unit->sizex, unit->sizey);
 }
 
-vec2 wu_getUnitFrameSize(WarEntity* entity)
+vec2 wu_getUnitFrameSize(WarContext* context, WarEntity* entity)
 {
-    WarSpriteComponent* sprite = &entity->sprite;
+    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+    assert(sprite);
+
     return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
 }
 
-rect wu_getUnitFrameRect(WarEntity* entity)
+rect wu_getUnitFrameRect(WarContext* context, WarEntity* entity)
 {
-    return rectv(VEC2_ZERO, wu_getUnitFrameSize(entity));
+    return rectv(VEC2_ZERO, wu_getUnitFrameSize(context, entity));
 }
 
-vec2 wu_getUnitSpriteSize(WarEntity* entity)
+vec2 wu_getUnitSpriteSize(WarContext* context, WarEntity* entity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
     return vec2i(unit->sizex * MEGA_TILE_WIDTH, unit->sizey * MEGA_TILE_HEIGHT);
 }
 
-rect wu_getUnitSpriteRect(WarEntity* entity)
+rect wu_getUnitSpriteRect(WarContext* context, WarEntity* entity)
 {
-    vec2 frameSize = wu_getUnitFrameSize(entity);
-    vec2 unitSize = wu_getUnitSpriteSize(entity);
+    vec2 frameSize = wu_getUnitFrameSize(context, entity);
+    vec2 unitSize = wu_getUnitSpriteSize(context, entity);
     vec2 pos = vec2_half(vec2_subv(frameSize, unitSize));
     return rectv(pos, unitSize);
 }
 
-vec2 wu_getUnitSpriteCenter(WarEntity* entity)
+vec2 wu_getUnitSpriteCenter(WarContext* context, WarEntity* entity)
 {
-    vec2 frameSize = wu_getUnitFrameSize(entity);
-    vec2 unitSize = wu_getUnitSpriteSize(entity);
+    vec2 frameSize = wu_getUnitFrameSize(context, entity);
+    vec2 unitSize = wu_getUnitSpriteSize(context, entity);
     vec2 pos = vec2_half(vec2_subv(frameSize, unitSize));
     return vec2_addv(pos, vec2_half(unitSize));
 }
 
-rect wu_getUnitRect(WarEntity* entity)
+rect wu_getUnitRect(WarContext* context, WarEntity* entity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    return rectv(entity->transform.position, wu_getUnitSpriteSize(entity));
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    return rectv(transform->position, wu_getUnitSpriteSize(context, entity));
 }
 
-vec2 wu_getUnitPosition(WarEntity* entity, bool inTiles)
+vec2 wu_getUnitPosition(WarContext* context, WarEntity* entity, bool inTiles)
 {
-    vec2 position = entity->transform.position;
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 position = transform->position;
     return inTiles ? wmap_mapToTileCoordinatesV(position) : position;
 }
 
-vec2 wu_getUnitCenterPosition(WarEntity* entity, bool inTiles)
+vec2 wu_getUnitCenterPosition(WarContext* context, WarEntity* entity, bool inTiles)
 {
-    WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = wu_getUnitSpriteSize(entity);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 spriteSize = wu_getUnitSpriteSize(context, entity);
     vec2 unitCenter = vec2_half(spriteSize);
     vec2 position = vec2_addv(transform->position, unitCenter);
     return inTiles ? wmap_mapToTileCoordinatesV(position) : position;
 }
 
-void wu_setUnitPosition(WarEntity* entity, vec2 position, bool inTiles)
+void wu_setUnitPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
         position = wmap_tileToMapCoordinatesV(position, true);
     }
 
-    entity->transform.position = position;
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    transform->position = position;
 }
 
-void wu_setUnitCenterPosition(WarEntity* entity, vec2 position, bool inTiles)
+void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles)
 {
     if (inTiles)
     {
         position = wmap_tileToMapCoordinatesV(position, true);
     }
 
-    WarTransformComponent* transform = &entity->transform;
-    vec2 spriteSize = wu_getUnitSpriteSize(entity);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 spriteSize = wu_getUnitSpriteSize(context, entity);
     vec2 unitCenter = vec2_half(spriteSize);
     transform->position = vec2_subv(position, unitCenter);
 }
 
-WarUnitDirection wu_getUnitDirection(WarEntity* entity)
+WarUnitDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    return entity->unit.direction;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    return unit->direction;
 }
 
 WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
@@ -1436,112 +1515,120 @@ WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
     return WAR_DIRECTION_NORTH;
 }
 
-void wu_setUnitDirection(WarEntity* entity, WarUnitDirection direction)
+void wu_setUnitDirection(WarContext* context, WarEntity* entity, WarUnitDirection direction)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    entity->unit.direction = direction;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    unit->direction = direction;
 }
 
-void wu_setUnitDirectionFromDiff(WarEntity* entity, f32 dx, f32 dy)
+void wu_setUnitDirectionFromDiff(WarContext* context, WarEntity* entity, f32 dx, f32 dy)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarUnitDirection direction = wu_getDirectionFromDiff(dx, dy);
-    wu_setUnitDirection(entity, direction);
+    wu_setUnitDirection(context, entity, direction);
 }
 
-f32 wu_getUnitActionScale(WarEntity* entity)
+f32 wu_getUnitActionScale(WarContext* context, WarEntity* entity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    // this is the scale of the animation, for walking
-    // the lower the less time is the transition between the frames
-    // thus the animation goes faster.
-    //
-    // speed 0 -> 1.0f
-    // speed 1 -> 0.9f
-    // speed 2 -> 0.8f
-    return 1 - entity->unit.speed * 0.1f;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    return 1 - unit->speed * 0.1f;
 }
 
-vec2 wu_unitPointOnTarget(WarEntity* entity, WarEntity* targetEntity)
+vec2 wu_unitPointOnTarget(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
+    assert(wu_isUnit(entity));
+    assert(wu_isUnit(targetEntity));
 
-    vec2 position = wu_getUnitCenterPosition(entity, true);
+    vec2 position = wu_getUnitCenterPosition(context, entity, true);
 
-    vec2 targetPosition = wmap_mapToTileCoordinatesV(targetEntity->transform.position);
-    vec2 unitSize = wu_getUnitSize(targetEntity);
+    WarTransformComponent* targetTransform = we_getTransformComponent(context, targetEntity);
+    assert(targetTransform);
+
+    vec2 targetPosition = wmap_mapToTileCoordinatesV(targetTransform->position);
+    vec2 unitSize = wu_getUnitSize(context, targetEntity);
     rect unitRect = rectv(targetPosition, unitSize);
 
     return get_closestPointOnRect(position, unitRect);
 }
 
-s32 wu_entityTileDistance(WarEntity* entity, vec2 targetPosition)
+s32 wu_entityTileDistance(WarContext* context, WarEntity* entity, vec2 targetPosition)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    vec2 position = wu_getUnitCenterPosition(entity, true);
+    vec2 position = wu_getUnitCenterPosition(context, entity, true);
     f32 distance = vec2_distanceInTiles(position, targetPosition);
     return (s32)distance;
 }
 
-bool wu_tileInRange(WarEntity* entity, vec2 targetTile, s32 range)
+bool wu_tileInRange(WarContext* context, WarEntity* entity, vec2 targetTile, s32 range)
 {
     assert(range >= 0);
 
-    s32 distance = wu_entityTileDistance(entity, targetTile);
+    s32 distance = wu_entityTileDistance(context, entity, targetTile);
     return distance <= range;
 }
 
-s32 wu_unitDistanceInTiles(WarEntity* entity, WarEntity* targetEntity)
+s32 wu_unitDistanceInTiles(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
+    assert(wu_isUnit(entity));
+    assert(wu_isUnit(targetEntity));
 
-    vec2 pointOnTarget = wu_unitPointOnTarget(entity, targetEntity);
-    return wu_entityTileDistance(entity, pointOnTarget);
+    vec2 pointOnTarget = wu_unitPointOnTarget(context, entity, targetEntity);
+    return wu_entityTileDistance(context, entity, pointOnTarget);
 }
 
-bool wu_unitInRange(WarEntity* entity, WarEntity* targetEntity, s32 range)
+bool wu_unitInRange(WarContext* context, WarEntity* entity, WarEntity* targetEntity, s32 range)
 {
-    assert(isUnit(entity));
-    assert(isUnit(targetEntity));
+    assert(wu_isUnit(entity));
+    assert(wu_isUnit(targetEntity));
     assert(range >= 0);
 
-    s32 distance = wu_unitDistanceInTiles(entity, targetEntity);
+    s32 distance = wu_unitDistanceInTiles(context, entity, targetEntity);
     return distance <= range;
 }
 
-bool wu_isCarryingResources(WarEntity* entity)
+bool wu_isCarryingResources(WarContext* context, WarEntity* entity)
 {
     assert(entity);
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    switch (entity->unit.resourceKind)
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    switch (unit->resourceKind)
     {
-        case WAR_RESOURCE_GOLD: return entity->unit.amount == UNIT_MAX_CARRY_WOOD;
-        case WAR_RESOURCE_WOOD: return entity->unit.amount == UNIT_MAX_CARRY_GOLD;
+        case WAR_RESOURCE_GOLD: return unit->amount == UNIT_MAX_CARRY_GOLD;
+        case WAR_RESOURCE_WOOD: return unit->amount == UNIT_MAX_CARRY_WOOD;
         default: return false;
     }
 }
 
-s32 wu_getUnitSightRange(WarEntity* entity)
+s32 wu_getUnitSightRange(WarContext* context, WarEntity* entity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
     s32 sight = 0;
 
-    if (wu_isBuildingUnit(entity))
+    if (wu_isBuildingUnit(context, entity))
     {
-        WarBuildingStats stats = wu_getBuildingStats(entity->unit.type);
+        WarBuildingStats stats = wu_getBuildingStats(unit->type);
         sight = stats.sight;
     }
     else
     {
-        WarUnitStats stats = wu_getUnitStats(entity->unit.type);
+        WarUnitStats stats = wu_getUnitStats(unit->type);
         sight = stats.sight;
     }
 
@@ -1553,7 +1640,8 @@ bool wu_isFriendlyUnit(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    return isUnit(entity) && entity->unit.player == player->index;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    return unit && unit->player == player->index;
 }
 
 bool wu_isEnemyUnit(WarContext* context, WarEntity* entity)
@@ -1561,13 +1649,14 @@ bool wu_isEnemyUnit(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    if (!isUnit(entity))
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    if (!unit)
         return false;
 
-    if (entity->unit.player == player->index)
+    if (unit->player == player->index)
         return false;
 
-    WarPlayerInfo* otherPlayer = &map->players[entity->unit.player];
+    WarPlayerInfo* otherPlayer = &map->players[unit->player];
     return !isNeutralPlayer(otherPlayer);
 }
 
@@ -1575,16 +1664,18 @@ bool wu_areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 {
     WarMap* map = context->map;
 
-    if (!isUnit(entity1) || !isUnit(entity2))
+    WarUnitComponent* unit1 = we_getUnitComponent(context, entity1);
+    WarUnitComponent* unit2 = we_getUnitComponent(context, entity2);
+    if (!unit1 || !unit2)
         return false;
 
 	if (entity1->id == entity2->id)
 		return false;
 
-    if (entity1->unit.player == entity2->unit.player)
+    if (unit1->player == unit2->player)
         return false;
 
-    WarPlayerInfo* otherPlayer = &map->players[entity2->unit.player];
+    WarPlayerInfo* otherPlayer = &map->players[unit2->player];
     return !isNeutralPlayer(otherPlayer);
 }
 
@@ -1592,47 +1683,48 @@ bool wu_canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntit
 {
     NOT_USED(context);
 
-    if (wu_isWarriorUnit(entity) && !isDead(entity) && !isGoingToDie(entity))
+    if (wu_isWarriorUnit(context, entity) && !wst_isDead(context, entity) && !wst_isGoingToDie(context, entity))
     {
-        if (isUnit(targetEntity))
+        if (wu_isUnit(targetEntity))
         {
-            if (!isDead(targetEntity) &&
-                !isGoingToDie(targetEntity) &&
-                !wu_isCorpseUnit(targetEntity) &&
-                !isCollapsing(entity) &&
-                !isGoingToCollapse(entity))
+            if (!wst_isDead(context, targetEntity) &&
+                !wst_isGoingToDie(context, targetEntity) &&
+                !wu_isCorpseUnit(context, targetEntity) &&
+                !wst_isCollapsing(context, entity) &&
+                !wst_isGoingToCollapse(context, entity))
             {
                 return true;
             }
         }
-        else if (isWall(targetEntity))
+        else if (wu_isWall(targetEntity))
             return true;
     }
 
     return false;
 }
 
-bool wu_displayUnitOnMinimap(WarEntity* entity)
+bool wu_displayUnitOnMinimap(WarContext* context, WarEntity* entity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    if (wu_isCorpseUnit(entity))
+    if (wu_isCorpseUnit(context, entity))
         return false;
 
-    if (isDead(entity) || isGoingToDie(entity))
+    if (wst_isDead(context, entity) || wst_isGoingToDie(context, entity))
         return false;
 
-    if (isCollapsing(entity) || isGoingToCollapse(entity))
+    if (wst_isCollapsing(context, entity) || wst_isGoingToCollapse(context, entity))
         return false;
 
     return true;
 }
 
-WarColor wu_getUnitColorOnMinimap(WarEntity* entity)
+WarColor wu_getUnitColorOnMinimap(WarContext* context, WarEntity* entity)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
     u8 r = 211, g = 211, b = 211;
 
@@ -1663,7 +1755,8 @@ s32 wu_getTotalNumberOfUnits(WarContext* context, u8 player)
         WarEntity* entity = units->items[i];
         if (entity)
         {
-            if (entity->unit.player == player)
+            WarUnitComponent* unit = we_getUnitComponent(context, entity);
+            if (unit && unit->player == player)
             {
                 count++;
             }
@@ -1671,6 +1764,21 @@ s32 wu_getTotalNumberOfUnits(WarContext* context, u8 player)
     }
 
     return count;
+}
+
+bool wu_playerHasUnit(WarContext* context, u8 player, WarUnitType unitType)
+{
+    return wu_getNumberOfUnitsOfType(context, player, unitType) > 0;
+}
+
+bool wu_playerHasBuilding(WarContext* context, u8 player, WarUnitType unitType)
+{
+    return wu_getNumberOfBuildingsOfType(context, player, unitType, true) > 0;
+}
+
+bool wu_isValidUnitType(WarUnitType type)
+{
+    return inRange(type, WAR_UNIT_FOOTMAN, WAR_UNIT_COUNT);
 }
 
 s32 wu_getTotalNumberOfDudes(WarContext* context, u8 player)
@@ -1681,9 +1789,10 @@ s32 wu_getTotalNumberOfDudes(WarContext* context, u8 player)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity && wu_isDudeUnit(entity) && !wu_isSummonUnit(entity) && !wu_isSkeletonUnit(entity))
+        if (entity && wu_isDudeUnit(context, entity) && !wu_isSummonUnit(context, entity) && !wu_isSkeletonUnit(context, entity))
         {
-            if (entity->unit.player == player)
+            WarUnitComponent* unit = we_getUnitComponent(context, entity);
+            if (unit && unit->player == player)
             {
                 count++;
             }
@@ -1703,9 +1812,10 @@ s32 wu_getTotalNumberOfBuildings(WarContext* context, u8 player, bool alreadyBui
         WarEntity* entity = units->items[i];
         if (entity)
         {
-            if (entity->unit.player == player && wu_isBuildingUnit(entity))
+            WarUnitComponent* unit = we_getUnitComponent(context, entity);
+            if (unit && unit->player == player && wu_isBuildingUnit(context, entity))
             {
-                if (alreadyBuilt && (isBuilding(entity) || isGoingToBuild(entity)))
+                if (alreadyBuilt && (wst_isBuilding(context, entity) || wst_isGoingToBuild(context, entity)))
                     continue;
 
                 count++;
@@ -1728,10 +1838,12 @@ s32 wu_getNumberOfBuildingsOfType(WarContext* context, u8 player, WarUnitType un
         WarEntity* entity = units->items[i];
         if (entity)
         {
-            if (entity->unit.player == player &&
-                entity->unit.type == unitType)
+            WarUnitComponent* unit = we_getUnitComponent(context, entity);
+            if (unit &&
+                unit->player == player &&
+                unit->type == unitType)
             {
-                if (alreadyBuilt && (isBuilding(entity) || isGoingToBuild(entity)))
+                if (alreadyBuilt && (wst_isBuilding(context, entity) || wst_isGoingToBuild(context, entity)))
                     continue;
 
                 count++;
@@ -1752,8 +1864,10 @@ s32 wu_getNumberOfUnitsOfType(WarContext* context, u8 player, WarUnitType unitTy
         WarEntity* entity = units->items[i];
         if (entity)
         {
-            if (entity->unit.player == player &&
-                entity->unit.type == unitType)
+            WarUnitComponent* unit = we_getUnitComponent(context, entity);
+            if (unit &&
+                unit->player == player &&
+                unit->type == unitType)
             {
                 count++;
             }
@@ -1828,15 +1942,16 @@ WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race)
 void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandType commands[])
 {
     assert(entity);
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     WarMap* map = context->map;
     WarUnitCommand* command = &map->command;
     WarPlayerInfo* player = &map->players[0];
 
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
-    if (player->race != wu_getUnitRace(entity))
+    if (player->race != wu_getUnitRace(context, entity))
     {
         return;
     }
@@ -1893,7 +2008,7 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
                     commands[1] = WAR_COMMAND_BUILD_CHURCH;
                     commands[2] = WAR_COMMAND_BUILD_STABLE;
 
-                    if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
+                    if (wu_playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
                     {
                         commands[3] = WAR_COMMAND_BUILD_TOWER_HUMANS;
                     }
@@ -1906,12 +2021,12 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
                 commands[0] = WAR_COMMAND_MOVE;
                 commands[1] = WAR_COMMAND_STOP;
                 commands[2] = WAR_COMMAND_REPAIR;
-                commands[3] = !wu_isCarryingResources(entity)
+                commands[3] = !wu_isCarryingResources(context, entity)
                     ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
 
                 commands[4] = WAR_COMMAND_BUILD_BASIC;
 
-                if (playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
+                if (wu_playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
                 {
                     commands[5] = WAR_COMMAND_BUILD_ADVANCED;
                 }
@@ -1940,7 +2055,7 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
                     commands[1] = WAR_COMMAND_BUILD_TEMPLE;
                     commands[2] = WAR_COMMAND_BUILD_KENNEL;
 
-                    if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
+                    if (wu_playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
                     {
                         commands[3] = WAR_COMMAND_BUILD_TOWER_ORCS;
                     }
@@ -1953,12 +2068,12 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
                 commands[0] = WAR_COMMAND_MOVE;
                 commands[1] = WAR_COMMAND_STOP;
                 commands[2] = WAR_COMMAND_REPAIR;
-                commands[3] = !wu_isCarryingResources(entity)
+                commands[3] = !wu_isCarryingResources(context, entity)
                     ? WAR_COMMAND_HARVEST : WAR_COMMAND_DELIVER;
 
                 commands[4] = WAR_COMMAND_BUILD_BASIC;
 
-                if (playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
+                if (wu_playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
                 {
                     commands[5] = WAR_COMMAND_BUILD_ADVANCED;
                 }
@@ -2126,18 +2241,18 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
                 commands[0] = WAR_COMMAND_TRAIN_FOOTMAN;
 
                 // only if there is a lumber mill
-                if (playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
+                if (wu_playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_HUMANS))
                 {
                     commands[1] = WAR_COMMAND_TRAIN_ARCHER;
                 }
 
                 // only if there is a blacksmith
-                if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
+                if (wu_playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_HUMANS))
                 {
                     commands[2] = WAR_COMMAND_TRAIN_CATAPULT_HUMANS;
 
                     // only if there is a stable
-                    if (playerHasBuilding(context, player->index, WAR_UNIT_STABLE))
+                    if (wu_playerHasBuilding(context, player->index, WAR_UNIT_STABLE))
                     {
                         commands[3] = WAR_COMMAND_TRAIN_KNIGHT;
                     }
@@ -2157,18 +2272,18 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
                 commands[0] = WAR_COMMAND_TRAIN_GRUNT;
 
                 // only if there is a lumber mill
-                if (playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
+                if (wu_playerHasBuilding(context, player->index, WAR_UNIT_LUMBERMILL_ORCS))
                 {
                     commands[1] = WAR_COMMAND_TRAIN_SPEARMAN;
                 }
 
                 // only if there is a blacksmith
-                if (playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
+                if (wu_playerHasBuilding(context, player->index, WAR_UNIT_BLACKSMITH_ORCS))
                 {
                     commands[2] = WAR_COMMAND_TRAIN_CATAPULT_ORCS;
 
                     // only if there is a kennel
-                    if (playerHasBuilding(context, player->index, WAR_UNIT_KENNEL))
+                    if (wu_playerHasBuilding(context, player->index, WAR_UNIT_KENNEL))
                     {
                         commands[3] = WAR_COMMAND_TRAIN_RAIDER;
                     }
@@ -2523,9 +2638,11 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
         }
         case WAR_COMMAND_ATTACK:
         {
-            if (entity && isUnit(entity))
+            if (entity && wu_isUnit(entity))
             {
-                WarUnitComponent* unit = &entity->unit;
+                WarUnitComponent* unit = we_getUnitComponent(context, entity);
+                assert(unit);
+
                 switch (unit->type)
                 {
                     // units

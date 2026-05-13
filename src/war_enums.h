@@ -1100,3 +1100,26 @@ typedef enum _WarSceneDownloadState
     WAR_SCENE_DOWNLOAD_FILE_LOADED,
     WAR_SCENE_DOWNLOAD_FAILED,
 } WarSceneDownloadState;
+
+typedef enum _WarComponentType
+{
+    COMP_TRANSFORM      = 0,
+    COMP_SPRITE         = 1,
+    COMP_UNIT           = 2,
+    COMP_ANIMATIONS     = 3,
+    COMP_ROAD           = 4,
+    COMP_WALL           = 5,
+    COMP_RUIN           = 6,
+    COMP_FOREST         = 7,
+    COMP_STATE_MACHINE  = 8,
+    COMP_UI             = 9,
+    COMP_TEXT           = 10,
+    COMP_RECT           = 11,
+    COMP_BUTTON         = 12,
+    COMP_AUDIO          = 13,
+    COMP_CURSOR         = 14,
+    COMP_PROJECTILE     = 15,
+    COMP_POISON_CLOUD   = 16,
+    COMP_SIGHT          = 17,
+    COMP_COUNT          = 18
+} WarComponentType;

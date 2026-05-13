@@ -80,12 +80,12 @@
     void typeName ## RemoveAtRange(typeName* list, int32_t index, int32_t count); \
     void typeName ## Clear(typeName* list); \
     void typeName ## Reverse(typeName* list); \
-    void typeName ## Sort(typeName* list, int32_t (*compareFn)(const itemType item1, const itemType item2)); \
+    void typeName ## Sort(typeName* list, int32_t (*compareFn)(const itemType item1, const itemType item2, void* userdata), void* userdata); \
     void typeName ## CopyTo(typeName* list, itemType array[], int32_t index); \
     itemType* typeName ## ToArray(typeName* list); \
 
 #define shlDefineList(typeName, itemType) \
-    void typeName ## __qsort(typeName* list, int32_t left, int32_t right, int32_t (*compareFn)(const itemType item1, const itemType item2)) \
+    void typeName ## __qsort(typeName* list, int32_t left, int32_t right, int32_t (*compareFn)(const itemType item1, const itemType item2, void* userdata), void* userdata) \
     { \
         if (left >= right) \
             return; \
@@ -98,8 +98,8 @@
         \
         while (i < j) \
         { \
-            do { i++; } while (compareFn(list->items[i], p) < 0); \
-            do { j--; } while (compareFn(list->items[j], p) > 0); \
+            do { i++; } while (compareFn(list->items[i], p, userdata) < 0); \
+            do { j--; } while (compareFn(list->items[j], p, userdata) > 0); \
             \
             if (i >= j) \
                 break; \
@@ -109,8 +109,8 @@
             list->items[j] = tmp; \
         } \
         \
-        typeName ## __qsort(list, left, j, compareFn); \
-        typeName ## __qsort(list, j + 1, right, compareFn); \
+        typeName ## __qsort(list, left, j, compareFn, userdata); \
+        typeName ## __qsort(list, j + 1, right, compareFn, userdata); \
     } \
     \
     void typeName ## Init(typeName* list, typeName ## Options options) \
@@ -273,9 +273,9 @@
             list->items[count - i - 1] = tmp; \
         } \
     } \
-    void typeName ## Sort(typeName* list, int32_t (*compareFn)(const itemType item1, const itemType item2)) \
+    void typeName ## Sort(typeName* list, int32_t (*compareFn)(const itemType item1, const itemType item2, void* userdata), void* userdata) \
     { \
-        typeName ## __qsort(list, 0, list->count - 1, compareFn); \
+        typeName ## __qsort(list, 0, list->count - 1, compareFn, userdata); \
     } \
     \
     void typeName ## CopyTo(typeName* list, itemType array[], int32_t index) \

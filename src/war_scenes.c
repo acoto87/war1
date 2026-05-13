@@ -27,7 +27,6 @@ WarScene* wsc_createScene(WarContext* context, WarSceneType type)
 void wsc_freeScene(WarScene* scene)
 {
     WarEntityManager* manager = &scene->entityManager;
-    WarEntityListFree(&manager->entities);
     WarEntityMapFree(&manager->entitiesByType);
     WarUnitMapFree(&manager->unitsByType);
     WarEntityIdMapFree(&manager->entitiesById);
@@ -108,11 +107,25 @@ void wsc_renderScene(WarContext* context)
 {
     TracyCZoneN(ctx, "RenderScene", 1);
 
-    WarEntityList* uiEntities = we_getEntities(context);
+    WarEntityList* uiEntities = we_getUIEntities(context);
+    assert(uiEntities);
+
     for (s32 i = 0; i < uiEntities->count; i++)
     {
         WarEntity* entity = uiEntities->items[i];
-        if (entity && (wui_isUIEntity(entity) || entity->type == WAR_ENTITY_TYPE_ANIMATION))
+        if (entity && entity->id != 0)
+        {
+            we_renderEntity(context, entity);
+        }
+    }
+
+    WarEntityList* animations = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
+    assert(animations);
+
+    for(s32 i = 0; i < animations->count; i++)
+    {
+        WarEntity* entity = animations->items[i];
+        if (entity && entity->id != 0)
         {
             we_renderEntity(context, entity);
         }

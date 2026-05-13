@@ -22,17 +22,21 @@ void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state
     NOT_USED(state);
 
     WarMap* map = context->map;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     // remove the current sprite...
     we_removeSpriteComponent(context, entity);
 
     // ...and add the sprite for the construction of the building
-    WarBuildingData buildingData = wu_getBuildingData(entity->unit.type);
+    WarBuildingData buildingData = wu_getBuildingData(unit->type);
     we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.buildingResource));
 
     // set the action to NONE because the sprite changes will be handled by this state
@@ -47,10 +51,14 @@ void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state
     NOT_USED(state);
 
     WarMap* map = context->map;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
@@ -60,7 +68,8 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
     if (state->build.cancelled)
     {
@@ -99,15 +108,15 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         assert(worker);
 
         // ...find an empty position to put it
-        vec2 position = wu_getUnitCenterPosition(entity, true);
+        vec2 position = wu_getUnitCenterPosition(context, entity, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wu_setUnitCenterPosition(worker, spawnPosition, true);
+        wu_setUnitCenterPosition(context, worker, spawnPosition, true);
 
         // remove the building sprite...
         we_removeSpriteComponent(context, entity);
 
         // ...and add the normal sprite of the building
-        WarUnitData buildingData = wu_getUnitData(entity->unit.type);
+        WarUnitData buildingData = wu_getUnitData(unit->type);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.resourceIndex));
 
         if (!wst_changeStateNextState(context, entity, state))
@@ -117,7 +126,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         }
 
         WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;
-        wa_createAudio(context, audioId, false);
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
 
         return;
     }
@@ -130,8 +139,11 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
     // and `resumeAction` functions to be able to pause it or resume it according
     // to the presence of the worker at the construction site
     //
-    s32 framesCount = entity->sprite.sprite.framesCount;
-    s32 frameIndex = entity->sprite.frameIndex;
+    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+    assert(sprite);
+
+    s32 framesCount = sprite->sprite.framesCount;
+    s32 frameIndex = sprite->frameIndex;
     f32 frameIndexStep = 1.0f / framesCount;
     if (unit->buildPercent >= (frameIndex + 1) * frameIndexStep)
     {
@@ -140,7 +152,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
             frameIndex += 1;
         }
     }
-    entity->sprite.frameIndex = frameIndex;
+    sprite->frameIndex = frameIndex;
 }
 
 void wst_freeBuildState(WarContext* context, WarState* state)

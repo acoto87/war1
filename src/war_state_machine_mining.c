@@ -30,9 +30,11 @@ void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* stat
 
     // NOTE: if the goldmine doesn't exists (it could ran out of gold, or other units destroyed it), or it's collapsing or going to collapse,
     // restore back the sprite component to the worker, so it should be visible again
-    if (!goldmine || isCollapsing(goldmine) || isGoingToCollapse(goldmine))
+    if (!goldmine || wst_isCollapsing(context, goldmine) || wst_isGoingToCollapse(context, goldmine))
     {
-        WarUnitComponent* unit = &entity->unit;
+        WarUnitComponent* unit = we_getUnitComponent(context, entity);
+        assert(unit);
+
         WarUnitData unitData = wu_getUnitData(unit->type);
 
         s32 spriteIndex = unitData.resourceIndex;
@@ -48,7 +50,9 @@ void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* stat
 void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
     WarEntity* goldmine = we_findEntity(context, (WarEntityId)state->mine.goldmineId);
 
     // if the goldmine doesn't exists (it could ran out of gold, or other units attacking it), or it's collapsing or going to collapse, go idle
@@ -57,21 +61,21 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
     if (!goldmine)
     {
         // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(entity, true);
+        vec2 position = wu_getUnitCenterPosition(context, entity, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wu_setUnitCenterPosition(entity, spawnPosition, true);
+        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
         return;
     }
 
-    if (isCollapsing(goldmine) || isGoingToCollapse(goldmine))
+    if (wst_isCollapsing(context, goldmine) || wst_isGoingToCollapse(context, goldmine))
     {
         // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(goldmine, true);
+        vec2 position = wu_getUnitCenterPosition(context, goldmine, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wu_setUnitCenterPosition(entity, spawnPosition, true);
+        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
@@ -89,16 +93,16 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         }
 
         // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(goldmine, true);
+        vec2 position = wu_getUnitCenterPosition(context, goldmine, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wu_setUnitCenterPosition(entity, spawnPosition, true);
+        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         // set the carrying gold sprites
         WarWorkerData workerData = wu_getWorkerData(unit->type);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingGoldResource));
 
         // find the closest town hall to deliver the gold
-        WarRace race = wu_getUnitRace(entity);
+        WarRace race = wu_getUnitRace(context, entity);
         WarUnitType townHallType = wu_getTownHallOfRace(race);
         WarEntity* townHall = we_findClosestUnitOfType(context, entity, townHallType);
 

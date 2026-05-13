@@ -973,9 +973,9 @@ bool wact_equalsActionStep(const WarUnitActionStep step1, const WarUnitActionSte
 
 shlDefineList(WarUnitActionStepList, WarUnitActionStep)
 
-void wact_addUnitActions(WarEntity* entity)
+void wact_addUnitActions(WarContext* context, WarEntity* entity)
 {
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
 
     for (s32 i = 0; i < WAR_ACTION_TYPE_COUNT; i++)
     {
@@ -989,16 +989,16 @@ void wact_addUnitActions(WarEntity* entity)
     }
 }
 
-s32 wact_getActionDuration(WarEntity* entity, WarUnitActionType type)
+s32 wact_getActionDuration(WarContext* context, WarEntity* entity, WarUnitActionType type)
 {
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
     if (type == WAR_ACTION_TYPE_NONE)
-    {
         return 0;
-    }
 
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
     WarUnitActionDef* actionDef = &gUnitActionDefs[unit->type][type];
 
     s32 duration = 0;
@@ -1023,9 +1023,9 @@ void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType ty
 {
     NOT_USED(context);
 
-    assert(isUnit(entity));
+    assert(wu_isUnit(entity));
 
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
 
     if (type != WAR_ACTION_TYPE_NONE)
     {
@@ -1054,9 +1054,7 @@ void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType ty
 
 void wact_updateAction(WarContext* context, WarEntity* entity)
 {
-    WarTransformComponent* transform = &entity->transform;
-    WarSpriteComponent* sprite = &entity->sprite;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
 
     if (!unit || unit->actionType == WAR_ACTION_TYPE_NONE)
     {
@@ -1132,8 +1130,14 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
 
                     frameIndex += (4 - ABS(4 - (s32)unit->direction));
 
+                    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+                    assert(transform);
+
                     transform->scale.x = inRange(unit->direction, WAR_DIRECTION_SOUTH_WEST, WAR_DIRECTION_COUNT) ? -1.0f : 1.0f;
                 }
+
+                WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+                assert(sprite);
 
                 sprite->frameIndex = frameIndex;
                 break;

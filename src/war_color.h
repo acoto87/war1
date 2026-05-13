@@ -3,18 +3,19 @@
 #include <stdint.h>
 
 typedef union {
-    uint8_t rgba[4];
     uint32_t packed;
+    uint8_t rgba[4];
     struct { uint8_t r, g, b, a; };
 } WarColor;
 
-#define WAR_COLOR_RGB(r, g, b) ((WarColor){{r, g, b, 255}})
-#define WAR_COLOR_RGBA(r, g, b, a) ((WarColor){{r, g, b, a}})
-#define WAR_COLOR_PACKED(value) ((WarColor){{ \
-    (u8)(((value) >> 24) & 0xFF), \
-    (u8)(((value) >> 16) & 0xFF), \
-    (u8)(((value) >>  8) & 0xFF), \
-    (u8)(((value) >>  0) & 0xFF) }})
+#define WAR_COLOR_RGBA_INIT(r_, g_, b_, a_) {.r = r_, .g = g_, .b = b_, .a = a_}
+#define WAR_COLOR_RGBA(r_, g_, b_, a_) ((WarColor)WAR_COLOR_RGBA_INIT(r_, g_, b_, a_))
+
+#define WAR_COLOR_RGB_INIT(r_, g_, b_) WAR_COLOR_RGBA_INIT(r_, g_, b_, 255)
+#define WAR_COLOR_RGB(r_, g_, b_) WAR_COLOR_RGBA(r_, g_, b_, 255)
+
+#define WAR_COLOR_PACKED_INIT(value) { .packed = (uint32_t)(value) }
+#define WAR_COLOR_PACKED(value) ((WarColor)WAR_COLOR_PACKED_INIT(value))
 
 #define WAR_COLOR_TRANSPARENT WAR_COLOR_PACKED(0x00000000)
 #define WAR_COLOR_WHITE WAR_COLOR_PACKED(0xFFFFFFFF)

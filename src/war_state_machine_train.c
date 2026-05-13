@@ -1,4 +1,6 @@
-﻿#include "war_state_machine.h"
+﻿#include <assert.h>
+
+#include "war_state_machine.h"
 
 #include "war_audio.h"
 
@@ -17,10 +19,14 @@ void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state
     NOT_USED(state);
 
     WarMap* map = context->map;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
     setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
@@ -32,10 +38,14 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
     NOT_USED(state);
 
     WarMap* map = context->map;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
-    vec2 unitSize = wu_getUnitSize(entity);
-    vec2 position = wmap_mapToTileCoordinatesV(entity->transform.position);
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
     setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
@@ -44,7 +54,8 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
 void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
     WarMap* map = context->map;
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
 
     if (state->train.cancelled)
     {
@@ -73,12 +84,17 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         unit->buildPercent = 1;
 
         // ...create the unit
-        WarEntity* unitToBuild = we_createDude(context, state->train.unitToBuild, 0, 0, unit->player, false);
+        WarEntity* unitToBuild = we_createDude(context, CREATE_UNIT_ARGS_INIT(
+            .type=state->train.unitToBuild,
+            .x=0, .y=0,
+            .player=unit->player,
+            .isGoingToTrain=false
+        ));
 
         // ...find an empty position to put it
-        vec2 position = wu_getUnitCenterPosition(entity, true);
+        vec2 position = wu_getUnitCenterPosition(context, entity, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
-        wu_setUnitCenterPosition(unitToBuild, spawnPosition, true);
+        wu_setUnitCenterPosition(context, unitToBuild, spawnPosition, true);
 
         if (!wst_changeStateNextState(context, entity, state))
         {
@@ -86,8 +102,8 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
-        WarAudioId audioId = isHumanUnit(unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
-        wa_createAudio(context, audioId, false);
+        WarAudioId audioId = wu_isHumanUnit(context, unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
+        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
 
         return;
     }

@@ -23,13 +23,15 @@ void wst_leaveRepairState(WarContext* context, WarEntity* entity, WarState* stat
 
 void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarUnitComponent* unit = &entity->unit;
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
     WarUnitStats stats = wu_getUnitStats(unit->type);
 
     WarEntity* building = we_findEntity(context, state->repair.buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
-    if (!building || isCollapsing(building) || isGoingToCollapse(building))
+    if (!building || wst_isCollapsing(context, building) || wst_isGoingToCollapse(context, building))
     {
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
@@ -37,9 +39,9 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // if the building is not in range, go to it
-    if (!wu_unitInRange(entity, building, stats.range))
+    if (!wu_unitInRange(context, entity, building, stats.range))
     {
-        vec2 targetTile = wu_unitPointOnTarget(entity, building);
+        vec2 targetTile = wu_unitPointOnTarget(context, entity, building);
 
         WarState* followState = wst_createFollowState(context, entity, building->id, targetTile, stats.range);
         followState->nextState = state;
