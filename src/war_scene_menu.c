@@ -78,7 +78,7 @@ static void wsm_setUIRaceValueByName(WarContext* context, StringView name, WarRa
     if (entity)
     {
         wui_setUIText(context, entity, getCustomGameRaceStr(value));
-        setUITextHighlight(context, entity, NO_HIGHLIGHT, 0);
+        wui_setUITextHighlight(context, entity, NO_HIGHLIGHT, 0);
     }
 }
 
@@ -88,7 +88,7 @@ static void wsm_setCustomMapValueByName(WarContext* context, StringView name, s3
     if (entity)
     {
         wui_setUIText(context, entity, getCustomMapStr(value));
-        setUITextHighlight(context, entity, NO_HIGHLIGHT, 0);
+        wui_setUITextHighlight(context, entity, NO_HIGHLIGHT, 0);
     }
 }
 

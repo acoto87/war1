@@ -6,6 +6,7 @@
 
 #include "war_entities.h"
 #include "war_map.h"
+#include "war_map_menu.h"
 #include "war_ui.h"
 #include "war_units.h"
 
@@ -278,7 +279,7 @@ void wmui_updateGoldText(WarContext* context)
 
     s32 gold = map->players[0].gold;
     wui_setUIText(context, txtGold, wstr_fromCStringFormat("GOLD:%*d", 6, gold));
-    setUITextHighlight(context, txtGold, NO_HIGHLIGHT, 0);
+    wui_setUITextHighlight(context, txtGold, NO_HIGHLIGHT, 0);
 
     TracyCZoneEnd(ctx);
 }
@@ -294,7 +295,7 @@ void wmui_updateWoodText(WarContext* context)
 
     s32 wood = map->players[0].wood;
     wui_setUIText(context, txtWood, wstr_fromCStringFormat("LUMBER:%*d", 6, wood));
-    setUITextHighlight(context, txtWood, NO_HIGHLIGHT, 0);
+    wui_setUITextHighlight(context, txtWood, NO_HIGHLIGHT, 0);
 
     TracyCZoneEnd(ctx);
 }
@@ -305,7 +306,9 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
 
     WarMap* map = context->map;
 
-    // retrieve entities of sprites of unit info/portraits
+    /* Find UI entities (portraits, bars, text) */
+    TracyCZoneN(ctxFindUIEntities, "FindUIEntities", 1);
+
     WarEntity* imgUnitInfo = we_findUIEntity(context, wsv_fromCString("imgUnitInfo"));
     assert(imgUnitInfo);
 
@@ -338,7 +341,11 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     WarEntity* txtUnitName = we_findUIEntity(context, wsv_fromCString("txtUnitName"));
     assert(txtUnitName);
 
-    // reset frame index of the sprites of unit info/portraits
+    TracyCZoneEnd(ctxFindUIEntities);
+
+    /* Reset UI elements */
+    TracyCZoneN(ctxResetUI, "ResetUI", 1);
+
     wui_setUIImage(context, imgUnitInfo, -1);
     wui_setUIImage(context, imgUnitInfoLife, -1);
 
@@ -352,24 +359,28 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
     wui_setUIRectWidth(context, rectPercentBar, 0);
     wui_setUIImage(context, rectPercentText, -1);
     wui_setUIText(context, txtUnitName, wstr_make());
-    setUITextHighlight(context, txtUnitName, NO_HIGHLIGHT, 0);
+    wui_setUITextHighlight(context, txtUnitName, NO_HIGHLIGHT, 0);
 
-    // update the frame index of unit info/portraits
-    // based on the number of entities selected
-    //
-    // TODO: the max number of selected entities shouldn't greater than 4 but
-    // that's not implemented right now, so put a min call to guard for that.
+    TracyCZoneEnd(ctxResetUI);
+
+    /* Determine selection count */
     s32 selectedEntitiesCount = MIN(map->selectedEntities.count, 4);
     if (selectedEntitiesCount > 1)
     {
-        // for 4 units selected -> frame indices 5, 8
-        // for 3 units selected -> frame indices 4, 7
-        // for 2 units selected -> frame indices 3, 6
+        /* Multiple selection handling */
+        TracyCZoneN(ctxUpdateMultiSelected, "UpdateMultiSelected", 1);
+
+        /* for 4 units selected -> frame indices 5, 8
+         * for 3 units selected -> frame indices 4, 7
+         * for 2 units selected -> frame indices 3, 6
+         */
         wui_setUIImage(context, imgUnitInfo, selectedEntitiesCount + 1);
         wui_setUIImage(context, imgUnitInfoLife, selectedEntitiesCount + 4);
 
+        TracyCZoneN(ctxMultiLoop, "MultiLoop", 1);
         for (s32 i = 1; i <= selectedEntitiesCount; i++)
         {
+            TracyCZoneN(ctxPerEntityUpdate, "PerEntityUpdate", 1);
             WarEntityId selectedEntityId = map->selectedEntities.items[i - 1];
             WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
             if (selectedEntity && wu_isUnit(selectedEntity))
@@ -381,10 +392,16 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
                 wui_setUIImage(context, imgUnitPortraits[i], unitData.portraitFrameIndex);
                 wmui_setLifeBar(context, rectLifeBars[i], unit);
             }
+            TracyCZoneEnd(ctxPerEntityUpdate);
         }
+        TracyCZoneEnd(ctxMultiLoop);
+
+        TracyCZoneEnd(ctxUpdateMultiSelected);
     }
     else if (selectedEntitiesCount == 1)
     {
+        /* Single selection handling */
+        TracyCZoneN(ctxUpdateSingleSelected, "UpdateSingleSelected", 1);
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
         WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
         if (selectedEntity && wu_isUnit(selectedEntity))
@@ -392,6 +409,7 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
             WarUnitComponent* unit = we_getUnitComponent(context, selectedEntity);
             assert(unit);
 
+            TracyCZoneN(ctxSingleUnitTypeCheck, "SingleUnitTypeCheck", 1);
             if (wu_isDudeUnit(context, selectedEntity))
             {
                 if (wu_isMagicUnit(context, selectedEntity))
@@ -416,13 +434,15 @@ void wmui_updateSelectedUnitsInfo(WarContext* context)
                     wui_setUIImage(context, imgUnitInfo, 0);
                 }
             }
+            TracyCZoneEnd(ctxSingleUnitTypeCheck);
 
             WarUnitData unitData = wu_getUnitData(unit->type);
             wui_setUIImage(context, imgUnitPortraits[0], unitData.portraitFrameIndex);
             wui_setUIText(context, txtUnitName, wsv_toString(unitData.name));
-            setUITextHighlight(context, txtUnitName, NO_HIGHLIGHT, 0);
+            wui_setUITextHighlight(context, txtUnitName, NO_HIGHLIGHT, 0);
             wmui_setLifeBar(context, rectLifeBars[0], unit);
         }
+        TracyCZoneEnd(ctxUpdateSingleSelected);
     }
 
     TracyCZoneEnd(ctx);
@@ -447,7 +467,7 @@ void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount,
 
     wui_setUIText(context, txtStatus, text);
 
-    setUITextHighlight(context, txtStatus, highlightIndex, highlightCount);
+    wui_setUITextHighlight(context, txtStatus, highlightIndex, highlightCount);
 
     if (gold == 0 && wood == 0)
     {
@@ -473,9 +493,9 @@ void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount,
         we_enableComponent(context, imgStatusWood, COMP_SPRITE);
         we_enableComponent(context, imgStatusGold, COMP_SPRITE);
         wui_setUIText(context, txtStatusWood, wstr_fromCStringFormat("%d", wood));
-        setUITextHighlight(context, txtStatusWood, NO_HIGHLIGHT, 0);
+        wui_setUITextHighlight(context, txtStatusWood, NO_HIGHLIGHT, 0);
         wui_setUIText(context, txtStatusGold, wstr_fromCStringFormat("%d", gold));
-        setUITextHighlight(context, txtStatusGold, NO_HIGHLIGHT, 0);
+        wui_setUITextHighlight(context, txtStatusGold, NO_HIGHLIGHT, 0);
     }
 }
 

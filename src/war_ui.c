@@ -94,12 +94,48 @@ void wui_setUITooltip(WarContext* context, WarEntity* uiButton, s32 highlightInd
     }
 }
 
-void setUIEntityStatus(WarContext* ctx, WarEntity* uiEntity, bool value) { we_setComponentEnabled(ctx, uiEntity, COMP_UI, value); }
+void wui_setUITextHighlight(WarContext* context, WarEntity* uiButton, s32 highlightIndex, s32 highlightCount)
+{
+    WarTextComponent* textComp = we_getTextComponent(context, uiButton);
+    assert(textComp);
 
-void setUIButtonStatus(WarContext* ctx, WarEntity* uiEntity, bool value) { we_setComponentEnabled(ctx, uiEntity, COMP_BUTTON, value); }
-void setUIButtonInteractive(WarContext* ctx, WarEntity* uiEntity, bool value) { we_getButtonComponent((ctx), (uiEntity))->interactive = (value); }
-void setUIButtonHotKey(WarContext* ctx, WarEntity* uiEntity, WarKeys key) { we_getButtonComponent((ctx), (uiEntity))->hotKey = (key); }
-void setUIButtonClickHandler(WarContext* ctx, WarEntity* uiEntity, void (*handler)(WarContext*, WarEntity*)) { we_getButtonComponent((ctx), (uiEntity))->clickHandler = (handler); }
+    textComp->highlightIndex = highlightIndex;
+    textComp->highlightCount = highlightCount;
+}
+
+void setUIEntityStatus(WarContext* context, WarEntity* uiEntity, bool value)
+{
+    we_setComponentEnabled(context, uiEntity, COMP_UI, value);
+}
+
+void setUIButtonStatus(WarContext* context, WarEntity* uiEntity, bool value)
+{
+    we_setComponentEnabled(context, uiEntity, COMP_BUTTON, value);
+}
+
+void setUIButtonInteractive(WarContext* context, WarEntity* uiEntity, bool value)
+{
+    WarButtonComponent* button = we_getButtonComponent(context, uiEntity);
+    assert(button);
+
+    button->interactive = value;
+}
+
+void setUIButtonHotKey(WarContext* context, WarEntity* uiEntity, WarKeys key)
+{
+    WarButtonComponent* button = we_getButtonComponent(context, uiEntity);
+    assert(button);
+
+    button->hotKey = key;
+}
+
+void setUIButtonClickHandler(WarContext* context, WarEntity* uiEntity, void (*handler)(WarContext*, WarEntity*))
+{
+    WarButtonComponent* button = we_getButtonComponent(context, uiEntity);
+    assert(button);
+
+    button->clickHandler = handler;
+}
 
 void wui_setUIButtonStatusByName(WarContext* context, StringView name, bool enabled)
 {

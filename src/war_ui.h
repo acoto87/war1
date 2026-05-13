@@ -18,10 +18,7 @@ void wui_setUIRectWidth(WarContext* context, WarEntity* uiRect, s32 width);
 void wui_clearUITooltip(WarContext* context, WarEntity* uiButton);
 void wui_setUITooltip(WarContext* context, WarEntity* uiButton, s32 highlightIndex, s32 highlightCount, String text);
 
-#define setUITextHighlight(ctx, uiEntity, index, count) \
-    do { (we_getTextComponent((ctx), (uiEntity))->highlightIndex = (index)); \
-       (we_getTextComponent((ctx), (uiEntity))->highlightCount = (count)); } while (0)
-
+void wui_setUITextHighlight(WarContext* context, WarEntity* uiButton, s32 highlightIndex, s32 highlightCount);
 
 void setUIEntityStatus(WarContext* ctx, WarEntity* uiEntity, bool value);
 

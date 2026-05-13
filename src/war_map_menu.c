@@ -494,11 +494,12 @@ void createRestartMenu(WarContext* context)
         .backgroundNormalRef  = smallNormalRef,
         .backgroundPressedRef = smallPressedRef,
         .position             = vec2_addv(messagePanel, vec2i(20, 25)),
+        .hotKey               = WAR_KEY_R,
+        .clickHandler         = wmm_handleRestartRestart,
+        .highlightIndex       = 0,
+        .highlightCount       = 1,
     ));
     setUIEntityStatus(context, uiEntity, false);
-    setUIButtonClickHandler(context, uiEntity, wmm_handleRestartRestart);
-    setUIButtonHotKey(context, uiEntity, WAR_KEY_R);
-    setUITextHighlight(context, uiEntity, 0, 1);
 
     uiEntity = wui_createUITextButton(context, wstr_fromCString("btnRestartCancel"), CREATE_UI_TEXT_BUTTON_ARGS_INIT(
         .fontIndex            = 1,

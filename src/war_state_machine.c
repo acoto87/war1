@@ -59,8 +59,6 @@ WarState* wst_createState(WarContext* context, WarEntity* entity, WarStateType t
 
 void wst_changeNextState(WarContext* context, WarEntity* entity, WarState* state, bool wst_leaveState, bool wst_enterState)
 {
-    NOT_USED(context);
-
     WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
     assert(stateMachine);
 

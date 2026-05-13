@@ -1451,11 +1451,11 @@ void updateCommandButtons(WarContext* context)
             s32 dudesCount = wu_getTotalNumberOfDudes(context, unit->player);
 
             wui_setUIText(context, commandTexts[0], wstr_fromCString("FOOD USAGE:"));
-            setUITextHighlight(context, commandTexts[0], NO_HIGHLIGHT, 0);
+            wui_setUITextHighlight(context, commandTexts[0], NO_HIGHLIGHT, 0);
             wui_setUIText(context, commandTexts[1], wstr_fromCStringFormat("GROWN %d", farmsCount * 4 + 1));
-            setUITextHighlight(context, commandTexts[1], NO_HIGHLIGHT, 0);
+            wui_setUITextHighlight(context, commandTexts[1], NO_HIGHLIGHT, 0);
             wui_setUIText(context, commandTexts[2], wstr_fromCStringFormat(" USED %d", dudesCount));
-            setUITextHighlight(context, commandTexts[2], NO_HIGHLIGHT, 0);
+            wui_setUITextHighlight(context, commandTexts[2], NO_HIGHLIGHT, 0);
             TracyCZoneEnd(ctx);
             return;
         }
@@ -1468,9 +1468,9 @@ void updateCommandButtons(WarContext* context)
         s32 gold = unit->amount;
 
         wui_setUIText(context, commandTexts[0], wstr_fromCString("GOLD LEFT"));
-        setUITextHighlight(context, commandTexts[0], NO_HIGHLIGHT, 0);
+        wui_setUITextHighlight(context, commandTexts[0], NO_HIGHLIGHT, 0);
         wui_setUIText(context, commandTexts[3], wstr_fromCStringFormat("%d", gold));
-        setUITextHighlight(context, commandTexts[3], NO_HIGHLIGHT, 0);
+        wui_setUITextHighlight(context, commandTexts[3], NO_HIGHLIGHT, 0);
         TracyCZoneEnd(ctx);
         return;
     }
