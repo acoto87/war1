@@ -1386,10 +1386,15 @@ vec2 wu_getUnitSize(WarContext* context, WarEntity* entity)
 
 vec2 wu_getUnitFrameSize(WarContext* context, WarEntity* entity)
 {
-    WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-    assert(sprite);
+    if (we_isComponentEnabled(context, entity, COMP_SPRITE))
+    {
+        WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
+        assert(sprite);
 
-    return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
+        return vec2i(sprite->sprite.frameWidth, sprite->sprite.frameHeight);
+    }
+
+    return VEC2_ZERO;
 }
 
 rect wu_getUnitFrameRect(WarContext* context, WarEntity* entity)

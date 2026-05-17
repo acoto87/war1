@@ -2,16 +2,7 @@
 
 #include "war.h"
 
-void wmm_createMenu(WarContext* context);
-void wmm_createOptionsMenu(WarContext* context);
-void wmm_createGameOverMenu(WarContext* context);
-void wmm_createQuitMenu(WarContext* context);
-
-void wmm_enableOrDisableCommandButtons(WarContext* context, bool interactive);
-void wmm_showOrHideMenu(WarContext* context, bool status);
-void wmm_showOrHideOptionsMenu(WarContext* context, bool status);
 void wmm_showOrHideGameOverMenu(WarContext* context, bool status);
-void wmm_showOrHideQuitMenu(WarContext* context, bool status);
 void wmm_showDemoEndMenu(WarContext* context, bool status);
 
 // menu button handlers

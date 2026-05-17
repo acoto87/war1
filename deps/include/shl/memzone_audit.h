@@ -319,13 +319,14 @@ static void mz__audit_zone_state(const memzone_t* zone, char* buf, size_t sz)
         size_t  max     = mz_maxSize(zone);
         float   pctFull = max > 0 ? ((float)used / (float)max) * 100.0f : 0.0f;
         snprintf(buf, sz,
-            "used=%llu, max=%llu (%.2f%% full), blocks=%d, frag=%.2f%%, free=%llu bytes",
+            "used=%llu, max=%llu (%.2f%% full), blocks=%d, frag=%.2f%%, free=%llu bytes, rover=%p",
             (unsigned long long)used,
             (unsigned long long)max,
             pctFull,
             blocks,
             frag,
-            (unsigned long long)(max - used));
+            (unsigned long long)(max - used),
+            (const void*)zone->rover);
     }
 }
 

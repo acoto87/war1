@@ -455,7 +455,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
 
     // Post finished entity IDs to the main thread for removal.
     // Never call we_removeEntityById from the audio thread: it calls wm_free which
-    // would race with main-thread allocations on permanentZone.
+    // would race with main-thread allocations on globalZone.
     if (toRemoveCount > 0)
     {
         SDL_LockMutex(context->audioRemoveMutex);
@@ -488,7 +488,7 @@ bool wa_initAudio(WarContext* context)
 
     // Pre-allocate the mix buffer on the main thread before audio starts.
     // This ensures the audio callback thread never needs to call wm_calloc
-    // or wm_free, which would race with main-thread allocations on permanentZone.
+    // or wm_free, which would race with main-thread allocations on globalZone.
     context->audioMixBuffer = (s16*)wm_alloc(AUDIO_MIX_BUFFER_MAX_SAMPLES * sizeof(s16));
     if (!context->audioMixBuffer)
     {

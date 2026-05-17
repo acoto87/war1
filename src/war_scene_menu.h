@@ -3,15 +3,7 @@
 #include "war.h"
 
 void wsc_enterSceneMainMenu(WarContext* context);
-
-void wsc_createMainMenu(WarContext* context);
-void wsc_createSinglePlayerMenu(WarContext* context);
-void wsc_createLoadMenu(WarContext* context);
-void wsc_createCustomGameMenu(WarContext* context);
-
-void wsc_showOrHideMainMenu(WarContext* context, bool status);
-void wsc_showOrHideSinglePlayer(WarContext* context, bool status);
-void wsc_showOrHideCustomGame(WarContext* context, bool status);
+void wsc_renderSceneMainMenu(WarContext* context);
 
 // menu button handlers
 void wsc_handleMenuSinglePlayer(WarContext* context, WarEntity* entity);

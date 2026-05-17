@@ -130,6 +130,7 @@ typedef struct
     s32 tooltipHighlightCount;
     s32 gold;
     s32 wood;
+    s32 foregroundFrameIndex;
     WarClickHandler clickHandler;
 } CreateUIImageButtonArgs;
 
@@ -139,10 +140,9 @@ typedef struct
     .fontColor      = FONT_NORMAL_COLOR_INIT, \
     .highlightColor = FONT_HIGHLIGHT_COLOR_INIT, \
     .highlightIndex = NO_HIGHLIGHT, \
-    .horizontalAlign = WAR_TEXT_ALIGN_LEFT, \
-    .verticalAlign   = WAR_TEXT_ALIGN_TOP, \
-    .lineAlign       = WAR_TEXT_ALIGN_LEFT, \
-    .wrapping         = WAR_TEXT_WRAP_NONE, \
+    .verticalAlign  = WAR_TEXT_ALIGN_TOP, \
+    .lineAlign      = WAR_TEXT_ALIGN_LEFT, \
+    .wrapping       = WAR_TEXT_WRAP_NONE, \
     __VA_ARGS__ \
 }
 #define CREATE_UI_TEXT_ARGS_INIT(...) (&(CreateUITextArgs)CREATE_UI_TEXT_ARGS_INIT_CONST(__VA_ARGS__))
@@ -187,6 +187,7 @@ typedef struct
     .interactive           = true, \
     .hotKey                = WAR_KEY_NONE, \
     .tooltipHighlightIndex = NO_HIGHLIGHT, \
+    .foregroundFrameIndex  = 0, \
     __VA_ARGS__ \
 }
 #define CREATE_UI_IMAGE_BUTTON_ARGS_INIT(...) (&(CreateUIImageButtonArgs)CREATE_UI_IMAGE_BUTTON_ARGS_INIT_CONST(__VA_ARGS__))

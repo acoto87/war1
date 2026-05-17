@@ -5,13 +5,14 @@
 #include "war_scene_blizzard.h"
 #include "war_scene_briefing.h"
 #include "war_scene_download.h"
+#include "war_scene_menu.h"
 
 WarSceneDescriptor sceneDescriptors[WAR_SCENE_COUNT] =
 {
-    { WAR_SCENE_DOWNLOAD,   wsc_enterSceneDownload, NULL, wsc_updateSceneDownload },
-    { WAR_SCENE_BLIZZARD,   wsc_enterSceneBlizzard, NULL, wsc_updateSceneBlizzard },
-    { WAR_SCENE_MAIN_MENU,  wsc_enterSceneMainMenu, NULL, NULL },
-    { WAR_SCENE_BRIEFING,   wsc_enterSceneBriefing, NULL, wsc_updateSceneBriefing }
+    { WAR_SCENE_DOWNLOAD,   wsc_enterSceneDownload, NULL, wsc_updateSceneDownload, NULL },
+    { WAR_SCENE_BLIZZARD,   wsc_enterSceneBlizzard, NULL, wsc_updateSceneBlizzard, NULL },
+    { WAR_SCENE_MAIN_MENU,  wsc_enterSceneMainMenu, NULL, NULL,                    wsc_renderSceneMainMenu },
+    { WAR_SCENE_BRIEFING,   wsc_enterSceneBriefing, NULL, wsc_updateSceneBriefing, NULL }
 };
 
 WarScene* wsc_createScene(WarContext* context, WarSceneType type)
@@ -71,7 +72,6 @@ void wsc_updateScene(WarContext* context)
     else
     {
         wcheatp_updateCheatsPanel(context);
-        wui_updateUIButtons(context, !cheatsEnabledAndVisible(scene));
         wui_updateUICursor(context);
         wanim_updateAnimations(context);
     }
@@ -106,6 +106,13 @@ void wsc_leaveScene(WarContext* context)
 void wsc_renderScene(WarContext* context)
 {
     TracyCZoneN(ctx, "RenderScene", 1);
+
+    WarScene* scene = context->scene;
+    WarSceneFunc renderSceneFunc = sceneDescriptors[scene->type].renderSceneFunc;
+    if (renderSceneFunc)
+    {
+        renderSceneFunc(context);
+    }
 
     WarEntityList* uiEntities = we_getUIEntities(context);
     assert(uiEntities);

@@ -13,18 +13,43 @@
 #include "war_alloc.h"
 #include "war_log.h"
 
-memzone_t* permanentZone = NULL;
+memzone_t* globalZone = NULL;
 memzone_t* frameZone = NULL;
-memzone_t* currentZone = NULL;
+memzone_t* audioZone = NULL;
 
 static void zoneReporter(const memzone_t* zone, mz_report_t report, const void* ptr, const char* message, void* userData)
 {
-    NOT_USED(zone);
-    NOT_USED(report);
-    NOT_USED(ptr);
     NOT_USED(userData);
 
-    logError("memzone: %s", message);
+    const char* zoneName = "unknown";
+    if (zone == globalZone)
+        zoneName = "globalZone";
+    else if (zone == frameZone)
+        zoneName = "frameZone";
+    else if (zone == audioZone)
+        zoneName = "audioZone";
+
+    const char* reportName = NULL;
+    switch (report)
+    {
+        case MZ_REPORT_ALLOCATION_FAILURE: reportName = "allocation failure"; break;
+        case MZ_REPORT_INVALID_FREE: reportName = "invalid free"; break;
+        case MZ_REPORT_VALIDATION_FAILURE: reportName = "validation failure"; break;
+        default: reportName = "unknown"; break;
+    }
+
+    logError("Memory zone report [%s]: %s, %s, for %p.", zoneName, reportName, message, ptr);
+}
+
+static bool initZone(size_t size, const char* logFileName, memzone_t** outZone)
+{
+#ifdef SHL_MZ_DEBUG
+    *outZone = mz_initAudit(size, SHL_MZ_AUDIT_FORMAT_COMPACT, logFileName);
+#else
+    *outZone = mz_init(size);
+#endif
+
+    return *outZone;
 }
 
 static bool isInZone(memzone_t* zone, void* p)
@@ -69,63 +94,51 @@ static void freeInZone(memzone_t* zone, void* p, const char* file, int line)
 #endif
 }
 
-bool wm_allocInit(size_t permSize, size_t frameSize)
+bool wm_allocInit(size_t globalSize, size_t frameSize, size_t audioSize)
 {
-#ifdef SHL_MZ_DEBUG
-    permanentZone = mz_initAudit(permSize, SHL_MZ_AUDIT_FORMAT_COMPACT, "permanent_zone.log");
-#else
-    permanentZone = mz_init(permSize);
-#endif
-
-    if (!permanentZone)
+    if (!initZone(globalSize, "global_zone.log", &globalZone))
     {
-        logError("Failed to initialize permanentZone.");
+        logError("Failed to initialize globalZone.");
         return false;
     }
 
-#ifdef SHL_MZ_DEBUG
-    frameZone = mz_initAudit(frameSize, SHL_MZ_AUDIT_FORMAT_COMPACT, "frame_zone.log");
-#else
-    frameZone = mz_init(frameSize);
-#endif
-
-    if (!frameZone)
+    if (!initZone(frameSize, "frame_zone.log", &frameZone))
     {
         logError("Failed to initialize frameZone.");
-        mz_destroy(permanentZone);
-        permanentZone = NULL;
+        mz_destroy(globalZone);
+        globalZone = NULL;
         return false;
     }
 
-    currentZone = permanentZone;
+    if (!initZone(audioSize, "audio_zone.log", &audioZone))
+    {
+        logError("Failed to initialize audioZone.");
+        mz_destroy(globalZone);
+        mz_destroy(frameZone);
+        globalZone = NULL;
+        frameZone = NULL;
+        return false;
+    }
 
-    mz_setReporter(permanentZone, zoneReporter, NULL);
+    mz_setReporter(globalZone, zoneReporter, NULL);
     mz_setReporter(frameZone, zoneReporter, NULL);
+    mz_setReporter(audioZone, zoneReporter, NULL);
     return true;
 }
 
 void wm_allocFree(void)
 {
-    if (permanentZone) mz_destroy(permanentZone);
+    if (globalZone) mz_destroy(globalZone);
     if (frameZone) mz_destroy(frameZone);
-    permanentZone = NULL;
+    if (audioZone) mz_destroy(audioZone);
+    globalZone = NULL;
     frameZone = NULL;
-    currentZone = NULL;
-}
-
-void wm_setZone(memzone_t* zone)
-{
-    currentZone = zone;
-}
-
-void wm_resetZone(void)
-{
-    currentZone = permanentZone;
+    audioZone = NULL;
 }
 
 void* wm__alloc(size_t sz, const char* file, int line)
 {
-    return allocInZone(currentZone, sz, file, line);
+    return allocInZone(globalZone, sz, file, line);
 }
 
 void* wm__allocFrame(size_t sz, const char* file, int line)
@@ -133,12 +146,9 @@ void* wm__allocFrame(size_t sz, const char* file, int line)
     return allocInZone(frameZone, sz, file, line);
 }
 
-void* wm__calloc(size_t n, size_t sz, const char* file, int line)
+void* wm__allocAudio(size_t sz, const char* file, int line)
 {
-    // Guard against n*sz wrapping to a smaller value on overflow.
-    if (n != 0 && sz > (size_t)-1 / n) return NULL;
-    // NOTE: mz_alloc already returns zeroed memory
-    return allocInZone(currentZone, n * sz, file, line);
+    return allocInZone(audioZone, sz, file, line);
 }
 
 void* wm__realloc(void* p, size_t sz, const char* file, int line)
@@ -150,9 +160,9 @@ void* wm__realloc(void* p, size_t sz, const char* file, int line)
         return NULL;
     }
 
-    if (isInZone(permanentZone, p))
+    if (isInZone(globalZone, p))
     {
-        return reallocInZone(permanentZone, p, sz, file, line);
+        return reallocInZone(globalZone, p, sz, file, line);
     }
 
     if (isInZone(frameZone, p))
@@ -166,17 +176,33 @@ void* wm__realloc(void* p, size_t sz, const char* file, int line)
     return realloc(p, sz);
 }
 
+void* wm__reallocAudio(void* p, size_t sz, const char* file, int line)
+{
+    if (!p) return wm__allocAudio(sz, file, line);
+    if (sz == 0)
+    {
+        wm__free(p, file, line);
+        return NULL;
+    }
+
+    return reallocInZone(audioZone, p, sz, file, line);
+}
+
 void wm__free(void* p, const char* file, int line)
 {
     if (!p) return;
 
-    if (isInZone(permanentZone, p))
+    if (isInZone(globalZone, p))
     {
-        freeInZone(permanentZone, p, file, line);
+        freeInZone(globalZone, p, file, line);
     }
     else if (isInZone(frameZone, p))
     {
         freeInZone(frameZone, p, file, line);
+    }
+    else if (isInZone(audioZone, p))
+    {
+        freeInZone(audioZone, p, file, line);
     }
     else
     {

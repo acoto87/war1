@@ -2281,11 +2281,6 @@ void renderUnit(WarContext* context, WarEntity* entity)
     wr_fillRect(context, rectv(wu_getUnitSpriteCenter(context, entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
 #endif
 
-#ifdef DEBUG_RENDER_UNIT_STATS
-    // NOTE: TTF text rendering not available in SDL_Renderer path.
-    // Use sprite text if needed in the future.
-#endif
-
     if (we_isComponentEnabled(context, entity, COMP_SPRITE) && (isVisible || unit->hasBeenSeen))
     {
         WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
@@ -2821,12 +2816,19 @@ void we_renderUnitSelection(WarContext* context)
             wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
             wr_translate(context, position.x, position.y);
 
-            rect selr = rectf(0.5f * (frameSize.x - unitSize.x), 0.5f * (frameSize.y - unitSize.y), unitSize.x, unitSize.y);
+            rect selr = rectf(
+                0.5f * (frameSize.x - unitSize.x),
+                0.5f * (frameSize.y - unitSize.y),
+                unitSize.x,
+                unitSize.y
+            );
+
             WarColor color = WAR_COLOR_WHITE_SELECTION;
             if (wu_isFriendlyUnit(context, entity))
                 color = WAR_COLOR_GREEN_SELECTION;
             else if (wu_isEnemyUnit(context, entity))
                 color = WAR_COLOR_RED_SELECTION;
+
             wr_strokeRect(context, selr, color, 1.0f);
 
             wr_restore(context);

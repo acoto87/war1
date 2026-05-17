@@ -358,16 +358,51 @@ bool wmap_areAllUnitTilesInState(WarContext* context, WarMap* map, WarEntity* en
     return wmap_areAllTilesInState(map, (s32)position.x, (s32)position.y, unit->sizex, unit->sizey, state);
 }
 
-bool wmap_isUnitPartiallyVisible(WarContext* context, WarMap* map, WarEntity* entity) { return wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_VISIBLE); }
-bool wmap_isUnitVisible(WarContext* context, WarMap* map, WarEntity* entity) { return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_VISIBLE); }
-bool wmap_isUnitPartiallyFog(WarContext* context, WarMap* map, WarEntity* entity) { return wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_FOG); }
-bool wmap_isUnitFog(WarContext* context, WarMap* map, WarEntity* entity) { return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_FOG); }
-bool wmap_isUnitPartiallyUnkown(WarContext* context, WarMap* map, WarEntity* entity) { return wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_UNKOWN); }
-bool wmap_isUnitUnknown(WarContext* context, WarMap* map, WarEntity* entity) { return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_UNKOWN); }
+bool wmap_isUnitPartiallyVisible(WarContext* context, WarMap* map, WarEntity* entity)
+{
+    return wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_VISIBLE);
+}
 
-bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y) { return wmap_isTileInState(map, x, y, MAP_TILE_STATE_UNKOWN); }
-bool wmap_isTileFog(WarMap* map, s32 x, s32 y) { return wmap_isTileInState(map, x, y, MAP_TILE_STATE_FOG); }
-bool wmap_isTileVisible(WarMap* map, s32 x, s32 y) { return wmap_isTileInState(map, x, y, MAP_TILE_STATE_VISIBLE); }
+bool wmap_isUnitVisible(WarContext* context, WarMap* map, WarEntity* entity)
+{
+    return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_VISIBLE);
+}
+
+bool wmap_isUnitPartiallyFog(WarContext* context, WarMap* map, WarEntity* entity)
+{
+    return wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_FOG);
+}
+
+bool wmap_isUnitFog(WarContext* context, WarMap* map, WarEntity* entity)
+{
+    return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_FOG);
+}
+
+bool wmap_isUnitPartiallyUnkown(WarContext* context, WarMap* map, WarEntity* entity)
+{
+    return wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_UNKOWN);
+}
+
+bool wmap_isUnitUnknown(WarContext* context, WarMap* map, WarEntity* entity)
+{
+    return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_UNKOWN);
+}
+
+bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y)
+{
+    return wmap_isTileInState(map, x, y, MAP_TILE_STATE_UNKOWN);
+}
+
+bool wmap_isTileFog(WarMap* map, s32 x, s32 y)
+{
+    return wmap_isTileInState(map, x, y, MAP_TILE_STATE_FOG);
+}
+
+bool wmap_isTileVisible(WarMap* map, s32 x, s32 y)
+{
+    return wmap_isTileInState(map, x, y, MAP_TILE_STATE_VISIBLE);
+}
+
 
 WarColor wmap_getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
 {
@@ -863,13 +898,6 @@ void wmap_enterMap(WarContext* context)
 
     // add ui entities
     wmui_createMapUI(context);
-    wmm_createMenu(context);
-    wmm_createOptionsMenu(context);
-    createObjectivesMenu(context);
-    createRestartMenu(context);
-    wmm_createGameOverMenu(context);
-    wmm_createQuitMenu(context);
-    createDemoEndMenu(context);
     wui_createUICursor(context, wstr_fromCString("cursor"), CREATE_UI_CURSOR_ARGS_INIT(
         .type     = WAR_CURSOR_ARROW,
         .position = VEC2_ZERO,
@@ -1402,29 +1430,20 @@ void updateCommandButtons(WarContext* context)
 
     WarMap* map = context->map;
 
-    WarEntity* commandButtons[6] =
+    // Reset all IMGUI command panel state.
+    for (s32 i = 0; i < 6; i++)
     {
-        we_findUIEntity(context, wsv_fromCString("btnCommand0")),
-        we_findUIEntity(context, wsv_fromCString("btnCommand1")),
-        we_findUIEntity(context, wsv_fromCString("btnCommand2")),
-        we_findUIEntity(context, wsv_fromCString("btnCommand3")),
-        we_findUIEntity(context, wsv_fromCString("btnCommand4")),
-        we_findUIEntity(context, wsv_fromCString("btnCommand5"))
-    };
+        map->commandSlotActive[i]   = false;
+        map->commandSlots[i]        = (WarUnitCommandData){0};
+    }
 
-    WarEntity* commandTexts[4] =
+    for (s32 i = 0; i < 4; i++)
     {
-        we_findUIEntity(context, wsv_fromCString("txtCommand0")),
-        we_findUIEntity(context, wsv_fromCString("txtCommand1")),
-        we_findUIEntity(context, wsv_fromCString("txtCommand2")),
-        we_findUIEntity(context, wsv_fromCString("txtCommand3"))
-    };
-
-    for (s32 i = 0; i < arrayLength(commandButtons); i++)
-        we_disableComponent(context, commandButtons[i], COMP_BUTTON);
-
-    for (s32 i = 0; i < arrayLength(commandTexts); i++)
-        wui_clearUIText(context, commandTexts[i]);
+        map->commandTextVisible[i]         = false;
+        map->commandTexts[i][0]            = '\0';
+        map->commandTextHighlightIndex[i]  = NO_HIGHLIGHT;
+        map->commandTextHighlightCount[i]  = 0;
+    }
 
     s32 selectedEntitiesCount = map->selectedEntities.count;
     if (selectedEntitiesCount == 0)
@@ -1450,12 +1469,13 @@ void updateCommandButtons(WarContext* context)
             s32 farmsCount = wu_getNumberOfBuildingsOfType(context, unit->player, unit->type, true);
             s32 dudesCount = wu_getTotalNumberOfDudes(context, unit->player);
 
-            wui_setUIText(context, commandTexts[0], wstr_fromCString("FOOD USAGE:"));
-            wui_setUITextHighlight(context, commandTexts[0], NO_HIGHLIGHT, 0);
-            wui_setUIText(context, commandTexts[1], wstr_fromCStringFormat("GROWN %d", farmsCount * 4 + 1));
-            wui_setUITextHighlight(context, commandTexts[1], NO_HIGHLIGHT, 0);
-            wui_setUIText(context, commandTexts[2], wstr_fromCStringFormat(" USED %d", dudesCount));
-            wui_setUITextHighlight(context, commandTexts[2], NO_HIGHLIGHT, 0);
+            snprintf(map->commandTexts[0], sizeof(map->commandTexts[0]), "FOOD USAGE:");
+            map->commandTextVisible[0] = true;
+            snprintf(map->commandTexts[1], sizeof(map->commandTexts[1]), "GROWN %d", farmsCount * 4 + 1);
+            map->commandTextVisible[1] = true;
+            snprintf(map->commandTexts[2], sizeof(map->commandTexts[2]), " USED %d", dudesCount);
+            map->commandTextVisible[2] = true;
+
             TracyCZoneEnd(ctx);
             return;
         }
@@ -1467,10 +1487,11 @@ void updateCommandButtons(WarContext* context)
     {
         s32 gold = unit->amount;
 
-        wui_setUIText(context, commandTexts[0], wstr_fromCString("GOLD LEFT"));
-        wui_setUITextHighlight(context, commandTexts[0], NO_HIGHLIGHT, 0);
-        wui_setUIText(context, commandTexts[3], wstr_fromCStringFormat("%d", gold));
-        wui_setUITextHighlight(context, commandTexts[3], NO_HIGHLIGHT, 0);
+        snprintf(map->commandTexts[0], sizeof(map->commandTexts[0]), "GOLD LEFT");
+        map->commandTextVisible[0] = true;
+        snprintf(map->commandTexts[3], sizeof(map->commandTexts[3]), "%d", gold);
+        map->commandTextVisible[3] = true;
+
         TracyCZoneEnd(ctx);
         return;
     }
@@ -1504,17 +1525,8 @@ void updateCommandButtons(WarContext* context)
     {
         if (commands[i] != WAR_COMMAND_NONE)
         {
-            WarButtonComponent* button = we_getButtonComponent(context, commandButtons[i]);
-            assert(button);
-
-            WarUnitCommandData commandData = wu_getUnitCommandData(context, entity, commands[i]);
-            wui_setUIImage(context, commandButtons[i], commandData.frameIndex);
-            wui_setUITooltip(context, commandButtons[i], commandData.highlightIndex, commandData.highlightCount, wsv_toString(commandData.tooltip));
-            we_enableComponent(context, commandButtons[i], COMP_BUTTON);
-            button->gold = commandData.gold;
-            button->wood = commandData.wood;
-            button->hotKey = commandData.hotKey;
-            button->clickHandler = commandData.clickHandler;
+            map->commandSlots[i]       = wu_getUnitCommandData(context, entity, commands[i]);
+            map->commandSlotActive[i]  = true;
         }
     }
 
@@ -1646,9 +1658,6 @@ void updateStatus(WarContext* context)
     WarEntity* statusCursor = we_findUIEntity(context, wsv_fromCString("txtStatusCursor"));
     assert(statusCursor);
 
-    WarEntity* statusTextUI = we_findUIEntity(context, wsv_fromCString("txtStatus"));
-    assert(statusTextUI);
-
     WarEntity* cheatFeedbackText = we_findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
     assert(cheatFeedbackText);
 
@@ -1740,14 +1749,12 @@ void updateStatus(WarContext* context)
             StringView cheatStatusText = wstr_view(&cheatStatus->text);
 
             String statusText = wstr_concat(prefix, cheatStatusText);
-            wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, statusText);
+            wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, wstr_view(&statusText));
+            wstr_free(statusText);
 
             WarFontParams params = {0};
-            WarTextComponent* statusText2 = we_getTextComponent(context, statusTextUI);
-            assert(statusText2);
-
-            params.fontSize = statusText2->fontSize;
-            params.fontData = getFontData(statusText2->fontIndex);
+            params.fontSize = 6.0f;
+            params.fontData = getFontData(0);
 
             vec2 prefixSize = wfont_measureSingleSpriteText(prefix, (s32)prefix.length, params);
             vec2 textSize = wfont_measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
@@ -1776,7 +1783,7 @@ void updateStatus(WarContext* context)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, flashStatus->text);
+            wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, wstr_view(&flashStatus->text));
             TracyCZoneEnd(ctx);
             return;
         }
@@ -1884,7 +1891,8 @@ void updateStatus(WarContext* context)
         }
     }
 
-    wmui_setStatus(context, highlightIndex, highlightCount, goldCost, woodCost, statusText);
+    wmui_setStatus(context, highlightIndex, highlightCount, goldCost, woodCost, wstr_view(&statusText));
+    wstr_free(statusText);
 
     TracyCZoneEnd(ctx);
 }
@@ -2685,12 +2693,7 @@ void wmap_updateMap(WarContext* context)
     updateFoW(context);
     determineFoWTypes(context);
 
-    wmui_updateGoldText(context);
-    wmui_updateWoodText(context);
-    wmui_updateSelectedUnitsInfo(context);
     updateCommandButtons(context);
-
-    wui_updateUIButtons(context, !cheatsEnabledAndVisible(map));
 
     updateCommandFromRightClick(context);
     updateStatus(context);

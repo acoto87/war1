@@ -28,6 +28,7 @@ struct _WarScene
             WarRace yourRace;
             WarRace enemyRace;
             s32 customMap;
+            WarMainMenuPanel menuPanel;
         } menu;
 
         struct
@@ -45,6 +46,7 @@ struct _WarSceneDescriptor
     WarSceneFunc enterSceneFunc;
     WarSceneFunc leaveSceneFunc;
     WarSceneFunc updateSceneFunc;
+    WarSceneFunc renderSceneFunc;
 };
 
 WarScene* wsc_createScene(WarContext* context, WarSceneType type);
