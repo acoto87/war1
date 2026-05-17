@@ -34,12 +34,7 @@ void imui_end(WarContext* context);
 // ---------------------------------------------------------------------------
 
 // Draw a text label.  Uses CreateUITextArgs (see war_ui.h / CREATE_UI_TEXT_ARGS_INIT).
-// The text string is NOT owned and must remain valid for the duration of the call.
 void imui_text(WarContext* context, const char* id, const CreateUITextArgs* args);
-
-// Like imui_text but the rendered text comes from a StringView rather than args->text.
-// Zero allocation — suitable for stack-formatted strings (e.g. snprintf output).
-void imui_text_sv(WarContext* context, const char* id, const CreateUITextArgs* args, StringView text);
 
 // Draw a filled rectangle.  Uses CreateUIRectArgs (see CREATE_UI_RECT_ARGS_INIT).
 void imui_rect(WarContext* context, const char* id, const CreateUIRectArgs* args);

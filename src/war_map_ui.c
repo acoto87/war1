@@ -132,21 +132,21 @@ static void wmui_renderMenus(WarContext* context)
                     .position  = mp,
                 ));
 
-            imui_text_sv(context, "txtMenuHeader",
+            imui_text(context, "txtMenuHeader",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(0, 10)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(map->menuPanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString("Warcraft"));
+                    .text = wsv_fromCString("Warcraft")
+                ));
 
             // Save / Load not yet implemented — no handler
             imui_text_button(context, "btnMenuSave",
                 CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                     .fontIndex            = 1,
-                    .text                 = wstr_fromCString("Save"),
+                    .text                 = wsv_fromCString("Save"),
                     .backgroundNormalRef  = smallNormalRef,
                     .backgroundPressedRef = smallPressedRef,
                     .position             = vec2_addv(mp, vec2i(20, 25)),
@@ -158,7 +158,7 @@ static void wmui_renderMenus(WarContext* context)
             imui_text_button(context, "btnMenuLoad",
                 CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                     .fontIndex            = 1,
-                    .text                 = wstr_fromCString("Load"),
+                    .text                 = wsv_fromCString("Load"),
                     .backgroundNormalRef  = smallNormalRef,
                     .backgroundPressedRef = smallPressedRef,
                     .position             = vec2_addv(mp, vec2i(78, 25)),
@@ -170,7 +170,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnMenuOptions",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Options"),
+                        .text                 = wsv_fromCString("Options"),
                         .backgroundNormalRef  = mediumNormalRef,
                         .backgroundPressedRef = mediumPressedRef,
                         .position             = vec2_addv(mp, vec2i(20, 45)),
@@ -183,7 +183,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnMenuObjectives",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Objectives"),
+                        .text                 = wsv_fromCString("Objectives"),
                         .backgroundNormalRef  = mediumNormalRef,
                         .backgroundPressedRef = mediumPressedRef,
                         .position             = vec2_addv(mp, vec2i(20, 65)),
@@ -196,7 +196,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnMenuRestart",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Restart scenario"),
+                        .text                 = wsv_fromCString("Restart scenario"),
                         .backgroundNormalRef  = mediumNormalRef,
                         .backgroundPressedRef = mediumPressedRef,
                         .position             = vec2_addv(mp, vec2i(20, 85)),
@@ -209,7 +209,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnMenuContinue",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Continue"),
+                        .text                 = wsv_fromCString("Continue"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(mp, vec2i(20, 105)),
@@ -222,7 +222,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnMenuQuit",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Quit"),
+                        .text                 = wsv_fromCString("Quit"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(mp, vec2i(78, 105)),
@@ -243,15 +243,15 @@ static void wmui_renderMenus(WarContext* context)
                     .position  = mp,
                 ));
 
-            imui_text_sv(context, "txtOptionsHeader",
+            imui_text(context, "txtOptionsHeader",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(0, 10)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(map->menuPanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString("Options"));
+                    .text = wsv_fromCString("Options")
+                ));
 
             // Labels (right-aligned in 75px)
             static const char* labelNames[5] = { "Game Speed", "Music Vol", "SFX Vol", "Mouse Scroll", "Key Scroll" };
@@ -260,72 +260,72 @@ static void wmui_renderMenus(WarContext* context)
             for (s32 i = 0; i < 5; i++)
             {
                 snprintf(buf, sizeof(buf), "txtOptionsLabel%d", i);
-                imui_text_sv(context, buf,
+                imui_text(context, buf,
                     CREATE_UI_TEXT_ARGS_INIT(
                         .position        = vec2_addv(mp, vec2i(0, labelOffY[i])),
                         .fontIndex       = 1,
                         .boundings       = vec2f(75, 12),
                         .horizontalAlign = WAR_TEXT_ALIGN_RIGHT,
                         .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                    ),
-                    wsv_fromCString(labelNames[i]));
+                        .text = wsv_fromCString(labelNames[i])
+                    ));
             }
 
             // Value texts (centred in 42px)
             snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->settings2.gameSpeed));
-            imui_text_sv(context, "txtOptionsGameSpeedValue",
+            imui_text(context, "txtOptionsGameSpeedValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 25)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(42, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString(buf));
+                    .text = wsv_fromCString(buf)
+                ));
 
             snprintf(buf, sizeof(buf), "%d", map->settings2.musicVol);
-            imui_text_sv(context, "txtOptionsMusicVolValue",
+            imui_text(context, "txtOptionsMusicVolValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 42)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(42, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString(buf));
+                    .text = wsv_fromCString(buf)
+                ));
 
             snprintf(buf, sizeof(buf), "%d", map->settings2.sfxVol);
-            imui_text_sv(context, "txtOptionsSFXVolValue",
+            imui_text(context, "txtOptionsSFXVolValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 59)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(42, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString(buf));
+                    .text = wsv_fromCString(buf)
+                ));
 
             snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->settings2.mouseScrollSpeed));
-            imui_text_sv(context, "txtOptionsMouseScrollValue",
+            imui_text(context, "txtOptionsMouseScrollValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 76)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(42, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString(buf));
+                    .text = wsv_fromCString(buf)
+                ));
 
             snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->settings2.keyScrollSpeed));
-            imui_text_sv(context, "txtOptionsKeyScrollValue",
+            imui_text(context, "txtOptionsKeyScrollValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 93)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(42, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString(buf));
+                    .text = wsv_fromCString(buf)
+                ));
 
             // Arrow buttons — (dec at x+76, inc at x+133), y offsets: 22,39,56,73,90
             if (imui_image_button(context, "btnOptionsGameSpeedDec",
@@ -411,7 +411,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnOptionsOk",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Ok"),
+                        .text                 = wsv_fromCString("Ok"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(mp, vec2i(20, 115)),
@@ -424,7 +424,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnOptionsCancel",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Cancel"),
+                        .text                 = wsv_fromCString("Cancel"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(mp, vec2i(78, 115)),
@@ -448,17 +448,17 @@ static void wmui_renderMenus(WarContext* context)
                     .position  = mp,
                 ));
 
-            imui_text_sv(context, "txtObjectivesHeader",
+            imui_text(context, "txtObjectivesHeader",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(0, 10)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(map->menuPanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString("Objectives"));
+                    .text = wsv_fromCString("Objectives")
+                ));
 
-            imui_text_sv(context, "txtObjectivesText",
+            imui_text(context, "txtObjectivesText",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position  = vec2_addv(mp, vec2i(10, 26)),
                     .fontIndex = 1,
@@ -466,13 +466,13 @@ static void wmui_renderMenus(WarContext* context)
                     .boundings = vec2f(map->menuPanel.width - 20, 75),
                     .wrapping  = WAR_TEXT_WRAP_CHAR,
                     .trimming  = WAR_TEXT_TRIM_SPACES,
-                ),
-                wstr_view(&campaignData.objectives));
+                    .text = wstr_view(&campaignData.objectives)
+                ));
 
             if (imui_text_button(context, "btnObjectivesMenu",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Menu"),
+                        .text                 = wsv_fromCString("Menu"),
                         .backgroundNormalRef  = mediumNormalRef,
                         .backgroundPressedRef = mediumPressedRef,
                         .position             = vec2_addv(mp, vec2i(20, 105)),
@@ -493,20 +493,20 @@ static void wmui_renderMenus(WarContext* context)
                     .position  = msgp,
                 ));
 
-            imui_text_sv(context, "txtRestartText",
+            imui_text(context, "txtRestartText",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(msgp, vec2i(0, 10)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(map->messagePanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString("Are you sure you want to restart?"));
+                    .text = wsv_fromCString("Are you sure you want to restart?")
+                ));
 
             if (imui_text_button(context, "btnRestartRestart",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Restart"),
+                        .text                 = wsv_fromCString("Restart"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(msgp, vec2i(20, 25)),
@@ -519,7 +519,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnRestartCancel",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Cancel"),
+                        .text                 = wsv_fromCString("Cancel"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(msgp, vec2i(210, 25)),
@@ -544,22 +544,22 @@ static void wmui_renderMenus(WarContext* context)
                 ? "You are victorious!"
                 : "You failed to archieve victory...";
 
-            imui_text_sv(context, "txtGameOverText",
+            imui_text(context, "txtGameOverText",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(msgp, vec2i(0, 10)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(map->messagePanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString(gameOverText));
+                    .text = wsv_fromCString(gameOverText)
+                ));
 
             if (map->result == WAR_LEVEL_RESULT_WIN)
             {
                 if (imui_text_button(context, "btnGameOverSave",
                         CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                             .fontIndex            = 1,
-                            .text                 = wstr_fromCString("Save"),
+                            .text                 = wsv_fromCString("Save"),
                             .backgroundNormalRef  = smallNormalRef,
                             .backgroundPressedRef = smallPressedRef,
                             .position             = vec2_addv(msgp, vec2i(20, 25)),
@@ -572,7 +572,7 @@ static void wmui_renderMenus(WarContext* context)
                 if (imui_text_button(context, "btnGameOverContinue",
                         CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                             .fontIndex            = 1,
-                            .text                 = wstr_fromCString("Continue"),
+                            .text                 = wsv_fromCString("Continue"),
                             .backgroundNormalRef  = smallNormalRef,
                             .backgroundPressedRef = smallPressedRef,
                             .position             = vec2_addv(msgp, vec2i(210, 25)),
@@ -587,7 +587,7 @@ static void wmui_renderMenus(WarContext* context)
                 if (imui_text_button(context, "btnGameOverOk",
                         CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                             .fontIndex            = 1,
-                            .text                 = wstr_fromCString("Ok"),
+                            .text                 = wsv_fromCString("Ok"),
                             .backgroundNormalRef  = smallNormalRef,
                             .backgroundPressedRef = smallPressedRef,
                             .position             = vec2_addv(msgp, vec2i(116, 25)),
@@ -609,20 +609,20 @@ static void wmui_renderMenus(WarContext* context)
                     .position  = msgp,
                 ));
 
-            imui_text_sv(context, "txtQuitText",
+            imui_text(context, "txtQuitText",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(msgp, vec2i(0, 10)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(map->messagePanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString("Are you sure you want to quit?"));
+                    .text = wsv_fromCString("Are you sure you want to quit?")
+                ));
 
             if (imui_text_button(context, "btnQuitQuit",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Quit"),
+                        .text                 = wsv_fromCString("Quit"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(msgp, vec2i(20, 25)),
@@ -635,7 +635,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnQuitMenu",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Menu"),
+                        .text                 = wsv_fromCString("Menu"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(msgp, vec2i(115, 25)),
@@ -648,7 +648,7 @@ static void wmui_renderMenus(WarContext* context)
             if (imui_text_button(context, "btnQuitCancel",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Cancel"),
+                        .text                 = wsv_fromCString("Cancel"),
                         .backgroundNormalRef  = smallNormalRef,
                         .backgroundPressedRef = smallPressedRef,
                         .position             = vec2_addv(msgp, vec2i(210, 25)),
@@ -669,17 +669,17 @@ static void wmui_renderMenus(WarContext* context)
                     .position  = mp,
                 ));
 
-            imui_text_sv(context, "txtDemoEndHeader",
+            imui_text(context, "txtDemoEndHeader",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(0, 10)),
                     .fontIndex       = 1,
                     .boundings       = vec2f(map->menuPanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                ),
-                wsv_fromCString("Thanks for playing!"));
+                    .text            = wsv_fromCString("Thanks for playing!")
+                ));
 
-            imui_text_sv(context, "txtDemoEndText",
+            imui_text(context, "txtDemoEndText",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position  = vec2_addv(mp, vec2i(8, 26)),
                     .fontIndex = 1,
@@ -687,23 +687,23 @@ static void wmui_renderMenus(WarContext* context)
                     .multiline = true,
                     .boundings = vec2f(map->menuPanel.width - 16, 75),
                     .wrapping  = WAR_TEXT_WRAP_CHAR,
-                ),
-                wsv_fromCString(
-                    "This is a non-profit project with\n"
-                    "the personal goal of learning to\n"
-                    "do RTS engines\n"
-                    "\n"
-                    "This is not an official Blizzard\n"
-                    "product. Warcraft and all assets\n"
-                    "you see are registered trademarks\n"
-                    "of Blizzard Entertainment.\n"
-                    "\n"
-                    "Made by @acoro87"));
+                    .text = wsv_fromCString(
+                        "This is a non-profit project with\n"
+                        "the personal goal of learning to\n"
+                        "do RTS engines\n"
+                        "\n"
+                        "This is not an official Blizzard\n"
+                        "product. Warcraft and all assets\n"
+                        "you see are registered trademarks\n"
+                        "of Blizzard Entertainment.\n"
+                        "\n"
+                        "Made by @acoro87")
+                ));
 
             if (imui_text_button(context, "btnDemoEndMenu",
                     CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                         .fontIndex            = 1,
-                        .text                 = wstr_fromCString("Menu"),
+                        .text                 = wsv_fromCString("Menu"),
                         .backgroundNormalRef  = mediumNormalRef,
                         .backgroundPressedRef = mediumPressedRef,
                         .position             = vec2_addv(mp, vec2i(20, 105)),
@@ -746,33 +746,33 @@ static void wmui_renderHUD(WarContext* context)
 
     // --- Gold counter (top panel) ---
     snprintf(buf, sizeof(buf), "GOLD:%6d", player->gold);
-    imui_text_sv(context, "txtGold",
+    imui_text(context, "txtGold",
         CREATE_UI_TEXT_ARGS_INIT(
             .position = vec2_addv(topPanel, vec2i(135, 2)),
             .fontSize = 6,
-        ),
-        wsv_fromCString(buf));
+            .text = wsv_fromCString(buf)
+        ));
 
     // --- Wood counter (top panel) ---
     snprintf(buf, sizeof(buf), "LUMBER:%6d", player->wood);
-    imui_text_sv(context, "txtWood",
+    imui_text(context, "txtWood",
         CREATE_UI_TEXT_ARGS_INIT(
             .position = vec2_addv(topPanel, vec2i(24, 2)),
             .fontSize = 6,
-        ),
-        wsv_fromCString(buf));
+            .text = wsv_fromCString(buf)
+        ));
 
     // --- Status text (bottom panel) ---
     if (map->hudStatusText[0] != '\0')
     {
-        imui_text_sv(context, "txtStatus",
+        imui_text(context, "txtStatus",
             CREATE_UI_TEXT_ARGS_INIT(
                 .position       = vec2_addv(bottomPanel, vec2i(2, 5)),
                 .fontSize       = 6,
                 .highlightIndex = map->hudStatusHighlightIndex,
                 .highlightCount = map->hudStatusHighlightCount,
-            ),
-            wsv_fromCString(map->hudStatusText));
+                .text = wsv_fromCString(map->hudStatusText)
+            ));
     }
 
     // --- Status gold/wood cost icons + amounts (bottom panel) ---
@@ -784,12 +784,12 @@ static void wmui_renderHUD(WarContext* context)
         ));
 
         snprintf(buf, sizeof(buf), "%d", map->hudStatusWood);
-        imui_text_sv(context, "txtStatusWood",
+        imui_text(context, "txtStatusWood",
             CREATE_UI_TEXT_ARGS_INIT(
                 .position = vec2_addv(bottomPanel, vec2i(179, 5)),
                 .fontSize = 6,
-            ),
-            wsv_fromCString(buf));
+                .text = wsv_fromCString(buf)
+            ));
 
         imui_image(context, "imgStatusGold", CREATE_UI_IMAGE_ARGS_INIT(
             .spriteRef = imageResourceRef(406),
@@ -797,12 +797,12 @@ static void wmui_renderHUD(WarContext* context)
         ));
 
         snprintf(buf, sizeof(buf), "%d", map->hudStatusGold);
-        imui_text_sv(context, "txtStatusGold",
+        imui_text(context, "txtStatusGold",
             CREATE_UI_TEXT_ARGS_INIT(
                 .position = vec2_addv(bottomPanel, vec2i(218, 5)),
                 .fontSize = 6,
-            ),
-            wsv_fromCString(buf));
+                .text = wsv_fromCString(buf)
+            ));
     }
 
     // --- Selection info panel (left bottom panel) ---
@@ -859,13 +859,13 @@ static void wmui_renderHUD(WarContext* context)
                     unitData.portraitFrameIndex);
 
                 // Unit name
-                imui_text_sv(context, "txtUnitName",
+                imui_text(context, "txtUnitName",
                     CREATE_UI_TEXT_ARGS_INIT(
                         .position       = vec2_addv(leftBottomPanel, vec2i(6, 26)),
                         .fontSize       = 6,
                         .highlightIndex = NO_HIGHLIGHT,
-                    ),
-                    unitData.name);
+                        .text = unitData.name
+                    ));
 
                 // Life bar
                 {
@@ -1027,14 +1027,14 @@ static void wmui_renderHUD(WarContext* context)
             char txtId[16];
             snprintf(txtId, sizeof(txtId), "txtCommand%d", i);
 
-            imui_text_sv(context, txtId,
+            imui_text(context, txtId,
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position       = vec2_addv(leftBottomPanel, vec2i(txtOffX[i], txtOffY[i])),
                     .fontSize       = 6,
                     .highlightIndex = map->commandTextHighlightIndex[i],
                     .highlightCount = map->commandTextHighlightCount[i],
-                ),
-                wsv_fromCString(map->commandTexts[i]));
+                    .text = wsv_fromCString(map->commandTexts[i])
+                ));
         }
 
         // Menu button
@@ -1044,7 +1044,7 @@ static void wmui_renderHUD(WarContext* context)
                     .backgroundPressedRef  = imageResourceRef(363),
                     .position              = vec2_addv(leftBottomPanel, vec2i(3, 116)),
                     .hotKey                = WAR_KEY_F10,
-                    .tooltip               = (String){ (char*)"MENU (F10)", 10, 0 },
+                    .tooltip               = wsv_fromCString("MENU (F10)"),
                     .tooltipHighlightIndex = 6,
                     .tooltipHighlightCount = 3,
                 )))
@@ -1067,14 +1067,14 @@ static void wmui_renderHUD(WarContext* context)
     // --- Cheat feedback text (shown for a few seconds after applying a cheat) ---
     if (cheatStatus->enabled && cheatStatus->feedback && cheatStatus->feedbackText.data)
     {
-        imui_text_sv(context, "txtCheatFeedback",
+        imui_text(context, "txtCheatFeedback",
             CREATE_UI_TEXT_ARGS_INIT(
                 .position  = vec2_addv(bottomPanel, vec2i(15, -20)),
                 .fontIndex = 1,
                 .fontSize  = 8,
                 .fontColor = WAR_COLOR_YELLOW,
-            ),
-            wstr_view(&cheatStatus->feedbackText));
+                .text = wstr_view(&cheatStatus->feedbackText)
+            ));
     }
 
     TracyCZoneEnd(ctx);

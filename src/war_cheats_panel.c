@@ -219,12 +219,12 @@ void wcheatp_renderCheatsPanel(WarContext* context)
         StringView cheatText = wstr_view(&cheatStatus->text);
         snprintf(inputBuf, sizeof(inputBuf), "MSG: %.*s", (int)cheatText.length, cheatText.data ? cheatText.data : "");
 
-        imui_text_sv(context, "txtCheat",
+        imui_text(context, "txtCheat",
             CREATE_UI_TEXT_ARGS_INIT(
                 .position = vec2i(2, 4),
                 .fontSize = 6,
-            ),
-            wsv_fromCString(inputBuf));
+                .text = wsv_fromCString(inputBuf)
+            ));
 
         // Blinking cursor rect — position computed in wcheatp_updateCheatsPanel.
         if (cheatStatus->cursorX >= 0.0f)
@@ -240,13 +240,13 @@ void wcheatp_renderCheatsPanel(WarContext* context)
     // --- Cheat feedback text (shown for a few seconds after a cheat is applied) ---
     if (cheatStatus->feedback && cheatStatus->feedbackText.data)
     {
-        imui_text_sv(context, "txtCheatFeedback",
+        imui_text(context, "txtCheatFeedback",
             CREATE_UI_TEXT_ARGS_INIT(
                 .position  = vec2i(10, 20),
                 .fontIndex = 1,
                 .fontSize  = 8,
                 .fontColor = WAR_COLOR_YELLOW,
-            ),
-            wstr_view(&cheatStatus->feedbackText));
+                .text = wstr_view(&cheatStatus->feedbackText)
+            ));
     }
 }

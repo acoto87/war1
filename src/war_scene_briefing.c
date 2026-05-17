@@ -153,7 +153,7 @@ void wsc_renderOverlayBriefing(WarContext* context)
 {
     WarScene* scene = context->scene;
 
-    imui_text_sv(context, "txtBriefing",
+    imui_text(context, "txtBriefing",
         CREATE_UI_TEXT_ARGS_INIT(
             .position   = vec2f(20.0f, scene->briefing.scrollY),
             .fontIndex  = 1,
@@ -162,6 +162,6 @@ void wsc_renderOverlayBriefing(WarContext* context)
             .boundings  = vec2f((f32)(context->originalWindowWidth - 40), 200.0f),
             .wrapping   = WAR_TEXT_WRAP_CHAR,
             .lineHeight = 150,
-        ),
-        wstr_view(&scene->briefing.briefingText));
+            .text = wstr_view(&scene->briefing.briefingText)
+        ));
 }

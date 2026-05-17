@@ -102,7 +102,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
         {
             if (imui_text_button(context, "btnMenuSinglePlayer", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Start a new game"),
+                .text                 = wsv_fromCString("Start a new game"),
                 .backgroundNormalRef  = mediumNormalRef,
                 .backgroundPressedRef = mediumPressedRef,
                 .position             = vec2i(104, 85),
@@ -117,7 +117,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
             // Load existing game — not yet implemented; button is inert
             imui_text_button(context, "btnMenuLoad", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Load existing game"),
+                .text                 = wsv_fromCString("Load existing game"),
                 .backgroundNormalRef  = mediumNormalRef,
                 .backgroundPressedRef = mediumPressedRef,
                 .position             = vec2i(104, 105),
@@ -129,7 +129,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
             // Replay introduction — not yet implemented; button is inert
             imui_text_button(context, "btnMenuReplayIntro", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Replay introduction"),
+                .text                 = wsv_fromCString("Replay introduction"),
                 .backgroundNormalRef  = mediumNormalRef,
                 .backgroundPressedRef = mediumPressedRef,
                 .position             = vec2i(104, 125),
@@ -140,7 +140,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
 
             if (imui_text_button(context, "btnMenuQuit", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Quit"),
+                .text                 = wsv_fromCString("Quit"),
                 .backgroundNormalRef  = mediumNormalRef,
                 .backgroundPressedRef = mediumPressedRef,
                 .position             = vec2i(104, 165),
@@ -159,7 +159,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
         {
             if (imui_text_button(context, "btnSinglePlayerOrc", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Orc campaign"),
+                .text                 = wsv_fromCString("Orc campaign"),
                 .backgroundNormalRef  = mediumNormalRef,
                 .backgroundPressedRef = mediumPressedRef,
                 .position             = vec2i(104, 85),
@@ -173,7 +173,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
 
             if (imui_text_button(context, "btnSinglePlayerHuman", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Human campaign"),
+                .text                 = wsv_fromCString("Human campaign"),
                 .backgroundNormalRef  = mediumNormalRef,
                 .backgroundPressedRef = mediumPressedRef,
                 .position             = vec2i(104, 105),
@@ -187,7 +187,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
 
             if (imui_text_button(context, "btnCustomGame", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Custom game"),
+                .text                 = wsv_fromCString("Custom game"),
                 .backgroundNormalRef  = mediumNormalRef,
                 .backgroundPressedRef = mediumPressedRef,
                 .position             = vec2i(104, 125),
@@ -201,7 +201,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
 
             if (imui_text_button(context, "btnSinglePlayerCancel", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Cancel"),
+                .text                 = wsv_fromCString("Cancel"),
                 .backgroundNormalRef  = smallNormalRef,
                 .backgroundPressedRef = smallPressedRef,
                 .position             = vec2i(133, 165),
@@ -230,7 +230,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
                 .boundings       = vec2f(100, 12),
                 .horizontalAlign = WAR_TEXT_ALIGN_RIGHT,
                 .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                .text            = wstr_fromCString("Your race:"),
+                .text            = wsv_fromCString("Your race:"),
             ));
 
             imui_text(context, "txtEnemyRaceLabel", CREATE_UI_TEXT_ARGS_INIT(
@@ -239,7 +239,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
                 .boundings       = vec2f(100, 12),
                 .horizontalAlign = WAR_TEXT_ALIGN_RIGHT,
                 .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                .text            = wstr_fromCString("Enemy race:"),
+                .text            = wsv_fromCString("Enemy race:"),
             ));
 
             imui_text(context, "txtMapLabel", CREATE_UI_TEXT_ARGS_INIT(
@@ -248,7 +248,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
                 .boundings       = vec2f(100, 12),
                 .horizontalAlign = WAR_TEXT_ALIGN_RIGHT,
                 .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                .text            = wstr_fromCString("Map:"),
+                .text            = wsv_fromCString("Map:"),
             ));
 
             // Dynamic values
@@ -258,7 +258,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
                 .boundings       = vec2f(50, 12),
                 .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                 .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                .text            = wstr_fromCString(getCustomGameRaceStr(scene->menu.yourRace)),
+                .text            = wsv_fromCString(getCustomGameRaceStr(scene->menu.yourRace)),
             ));
 
             imui_text(context, "txtEnemyRace", CREATE_UI_TEXT_ARGS_INIT(
@@ -267,7 +267,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
                 .boundings       = vec2f(50, 12),
                 .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                 .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                .text            = wstr_fromCString(getCustomGameRaceStr(scene->menu.enemyRace)),
+                .text            = wsv_fromCString(getCustomGameRaceStr(scene->menu.enemyRace)),
             ));
 
             imui_text(context, "txtMap", CREATE_UI_TEXT_ARGS_INIT(
@@ -276,7 +276,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
                 .boundings       = vec2f(50, 12),
                 .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                 .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
-                .text            = wstr_fromCString(getCustomMapStr(scene->menu.customMap)),
+                .text            = wsv_fromCString(getCustomMapStr(scene->menu.customMap)),
             ));
 
             // Your race arrows
@@ -339,7 +339,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
             // Ok / Cancel
             if (imui_text_button(context, "btnCustomGameOk", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Ok"),
+                .text                 = wsv_fromCString("Ok"),
                 .backgroundNormalRef  = smallNormalRef,
                 .backgroundPressedRef = smallPressedRef,
                 .position             = vec2i(100, 165),
@@ -353,7 +353,7 @@ void wsc_renderSceneMainMenu(WarContext* context)
 
             if (imui_text_button(context, "btnCustomGameCancel", CREATE_UI_TEXT_BUTTON_ARGS_INIT(
                 .fontIndex            = 1,
-                .text                 = wstr_fromCString("Cancel"),
+                .text                 = wsv_fromCString("Cancel"),
                 .backgroundNormalRef  = smallNormalRef,
                 .backgroundPressedRef = smallPressedRef,
                 .position             = vec2i(180, 165),

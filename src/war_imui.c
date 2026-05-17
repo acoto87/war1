@@ -67,7 +67,7 @@ static WarSprite imui_getOrCreateSprite(WarContext* context, WarSpriteResourceRe
 }
 
 // Store tooltip deferral data from a hovered button.
-static void imui_deferTooltip(WarContext* context, String tooltip, s32 highlightIndex, s32 highlightCount)
+static void imui_deferTooltip(WarContext* context, StringView tooltip, s32 highlightIndex, s32 highlightCount)
 {
     WarImuiState* imui = &context->imui;
 
@@ -177,7 +177,7 @@ void imui_end(WarContext* context)
 // Primitives
 // ---------------------------------------------------------------------------
 
-void imui_text_sv(WarContext* context, const char* id, const CreateUITextArgs* args, StringView text)
+void imui_text(WarContext* context, const char* id, const CreateUITextArgs* args)
 {
     NOT_USED(id);
     assert(args);
@@ -205,19 +205,14 @@ void imui_text_sv(WarContext* context, const char* id, const CreateUITextArgs* a
 
     if (args->multiline)
     {
-        wfont_renderMultiSpriteText(context, text, 0.0f, 0.0f, params);
+        wfont_renderMultiSpriteText(context, args->text, 0.0f, 0.0f, params);
     }
     else
     {
-        wfont_renderSingleSpriteText(context, text, 0.0f, 0.0f, params);
+        wfont_renderSingleSpriteText(context, args->text, 0.0f, 0.0f, params);
     }
 
     wr_restore(context);
-}
-
-void imui_text(WarContext* context, const char* id, const CreateUITextArgs* args)
-{
-    imui_text_sv(context, id, args, wstr_view(&args->text));
 }
 
 void imui_rect(WarContext* context, const char* id, const CreateUIRectArgs* args)
@@ -394,11 +389,6 @@ bool imui_image_button(WarContext* context, const char* id, const CreateUIImageB
             offset = vec2_addv(offset, vec2i(0, 1));
         }
 
-        s32 fgFrame = (args->foregroundFrameIndex >= 0 && args->foregroundFrameIndex < fgSprite.framesCount)
-                      ? args->foregroundFrameIndex : 0;
-        WarSpriteFrame frame = wspr_getSpriteFrame(context, fgSprite, fgFrame);
-        wspr_updateSpriteImage(context, fgSprite, frame.data);
-
         wr_translate(context, offset.x, offset.y);
         wspr_renderSprite(context, fgSprite, VEC2_ZERO, VEC2_ONE);
     }
@@ -481,8 +471,7 @@ bool imui_text_button(WarContext* context, const char* id, const CreateUITextBut
         params.fontSprite      = context->fontSprites[args->fontIndex];
         params.fontData        = getFontData(args->fontIndex);
 
-        StringView text = wstr_view(&args->text);
-        wfont_renderSingleSpriteText(context, text, 0.0f, 0.0f, params);
+        wfont_renderSingleSpriteText(context, args->text, 0.0f, 0.0f, params);
     }
 
     wr_restore(context);

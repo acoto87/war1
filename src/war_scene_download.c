@@ -123,7 +123,7 @@ void wsc_renderSceneDownload(WarContext* context)
     {
         case WAR_SCENE_DOWNLOAD_DOWNLOAD:
         {
-            imui_text_sv(context, "txtDownload",
+            imui_text(context, "txtDownload",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position   = vec2i(10, 10),
                     .fontIndex  = 1,
@@ -132,13 +132,13 @@ void wsc_renderSceneDownload(WarContext* context)
                     .boundings  = vec2f(w, h),
                     .wrapping   = WAR_TEXT_WRAP_CHAR,
                     .lineHeight = 120,
-                ),
-                wsv_fromCString(downloadWelcomeText));
+                    .text = wsv_fromCString(downloadWelcomeText)
+                ));
             break;
         }
         case WAR_SCENE_DOWNLOAD_CONFIRM:
         {
-            imui_text_sv(context, "txtDownload",
+            imui_text(context, "txtDownload",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position   = vec2i(10, 10),
                     .fontIndex  = 1,
@@ -147,48 +147,48 @@ void wsc_renderSceneDownload(WarContext* context)
                     .boundings  = vec2f(w, h),
                     .wrapping   = WAR_TEXT_WRAP_CHAR,
                     .lineHeight = 120,
-                ),
-                wsv_fromCString(downloadConfirmText));
+                    .text = wsv_fromCString(downloadConfirmText)
+                ));
             break;
         }
         case WAR_SCENE_DOWNLOAD_DOWNLOADING:
         {
-            imui_text_sv(context, "txtDownloading",
+            imui_text(context, "txtDownloading",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position      = vec2i(10, 10),
                     .fontIndex     = 1,
                     .fontColor     = WAR_COLOR_RGB(255, 215, 138),
                     .boundings     = vec2f(w, h),
                     .verticalAlign = WAR_TEXT_ALIGN_BOTTOM,
-                ),
-                wsv_fromCString("Downloading..."));
+                    .text = wsv_fromCString("Downloading...")
+                ));
             break;
         }
         case WAR_SCENE_DOWNLOAD_DOWNLOADED:
         case WAR_SCENE_DOWNLOAD_FILE_LOADED:
         {
-            imui_text_sv(context, "txtDownloading",
+            imui_text(context, "txtDownloading",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position      = vec2i(10, 10),
                     .fontIndex     = 1,
                     .fontColor     = WAR_COLOR_RGB(255, 215, 138),
                     .boundings     = vec2f(w, h),
                     .verticalAlign = WAR_TEXT_ALIGN_BOTTOM,
-                ),
-                wsv_fromCString("Downloading... Done. Press Enter to start the game."));
+                    .text = wsv_fromCString("Downloading... Done. Press Enter to start the game.")
+                ));
             break;
         }
         case WAR_SCENE_DOWNLOAD_FAILED:
         {
-            imui_text_sv(context, "txtDownloading",
+            imui_text(context, "txtDownloading",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position      = vec2i(10, 10),
                     .fontIndex     = 1,
                     .fontColor     = WAR_COLOR_RGB(255, 215, 138),
                     .boundings     = vec2f(w, h),
                     .verticalAlign = WAR_TEXT_ALIGN_BOTTOM,
-                ),
-                wsv_fromCString("Downloading... Failed. Press Enter to quit the game."));
+                    .text = wsv_fromCString("Downloading... Failed. Press Enter to quit the game.")
+                ));
             break;
         }
     }

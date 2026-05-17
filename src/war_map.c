@@ -982,7 +982,7 @@ static void updateViewport(WarContext *context)
     }
 }
 
-void updateDragRect(WarContext* context)
+static void updateDragRect(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -1100,7 +1100,7 @@ static void updateSelectionFromList(WarContext* context, WarEntityList* newSelec
     }
 }
 
-void updateSelection(WarContext* context)
+static void updateSelection(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -1213,7 +1213,7 @@ void updateSelection(WarContext* context)
     }
 }
 
-void updateTreesEdit(WarContext* context)
+static void updateTreesEdit(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -1288,7 +1288,7 @@ void updateRoadsEdit(WarContext* context)
     }
 }
 
-void updateWallsEdit(WarContext* context)
+static void updateWallsEdit(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -1363,7 +1363,7 @@ void updateRuinsEdit(WarContext* context)
     }
 }
 
-void updateRainOfFireEdit(WarContext* context)
+static void updateRainOfFireEdit(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -1386,7 +1386,7 @@ void updateRainOfFireEdit(WarContext* context)
     }
 }
 
-void updateAddUnit(WarContext* context)
+static void updateAddUnit(WarContext* context)
 {
     WarMap* map = context->map;
     WarInput* input = &context->input;
@@ -1421,7 +1421,7 @@ void updateAddUnit(WarContext* context)
     }
 }
 
-void updateCommandButtons(WarContext* context)
+static void updateCommandButtons(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateCommandButtons", 1);
 
@@ -1643,7 +1643,7 @@ void updateCommandFromRightClick(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void updateStatus(WarContext* context)
+static void updateStatus(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateStatus", 1);
 
@@ -1878,7 +1878,7 @@ void updateStatus(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void updateMapCursor(WarContext* context)
+static void updateMapCursor(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateMapCursor", 1);
 
@@ -2084,7 +2084,7 @@ void updateMapCursor(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void updateStateMachines(WarContext* context)
+static void updateStateMachines(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateStateMachines", 1);
 
@@ -2103,7 +2103,7 @@ void updateStateMachines(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void updateActions(WarContext* context)
+static void updateActions(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateActions", 1);
 
@@ -2120,7 +2120,7 @@ void updateActions(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void updateProjectiles(WarContext* context)
+static void updateProjectiles(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateProjectiles", 1);
 
@@ -2137,7 +2137,7 @@ void updateProjectiles(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void updateMagic(WarContext* context)
+static void updateMagic(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateMagic", 1);
 
@@ -2192,8 +2192,10 @@ void updateMagic(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-bool updatePoisonCloud(WarContext* context, WarEntity* entity)
+static bool updatePoisonCloud(WarContext* context, WarEntity* entity)
 {
+    TracyCZoneN(ctx, "UpdatePoisonCloud", 1);
+
     WarPoisonCloudComponent* poisonCloud = we_getPoisonCloudComponent(context, entity);
     assert(poisonCloud);
 
@@ -2218,23 +2220,36 @@ bool updatePoisonCloud(WarContext* context, WarEntity* entity)
         poisonCloud->damageTime = 1.0f;
     }
 
+    TracyCZoneEnd(ctx);
+
     return poisonCloud->time <= 0;
 }
 
-bool updateSight(WarContext* context, WarEntity* entity)
+static bool updateSight(WarContext* context, WarEntity* entity)
 {
+    TracyCZoneN(ctx, "UpdateSight", 1);
+
     WarSightComponent* sight = we_getSightComponent(context, entity);
     assert(sight);
     sight->time -= wmap_getMapScaledSpeed(context, context->deltaTime);
+
+    TracyCZoneEnd(ctx);
+
     return sight->time <= 0;
 }
 
-void updateSpells(WarContext* context)
+static void updateSpells(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateSpells", 1);
 
+    TracyCZoneN(ctxInitializingSpellsToRemove, "InitializingSpellsToRemove", 1);
+
     WarEntityIdList spellsToRemove;
     WarEntityIdListInit(&spellsToRemove, WarEntityIdListDefaultOptions);
+
+    TracyCZoneEnd(ctxInitializingSpellsToRemove);
+
+    TracyCZoneN(ctxUpdatePoisonCloudSpells, "UpdatePoisonCloudSpells", 1);
 
     WarEntityList* poisonCloudSpells = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
     for (s32 i = 0; i < poisonCloudSpells->count; i++)
@@ -2249,6 +2264,10 @@ void updateSpells(WarContext* context)
         }
     }
 
+    TracyCZoneEnd(ctxUpdatePoisonCloudSpells);
+
+    TracyCZoneN(ctxUpdateSightSpells, "UpdateSightSpells", 1);
+
     WarEntityList* sightSpells = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
     for (s32 i = 0; i < sightSpells->count; i++)
     {
@@ -2261,6 +2280,10 @@ void updateSpells(WarContext* context)
             }
         }
     }
+
+    TracyCZoneEnd(ctxUpdateSightSpells);
+
+    TracyCZoneN(ctxUpdateInvisibilityAndInvulnerability, "UpdateInvisibilityAndInvulnerability", 1);
 
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
@@ -2293,12 +2316,22 @@ void updateSpells(WarContext* context)
         }
     }
 
+    TracyCZoneEnd(ctxUpdateInvisibilityAndInvulnerability);
+
+    TracyCZoneN(ctxRemovingSpells, "RemovingSpells", 1);
+
     for (s32 i = 0; i < spellsToRemove.count; i++)
     {
         we_removeEntityById(context, spellsToRemove.items[i]);
     }
 
+    TracyCZoneEnd(ctxRemovingSpells);
+
+    TracyCZoneN(ctxFreeingSpellsToRemove, "FreeingSpellsToRemove", 1);
+
     WarEntityIdListFree(&spellsToRemove);
+
+    TracyCZoneEnd(ctxFreeingSpellsToRemove);
 
     TracyCZoneEnd(ctx);
 }
