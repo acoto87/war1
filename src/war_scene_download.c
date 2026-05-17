@@ -6,45 +6,35 @@
 
 #include "war.h"
 #include "war_game.h"
+#include "war_imui.h"
 #include "war_net.h"
-#include "war_ui.h"
+
+static const char downloadWelcomeText[] =
+    "Hi there! Thanks for downloading the game! :)\n"
+    "\n"
+    "War 1 needs the file with all the assets of the game.\n"
+    "That file is the DATA.WAR that comes with original\n"
+    "game, you can copy and paste that file (if you have it)\n"
+    "into the War 1 folder or you can press Enter to\n"
+    "download the DEMO DATA.WAR file from the internet.\n"
+    "\n"
+    "Enjoy the game!";
+
+static const char downloadConfirmText[] =
+    "The DEMO DATA.WAR doesn't have all assets.\n"
+    "\n"
+    "You may not get all the features, but it will allow you to start and play the game.\n"
+    "\n"
+    "To get the full experience, you need to get an original\n"
+    "copy of the game and copy the file from there.\n"
+    "\n"
+    "Press Enter to confirm you want to download the\n"
+    "DEMO DATA.WAR file";
 
 void wsc_enterSceneDownload(WarContext* context)
 {
     WarScene* scene = context->scene;
-
     scene->download.status = WAR_SCENE_DOWNLOAD_DOWNLOAD;
-
-    static const char text[] = "Hi there! Thanks for downloading the game! :)\n"
-                               "\n"
-                               "War 1 needs the file with all the assets of the game.\n"
-                               "That file is the DATA.WAR that comes with original\n"
-                               "game, you can copy and paste that file (if you have it)\n"
-                               "into the War 1 folder or you can press Enter to\n"
-                               "download the DEMO DATA.WAR file from the internet.\n"
-                               "\n"
-                               "Enjoy the game!";
-
-    wui_createUIText(context, wstr_fromCString("txtDownload"), CREATE_UI_TEXT_ARGS_INIT(
-        .position   = vec2i(10, 10),
-        .fontIndex  = 1,
-        .fontColor  = WAR_COLOR_RGB(255, 215, 138),
-        .multiline  = true,
-        .boundings  = vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)),
-        .wrapping   = WAR_TEXT_WRAP_CHAR,
-        .lineHeight = 120,
-        .text       = wstr_fromCString(text),
-    ));
-
-    WarEntity* downloadingText = wui_createUIText(context, wstr_fromCString("txtDownloading"), CREATE_UI_TEXT_ARGS_INIT(
-        .position      = vec2i(10, 10),
-        .fontIndex     = 1,
-        .fontColor     = WAR_COLOR_RGB(255, 215, 138),
-        .boundings     = vec2f((f32)(context->originalWindowWidth - 20), (f32)(context->originalWindowHeight - 20)),
-        .verticalAlign = WAR_TEXT_ALIGN_BOTTOM,
-        .text          = wstr_fromCString("Downloading..."),
-    ));
-    setUIEntityStatus(context, downloadingText, false);
 }
 
 void wsc_updateSceneDownload(WarContext* context)
@@ -58,19 +48,6 @@ void wsc_updateSceneDownload(WarContext* context)
         {
             if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
-                static const char confirm[] = "The DEMO DATA.WAR doesn't have all assets.\n"
-                                              "\n"
-                                              "You may not get all the features, but it will allow you to start and play the game.\n"
-                                              "\n"
-                                              "To get the full experience, you need to get an original\n"
-                                              "copy of the game and copy the file from there.\n"
-                                              "\n"
-                                              "Press Enter to confirm you want to download the\n"
-                                              "DEMO DATA.WAR file";
-
-                WarEntity* downloadText = we_findUIEntity(context, wsv_fromCString("txtDownload"));
-                wui_setUIText(context, downloadText, wstr_fromCString(confirm));
-
                 scene->download.status = WAR_SCENE_DOWNLOAD_CONFIRM;
             }
 
@@ -80,9 +57,6 @@ void wsc_updateSceneDownload(WarContext* context)
         {
             if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
-                WarEntity* downloadingText = we_findUIEntity(context, wsv_fromCString("txtDownloading"));
-                setUIEntityStatus(context, downloadingText, true);
-
                 scene->download.status = WAR_SCENE_DOWNLOAD_DOWNLOADING;
             }
 
@@ -93,16 +67,10 @@ void wsc_updateSceneDownload(WarContext* context)
             bool success = wnet_downloadFileFromUrl(context, wsv_fromCString(ONLINE_DEMO_DATAWAR_FILE_URL), wsv_fromCString(DATAWAR_FILE_PATH));
             if (success)
             {
-                WarEntity* downloadingText = we_findUIEntity(context, wsv_fromCString("txtDownloading"));
-                wui_setUIText(context, downloadingText, wstr_fromCString("Downloading... Done. Press Enter to start the game."));
-
                 scene->download.status = WAR_SCENE_DOWNLOAD_DOWNLOADED;
             }
             else
             {
-                WarEntity* downloadingText = we_findUIEntity(context, wsv_fromCString("txtDownloading"));
-                wui_setUIText(context, downloadingText, wstr_fromCString("Downloading... Failed. Press Enter to quit the game."));
-
                 scene->download.status = WAR_SCENE_DOWNLOAD_FAILED;
             }
 
@@ -112,7 +80,6 @@ void wsc_updateSceneDownload(WarContext* context)
         {
             if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
-                // load DATA.WAR file
                 if (wg_loadDataFile(context))
                 {
                     scene->download.status = WAR_SCENE_DOWNLOAD_FILE_LOADED;
@@ -139,6 +106,89 @@ void wsc_updateSceneDownload(WarContext* context)
                 SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
             }
 
+            break;
+        }
+    }
+}
+
+void wsc_renderSceneDownload(WarContext* context)
+{
+    WarScene* scene = context->scene;
+
+    f32 w = (f32)(context->originalWindowWidth  - 20);
+    f32 h = (f32)(context->originalWindowHeight - 20);
+
+    // Main body text — shown in DOWNLOAD and CONFIRM states.
+    switch (scene->download.status)
+    {
+        case WAR_SCENE_DOWNLOAD_DOWNLOAD:
+        {
+            imui_text(context, "txtDownload",
+                CREATE_UI_TEXT_ARGS_INIT(
+                    .position   = vec2i(10, 10),
+                    .fontIndex  = 1,
+                    .fontColor  = WAR_COLOR_RGB(255, 215, 138),
+                    .multiline  = true,
+                    .boundings  = vec2f(w, h),
+                    .wrapping   = WAR_TEXT_WRAP_CHAR,
+                    .lineHeight = 120,
+                    .text = wsv_fromCString(downloadWelcomeText)
+                ));
+            break;
+        }
+        case WAR_SCENE_DOWNLOAD_CONFIRM:
+        {
+            imui_text(context, "txtDownload",
+                CREATE_UI_TEXT_ARGS_INIT(
+                    .position   = vec2i(10, 10),
+                    .fontIndex  = 1,
+                    .fontColor  = WAR_COLOR_RGB(255, 215, 138),
+                    .multiline  = true,
+                    .boundings  = vec2f(w, h),
+                    .wrapping   = WAR_TEXT_WRAP_CHAR,
+                    .lineHeight = 120,
+                    .text = wsv_fromCString(downloadConfirmText)
+                ));
+            break;
+        }
+        case WAR_SCENE_DOWNLOAD_DOWNLOADING:
+        {
+            imui_text(context, "txtDownloading",
+                CREATE_UI_TEXT_ARGS_INIT(
+                    .position      = vec2i(10, 10),
+                    .fontIndex     = 1,
+                    .fontColor     = WAR_COLOR_RGB(255, 215, 138),
+                    .boundings     = vec2f(w, h),
+                    .verticalAlign = WAR_TEXT_ALIGN_BOTTOM,
+                    .text = wsv_fromCString("Downloading...")
+                ));
+            break;
+        }
+        case WAR_SCENE_DOWNLOAD_DOWNLOADED:
+        case WAR_SCENE_DOWNLOAD_FILE_LOADED:
+        {
+            imui_text(context, "txtDownloading",
+                CREATE_UI_TEXT_ARGS_INIT(
+                    .position      = vec2i(10, 10),
+                    .fontIndex     = 1,
+                    .fontColor     = WAR_COLOR_RGB(255, 215, 138),
+                    .boundings     = vec2f(w, h),
+                    .verticalAlign = WAR_TEXT_ALIGN_BOTTOM,
+                    .text = wsv_fromCString("Downloading... Done. Press Enter to start the game.")
+                ));
+            break;
+        }
+        case WAR_SCENE_DOWNLOAD_FAILED:
+        {
+            imui_text(context, "txtDownloading",
+                CREATE_UI_TEXT_ARGS_INIT(
+                    .position      = vec2i(10, 10),
+                    .fontIndex     = 1,
+                    .fontColor     = WAR_COLOR_RGB(255, 215, 138),
+                    .boundings     = vec2f(w, h),
+                    .verticalAlign = WAR_TEXT_ALIGN_BOTTOM,
+                    .text = wsv_fromCString("Downloading... Failed. Press Enter to quit the game.")
+                ));
             break;
         }
     }

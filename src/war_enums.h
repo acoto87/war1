@@ -306,6 +306,18 @@ typedef enum _WarLevelResult
     WAR_LEVEL_RESULT_LOSE
 } WarLevelResult;
 
+typedef enum _WarMenuState
+{
+    WAR_MENU_STATE_NONE,
+    WAR_MENU_STATE_MAIN,
+    WAR_MENU_STATE_OPTIONS,
+    WAR_MENU_STATE_OBJECTIVES,
+    WAR_MENU_STATE_RESTART,
+    WAR_MENU_STATE_GAME_OVER,
+    WAR_MENU_STATE_QUIT,
+    WAR_MENU_STATE_DEMO_END
+} WarMenuState;
+
 typedef enum _WarFeatureType
 {
     WAR_FEATURE_UNIT_FOOTMAN,
@@ -1100,6 +1112,13 @@ typedef enum _WarSceneDownloadState
     WAR_SCENE_DOWNLOAD_FILE_LOADED,
     WAR_SCENE_DOWNLOAD_FAILED,
 } WarSceneDownloadState;
+
+typedef enum _WarMainMenuPanel
+{
+    WAR_MAIN_MENU_PANEL_MAIN,
+    WAR_MAIN_MENU_PANEL_SINGLE_PLAYER,
+    WAR_MAIN_MENU_PANEL_CUSTOM_GAME,
+} WarMainMenuPanel;
 
 typedef enum _WarComponentType
 {

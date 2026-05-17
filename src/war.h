@@ -31,7 +31,6 @@
 // #define DEBUG_RENDER_PASSABLE_INFO
 // #define DEBUG_RENDER_UNIT_PATHS
 // #define DEBUG_RENDER_UNIT_INFO
-// #define DEBUG_RENDER_UNIT_STATS
 // #define DEBUG_RENDER_UNIT_ANIMATIONS
 // #define DEBUG_RENDER_MAP_ANIMATIONS
 // #define DEBUG_RENDER_FONT
@@ -165,11 +164,51 @@ struct _WarRenderState
 
 #include "war_sprites.h"
 
+#define IMUI_SPRITE_CACHE_SIZE 64
+#define IMUI_TOOLTIP_TEXT_MAX  256
+
+struct _WarImuiSpriteEntry
+{
+    s32 resourceIndex;
+    s32 frameIndex;
+    s32 lastUsedFrame; // for LRU eviction
+    WarSprite sprite;
+};
+
+struct _WarImuiState
+{
+    u32  active_item;
+    u32  hot_item;
+    bool is_mouse_over_ui;
+
+    // Cursor: set by wui_changeCursorType each update, rendered in imui_end().
+    // Reset to WAR_CURSOR_ARROW at the start of every imui_begin().
+    WarCursorType cursor_type;
+
+    // Hotkey suppression: set to false before retained-button updates when
+    // the cheat panel is visible so buttons don't fire via keyboard shortcuts.
+    // Reset to true at the start of every imui_begin().
+    bool hotkeys_enabled;
+
+    // Tooltip deferral: set during a button call, drawn in imui_end()
+    bool show_tooltip;
+    char tooltip_text[IMUI_TOOLTIP_TEXT_MAX];
+    s32  tooltip_highlight_index;
+    s32  tooltip_highlight_count;
+
+    // Sprite cache: sprites are loaded on first use and reused across frames.
+    // Keyed by (resourceIndex, frameIndex) — each unique pair has its own
+    // SDL_Texture pre-loaded with the correct frame's pixel data.
+    WarImuiSpriteEntry spriteCache[IMUI_SPRITE_CACHE_SIZE];
+    s32 spriteCacheCount;
+};
+
 struct _WarContext
 {
     f32 time;
     f32 deltaTime;
     u32 fps;
+    u32 frameCount;
 
     bool paused;
 
@@ -206,7 +245,7 @@ struct _WarContext
     // Pre-allocated mix buffer owned exclusively by the audio callback.
     // Allocated on the main thread before audio starts so that the audio
     // callback thread never calls wm_calloc / war_free, which would race
-    // with main-thread allocations on permanentZone.
+    // with main-thread allocations on globalZone.
     s16* audioMixBuffer;
     u32  audioMixBufferCapacity; // capacity in samples
 
@@ -233,6 +272,8 @@ struct _WarContext
     WarScene* nextScene;
     WarMap* map;
     WarMap* nextMap;
+
+    WarImuiState imui;
 };
 
 void wg_setGlobalScale(WarContext* context, f32 scale);

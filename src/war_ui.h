@@ -37,7 +37,7 @@ typedef struct
     vec2 position;
     vec2 rotation;
     vec2 scale;
-    String text;
+    StringView text;
     s32 fontIndex;
     f32 fontSize;
     f32 lineHeight;
@@ -88,7 +88,7 @@ typedef struct
 
     s32 fontIndex;
     f32 fontSize;
-    String text;
+    StringView text;
     f32 lineHeight;
     WarColor fontColor;
     WarColor highlightColor;
@@ -106,7 +106,7 @@ typedef struct
 
     bool interactive;
     WarKeys hotKey;
-    String tooltip;
+    StringView tooltip;
     s32 tooltipHighlightIndex;
     s32 tooltipHighlightCount;
     s32 gold;
@@ -125,11 +125,12 @@ typedef struct
 
     bool interactive;
     WarKeys hotKey;
-    String tooltip;
+    StringView tooltip;
     s32 tooltipHighlightIndex;
     s32 tooltipHighlightCount;
     s32 gold;
     s32 wood;
+    s32 foregroundFrameIndex;
     WarClickHandler clickHandler;
 } CreateUIImageButtonArgs;
 
@@ -139,10 +140,9 @@ typedef struct
     .fontColor      = FONT_NORMAL_COLOR_INIT, \
     .highlightColor = FONT_HIGHLIGHT_COLOR_INIT, \
     .highlightIndex = NO_HIGHLIGHT, \
-    .horizontalAlign = WAR_TEXT_ALIGN_LEFT, \
-    .verticalAlign   = WAR_TEXT_ALIGN_TOP, \
-    .lineAlign       = WAR_TEXT_ALIGN_LEFT, \
-    .wrapping         = WAR_TEXT_WRAP_NONE, \
+    .verticalAlign  = WAR_TEXT_ALIGN_TOP, \
+    .lineAlign      = WAR_TEXT_ALIGN_LEFT, \
+    .wrapping       = WAR_TEXT_WRAP_NONE, \
     __VA_ARGS__ \
 }
 #define CREATE_UI_TEXT_ARGS_INIT(...) (&(CreateUITextArgs)CREATE_UI_TEXT_ARGS_INIT_CONST(__VA_ARGS__))
@@ -187,18 +187,12 @@ typedef struct
     .interactive           = true, \
     .hotKey                = WAR_KEY_NONE, \
     .tooltipHighlightIndex = NO_HIGHLIGHT, \
+    .foregroundFrameIndex  = 0, \
     __VA_ARGS__ \
 }
 #define CREATE_UI_IMAGE_BUTTON_ARGS_INIT(...) (&(CreateUIImageButtonArgs)CREATE_UI_IMAGE_BUTTON_ARGS_INIT_CONST(__VA_ARGS__))
 
-WarEntity* wui_createUIText(WarContext* context, String name, const CreateUITextArgs* args);
-WarEntity* wui_createUIRect(WarContext* context, String name, const CreateUIRectArgs* args);
-WarEntity* wui_createUIImage(WarContext* context, String name, const CreateUIImageArgs* args);
-WarEntity* wui_createUICursor(WarContext* context, String name, const CreateUICursorArgs* args);
-WarEntity* wui_createUITextButton(WarContext* context, String name, const CreateUITextButtonArgs* args);
-WarEntity* wui_createUIImageButton(WarContext* context, String name, const CreateUIImageButtonArgs* args);
-
-void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+void wui_changeCursorType(WarContext* context, WarCursorType type);
 void wui_updateUICursor(WarContext* context);
 void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled);
 

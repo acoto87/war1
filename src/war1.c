@@ -48,14 +48,14 @@
 #include "war_alloc.h"
 
 // https://github.com/schellingb/TinySoundFont
-#define TSF_MALLOC(sz) wm_alloc(sz)
-#define TSF_REALLOC(p,sz) wm_realloc((p),(sz))
+#define TSF_MALLOC(sz) wm_allocAudio(sz)
+#define TSF_REALLOC(p,sz) wm_reallocAudio((p),(sz))
 #define TSF_FREE(p) wm_free(p)
 #define TSF_IMPLEMENTATION
 #include "TinySoundFont/tsf.h"
 
-#define TML_MALLOC(sz) wm_alloc(sz)
-#define TML_REALLOC(p,sz) wm_realloc((p),(sz))
+#define TML_MALLOC(sz) wm_allocAudio(sz)
+#define TML_REALLOC(p,sz) wm_reallocAudio((p),(sz))
 #define TML_FREE(p) wm_free(p)
 #define TML_ERROR(msg) printf("ERROR: %s\n", msg)
 #define TML_WARN(msg) printf("WARNING: %s\n", msg)
@@ -80,7 +80,7 @@
 #include "stb/stb_image_resize.h"
 
 #define SHL_MALLOC(sz) wm_alloc(sz)
-#define SHL_CALLOC(n, sz) wm_calloc((n), (sz))
+#define SHL_CALLOC(n, sz) wm_alloc((n) * (sz))
 #define SHL_REALLOC(p, sz) wm_realloc((p), (sz))
 #define SHL_FREE(p) wm_free(p)
 #include "shl/list.h"
@@ -91,7 +91,7 @@
 
 #define SHL_MEMORY_BUFFER_IMPLEMENTATION
 #define MB_MALLOC(sz) wm_alloc(sz)
-#define MB_CALLOC(n, sz) wm_calloc((n), (sz))
+#define MB_CALLOC(n, sz) wm_alloc((n) * (sz))
 #define MB_FREE(p) wm_free(p)
 #include "shl/memory_buffer.h"
 
@@ -110,10 +110,11 @@
 
 #define PERM_SIZE (536870912ULL) // 512 MB
 #define FRAME_SIZE (4194304ULL)  // 4 MB
+#define AUDIO_SIZE (33554432ULL)  // 32 MB
 
 int main(void)
 {
-    if (!wm_allocInit(PERM_SIZE, FRAME_SIZE))
+    if (!wm_allocInit(PERM_SIZE, FRAME_SIZE, AUDIO_SIZE))
     {
         logError("Failed to initialize memory allocators!");
         return -1;
@@ -147,7 +148,6 @@ int main(void)
         return -1;
     }
 
-    u32 frameCount = 0;
     bool running = true;
 
     while (running)
@@ -165,7 +165,7 @@ int main(void)
             }
         }
 
-        wstr_setFormat(&context->windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context->time, context->fps, context->deltaTime, frameCount);
+        wstr_setFormat(&context->windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context->time, context->fps, context->deltaTime, context->frameCount);
         SDL_SetWindowTitle(context->window, wstr_cstr(&context->windowTitle));
 
         wg_updateGame(context);
@@ -173,7 +173,7 @@ int main(void)
         wg_presentGame(context);
         TracyCFrameMark
 
-        frameCount++;
+        context->frameCount++;
     }
 
     wg_quitGame(context);
@@ -234,5 +234,6 @@ int main(void)
 #include "war_scene_briefing.c"
 #include "war_scenes.c"
 #include "war_ui.c"
+#include "war_imui.c"
 #include "war_ai.c"
 #include "war_game.c"

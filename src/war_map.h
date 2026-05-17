@@ -68,6 +68,7 @@ struct _WarMap
     bool playing;
     bool custom;
     WarLevelResult result;
+    WarMenuState menuState;
 
     s32 levelInfoIndex;
     f32 objectivesTime;
@@ -126,6 +127,21 @@ struct _WarMap
     WarFlashStatus flashStatus;
     WarCheatStatus cheatStatus;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
+
+    // IMGUI HUD state — written by wmui_setStatus every update, read by wmui_renderHUD every render.
+    char hudStatusText[256];
+    s32 hudStatusHighlightIndex;
+    s32 hudStatusHighlightCount;
+    s32 hudStatusGold;
+    s32 hudStatusWood;
+
+    WarUnitCommandData commandSlots[6];
+    bool commandSlotActive[6];
+
+    char commandTexts[4][32];
+    s32 commandTextHighlightIndex[4];
+    s32 commandTextHighlightCount[4];
+    bool commandTextVisible[4];
 };
 
 WarMap* wmap_createMap(WarContext *context, s32 levelInfoIndex);
@@ -176,7 +192,7 @@ bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y);
 bool wmap_isTileFog(WarMap* map, s32 x, s32 y);
 bool wmap_isTileVisible(WarMap* map, s32 x, s32 y);
 
-void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+void wui_changeCursorType(WarContext* context, WarCursorType type);
 
 WarCampaignMapType wmap_getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex);
 

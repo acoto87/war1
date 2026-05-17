@@ -22,6 +22,7 @@
 #include "war_file.h"
 #include "war_font.h"
 #include "war.h"
+#include "war_imui.h"
 #include "war_map.h"
 #include "war_resources.h"
 #include "war_scenes.h"
@@ -191,9 +192,7 @@ bool wg_initGame(WarContext* context)
 
     // Set logical presentation so all rendering is in 320x200 space.
     // SDL handles upscaling to the actual window size.
-    if (!SDL_SetRenderLogicalPresentation(context->renderer,
-            context->originalWindowWidth, context->originalWindowHeight,
-            SDL_LOGICAL_PRESENTATION_INTEGER_SCALE))
+    if (!SDL_SetRenderLogicalPresentation(context->renderer, context->originalWindowWidth, context->originalWindowHeight, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE))
     {
         logError("Error setting logical presentation: %s", SDL_GetError());
         SDL_DestroyRenderer(context->renderer);
@@ -652,6 +651,9 @@ void wg_renderGame(WarContext *context)
     // Reset render state for this frame
     wr_init(context);
 
+    // Begin IMGUI pass — resets hot item, tooltip deferral, and is_mouse_over_ui.
+    imui_begin(context);
+
     if (context->scene)
     {
         wsc_renderScene(context);
@@ -660,6 +662,9 @@ void wg_renderGame(WarContext *context)
     {
         wmap_renderMap(context);
     }
+
+    // End IMGUI pass — draws deferred tooltip on top of everything, clears active item.
+    imui_end(context);
 
     TracyCZoneEnd(ctx);
 }

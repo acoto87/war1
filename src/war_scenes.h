@@ -28,13 +28,16 @@ struct _WarScene
             WarRace yourRace;
             WarRace enemyRace;
             s32 customMap;
+            WarMainMenuPanel menuPanel;
         } menu;
 
         struct
         {
             f32 time;
+            f32 scrollY;
             WarRace race;
             WarCampaignMapType mapType;
+            String briefingText;
         } briefing;
     };
 };
@@ -45,6 +48,10 @@ struct _WarSceneDescriptor
     WarSceneFunc enterSceneFunc;
     WarSceneFunc leaveSceneFunc;
     WarSceneFunc updateSceneFunc;
+    WarSceneFunc renderSceneFunc;
+    // Optional: called in wsc_renderScene after the animation loop, so it
+    // draws on top of both retained UI entities and sprite animations.
+    WarSceneFunc renderOverlayFunc;
 };
 
 WarScene* wsc_createScene(WarContext* context, WarSceneType type);

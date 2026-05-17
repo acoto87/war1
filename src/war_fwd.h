@@ -234,6 +234,12 @@ typedef struct _WarTransformComponent WarTransformComponent;
 struct _WarRenderState;
 typedef struct _WarRenderState WarRenderState;
 
+struct _WarImuiSpriteEntry;
+typedef struct _WarImuiSpriteEntry WarImuiSpriteEntry;
+
+struct _WarImuiState;
+typedef struct _WarImuiState WarImuiState;
+
 struct _WarContext;
 typedef struct _WarContext WarContext;
 

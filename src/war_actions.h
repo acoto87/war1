@@ -44,3 +44,4 @@ s32 wact_getActionDuration(WarContext* context, WarEntity* entity, WarUnitAction
 
 void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale);
 void wact_updateAction(WarContext* context, WarEntity* entity);
+void wact_resetAction(WarContext* context, WarEntity* entity, WarUnitActionType type);

@@ -13,6 +13,12 @@ void wst_enterMiningState(WarContext* context, WarEntity* entity, WarState* stat
     // remove the sprite to simulate the mining process
     we_removeSpriteComponent(context, entity);
 
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    // reset the current action to stop any movement or attack action
+    wact_resetAction(context, entity, unit->actionType);
+
     // set the mining time
     state->mine.miningTime = 2.0f;
 

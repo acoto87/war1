@@ -539,7 +539,14 @@ void* mz_allocAligned(memzone_t* zone, size_t size, size_t alignment)
     }
     else
     {
-        zone->rover = rover->next;
+        // rover->next may be allocated; advance to the next free block
+        // (falls back to the sentinel if no free blocks remain)
+        memblock_t* next = rover->next;
+        while (next != &zone->blockList && !MZ__IS_BLOCK_EMPTY(next))
+        {
+            next = next->next;
+        }
+        zone->rover = next;
     }
 
     zone->usedSize += usedPayloadSize;
@@ -819,6 +826,11 @@ bool mz_validate(const memzone_t* zone)
     if (!roverFound)
     {
         return mz__validationFailure(zone, zone->rover, "rover does not point at a block in the circular list");
+    }
+
+    if (zone->rover != &zone->blockList && !MZ__IS_BLOCK_EMPTY(zone->rover))
+    {
+        return mz__validationFailure(zone, zone->rover, "rover points to an allocated block");
     }
 
     if (totalBlockSize != zone->maxSize - offsetof(memzone_t, blockList))
