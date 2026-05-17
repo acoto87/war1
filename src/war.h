@@ -169,8 +169,9 @@ struct _WarRenderState
 
 struct _WarImuiSpriteEntry
 {
-    s32       resourceIndex;
-    s32       frameIndex;
+    s32 resourceIndex;
+    s32 frameIndex;
+    s32 lastUsedFrame; // for LRU eviction
     WarSprite sprite;
 };
 
@@ -207,6 +208,7 @@ struct _WarContext
     f32 time;
     f32 deltaTime;
     u32 fps;
+    u32 frameCount;
 
     bool paused;
 

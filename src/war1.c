@@ -148,7 +148,6 @@ int main(void)
         return -1;
     }
 
-    u32 frameCount = 0;
     bool running = true;
 
     while (running)
@@ -166,7 +165,7 @@ int main(void)
             }
         }
 
-        wstr_setFormat(&context->windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context->time, context->fps, context->deltaTime, frameCount);
+        wstr_setFormat(&context->windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context->time, context->fps, context->deltaTime, context->frameCount);
         SDL_SetWindowTitle(context->window, wstr_cstr(&context->windowTitle));
 
         wg_updateGame(context);
@@ -174,7 +173,7 @@ int main(void)
         wg_presentGame(context);
         TracyCFrameMark
 
-        frameCount++;
+        context->frameCount++;
     }
 
     wg_quitGame(context);

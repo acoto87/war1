@@ -28,27 +28,34 @@ static WarSprite imui_getOrCreateSprite(WarContext* context, WarSpriteResourceRe
 
     WarImuiState* imui = &context->imui;
 
+    // Search for an existing cache entry.
+    // Track the least recently used entry for eviction if needed.
+    s32 lruIndex = 0;
+
     for (s32 i = 0; i < imui->spriteCacheCount; i++)
     {
-        if (imui->spriteCache[i].resourceIndex == ref.resourceIndex &&
-            imui->spriteCache[i].frameIndex    == frameIndex)
+        WarImuiSpriteEntry* entry = &imui->spriteCache[i];
+        if (entry->resourceIndex == ref.resourceIndex &&
+            entry->frameIndex    == frameIndex)
         {
-            return imui->spriteCache[i].sprite;
+            return entry->sprite;
         }
+
+        if (entry->lastUsedFrame < imui->spriteCache[lruIndex].lastUsedFrame)
+        {
+            lruIndex = i;
+        }
+    }
+
+    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, ref);
+    if (frameIndex >= 0 && frameIndex < sprite.framesCount)
+    {
+        WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite, frameIndex);
+        wspr_updateSpriteImage(context, sprite, frame.data);
     }
 
     if (imui->spriteCacheCount < IMUI_SPRITE_CACHE_SIZE)
     {
-        WarSprite sprite = wspr_createSpriteFromResourceIndex(context, ref);
-
-        // wspr_createSpriteFromResourceIndex always uploads frame 0.
-        // Upload the requested frame if it differs.
-        if (frameIndex >= 0 && frameIndex < sprite.framesCount)
-        {
-            WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite, frameIndex);
-            wspr_updateSpriteImage(context, sprite, frame.data);
-        }
-
         imui->spriteCache[imui->spriteCacheCount].resourceIndex = ref.resourceIndex;
         imui->spriteCache[imui->spriteCacheCount].frameIndex    = frameIndex;
         imui->spriteCache[imui->spriteCacheCount].sprite        = sprite;
@@ -56,13 +63,19 @@ static WarSprite imui_getOrCreateSprite(WarContext* context, WarSpriteResourceRe
         return sprite;
     }
 
-    logWarning("imui sprite cache full — cannot cache resource %d frame %d", ref.resourceIndex, frameIndex);
-    WarSprite sprite = wspr_createSpriteFromResourceIndex(context, ref);
-    if (frameIndex != 0 && frameIndex < sprite.framesCount)
-    {
-        WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite, frameIndex);
-        wspr_updateSpriteImage(context, sprite, frame.data);
-    }
+    logDebug("IMUI sprite cache full, evicting resource %d frame %d last used at frame %u",
+             imui->spriteCache[lruIndex].resourceIndex,
+             imui->spriteCache[lruIndex].frameIndex,
+             imui->spriteCache[lruIndex].lastUsedFrame);
+
+    // Evict the least recently used sprite.
+    WarImuiSpriteEntry* lruEntry = &imui->spriteCache[lruIndex];
+    wspr_freeSprite(context, lruEntry->sprite);
+    lruEntry->resourceIndex = ref.resourceIndex;
+    lruEntry->frameIndex    = frameIndex;
+    lruEntry->lastUsedFrame = context->frameCount;
+    lruEntry->sprite = sprite;
+
     return sprite;
 }
 
