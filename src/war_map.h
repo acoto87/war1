@@ -192,7 +192,7 @@ bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y);
 bool wmap_isTileFog(WarMap* map, s32 x, s32 y);
 bool wmap_isTileVisible(WarMap* map, s32 x, s32 y);
 
-void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+void wui_changeCursorType(WarContext* context, WarCursorType type);
 
 WarCampaignMapType wmap_getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex);
 

@@ -2,12 +2,13 @@
 
 #include <assert.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "SDL3/SDL.h"
 #include "shl/wstr.h"
 
 #include "war_font.h"
-#include "war_ui.h"
+#include "war_imui.h"
 
 void wcheatp_setCheatsPanelVisible(WarContext* context, bool visible)
 {
@@ -20,6 +21,7 @@ void wcheatp_setCheatsPanelVisible(WarContext* context, bool visible)
 
     wstr_clear(&cheatStatus->text);
     cheatStatus->position = 0;
+    cheatStatus->cursorX  = -1.0f;
     cheatStatus->visible = visible;
 
     if (visible)
@@ -69,47 +71,18 @@ void wcheatp_createCheatsPanel(WarContext* context)
     cheatStatus->enabled = true;
     cheatStatus->visible = false;
     cheatStatus->position = 0;
+    cheatStatus->cursorX  = -1.0f;
     wstr_clear(&cheatStatus->text);
-
-    WarEntity* uiEntity;
-
-    vec2 cheatSize = vec2f((f32)context->originalWindowWidth, 12.0f);
-    WarColor cheatBackgroundColor = WAR_COLOR_RGBA(100, 100, 100, 160);
-    uiEntity = wui_createUIRect(context, wstr_fromCString("panelCheat"), CREATE_UI_RECT_ARGS_INIT(
-        .position = VEC2_ZERO,
-        .size     = cheatSize,
-        .color    = cheatBackgroundColor,
-    ));
-    setUIEntityStatus(context, uiEntity, false);
-
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheat"), CREATE_UI_TEXT_ARGS_INIT(
-        .position = vec2i(2, 4),
-        .fontSize = 6,
-    ));
-    setUIEntityStatus(context, uiEntity, false);
-
-    uiEntity = wui_createUIRect(context, wstr_fromCString("cursorCheat"), CREATE_UI_RECT_ARGS_INIT(
-        .position = vec2i(2, 3),
-        .size     = vec2i(1, 7),
-        .color    = WAR_COLOR_WHITE,
-    ));
-    setUIEntityStatus(context, uiEntity, false);
-
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), CREATE_UI_TEXT_ARGS_INIT(
-        .position  = vec2i(10, 20),
-        .fontIndex = 1,
-        .fontSize  = 8,
-        .fontColor = WAR_COLOR_YELLOW,
-    ));
-    setUIEntityStatus(context, uiEntity, false);
+    // NOTE: No retained entities are created; the panel is rendered each
+    // frame by wcheatp_renderCheatsPanel() called from wsc_renderScene().
 }
 
 void wcheatp_setCheatText(WarContext* context, String text)
 {
-    WarEntity* txtCheat = we_findUIEntity(context, wsv_fromCString("txtCheat"));
-    assert(txtCheat);
-
-    wui_setUIText(context, txtCheat, text);
+    NOT_USED(context);
+    // Text is now derived directly from cheatStatus->text in wcheatp_renderCheatsPanel.
+    // Free the String to avoid leaks if callers still pass one.
+    wstr_free(text);
 }
 
 void wcheatp_updateCheatsPanel(WarContext* context)
@@ -123,33 +96,15 @@ void wcheatp_updateCheatsPanel(WarContext* context)
     if (!cheatStatus->enabled)
         return;
 
-    WarEntity* cheatPanel = we_findUIEntity(context, wsv_fromCString("panelCheat"));
-    assert(cheatPanel);
-
-    WarEntity* cheatCursor = we_findUIEntity(context, wsv_fromCString("cursorCheat"));
-    assert(cheatCursor);
-
-    WarEntity* cheatText = we_findUIEntity(context, wsv_fromCString("txtCheat"));
-    assert(cheatText);
-
-    WarEntity* cheatFeedbackText = we_findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
-    assert(cheatFeedbackText);
-
+    // Tick feedback timer.
     if (cheatStatus->feedback)
     {
-        setUIEntityStatus(context, cheatFeedbackText, true);
-        wui_setUIText(context, cheatFeedbackText, cheatStatus->feedbackText);
-
         cheatStatus->feedbackTime -= context->deltaTime;
         if (cheatStatus->feedbackTime <= 0)
         {
             cheatStatus->feedbackTime = 0;
             cheatStatus->feedback = false;
         }
-    }
-    else
-    {
-        setUIEntityStatus(context, cheatFeedbackText, false);
     }
 
     if (cheatStatus->visible)
@@ -216,40 +171,82 @@ void wcheatp_updateCheatsPanel(WarContext* context)
             cheatStatus->position = length;
         }
 
+        // Compute cursor X for the render step.
         StringView prefix = wsv_fromCString("MSG: ");
         StringView cheatStatusText = wstr_view(&cheatStatus->text);
 
-        String statusText = wstr_concat(prefix, cheatStatusText);
-        wcheatp_setCheatText(context, statusText);
-
-        WarTextComponent* cheatTextText = we_getTextComponent(context, cheatText);
-        assert(cheatTextText);
-
         WarFontParams params = {0};
-        params.fontSize = cheatTextText->fontSize;
-        params.fontData = getFontData(cheatTextText->fontIndex);
+        params.fontSize = 6.0f;
+        params.fontData = getFontData(0);
 
         vec2 prefixSize = wfont_measureSingleSpriteText(prefix, (s32)wsv_length(prefix), params);
-        vec2 textSize = wfont_measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
-
-        WarTransformComponent* cheatCursorTransform = we_getTransformComponent(context, cheatCursor);
-        assert(cheatCursorTransform);
-
-        cheatCursorTransform->position.x = prefixSize.x + textSize.x;
-
-        setUIEntityStatus(context, cheatPanel, true);
-        setUIEntityStatus(context, cheatCursor, true);
-        setUIEntityStatus(context, cheatText, true);
+        vec2 textSize   = wfont_measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
+        cheatStatus->cursorX = 2.0f + prefixSize.x + textSize.x;
     }
     else
     {
-        setUIEntityStatus(context, cheatPanel, false);
-        setUIEntityStatus(context, cheatCursor, false);
-        setUIEntityStatus(context, cheatText, false);
+        cheatStatus->cursorX = -1.0f;
 
         if (isKeyJustReleased(input, WAR_KEY_ENTER))
         {
             wcheatp_setCheatsPanelVisible(context, true);
         }
+    }
+}
+
+void wcheatp_renderCheatsPanel(WarContext* context)
+{
+    WarScene* scene = context->scene;
+    assert(scene);
+
+    WarCheatStatus* cheatStatus = &scene->cheatStatus;
+
+    if (!cheatStatus->enabled)
+        return;
+
+    // --- Cheat panel background + input line ---
+    if (cheatStatus->visible)
+    {
+        // Gray translucent background bar at the top of the screen.
+        imui_rect(context, "panelCheat", CREATE_UI_RECT_ARGS_INIT(
+            .position = VEC2_ZERO,
+            .size     = vec2f((f32)context->originalWindowWidth, 12.0f),
+            .color    = WAR_COLOR_RGBA(100, 100, 100, 160),
+        ));
+
+        // "MSG: <typed text>" — built into a local buffer to avoid a heap alloc.
+        char inputBuf[8 + CHEAT_TEXT_MAX_LENGTH];
+        StringView cheatText = wstr_view(&cheatStatus->text);
+        snprintf(inputBuf, sizeof(inputBuf), "MSG: %.*s", (int)cheatText.length, cheatText.data ? cheatText.data : "");
+
+        imui_text_sv(context, "txtCheat",
+            CREATE_UI_TEXT_ARGS_INIT(
+                .position = vec2i(2, 4),
+                .fontSize = 6,
+            ),
+            wsv_fromCString(inputBuf));
+
+        // Blinking cursor rect — position computed in wcheatp_updateCheatsPanel.
+        if (cheatStatus->cursorX >= 0.0f)
+        {
+            imui_rect(context, "cursorCheat", CREATE_UI_RECT_ARGS_INIT(
+                .position = vec2f(cheatStatus->cursorX, 3.0f),
+                .size     = vec2i(1, 7),
+                .color    = WAR_COLOR_WHITE,
+            ));
+        }
+    }
+
+    // --- Cheat feedback text (shown for a few seconds after a cheat is applied) ---
+    if (cheatStatus->feedback && cheatStatus->feedbackText.data)
+    {
+        imui_text_sv(context, "txtCheatFeedback",
+            CREATE_UI_TEXT_ARGS_INIT(
+                .position  = vec2i(10, 20),
+                .fontIndex = 1,
+                .fontSize  = 8,
+                .fontColor = WAR_COLOR_YELLOW,
+            ),
+            wstr_view(&cheatStatus->feedbackText));
     }
 }

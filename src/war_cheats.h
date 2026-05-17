@@ -24,6 +24,10 @@ struct _WarCheatStatus
     bool feedback;
     f32 feedbackTime;
     String feedbackText;
+    // X offset (relative to panel.x + 2) of the blinking cursor rect.
+    // Written by the update function; read by the render function.
+    // Negative value means cursor is not visible.
+    f32 cursorX;
 };
 
 #define CHEAT_GOLD_INCREASE 10000
@@ -75,3 +79,4 @@ void wcheatp_setCheatsFeedback(WarContext* context, String feedbackText);
 void wcheatp_createCheatsPanel(WarContext* context);
 void wcheatp_setCheatText(WarContext* context, String text);
 void wcheatp_updateCheatsPanel(WarContext* context);
+void wcheatp_renderCheatsPanel(WarContext* context);

@@ -199,7 +199,7 @@ WarEntity* wui_createUICursor(WarContext* context, String name, const CreateUICu
 WarEntity* wui_createUITextButton(WarContext* context, String name, const CreateUITextButtonArgs* args);
 WarEntity* wui_createUIImageButton(WarContext* context, String name, const CreateUIImageButtonArgs* args);
 
-void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type);
+void wui_changeCursorType(WarContext* context, WarCursorType type);
 void wui_updateUICursor(WarContext* context);
 void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled);
 

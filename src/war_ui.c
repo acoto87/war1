@@ -329,45 +329,16 @@ WarEntity* wui_createUIImageButton(WarContext* context, String name, const Creat
     return entity;
 }
 
-void wui_changeCursorType(WarContext* context, WarEntity* entity, WarCursorType type)
+void wui_changeCursorType(WarContext* context, WarCursorType type)
 {
-    assert(entity->type == WAR_ENTITY_TYPE_CURSOR);
-
-    WarCursorComponent* cursor = we_getCursorComponent(context, entity);
-    assert(cursor);
-
-    if (cursor->type != type)
-    {
-        WarResource* resource = wres_getOrCreateResource(context, type);
-        assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
-
-        we_removeCursorComponent(context, entity);
-        we_addCursorComponent(context, entity, WAR_CURSOR_COMPONENT_INIT(
-            .type = type,
-            .hot  = vec2i(resource->cursor.hotx, resource->cursor.hoty),
-        ));
-
-        we_removeSpriteComponent(context, entity);
-        we_addSpriteComponentFromResource(context, entity, imageResourceRef(type));
-    }
+    context->imui.cursor_type = type;
 }
 
 void wui_updateUICursor(WarContext* context)
 {
-    WarInput* input = &context->input;
-
-    WarEntity* entity = we_findUIEntity(context, wsv_fromCString("cursor"));
-    if (entity)
-    {
-        WarTransformComponent* transform = we_getTransformComponent(context, entity);
-        assert(transform);
-
-        WarCursorComponent* cursor = we_getCursorComponent(context, entity);
-        assert(cursor);
-
-        transform->position = vec2_subv(input->pos, cursor->hot);
-        wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
-    }
+    NOT_USED(context);
+    // Cursor is now fully managed by imui: wui_changeCursorType sets the type
+    // each frame, and imui_end() renders the sprite at the mouse position.
 }
 
 void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
@@ -494,7 +465,8 @@ void wui_renderUIEntities(WarContext* context)
     for(s32 i = 0; i < entities->count; i++)
     {
         WarEntity *entity = entities->items[i];
-        if (entity)
+        // Cursor entities are now rendered by imui_end(); skip them here.
+        if (entity && entity->type != WAR_ENTITY_TYPE_CURSOR)
         {
             we_renderEntity(context, entity);
         }

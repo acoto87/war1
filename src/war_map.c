@@ -898,10 +898,6 @@ void wmap_enterMap(WarContext* context)
 
     // add ui entities
     wmui_createMapUI(context);
-    wui_createUICursor(context, wstr_fromCString("cursor"), CREATE_UI_CURSOR_ARGS_INIT(
-        .type     = WAR_CURSOR_ARROW,
-        .position = VEC2_ZERO,
-    ));
 
     if (!isDemo(context))
         wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_MUSIC_00, .loop=true));
@@ -953,12 +949,13 @@ static void updateViewport(WarContext *context)
 
         // don't scroll with arrow keys if Control or Shift are pressed
         // don't scroll with arrow keys if the cheat status is active
-        if (!isKeyHeld(input, WAR_KEY_CTRL) &&
+        if (!mouseScroll &&
+            !isKeyHeld(input, WAR_KEY_CTRL) &&
             !isKeyHeld(input, WAR_KEY_SHIFT) &&
             !cheatsEnabledAndVisible(map))
         {
             dir = wmap_getDirFromArrowKeys(context);
-            keyScroll = true;
+            keyScroll = !VEC2_IS_ZERO(dir);
         }
     }
 
@@ -1655,29 +1652,16 @@ void updateStatus(WarContext* context)
     WarCheatStatus* cheatStatus = &map->cheatStatus;
     WarFlashStatus* flashStatus = &map->flashStatus;
 
-    WarEntity* statusCursor = we_findUIEntity(context, wsv_fromCString("txtStatusCursor"));
-    assert(statusCursor);
-
-    WarEntity* cheatFeedbackText = we_findUIEntity(context, wsv_fromCString("txtCheatFeedbackText"));
-    assert(cheatFeedbackText);
-
     if (cheatStatus->enabled)
     {
         if (cheatStatus->feedback)
         {
-            setUIEntityStatus(context, cheatFeedbackText, true);
-            wui_setUIText(context, cheatFeedbackText, cheatStatus->feedbackText);
-
             cheatStatus->feedbackTime -= context->deltaTime;
             if (cheatStatus->feedbackTime <= 0)
             {
                 cheatStatus->feedbackTime = 0;
                 cheatStatus->feedback = false;
             }
-        }
-        else
-        {
-            setUIEntityStatus(context, cheatFeedbackText, false);
         }
 
         if (cheatStatus->visible)
@@ -1759,18 +1743,15 @@ void updateStatus(WarContext* context)
             vec2 prefixSize = wfont_measureSingleSpriteText(prefix, (s32)prefix.length, params);
             vec2 textSize = wfont_measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
 
-            WarTransformComponent* statusCursorTransform = we_getTransformComponent(context, statusCursor);
-            assert(statusCursorTransform);
+            // Store cursor X offset (relative to bottomPanel.x + 2) for wmui_renderHUD.
+            map->cheatStatus.cursorX = 2.0f + prefixSize.x + textSize.x;
 
-            statusCursorTransform->position.x = map->bottomPanel.x + prefixSize.x + textSize.x;
-
-            setUIEntityStatus(context, statusCursor, true);
             TracyCZoneEnd(ctx);
             return;
         }
         else
         {
-            setUIEntityStatus(context, statusCursor, false);
+            map->cheatStatus.cursorX = -1.0f; // sentinel: cursor not visible
 
             if (isKeyJustReleased(input, WAR_KEY_ENTER))
             {
@@ -1904,212 +1885,200 @@ void updateMapCursor(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    WarEntity* entity = we_findUIEntity(context, wsv_fromCString("cursor"));
-    if (entity)
+    if (!map->playing)
     {
-        WarTransformComponent* transform = we_getTransformComponent(context, entity);
-        assert(transform);
+        wui_changeCursorType(context, WAR_CURSOR_ARROW);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
-        WarCursorComponent* cursor = we_getCursorComponent(context, entity);
-        assert(cursor);
+    if (isMapDragging(input))
+    {
+        wui_changeCursorType(context, WAR_CURSOR_GREEN_CROSSHAIR);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
-        transform->position = vec2_subv(input->pos, cursor->hot);
-
-        if (!map->playing)
+    if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+    {
+        WarUnitCommand* command = &map->command;
+        switch (command->type)
         {
-            wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
-            TracyCZoneEnd(ctx);
-            return;
-        }
-
-        if (isMapDragging(input))
-        {
-            wui_changeCursorType(context, entity, WAR_CURSOR_GREEN_CROSSHAIR);
-            TracyCZoneEnd(ctx);
-            return;
-        }
-
-        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
-        {
-            WarUnitCommand* command = &map->command;
-            switch (command->type)
+            case WAR_COMMAND_ATTACK:
+            case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
+            case WAR_COMMAND_SPELL_POISON_CLOUD:
             {
-                case WAR_COMMAND_ATTACK:
-                case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
-                case WAR_COMMAND_SPELL_POISON_CLOUD:
+                wui_changeCursorType(context, WAR_CURSOR_RED_CROSSHAIR);
+                break;
+            }
+
+            case WAR_COMMAND_MOVE:
+            case WAR_COMMAND_STOP:
+            case WAR_COMMAND_HARVEST:
+            case WAR_COMMAND_DELIVER:
+            case WAR_COMMAND_REPAIR:
+            case WAR_COMMAND_SPELL_HEALING:
+            case WAR_COMMAND_SPELL_FAR_SIGHT:
+            case WAR_COMMAND_SPELL_INVISIBILITY:
+            case WAR_COMMAND_SPELL_RAISE_DEAD:
+            case WAR_COMMAND_SPELL_DARK_VISION:
+            case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
+            {
+                wui_changeCursorType(context, WAR_CURSOR_YELLOW_CROSSHAIR);
+                break;
+            }
+
+            case WAR_COMMAND_BUILD_FARM_HUMANS:
+            case WAR_COMMAND_BUILD_FARM_ORCS:
+            case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
+            case WAR_COMMAND_BUILD_BARRACKS_ORCS:
+            case WAR_COMMAND_BUILD_CHURCH:
+            case WAR_COMMAND_BUILD_TEMPLE:
+            case WAR_COMMAND_BUILD_TOWER_HUMANS:
+            case WAR_COMMAND_BUILD_TOWER_ORCS:
+            case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
+            case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
+            case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
+            case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
+            case WAR_COMMAND_BUILD_STABLE:
+            case WAR_COMMAND_BUILD_KENNEL:
+            case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
+            case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
+            case WAR_COMMAND_BUILD_ROAD:
+            case WAR_COMMAND_BUILD_WALL:
+            {
+                wui_changeCursorType(context, WAR_CURSOR_ARROW);
+                break;
+            }
+
+            default:
+            {
+                vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
+
+                WarEntity* entityUnderCursor = we_findEntityUnderCursor(context, true, true);
+                if (!entityUnderCursor)
                 {
-                    wui_changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
+                    wui_changeCursorType(context, WAR_CURSOR_ARROW);
                     break;
                 }
 
-                case WAR_COMMAND_MOVE:
-                case WAR_COMMAND_STOP:
-                case WAR_COMMAND_HARVEST:
-                case WAR_COMMAND_DELIVER:
-                case WAR_COMMAND_REPAIR:
-                case WAR_COMMAND_SPELL_HEALING:
-                case WAR_COMMAND_SPELL_FAR_SIGHT:
-                case WAR_COMMAND_SPELL_INVISIBILITY:
-                case WAR_COMMAND_SPELL_RAISE_DEAD:
-                case WAR_COMMAND_SPELL_DARK_VISION:
-                case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
+                WarEntityIdList* selectedEntities = &map->selectedEntities;
+                if (selectedEntities->count > 0)
                 {
-                    wui_changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
-                    break;
-                }
-
-                case WAR_COMMAND_BUILD_FARM_HUMANS:
-                case WAR_COMMAND_BUILD_FARM_ORCS:
-                case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
-                case WAR_COMMAND_BUILD_BARRACKS_ORCS:
-                case WAR_COMMAND_BUILD_CHURCH:
-                case WAR_COMMAND_BUILD_TEMPLE:
-                case WAR_COMMAND_BUILD_TOWER_HUMANS:
-                case WAR_COMMAND_BUILD_TOWER_ORCS:
-                case WAR_COMMAND_BUILD_TOWNHALL_HUMANS:
-                case WAR_COMMAND_BUILD_TOWNHALL_ORCS:
-                case WAR_COMMAND_BUILD_LUMBERMILL_HUMANS:
-                case WAR_COMMAND_BUILD_LUMBERMILL_ORCS:
-                case WAR_COMMAND_BUILD_STABLE:
-                case WAR_COMMAND_BUILD_KENNEL:
-                case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
-                case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
-                case WAR_COMMAND_BUILD_ROAD:
-                case WAR_COMMAND_BUILD_WALL:
-                {
-                    wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
-                    break;
-                }
-
-                default:
-                {
-                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-
-                    WarEntity* entityUnderCursor = we_findEntityUnderCursor(context, true, true);
-                    if (!entityUnderCursor)
+                    WarEntity* selectedEntity = we_findEntity(context, selectedEntities->items[0]);
+                    if (selectedEntity &&
+                        wu_isFriendlyUnit(context, selectedEntity) &&
+                        wu_isDudeUnit(context, selectedEntity))
                     {
-                        wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
-                        break;
-                    }
-
-                    WarEntityIdList* selectedEntities = &map->selectedEntities;
-                    if (selectedEntities->count > 0)
-                    {
-                        WarEntity* selectedEntity = we_findEntity(context, selectedEntities->items[0]);
-                        if (selectedEntity &&
-                            wu_isFriendlyUnit(context, selectedEntity) &&
-                            wu_isDudeUnit(context, selectedEntity))
+                        if (wu_isUnitOfType(context, entityUnderCursor, WAR_UNIT_GOLDMINE) &&
+                            !wmap_isUnitUnknown(context, map, entityUnderCursor) &&
+                            wu_isWorkerUnit(context, selectedEntity))
                         {
-                            if (wu_isUnitOfType(context, entityUnderCursor, WAR_UNIT_GOLDMINE) &&
-                                !wmap_isUnitUnknown(context, map, entityUnderCursor) &&
-                                wu_isWorkerUnit(context, selectedEntity))
-                            {
-                                wui_changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
-                            }
-                            else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) &&
-                                     !wmap_isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
-                                     wu_isWorkerUnit(context, selectedEntity))
-                            {
-                                wui_changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
-                            }
-                            else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL) &&
-                                     !wmap_isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
-                                     wu_isWarriorUnit(context, selectedEntity) &&
-                                     wu_canAttack(context, selectedEntity, entityUnderCursor))
-                            {
-                                wui_changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
-                            }
-                            else if (!wu_isFriendlyUnit(context, entityUnderCursor) &&
-                                     wu_isWarriorUnit(context, selectedEntity) &&
-                                     wu_canAttack(context, selectedEntity, entityUnderCursor))
-                            {
-                                wui_changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
-                            }
-                            else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
-                                     isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
-                            {
-                                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
-                            }
-                            else
-                            {
-                                wui_changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
-                            }
+                            wui_changeCursorType(context, WAR_CURSOR_YELLOW_CROSSHAIR);
+                        }
+                        else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) &&
+                                 !wmap_isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
+                                 wu_isWorkerUnit(context, selectedEntity))
+                        {
+                            wui_changeCursorType(context, WAR_CURSOR_YELLOW_CROSSHAIR);
+                        }
+                        else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL) &&
+                                 !wmap_isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
+                                 wu_isWarriorUnit(context, selectedEntity) &&
+                                 wu_canAttack(context, selectedEntity, entityUnderCursor))
+                        {
+                            wui_changeCursorType(context, WAR_CURSOR_RED_CROSSHAIR);
+                        }
+                        else if (!wu_isFriendlyUnit(context, entityUnderCursor) &&
+                                 wu_isWarriorUnit(context, selectedEntity) &&
+                                 wu_canAttack(context, selectedEntity, entityUnderCursor))
+                        {
+                            wui_changeCursorType(context, WAR_CURSOR_RED_CROSSHAIR);
                         }
                         else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
                                  isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
                         {
-                            wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
+                            wui_changeCursorType(context, WAR_CURSOR_ARROW);
                         }
                         else
                         {
-                            wui_changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
+                            wui_changeCursorType(context, WAR_CURSOR_MAGNIFYING_GLASS);
                         }
                     }
                     else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
                              isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
                     {
-                        wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
+                        wui_changeCursorType(context, WAR_CURSOR_ARROW);
                     }
                     else
                     {
-                        wui_changeCursorType(context, entity, WAR_CURSOR_MAGNIFYING_GLASS);
+                        wui_changeCursorType(context, WAR_CURSOR_MAGNIFYING_GLASS);
                     }
-
-                    break;
                 }
+                else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) ||
+                         isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL))
+                {
+                    wui_changeCursorType(context, WAR_CURSOR_ARROW);
+                }
+                else
+                {
+                    wui_changeCursorType(context, WAR_CURSOR_MAGNIFYING_GLASS);
+                }
+
+                break;
             }
         }
-        else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+    }
+    else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+    {
+        WarUnitCommand* command = &map->command;
+        switch (command->type)
         {
-            WarUnitCommand* command = &map->command;
-            switch (command->type)
+            case WAR_COMMAND_ATTACK:
+            case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
+            case WAR_COMMAND_SPELL_POISON_CLOUD:
             {
-                case WAR_COMMAND_ATTACK:
-                case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
-                case WAR_COMMAND_SPELL_POISON_CLOUD:
-                {
-                    wui_changeCursorType(context, entity, WAR_CURSOR_RED_CROSSHAIR);
-                    break;
-                }
+                wui_changeCursorType(context, WAR_CURSOR_RED_CROSSHAIR);
+                break;
+            }
 
-                case WAR_COMMAND_MOVE:
-                case WAR_COMMAND_SPELL_FAR_SIGHT:
-                case WAR_COMMAND_SPELL_DARK_VISION:
-                {
-                    wui_changeCursorType(context, entity, WAR_CURSOR_YELLOW_CROSSHAIR);
-                    break;
-                }
+            case WAR_COMMAND_MOVE:
+            case WAR_COMMAND_SPELL_FAR_SIGHT:
+            case WAR_COMMAND_SPELL_DARK_VISION:
+            {
+                wui_changeCursorType(context, WAR_CURSOR_YELLOW_CROSSHAIR);
+                break;
+            }
 
-                default:
-                {
-                    wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
-                    break;
-                }
+            default:
+            {
+                wui_changeCursorType(context, WAR_CURSOR_ARROW);
+                break;
             }
         }
-        else
-        {
-            vec2 dir = wmap_getDirFromMousePos(context);
-            if (dir.x < 0 && dir.y < 0)         // -1, -1
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW_UP_LEFT);
-            else if (dir.x < 0 && dir.y > 0)    // -1,  1
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW_BOTTOM_LEFT);
-            else if (dir.x > 0 && dir.y < 0)    //  1, -1
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW_UP_RIGHT);
-            else if (dir.x > 0 && dir.y > 0)    //  1,  1
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW_BOTTOM_RIGHT);
-            else if (dir.x < 0)                 // -1,  0
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW_LEFT);
-            else if (dir.x > 0)                 //  1,  0
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW_RIGHT);
-            else if (dir.y < 0)                 //  0, -1
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW_UP);
-            else if (dir.y > 0)                 //  0,  1
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW_BOTTOM);
-            else                                //  0,  0
-                wui_changeCursorType(context, entity, WAR_CURSOR_ARROW);
-        }
+    }
+    else
+    {
+        vec2 dir = wmap_getDirFromMousePos(context);
+        if (dir.x < 0 && dir.y < 0)         // -1, -1
+            wui_changeCursorType(context, WAR_CURSOR_ARROW_UP_LEFT);
+        else if (dir.x < 0 && dir.y > 0)    // -1,  1
+            wui_changeCursorType(context, WAR_CURSOR_ARROW_BOTTOM_LEFT);
+        else if (dir.x > 0 && dir.y < 0)    //  1, -1
+            wui_changeCursorType(context, WAR_CURSOR_ARROW_UP_RIGHT);
+        else if (dir.x > 0 && dir.y > 0)    //  1,  1
+            wui_changeCursorType(context, WAR_CURSOR_ARROW_BOTTOM_RIGHT);
+        else if (dir.x < 0)                 // -1,  0
+            wui_changeCursorType(context, WAR_CURSOR_ARROW_LEFT);
+        else if (dir.x > 0)                 //  1,  0
+            wui_changeCursorType(context, WAR_CURSOR_ARROW_RIGHT);
+        else if (dir.y < 0)                 //  0, -1
+            wui_changeCursorType(context, WAR_CURSOR_ARROW_UP);
+        else if (dir.y > 0)                 //  0,  1
+            wui_changeCursorType(context, WAR_CURSOR_ARROW_BOTTOM);
+        else                                //  0,  0
+            wui_changeCursorType(context, WAR_CURSOR_ARROW);
     }
 
     TracyCZoneEnd(ctx);
@@ -2662,7 +2631,7 @@ void wmap_updateMap(WarContext* context)
         input->mapDragStartPos = VEC2_ZERO;
         input->mapDragRect = RECT_EMPTY;
 
-        wui_updateUIButtons(context, true);
+        wui_updateUIButtons(context, !map->cheatStatus.visible);
         updateMapCursor(context);
         TracyCZoneEnd(ctx);
         return;

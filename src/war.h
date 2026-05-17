@@ -180,6 +180,15 @@ struct _WarImuiState
     u32  hot_item;
     bool is_mouse_over_ui;
 
+    // Cursor: set by wui_changeCursorType each update, rendered in imui_end().
+    // Reset to WAR_CURSOR_ARROW at the start of every imui_begin().
+    WarCursorType cursor_type;
+
+    // Hotkey suppression: set to false before retained-button updates when
+    // the cheat panel is visible so buttons don't fire via keyboard shortcuts.
+    // Reset to true at the start of every imui_begin().
+    bool hotkeys_enabled;
+
     // Tooltip deferral: set during a button call, drawn in imui_end()
     bool show_tooltip;
     char tooltip_text[IMUI_TOOLTIP_TEXT_MAX];

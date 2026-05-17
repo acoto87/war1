@@ -17,17 +17,7 @@
 void wmui_createMapUI(WarContext* context)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
-
-    vec2 leftTopPanel = RECT_TOP_LEFT(map->leftTopPanel);
-    vec2 leftBottomPanel = RECT_TOP_LEFT(map->leftBottomPanel);
-    vec2 topPanel = RECT_TOP_LEFT(map->topPanel);
-    vec2 rightPanel = RECT_TOP_LEFT(map->rightPanel);
-    vec2 bottomPanel = RECT_TOP_LEFT(map->bottomPanel);
     vec2 minimapPanel = RECT_TOP_LEFT(map->minimapPanel);
-    WarSpriteResourceRef normalRef = imageResourceRef(364);
-    WarSpriteResourceRef pressedRef = imageResourceRef(365);
-    WarSpriteResourceRef portraitsRef = imageResourceRef(361);
 
     WarCheatStatus* cheatStatus = &map->cheatStatus;
     cheatStatus->enabled = true;
@@ -35,57 +25,7 @@ void wmui_createMapUI(WarContext* context)
     cheatStatus->position = 0;
     wstr_clear(&cheatStatus->text);
 
-    WarEntity* uiEntity;
-
-    // panels
-    wui_createUIImage(context, wstr_fromCString("panelLeftTop"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 224, 225),
-        .position  = leftTopPanel,
-    ));
-    wui_createUIImage(context, wstr_fromCString("panelLeftBottom"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 226, 227),
-        .position  = leftBottomPanel,
-    ));
-    wui_createUIImage(context, wstr_fromCString("panelTop"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 218, 219),
-        .position  = topPanel,
-    ));
-    wui_createUIImage(context, wstr_fromCString("panelRight"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 220, 221),
-        .position  = rightPanel,
-    ));
-    wui_createUIImage(context, wstr_fromCString("panelBottom"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 222, 223),
-        .position  = bottomPanel,
-    ));
-
-    // minimap
     wmui_createUIMinimap(context, wstr_fromCString("minimap"), minimapPanel);
-
-    // top panel images
-    wui_createUIImage(context, wstr_fromCString("imgGold"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRef(406),
-        .position  = vec2_addv(topPanel, vec2i(201, 1)),
-    ));
-    wui_createUIImage(context, wstr_fromCString("imgLumber"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRef(407),
-        .position  = vec2_addv(topPanel, vec2i(102, 0)),
-    ));
-
-    // status bar elements — now IMGUI (rendered each frame in wmui_renderHUD).
-    wui_createUIRect(context, wstr_fromCString("txtStatusCursor"), CREATE_UI_RECT_ARGS_INIT(
-        .position = vec2_addv(bottomPanel, vec2i(2, 4)),
-        .size     = vec2i(1, 7),
-        .color    = WAR_COLOR_WHITE,
-    ));
-
-    uiEntity = wui_createUIText(context, wstr_fromCString("txtCheatFeedbackText"), CREATE_UI_TEXT_ARGS_INIT(
-        .position  = vec2_addv(bottomPanel, vec2i(15, -20)),
-        .fontIndex = 1,
-        .fontSize  = 8,
-        .fontColor = WAR_COLOR_YELLOW,
-    ));
-    setUIEntityStatus(context, uiEntity, false);
 }
 
 WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
@@ -789,6 +729,14 @@ static void wmui_renderHUD(WarContext* context)
 
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
+    WarCheatStatus* cheatStatus = &map->cheatStatus;
+
+    // Suppress imui button hotkeys while the cheat panel is open so that
+    // key presses intended as cheat input don't trigger command shortcuts.
+    if (cheatStatus->enabled && cheatStatus->visible)
+    {
+        context->imui.hotkeys_enabled = false;
+    }
 
     vec2 topPanel        = RECT_TOP_LEFT(map->topPanel);
     vec2 bottomPanel     = RECT_TOP_LEFT(map->bottomPanel);
@@ -1105,6 +1053,30 @@ static void wmui_renderHUD(WarContext* context)
         }
     }
 
+    // --- Cheat input cursor (visible while cheat panel is open) ---
+    // Drawn as a 1×7 white rect at the current text insertion position.
+    if (cheatStatus->enabled && cheatStatus->visible && cheatStatus->cursorX >= 0.0f)
+    {
+        imui_rect(context, "rectStatusCursor", CREATE_UI_RECT_ARGS_INIT(
+            .position = vec2f(bottomPanel.x + cheatStatus->cursorX, bottomPanel.y + 4.0f),
+            .size     = vec2i(1, 7),
+            .color    = WAR_COLOR_WHITE,
+        ));
+    }
+
+    // --- Cheat feedback text (shown for a few seconds after applying a cheat) ---
+    if (cheatStatus->enabled && cheatStatus->feedback && cheatStatus->feedbackText.data)
+    {
+        imui_text_sv(context, "txtCheatFeedback",
+            CREATE_UI_TEXT_ARGS_INIT(
+                .position  = vec2_addv(bottomPanel, vec2i(15, -20)),
+                .fontIndex = 1,
+                .fontSize  = 8,
+                .fontColor = WAR_COLOR_YELLOW,
+            ),
+            wstr_view(&cheatStatus->feedbackText));
+    }
+
     TracyCZoneEnd(ctx);
 }
 
@@ -1199,8 +1171,6 @@ void wmui_renderCommand(WarContext* context)
         }
     }
 
-    wmui_renderMenus(context);
-
     wr_restore(context);
 
     TracyCZoneEnd(ctx);
@@ -1212,10 +1182,49 @@ void wmui_renderMapUI(WarContext* context)
 
     wr_save(context);
 
+    WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+
+    vec2 leftTopPanel    = RECT_TOP_LEFT(map->leftTopPanel);
+    vec2 leftBottomPanel = RECT_TOP_LEFT(map->leftBottomPanel);
+    vec2 topPanel        = RECT_TOP_LEFT(map->topPanel);
+    vec2 rightPanel      = RECT_TOP_LEFT(map->rightPanel);
+    vec2 bottomPanel     = RECT_TOP_LEFT(map->bottomPanel);
+
+    imui_image(context, "panelLeftTop", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 224, 225),
+        .position  = leftTopPanel,
+    ));
+    imui_image(context, "panelLeftBottom", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 226, 227),
+        .position  = leftBottomPanel,
+    ));
+    imui_image(context, "panelTop", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 218, 219),
+        .position  = topPanel,
+    ));
+    imui_image(context, "panelRight", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 220, 221),
+        .position  = rightPanel,
+    ));
+    imui_image(context, "panelBottom", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 222, 223),
+        .position  = bottomPanel,
+    ));
+    imui_image(context, "imgGold", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRef(406),
+        .position  = vec2_addv(topPanel, vec2i(201, 1)),
+    ));
+    imui_image(context, "imgLumber", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRef(407),
+        .position  = vec2_addv(topPanel, vec2i(102, 0)),
+    ));
+
     wmui_renderSelectionRect(context);
     wmui_renderCommand(context);
     wui_renderUIEntities(context);
     wmui_renderHUD(context);
+    wmui_renderMenus(context);
 
     wr_restore(context);
 

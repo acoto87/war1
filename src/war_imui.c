@@ -6,6 +6,7 @@
 #include "war_audio.h"
 #include "war_font.h"
 #include "war_render.h"
+#include "war_resources.h"
 #include "war_sprites.h"
 
 // ---------------------------------------------------------------------------
@@ -102,6 +103,8 @@ void imui_begin(WarContext* context)
     imui->tooltip_text[0]      = '\0';
     imui->tooltip_highlight_index = NO_HIGHLIGHT;
     imui->tooltip_highlight_count = 0;
+    imui->cursor_type          = WAR_CURSOR_ARROW;
+    imui->hotkeys_enabled      = true;
     // NOTE: active_item and spriteCache are intentionally NOT reset here.
     // active_item persists until the mouse button is released (cleared in imui_end).
     // spriteCache persists for the lifetime of the context.
@@ -146,6 +149,27 @@ void imui_end(WarContext* context)
         wr_save(context);
         wfont_renderSingleSpriteText(context, tooltipView, 74.0f, 193.0f, params);
         wr_restore(context);
+    }
+
+    // Draw the cursor sprite on top of everything else.
+    // The hotspot offset is read from the cursor resource so the sprite is
+    // positioned so that the logical pointer tip sits at the mouse coordinates.
+    {
+        WarSpriteResourceRef cursorRef = imageResourceRef(imui->cursor_type);
+        WarSprite cursorSprite = imui_getOrCreateSprite(context, cursorRef, 0);
+        if (cursorSprite.texture)
+        {
+            WarResource* resource = wres_getOrCreateResource(context, imui->cursor_type);
+            assert(resource->type == WAR_RESOURCE_TYPE_CURSOR);
+
+            vec2 hotspot = vec2i(resource->cursor.hotx, resource->cursor.hoty);
+            vec2 pos     = vec2_subv(input->pos, hotspot);
+
+            wr_save(context);
+            wr_translate(context, pos.x, pos.y);
+            wspr_renderSprite(context, cursorSprite, VEC2_ZERO, VEC2_ONE);
+            wr_restore(context);
+        }
     }
 }
 
@@ -283,7 +307,8 @@ static bool imui_evalButton(WarContext* context, u32 itemId, rect buttonRect, Wa
     }
 
     // Hot-key: fires immediately on key release regardless of mouse position.
-    if (hotKey != WAR_KEY_NONE && isKeyJustReleased(input, hotKey))
+    // Suppressed when hotkeys_enabled is false (e.g. cheat panel is open).
+    if (imui->hotkeys_enabled && hotKey != WAR_KEY_NONE && isKeyJustReleased(input, hotKey))
     {
         return true;
     }

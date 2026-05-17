@@ -8,7 +8,7 @@
 #include "war_audio.h"
 #include "war_campaigns.h"
 #include "war_entities.h"
-#include "war_ui.h"
+#include "war_imui.h"
 
 void wsbr_enterSceneBriefingHumans(WarContext* context)
 {
@@ -16,12 +16,10 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
 
     WarCampaignMapData data = wcamp_getCampaignData(scene->briefing.mapType);
 
-    scene->briefing.time = data.briefingDuration;
-
-    wui_createUIImage(context, wstr_fromCString("imgBackground"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRef(421),
-        .position  = VEC2_ZERO,
-    ));
+    scene->briefing.time        = data.briefingDuration;
+    scene->briefing.scrollY     = 160.0f;
+    scene->briefing.briefingText = data.briefingText;  // transfer ownership
+    wstr_free(data.objectives);
 
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
@@ -49,17 +47,6 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
     wanim_addAnimationFramesRange(anim4, 0, 20);
     wanim_addAnimation(context, animEntity, anim4);
 
-    wui_createUIText(context, wstr_fromCString("txtBriefing"), CREATE_UI_TEXT_ARGS_INIT(
-        .position   = vec2i(20, 160),
-        .fontIndex  = 1,
-        .fontColor  = WAR_COLOR_RGB(255, 215, 138),
-        .multiline  = true,
-        .boundings  = vec2f((f32)(context->originalWindowWidth - 40), 200.0f),
-        .wrapping   = WAR_TEXT_WRAP_CHAR,
-        .lineHeight = 150,
-        .text       = data.briefingText,
-    ));
-
     if (!isDemo(context))
         wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=data.briefingAudioId, .loop=false));
 }
@@ -70,12 +57,10 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
 
     WarCampaignMapData data = wcamp_getCampaignData(scene->briefing.mapType);
 
-    scene->briefing.time = data.briefingDuration;
-
-    wui_createUIImage(context, wstr_fromCString("imgBackground"), CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRef(422),
-        .position  = VEC2_ZERO,
-    ));
+    scene->briefing.time         = data.briefingDuration;
+    scene->briefing.scrollY      = 160.0f;
+    scene->briefing.briefingText = data.briefingText;  // transfer ownership
+    wstr_free(data.objectives);
 
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
@@ -101,17 +86,6 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
         wanim_addAnimationFramesRange(anim3, 0, 30);
         wanim_addAnimation(context, animEntity, anim3);
     }
-
-    wui_createUIText(context, wstr_fromCString("txtBriefing"), CREATE_UI_TEXT_ARGS_INIT(
-        .position   = vec2i(20, 160),
-        .fontIndex  = 1,
-        .fontColor  = WAR_COLOR_RGB(255, 215, 138),
-        .multiline  = true,
-        .boundings  = vec2f((f32)(context->originalWindowWidth - 40), 200.0f),
-        .wrapping   = WAR_TEXT_WRAP_CHAR,
-        .lineHeight = 150,
-        .text       = data.briefingText,
-    ));
 
     if (!isDemo(context))
         wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=data.briefingAudioId, .loop=false));
@@ -148,18 +122,8 @@ void wsc_updateSceneBriefing(WarContext* context)
     WarInput* input = &context->input;
     WarScene* scene = context->scene;
 
-    scene->briefing.time -= context->deltaTime;
-
-    WarEntity* txtBriefing = we_findUIEntity(context, wsv_fromCString("txtBriefing"));
-    if (txtBriefing)
-    {
-        WarTransformComponent* transform = we_getTransformComponent(context, txtBriefing);
-        assert(transform);
-
-        vec2 position = transform->position;
-        position.y -= 10 * context->deltaTime;
-        transform->position = position;
-    }
+    scene->briefing.time    -= context->deltaTime;
+    scene->briefing.scrollY -= 10.0f * context->deltaTime;
 
     wanim_updateAnimations(context);
 
@@ -171,4 +135,33 @@ void wsc_updateSceneBriefing(WarContext* context)
         WarMap* map = wmap_createMap(context, scene->briefing.mapType);
         wg_setNextMap(context, map, 1.0f);
     }
+}
+
+void wsc_renderSceneBriefing(WarContext* context)
+{
+    WarScene* scene = context->scene;
+
+    // Background image — must render before animations so it sits behind them.
+    s32 bgSpriteIndex = (scene->briefing.race == WAR_RACE_HUMANS) ? 421 : 422;
+    imui_image(context, "imgBackground", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRef(bgSpriteIndex),
+        .position  = VEC2_ZERO,
+    ));
+}
+
+void wsc_renderOverlayBriefing(WarContext* context)
+{
+    WarScene* scene = context->scene;
+
+    imui_text_sv(context, "txtBriefing",
+        CREATE_UI_TEXT_ARGS_INIT(
+            .position   = vec2f(20.0f, scene->briefing.scrollY),
+            .fontIndex  = 1,
+            .fontColor  = WAR_COLOR_RGB(255, 215, 138),
+            .multiline  = true,
+            .boundings  = vec2f((f32)(context->originalWindowWidth - 40), 200.0f),
+            .wrapping   = WAR_TEXT_WRAP_CHAR,
+            .lineHeight = 150,
+        ),
+        wstr_view(&scene->briefing.briefingText));
 }

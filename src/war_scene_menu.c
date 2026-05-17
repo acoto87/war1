@@ -77,11 +77,6 @@ void wsc_enterSceneMainMenu(WarContext* context)
 
     wcheatp_createCheatsPanel(context);
 
-    wui_createUICursor(context, wstr_fromCString("cursor"), CREATE_UI_CURSOR_ARGS_INIT(
-        .type     = WAR_CURSOR_ARROW,
-        .position = VEC2_ZERO,
-    ));
-
     if (!isDemo(context))
         wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_MUSIC_00, .loop=true));
 }

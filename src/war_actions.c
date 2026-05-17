@@ -911,6 +911,12 @@ static void initOrcCorpseActionDefs(void)
     gUnitActionDefs[WAR_UNIT_ORC_CORPSE][WAR_ACTION_TYPE_DEATH] = deathDef;
 }
 
+static void resetAction(WarUnitAction* action)
+{
+    action->stepIndex = 0;
+    action->status = WAR_ACTION_NOT_STARTED;
+}
+
 void wact_initUnitActionDefs(void)
 {
     WarUnitFrameNumbers frameNumbers_5_5_5_5 = wact_getFrameNumbers(5, arrayArg(s32, 5, 5, 5));
@@ -1013,12 +1019,6 @@ s32 wact_getActionDuration(WarContext* context, WarEntity* entity, WarUnitAction
     return duration;
 }
 
-void wact_resetAction(WarUnitAction* action)
-{
-    action->stepIndex = 0;
-    action->status = WAR_ACTION_NOT_STARTED;
-}
-
 void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType type, bool reset, f32 scale)
 {
     NOT_USED(context);
@@ -1043,7 +1043,7 @@ void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType ty
 
         if (reset)
         {
-            wact_resetAction(action);
+            resetAction(action);
         }
     }
     else
@@ -1069,7 +1069,7 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
 
     if (action->stepIndex < 0)
     {
-        wact_resetAction(action);
+        resetAction(action);
     }
 
     action->status = WAR_ACTION_RUNNING;
@@ -1137,9 +1137,8 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
                 }
 
                 WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
-                assert(sprite);
+                if (sprite) sprite->frameIndex = frameIndex;
 
-                sprite->frameIndex = frameIndex;
                 break;
             }
             case WAR_ACTION_STEP_ATTACK:
@@ -1180,4 +1179,14 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
     }
 
     action->waitCount = __frameCountToSeconds(step.param) * action->scale;
+}
+
+void wact_resetAction(WarContext* context, WarEntity* entity, WarUnitActionType type)
+{
+    assert(wu_isUnit(entity));
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    WarUnitAction* action = &unit->actions[type];
+
+    resetAction(action);
 }
