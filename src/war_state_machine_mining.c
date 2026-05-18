@@ -41,9 +41,8 @@ void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* stat
         WarUnitComponent* unit = we_getUnitComponent(context, entity);
         assert(unit);
 
-        WarUnitData unitData = wu_getUnitData(unit->type);
-
-        s32 spriteIndex = unitData.resourceIndex;
+        const WarUnitData* unitData = wu_getUnitData(unit->type);
+        s32 spriteIndex = unitData->resourceIndex;
         if (spriteIndex == 0)
         {
             logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", unit->type);
@@ -104,8 +103,8 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         // set the carrying gold sprites
-        WarWorkerData workerData = wu_getWorkerData(unit->type);
-        we_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingGoldResource));
+        const WarWorkerData* workerData = wu_getWorkerData(unit->type);
+        we_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData->carryingGoldResource));
 
         // find the closest town hall to deliver the gold
         WarRace race = wu_getUnitRace(context, entity);

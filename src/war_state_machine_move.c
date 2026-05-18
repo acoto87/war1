@@ -90,7 +90,7 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    WarUnitStats stats = wu_getUnitStats(unit->type);
+    const WarUnitStats* stats = wu_getUnitStats(unit->type);
     vec2 unitSize = wu_getUnitSize(context, entity);
 
     vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
@@ -158,7 +158,7 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
     vec2 direction = vec2_subv(target, position);
     f32 directionLength = vec2_length(direction);
 
-    f32 speed = wmap_getMapScaledSpeed(context, (f32)stats.speeds[unit->speed]);
+    f32 speed = wmap_getMapScaledSpeed(context, (f32)stats->speeds[unit->speed]);
     vec2 step = vec2_mulf(vec2_normalize(direction), speed * context->deltaTime);
     f32 stepLength = vec2_length(step);
 

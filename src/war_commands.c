@@ -345,23 +345,23 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
             unit->invisible = false;
             unit->invisibilityTime = 0;
 
-            WarUnitCommandMapping commandMapping = wu_getCommandMapping(summonType);
-            WarSpellMapping spellMapping = wu_getSpellMapping(commandMapping.mappedType);
-            WarSpellStats stats = wu_getSpellStats(commandMapping.mappedType);
+            const WarUnitCommandMapping* commandMapping = wu_getCommandMapping(summonType);
+            const WarSpellMapping* spellMapping = wu_getSpellMapping(commandMapping->mappedType);
+            const WarSpellStats* stats = wu_getSpellStats(commandMapping->mappedType);
 
-            while (we_decreaseUnitMana(context, entity, stats.manaCost))
+            while (we_decreaseUnitMana(context, entity, stats->manaCost))
             {
                 vec2 position = wu_getUnitCenterPosition(context, entity, true);
                 vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
 
                 WarEntity* summonedUnit = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
-                    .type=spellMapping.mappedType,
-                    .x=(s32)spawnPosition.x,
-                    .y=(s32)spawnPosition.y,
-                    .player=unit->player,
-                    .resourceKind=WAR_RESOURCE_NONE,
-                    .amount=0,
-                    .addToMap=true
+                    .type = spellMapping->mappedType,
+                    .x = (s32)spawnPosition.x,
+                    .y = (s32)spawnPosition.y,
+                    .player = unit->player,
+                    .resourceKind = WAR_RESOURCE_NONE,
+                    .amount = 0,
+                    .addToMap = true
                 ));
 
                 vec2 unitSize = wu_getUnitSize(context, summonedUnit);
@@ -788,11 +788,11 @@ bool wcmd_executeCommand(WarContext* context)
             NOT_USED(buildingUnit);
             NOT_USED(selectedUnit);
 
-            WarUnitStats stats = wu_getUnitStats(unitToTrain);
+            const WarUnitStats* stats = wu_getUnitStats(unitToTrain);
             if (we_checkFarmFood(context, player) &&
-                we_decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
+                we_decreasePlayerResources(context, player, stats->goldCost, stats->woodCost))
             {
-                WarState* trainState = wst_createTrainState(context, selectedEntity, unitToTrain, (f32)stats.buildTime);
+                WarState* trainState = wst_createTrainState(context, selectedEntity, unitToTrain, (f32)stats->buildTime);
                 wst_changeNextState(context, selectedEntity, trainState, true, true);
             }
 
@@ -837,11 +837,11 @@ bool wcmd_executeCommand(WarContext* context)
 
             assert(hasRemainingUpgrade(player, upgradeToBuild));
 
-            WarUpgradeStats stats = wu_getUpgradeStats(upgradeToBuild);
+            const WarUpgradeStats* stats = wu_getUpgradeStats(upgradeToBuild);
             s32 level = getUpgradeLevel(player, upgradeToBuild);
-            if (we_decreasePlayerResources(context, player, stats.goldCost[level], 0))
+            if (we_decreasePlayerResources(context, player, stats->goldCost[level], 0))
             {
-                WarState* upgradeState = wst_createUpgradeState(context, selectedEntity, upgradeToBuild, (f32)stats.buildTime);
+                WarState* upgradeState = wst_createUpgradeState(context, selectedEntity, upgradeToBuild, (f32)stats->buildTime);
                 wst_changeNextState(context, selectedEntity, upgradeState, true, true);
             }
 
@@ -881,10 +881,10 @@ bool wcmd_executeCommand(WarContext* context)
 
                     WarUnitType buildingToBuild = command->build.buildingToBuild;
 
-                    WarBuildingStats stats = wu_getBuildingStats(buildingToBuild);
+                    const WarBuildingStats* stats = wu_getBuildingStats(buildingToBuild);
                     if (we_checkTileToBuild(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        if (we_decreasePlayerResources(context, player, stats.goldCost, stats.woodCost))
+                        if (we_decreasePlayerResources(context, player, stats->goldCost, stats->woodCost))
                         {
                             WarEntity* building = we_createBuilding(context, CREATE_UNIT_ARGS_INIT(
                                 .type=buildingToBuild,
@@ -1450,8 +1450,8 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
 
             if (wst_isBuilding(context, selectedEntity) || wst_isGoingToBuild(context, selectedEntity))
             {
-                WarBuildingStats stats = wu_getBuildingStats(unit->type);
-                we_increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
+                const WarBuildingStats* stats = wu_getBuildingStats(unit->type);
+                we_increasePlayerResources(context, player, stats->goldCost, stats->woodCost);
 
                 WarState* collapseState = wst_createCollapseState(context, selectedEntity);
                 wst_changeNextState(context, selectedEntity, collapseState, true, true);
@@ -1465,8 +1465,8 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
                     WarState* trainState = wst_getTrainState(context, selectedEntity);
                     WarUnitType unitToBuild = trainState->train.unitToBuild;
 
-                    WarUnitStats stats = wu_getUnitStats(unitToBuild);
-                    we_increasePlayerResources(context, player, stats.goldCost, stats.woodCost);
+                    const WarUnitStats* stats = wu_getUnitStats(unitToBuild);
+                    we_increasePlayerResources(context, player, stats->goldCost, stats->woodCost);
                 }
                 else if (wst_isUpgrading(context, selectedEntity) || wst_isGoingToUpgrade(context, selectedEntity))
                 {
@@ -1475,8 +1475,8 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
                     assert(hasRemainingUpgrade(player, upgradeToBuild));
 
                     s32 upgradeLevel = getUpgradeLevel(player, upgradeToBuild);
-                    WarUpgradeStats stats = wu_getUpgradeStats(upgradeToBuild);
-                    we_increasePlayerResources(context, player, stats.goldCost[upgradeLevel], 0);
+                    const WarUpgradeStats* stats = wu_getUpgradeStats(upgradeToBuild);
+                    we_increasePlayerResources(context, player, stats->goldCost[upgradeLevel], 0);
                 }
 
                 WarState* idleState = wst_createIdleState(context, entity, false);

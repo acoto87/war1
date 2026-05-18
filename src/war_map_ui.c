@@ -850,13 +850,13 @@ static void wmui_renderHUD(WarContext* context)
                     infoFrame);
 
                 // Portrait
-                WarUnitData unitData = wu_getUnitData(unit->type);
+                const WarUnitData* unitData = wu_getUnitData(unit->type);
                 imui_image_frame(context, "imgUnitPortrait0",
                     CREATE_UI_IMAGE_ARGS_INIT(
                         .spriteRef = imageResourceRef(361),
                         .position  = vec2_addv(leftBottomPanel, vec2i(6, 4)),
                     ),
-                    unitData.portraitFrameIndex);
+                    unitData->portraitFrameIndex);
 
                 // Unit name
                 imui_text(context, "txtUnitName",
@@ -864,7 +864,7 @@ static void wmui_renderHUD(WarContext* context)
                         .position       = vec2_addv(leftBottomPanel, vec2i(6, 26)),
                         .fontSize       = 6,
                         .highlightIndex = NO_HIGHLIGHT,
-                        .text = unitData.name
+                        .text = unitData->name
                     ));
 
                 // Life bar
@@ -948,7 +948,7 @@ static void wmui_renderHUD(WarContext* context)
                     WarUnitComponent* unit = we_getUnitComponent(context, selectedEntity);
                     assert(unit);
 
-                    WarUnitData unitData = wu_getUnitData(unit->type);
+                    const WarUnitData* unitData = wu_getUnitData(unit->type);
 
                     // Portrait
                     char portraitId[32];
@@ -958,7 +958,7 @@ static void wmui_renderHUD(WarContext* context)
                             .spriteRef = imageResourceRef(361),
                             .position  = vec2_addv(leftBottomPanel, vec2i(portraitOffX[i], portraitOffY[i])),
                         ),
-                        unitData.portraitFrameIndex);
+                        unitData->portraitFrameIndex);
 
                     // Life bar
                     f32 hpPct = PERCENTF01(unit->hp, unit->maxhp);
@@ -1132,14 +1132,14 @@ void wmui_renderCommand(WarContext* context)
             position = wmap_mapToTileCoordinatesV(position);
 
             WarUnitType buildingToBuild = command->build.buildingToBuild;
-            WarUnitData data = wu_getUnitData(buildingToBuild);
+            const WarUnitData* unitData = wu_getUnitData(buildingToBuild);
 
-            WarColor fillColor = we_checkRectToBuild(context, (s32)position.x, (s32)position.y, data.sizex, data.sizey)
+            WarColor fillColor = we_checkRectToBuild(context, (s32)position.x, (s32)position.y, unitData->sizex, unitData->sizey)
                 ? WAR_COLOR_GRAY_TRANSPARENT : WAR_COLOR_RED_TRANSPARENT;
 
             position = wmap_tileToMapCoordinatesV(position, false);
             position = wmap_mapToScreenCoordinatesV(context, position);
-            vec2 size = vec2i(data.sizex * MEGA_TILE_WIDTH, data.sizey * MEGA_TILE_HEIGHT);
+            vec2 size = vec2i(unitData->sizex * MEGA_TILE_WIDTH, unitData->sizey * MEGA_TILE_HEIGHT);
             rect buildingRect = rectv(position, size);
             wr_fillRect(context, buildingRect, fillColor);
 

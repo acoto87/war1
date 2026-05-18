@@ -40,7 +40,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
     vec2 position = wmap_mapToTileCoordinatesV(transform->position);
 
-    WarUnitStats stats = wu_getUnitStats(unit->type);
+    const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
     WarEntityId targetEntityId = (WarEntityId)state->attack.targetEntityId;
     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
@@ -76,17 +76,17 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // if the unit is not in range to attack, chase it
-    if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats.range))
+    if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats->range))
     {
-        WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
         followState->nextState = state;
         wst_changeNextState(context, entity, followState, false, true);
         return;
     }
 
-    if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats.range))
+    if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats->range))
     {
-        WarState* followState = wst_createFollowState(context, entity, 0, targetTile, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range);
         followState->nextState = state;
         wst_changeNextState(context, entity, followState, false, true);
         return;

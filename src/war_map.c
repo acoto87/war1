@@ -1793,19 +1793,19 @@ static void updateStatus(WarContext* context)
                 {
                     WarState* trainState = wst_getTrainState(context, selectedEntity);
                     WarUnitType unitToBuild = trainState->train.unitToBuild;
-                    WarUnitCommandMapping commandMapping = wu_getCommandMappingFromUnitType(unitToBuild);
-                    WarUnitCommandBaseData commandData = wu_getCommandBaseData(commandMapping.type);
+                    const WarUnitCommandMapping* commandMapping = wu_getCommandMappingFromUnitType(unitToBuild);
+                    const WarUnitCommandBaseData* commandData = wu_getCommandBaseData(commandMapping->type);
 
-                    wstr_assign(&statusText, commandData.tooltip2);
+                    wstr_assign(&statusText, commandData->tooltip2);
                 }
                 else if (wst_isUpgrading(context, selectedEntity) || wst_isGoingToUpgrade(context, selectedEntity))
                 {
                     WarState* upgradeState = wst_getUpgradeState(context, selectedEntity);
                     WarUpgradeType upgradeToBuild = upgradeState->upgrade.upgradeToBuild;
-                    WarUnitCommandMapping commandMapping = wu_getCommandMappingFromUpgradeType(upgradeToBuild);
-                    WarUnitCommandBaseData commandData = wu_getCommandBaseData(commandMapping.type);
+                    const WarUnitCommandMapping* commandMapping = wu_getCommandMappingFromUpgradeType(upgradeToBuild);
+                    const WarUnitCommandBaseData* commandData = wu_getCommandBaseData(commandMapping->type);
 
-                    wstr_assign(&statusText, commandData.tooltip2);
+                    wstr_assign(&statusText, commandData->tooltip2);
                 }
                 else
                 {
@@ -2373,11 +2373,11 @@ void updateFoW(WarContext* context)
             WarEntity* targetEntity = we_getAttackTarget(context, entity);
             if (targetEntity)
             {
-                WarUnitStats stats = wu_getUnitStats(unit->type);
+                const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
                 if (wu_isUnit(targetEntity))
                 {
-                    if (wu_unitInRange(context, entity, targetEntity, stats.range))
+                    if (wu_unitInRange(context, entity, targetEntity, stats->range))
                     {
                         wmap_setUnitMapTileState(context, map, targetEntity, MAP_TILE_STATE_VISIBLE);
                     }
@@ -2387,7 +2387,7 @@ void updateFoW(WarContext* context)
                     WarState* attackState = wst_getAttackState(context, entity);
                     vec2 targetTile = attackState->attack.targetTile;
 
-                    if (wu_tileInRange(context, entity, targetTile, stats.range))
+                    if (wu_tileInRange(context, entity, targetTile, stats->range))
                     {
                         WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
                         if (piece)

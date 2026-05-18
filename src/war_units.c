@@ -700,89 +700,89 @@ bool wu_equalsUnitType(const WarUnitType t1, const WarUnitType t2)
     while (index < length && array[index].type != type) \
         index++; \
     assert(index < length); \
-    return array[index];
+    return &array[index];
 
-WarUnitData wu_getUnitData(WarUnitType type)
+const WarUnitData* wu_getUnitData(WarUnitType type)
 {
     FIND_BY_TYPE(unitsData, type);
 }
 
-WarWorkerData wu_getWorkerData(WarUnitType type)
+const WarWorkerData* wu_getWorkerData(WarUnitType type)
 {
     FIND_BY_TYPE(workersData, type);
 }
 
-WarBuildingData wu_getBuildingData(WarUnitType type)
+const WarBuildingData* wu_getBuildingData(WarUnitType type)
 {
     FIND_BY_TYPE(buildingsData, type);
 }
 
-WarRoadData wu_getRoadData(WarRoadPieceType type)
+const WarRoadData* wu_getRoadData(WarRoadPieceType type)
 {
     FIND_BY_TYPE(roadsData, type);
 }
 
-WarWallData wu_getWallData(WarWallPieceType type)
+const WarWallData* wu_getWallData(WarWallPieceType type)
 {
     FIND_BY_TYPE(wallsData, type);
 }
 
-WarRuinData wu_getRuinData(WarRuinPieceType type)
+const WarRuinData* wu_getRuinData(WarRuinPieceType type)
 {
     FIND_BY_TYPE(ruinsData, type);
 }
 
-WarTreeData wu_getTreeData(WarTreeTileType type)
+const WarTreeData* wu_getTreeData(WarTreeTileType type)
 {
     FIND_BY_TYPE(treesData, type);
 }
 
-WarUpgradeData wu_getUpgradeData(WarUpgradeType type)
+const WarUpgradeData* wu_getUpgradeData(WarUpgradeType type)
 {
     FIND_BY_TYPE(upgradesData, type);
 }
 
-WarSpellData wu_getSpellData(WarSpellType type)
+const WarSpellData* wu_getSpellData(WarSpellType type)
 {
     FIND_BY_TYPE(spellData, type);
 }
 
-WarUnitStats wu_getUnitStats(WarUnitType type)
+const WarUnitStats* wu_getUnitStats(WarUnitType type)
 {
     FIND_BY_TYPE(unitStats, type);
 }
 
-WarBuildingStats wu_getBuildingStats(WarUnitType type)
+const WarBuildingStats* wu_getBuildingStats(WarUnitType type)
 {
     FIND_BY_TYPE(buildingStats, type);
 }
 
-WarUpgradeStats wu_getUpgradeStats(WarUpgradeType type)
+const WarUpgradeStats* wu_getUpgradeStats(WarUpgradeType type)
 {
     FIND_BY_TYPE(upgradeStats, type);
 }
 
-WarSpellStats wu_getSpellStats(WarSpellType type)
+const WarSpellStats* wu_getSpellStats(WarSpellType type)
 {
     FIND_BY_TYPE(spellStats, type);
 }
 
-WarSpellMapping wu_getSpellMapping(WarSpellType type)
+const WarSpellMapping* wu_getSpellMapping(WarSpellType type)
 {
     FIND_BY_TYPE(spellMappings, type);
 }
 
-WarUnitCommandBaseData wu_getCommandBaseData(WarUnitCommandType type)
+const WarUnitCommandBaseData* wu_getCommandBaseData(WarUnitCommandType type)
 {
     FIND_BY_TYPE(commandsBaseData, type);
 }
 
-WarUnitCommandMapping wu_getCommandMapping(WarUnitCommandType type)
+const WarUnitCommandMapping* wu_getCommandMapping(WarUnitCommandType type)
 {
     FIND_BY_TYPE(commandMappings, type);
 }
 
-WarUnitCommandMapping wu_getCommandMappingFromUnitType(WarUnitType unitType)
+const WarUnitCommandMapping* wu_getCommandMappingFromUnitType(WarUnitType unitType)
 {
     s32 index = 0;
     s32 length = index + 30;
@@ -790,10 +790,10 @@ WarUnitCommandMapping wu_getCommandMappingFromUnitType(WarUnitType unitType)
         index++;
 
     assert(index < length);
-    return commandMappings[index];
+    return &commandMappings[index];
 }
 
-WarUnitCommandMapping wu_getCommandMappingFromUpgradeType(WarUpgradeType upgradeType)
+const WarUnitCommandMapping* wu_getCommandMappingFromUpgradeType(WarUpgradeType upgradeType)
 {
     s32 index = 30;
     s32 length = index + 20;
@@ -801,10 +801,10 @@ WarUnitCommandMapping wu_getCommandMappingFromUpgradeType(WarUpgradeType upgrade
         index++;
 
     assert(index < length);
-    return commandMappings[index];
+    return &commandMappings[index];
 }
 
-WarUnitCommandMapping wu_getCommandMappingFromSpellType(WarSpellType spellType)
+const WarUnitCommandMapping* wu_getCommandMappingFromSpellType(WarSpellType spellType)
 {
     s32 index = 50;
     s32 length = arrayLength(commandMappings);
@@ -812,7 +812,7 @@ WarUnitCommandMapping wu_getCommandMappingFromSpellType(WarSpellType spellType)
         index++;
 
     assert(index < length);
-    return commandMappings[index];
+    return &commandMappings[index];
 }
 
 bool wu_isUnit(const WarEntity* entity)
@@ -1628,13 +1628,13 @@ s32 wu_getUnitSightRange(WarContext* context, WarEntity* entity)
 
     if (wu_isBuildingUnit(context, entity))
     {
-        WarBuildingStats stats = wu_getBuildingStats(unit->type);
-        sight = stats.sight;
+        const WarBuildingStats* stats = wu_getBuildingStats(unit->type);
+        sight = stats->sight;
     }
     else
     {
-        WarUnitStats stats = wu_getUnitStats(unit->type);
-        sight = stats.sight;
+        const WarUnitStats* stats = wu_getUnitStats(unit->type);
+        sight = stats->sight;
     }
 
     return sight;
@@ -2576,15 +2576,15 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    WarUnitCommandBaseData commandBaseData = wu_getCommandBaseData(commandType);
+    const WarUnitCommandBaseData* commandBaseData = wu_getCommandBaseData(commandType);
 
     WarUnitCommandData data = (WarUnitCommandData){0};
     data.type = commandType;
-    data.hotKey = commandBaseData.hotKey;
-    data.highlightIndex = commandBaseData.highlightIndex;
-    data.highlightCount = commandBaseData.highlightCount;
-    data.tooltip = commandBaseData.tooltip;
-    data.clickHandler = commandBaseData.clickHandler;
+    data.hotKey = commandBaseData->hotKey;
+    data.highlightIndex = commandBaseData->highlightIndex;
+    data.highlightCount = commandBaseData->highlightCount;
+    data.tooltip = commandBaseData->tooltip;
+    data.clickHandler = commandBaseData->clickHandler;
 
     switch (commandType)
     {
@@ -2788,13 +2788,13 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
         case WAR_COMMAND_TRAIN_CLERIC:
         case WAR_COMMAND_TRAIN_NECROLYTE:
         {
-            WarUnitCommandMapping commandMapping = wu_getCommandMapping(commandType);
-            WarUnitData unitData = wu_getUnitData(commandMapping.mappedType);
-            WarUnitStats stats = wu_getUnitStats(commandMapping.mappedType);
+            const WarUnitCommandMapping* commandMapping = wu_getCommandMapping(commandType);
+            const WarUnitData* unitData = wu_getUnitData(commandMapping->mappedType);
+            const WarUnitStats* stats = wu_getUnitStats(commandMapping->mappedType);
 
-            data.gold = stats.goldCost;
-            data.wood = stats.woodCost;
-            data.frameIndex = unitData.portraitFrameIndex;
+            data.gold = stats->goldCost;
+            data.wood = stats->woodCost;
+            data.frameIndex = unitData->portraitFrameIndex;
             break;
         }
 
@@ -2815,13 +2815,13 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
         case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
         case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
-            WarUnitCommandMapping commandMapping = wu_getCommandMapping(commandType);
-            WarUnitData unitData = wu_getUnitData(commandMapping.mappedType);
-            WarBuildingStats stats = wu_getBuildingStats(commandMapping.mappedType);
+            const WarUnitCommandMapping* commandMapping = wu_getCommandMapping(commandType);
+            const WarUnitData* unitData = wu_getUnitData(commandMapping->mappedType);
+            const WarBuildingStats* stats = wu_getBuildingStats(commandMapping->mappedType);
 
-            data.gold = stats.goldCost;
-            data.wood = stats.woodCost;
-            data.frameIndex = unitData.portraitFrameIndex;
+            data.gold = stats->goldCost;
+            data.wood = stats->woodCost;
+            data.frameIndex = unitData->portraitFrameIndex;
             break;
         }
 
@@ -2860,16 +2860,16 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
         case WAR_COMMAND_UPGRADE_INVISIBILITY:
         case WAR_COMMAND_UPGRADE_UNHOLY_ARMOR:
         {
-            WarUnitCommandMapping commandMapping = wu_getCommandMapping(commandType);
+            const WarUnitCommandMapping* commandMapping = wu_getCommandMapping(commandType);
 
-            assert(hasRemainingUpgrade(player, commandMapping.mappedType));
+            assert(hasRemainingUpgrade(player, commandMapping->mappedType));
 
-            WarUpgradeData upgradeData = wu_getUpgradeData(commandMapping.mappedType);
-            WarUpgradeStats stats = wu_getUpgradeStats(commandMapping.mappedType);
-            s32 upgradeLevel = getUpgradeLevel(player, commandMapping.mappedType);
+            const WarUpgradeData* upgradeData = wu_getUpgradeData(commandMapping->mappedType);
+            const WarUpgradeStats* stats = wu_getUpgradeStats(commandMapping->mappedType);
+            s32 upgradeLevel = getUpgradeLevel(player, commandMapping->mappedType);
 
-            data.gold = stats.goldCost[upgradeLevel];
-            data.frameIndex = upgradeData.frameIndices[upgradeLevel];
+            data.gold = stats->goldCost[upgradeLevel];
+            data.frameIndex = upgradeData->frameIndices[upgradeLevel];
             break;
         }
 
@@ -2886,10 +2886,10 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
         case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
         case WAR_COMMAND_SPELL_POISON_CLOUD:
         {
-            WarUnitCommandMapping commandMapping = wu_getCommandMapping(commandType);
-            WarSpellData spell = wu_getSpellData(commandMapping.mappedType);
+            const WarUnitCommandMapping* commandMapping = wu_getCommandMapping(commandType);
+            const WarSpellData* spell = wu_getSpellData(commandMapping->mappedType);
 
-            data.frameIndex = spell.portraitFrameIndex;
+            data.frameIndex = spell->portraitFrameIndex;
             break;
         }
 

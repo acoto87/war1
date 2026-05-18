@@ -36,8 +36,8 @@ void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state
     we_removeSpriteComponent(context, entity);
 
     // ...and add the sprite for the construction of the building
-    WarBuildingData buildingData = wu_getBuildingData(unit->type);
-    we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.buildingResource));
+    const WarBuildingData* buildingData = wu_getBuildingData(unit->type);
+    we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->buildingResource));
 
     // set the action to NONE because the sprite changes will be handled by this state
     wact_setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
@@ -116,8 +116,8 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         we_removeSpriteComponent(context, entity);
 
         // ...and add the normal sprite of the building
-        WarUnitData buildingData = wu_getUnitData(unit->type);
-        we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData.resourceIndex));
+        const WarUnitData* buildingData = wu_getUnitData(unit->type);
+        we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->resourceIndex));
 
         if (!wst_changeStateNextState(context, entity, state))
         {

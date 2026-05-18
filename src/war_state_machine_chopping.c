@@ -82,9 +82,9 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
         if (unit->amount == UNIT_MAX_CARRY_WOOD)
         {
             // set the carrying gold sprites
-            WarWorkerData workerData = wu_getWorkerData(unit->type);
+            const WarWorkerData* workerData = wu_getWorkerData(unit->type);
             we_removeSpriteComponent(context, entity);
-            we_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData.carryingWoodResource));
+            we_addSpriteComponentFromResource(context, entity, imageResourceRef(workerData->carryingWoodResource));
 
             // find the closest town hall to deliver the gold
             WarRace race = wu_getUnitRace(context, entity);
