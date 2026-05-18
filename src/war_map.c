@@ -2348,80 +2348,66 @@ void updateFoW(WarContext* context)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity)
+        if (entity && wu_isFriendlyUnit(context, entity))
         {
-            if (wu_isFriendlyUnit(context, entity))
+            WarUnitComponent* unit = we_getUnitComponent(context, entity);
+            assert(unit);
+
+            vec2 position = wu_getUnitCenterPosition(context, entity, true);
+            vec2 unitSize = wu_getUnitSize(context, entity);
+            s32 sight = wu_getUnitSightRange(context, entity);
+
+            rect unitRect = rectv(position, unitSize);
+            unitRect = rect_expand(unitRect, (f32)sight, (f32)sight);
+
+            if (wu_isBuildingUnit(context, entity))
             {
-                WarUnitComponent* unit = we_getUnitComponent(context, entity);
-                assert(unit);
+                // the friendly buildings are always seen by the player
+                unit->hasBeenSeen = true;
+            }
 
-                vec2 position = wu_getUnitCenterPosition(context, entity, true);
-                s32 sightRange = wu_getUnitSightRange(context, entity);
+            // mark the tiles of the unit as visible
+            wmap_setMapTileState(map, (s32)unitRect.x, (s32)unitRect.y, (s32)unitRect.width, (s32)unitRect.height, MAP_TILE_STATE_VISIBLE);
 
-                if (wu_isBuildingUnit(context, entity))
+            // reveal the attack target of the unit
+            WarEntity* targetEntity = we_getAttackTarget(context, entity);
+            if (targetEntity)
+            {
+                WarUnitStats stats = wu_getUnitStats(unit->type);
+
+                if (wu_isUnit(targetEntity))
                 {
-                    // the friendly buildings are always seen by the player
-                    unit->hasBeenSeen = true;
-                }
-
-                // mark the tiles of the unit as visible
-                wmap_setUnitMapTileState(context, map, entity, MAP_TILE_STATE_VISIBLE);
-
-                // reveal the attack target of the unit
-                WarEntity* targetEntity = we_getAttackTarget(context, entity);
-                if (targetEntity)
-                {
-                    WarUnitStats stats = wu_getUnitStats(unit->type);
-
-                    if (wu_isUnit(targetEntity))
+                    if (wu_unitInRange(context, entity, targetEntity, stats.range))
                     {
-                        if (wu_unitInRange(context, entity, targetEntity, stats.range))
-                        {
-                            wmap_setUnitMapTileState(context, map, targetEntity, MAP_TILE_STATE_VISIBLE);
-                        }
+                        wmap_setUnitMapTileState(context, map, targetEntity, MAP_TILE_STATE_VISIBLE);
                     }
-                    else if (wu_isWall(targetEntity))
-                    {
-                        WarState* attackState = wst_getAttackState(context, entity);
-                        vec2 targetTile = attackState->attack.targetTile;
+                }
+                else if (wu_isWall(targetEntity))
+                {
+                    WarState* attackState = wst_getAttackState(context, entity);
+                    vec2 targetTile = attackState->attack.targetTile;
 
-                        if (wu_tileInRange(context, entity, targetTile, stats.range))
+                    if (wu_tileInRange(context, entity, targetTile, stats.range))
+                    {
+                        WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
+                        if (piece)
                         {
-                            WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
-                            if (piece)
-                            {
-                                wmap_setMapTileState(map, (s32)targetTile.x, (s32)targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
-                            }
+                            wmap_setMapTileState(map, (s32)targetTile.x, (s32)targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
                         }
                     }
                 }
+            }
 
-                // reveal the attacker
-                WarEntity* attacker = we_getAttacker(context, entity);
-                if (attacker)
+            // reveal the attacker
+            WarEntity* attacker = we_getAttacker(context, entity);
+            if (attacker)
+            {
+                // if the attacker is the same the unit is attacking to
+                // don't change tile state because already happened above
+                if (!targetEntity || attacker->id != targetEntity->id)
                 {
-                    // if the attacker is the same the unit is attacking to
-                    // don't change tile state because already happened above
-                    if (!targetEntity || attacker->id != targetEntity->id)
-                    {
-                        wmap_setUnitMapTileState(context, map, attacker, MAP_TILE_STATE_VISIBLE);
-                    }
+                    wmap_setUnitMapTileState(context, map, attacker, MAP_TILE_STATE_VISIBLE);
                 }
-
-                // check near non-friendly building units to mark it as seen
-                WarEntityList* nearUnits = we_getNearUnits(context, position, sightRange);
-                for (s32 k = 0; k < nearUnits->count; k++)
-                {
-                    WarEntity* nearbyEntity = nearUnits->items[k];
-                    if (nearbyEntity && !wu_isFriendlyUnit(context, nearbyEntity) && wu_isBuildingUnit(context, nearbyEntity))
-                    {
-                        WarUnitComponent* nearUnit = we_getUnitComponent(context, nearbyEntity);
-                        assert(nearUnit);
-
-                        nearUnit->hasBeenSeen = true;
-                    }
-                }
-                WarEntityListFree(nearUnits);
             }
         }
     }
@@ -2430,15 +2416,19 @@ void updateFoW(WarContext* context)
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity)
+        if (entity && !wu_isFriendlyUnit(context, entity))
         {
-            if (!wu_isFriendlyUnit(context, entity))
+            if (!wmap_isUnitPartiallyVisible(context, map, entity))
             {
-                if (!wmap_isUnitPartiallyVisible(context, map, entity))
-                {
-                    // remove from selection enemy or neutral units that goes into fog
-                    wmap_removeEntityFromSelection(context, entity->id);
-                }
+                // remove from selection enemy or neutral units that goes into fog
+                wmap_removeEntityFromSelection(context, entity->id);
+            }
+            else if (wu_isBuildingUnit(context, entity))
+            {
+                WarUnitComponent* unit = we_getUnitComponent(context, entity);
+                assert(unit);
+
+                unit->hasBeenSeen = true;
             }
         }
     }
