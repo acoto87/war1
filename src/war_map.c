@@ -2205,6 +2205,7 @@ static bool updatePoisonCloud(WarContext* context, WarEntity* entity)
     if (poisonCloud->damageTime <= 0)
     {
         WarEntityList* nearUnits = we_getNearUnits(context, poisonCloud->position, 2);
+
         for (s32 i = 0; i < nearUnits->count; i++)
         {
             WarEntity* targetEntity = nearUnits->items[i];
@@ -2215,6 +2216,7 @@ static bool updatePoisonCloud(WarContext* context, WarEntity* entity)
                 we_takeDamage(context, targetEntity, 0, POISON_CLOUD_DAMAGE);
             }
         }
+
         WarEntityListFree(nearUnits);
 
         poisonCloud->damageTime = 1.0f;
@@ -2231,6 +2233,7 @@ static bool updateSight(WarContext* context, WarEntity* entity)
 
     WarSightComponent* sight = we_getSightComponent(context, entity);
     assert(sight);
+
     sight->time -= wmap_getMapScaledSpeed(context, context->deltaTime);
 
     TracyCZoneEnd(ctx);
@@ -2242,96 +2245,68 @@ static void updateSpells(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateSpells", 1);
 
-    TracyCZoneN(ctxInitializingSpellsToRemove, "InitializingSpellsToRemove", 1);
-
-    WarEntityIdList spellsToRemove;
-    WarEntityIdListInit(&spellsToRemove, WarEntityIdListDefaultOptions);
-
-    TracyCZoneEnd(ctxInitializingSpellsToRemove);
-
-    TracyCZoneN(ctxUpdatePoisonCloudSpells, "UpdatePoisonCloudSpells", 1);
-
     WarEntityList* poisonCloudSpells = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
+    WarEntityList* sightSpells = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
+
+    s32 spellsToRemoveCount = 0;
+    WarEntityId* spellsToRemove = (WarEntityId*)wm_allocFrame(sizeof(WarEntityId) * (poisonCloudSpells->count + sightSpells->count));
+
     for (s32 i = 0; i < poisonCloudSpells->count; i++)
     {
         WarEntity* entity = poisonCloudSpells->items[i];
-        if (entity)
+        assert(entity);
+
+        if (updatePoisonCloud(context, entity))
         {
-            if (updatePoisonCloud(context, entity))
-            {
-                WarEntityIdListAdd(&spellsToRemove, entity->id);
-            }
+            spellsToRemove[spellsToRemoveCount++] = entity->id;
         }
     }
 
-    TracyCZoneEnd(ctxUpdatePoisonCloudSpells);
-
-    TracyCZoneN(ctxUpdateSightSpells, "UpdateSightSpells", 1);
-
-    WarEntityList* sightSpells = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_SIGHT);
     for (s32 i = 0; i < sightSpells->count; i++)
     {
         WarEntity* entity = sightSpells->items[i];
-        if (entity)
+        assert(entity);
+
+        if (updateSight(context, entity))
         {
-            if (updateSight(context, entity))
-            {
-                WarEntityIdListAdd(&spellsToRemove, entity->id);
-            }
+            spellsToRemove[spellsToRemoveCount++] = entity->id;
         }
     }
-
-    TracyCZoneEnd(ctxUpdateSightSpells);
-
-    TracyCZoneN(ctxUpdateInvisibilityAndInvulnerability, "UpdateInvisibilityAndInvulnerability", 1);
 
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
     {
         WarEntity* entity = units->items[i];
-        if (entity)
+        assert(entity);
+
+        WarUnitComponent* unit = we_getUnitComponent(context, entity);
+        assert(unit);
+
+        if (unit->invisible)
         {
-            WarUnitComponent* unit = we_getUnitComponent(context, entity);
-            assert(unit);
-
-            if (unit->invisible)
+            unit->invisibilityTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
+            if (unit->invisibilityTime <= 0)
             {
-                unit->invisibilityTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
-                if (unit->invisibilityTime <= 0)
-                {
-                    unit->invisible = false;
-                    unit->invisibilityTime = 0;
-                }
+                unit->invisible = false;
+                unit->invisibilityTime = 0;
             }
+        }
 
-            if (unit->invulnerable)
+        if (unit->invulnerable)
+        {
+            unit->invulnerabilityTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
+            if (unit->invulnerabilityTime <= 0)
             {
-                unit->invulnerabilityTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
-                if (unit->invulnerabilityTime <= 0)
-                {
-                    unit->invulnerable = false;
-                    unit->invulnerabilityTime = 0;
-                }
+                unit->invulnerable = false;
+                unit->invulnerabilityTime = 0;
             }
         }
     }
 
-    TracyCZoneEnd(ctxUpdateInvisibilityAndInvulnerability);
-
-    TracyCZoneN(ctxRemovingSpells, "RemovingSpells", 1);
-
-    for (s32 i = 0; i < spellsToRemove.count; i++)
+    for (s32 i = 0; i < spellsToRemoveCount; i++)
     {
-        we_removeEntityById(context, spellsToRemove.items[i]);
+        we_removeEntityById(context, spellsToRemove[i]);
     }
-
-    TracyCZoneEnd(ctxRemovingSpells);
-
-    TracyCZoneN(ctxFreeingSpellsToRemove, "FreeingSpellsToRemove", 1);
-
-    WarEntityIdListFree(&spellsToRemove);
-
-    TracyCZoneEnd(ctxFreeingSpellsToRemove);
 
     TracyCZoneEnd(ctx);
 }

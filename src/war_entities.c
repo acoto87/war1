@@ -3115,12 +3115,9 @@ WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 dista
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
-        if (other)
+        if (other && wu_tileInRange(context, other, tilePosition, distance))
         {
-            if (wu_tileInRange(context, other, tilePosition, distance))
-            {
-                WarEntityListAdd(nearUnits, other);
-            }
+            WarEntityListAdd(nearUnits, other);
         }
     }
 
