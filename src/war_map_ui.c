@@ -710,6 +710,7 @@ static void renderHUD(WarContext* context)
     TracyCZoneN(ctx, "RenderHUD", 1);
 
     WarMap* map = context->map;
+    WarImuiState* imui = &context->imui;
     WarPlayerInfo* player = &map->players[0];
     WarCheatStatus* cheatStatus = &map->cheatStatus;
 
@@ -743,49 +744,6 @@ static void renderHUD(WarContext* context)
             .fontSize = 6,
             .text = wsv_fromCString(buf)
         ));
-
-    // --- Status text (bottom panel) ---
-    if (map->hudStatusText[0] != '\0')
-    {
-        imui_text(context, "txtStatus",
-            CREATE_UI_TEXT_ARGS_INIT(
-                .position       = vec2_addv(bottomPanel, vec2i(2, 5)),
-                .fontSize       = 6,
-                .highlightIndex = map->hudStatusHighlightIndex,
-                .highlightCount = map->hudStatusHighlightCount,
-                .text = wsv_fromCString(map->hudStatusText)
-            ));
-    }
-
-    // --- Status gold/wood cost icons + amounts (bottom panel) ---
-    if (map->hudStatusGold > 0 || map->hudStatusWood > 0)
-    {
-        imui_image(context, "imgStatusWood", CREATE_UI_IMAGE_ARGS_INIT(
-            .spriteRef = imageResourceRef(407),
-            .position  = vec2_addv(bottomPanel, vec2i(163, 3)),
-        ));
-
-        snprintf(buf, sizeof(buf), "%d", map->hudStatusWood);
-        imui_text(context, "txtStatusWood",
-            CREATE_UI_TEXT_ARGS_INIT(
-                .position = vec2_addv(bottomPanel, vec2i(179, 5)),
-                .fontSize = 6,
-                .text = wsv_fromCString(buf)
-            ));
-
-        imui_image(context, "imgStatusGold", CREATE_UI_IMAGE_ARGS_INIT(
-            .spriteRef = imageResourceRef(406),
-            .position  = vec2_addv(bottomPanel, vec2i(200, 5)),
-        ));
-
-        snprintf(buf, sizeof(buf), "%d", map->hudStatusGold);
-        imui_text(context, "txtStatusGold",
-            CREATE_UI_TEXT_ARGS_INIT(
-                .position = vec2_addv(bottomPanel, vec2i(218, 5)),
-                .fontSize = 6,
-                .text = wsv_fromCString(buf)
-            ));
-    }
 
     // --- Selection info panel (left bottom panel) ---
     //
@@ -990,6 +948,11 @@ static void renderHUD(WarContext* context)
                         .foregroundFrameIndex = map->commandSlots[i].frameIndex,
                         .position             = vec2_addv(leftBottomPanel, vec2i(cmdOffX[i], cmdOffY[i])),
                         .hotKey               = map->commandSlots[i].hotKey,
+                        .tooltip               = map->commandSlots[i].tooltip,
+                        .tooltipHighlightIndex = map->commandSlots[i].highlightIndex,
+                        .tooltipHighlightCount = map->commandSlots[i].highlightCount,
+                        .gold                  = map->commandSlots[i].gold,
+                        .wood                  = map->commandSlots[i].wood,
                     )))
             {
                 if (map->commandSlots[i].clickHandler)
@@ -1033,6 +996,17 @@ static void renderHUD(WarContext* context)
         {
             wmm_handleMenu(context, NULL);
         }
+    }
+
+    if (!imui->show_tooltip && map->hudStatusText[0] != '\0')
+    {
+        imui_deferTooltip(context,
+            wsv_fromCString(map->hudStatusText),
+            map->hudStatusHighlightIndex,
+            map->hudStatusHighlightCount,
+            map->hudStatusGold,
+            map->hudStatusWood
+        );
     }
 
     // --- Cheat input cursor (visible while cheat panel is open) ---

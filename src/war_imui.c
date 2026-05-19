@@ -80,19 +80,19 @@ static WarSprite imui_getOrCreateSprite(WarContext* context, WarSpriteResourceRe
 }
 
 // Store tooltip deferral data from a hovered button.
-static void imui_deferTooltip(WarContext* context, StringView tooltip, s32 highlightIndex, s32 highlightCount)
+void imui_deferTooltip(WarContext* context, StringView tooltip, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood)
 {
     WarImuiState* imui = &context->imui;
 
     imui->show_tooltip            = true;
     imui->tooltip_highlight_index = highlightIndex;
     imui->tooltip_highlight_count = highlightCount;
+    imui->tooltip_gold             = gold;
+    imui->tooltip_wood             = wood;
 
     if (tooltip.data && tooltip.length > 0)
     {
-        size_t copyLen = tooltip.length < (IMUI_TOOLTIP_TEXT_MAX - 1)
-                         ? tooltip.length
-                         : (IMUI_TOOLTIP_TEXT_MAX - 1);
+        size_t copyLen = MIN(tooltip.length, IMUI_TOOLTIP_TEXT_MAX - 1);
         memcpy(imui->tooltip_text, tooltip.data, copyLen);
         imui->tooltip_text[copyLen] = '\0';
     }
@@ -116,6 +116,8 @@ void imui_begin(WarContext* context)
     imui->tooltip_text[0]      = '\0';
     imui->tooltip_highlight_index = NO_HIGHLIGHT;
     imui->tooltip_highlight_count = 0;
+    imui->tooltip_gold            = 0;
+    imui->tooltip_wood            = 0;
     imui->cursor_type          = WAR_CURSOR_ARROW;
     imui->hotkeys_enabled      = true;
     // NOTE: active_item and spriteCache are intentionally NOT reset here.
@@ -127,6 +129,7 @@ void imui_end(WarContext* context)
 {
     WarImuiState* imui  = &context->imui;
     WarInput*     input = &context->input;
+    WarMap*       map   = context->map;
 
     // Clear the active item once the left mouse button is fully released.
     if (!isButtonHeld(input, WAR_MOUSE_LEFT))
@@ -162,6 +165,50 @@ void imui_end(WarContext* context)
         wr_save(context);
         wfont_renderSingleSpriteText(context, tooltipView, 74.0f, 193.0f, params);
         wr_restore(context);
+
+        // If the tooltip includes gold or wood costs, render those icons + amounts to the right of the text.
+        if (imui->tooltip_gold > 0 || imui->tooltip_wood > 0)
+        {
+            vec2 bottomPanel = RECT_TOP_LEFT(map->bottomPanel);
+
+            if (imui->tooltip_wood > 0)
+            {
+                WarSprite woodSprite = imui_getOrCreateSprite(context, imageResourceRef(407), 0);
+                if (woodSprite.texture)
+                {
+                    vec2 iconPos = vec2_addv(bottomPanel, vec2i(163, 3));
+                    vec2 textPos = vec2_addv(bottomPanel, vec2i(179, 5));
+
+                    wr_save(context);
+                    wr_translate(context, iconPos.x, iconPos.y);
+                    wspr_renderSprite(context, woodSprite, VEC2_ZERO, VEC2_ONE);
+                    wr_restore(context);
+
+                    char woodText[16];
+                    StringView woodTextStr = wsv_fromCStringFormat(woodText, arrayLength(woodText), "%d", imui->tooltip_wood);
+                    wfont_renderSingleSpriteText(context, woodTextStr, textPos.x, textPos.y, params);
+                }
+            }
+
+            if (imui->tooltip_gold > 0)
+            {
+                WarSprite goldSprite = imui_getOrCreateSprite(context, imageResourceRef(406), 0);
+                if (goldSprite.texture)
+                {
+                    vec2 iconPos = vec2_addv(bottomPanel, vec2i(200, 5));
+                    vec2 textPos = vec2_addv(bottomPanel, vec2i(218, 5));
+
+                    wr_save(context);
+                    wr_translate(context, iconPos.x, iconPos.y);
+                    wspr_renderSprite(context, goldSprite, VEC2_ZERO, VEC2_ONE);
+                    wr_restore(context);
+
+                    char goldText[16];
+                    StringView goldTextStr = wsv_fromCStringFormat(goldText, arrayLength(goldText), "%d", imui->tooltip_gold);
+                    wfont_renderSingleSpriteText(context, goldTextStr, textPos.x, textPos.y, params);
+                }
+            }
+        }
     }
 
     // Draw the cursor sprite on top of everything else.
@@ -373,7 +420,7 @@ bool imui_image_button(WarContext* context, const char* id, const CreateUIImageB
     // Tooltip deferral
     if (context->imui.hot_item == itemId && args->tooltip.length > 0)
     {
-        imui_deferTooltip(context, args->tooltip, args->tooltipHighlightIndex, args->tooltipHighlightCount);
+        imui_deferTooltip(context, args->tooltip, args->tooltipHighlightIndex, args->tooltipHighlightCount, args->gold, args->wood);
     }
 
     // Render
@@ -446,7 +493,7 @@ bool imui_text_button(WarContext* context, const char* id, const CreateUITextBut
     // Tooltip deferral
     if (isHot && args->tooltip.length > 0)
     {
-        imui_deferTooltip(context, args->tooltip, args->tooltipHighlightIndex, args->tooltipHighlightCount);
+        imui_deferTooltip(context, args->tooltip, args->tooltipHighlightIndex, args->tooltipHighlightCount, args->gold, args->wood);
     }
 
     // Render
