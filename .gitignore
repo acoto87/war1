@@ -16,3 +16,4 @@ assets/*.WAR
 .vscode-ctags
 .markdownlint.json
 *.pdb
+*.o

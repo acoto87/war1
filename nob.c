@@ -26,6 +26,7 @@ typedef enum {
     COMMAND_BUILD,
     COMMAND_RUN,
     COMMAND_EDITOR,
+    COMMAND_RUN_EDITOR,
 } Command;
 
 typedef struct {
@@ -179,6 +180,8 @@ static void usage(const char *program)
     printf("  %s build --cc msvc --target win64 --profile\n", program);
     printf("  %s editor --cc msvc --target win64 --check\n", program);
     printf("  %s editor --cc gcc --target linux64\n", program);
+    printf("  %s run editor --target win64\n", program);
+    printf("  %s run editor --cc msvc --target win64 --debug\n", program);
 }
 
 static bool parse_toolchain(const char *value, Toolchain *toolchain)
@@ -241,7 +244,13 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
         }
 
         if (!command_consumed && strcmp(arg, "run") == 0) {
-            options->command = COMMAND_RUN;
+            // Check for optional 'editor' sub-command: "run editor"
+            if (argc > 0 && strcmp(argv[0], "editor") == 0) {
+                nob_shift_args(&argc, &argv); // consume "editor"
+                options->command = COMMAND_RUN_EDITOR;
+            } else {
+                options->command = COMMAND_RUN;
+            }
             command_consumed = true;
             continue;
         }
@@ -267,7 +276,7 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
                 return false;
             }
 
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
@@ -284,19 +293,19 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
                 return false;
             }
 
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
         if (strcmp(arg, "--debug") == 0) {
             options->debug = true;
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
         if (strcmp(arg, "--release") == 0) {
             options->debug = false;
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
@@ -307,7 +316,7 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
 
         if (strcmp(arg, "--profile") == 0) {
             options->profile = true;
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
@@ -616,6 +625,7 @@ static bool build_with_msvc(const Build_Options *options)
 static bool append_editor_defines_gnu(Nob_Cmd *cmd)
 {
     nob_cmd_append(cmd,
+                   "-Isrc",
                    "-DWAR_EDITOR_BUILD",
                    "-DCIMGUI_DEFINE_ENUMS_AND_STRUCTS",
                    "-DCIMGUI_NO_EXPORT",
@@ -671,7 +681,7 @@ static bool build_editor_with_gnu_like(const Build_Options *options)
                    nob_temp_sprintf("-L%s", lib_dir));
 
     if (target_is_windows(options->target)) {
-        nob_cmd_append(&cmd, "-lcimgui", "-lSDL3", "-lws2_32");
+        nob_cmd_append(&cmd, "-lcimgui", "-lSDL3", "-lws2_32", "-lstdc++");
         if (options->toolchain == TOOLCHAIN_GCC) {
             nob_cmd_append(&cmd, "-static-libgcc");
         }
@@ -822,6 +832,30 @@ static bool run_project(const Build_Options *options)
     return nob_cmd_run(&cmd);
 }
 
+static bool run_editor_project(const Build_Options *options)
+{
+    if (target_is_windows(options->target) && !host_is_windows()) {
+        nob_log(NOB_ERROR, "Cannot run a Windows binary on a non-Windows host");
+        return false;
+    }
+
+    const char *output_dir = target_output_dir(options->target);
+    const char *binary = target_is_windows(options->target) ? "war1_editor.exe" : "./war1_editor";
+
+    nob_log(NOB_INFO, "Changing directory to: %s", output_dir);
+
+    if (!nob_set_current_dir(output_dir)) {
+        nob_log(NOB_ERROR, "Could not change to directory: %s", output_dir);
+        return false;
+    }
+
+    nob_log(NOB_INFO, "Running: %s", binary);
+
+    Nob_Cmd cmd = {0};
+    nob_cmd_append(&cmd, binary);
+    return nob_cmd_run(&cmd);
+}
+
 int main(int argc, char **argv)
 {
     NOB_GO_REBUILD_URSELF(argc, argv);
@@ -852,6 +886,12 @@ int main(int argc, char **argv)
             break;
         case COMMAND_EDITOR:
             if (!build_editor(&options)) return 1;
+            break;
+        case COMMAND_RUN_EDITOR:
+            if (options.build_before_run) {
+                if (!build_editor(&options)) return 1;
+            }
+            if (!run_editor_project(&options)) return 1;
             break;
         default:
             nob_log(NOB_ERROR, "unknown command");
