@@ -25,6 +25,7 @@ typedef enum {
 typedef enum {
     COMMAND_BUILD,
     COMMAND_RUN,
+    COMMAND_EDITOR,
 } Command;
 
 typedef struct {
@@ -107,6 +108,23 @@ static const char *target_binary_path(Target target)
     }
 }
 
+static const char *editor_binary_path(Target target)
+{
+    const char *output_dir = target_output_dir(target);
+    switch (target) {
+        case TARGET_WIN32:
+        case TARGET_WIN64:
+            return nob_temp_sprintf("%s/war1_editor.exe", output_dir);
+
+        case TARGET_LINUX64:
+        case TARGET_ARM64:
+            return nob_temp_sprintf("%s/war1_editor", output_dir);
+
+        default:
+            return NULL;
+    }
+}
+
 static bool target_is_windows(Target target)
 {
     return target == TARGET_WIN32 || target == TARGET_WIN64;
@@ -149,7 +167,7 @@ static Toolchain default_toolchain(void)
 
 static void usage(const char *program)
 {
-    printf("Usage: %s [build|run] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile]\n", program);
+    printf("Usage: %s [build|run|editor] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile]\n", program);
     printf("\n");
     printf("Examples:\n");
     printf("  %s build --cc gcc --target linux64\n", program);
@@ -159,6 +177,8 @@ static void usage(const char *program)
     printf("  %s run --target linux64\n", program);
     printf("  %s run --cc gcc --target linux64 --debug\n", program);
     printf("  %s build --cc msvc --target win64 --profile\n", program);
+    printf("  %s editor --cc msvc --target win64 --check\n", program);
+    printf("  %s editor --cc gcc --target linux64\n", program);
 }
 
 static bool parse_toolchain(const char *value, Toolchain *toolchain)
@@ -222,6 +242,12 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
 
         if (!command_consumed && strcmp(arg, "run") == 0) {
             options->command = COMMAND_RUN;
+            command_consumed = true;
+            continue;
+        }
+
+        if (!command_consumed && strcmp(arg, "editor") == 0) {
+            options->command = COMMAND_EDITOR;
             command_consumed = true;
             continue;
         }
@@ -587,6 +613,167 @@ static bool build_with_msvc(const Build_Options *options)
     return copy_runtime_files(options);
 }
 
+static bool append_editor_defines_gnu(Nob_Cmd *cmd)
+{
+    nob_cmd_append(cmd,
+                   "-DWAR_EDITOR_BUILD",
+                   "-DCIMGUI_DEFINE_ENUMS_AND_STRUCTS",
+                   "-DCIMGUI_NO_EXPORT",
+                   "-DCIMGUI_USE_SDL3",
+                   "-DCIMGUI_USE_SDLRENDERER3",
+                   "-Ideps/include/cimgui");
+    return true;
+}
+
+static bool append_editor_defines_msvc(Nob_Cmd *cmd)
+{
+    nob_cmd_append(cmd,
+                   "/DWAR_EDITOR_BUILD",
+                   "/DCIMGUI_DEFINE_ENUMS_AND_STRUCTS",
+                   "/DCIMGUI_NO_EXPORT",
+                   "/DCIMGUI_USE_SDL3",
+                   "/DCIMGUI_USE_SDLRENDERER3",
+                   "/Ideps/include/cimgui");
+    return true;
+}
+
+static bool build_editor_with_gnu_like(const Build_Options *options)
+{
+    const char *output_dir = target_output_dir(options->target);
+
+    if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    if (options->check_only) {
+        Nob_Cmd cmd = {0};
+        append_gnu_common_flags(&cmd, options);
+        append_editor_defines_gnu(&cmd);
+        nob_cmd_append(&cmd,
+                       "-c",
+                       "src/war1_editor.c",
+                       "-o",
+                       nob_temp_sprintf("%s/war1_editor.o", output_dir));
+        return nob_cmd_run(&cmd);
+    }
+
+    // Full build: compile + link
+    const char *lib_dir = target_library_dir(options->target);
+
+    Nob_Cmd cmd = {0};
+    append_gnu_common_flags(&cmd, options);
+    append_editor_defines_gnu(&cmd);
+    nob_cmd_append(&cmd,
+                   "src/war1_editor.c",
+                   "-o",
+                   editor_binary_path(options->target),
+                   nob_temp_sprintf("-L%s", lib_dir));
+
+    if (target_is_windows(options->target)) {
+        nob_cmd_append(&cmd, "-lcimgui", "-lSDL3", "-lws2_32");
+        if (options->toolchain == TOOLCHAIN_GCC) {
+            nob_cmd_append(&cmd, "-static-libgcc");
+        }
+    } else {
+        // cimgui is a C++ static lib; must link C++ runtime explicitly from C
+        const char *cimgui_lib = nob_temp_sprintf("%s/libcimgui.a", lib_dir);
+        nob_cmd_append(&cmd,
+                       cimgui_lib,
+                       "-lSDL3",
+                       "-lpthread",
+                       "-lm",
+                       "-ldl",
+                       "-lstdc++",
+                       "-Wl,-rpath,$ORIGIN");
+        if (options->target == TARGET_LINUX64) {
+            nob_cmd_append(&cmd, "-no-pie");
+        }
+    }
+
+    if (!nob_cmd_run(&cmd)) {
+        return false;
+    }
+
+    return copy_runtime_files(options);
+}
+
+static bool build_editor_with_msvc(const Build_Options *options)
+{
+    if (!host_is_windows()) {
+        nob_log(NOB_ERROR, "msvc builds are only supported when running nob on Windows");
+        return false;
+    }
+
+    if (!target_is_windows(options->target)) {
+        nob_log(NOB_ERROR, "msvc builds require a Windows target");
+        return false;
+    }
+
+    if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    const char *output_dir = target_output_dir(options->target);
+    const char *lib_dir = target_library_dir(options->target);
+
+    if (options->check_only) {
+        Nob_Cmd cmd = {0};
+        append_msvc_common_flags(&cmd, options);
+        append_editor_defines_msvc(&cmd);
+        nob_cmd_append(&cmd,
+                       "/c",
+                       "src/war1_editor.c",
+                       nob_temp_sprintf("/Fo:%s/war1_editor.obj", output_dir));
+        return nob_cmd_run(&cmd);
+    }
+
+    // Full build: compile + link
+    Nob_Cmd cmd = {0};
+    append_msvc_common_flags(&cmd, options);
+    append_editor_defines_msvc(&cmd);
+    nob_cmd_append(&cmd,
+                   "src/war1_editor.c",
+                   nob_temp_sprintf("/Fe:%s/war1_editor.exe", output_dir),
+                   nob_temp_sprintf("/Fo:%s/", output_dir),
+                   "/link",
+                   nob_temp_sprintf("/LIBPATH:%s", lib_dir),
+                   "SDL3.lib",
+                   "cimgui.lib",
+                   "shell32.lib",
+                   "ws2_32.lib");
+
+    if (!nob_cmd_run(&cmd)) {
+        return false;
+    }
+
+    return copy_runtime_files(options);
+}
+
+static bool build_editor(const Build_Options *options)
+{
+    nob_log(NOB_INFO,
+            "Building editor target=%s toolchain=%s mode=%s build=%s",
+            target_name(options->target),
+            toolchain_name(options->toolchain),
+            options->check_only ? "check" : "build",
+            options->debug ? "debug" : "release");
+
+    switch (options->toolchain) {
+        case TOOLCHAIN_GCC:
+        case TOOLCHAIN_CLANG:
+            return build_editor_with_gnu_like(options);
+
+        case TOOLCHAIN_MSVC:
+            return build_editor_with_msvc(options);
+
+        default:
+            nob_log(NOB_ERROR, "unsupported toolchain");
+            return false;
+    }
+}
+
 static bool build_project(const Build_Options *options)
 {
     nob_log(NOB_INFO,
@@ -662,6 +849,9 @@ int main(int argc, char **argv)
                 if (!build_project(&options)) return 1;
             }
             if (!run_project(&options)) return 1;
+            break;
+        case COMMAND_EDITOR:
+            if (!build_editor(&options)) return 1;
             break;
         default:
             nob_log(NOB_ERROR, "unknown command");

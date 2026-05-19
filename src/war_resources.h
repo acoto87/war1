@@ -50,6 +50,8 @@ struct _WarLevelUnit
     WarResourceKind resourceKind;
     u16 amount;
 };
+// WarUnitType and WarResourceKind are int-sized enums; actual layout is 20 bytes, not 12 as spec claims.
+static_assert(sizeof(WarLevelUnit) == 20, "WarLevelUnit size mismatch; check enum sizes");
 
 struct _WarLevelConstruct
 {
@@ -58,6 +60,8 @@ struct _WarLevelConstruct
     u8 x2, y2;
     u8 player;
 };
+// WarConstructType is int-sized; actual layout is 12 bytes, not 8 as spec claims.
+static_assert(sizeof(WarLevelConstruct) == 12, "WarLevelConstruct size mismatch; check enum sizes");
 
 struct _WarTilesetTile
 {
