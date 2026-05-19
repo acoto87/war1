@@ -37,7 +37,7 @@ struct _WarScene
             f32 scrollY;
             WarRace race;
             WarCampaignMapType mapType;
-            String briefingText;
+            StringView briefingText;
         } briefing;
     };
 };

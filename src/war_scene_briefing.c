@@ -19,7 +19,6 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
     scene->briefing.time        = data.briefingDuration;
     scene->briefing.scrollY     = 160.0f;
     scene->briefing.briefingText = data.briefingText;  // transfer ownership
-    wstr_free(data.objectives);
 
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
@@ -60,7 +59,6 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
     scene->briefing.time         = data.briefingDuration;
     scene->briefing.scrollY      = 160.0f;
     scene->briefing.briefingText = data.briefingText;  // transfer ownership
-    wstr_free(data.objectives);
 
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
@@ -162,6 +160,6 @@ void wsc_renderOverlayBriefing(WarContext* context)
             .boundings  = vec2f((f32)(context->originalWindowWidth - 40), 200.0f),
             .wrapping   = WAR_TEXT_WRAP_CHAR,
             .lineHeight = 150,
-            .text = wstr_view(&scene->briefing.briefingText)
+            .text = scene->briefing.briefingText
         ));
 }

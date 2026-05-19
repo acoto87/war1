@@ -128,7 +128,6 @@ struct _WarMap
     WarCheatStatus cheatStatus;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
 
-    // IMGUI HUD state — written by wmui_setStatus every update, read by wmui_renderHUD every render.
     char hudStatusText[256];
     s32 hudStatusHighlightIndex;
     s32 hudStatusHighlightCount;

@@ -27,11 +27,6 @@ WarScene* wsc_createScene(WarContext* context, WarSceneType type)
 
 void wsc_freeScene(WarScene* scene)
 {
-    if (scene->type == WAR_SCENE_BRIEFING)
-    {
-        wstr_free(scene->briefing.briefingText);
-    }
-
     WarEntityManager* manager = &scene->entityManager;
     WarEntityMapFree(&manager->entitiesByType);
     WarUnitMapFree(&manager->unitsByType);

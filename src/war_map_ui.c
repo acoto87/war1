@@ -39,25 +39,6 @@ WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
     return entity;
 }
 
-void wmui_setStatus(WarContext* context, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood, StringView text)
-{
-    WarMap* map = context->map;
-
-    size_t copyLen = text.length < (sizeof(map->hudStatusText) - 1)
-        ? text.length : (sizeof(map->hudStatusText) - 1);
-
-    if (text.data && copyLen > 0)
-    {
-        memcpy(map->hudStatusText, text.data, copyLen);
-    }
-
-    map->hudStatusText[copyLen]      = '\0';
-    map->hudStatusHighlightIndex     = highlightIndex;
-    map->hudStatusHighlightCount     = highlightCount;
-    map->hudStatusGold               = gold;
-    map->hudStatusWood               = wood;
-}
-
 void wmui_setFlashStatus(WarContext* context, f32 duration, String text)
 {
     WarMap* map = context->map;
@@ -86,7 +67,7 @@ static const char* getSpeedStr(WarMapSpeed value)
     }
 }
 
-static void wmui_renderMenus(WarContext* context)
+static void renderMenus(WarContext* context)
 {
     TracyCZoneN(ctx, "RenderMenus", 1);
 
@@ -440,7 +421,8 @@ static void wmui_renderMenus(WarContext* context)
         case WAR_MENU_STATE_OBJECTIVES:
         {
             WarCampaignMapData campaignData = wcamp_getCampaignData(
-                wmap_getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
+                wmap_getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex)
+            );
 
             imui_image(context, "imgMenuBackground",
                 CREATE_UI_IMAGE_ARGS_INIT(
@@ -466,7 +448,7 @@ static void wmui_renderMenus(WarContext* context)
                     .boundings = vec2f(map->menuPanel.width - 20, 75),
                     .wrapping  = WAR_TEXT_WRAP_CHAR,
                     .trimming  = WAR_TEXT_TRIM_SPACES,
-                    .text = wstr_view(&campaignData.objectives)
+                    .text = campaignData.objectives
                 ));
 
             if (imui_text_button(context, "btnObjectivesMenu",
@@ -723,7 +705,7 @@ static void wmui_renderMenus(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-static void wmui_renderHUD(WarContext* context)
+static void renderHUD(WarContext* context)
 {
     TracyCZoneN(ctx, "RenderHUD", 1);
 
@@ -1080,7 +1062,48 @@ static void wmui_renderHUD(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void wmui_renderSelectionRect(WarContext* context)
+static void renderStaticPanels(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarPlayerInfo* player = &map->players[0];
+
+    vec2 leftTopPanel    = RECT_TOP_LEFT(map->leftTopPanel);
+    vec2 leftBottomPanel = RECT_TOP_LEFT(map->leftBottomPanel);
+    vec2 topPanel        = RECT_TOP_LEFT(map->topPanel);
+    vec2 rightPanel      = RECT_TOP_LEFT(map->rightPanel);
+    vec2 bottomPanel     = RECT_TOP_LEFT(map->bottomPanel);
+
+    imui_image(context, "panelLeftTop", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 224, 225),
+        .position  = leftTopPanel,
+    ));
+    imui_image(context, "panelLeftBottom", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 226, 227),
+        .position  = leftBottomPanel,
+    ));
+    imui_image(context, "panelTop", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 218, 219),
+        .position  = topPanel,
+    ));
+    imui_image(context, "panelRight", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 220, 221),
+        .position  = rightPanel,
+    ));
+    imui_image(context, "panelBottom", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRefFromPlayer(player, 222, 223),
+        .position  = bottomPanel,
+    ));
+    imui_image(context, "imgGold", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRef(406),
+        .position  = vec2_addv(topPanel, vec2i(201, 1)),
+    ));
+    imui_image(context, "imgLumber", CREATE_UI_IMAGE_ARGS_INIT(
+        .spriteRef = imageResourceRef(407),
+        .position  = vec2_addv(topPanel, vec2i(102, 0)),
+    ));
+}
+
+static void renderSelectionRect(WarContext* context)
 {
     TracyCZoneN(ctx, "RenderSelectionRect", 1);
 
@@ -1098,7 +1121,7 @@ void wmui_renderSelectionRect(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-void wmui_renderCommand(WarContext* context)
+static void renderCommand(WarContext* context)
 {
     TracyCZoneN(ctx, "RenderCommand", 1);
 
@@ -1182,49 +1205,12 @@ void wmui_renderMapUI(WarContext* context)
 
     wr_save(context);
 
-    WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
-
-    vec2 leftTopPanel    = RECT_TOP_LEFT(map->leftTopPanel);
-    vec2 leftBottomPanel = RECT_TOP_LEFT(map->leftBottomPanel);
-    vec2 topPanel        = RECT_TOP_LEFT(map->topPanel);
-    vec2 rightPanel      = RECT_TOP_LEFT(map->rightPanel);
-    vec2 bottomPanel     = RECT_TOP_LEFT(map->bottomPanel);
-
-    imui_image(context, "panelLeftTop", CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 224, 225),
-        .position  = leftTopPanel,
-    ));
-    imui_image(context, "panelLeftBottom", CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 226, 227),
-        .position  = leftBottomPanel,
-    ));
-    imui_image(context, "panelTop", CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 218, 219),
-        .position  = topPanel,
-    ));
-    imui_image(context, "panelRight", CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 220, 221),
-        .position  = rightPanel,
-    ));
-    imui_image(context, "panelBottom", CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRefFromPlayer(player, 222, 223),
-        .position  = bottomPanel,
-    ));
-    imui_image(context, "imgGold", CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRef(406),
-        .position  = vec2_addv(topPanel, vec2i(201, 1)),
-    ));
-    imui_image(context, "imgLumber", CREATE_UI_IMAGE_ARGS_INIT(
-        .spriteRef = imageResourceRef(407),
-        .position  = vec2_addv(topPanel, vec2i(102, 0)),
-    ));
-
-    wmui_renderSelectionRect(context);
-    wmui_renderCommand(context);
+    renderStaticPanels(context);
+    renderSelectionRect(context);
+    renderCommand(context);
     wui_renderUIEntities(context);
-    wmui_renderHUD(context);
-    wmui_renderMenus(context);
+    renderHUD(context);
+    renderMenus(context);
 
     wr_restore(context);
 

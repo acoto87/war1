@@ -1652,6 +1652,12 @@ static void updateStatus(WarContext* context)
     WarCheatStatus* cheatStatus = &map->cheatStatus;
     WarFlashStatus* flashStatus = &map->flashStatus;
 
+    memset(map->hudStatusText, 0, sizeof(map->hudStatusText));
+    map->hudStatusHighlightIndex = NO_HIGHLIGHT;
+    map->hudStatusHighlightCount = 0;
+    map->hudStatusGold = 0;
+    map->hudStatusWood = 0;
+
     if (cheatStatus->enabled)
     {
         if (cheatStatus->feedback)
@@ -1666,8 +1672,7 @@ static void updateStatus(WarContext* context)
 
         if (cheatStatus->visible)
         {
-            if (isKeyJustReleased(input, WAR_KEY_ESC) ||
-                isKeyJustReleased(input, WAR_KEY_ENTER))
+            if (isKeyJustReleased(input, WAR_KEY_ESC) || isKeyJustReleased(input, WAR_KEY_ENTER))
             {
                 if (isKeyJustReleased(input, WAR_KEY_ENTER))
                 {
@@ -1729,22 +1734,12 @@ static void updateStatus(WarContext* context)
                 cheatStatus->position = length;
             }
 
-            StringView prefix = wsv_fromCString("MSG: ");
-            StringView cheatStatusText = wstr_view(&cheatStatus->text);
+            StringView statusText = wsv_fromCStringFormat(map->hudStatusText, arrayLength(map->hudStatusText), "MSG: %.*s", (s32)cheatStatus->text.length, cheatStatus->text.data);
+            WarFontParams params = { .fontSize = 6.0f, .fontData = getFontData(0) };
+            vec2 statusTextSize = wfont_measureSingleSpriteText(statusText, (s32)statusText.length, params);
 
-            String statusText = wstr_concat(prefix, cheatStatusText);
-            wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, wstr_view(&statusText));
-            wstr_free(statusText);
-
-            WarFontParams params = {0};
-            params.fontSize = 6.0f;
-            params.fontData = getFontData(0);
-
-            vec2 prefixSize = wfont_measureSingleSpriteText(prefix, (s32)prefix.length, params);
-            vec2 textSize = wfont_measureSingleSpriteText(cheatStatusText, cheatStatus->position, params);
-
-            // Store cursor X offset (relative to bottomPanel.x + 2) for wmui_renderHUD.
-            map->cheatStatus.cursorX = 2.0f + prefixSize.x + textSize.x;
+            // Store cursor X offset (relative to bottomPanel.x + 2) for renderHUD.
+            map->cheatStatus.cursorX = 2.0f + statusTextSize.x;
 
             TracyCZoneEnd(ctx);
             return;
@@ -1764,7 +1759,11 @@ static void updateStatus(WarContext* context)
     {
         if (flashStatus->startTime + flashStatus->duration >= context->time)
         {
-            wmui_setStatus(context, NO_HIGHLIGHT, 0, 0, 0, wstr_view(&flashStatus->text));
+            wsv_copyToBuffer(wstr_view(&flashStatus->text), map->hudStatusText, arrayLength(map->hudStatusText));
+            map->hudStatusHighlightIndex = NO_HIGHLIGHT;
+            map->hudStatusHighlightCount = 0;
+            map->hudStatusGold = 0;
+            map->hudStatusWood = 0;
             TracyCZoneEnd(ctx);
             return;
         }
@@ -1772,12 +1771,6 @@ static void updateStatus(WarContext* context)
         // if the time for the flash status is over, just disabled it
         flashStatus->enabled = false;
     }
-
-    String statusText = wstr_make();
-    s32 highlightIndex = NO_HIGHLIGHT;
-    s32 highlightCount = 0;
-    s32 goldCost = 0;
-    s32 woodCost = 0;
 
     if (map->selectedEntities.count > 0)
     {
@@ -1796,7 +1789,7 @@ static void updateStatus(WarContext* context)
                     const WarUnitCommandMapping* commandMapping = wu_getCommandMappingFromUnitType(unitToBuild);
                     const WarUnitCommandBaseData* commandData = wu_getCommandBaseData(commandMapping->type);
 
-                    wstr_assign(&statusText, commandData->tooltip2);
+                    wsv_copyToBuffer(commandData->tooltip2, map->hudStatusText, arrayLength(map->hudStatusText));
                 }
                 else if (wst_isUpgrading(context, selectedEntity) || wst_isGoingToUpgrade(context, selectedEntity))
                 {
@@ -1805,7 +1798,7 @@ static void updateStatus(WarContext* context)
                     const WarUnitCommandMapping* commandMapping = wu_getCommandMappingFromUpgradeType(upgradeToBuild);
                     const WarUnitCommandBaseData* commandData = wu_getCommandBaseData(commandMapping->type);
 
-                    wstr_assign(&statusText, commandData->tooltip2);
+                    wsv_copyToBuffer(commandData->tooltip2, map->hudStatusText, arrayLength(map->hudStatusText));
                 }
                 else
                 {
@@ -1822,8 +1815,7 @@ static void updateStatus(WarContext* context)
                         // wood and gold would be 200 * 0.12 = 24.
                         //
                         s32 repairCost = (s32)ceil((maxhp - hp) * 0.12f);
-                        wstr_assignCString(&statusText, "FULL REPAIRS WILL COST ");
-                        wstr_appendFormat(&statusText, "%d GOLD & LUMBER", repairCost);
+                        wsv_fromCStringFormat(map->hudStatusText, arrayLength(map->hudStatusText), "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
                     }
                 }
             }
@@ -1836,11 +1828,11 @@ static void updateStatus(WarContext* context)
 
                     if (selUnit->resourceKind == WAR_RESOURCE_GOLD)
                     {
-                        wstr_assignCString(&statusText, "CARRYING GOLD");
+                        wsv_copyToBuffer(wsv_fromCString("CARRYING GOLD"), map->hudStatusText, arrayLength(map->hudStatusText));
                     }
                     else if (selUnit->resourceKind == WAR_RESOURCE_WOOD)
                     {
-                        wstr_assignCString(&statusText, "CARRYING LUMBER");
+                        wsv_copyToBuffer(wsv_fromCString("CARRYING LUMBER"), map->hudStatusText, arrayLength(map->hudStatusText));
                     }
                 }
             }
@@ -1853,27 +1845,23 @@ static void updateStatus(WarContext* context)
         WarEntity* entity = buttons->items[i];
         if (entity)
         {
-            if (we_isComponentEnabled(context, entity, COMP_UI) &&
-                we_isComponentEnabled(context, entity, COMP_BUTTON))
+            if (we_isComponentEnabled(context, entity, COMP_UI) && we_isComponentEnabled(context, entity, COMP_BUTTON))
             {
                 WarButtonComponent* button = we_getButtonComponent(context, entity);
                 assert(button);
 
                 if (button->interactive && button->hot)
                 {
-                    wstr_assign(&statusText, wstr_view(&button->tooltip));
-                    goldCost = button->gold;
-                    woodCost = button->wood;
-                    highlightIndex = button->highlightIndex;
-                    highlightCount = button->highlightCount;
+                    wsv_copyToBuffer(wstr_view(&button->tooltip), map->hudStatusText, arrayLength(map->hudStatusText));
+                    map->hudStatusHighlightIndex = button->highlightIndex;
+                    map->hudStatusHighlightCount = button->highlightCount;
+                    map->hudStatusGold = button->gold;
+                    map->hudStatusWood = button->wood;
                     break;
                 }
             }
         }
     }
-
-    wmui_setStatus(context, highlightIndex, highlightCount, goldCost, woodCost, wstr_view(&statusText));
-    wstr_free(statusText);
 
     TracyCZoneEnd(ctx);
 }
@@ -2574,7 +2562,10 @@ WarLevelResult checkObjectives(WarContext* context)
 
     if (map->objectivesTime <= 0)
     {
-        WarCampaignMapData data = wcamp_getCampaignData(wmap_getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex));
+        WarCampaignMapData data = wcamp_getCampaignData
+            (wmap_getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex)
+        );
+
         if (data.checkObjectivesFunc)
         {
             return data.checkObjectivesFunc(context);
@@ -2926,10 +2917,7 @@ void wmap_renderMap(WarContext *context)
 {
     TracyCZoneN(ctx, "RenderMap", 1);
 
-    // render map
     renderMapPanel(context);
-
-    // render ui
     wmui_renderMapUI(context);
 
     TracyCZoneEnd(ctx);

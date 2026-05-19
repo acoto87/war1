@@ -370,14 +370,15 @@ WarCampaignMapData wcamp_getCampaignData(WarCampaignMapType type)
 
     assert(index < length);
 
-    WarCampaignMapRawData raw = campaignsData[index];
+    const WarCampaignMapRawData* rawData = &campaignsData[index];
+
     WarCampaignMapData data;
-    data.type = raw.type;
-    data.checkObjectivesFunc = raw.checkObjectivesFunc;
-    data.objectives = wstr_fromCString(raw.objectives);
-    data.briefingAudioId = raw.briefingAudioId;
-    data.briefingText = raw.briefingText ? wstr_fromCString(raw.briefingText) : wstr_make();
-    data.briefingDuration = raw.briefingDuration;
+    data.type = rawData->type;
+    data.checkObjectivesFunc = rawData->checkObjectivesFunc;
+    data.objectives = wsv_fromCString(rawData->objectives);
+    data.briefingAudioId = rawData->briefingAudioId;
+    data.briefingText = wsv_fromCString(rawData->briefingText);
+    data.briefingDuration = rawData->briefingDuration;
     return data;
 }
 
