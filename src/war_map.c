@@ -1744,14 +1744,12 @@ static void updateStatus(WarContext* context)
             TracyCZoneEnd(ctx);
             return;
         }
-        else
-        {
-            map->cheatStatus.cursorX = -1.0f; // sentinel: cursor not visible
 
-            if (isKeyJustReleased(input, WAR_KEY_ENTER))
-            {
-                wcheatp_setCheatsPanelVisible(context, true);
-            }
+        map->cheatStatus.cursorX = -1.0f; // sentinel: cursor not visible
+
+        if (isKeyJustReleased(input, WAR_KEY_ENTER))
+        {
+            wcheatp_setCheatsPanelVisible(context, true);
         }
     }
 
@@ -1852,6 +1850,7 @@ static void updateStatus(WarContext* context)
 
                 if (button->interactive && button->hot)
                 {
+                    memset(map->hudStatusText, 0, sizeof(map->hudStatusText));
                     wsv_copyToBuffer(wstr_view(&button->tooltip), map->hudStatusText, arrayLength(map->hudStatusText));
                     map->hudStatusHighlightIndex = button->highlightIndex;
                     map->hudStatusHighlightCount = button->highlightCount;
@@ -2621,7 +2620,6 @@ void wmap_updateMap(WarContext* context)
         input->mapDragRect = RECT_EMPTY;
 
         wui_updateUIButtons(context, !map->cheatStatus.visible);
-        updateMapCursor(context);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -2655,8 +2653,6 @@ void wmap_updateMap(WarContext* context)
 
     updateCommandFromRightClick(context);
     updateStatus(context);
-
-    updateMapCursor(context);
 
     updateTreesEdit(context);
     updateRoadsEdit(context);
@@ -2916,6 +2912,8 @@ static void renderMapPanel(WarContext *context)
 void wmap_renderMap(WarContext *context)
 {
     TracyCZoneN(ctx, "RenderMap", 1);
+
+    updateMapCursor(context);
 
     renderMapPanel(context);
     wmui_renderMapUI(context);

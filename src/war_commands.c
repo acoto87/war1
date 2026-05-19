@@ -1433,6 +1433,8 @@ void wcmd_upgradeUnholyArmor(WarContext* context, WarEntity* entity)
 // wcmd_cancel
 void wcmd_cancel(WarContext* context, WarEntity* entity)
 {
+    NOT_USED(entity);
+
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
@@ -1442,6 +1444,7 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
     {
         WarEntityId selectedEntityId = map->selectedEntities.items[i];
         WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
+        assert(selectedEntity);
 
         if (wu_isBuildingUnit(context, selectedEntity))
         {
@@ -1479,7 +1482,7 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
                     we_increasePlayerResources(context, player, stats->goldCost[upgradeLevel], 0);
                 }
 
-                WarState* idleState = wst_createIdleState(context, entity, false);
+                WarState* idleState = wst_createIdleState(context, selectedEntity, false);
                 wst_changeNextState(context, selectedEntity, idleState, true, true);
             }
         }

@@ -679,6 +679,7 @@ void wg_presentGame(WarContext *context)
     TracyCZoneN(waitCtx, "FrameWait", 1);
     // sleep until the end of the frame to save CPU and battery, but only if we have time left in the frame
     SDL_Delay((s32)(MAX(0.0f, SECONDS_PER_FRAME - context->deltaTime) * 1000));
+    context->waitTime = SDL_GetTicks() / 1000.0f - currentTime;
     TracyCZoneEnd(waitCtx);
 
     context->time = currentTime;

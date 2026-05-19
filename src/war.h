@@ -195,6 +195,8 @@ struct _WarImuiState
     char tooltip_text[IMUI_TOOLTIP_TEXT_MAX];
     s32  tooltip_highlight_index;
     s32  tooltip_highlight_count;
+    s32  tooltip_gold;
+    s32  tooltip_wood;
 
     // Sprite cache: sprites are loaded on first use and reused across frames.
     // Keyed by (resourceIndex, frameIndex) — each unique pair has its own
@@ -207,6 +209,7 @@ struct _WarContext
 {
     f32 time;
     f32 deltaTime;
+    f32 waitTime;
     u32 fps;
     u32 frameCount;
 

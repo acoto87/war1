@@ -150,6 +150,11 @@ int main(void)
 
     bool running = true;
 
+    s32 cachedFps = 0;
+    f32 cachedDeltaTime = 0;
+    f32 cachedWaitTime = 0;
+    f32 lastFpsUpdateTime = 0;
+
     while (running)
     {
         wg_beginInputFrame(context);
@@ -165,7 +170,25 @@ int main(void)
             }
         }
 
-        wstr_setFormat(&context->windowTitle, "War 1: %.2fs at %d fps (%.4fs) - Frames: %u", context->time, context->fps, context->deltaTime, context->frameCount);
+        // Update window title with FPS and timing info,
+        // but only once per second to have more stable numbers.
+        if (context->time - lastFpsUpdateTime >= 1.0f)
+        {
+            cachedFps = context->fps;
+            cachedDeltaTime = context->deltaTime;
+            cachedWaitTime = context->waitTime;
+            lastFpsUpdateTime = context->time;
+        }
+
+        wstr_setFormat(
+            &context->windowTitle,
+            "War 1: %.2fs at %d fps (%.4fs) - Wait time: %.4fs - Frames: %u",
+            context->time,
+            cachedFps,
+            cachedDeltaTime,
+            cachedWaitTime,
+            context->frameCount
+        );
         SDL_SetWindowTitle(context->window, wstr_cstr(&context->windowTitle));
 
         wg_updateGame(context);

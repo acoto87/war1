@@ -47,6 +47,10 @@ void imui_image(WarContext* context, const char* id, const CreateUIImageArgs* ar
 // same sprite resource can be drawn in a single render pass without conflicts.
 void imui_image_frame(WarContext* context, const char* id, const CreateUIImageArgs* args, s32 frameIndex);
 
+// Set a tooltip to be drawn in imui_end() if the current item is hovered.
+// The tooltip text will be rendered with the same highlight range and gold/wood cost indicators as the hovered item.
+void imui_deferTooltip(WarContext* context, StringView tooltip, s32 highlightIndex, s32 highlightCount, s32 gold, s32 wood);
+
 // ---------------------------------------------------------------------------
 // Interactive elements — return true the frame the element is clicked
 // ---------------------------------------------------------------------------
