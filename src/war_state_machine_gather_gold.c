@@ -26,7 +26,7 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    WarUnitStats stats = wu_getUnitStats(unit->type);
+    const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
     WarEntity* goldmine = we_findEntity(context, (WarEntityId)state->gold.goldmineId);
 
@@ -41,9 +41,9 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     }
 
     // if the goldmine is not in range, go to it
-    if (!wu_unitInRange(context, entity, goldmine, stats.range))
+    if (!wu_unitInRange(context, entity, goldmine, stats->range))
     {
-        WarState* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats.range);
+        WarState* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats->range);
         followState->nextState = state;
         wst_changeNextState(context, entity, followState, false, true);
         return;

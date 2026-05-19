@@ -29,7 +29,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    WarUnitStats stats = wu_getUnitStats(unit->type);
+    const WarUnitStats* stats = wu_getUnitStats(unit->type);
     vec2 position = wu_getUnitCenterPosition(context, entity, true);
 
     WarEntity* forest = we_findEntity(context, (WarEntityId)state->wood.forestId);
@@ -62,7 +62,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     }
 
     // if the tree is not in range, go to it
-    if (!wu_tileInRange(context, entity, treePosition, stats.range))
+    if (!wu_tileInRange(context, entity, treePosition, stats->range))
     {
         WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition));
         moveState->nextState = state;

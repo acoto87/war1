@@ -1456,7 +1456,7 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
 
     WarMap* map = context->map;
 
-    WarUnitData unitData = wu_getUnitData(type);
+    const WarUnitData* unitData = wu_getUnitData(type);
 
     WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
     we_addTransformComponent(context, entity, WAR_TRANSFORM_COMPONENT_INIT(
@@ -1467,14 +1467,14 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
         .direction    = rand() % WAR_DIRECTION_COUNT,
         .tilex        = x,
         .tiley        = y,
-        .sizex        = unitData.sizex,
-        .sizey        = unitData.sizey,
+        .sizex        = unitData->sizex,
+        .sizey        = unitData->sizey,
         .player       = player,
         .resourceKind = resourceKind,
         .amount       = amount,
     ));
 
-    s32 spriteIndex = unitData.resourceIndex;
+    s32 spriteIndex = unitData->resourceIndex;
     if (spriteIndex == 0)
     {
         logError("Sprite for unit of type %d is not configure properly. Default to footman sprite.", type);
@@ -1488,32 +1488,32 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
 
     if (wu_isDudeUnit(context, entity))
     {
-        WarUnitStats stats = wu_getUnitStats(type);
+        const WarUnitStats* stats = wu_getUnitStats(type);
 
         WarUnitComponent* uc = we_getUnitComponent(context, entity);
         assert(uc);
 
-        uc->maxhp = stats.hp;
-        uc->hp = stats.hp;
-        uc->maxMana = stats.mana;
-        uc->mana = wu_isSummonUnit(context, entity) ? stats.mana : 100;
-        uc->armor = stats.armor;
-        uc->range = stats.range;
-        uc->minDamage = stats.minDamage;
-        uc->rndDamage = stats.rndDamage;
-        uc->decay = stats.decay;
+        uc->maxhp = stats->hp;
+        uc->hp = stats->hp;
+        uc->maxMana = stats->mana;
+        uc->mana = wu_isSummonUnit(context, entity) ? stats->mana : 100;
+        uc->armor = stats->armor;
+        uc->range = stats->range;
+        uc->minDamage = stats->minDamage;
+        uc->rndDamage = stats->rndDamage;
+        uc->decay = stats->decay;
         uc->manaTime = 1;
     }
     else if(wu_isBuildingUnit(context, entity))
     {
-        WarBuildingStats stats = wu_getBuildingStats(type);
+        const WarBuildingStats* stats = wu_getBuildingStats(type);
 
         WarUnitComponent* uc = we_getUnitComponent(context, entity);
         assert(uc);
 
-        uc->maxhp = stats.hp;
-        uc->hp = stats.hp;
-        uc->armor = stats.armor;
+        uc->maxhp = stats->hp;
+        uc->hp = stats->hp;
+        uc->armor = stats->armor;
     }
 
     WarState* idleState = wst_createIdleState(context, entity, wu_isDudeUnit(context, entity));
@@ -1556,8 +1556,8 @@ WarEntity* we_createBuilding(WarContext* context, const CreateUnitArgs* args)
 
     if (isGoingToBuild)
     {
-        WarBuildingStats stats = wu_getBuildingStats(type);
-        WarState* buildState = wst_createBuildState(context, entity, (f32)stats.buildTime);
+        const WarBuildingStats* stats = wu_getBuildingStats(type);
+        WarState* buildState = wst_createBuildState(context, entity, (f32)stats->buildTime);
         wst_changeNextState(context, entity, buildState, true, true);
     }
 
@@ -2056,10 +2056,11 @@ void renderRoad(WarContext* context, WarEntity* entity)
         {
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRoadData roadData = wu_getRoadData(pieces->items[i].type);
+            const WarRoadData* roadData = wu_getRoadData(pieces->items[i].type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                ? roadData.tileIndexForest : roadData.tileIndexSwamp;
+                ? roadData->tileIndexForest
+                : roadData->tileIndexSwamp;
 
             // the position in the world of the road piece tile
             s32 x = pieces->items[i].tilex;
@@ -2107,7 +2108,7 @@ void renderWall(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarWallData wallData = wu_getWallData(piece->type);
+            const WarWallData* wallData = wu_getWallData(piece->type);
 
             s32 tileIndex = 0;
 
@@ -2115,17 +2116,17 @@ void renderWall(WarContext* context, WarEntity* entity)
             if (hpPercent <= 0)
             {
                 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                    ? wallData.tileDestroyedForest : wallData.tileDestroyedSwamp;
+                    ? wallData->tileDestroyedForest : wallData->tileDestroyedSwamp;
             }
             else if(hpPercent < 50)
             {
                 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                    ? wallData.tileDamagedForest : wallData.tileDamagedSwamp;
+                    ? wallData->tileDamagedForest : wallData->tileDamagedSwamp;
             }
             else
             {
                 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                    ? wallData.tileForest : wallData.tileSwamp;
+                    ? wallData->tileForest : wallData->tileSwamp;
             }
 
             // the position in the world of the wall piece tile
@@ -2176,10 +2177,10 @@ void renderRuin(WarContext* context, WarEntity* entity)
 
             // get the index of the tile in the spritesheet of the map,
             // corresponding to the current tileset type (forest, swamp)
-            WarRuinData ruinData = wu_getRuinData(piece->type);
+            const WarRuinData* ruinData = wu_getRuinData(piece->type);
 
             s32 tileIndex = (tilesetType == MAP_TILESET_FOREST)
-                ? ruinData.tileIndexForest : ruinData.tileIndexSwamp;
+                ? ruinData->tileIndexForest : ruinData->tileIndexSwamp;
 
             // the position in the world of the road piece tile
             s32 x = piece->tilex;
@@ -2224,14 +2225,14 @@ void renderForest(WarContext* context, WarEntity* entity)
             if (tree->type == WAR_TREE_NONE)
                 continue;
 
-            WarTreeData data = wu_getTreeData(tree->type);
+            const WarTreeData* data = wu_getTreeData(tree->type);
 
             // the position in the world of the wood tile
             s32 x = tree->tilex;
             s32 y = tree->tiley;
 
             s32 prevTileIndex = wmap_getMapTileIndex(context, x, y);
-            s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data.tileIndexForest : data.tileIndexSwamp;
+            s32 newTileIndex = (tilesetType == MAP_TILESET_FOREST) ? data->tileIndexForest : data->tileIndexSwamp;
 
             if (prevTileIndex != newTileIndex)
                 logDebug("different tile index for tree (%d, %d), prev: %d, new: %d", x, y, prevTileIndex, newTileIndex);
@@ -3082,9 +3083,9 @@ bool we_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
 
 bool we_checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y)
 {
-    WarUnitData data = wu_getUnitData(buildingToBuild);
+    const WarUnitData* unitData = wu_getUnitData(buildingToBuild);
 
-    if (!we_checkRectToBuild(context, x, y, data.sizex, data.sizey))
+    if (!we_checkRectToBuild(context, x, y, unitData->sizex, unitData->sizey))
     {
         wmui_setFlashStatus(context, 1.5f, wstr_fromCString("CAN'T BUILD THERE"));
         return false;
@@ -3115,12 +3116,9 @@ WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 dista
     for(s32 i = 0; i < units->count; i++)
     {
         WarEntity* other = units->items[i];
-        if (other)
+        if (other && wu_tileInRange(context, other, tilePosition, distance))
         {
-            if (wu_tileInRange(context, other, tilePosition, distance))
-            {
-                WarEntityListAdd(nearUnits, other);
-            }
+            WarEntityListAdd(nearUnits, other);
         }
     }
 

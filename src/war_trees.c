@@ -229,9 +229,9 @@ void we_takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
     assert(forest->type == WAR_ENTITY_TYPE_FOREST);
     assert(tree);
 
-    WarTreeData data = wu_getTreeData(WAR_TREE_CHOPPED);
+    const WarTreeData* data = wu_getTreeData(WAR_TREE_CHOPPED);
     s32 choppedTileIndex = map->tilesetType == MAP_TILESET_FOREST
-        ? data.tileIndexForest : data.tileIndexSwamp;
+        ? data->tileIndexForest : data->tileIndexSwamp;
 
     WarTree choppedTree = *tree;
 

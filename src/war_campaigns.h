@@ -6,9 +6,9 @@ struct _WarCampaignMapData
 {
     WarCampaignMapType type;
     WarCheckObjectivesFunc checkObjectivesFunc;
-    String objectives;
+    StringView objectives;
     WarAudioId briefingAudioId;
-    String briefingText;
+    StringView briefingText;
     f32 briefingDuration;
 };
 

@@ -131,8 +131,8 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
 {
     if (wu_isDudeUnitType(unitType))
     {
-        WarUnitStats stats = wu_getUnitStats(unitType);
-        if (!we_enoughPlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+        const WarUnitStats* stats = wu_getUnitStats(unitType);
+        if (!we_enoughPlayerResources(context, aiPlayer, stats->goldCost, stats->woodCost))
         {
             // there is not enough resources to create the unit
             return false;
@@ -161,9 +161,9 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
                     {
                         if (!wst_isTraining(context, entity) && !wst_isUpgrading(context, entity))
                         {
-                            if (we_decreasePlayerResources(context, aiPlayer, stats.goldCost, stats.woodCost))
+                            if (we_decreasePlayerResources(context, aiPlayer, stats->goldCost, stats->woodCost))
                             {
-                                WarState* trainState = wst_createTrainState(context, entity, unitType, (f32)stats.buildTime);
+                                WarState* trainState = wst_createTrainState(context, entity, unitType, (f32)stats->buildTime);
                                 wst_changeNextState(context, entity, trainState, true, true);
                             }
 

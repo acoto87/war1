@@ -394,7 +394,7 @@ static bool append_msvc_common_flags(Nob_Cmd *cmd, const Build_Options *options)
     if (options->debug) {
         nob_cmd_append(cmd, "/Zi", "/D__DEBUG__=1", "/DSHL_MZ_DEBUG");
     } else {
-        nob_cmd_append(cmd, "/O2", "/DNDEBUG");
+        nob_cmd_append(cmd, "/Zi", "/O2", "/DNDEBUG");
     }
 
     if (options->profile) {

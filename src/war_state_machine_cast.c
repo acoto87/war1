@@ -47,13 +47,13 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
     WarEntityId targetEntityId = state->cast.targetEntityId;
     vec2 targetTile = state->cast.targetTile;
 
-    WarSpellStats stats = wu_getSpellStats(spellType);
+    const WarSpellStats* stats = wu_getSpellStats(spellType);
 
-    if (stats.range)
+    if (stats->range)
     {
-        if(!wu_tileInRange(context, entity, targetTile, stats.range))
+        if(!wu_tileInRange(context, entity, targetTile, stats->range))
         {
-            WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats.range);
+            WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
             followState->nextState = state;
             wst_changeNextState(context, entity, followState, false, true);
             return;
@@ -85,13 +85,13 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     // for every 6 units of mana, the damaged unit gets back 1 hit point.
                     //
                     // take all the hp the cleric can restore according to its mana
-                    s32 hpToRestore = unit->mana / stats.manaCost;
+                    s32 hpToRestore = unit->mana / stats->manaCost;
 
                     // take in reality how much hp needs to be restored
                     hpToRestore = MIN(hpToRestore, targetUnit->maxhp - targetUnit->hp);
 
                     // recalculate how much mana the cleric need to spend
-                    s32 manaToSpend = hpToRestore * stats.manaCost;
+                    s32 manaToSpend = hpToRestore * stats->manaCost;
 
                     we_increaseUnitHp(context, targetEntity, hpToRestore);
                     we_decreaseUnitMana(context, entity, manaToSpend);
@@ -114,14 +114,14 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
             case WAR_SPELL_FAR_SIGHT:
             case WAR_SPELL_DARK_VISION:
             {
-                if (we_decreaseUnitMana(context, entity, stats.manaCost))
+                if (we_decreaseUnitMana(context, entity, stats->manaCost))
                 {
                     vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
 
                     WarEntity* sight = we_createEntity(context, WAR_ENTITY_TYPE_SIGHT, true);
                     we_addSightComponent(context, sight, WAR_SIGHT_COMPONENT_INIT(
                         .position = targetTile,
-                        .time     = stats.time,
+                        .time     = stats->time,
                     ));
                     we_addAnimationsComponent(context, sight);
 
@@ -143,10 +143,10 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     WarUnitComponent* targetUnit = we_getUnitComponent(context, targetEntity);
                     assert(targetUnit);
 
-                    if (we_decreaseUnitMana(context, entity, stats.manaCost))
+                    if (we_decreaseUnitMana(context, entity, stats->manaCost))
                     {
                         targetUnit->invisible = true;
-                        targetUnit->invisibilityTime = stats.time;
+                        targetUnit->invisibilityTime = stats->time;
 
                         vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
 
@@ -166,7 +166,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
 
             case WAR_SPELL_RAIN_OF_FIRE:
             {
-                if (we_decreaseUnitMana(context, entity, stats.manaCost))
+                if (we_decreaseUnitMana(context, entity, stats->manaCost))
                 {
                     vec2 targetTilePosition = wmap_tileToMapCoordinatesV(targetTile, true);
                     s32 radius = 2 * MEGA_TILE_WIDTH;
@@ -201,7 +201,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     WarEntity* targetEntity = nearUnits->items[i];
                     if (targetEntity && wu_isCorpseUnit(context, targetEntity))
                     {
-                        if (we_decreaseUnitMana(context, entity, stats.manaCost))
+                        if (we_decreaseUnitMana(context, entity, stats->manaCost))
                         {
                             vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, true);
                             we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=WAR_UNIT_SKELETON, .x=(s32)targetPosition.x, .y=(s32)targetPosition.y, .player=unit->player, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
@@ -234,12 +234,12 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     WarUnitComponent* targetUnit = we_getUnitComponent(context, targetEntity);
                     assert(targetUnit);
 
-                    if (we_decreaseUnitMana(context, entity, stats.manaCost))
+                    if (we_decreaseUnitMana(context, entity, stats->manaCost))
                     {
                         we_decreaseUnitHp(context, targetEntity, targetUnit->hp/2);
 
                         targetUnit->invulnerable = true;
-                        targetUnit->invulnerabilityTime = stats.time;
+                        targetUnit->invulnerabilityTime = stats->time;
 
                         vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
 
@@ -259,14 +259,14 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
 
             case WAR_SPELL_POISON_CLOUD:
             {
-                if (we_decreaseUnitMana(context, entity, stats.manaCost))
+                if (we_decreaseUnitMana(context, entity, stats->manaCost))
                 {
                     vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
 
                     WarEntity* poisonCloud = we_createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
                     we_addPoisonCloudComponent(context, poisonCloud, WAR_POISON_CLOUD_COMPONENT_INIT(
                         .position = targetTile,
-                        .time     = stats.time,
+                        .time     = stats->time,
                     ));
                     we_addAnimationsComponent(context, poisonCloud);
 

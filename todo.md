@@ -102,6 +102,8 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Cursor is too sensitive, and usually out of window area
 * [x] Cursor should stay at the edges of the window. Should I capture the mouse from the OS!? That would allow scrolling when the cursor is at the edge and the player keep moving the mouse in the direction of that edge. Right now the OS cursor shows up when the user move the game cursor outside the window. That's no good.
 * [x] Click in a button, drag to the map panel, it start the selection rect. This shouldn't be.
+* [x] In breafing scenes, the text looks behind animations, mainly because of the refactor in `wsc_renderScene`, where it draws all UI entities first, and then animations.
+* [x] Scrolling by moving the mouse to the border is not working anymore.
 * [ ] When the last position of a segment is occupied and there is more segments, what should be the behavior? continue to next segment from the current position? stop?
 * [ ] Check for memory leaks in the removing animations functionality.
 * [ ] Check why the changing of the global scale renders with the previous global scale after a change (only on Linux, on Windows it doesn't happen).
@@ -115,6 +117,8 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Check this: <https://tcrf.net/Warcraft:_Orcs_%26_Humans>, <https://tcrf.net/Proto:Warcraft:_Orcs_%26_Humans>
 * [ ] I can hear the sounds of the enemy spawning and doing stuff
 * [ ] Frame rate gets unacceptable in debug mode (~5 fps after a while and a few units created)
+* [ ] MENU F10 tooltip overlaps if there a building training a soldier or worker saying "TRAINING ..."
+* [ ] Cancel button tooltip is not showing
 
 ## General
 
