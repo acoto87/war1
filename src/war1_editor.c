@@ -227,5 +227,7 @@ int main(int argc, char **argv)
 #include "editor/war_editor_ui.c"
 #include "editor/war_editor_map.c"
 #include "editor/war_editor_canvas.c"
+#include "editor/war_editor_autotile.c"
+#include "editor/war_editor_tools.c"
 #include "editor/war_editor.c"
 #include "editor/war_editor_stubs.c"

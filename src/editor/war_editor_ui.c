@@ -2,6 +2,7 @@
 #include "war_editor.h"
 #include "war_editor_canvas.h"
 #include "war_editor_map.h"
+#include "war_editor_tools.h"
 
 // Module-level storage so weui_beginFrame can access the window without
 // requiring it as a parameter (matching the void signature in the spec).
@@ -98,6 +99,169 @@ static void weui_drawImportDialog(WarEditorContext* ctx)
     }
 }
 
+// -----------------------------------------------------------------------
+// Toolbox panel (7.2) — vertical button strip; sets ctx->activeTool.
+// -----------------------------------------------------------------------
+static void weui_drawToolboxPanel(WarEditorContext* ctx)
+{
+    ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoScrollWithMouse;
+
+    if (igBegin("Toolbox##toolbox", NULL, flags))
+    {
+        static const struct { WarEditorToolType type; const char* label; } tools[] =
+        {
+            { WE_TOOL_SELECT,       "Select" },
+            { WE_TOOL_PENCIL,       "Pencil" },
+            { WE_TOOL_FILL,         "Fill"   },
+            { WE_TOOL_ERASE,        "Erase"  },
+            { WE_TOOL_PLACE_ENTITY, "Entity" },
+        };
+        s32 toolCount = (s32)(sizeof(tools) / sizeof(tools[0]));
+
+        ImVec2_c btnSize;
+        btnSize.x = igGetContentRegionAvail().x;
+        btnSize.y = 0.0f;
+
+        for (s32 i = 0; i < toolCount; i++)
+        {
+            bool active = (ctx->activeTool == tools[i].type);
+            if (active)
+            {
+                // Highlight the active tool in gold
+                igPushStyleColor_Vec4(ImGuiCol_Button,
+                    (ImVec4_c){ 0.80f, 0.60f, 0.10f, 1.0f });
+                igPushStyleColor_Vec4(ImGuiCol_ButtonHovered,
+                    (ImVec4_c){ 0.90f, 0.70f, 0.20f, 1.0f });
+            }
+
+            if (igButton(tools[i].label, btnSize))
+                ctx->activeTool = tools[i].type;
+
+            if (active)
+                igPopStyleColor(2);
+        }
+    }
+    igEnd();
+}
+
+// -----------------------------------------------------------------------
+// Tile palette panel (7.8 + 7.9) — grid of tileset thumbnails + tileset
+// type combo box.  Clicking a tile sets ctx->selectedTileIndex.
+// -----------------------------------------------------------------------
+
+// Tile zoom: base size 24 px, range [0.5×, 4.0×], step 0.25×.
+static f32 s_tileZoom = 1.0f;
+
+static void weui_drawTilePalettePanel(WarEditorContext* ctx)
+{
+    if (igBegin("Tiles##tiles", NULL, ImGuiWindowFlags_None))
+    {
+        // 7.9 — Tileset type combo box
+        s32 currentType = (s32)((ctx->map) ? ctx->map->tilesetType : MAP_TILESET_FOREST);
+        if (igCombo_Str("Tileset", &currentType, "Forest\0Swamp\0Dungeon\0", 3))
+        {
+            if (ctx->map)
+            {
+                ctx->map->tilesetType = (u16)currentType;
+                wemap_buildTerrainSprite(ctx);
+            }
+        }
+
+        // Zoom controls
+        if (igButton("-##zoom", (ImVec2_c){ 24.0f, 0.0f }))
+            s_tileZoom = fmaxf(0.5f, s_tileZoom - 0.25f);
+        igSameLine(0.0f, 4.0f);
+        igText("Zoom: %.2fx", (double)s_tileZoom);
+        igSameLine(0.0f, 4.0f);
+        if (igButton("+##zoom", (ImVec2_c){ 24.0f, 0.0f }))
+            s_tileZoom = fminf(4.0f, s_tileZoom + 0.25f);
+
+        igSeparator();
+
+        // 7.8 — Tile thumbnail grid
+        WarEditorMap* m = ctx->map;
+        if (m && m->terrainSprite.texture)
+        {
+            ImTextureRef_c texRef;
+            texRef._TexData = NULL;
+            texRef._TexID   = (ImTextureID)(uintptr_t)m->terrainSprite.texture;
+
+            // Tile display size driven by zoom; base = 24×24 px.
+            f32      tileSize    = 24.0f * s_tileZoom;
+            ImVec2_c displaySize = { tileSize, tileSize };
+
+            f32 tileUW = (f32)MEGA_TILE_WIDTH  / (f32)TILESET_WIDTH;
+            f32 tileUH = (f32)MEGA_TILE_HEIGHT / (f32)TILESET_HEIGHT;
+            s32 tilesPerRow = TILESET_TILES_PER_ROW;
+            s32 totalRows   = TILESET_HEIGHT / MEGA_TILE_HEIGHT;
+            s32 totalTiles  = tilesPerRow * totalRows;
+
+            // Zero padding between buttons so tiles are packed tight.
+            igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing,  (ImVec2_c){ 1.0f, 1.0f });
+            igPushStyleVar_Vec2(ImGuiStyleVar_FramePadding, (ImVec2_c){ 0.0f, 0.0f });
+
+            // Fetch the window draw list once for overlay rendering.
+            ImDrawList* dl = igGetWindowDrawList();
+
+            for (s32 i = 0; i < totalTiles; i++)
+            {
+                s32 col = i % tilesPerRow;
+                s32 row = i / tilesPerRow;
+
+                ImVec2_c uv0 = { col * tileUW,          row * tileUH          };
+                ImVec2_c uv1 = { col * tileUW + tileUW, row * tileUH + tileUH };
+
+                // Record the screen-space top-left corner BEFORE the button
+                // so we can draw overlays on top of the image afterward.
+                ImVec2_c itemPos = igGetCursorScreenPos();
+
+                igPushID_Int(i);
+                if (igImageButton("##t", texRef, displaySize, uv0, uv1,
+                                  (ImVec4_c){ 0.0f, 0.0f, 0.0f, 0.0f },  // bg_col: transparent
+                                  (ImVec4_c){ 1.0f, 1.0f, 1.0f, 1.0f })) // tint_col: none
+                    ctx->selectedTileIndex = (u16)i;
+                igPopID();
+
+                // Draw hover / selected highlights via ImDrawList so they are
+                // visible on top of the image regardless of FramePadding=0.
+                bool isHovered  = igIsItemHovered(0);
+                bool isSelected = (ctx->selectedTileIndex == (u16)i);
+
+                if (isHovered || isSelected)
+                {
+                    ImVec2_c itemMax;
+                    itemMax.x = itemPos.x + tileSize;
+                    itemMax.y = itemPos.y + tileSize;
+
+                    // White 25% alpha fill for hover
+                    if (isHovered)
+                        ImDrawList_AddRectFilled(dl, itemPos, itemMax,
+                                                 0x40FFFFFFu, 0.0f, 0);
+
+                    // Gold 2 px border for selected
+                    // IM_COL32(255,215,0,255) = R=0xFF, G=0xD7, B=0x00, A=0xFF
+                    if (isSelected)
+                        ImDrawList_AddRect(dl, itemPos, itemMax,
+                                           0xFF00D7FFu, 0.0f, 2.0f, 0);
+                }
+
+                // Same-line for every tile except the last in the row
+                if (col < tilesPerRow - 1)
+                    igSameLine(0.0f, 1.0f);
+            }
+
+            igPopStyleVar(2);
+        }
+        else
+        {
+            igText("No tileset loaded. Import a level first.");
+        }
+    }
+    igEnd();
+}
+
 void weui_init(SDL_Window* window, SDL_Renderer* renderer)
 {
     s_window   = window;
@@ -182,9 +346,12 @@ void weui_beginFrame(WarEditorContext* ctx)
 
         if (igBeginMenu("View", true))
         {
-            igMenuItem_Bool("Show Grid",       "G",            false, true);
-            igMenuItem_Bool("Show Passability","P",            false, true);
-            igMenuItem_Bool("Show Minimap",    NULL,           false, true);
+            if (igMenuItem_Bool("Show Grid",        "G", ctx->showGrid,        true))
+                ctx->showGrid = !ctx->showGrid;
+            if (igMenuItem_Bool("Show Passability", "P", ctx->showPassability, true))
+                ctx->showPassability = !ctx->showPassability;
+            if (igMenuItem_Bool("Show Minimap",     NULL, ctx->showMinimap,    true))
+                ctx->showMinimap = !ctx->showMinimap;
             igEndMenu();
         }
 
@@ -217,10 +384,25 @@ void weui_beginFrame(WarEditorContext* ctx)
     }
 
     // -----------------------------------------------------------------------
+    // Per-frame tool state update (7.11 — G/P shortcuts, fill drag release)
+    // -----------------------------------------------------------------------
+    wetools_update(ctx);
+
+    // -----------------------------------------------------------------------
     // Canvas panel (4.5 / Phase 4)
     // Writes tile coordinate into ctx->statusText when hovered.
     // -----------------------------------------------------------------------
     wecanvas_drawPanel(ctx, ctx->statusText, (s32)sizeof(ctx->statusText));
+
+    // -----------------------------------------------------------------------
+    // Toolbox panel (7.2)
+    // -----------------------------------------------------------------------
+    weui_drawToolboxPanel(ctx);
+
+    // -----------------------------------------------------------------------
+    // Tile palette panel (7.8 + 7.9)
+    // -----------------------------------------------------------------------
+    weui_drawTilePalettePanel(ctx);
 
     // -----------------------------------------------------------------------
     // Import Campaign Level dialog (Phase 5)
