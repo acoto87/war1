@@ -3,6 +3,7 @@
 #include "war_editor_canvas.h"
 #include "war_editor_inspector.h"
 #include "war_editor_map.h"
+#include "war_editor_playtest.h"
 #include "war_editor_serialization.h"
 #include "war_editor_tools.h"
 
@@ -10,6 +11,64 @@
 // requiring it as a parameter (matching the void signature in the spec).
 static SDL_Window*   s_window   = NULL;
 static SDL_Renderer* s_renderer = NULL;
+
+// -----------------------------------------------------------------------
+// Default ImGui layout — loaded on first run when no imgui.ini exists.
+// -----------------------------------------------------------------------
+static const char s_defaultIniLayout[] =
+    "[Window][WindowOverViewport_11111111]\n"
+    "Pos=0,19\n"
+    "Size=1920,998\n"
+    "Collapsed=0\n"
+    "\n"
+    "[Window][Tiles##tiles]\n"
+    "Pos=1457,19\n"
+    "Size=463,494\n"
+    "Collapsed=0\n"
+    "DockId=0x00000003,0\n"
+    "\n"
+    "[Window][Debug##Default]\n"
+    "Pos=60,60\n"
+    "Size=400,400\n"
+    "Collapsed=0\n"
+    "\n"
+    "[Window][Canvas##canvas]\n"
+    "Pos=237,19\n"
+    "Size=1218,998\n"
+    "Collapsed=0\n"
+    "DockId=0x00000001,0\n"
+    "\n"
+    "[Window][Toolbox##toolbox]\n"
+    "Pos=0,19\n"
+    "Size=235,998\n"
+    "Collapsed=0\n"
+    "DockId=0x00000005,0\n"
+    "\n"
+    "[Window][Entities##entities]\n"
+    "Pos=1457,19\n"
+    "Size=463,494\n"
+    "Collapsed=0\n"
+    "DockId=0x00000003,1\n"
+    "\n"
+    "[Window][Inspector##inspector]\n"
+    "Pos=1457,515\n"
+    "Size=463,502\n"
+    "Collapsed=0\n"
+    "DockId=0x00000004,0\n"
+    "\n"
+    "[Window][Unsaved Changes##modal]\n"
+    "Pos=780,470\n"
+    "Size=360,76\n"
+    "Collapsed=0\n"
+    "\n"
+    "[Docking][Data]\n"
+    "DockSpace       ID=0x08BD597D Window=0x1BBC0F80 Pos=0,19 Size=1920,998 Split=X\n"
+    "  DockNode      ID=0x00000005 Parent=0x08BD597D SizeRef=235,701 Selected=0x67E13F7B\n"
+    "  DockNode      ID=0x00000006 Parent=0x08BD597D SizeRef=1683,701 Split=X\n"
+    "    DockNode    ID=0x00000001 Parent=0x00000006 SizeRef=1218,701 CentralNode=1 Selected=0xA4ED7C79\n"
+    "    DockNode    ID=0x00000002 Parent=0x00000006 SizeRef=463,701 Split=Y Selected=0xBF980F15\n"
+    "      DockNode  ID=0x00000003 Parent=0x00000002 SizeRef=638,494 Selected=0x1639E026\n"
+    "      DockNode  ID=0x00000004 Parent=0x00000002 SizeRef=638,502 Selected=0x5BC9CB1C\n";
 
 // -----------------------------------------------------------------------
 // File I/O dialog state (Phase 11)
@@ -26,6 +85,9 @@ typedef enum
 } WePendingAction;
 
 static WePendingAction s_pendingAction   = WE_PENDING_NONE;
+// Set to true by weui_requestNew/Open/Quit when called from within a menu;
+// igOpenPopup_Str is deferred to top-level scope in weui_drawUnsavedChangesModal.
+static bool            s_openUnsavedModal = false;
 
 // Pending open-dialog result.  Set by weui_openFileCallback; consumed by
 // weui_processPendingPaths at the start of the next frame.
@@ -225,6 +287,13 @@ static void weui_processPendingPaths(WarEditorContext* ctx)
 // -----------------------------------------------------------------------
 static void weui_drawUnsavedChangesModal(WarEditorContext* ctx)
 {
+    // Deferred open — must happen at top-level scope, not inside a menu.
+    if (s_openUnsavedModal)
+    {
+        igOpenPopup_Str("Unsaved Changes##modal", 0);
+        s_openUnsavedModal = false;
+    }
+
     // Centre the popup.
     ImGuiViewport* vp = igGetMainViewport();
     ImVec2 centre;
@@ -336,8 +405,8 @@ static void weui_requestNew(WarEditorContext* ctx)
 {
     if (ctx->map != NULL)
     {
-        s_pendingAction = WE_PENDING_NEW;
-        igOpenPopup_Str("Unsaved Changes##modal", 0);
+        s_pendingAction    = WE_PENDING_NEW;
+        s_openUnsavedModal = true;
     }
     else
     {
@@ -350,8 +419,8 @@ static void weui_requestOpen(WarEditorContext* ctx)
 {
     if (ctx->unsavedChanges)
     {
-        s_pendingAction = WE_PENDING_OPEN;
-        igOpenPopup_Str("Unsaved Changes##modal", 0);
+        s_pendingAction    = WE_PENDING_OPEN;
+        s_openUnsavedModal = true;
     }
     else
     {
@@ -396,8 +465,8 @@ static void weui_requestQuit(WarEditorContext* ctx)
 {
     if (ctx->unsavedChanges)
     {
-        s_pendingAction = WE_PENDING_QUIT;
-        igOpenPopup_Str("Unsaved Changes##modal", 0);
+        s_pendingAction    = WE_PENDING_QUIT;
+        s_openUnsavedModal = true;
     }
     else
     {
@@ -854,6 +923,23 @@ void weui_init(SDL_Window* window, SDL_Renderer* renderer)
     ImGuiIO* io = igGetIO_Nil();
     io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
+    // Load the default layout on first run (before ImGui writes its own ini).
+    // io->IniFilename defaults to "imgui.ini"; we check for its existence via
+    // SDL_IOFromFile so we don't depend on <stdio.h>.
+    {
+        const char* iniPath = io->IniFilename ? io->IniFilename : "imgui.ini";
+        SDL_IOStream* probe = SDL_IOFromFile(iniPath, "rb");
+        if (!probe)
+        {
+            igLoadIniSettingsFromMemory(s_defaultIniLayout,
+                                        sizeof(s_defaultIniLayout) - 1);
+        }
+        else
+        {
+            SDL_CloseIO(probe);
+        }
+    }
+
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
@@ -908,6 +994,8 @@ void weui_beginFrame(WarEditorContext* ctx)
             else if (io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_S, false))
                 weui_requestSaveAs(ctx);
         }
+        if (igIsKeyPressed_Bool(ImGuiKey_F5, false))
+            weplay_startPlaytest(ctx);
     }
 
     // -----------------------------------------------------------------------
@@ -1002,7 +1090,7 @@ void weui_beginFrame(WarEditorContext* ctx)
         buttonSize.y = 0;
         if (igButton("Play", buttonSize))
         {
-            logInfo("Playtest not implemented");
+            weplay_startPlaytest(ctx);
         }
 
         igEndMainMenuBar();
@@ -1048,6 +1136,11 @@ void weui_beginFrame(WarEditorContext* ctx)
     // Unsaved-changes confirmation modal (11.9)
     // -----------------------------------------------------------------------
     weui_drawUnsavedChangesModal(ctx);
+
+    // -----------------------------------------------------------------------
+    // Playtest error modal (Phase 13)
+    // -----------------------------------------------------------------------
+    weplay_drawErrorPopup();
 
     // -----------------------------------------------------------------------
     // Status bar (2.11) — pinned at the bottom of the display

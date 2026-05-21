@@ -231,5 +231,6 @@ int main(int argc, char **argv)
 #include "editor/war_editor_tools.c"
 #include "editor/war_editor_inspector.c"
 #include "editor/war_editor_serialization.c"
+#include "editor/war_editor_playtest.c"
 #include "editor/war_editor.c"
 #include "editor/war_editor_stubs.c"
