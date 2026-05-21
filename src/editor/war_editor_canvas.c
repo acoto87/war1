@@ -405,8 +405,45 @@ void wecanvas_renderSelection(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
-// 4.3 — Render the map to ctx->canvasTarget
+// 13.9 — Lime-green X + tile border at the map start location.
 // ---------------------------------------------------------------------------
+void wecanvas_renderStartLocation(WarEditorContext* ctx)
+{
+    if (!ctx->showStartLocation) return;
+
+    WarEditorMap* m = ctx->map;
+    if (!m) return;
+
+    f32 zoom = ctx->cameraZoom;
+    f32 camX = ctx->cameraOffset.x;
+    f32 camY = ctx->cameraOffset.y;
+    f32 cw   = (f32)ctx->canvasPanelW;
+    f32 ch   = (f32)ctx->canvasPanelH;
+
+    f32 x = ((f32)(m->startX * MEGA_TILE_WIDTH)  - camX) * zoom;
+    f32 y = ((f32)(m->startY * MEGA_TILE_HEIGHT) - camY) * zoom;
+    f32 w = (f32)MEGA_TILE_WIDTH  * zoom;
+    f32 h = (f32)MEGA_TILE_HEIGHT * zoom;
+
+    // Frustum cull — skip if tile is fully off-screen
+    if (x + w < 0.0f || x >= cw || y + h < 0.0f || y >= ch)
+        return;
+
+    SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(ctx->renderer, 0, 230, 0, 220);  // lime-green
+
+    // Tile border rect
+    SDL_FRect r = { x, y, w, h };
+    SDL_RenderRect(ctx->renderer, &r);
+
+    // Diagonal X mark
+    SDL_RenderLine(ctx->renderer, x,     y,     x + w, y + h);
+    SDL_RenderLine(ctx->renderer, x + w, y,     x,     y + h);
+
+    SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_NONE);
+}
+
+
 void wecanvas_render(WarEditorContext* ctx)
 {
     if (!ctx->canvasTarget)
@@ -428,6 +465,7 @@ void wecanvas_render(WarEditorContext* ctx)
 
     wecanvas_renderEntityGhost(ctx);
     wecanvas_renderSelection(ctx);
+    wecanvas_renderStartLocation(ctx);
 
     // Reset to default render target (the window framebuffer)
     SDL_SetRenderTarget(ctx->renderer, NULL);

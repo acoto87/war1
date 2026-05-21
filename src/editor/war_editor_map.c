@@ -1,4 +1,5 @@
 #include "war_editor_map.h"
+#include "war_editor_history.h"
 
 // -----------------------------------------------------------------------
 // Tileset resource indices per WarMapTilesetType (0=forest,1=swamp,2=dungeon)
@@ -699,6 +700,9 @@ void wemap_newMap(WarEditorContext* ctx)
     ctx->cameraZoom         = 1.0f;
 
     WarEntityIdListClear(&ctx->selectedEntities);
+
+    if (ctx->history)
+        wehist_clear(ctx->history);
 
     SDL_strlcpy(ctx->statusText, "New map created.", sizeof(ctx->statusText));
     logInfo("wemap_newMap: new blank map created");

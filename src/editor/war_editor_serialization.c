@@ -1,4 +1,5 @@
 #include "war_editor_serialization.h"
+#include "war_editor_history.h"
 #include "war_editor_map.h"
 
 // -----------------------------------------------------------------------
@@ -262,6 +263,10 @@ bool wesave_loadMap(const char* path, WarEditorContext* ctx)
 
     // --- Rebuild terrain sprite from the loaded tilesetType ---
     bool ok = wemap_buildTerrainSprite(ctx);
+
+    // Clear history so the loaded map starts with a clean undo stack.
+    if (ctx->history)
+        wehist_clear(ctx->history);
 
     logInfo("wesave_loadMap: loaded '%s' (tilesetType=%d, entities=%u)",
             path, (s32)m->tilesetType, m->startEntitiesCount);

@@ -91,6 +91,7 @@ typedef struct _WarEditorContext
     bool            showGrid;
     bool            showPassability;
     bool            showMinimap;
+    bool            showStartLocation;
 
     // Recent files (persisted to war1_editor.cfg)
     char            recentFiles[5][512];

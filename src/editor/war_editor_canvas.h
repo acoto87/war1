@@ -63,3 +63,8 @@ void wecanvas_renderEntityGhost(WarEditorContext* ctx);
 // Applies move-drag offset from wetools_getMoveDelta when a move is in progress.
 // Must be called while ctx->canvasTarget is the active render target.
 void wecanvas_renderSelection(WarEditorContext* ctx);
+
+// 13.9 — Lime-green X + tile border at the map start location (startX, startY).
+// Only rendered when ctx->showStartLocation is true; skipped when off-screen.
+// Must be called while ctx->canvasTarget is the active render target.
+void wecanvas_renderStartLocation(WarEditorContext* ctx);

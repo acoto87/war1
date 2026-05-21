@@ -1,6 +1,7 @@
 #include "war_editor_ui.h"
 #include "war_editor.h"
 #include "war_editor_canvas.h"
+#include "war_editor_history.h"
 #include "war_editor_inspector.h"
 #include "war_editor_map.h"
 #include "war_editor_playtest.h"
@@ -993,6 +994,12 @@ void weui_beginFrame(WarEditorContext* ctx)
                 weui_requestSave(ctx);
             else if (io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_S, false))
                 weui_requestSaveAs(ctx);
+            else if (!io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_Z, false))
+                wehist_undo(ctx->history, ctx->map);
+            else if (!io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_Y, false))
+                wehist_redo(ctx->history, ctx->map);
+            else if (io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_Z, false))
+                wehist_redo(ctx->history, ctx->map);
         }
         if (igIsKeyPressed_Bool(ImGuiKey_F5, false))
             weplay_startPlaytest(ctx);
@@ -1049,21 +1056,28 @@ void weui_beginFrame(WarEditorContext* ctx)
 
         if (igBeginMenu("Edit", true))
         {
-            igMenuItem_Bool("Undo",            "Ctrl+Z",       false, true);
-            igMenuItem_Bool("Redo",            "Ctrl+Y",       false, true);
+            bool canUndo = ctx->history && ctx->history->cursor > 0;
+            bool canRedo = ctx->history && ctx->history->cursor < ctx->history->count;
+
+            if (igMenuItem_Bool("Undo", "Ctrl+Z", false, canUndo))
+                wehist_undo(ctx->history, ctx->map);
+            if (igMenuItem_Bool("Redo", "Ctrl+Y", false, canRedo))
+                wehist_redo(ctx->history, ctx->map);
             igSeparator();
-            igMenuItem_Bool("Copy",            "Ctrl+C",       false, true);
-            igMenuItem_Bool("Paste",           "Ctrl+V",       false, true);
+            igMenuItem_Bool("Copy",  "Ctrl+C", false, true);
+            igMenuItem_Bool("Paste", "Ctrl+V", false, true);
             igEndMenu();
         }
 
         if (igBeginMenu("View", true))
         {
-            if (igMenuItem_Bool("Show Grid",        "G", ctx->showGrid,        true))
+            if (igMenuItem_Bool("Show Grid",           "G", ctx->showGrid,          true))
                 ctx->showGrid = !ctx->showGrid;
-            if (igMenuItem_Bool("Show Passability", "P", ctx->showPassability, true))
+            if (igMenuItem_Bool("Show Passability",    "P", ctx->showPassability,   true))
                 ctx->showPassability = !ctx->showPassability;
-            if (igMenuItem_Bool("Show Minimap",     NULL, ctx->showMinimap,    true))
+            if (igMenuItem_Bool("Show Start Location", "L", ctx->showStartLocation, true))
+                ctx->showStartLocation = !ctx->showStartLocation;
+            if (igMenuItem_Bool("Show Minimap",        NULL, ctx->showMinimap,      true))
                 ctx->showMinimap = !ctx->showMinimap;
             igEndMenu();
         }

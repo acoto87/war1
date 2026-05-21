@@ -1,5 +1,6 @@
 #include "war_editor_tools.h"
 #include "war_editor_autotile.h"
+#include "war_editor_history.h"
 
 // ---------------------------------------------------------------------------
 // File-local fill-drag state
@@ -55,12 +56,27 @@ static void wetools_recomputeNeighbors(WarEditorContext* ctx,
     }
 }
 
+// Sort an index array ascending using insertion sort (arrays are small).
+static void wetools_sortIndicesAsc(s32* arr, s32 count)
+{
+    for (s32 i = 1; i < count; i++)
+    {
+        s32 key = arr[i];
+        s32 j   = i - 1;
+        while (j >= 0 && arr[j] > key)
+        {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+}
+
 // Write selectedTileIndex to the tile at (tx, ty).
 // For autotile groups: marks presence then recomputes the tile and its
 // neighbors so that joining edges update immediately.
 // For plain tiles: writes visual + passability directly.
-//
-// TODO(Phase 10): push WE_OP_PAINT_TILE to ctx->history.
+// Pushes WE_OP_PAINT_TILE to ctx->history when the tile state changed.
 static void wetools_paintTile(WarEditorContext* ctx, s32 tx, s32 ty)
 {
     WarEditorMap* m = ctx->map;
@@ -69,6 +85,10 @@ static void wetools_paintTile(WarEditorContext* ctx, s32 tx, s32 ty)
     s32             idx      = ty * MAP_TILES_WIDTH + tx;
     WeAutotileGroup newGroup = weautotile_detectGroup(ctx);
     WeAutotileGroup oldGroup = weautotile_groupAtTile(m, tx, ty);
+
+    // Phase 14: snapshot neighborhood before paint.
+    u16 oldVis[9], oldPass[9];
+    wehist_captureNeighborhood(m, tx, ty, oldVis, oldPass);
 
     if (newGroup != WE_AUTOTILE_NONE)
     {
@@ -98,6 +118,34 @@ static void wetools_paintTile(WarEditorContext* ctx, s32 tx, s32 ty)
     }
 
     ctx->unsavedChanges = true;
+
+    // Phase 14: snapshot neighborhood after paint; push op only if anything changed.
+    u16 newVis[9], newPass[9];
+    wehist_captureNeighborhood(m, tx, ty, newVis, newPass);
+
+    bool changed = false;
+    for (s32 k = 0; k < 9; k++)
+    {
+        if (oldVis[k] != newVis[k] || oldPass[k] != newPass[k])
+        {
+            changed = true;
+            break;
+        }
+    }
+
+    if (changed && ctx->history)
+    {
+        WarEditorOp op;
+        memset(&op, 0, sizeof(op));
+        op.type         = WE_OP_PAINT_TILE;
+        op.paintTile.cx = tx;
+        op.paintTile.cy = ty;
+        memcpy(op.paintTile.oldVisual,   oldVis,  sizeof(oldVis));
+        memcpy(op.paintTile.oldPassable, oldPass, sizeof(oldPass));
+        memcpy(op.paintTile.newVisual,   newVis,  sizeof(newVis));
+        memcpy(op.paintTile.newPassable, newPass, sizeof(newPass));
+        wehist_push(ctx->history, op);
+    }
 }
 
 // Fill the rectangular region [x0,x1] × [y0,y1] with selectedTileIndex.
@@ -107,8 +155,7 @@ static void wetools_paintTile(WarEditorContext* ctx, s32 tx, s32 ty)
 //             border, so edges that join into pre-existing autotile tiles
 //             update their bitmask correctly.
 // For plain tiles writes visual + passability directly.
-//
-// TODO(Phase 10): push WE_OP_FILL_REGION to ctx->history.
+// Pushes WE_OP_FILL_REGION to ctx->history.
 static void wetools_fillRegion(WarEditorContext* ctx,
                                s32 x0, s32 y0, s32 x1, s32 y1)
 {
@@ -117,6 +164,32 @@ static void wetools_fillRegion(WarEditorContext* ctx,
 
     if (x0 > x1) { s32 tmp = x0; x0 = x1; x1 = tmp; }
     if (y0 > y1) { s32 tmp = y0; y0 = y1; y1 = tmp; }
+
+    // Bounding box for history snapshot: fill region + 1-tile border, clamped.
+    s32 bx0  = (x0 > 0)                    ? x0 - 1 : x0;
+    s32 by0  = (y0 > 0)                    ? y0 - 1 : y0;
+    s32 bx1  = (x1 < MAP_TILES_WIDTH  - 1) ? x1 + 1 : x1;
+    s32 by1  = (y1 < MAP_TILES_HEIGHT - 1) ? y1 + 1 : y1;
+    s32 bw   = bx1 - bx0 + 1;
+    s32 bh   = by1 - by0 + 1;
+    s32 bCnt = bw * bh;
+
+    u16* oldVis  = (u16*)wm_alloc((u32)bCnt * sizeof(u16));
+    u16* oldPass = (u16*)wm_alloc((u32)bCnt * sizeof(u16));
+    u16* newVis  = (u16*)wm_alloc((u32)bCnt * sizeof(u16));
+    u16* newPass = (u16*)wm_alloc((u32)bCnt * sizeof(u16));
+
+    // Capture old state.
+    for (s32 y = by0; y <= by1; y++)
+    {
+        for (s32 x = bx0; x <= bx1; x++)
+        {
+            s32 k = (y - by0) * bw + (x - bx0);
+            s32 i = y * MAP_TILES_WIDTH + x;
+            oldVis[k]  = m->visualData[i];
+            oldPass[k] = m->passableData[i];
+        }
+    }
 
     WeAutotileGroup group = weautotile_detectGroup(ctx);
 
@@ -129,13 +202,7 @@ static void wetools_fillRegion(WarEditorContext* ctx,
                 weautotile_markPresence(m, fx, fy, group);
         }
 
-        // Pass 2: recompute visual for the region plus a 1-tile border so
-        // edge tiles pick up the correct bitmask from their new neighbors.
-        s32 bx0 = (x0 > 0)                   ? x0 - 1 : x0;
-        s32 by0 = (y0 > 0)                   ? y0 - 1 : y0;
-        s32 bx1 = (x1 < MAP_TILES_WIDTH  - 1) ? x1 + 1 : x1;
-        s32 by1 = (y1 < MAP_TILES_HEIGHT - 1) ? y1 + 1 : y1;
-
+        // Pass 2: recompute visual for the bbox (includes 1-tile border).
         for (s32 fy = by0; fy <= by1; fy++)
         {
             for (s32 fx = bx0; fx <= bx1; fx++)
@@ -148,14 +215,52 @@ static void wetools_fillRegion(WarEditorContext* ctx,
         {
             for (s32 fx = x0; fx <= x1; fx++)
             {
-                s32 idx             = fy * MAP_TILES_WIDTH + fx;
-                m->visualData[idx]  = ctx->selectedTileIndex;
-                m->passableData[idx] = 0u;
+                s32 i             = fy * MAP_TILES_WIDTH + fx;
+                m->visualData[i]  = ctx->selectedTileIndex;
+                m->passableData[i] = 0u;
             }
         }
     }
 
     ctx->unsavedChanges = true;
+
+    // Capture new state.
+    for (s32 y = by0; y <= by1; y++)
+    {
+        for (s32 x = bx0; x <= bx1; x++)
+        {
+            s32 k = (y - by0) * bw + (x - bx0);
+            s32 i = y * MAP_TILES_WIDTH + x;
+            newVis[k]  = m->visualData[i];
+            newPass[k] = m->passableData[i];
+        }
+    }
+
+    if (ctx->history)
+    {
+        WarEditorOp op;
+        memset(&op, 0, sizeof(op));
+        op.type                   = WE_OP_FILL_REGION;
+        op.fillRegion.bx0         = bx0;
+        op.fillRegion.by0         = by0;
+        op.fillRegion.bx1         = bx1;
+        op.fillRegion.by1         = by1;
+        op.fillRegion.bw          = bw;
+        op.fillRegion.bh          = bh;
+        op.fillRegion.oldVisual   = oldVis;
+        op.fillRegion.oldPassable = oldPass;
+        op.fillRegion.newVisual   = newVis;
+        op.fillRegion.newPassable = newPass;
+        wehist_push(ctx->history, op);
+        // Ownership transferred — do not free here.
+    }
+    else
+    {
+        wm_free(oldVis);
+        wm_free(oldPass);
+        wm_free(newVis);
+        wm_free(newPass);
+    }
 }
 
 // Complete and commit the current fill drag.
@@ -165,6 +270,61 @@ static void wetools_commitFill(WarEditorContext* ctx)
                        s_fillStartTx, s_fillStartTy,
                        s_fillCurTx,   s_fillCurTy);
     s_fillDragging = false;
+}
+
+// Erase the tile at (tx, ty): removes autotile presence or clears plain tile.
+// Pushes WE_OP_PAINT_TILE to ctx->history when the tile state changed.
+static void wetools_eraseTile(WarEditorContext* ctx, s32 tx, s32 ty)
+{
+    WarEditorMap* m = ctx->map;
+    if (!m) return;
+
+    // Phase 14: snapshot neighborhood before erase.
+    u16 oldVis[9], oldPass[9];
+    wehist_captureNeighborhood(m, tx, ty, oldVis, oldPass);
+
+    WeAutotileGroup group = weautotile_groupAtTile(m, tx, ty);
+    if (group != WE_AUTOTILE_NONE)
+    {
+        weautotile_clearPresence(m, tx, ty);
+        wetools_recomputeNeighbors(ctx, tx, ty, group);
+    }
+    else
+    {
+        s32 idx             = ty * MAP_TILES_WIDTH + tx;
+        m->visualData[idx]  = 0;
+        m->passableData[idx] = 0;
+    }
+
+    ctx->unsavedChanges = true;
+
+    // Phase 14: snapshot after erase; push op only if anything changed.
+    u16 newVis[9], newPass[9];
+    wehist_captureNeighborhood(m, tx, ty, newVis, newPass);
+
+    bool changed = false;
+    for (s32 k = 0; k < 9; k++)
+    {
+        if (oldVis[k] != newVis[k] || oldPass[k] != newPass[k])
+        {
+            changed = true;
+            break;
+        }
+    }
+
+    if (changed && ctx->history)
+    {
+        WarEditorOp op;
+        memset(&op, 0, sizeof(op));
+        op.type         = WE_OP_PAINT_TILE;
+        op.paintTile.cx = tx;
+        op.paintTile.cy = ty;
+        memcpy(op.paintTile.oldVisual,   oldVis,  sizeof(oldVis));
+        memcpy(op.paintTile.oldPassable, oldPass, sizeof(oldPass));
+        memcpy(op.paintTile.newVisual,   newVis,  sizeof(newVis));
+        memcpy(op.paintTile.newPassable, newPass, sizeof(newPass));
+        wehist_push(ctx->history, op);
+    }
 }
 
 // Return the entity ID at tile (ptx, pty), or 0 if none.
@@ -264,6 +424,56 @@ static void wetools_commitMove(WarEditorContext* ctx)
         s_moveDtx     = 0;
         s_moveDty     = 0;
         return;
+    }
+
+    // Phase 14: collect sorted entity indices before moving, push history op.
+    s32 regularCount  = 0;
+    s32 goldmineCount = 0;
+    for (s32 i = 0; i < ctx->selectedEntities.count; i++)
+    {
+        WarEntityId id = ctx->selectedEntities.items[i];
+        if (id & 0x8000u) goldmineCount++;
+        else              regularCount++;
+    }
+
+    s32* regularIndices  = NULL;
+    s32* goldmineIndices = NULL;
+    if (regularCount  > 0)
+        regularIndices  = (s32*)wm_alloc((u32)regularCount  * sizeof(s32));
+    if (goldmineCount > 0)
+        goldmineIndices = (s32*)wm_alloc((u32)goldmineCount * sizeof(s32));
+
+    s32 rk = 0, gk = 0;
+    for (s32 i = 0; i < ctx->selectedEntities.count; i++)
+    {
+        WarEntityId id = ctx->selectedEntities.items[i];
+        if (id & 0x8000u)
+            goldmineIndices[gk++] = (s32)(id & 0x7FFFu);
+        else
+            regularIndices[rk++]  = (s32)(id - 1u);
+    }
+
+    if (regularIndices)  wetools_sortIndicesAsc(regularIndices,  regularCount);
+    if (goldmineIndices) wetools_sortIndicesAsc(goldmineIndices, goldmineCount);
+
+    if (ctx->history)
+    {
+        WarEditorOp op;
+        memset(&op, 0, sizeof(op));
+        op.type                      = WE_OP_MOVE_BATCH;
+        op.moveBatch.regularIndices  = regularIndices;
+        op.moveBatch.regularCount    = regularCount;
+        op.moveBatch.goldmineIndices = goldmineIndices;
+        op.moveBatch.goldmineCount   = goldmineCount;
+        op.moveBatch.dtx             = s_moveDtx;
+        op.moveBatch.dty             = s_moveDty;
+        wehist_push(ctx->history, op);
+        // Ownership transferred — do not free here.
+    }
+    else
+    {
+        if (regularIndices)  wm_free(regularIndices);
+        if (goldmineIndices) wm_free(goldmineIndices);
     }
 
     for (s32 i = 0; i < ctx->selectedEntities.count; i++)
@@ -387,6 +597,62 @@ void wetools_deleteSelected(WarEditorContext* ctx)
     WarEditorMap* m = ctx->map;
     if (!m || ctx->selectedEntities.count == 0) return;
 
+    // Phase 14: collect sorted ascending indices + entity snapshots for history.
+    s32 regularCount  = 0;
+    s32 goldmineCount = 0;
+    for (s32 i = 0; i < ctx->selectedEntities.count; i++)
+    {
+        WarEntityId id = ctx->selectedEntities.items[i];
+        if (id & 0x8000u) goldmineCount++;
+        else              regularCount++;
+    }
+
+    s32*          regularIndices   = (regularCount  > 0) ? (s32*)wm_alloc((u32)regularCount  * sizeof(s32))          : NULL;
+    s32*          goldmineIndices  = (goldmineCount > 0) ? (s32*)wm_alloc((u32)goldmineCount * sizeof(s32))          : NULL;
+    WarLevelUnit* regularEntities  = (regularCount  > 0) ? (WarLevelUnit*)wm_alloc((u32)regularCount  * sizeof(WarLevelUnit)) : NULL;
+    WarLevelUnit* goldmineEntities = (goldmineCount > 0) ? (WarLevelUnit*)wm_alloc((u32)goldmineCount * sizeof(WarLevelUnit)) : NULL;
+
+    s32 rk = 0, gk = 0;
+    for (s32 i = 0; i < ctx->selectedEntities.count; i++)
+    {
+        WarEntityId id = ctx->selectedEntities.items[i];
+        if (id & 0x8000u)
+            goldmineIndices[gk++] = (s32)(id & 0x7FFFu);
+        else
+            regularIndices[rk++]  = (s32)(id - 1u);
+    }
+
+    if (regularIndices)  wetools_sortIndicesAsc(regularIndices,  regularCount);
+    if (goldmineIndices) wetools_sortIndicesAsc(goldmineIndices, goldmineCount);
+
+    // Save entity snapshots in sorted order (before deletion).
+    for (s32 i = 0; i < regularCount;  i++)
+        regularEntities[i]  = m->startEntities[regularIndices[i]];
+    for (s32 i = 0; i < goldmineCount; i++)
+        goldmineEntities[i] = m->startGoldmines[goldmineIndices[i]];
+
+    if (ctx->history)
+    {
+        WarEditorOp op;
+        memset(&op, 0, sizeof(op));
+        op.type                          = WE_OP_DELETE_BATCH;
+        op.deleteBatch.regularIndices    = regularIndices;
+        op.deleteBatch.regularEntities   = regularEntities;
+        op.deleteBatch.regularCount      = regularCount;
+        op.deleteBatch.goldmineIndices   = goldmineIndices;
+        op.deleteBatch.goldmineEntities  = goldmineEntities;
+        op.deleteBatch.goldmineCount     = goldmineCount;
+        wehist_push(ctx->history, op);
+        // Ownership transferred — do not free here.
+    }
+    else
+    {
+        if (regularIndices)   wm_free(regularIndices);
+        if (regularEntities)  wm_free(regularEntities);
+        if (goldmineIndices)  wm_free(goldmineIndices);
+        if (goldmineEntities) wm_free(goldmineEntities);
+    }
+
     // Mark which regular entities and goldmines to delete.
     bool deleteRegular[MAX_ENTITIES_COUNT];
     bool deleteGoldmine[MAX_CUSTOM_MAP_GOLDMINES_COUNT];
@@ -462,6 +728,8 @@ void wetools_update(WarEditorContext* ctx)
             ctx->showGrid = !ctx->showGrid;
         if (igIsKeyPressed_Bool(ImGuiKey_P, false))
             ctx->showPassability = !ctx->showPassability;
+        if (igIsKeyPressed_Bool(ImGuiKey_L, false))
+            ctx->showStartLocation = !ctx->showStartLocation;
 
         // Delete selected entities
         if (igIsKeyPressed_Bool(ImGuiKey_Delete, false))
@@ -499,21 +767,7 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
 
         case WE_TOOL_ERASE:
             if (io->MouseDown[0])
-            {
-                WeAutotileGroup group = weautotile_groupAtTile(m, tx, ty);
-                if (group != WE_AUTOTILE_NONE)
-                {
-                    weautotile_clearPresence(m, tx, ty);
-                    wetools_recomputeNeighbors(ctx, tx, ty, group);
-                }
-                else
-                {
-                    s32 idx             = ty * MAP_TILES_WIDTH + tx;
-                    m->visualData[idx]  = 0;
-                    m->passableData[idx] = 0;
-                }
-                ctx->unsavedChanges = true;
-            }
+                wetools_eraseTile(ctx, tx, ty);
             break;
 
         case WE_TOOL_FILL:
@@ -562,6 +816,16 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
                             lu->amount       = 0;
                             m->startEntitiesCount++;
                             ctx->unsavedChanges = true;
+
+                            if (ctx->history)
+                            {
+                                WarEditorOp op;
+                                memset(&op, 0, sizeof(op));
+                                op.type                   = WE_OP_PLACE_ENTITY;
+                                op.placeEntity.entity     = *lu;
+                                op.placeEntity.isGoldmine = false;
+                                wehist_push(ctx->history, op);
+                            }
                         }
                     }
                     else
@@ -578,6 +842,16 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
                             lu->amount       = 2500;
                             m->startGoldminesCount++;
                             ctx->unsavedChanges = true;
+
+                            if (ctx->history)
+                            {
+                                WarEditorOp op;
+                                memset(&op, 0, sizeof(op));
+                                op.type                   = WE_OP_PLACE_ENTITY;
+                                op.placeEntity.entity     = *lu;
+                                op.placeEntity.isGoldmine = true;
+                                wehist_push(ctx->history, op);
+                            }
                         }
                     }
                 }
