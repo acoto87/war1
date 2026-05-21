@@ -416,6 +416,11 @@ static void wemap_loadLevelInfoRes(WarEditorContext* ctx, s32 index,
 // Public API
 // -----------------------------------------------------------------------
 
+// Base tile index per tileset type (forest=0, swamp=0, dungeon=0).
+// All three happen to be 0 (the plain ground tile), but the explicit fill
+// documents that tile 0 is the intended ground tile for each tileset.
+static const u16 s_baseTiles[3] = { 0u, 0u, 0u };
+
 bool wemap_createEmpty(WarEditorContext* ctx)
 {
     WarEditorMap* m = (WarEditorMap*)wm_alloc(sizeof(WarEditorMap));
@@ -436,7 +441,11 @@ bool wemap_createEmpty(WarEditorContext* ctx)
     m->tilesIndex   = (u16)s_tilesetInfos[MAP_TILESET_FOREST].tilesIndex;
     m->paletteIndex = (u16)s_tilesetInfos[MAP_TILESET_FOREST].paletteIndex;
 
-    // visualData and passableData remain zero (tile index 0 = blank tile).
+    // Explicitly fill visualData with the base tile for this tileset.
+    // passableData remains zero (0 = passable).
+    u16 baseTile = s_baseTiles[m->tilesetType < 3 ? m->tilesetType : 0];
+    for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+        m->visualData[i] = baseTile;
 
     ctx->map = m;
     return true;
@@ -663,4 +672,34 @@ bool wemap_importFromLevelInfo(WarEditorContext* ctx, s32 levelInfoIndex)
     logInfo("wemap_importFromLevelInfo: imported level %d (%s), tilesetType=%d, entities=%d",
             levelInfoIndex, entry->name, (s32)tilesetType, m->startEntitiesCount);
     return ok;
+}
+
+void wemap_newMap(WarEditorContext* ctx)
+{
+    // Free the existing map (destroys terrain texture and frees memory).
+    wemap_free(ctx);
+
+    // Allocate a fresh blank map; log but continue on failure — the map
+    // pointer will be NULL and downstream code handles that gracefully.
+    if (!wemap_createEmpty(ctx))
+    {
+        logError("wemap_newMap: wemap_createEmpty failed");
+    }
+
+    // Rebuild terrain sprite (requires warFile; logs a warning internally
+    // and returns false if it is not available, which is acceptable here).
+    wemap_buildTerrainSprite(ctx);
+
+    // Reset editor state to "unsaved new map" defaults.
+    ctx->currentFilePath[0] = '\0';
+    ctx->mapName[0]         = '\0';
+    ctx->unsavedChanges     = false;
+    ctx->cameraOffset.x     = 0.0f;
+    ctx->cameraOffset.y     = 0.0f;
+    ctx->cameraZoom         = 1.0f;
+
+    WarEntityIdListClear(&ctx->selectedEntities);
+
+    SDL_strlcpy(ctx->statusText, "New map created.", sizeof(ctx->statusText));
+    logInfo("wemap_newMap: new blank map created");
 }

@@ -584,6 +584,70 @@ WarMap* createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yourRac
     return map;
 }
 
+WarMap* wmap_createCustomMap(WarContext* context, WarResource* levelInfoRes,
+                             u16* visual, u16* passable)
+{
+    // Resource indices for the three tilesets (forest=0, swamp=1, dungeon=2).
+    static const s32 wmap_tilesetResourceIndices[] = { 189, 192, 195 };
+
+    // Create and fill the level-visual resource.
+    WarResource* visRes = wres_getOrCreateResource(context, WAR_CUSTOM_VISUAL_INDEX);
+    visRes->type = WAR_RESOURCE_TYPE_LEVEL_VISUAL;
+    memcpy(visRes->levelVisual.data, visual,
+           sizeof(u16) * MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+
+    // Create and fill the level-passable resource.
+    WarResource* passRes = wres_getOrCreateResource(context, WAR_CUSTOM_PASSABLE_INDEX);
+    passRes->type = WAR_RESOURCE_TYPE_LEVEL_PASSABLE;
+    memcpy(passRes->levelPassable.data, passable,
+           sizeof(u16) * MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+
+    // Wire the levelInfo to the new tile resources.
+    levelInfoRes->levelInfo.visualIndex   = WAR_CUSTOM_VISUAL_INDEX;
+    levelInfoRes->levelInfo.passableIndex = WAR_CUSTOM_PASSABLE_INDEX;
+
+    // Select the pre-loaded tileset by tilesetType (bounds-clamped).
+    s32 tidx = (s32)levelInfoRes->levelInfo.tilesetType;
+    if (tidx < 0 || tidx >= (s32)(sizeof(wmap_tilesetResourceIndices) / sizeof(wmap_tilesetResourceIndices[0])))
+    {
+        tidx = 0;
+    }
+    levelInfoRes->levelInfo.tilesetIndex = (u16)wmap_tilesetResourceIndices[tidx];
+
+    return wmap_createMap(context, WAR_CUSTOM_LEVEL_INFO_INDEX);
+}
+
+bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
+{
+    WarResource* levelInfoRes = wres_getOrCreateResource(context, WAR_CUSTOM_LEVEL_INFO_INDEX);
+    memset(levelInfoRes, 0, sizeof(WarResource));
+
+    u16 visual  [MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+    u16 passable[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+
+    if (!wfile_loadWarMapFile(mapPath, levelInfoRes, visual, passable))
+    {
+        logError("wmap_loadCustomMap: wfile_loadWarMapFile failed for '%.*s'", (s32)mapPath.length, mapPath.data);
+        return false;
+    }
+
+    WarMap* map = wmap_createCustomMap(context, levelInfoRes, visual, passable);
+    if (!map)
+    {
+        logError("wmap_loadCustomMap: wmap_createCustomMap failed for '%.*s'", (s32)mapPath.length, mapPath.data);
+        return false;
+    }
+
+    wg_setNextMap(context, map, 0.0f);
+
+    logInfo("wmap_loadCustomMap: loaded '%.*s' (entities=%u, tilesetType=%d)",
+            (s32)mapPath.length, mapPath.data,
+            levelInfoRes->levelInfo.startEntitiesCount,
+            (s32)levelInfoRes->levelInfo.tilesetType);
+
+    return true;
+}
+
 void wmap_freeMap(WarContext* context, WarMap* map)
 {
     wspr_freeSprite(context, map->sprite);

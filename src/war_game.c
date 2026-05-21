@@ -233,8 +233,24 @@ bool wg_initGame(WarContext* context)
             return false;
         }
 
-        WarScene* scene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
-        wg_setNextScene(context, scene, 0.0f);
+        if (context->customMapPath[0] != '\0')
+        {
+            if (!wmap_loadCustomMap(context, wsv_fromCString(context->customMapPath)))
+            {
+                logError("Could not load custom map: %s", context->customMapPath);
+                return false;
+            }
+        }
+        else if (context->skipIntro)
+        {
+            WarScene* scene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
+            wg_setNextScene(context, scene, 0.0f);
+        }
+        else
+        {
+            WarScene* scene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
+            wg_setNextScene(context, scene, 0.0f);
+        }
     }
     else
     {

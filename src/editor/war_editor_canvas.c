@@ -92,7 +92,8 @@ static SDL_Texture* wecanvas_decodeSpriteTexture(WarEditorContext* ctx, s32 reso
 
 // Returns the cached SDL_Texture for resourceIndex, decoding it on first call.
 // Caches NULL results to avoid retrying a failed decode every frame.
-static SDL_Texture* wecanvas_getSpriteTexture(WarEditorContext* ctx, s32 resourceIndex)
+// Non-static: also called from war_editor_ui.c for palette thumbnails.
+SDL_Texture* wecanvas_getSpriteTexture(WarEditorContext* ctx, s32 resourceIndex)
 {
     // O(n) cache lookup — sprite count is small (≤ 50 unit types)
     for (s32 i = 0; i < s_spriteCacheCount; i++)
@@ -267,6 +268,143 @@ static void wecanvas_renderTerrain(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
+// 8.4 — Ghost preview of the selected unit type at the hover tile.
+// Renders with 50% alpha; red tint + fill when position is already occupied.
+// Must be called while ctx->canvasTarget is the active render target.
+// ---------------------------------------------------------------------------
+void wecanvas_renderEntityGhost(WarEditorContext* ctx)
+{
+    if (ctx->activeTool != WE_TOOL_PLACE_ENTITY) return;
+    if (!ctx->isHoveringCanvas) return;
+
+    WarEditorMap* m = ctx->map;
+    if (!m) return;
+
+    const WarUnitData* ud = wu_getUnitData(ctx->selectedUnitType);
+    if (!ud || ud->resourceIndex <= 0) return;
+
+    SDL_Texture* tex = wecanvas_getSpriteTexture(ctx, ud->resourceIndex);
+    if (!tex) return;
+
+    float texW, texH;
+    if (!SDL_GetTextureSize(tex, &texW, &texH)) return;
+
+    s32 tx = ctx->hoverTx;
+    s32 ty = ctx->hoverTy;
+
+    f32 unitW = (f32)(ud->sizex * MEGA_TILE_WIDTH);
+    f32 unitH = (f32)(ud->sizey * MEGA_TILE_HEIGHT);
+    f32 mapX  = (f32)(tx * MEGA_TILE_WIDTH)  - texW * 0.5f + unitW * 0.5f;
+    f32 mapY  = (f32)(ty * MEGA_TILE_HEIGHT) - texH * 0.5f + unitH * 0.5f;
+
+    f32 zoom = ctx->cameraZoom;
+    f32 camX = ctx->cameraOffset.x;
+    f32 camY = ctx->cameraOffset.y;
+
+    f32 dstX = (mapX - camX) * zoom;
+    f32 dstY = (mapY - camY) * zoom;
+    f32 dstW = texW * zoom;
+    f32 dstH = texH * zoom;
+
+    bool occupied = !wetools_canPlace(ctx, tx, ty, ud->sizex, ud->sizey);
+
+    // 50% alpha preview; red tint when blocked
+    SDL_SetTextureAlphaMod(tex, 128);
+    if (occupied)
+        SDL_SetTextureColorMod(tex, 255, 60, 60);
+
+    SDL_FRect dst = { dstX, dstY, dstW, dstH };
+    SDL_RenderTexture(ctx->renderer, tex, NULL, &dst);
+
+    // Restore texture state
+    SDL_SetTextureAlphaMod(tex, 255);
+    if (occupied)
+        SDL_SetTextureColorMod(tex, 255, 255, 255);
+
+    // Semi-transparent red fill over the footprint when blocked
+    if (occupied)
+    {
+        SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(ctx->renderer, 255, 0, 0, 80);
+        f32 fx = ((f32)(tx * MEGA_TILE_WIDTH)  - camX) * zoom;
+        f32 fy = ((f32)(ty * MEGA_TILE_HEIGHT) - camY) * zoom;
+        f32 fw = (f32)(ud->sizex * MEGA_TILE_WIDTH)  * zoom;
+        f32 fh = (f32)(ud->sizey * MEGA_TILE_HEIGHT) * zoom;
+        SDL_FRect fill = { fx, fy, fw, fh };
+        SDL_RenderFillRect(ctx->renderer, &fill);
+        SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_NONE);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 9.3 — Yellow selection border for every entity in ctx->selectedEntities.
+// Applies move-drag offset while a move drag is in progress.
+// Must be called while ctx->canvasTarget is the active render target.
+// ---------------------------------------------------------------------------
+void wecanvas_renderSelection(WarEditorContext* ctx)
+{
+    WarEditorMap* m = ctx->map;
+    if (!m) return;
+    if (ctx->selectedEntities.count == 0) return;
+
+    f32 zoom = ctx->cameraZoom;
+    f32 camX = ctx->cameraOffset.x;
+    f32 camY = ctx->cameraOffset.y;
+
+    s32 dtx = 0, dty = 0;
+    wetools_getMoveDelta(ctx, &dtx, &dty);
+
+    SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_BLEND);
+    // Gold: (255, 215, 0, 220)
+    SDL_SetRenderDrawColor(ctx->renderer, 255, 215, 0, 220);
+
+    for (s32 i = 0; i < ctx->selectedEntities.count; i++)
+    {
+        WarEntityId id = ctx->selectedEntities.items[i];
+
+        s32 tx, ty, sizeX, sizeY;
+
+        if (id & 0x8000u)
+        {
+            u32 idx = (u32)(id & 0x7FFFu);
+            if (idx >= m->startGoldminesCount) continue;
+            WarLevelUnit*      lu = &m->startGoldmines[idx];
+            const WarUnitData* ud = wu_getUnitData(lu->type);
+            if (!ud) continue;
+            tx    = (s32)lu->x;
+            ty    = (s32)lu->y;
+            sizeX = ud->sizex;
+            sizeY = ud->sizey;
+        }
+        else
+        {
+            u32 idx = (u32)(id - 1u);
+            if (idx >= m->startEntitiesCount) continue;
+            WarLevelUnit*      lu = &m->startEntities[idx];
+            const WarUnitData* ud = wu_getUnitData(lu->type);
+            if (!ud) continue;
+            tx    = (s32)lu->x;
+            ty    = (s32)lu->y;
+            sizeX = ud->sizex;
+            sizeY = ud->sizey;
+        }
+
+        tx += dtx;
+        ty += dty;
+
+        f32 rx = ((f32)(tx * MEGA_TILE_WIDTH)  - camX) * zoom;
+        f32 ry = ((f32)(ty * MEGA_TILE_HEIGHT) - camY) * zoom;
+        f32 rw = (f32)(sizeX * MEGA_TILE_WIDTH)  * zoom;
+        f32 rh = (f32)(sizeY * MEGA_TILE_HEIGHT) * zoom;
+
+        SDL_FRect r = { rx, ry, rw, rh };
+        SDL_RenderRect(ctx->renderer, &r);
+    }
+
+    SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_NONE);
+}
+
+// ---------------------------------------------------------------------------
 // 4.3 — Render the map to ctx->canvasTarget
 // ---------------------------------------------------------------------------
 void wecanvas_render(WarEditorContext* ctx)
@@ -276,7 +414,7 @@ void wecanvas_render(WarEditorContext* ctx)
 
     // Redirect SDL rendering to the off-screen target
     SDL_SetRenderTarget(ctx->renderer, ctx->canvasTarget);
-    SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(ctx->renderer, 40, 40, 40, 255);
     SDL_RenderClear(ctx->renderer);
 
     wecanvas_renderTerrain(ctx);
@@ -287,6 +425,9 @@ void wecanvas_render(WarEditorContext* ctx)
 
     if (ctx->showGrid)
         wecanvas_renderGrid(ctx);
+
+    wecanvas_renderEntityGhost(ctx);
+    wecanvas_renderSelection(ctx);
 
     // Reset to default render target (the window framebuffer)
     SDL_SetRenderTarget(ctx->renderer, NULL);
@@ -343,23 +484,35 @@ void wecanvas_renderGrid(WarEditorContext* ctx)
     f32 cw   = (f32)ctx->canvasPanelW;
     f32 ch   = (f32)ctx->canvasPanelH;
 
+    // Map extent in canvas-relative pixels.
+    f32 mapLeft   = (            -camX) * zoom;
+    f32 mapRight  = ((f32)(MAP_TILES_WIDTH  * MEGA_TILE_WIDTH)  - camX) * zoom;
+    f32 mapTop    = (            -camY) * zoom;
+    f32 mapBottom = ((f32)(MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT) - camY) * zoom;
+
+    // Clamp endpoints to the intersection of canvas area and map extent.
+    f32 lineX0 = mapLeft   > 0.0f ? mapLeft   : 0.0f;
+    f32 lineX1 = mapRight  < cw   ? mapRight  : cw;
+    f32 lineY0 = mapTop    > 0.0f ? mapTop    : 0.0f;
+    f32 lineY1 = mapBottom < ch   ? mapBottom : ch;
+
     SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 255, 55);
 
-    // Vertical lines (tile column boundaries)
+    // Vertical lines (tile column boundaries) — span only the map's Y extent.
     for (s32 tx = 0; tx <= MAP_TILES_WIDTH; tx++)
     {
         f32 x = ((f32)(tx * MEGA_TILE_WIDTH) - camX) * zoom;
         if (x < 0.0f || x >= cw) continue;
-        SDL_RenderLine(ctx->renderer, x, 0.0f, x, ch);
+        SDL_RenderLine(ctx->renderer, x, lineY0, x, lineY1);
     }
 
-    // Horizontal lines (tile row boundaries)
+    // Horizontal lines (tile row boundaries) — span only the map's X extent.
     for (s32 ty = 0; ty <= MAP_TILES_HEIGHT; ty++)
     {
         f32 y = ((f32)(ty * MEGA_TILE_HEIGHT) - camY) * zoom;
         if (y < 0.0f || y >= ch) continue;
-        SDL_RenderLine(ctx->renderer, 0.0f, y, cw, y);
+        SDL_RenderLine(ctx->renderer, lineX0, y, lineX1, y);
     }
 
     SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_NONE);
@@ -370,6 +523,9 @@ void wecanvas_renderGrid(WarEditorContext* ctx)
 // ---------------------------------------------------------------------------
 void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen)
 {
+    // Reset hover state each frame; set below if hovered this frame.
+    ctx->isHoveringCanvas = false;
+
     ImGuiWindowFlags flags =
         ImGuiWindowFlags_NoScrollbar |
         ImGuiWindowFlags_NoScrollWithMouse;
@@ -425,25 +581,24 @@ void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen
                 f32 zoom = ctx->cameraZoom;
                 ctx->cameraOffset.x -= io->MouseDelta.x / zoom;
                 ctx->cameraOffset.y -= io->MouseDelta.y / zoom;
-
-                // Clamp to map bounds
-                f32 mapW = (f32)(MAP_TILES_WIDTH  * MEGA_TILE_WIDTH);
-                f32 mapH = (f32)(MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
-                f32 maxX = mapW - (f32)w / zoom;
-                f32 maxY = mapH - (f32)h / zoom;
-                if (ctx->cameraOffset.x < 0.0f)   ctx->cameraOffset.x = 0.0f;
-                if (ctx->cameraOffset.y < 0.0f)   ctx->cameraOffset.y = 0.0f;
-                if (maxX > 0.0f && ctx->cameraOffset.x > maxX) ctx->cameraOffset.x = maxX;
-                if (maxY > 0.0f && ctx->cameraOffset.y > maxY) ctx->cameraOffset.y = maxY;
             }
 
-            // 4.7 — Zoom with mouse wheel
+            // 4.7 — Zoom with mouse wheel, anchored to pointer position
             if (io->MouseWheel != 0.0f)
             {
-                f32 factor = (io->MouseWheel > 0.0f) ? 1.1f : (1.0f / 1.1f);
-                ctx->cameraZoom *= factor;
-                if (ctx->cameraZoom < 0.5f) ctx->cameraZoom = 0.5f;
-                if (ctx->cameraZoom > 4.0f) ctx->cameraZoom = 4.0f;
+                f32 oldZoom = ctx->cameraZoom;
+                f32 factor  = (io->MouseWheel > 0.0f) ? 1.1f : (1.0f / 1.1f);
+                f32 newZoom = oldZoom * factor;
+                if (newZoom < 0.5f) newZoom = 0.5f;
+                if (newZoom > 4.0f) newZoom = 4.0f;
+
+                // Compute the map-space point under the mouse, then adjust
+                // cameraOffset so that point stays under the mouse after zoom.
+                f32 mx = io->MousePos.x - canvasOrigin.x;
+                f32 my = io->MousePos.y - canvasOrigin.y;
+                ctx->cameraOffset.x = mx / oldZoom + ctx->cameraOffset.x - mx / newZoom;
+                ctx->cameraOffset.y = my / oldZoom + ctx->cameraOffset.y - my / newZoom;
+                ctx->cameraZoom = newZoom;
             }
 
             // Compute tile under the cursor (used by status bar, tool input, and tooltip)
@@ -452,6 +607,11 @@ void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen
             vec2 tilePos   = wecanvas_mapToTile(mapPos);
             s32  tx        = (s32)tilePos.x;
             s32  ty        = (s32)tilePos.y;
+
+            // 8.3 — Update hover state so ghost/selection renderers can read it.
+            ctx->isHoveringCanvas = true;
+            ctx->hoverTx          = tx;
+            ctx->hoverTy          = ty;
 
             // 4.8 — Tile coordinate in status bar
             if (statusBuf && statusBufLen > 0)

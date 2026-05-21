@@ -78,3 +78,13 @@ bool wemap_buildTerrainSprite(WarEditorContext* ctx);
 // any previously created empty map), loads the visual and passable tile arrays,
 // and rebuilds the terrain sprite.  Returns false on error.
 bool wemap_importFromLevelInfo(WarEditorContext* ctx, s32 levelInfoIndex);
+
+// Reset the editor to a brand-new blank map.
+//
+// Frees the current map, allocates a fresh empty one with default settings,
+// rebuilds the terrain sprite, resets cameraOffset / cameraZoom, clears the
+// entity selection, clears currentFilePath / mapName, and clears unsavedChanges.
+//
+// The caller is responsible for confirming any unsaved-changes dialog BEFORE
+// calling this function.
+void wemap_newMap(WarEditorContext* ctx);

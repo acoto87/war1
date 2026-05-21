@@ -37,6 +37,8 @@ typedef struct {
     bool check_only;
     bool profile;           // enable Tracy profiler instrumentation
     bool build_before_run;  // set when build flags are passed alongside 'run'
+    int app_argc;           // extra args forwarded to the war1 executable (after --)
+    char **app_argv;
 } Build_Options;
 
 static const char *toolchain_name(Toolchain toolchain)
@@ -168,7 +170,7 @@ static Toolchain default_toolchain(void)
 
 static void usage(const char *program)
 {
-    printf("Usage: %s [build|run|editor] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile]\n", program);
+    printf("Usage: %s [build|run|editor] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile] [-- <app args>]\n", program);
     printf("\n");
     printf("Examples:\n");
     printf("  %s build --cc gcc --target linux64\n", program);
@@ -182,6 +184,7 @@ static void usage(const char *program)
     printf("  %s editor --cc gcc --target linux64\n", program);
     printf("  %s run editor --target win64\n", program);
     printf("  %s run editor --cc msvc --target win64 --debug\n", program);
+    printf("  %s run -- --map 5 --skip-intro\n", program);
 }
 
 static bool parse_toolchain(const char *value, Toolchain *toolchain)
@@ -318,6 +321,13 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
             options->profile = true;
             if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
+        }
+
+        if (strcmp(arg, "--") == 0) {
+            // Everything after -- is forwarded to the war1 executable
+            options->app_argc = argc;
+            options->app_argv = argv;
+            break;
         }
 
         if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
@@ -829,6 +839,9 @@ static bool run_project(const Build_Options *options)
 
     Nob_Cmd cmd = {0};
     nob_cmd_append(&cmd, binary);
+    for (int i = 0; i < options->app_argc; i++) {
+        nob_da_append(&cmd, options->app_argv[i]);
+    }
     return nob_cmd_run(&cmd);
 }
 
@@ -853,6 +866,9 @@ static bool run_editor_project(const Build_Options *options)
 
     Nob_Cmd cmd = {0};
     nob_cmd_append(&cmd, binary);
+    for (int i = 0; i < options->app_argc; i++) {
+        nob_da_append(&cmd, options->app_argv[i]);
+    }
     return nob_cmd_run(&cmd);
 }
 

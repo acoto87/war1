@@ -1,13 +1,409 @@
 #include "war_editor_ui.h"
 #include "war_editor.h"
 #include "war_editor_canvas.h"
+#include "war_editor_inspector.h"
 #include "war_editor_map.h"
+#include "war_editor_serialization.h"
 #include "war_editor_tools.h"
 
 // Module-level storage so weui_beginFrame can access the window without
 // requiring it as a parameter (matching the void signature in the spec).
 static SDL_Window*   s_window   = NULL;
 static SDL_Renderer* s_renderer = NULL;
+
+// -----------------------------------------------------------------------
+// File I/O dialog state (Phase 11)
+// -----------------------------------------------------------------------
+
+// Action waiting to happen after an "unsaved changes?" confirmation or
+// after a file-picker dialog resolves.
+typedef enum
+{
+    WE_PENDING_NONE  = 0,
+    WE_PENDING_NEW   = 1,   // create a blank map
+    WE_PENDING_OPEN  = 2,   // open a file-picker, then load the map
+    WE_PENDING_QUIT  = 3,   // quit the editor
+} WePendingAction;
+
+static WePendingAction s_pendingAction   = WE_PENDING_NONE;
+
+// Pending open-dialog result.  Set by weui_openFileCallback; consumed by
+// weui_processPendingPaths at the start of the next frame.
+static bool s_openPathReady              = false;
+static char s_pendingOpenPath[512];
+
+// Pending save-dialog result.  Set by weui_saveFileCallback; consumed by
+// weui_processPendingPaths at the start of the next frame.
+static bool s_savePathReady              = false;
+static char s_pendingSavePath[512];
+
+// Window title cache — only calls SDL_SetWindowTitle when the title changes.
+static char s_cachedWindowTitle[640];
+
+// -----------------------------------------------------------------------
+// Window title sync
+// -----------------------------------------------------------------------
+static void weui_syncWindowTitle(WarEditorContext* ctx)
+{
+    char title[640];
+    if (ctx->mapName[0])
+    {
+        if (ctx->unsavedChanges)
+            SDL_snprintf(title, sizeof(title), "war1_editor - %s *", ctx->mapName);
+        else
+            SDL_snprintf(title, sizeof(title), "war1_editor - %s", ctx->mapName);
+    }
+    else
+    {
+        if (ctx->unsavedChanges)
+            SDL_strlcpy(title, "war1_editor - untitled *", sizeof(title));
+        else
+            SDL_strlcpy(title, "war1_editor - untitled", sizeof(title));
+    }
+
+    if (strcmp(title, s_cachedWindowTitle) != 0)
+    {
+        SDL_strlcpy(s_cachedWindowTitle, title, sizeof(s_cachedWindowTitle));
+        SDL_SetWindowTitle(s_window, title);
+    }
+}
+
+// -----------------------------------------------------------------------
+// Map-name extraction from a file path
+// -----------------------------------------------------------------------
+static void weui_extractMapName(WarEditorContext* ctx)
+{
+    const char* path = ctx->currentFilePath;
+
+    // Walk forward to find the last path separator.
+    const char* base = path;
+    for (const char* p = path; *p; p++)
+    {
+        if (*p == '/' || *p == '\\')
+            base = p + 1;
+    }
+
+    // Copy base name up to the first '.', clamped to mapName's capacity.
+    s32 i = 0;
+    s32 limit = (s32)sizeof(ctx->mapName) - 1;
+    while (base[i] && base[i] != '.' && i < limit)
+    {
+        ctx->mapName[i] = base[i];
+        i++;
+    }
+    ctx->mapName[i] = '\0';
+}
+
+// -----------------------------------------------------------------------
+// SDL3 file-dialog callbacks
+// -----------------------------------------------------------------------
+static void weui_openFileCallback(void* userdata,
+                                   const char* const* filelist, int filter)
+{
+    (void)userdata;
+    (void)filter;
+
+    s_pendingOpenPath[0] = '\0';
+    if (filelist && filelist[0])
+        SDL_strlcpy(s_pendingOpenPath, filelist[0], sizeof(s_pendingOpenPath));
+
+    s_openPathReady = true;
+}
+
+static void weui_saveFileCallback(void* userdata,
+                                   const char* const* filelist, int filter)
+{
+    (void)userdata;
+    (void)filter;
+
+    s_pendingSavePath[0] = '\0';
+    if (filelist && filelist[0])
+        SDL_strlcpy(s_pendingSavePath, filelist[0], sizeof(s_pendingSavePath));
+
+    s_savePathReady = true;
+}
+
+// -----------------------------------------------------------------------
+// File-picker filter arrays (static — valid for the lifetime of the process)
+// -----------------------------------------------------------------------
+static const SDL_DialogFileFilter s_w1mFilters[] =
+{
+    { "War1-C Map (*.w1m)", "w1m" },
+    { "All Files",           "*"  },
+};
+
+// -----------------------------------------------------------------------
+// Forward declarations for action helpers
+// (defined below; referenced by the unsaved-changes modal)
+// -----------------------------------------------------------------------
+static void weui_requestNew(WarEditorContext* ctx);
+static void weui_requestOpen(WarEditorContext* ctx);
+static void weui_requestSave(WarEditorContext* ctx);
+static void weui_requestSaveAs(WarEditorContext* ctx);
+static void weui_requestQuit(WarEditorContext* ctx);
+static void weui_executeAction(WarEditorContext* ctx, WePendingAction action);
+
+// -----------------------------------------------------------------------
+// Pending path processing — called at the top of each frame
+// -----------------------------------------------------------------------
+static void weui_processPendingPaths(WarEditorContext* ctx)
+{
+    // --- Save-dialog result ---
+    if (s_savePathReady)
+    {
+        s_savePathReady = false;
+
+        bool savedOk = false;
+        if (s_pendingSavePath[0])
+        {
+            // Auto-append .w1m if the user didn't type it.
+            size_t len = SDL_strlen(s_pendingSavePath);
+            if (len < 4 || !wsv_equalsIgnoreCase(
+                    wsv_fromParts(s_pendingSavePath + len - 4, 4),
+                    WSV_LITERAL(".w1m")))
+            {
+                SDL_strlcat(s_pendingSavePath, ".w1m", sizeof(s_pendingSavePath));
+            }
+
+            if (wesave_saveMap(s_pendingSavePath, ctx))
+            {
+                SDL_strlcpy(ctx->currentFilePath, s_pendingSavePath,
+                            sizeof(ctx->currentFilePath));
+                weui_extractMapName(ctx);
+                ctx->unsavedChanges = false;
+                savedOk = true;
+                SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                             "Saved: %s", ctx->currentFilePath);
+            }
+            else
+            {
+                SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                             "Save failed: %s", s_pendingSavePath);
+            }
+        }
+        // else: user cancelled the save dialog — do not execute pending action
+
+        if (s_pendingAction != WE_PENDING_NONE)
+        {
+            WePendingAction action = s_pendingAction;
+            s_pendingAction        = WE_PENDING_NONE;
+            if (savedOk)
+                weui_executeAction(ctx, action);
+            // else: save failed / cancelled — pending action is dropped
+        }
+    }
+
+    // --- Open-dialog result ---
+    if (s_openPathReady)
+    {
+        s_openPathReady = false;
+
+        if (s_pendingOpenPath[0])
+        {
+            if (wesave_loadMap(s_pendingOpenPath, ctx))
+            {
+                SDL_strlcpy(ctx->currentFilePath, s_pendingOpenPath,
+                            sizeof(ctx->currentFilePath));
+                weui_extractMapName(ctx);
+                ctx->unsavedChanges = false;
+                WarEntityIdListClear(&ctx->selectedEntities);
+                SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                             "Opened: %s", ctx->currentFilePath);
+            }
+            else
+            {
+                SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                             "Open failed: %s", s_pendingOpenPath);
+            }
+        }
+        // else: user cancelled the open dialog — nothing to do
+    }
+}
+
+// -----------------------------------------------------------------------
+// Unsaved-changes confirmation modal (11.9)
+// -----------------------------------------------------------------------
+static void weui_drawUnsavedChangesModal(WarEditorContext* ctx)
+{
+    // Centre the popup.
+    ImGuiViewport* vp = igGetMainViewport();
+    ImVec2 centre;
+    centre.x = vp->Pos.x + vp->Size.x * 0.5f;
+    centre.y = vp->Pos.y + vp->Size.y * 0.5f;
+    igSetNextWindowPos(centre, ImGuiCond_Appearing, (ImVec2){ 0.5f, 0.5f });
+    igSetNextWindowSize((ImVec2){ 360.0f, 0.0f }, ImGuiCond_Appearing);
+
+    if (igBeginPopupModal("Unsaved Changes##modal", NULL,
+                          ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        if (ctx->unsavedChanges)
+        {
+            igText("You have unsaved changes.");
+            igText("Save before continuing?");
+        }
+        else
+        {
+            igText("Are you sure you want to discard the current map?");
+        }
+        igSeparator();
+
+        // "Save" is only shown when there are unsaved changes.
+        if (ctx->unsavedChanges)
+        {
+            if (igButton("Save", (ImVec2){ 80.0f, 0.0f }))
+            {
+                igCloseCurrentPopup();
+
+                if (ctx->currentFilePath[0])
+                {
+                    // Save directly to the known path, then execute the pending action.
+                    if (wesave_saveMap(ctx->currentFilePath, ctx))
+                    {
+                        ctx->unsavedChanges = false;
+                        WePendingAction action = s_pendingAction;
+                        s_pendingAction        = WE_PENDING_NONE;
+                        weui_executeAction(ctx, action);
+                    }
+                    else
+                    {
+                        SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                                     "Save failed!");
+                        s_pendingAction = WE_PENDING_NONE;
+                    }
+                }
+                else
+                {
+                    // No path yet — show Save As dialog.
+                    // s_pendingAction stays set; weui_processPendingPaths will
+                    // execute it after the save dialog resolves.
+                    SDL_ShowSaveFileDialog(weui_saveFileCallback, NULL, s_window,
+                                           s_w1mFilters, 2, NULL);
+                }
+            }
+
+            igSameLine(0.0f, 8.0f);
+        }
+
+        // Label is "Ok" when there are no unsaved changes, "Discard" otherwise.
+        const char* discardLabel = ctx->unsavedChanges ? "Discard" : "Ok";
+        if (igButton(discardLabel, (ImVec2){ 80.0f, 0.0f }))
+        {
+            igCloseCurrentPopup();
+            ctx->unsavedChanges = false;
+            WePendingAction action = s_pendingAction;
+            s_pendingAction        = WE_PENDING_NONE;
+            weui_executeAction(ctx, action);
+        }
+
+        igSameLine(0.0f, 8.0f);
+
+        if (igButton("Cancel", (ImVec2){ 80.0f, 0.0f }))
+        {
+            igCloseCurrentPopup();
+            s_pendingAction   = WE_PENDING_NONE;
+            s_openPathReady   = false;
+            s_savePathReady   = false;
+        }
+
+        igEndPopup();
+    }
+}
+
+// -----------------------------------------------------------------------
+// Action helpers (11.6)
+// -----------------------------------------------------------------------
+
+// Execute a pending action directly (no unsaved-changes check).
+static void weui_executeAction(WarEditorContext* ctx, WePendingAction action)
+{
+    if (action == WE_PENDING_NEW)
+    {
+        wemap_newMap(ctx);
+    }
+    else if (action == WE_PENDING_OPEN)
+    {
+        SDL_ShowOpenFileDialog(weui_openFileCallback, NULL, s_window,
+                               s_w1mFilters, 2, NULL, false);
+    }
+    else if (action == WE_PENDING_QUIT)
+    {
+        ctx->running = false;
+    }
+}
+
+// Request a New Map; shows the unsaved-changes modal if a map is open.
+static void weui_requestNew(WarEditorContext* ctx)
+{
+    if (ctx->map != NULL)
+    {
+        s_pendingAction = WE_PENDING_NEW;
+        igOpenPopup_Str("Unsaved Changes##modal", 0);
+    }
+    else
+    {
+        wemap_newMap(ctx);
+    }
+}
+
+// Request Open; shows the unsaved-changes modal or file picker as needed.
+static void weui_requestOpen(WarEditorContext* ctx)
+{
+    if (ctx->unsavedChanges)
+    {
+        s_pendingAction = WE_PENDING_OPEN;
+        igOpenPopup_Str("Unsaved Changes##modal", 0);
+    }
+    else
+    {
+        SDL_ShowOpenFileDialog(weui_openFileCallback, NULL, s_window,
+                               s_w1mFilters, 2, NULL, false);
+    }
+}
+
+// Save to the current path if known; otherwise show Save As.
+static void weui_requestSave(WarEditorContext* ctx)
+{
+    if (ctx->currentFilePath[0])
+    {
+        if (wesave_saveMap(ctx->currentFilePath, ctx))
+        {
+            ctx->unsavedChanges = false;
+            SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                         "Saved: %s", ctx->currentFilePath);
+        }
+        else
+        {
+            SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                         "Save failed!");
+        }
+    }
+    else
+    {
+        weui_requestSaveAs(ctx);
+    }
+}
+
+// Show Save As file picker.
+static void weui_requestSaveAs(WarEditorContext* ctx)
+{
+    (void)ctx;
+    SDL_ShowSaveFileDialog(weui_saveFileCallback, NULL, s_window,
+                           s_w1mFilters, 2, NULL);
+}
+
+// Request quit; shows the unsaved-changes modal if needed.
+static void weui_requestQuit(WarEditorContext* ctx)
+{
+    if (ctx->unsavedChanges)
+    {
+        s_pendingAction = WE_PENDING_QUIT;
+        igOpenPopup_Str("Unsaved Changes##modal", 0);
+    }
+    else
+    {
+        ctx->running = false;
+    }
+}
 
 // -----------------------------------------------------------------------
 // Import Campaign Level dialog state
@@ -101,7 +497,31 @@ static void weui_drawImportDialog(WarEditorContext* ctx)
 
 // -----------------------------------------------------------------------
 // Toolbox panel (7.2) — vertical button strip; sets ctx->activeTool.
+// Tools are grouped: Select (global), Terrain (pencil/fill/erase),
+// Entities (entity placement).
 // -----------------------------------------------------------------------
+static void weui_drawToolButton(WarEditorContext* ctx,
+                                WarEditorToolType type,
+                                const char*       label,
+                                f32               width)
+{
+    bool active = (ctx->activeTool == type);
+    if (active)
+    {
+        igPushStyleColor_Vec4(ImGuiCol_Button,
+            (ImVec4_c){ 0.80f, 0.60f, 0.10f, 1.0f });
+        igPushStyleColor_Vec4(ImGuiCol_ButtonHovered,
+            (ImVec4_c){ 0.90f, 0.70f, 0.20f, 1.0f });
+    }
+
+    ImVec2_c sz = { width, 0.0f };
+    if (igButton(label, sz))
+        ctx->activeTool = type;
+
+    if (active)
+        igPopStyleColor(2);
+}
+
 static void weui_drawToolboxPanel(WarEditorContext* ctx)
 {
     ImGuiWindowFlags flags =
@@ -110,38 +530,20 @@ static void weui_drawToolboxPanel(WarEditorContext* ctx)
 
     if (igBegin("Toolbox##toolbox", NULL, flags))
     {
-        static const struct { WarEditorToolType type; const char* label; } tools[] =
-        {
-            { WE_TOOL_SELECT,       "Select" },
-            { WE_TOOL_PENCIL,       "Pencil" },
-            { WE_TOOL_FILL,         "Fill"   },
-            { WE_TOOL_ERASE,        "Erase"  },
-            { WE_TOOL_PLACE_ENTITY, "Entity" },
-        };
-        s32 toolCount = (s32)(sizeof(tools) / sizeof(tools[0]));
+        f32 w = igGetContentRegionAvail().x;
 
-        ImVec2_c btnSize;
-        btnSize.x = igGetContentRegionAvail().x;
-        btnSize.y = 0.0f;
+        // --- Global ---
+        weui_drawToolButton(ctx, WE_TOOL_SELECT, "Select", w);
 
-        for (s32 i = 0; i < toolCount; i++)
-        {
-            bool active = (ctx->activeTool == tools[i].type);
-            if (active)
-            {
-                // Highlight the active tool in gold
-                igPushStyleColor_Vec4(ImGuiCol_Button,
-                    (ImVec4_c){ 0.80f, 0.60f, 0.10f, 1.0f });
-                igPushStyleColor_Vec4(ImGuiCol_ButtonHovered,
-                    (ImVec4_c){ 0.90f, 0.70f, 0.20f, 1.0f });
-            }
+        igSeparator();
+        igTextDisabled("Terrain");
+        weui_drawToolButton(ctx, WE_TOOL_PENCIL, "Pencil", w);
+        weui_drawToolButton(ctx, WE_TOOL_FILL,   "Fill",   w);
+        weui_drawToolButton(ctx, WE_TOOL_ERASE,  "Erase",  w);
 
-            if (igButton(tools[i].label, btnSize))
-                ctx->activeTool = tools[i].type;
-
-            if (active)
-                igPopStyleColor(2);
-        }
+        igSeparator();
+        igTextDisabled("Entities");
+        weui_drawToolButton(ctx, WE_TOOL_PLACE_ENTITY, "Entity", w);
     }
     igEnd();
 }
@@ -262,6 +664,186 @@ static void weui_drawTilePalettePanel(WarEditorContext* ctx)
     igEnd();
 }
 
+// -----------------------------------------------------------------------
+// Entity palette panel (Phase 8) — player selection + unit/building palette.
+// Clicking a thumbnail sets ctx->selectedUnitType and switches to the
+// WE_TOOL_PLACE_ENTITY tool.
+// -----------------------------------------------------------------------
+
+// Player colors used for the active-player selector buttons.
+static const ImVec4_c s_playerBtnColors[5] =
+{
+    { 0.00f, 0.00f, 0.78f, 1.0f },  // player 0: blue
+    { 0.78f, 0.00f, 0.00f, 1.0f },  // player 1: red
+    { 0.00f, 0.78f, 0.00f, 1.0f },  // player 2: green
+    { 0.78f, 0.78f, 0.00f, 1.0f },  // player 3: yellow
+    { 0.78f, 0.78f, 0.78f, 1.0f },  // player 4: white
+};
+
+static void weui_drawEntityPalettePanel(WarEditorContext* ctx)
+{
+    if (igBegin("Entities##entities", NULL, ImGuiWindowFlags_None))
+    {
+        // --- Player selector ---
+        igText("Player:");
+        igSameLine(0.0f, 6.0f);
+
+        for (s32 p = 0; p < 5; p++)
+        {
+            ImVec4_c col = s_playerBtnColors[p];
+            ImVec4_c hov = { fminf(col.x + 0.2f, 1.0f),
+                             fminf(col.y + 0.2f, 1.0f),
+                             fminf(col.z + 0.2f, 1.0f),
+                             1.0f };
+            igPushStyleColor_Vec4(ImGuiCol_Button,        col);
+            igPushStyleColor_Vec4(ImGuiCol_ButtonHovered, hov);
+
+            char label[16];
+            bool active = (ctx->activePlayer == (u8)p);
+            SDL_snprintf(label, sizeof(label),
+                         active ? "[%d]##p%d" : " %d ##p%d", p, p);
+
+            if (igButton(label, (ImVec2_c){ 28.0f, 0.0f }))
+                ctx->activePlayer = (u8)p;
+
+            igPopStyleColor(2);
+
+            if (p < 4)
+                igSameLine(0.0f, 2.0f);
+        }
+
+        igSeparator();
+
+        // --- Entity groups ---
+        static const struct
+        {
+            const char* groupName;
+            WarUnitType types[9];
+            s32         count;
+        } groups[] =
+        {
+            {
+                "Human Units",
+                { WAR_UNIT_FOOTMAN, WAR_UNIT_PEASANT, WAR_UNIT_ARCHER,
+                  WAR_UNIT_KNIGHT,  WAR_UNIT_CLERIC,  WAR_UNIT_CONJURER,
+                  WAR_UNIT_CATAPULT_HUMANS },
+                7
+            },
+            {
+                "Orc Units",
+                { WAR_UNIT_GRUNT,    WAR_UNIT_PEON,      WAR_UNIT_SPEARMAN,
+                  WAR_UNIT_RAIDER,   WAR_UNIT_NECROLYTE, WAR_UNIT_WARLOCK,
+                  WAR_UNIT_CATAPULT_ORCS },
+                7
+            },
+            {
+                "Human Buildings",
+                { WAR_UNIT_TOWNHALL_HUMANS, WAR_UNIT_FARM_HUMANS,
+                  WAR_UNIT_BARRACKS_HUMANS, WAR_UNIT_LUMBERMILL_HUMANS,
+                  WAR_UNIT_BLACKSMITH_HUMANS, WAR_UNIT_CHURCH,
+                  WAR_UNIT_TOWER_HUMANS, WAR_UNIT_STABLE, WAR_UNIT_STORMWIND },
+                9
+            },
+            {
+                "Orc Buildings",
+                { WAR_UNIT_TOWNHALL_ORCS, WAR_UNIT_FARM_ORCS,
+                  WAR_UNIT_BARRACKS_ORCS, WAR_UNIT_LUMBERMILL_ORCS,
+                  WAR_UNIT_BLACKSMITH_ORCS, WAR_UNIT_TEMPLE,
+                  WAR_UNIT_TOWER_ORCS, WAR_UNIT_KENNEL, WAR_UNIT_BLACKROCK },
+                9
+            },
+            {
+                "Neutral",
+                { WAR_UNIT_GOLDMINE },
+                1
+            },
+        };
+        s32 groupCount = (s32)(sizeof(groups) / sizeof(groups[0]));
+
+        f32      thumbSize   = 32.0f;
+        ImVec2_c displaySize = { thumbSize, thumbSize };
+        ImVec2_c uv0         = { 0.0f, 0.0f };
+        ImVec2_c uv1         = { 1.0f, 1.0f };
+
+        igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing,  (ImVec2_c){ 2.0f, 2.0f });
+        igPushStyleVar_Vec2(ImGuiStyleVar_FramePadding, (ImVec2_c){ 1.0f, 1.0f });
+
+        ImDrawList* dl = igGetWindowDrawList();
+
+        for (s32 g = 0; g < groupCount; g++)
+        {
+            if (igCollapsingHeader_TreeNodeFlags(groups[g].groupName,
+                                                ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                f32 panelW = igGetContentRegionAvail().x;
+                s32 perRow = (s32)((panelW + 2.0f) / (thumbSize + 2.0f));
+                if (perRow < 1) perRow = 1;
+
+                for (s32 j = 0; j < groups[g].count; j++)
+                {
+                    WarUnitType        type = groups[g].types[j];
+                    const WarUnitData* ud   = wu_getUnitData(type);
+
+                    ImTextureRef_c texRef;
+                    texRef._TexData = NULL;
+                    texRef._TexID   = 0;
+
+                    if (ud && ud->resourceIndex > 0)
+                    {
+                        SDL_Texture* tex = wecanvas_getSpriteTexture(ctx, ud->resourceIndex);
+                        if (tex)
+                            texRef._TexID = (ImTextureID)(uintptr_t)tex;
+                    }
+
+                    ImVec2_c itemPos = igGetCursorScreenPos();
+
+                    char btnId[32];
+                    SDL_snprintf(btnId, sizeof(btnId), "##ent%d", (s32)type);
+
+                    bool clicked = igImageButton(btnId, texRef, displaySize, uv0, uv1,
+                                                 (ImVec4_c){ 0.0f, 0.0f, 0.0f, 1.0f },
+                                                 (ImVec4_c){ 1.0f, 1.0f, 1.0f, 1.0f });
+                    if (clicked)
+                    {
+                        ctx->selectedUnitType = type;
+                        ctx->activeTool       = WE_TOOL_PLACE_ENTITY;
+                    }
+
+                    // Highlight selected / hovered thumbnail
+                    bool isSelected = (ctx->selectedUnitType == type &&
+                                       ctx->activeTool == WE_TOOL_PLACE_ENTITY);
+                    bool isHovered  = igIsItemHovered(0);
+
+                    if (isSelected || isHovered)
+                    {
+                        ImVec2_c itemMax;
+                        itemMax.x = itemPos.x + thumbSize + 2.0f;
+                        itemMax.y = itemPos.y + thumbSize + 2.0f;
+
+                        if (isSelected)
+                            ImDrawList_AddRect(dl, itemPos, itemMax,
+                                               0xFF00D7FFu, 0.0f, 2.0f, 0);
+                        else
+                            ImDrawList_AddRectFilled(dl, itemPos, itemMax,
+                                                     0x30FFFFFFu, 0.0f, 0);
+                    }
+
+                    // Tooltip: unit name
+                    if (igIsItemHovered(0) && ud)
+                        igSetTooltip("%.*s", (int)ud->name.length, ud->name.data);
+
+                    // Same-line within each row
+                    if ((j + 1) % perRow != 0 && j < groups[g].count - 1)
+                        igSameLine(0.0f, 2.0f);
+                }
+            }
+        }
+
+        igPopStyleVar(2);
+    }
+    igEnd();
+}
+
 void weui_init(SDL_Window* window, SDL_Renderer* renderer)
 {
     s_window   = window;
@@ -297,6 +879,44 @@ void weui_beginFrame(WarEditorContext* ctx)
     igNewFrame();
 
     // -----------------------------------------------------------------------
+    // Window title sync (11.8) — cheaply updates only when needed
+    // -----------------------------------------------------------------------
+    weui_syncWindowTitle(ctx);
+
+    // -----------------------------------------------------------------------
+    // Quit request forwarded from the SDL_EVENT_QUIT event (11.9)
+    // -----------------------------------------------------------------------
+    if (ctx->quitRequested)
+    {
+        ctx->quitRequested = false;
+        weui_requestQuit(ctx);
+    }
+
+    // -----------------------------------------------------------------------
+    // Keyboard shortcuts (11.6)
+    // -----------------------------------------------------------------------
+    {
+        ImGuiIO* io = igGetIO_Nil();
+        if (io->KeyCtrl)
+        {
+            if (!io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_N, false))
+                weui_requestNew(ctx);
+            else if (!io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_O, false))
+                weui_requestOpen(ctx);
+            else if (!io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_S, false))
+                weui_requestSave(ctx);
+            else if (io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_S, false))
+                weui_requestSaveAs(ctx);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Pending file-dialog results (11.6) — process at start of frame so that
+    // save/load completes before any ImGui widgets react to new map state.
+    // -----------------------------------------------------------------------
+    weui_processPendingPaths(ctx);
+
+    // -----------------------------------------------------------------------
     // DPI framebuffer scale sync (2.6)
     // -----------------------------------------------------------------------
     {
@@ -322,15 +942,20 @@ void weui_beginFrame(WarEditorContext* ctx)
     {
         if (igBeginMenu("File", true))
         {
-            igMenuItem_Bool("New Map",                 "Ctrl+N",       false, true);
-            igMenuItem_Bool("Open...",                 "Ctrl+O",       false, true);
-            igMenuItem_Bool("Save",                    "Ctrl+S",       false, true);
-            igMenuItem_Bool("Save As...",              "Ctrl+Shift+S", false, true);
+            if (igMenuItem_Bool("New Map",    "Ctrl+N",       false, true))
+                weui_requestNew(ctx);
+            if (igMenuItem_Bool("Open...",    "Ctrl+O",       false, true))
+                weui_requestOpen(ctx);
+            if (igMenuItem_Bool("Save",       "Ctrl+S",       false, true))
+                weui_requestSave(ctx);
+            if (igMenuItem_Bool("Save As...", "Ctrl+Shift+S", false, true))
+                weui_requestSaveAs(ctx);
             igSeparator();
             if (igMenuItem_Bool("Import Campaign Level...", NULL, false, true))
                 s_showImportDialog = true;
             igSeparator();
-            igMenuItem_Bool("Exit",                    NULL,           false, true);
+            if (igMenuItem_Bool("Exit", NULL, false, true))
+                weui_requestQuit(ctx);
             igEndMenu();
         }
 
@@ -405,9 +1030,24 @@ void weui_beginFrame(WarEditorContext* ctx)
     weui_drawTilePalettePanel(ctx);
 
     // -----------------------------------------------------------------------
+    // Entity palette panel (Phase 8)
+    // -----------------------------------------------------------------------
+    weui_drawEntityPalettePanel(ctx);
+
+    // -----------------------------------------------------------------------
+    // Inspector panel (Phase 10)
+    // -----------------------------------------------------------------------
+    weinspect_drawPanel(ctx);
+
+    // -----------------------------------------------------------------------
     // Import Campaign Level dialog (Phase 5)
     // -----------------------------------------------------------------------
     weui_drawImportDialog(ctx);
+
+    // -----------------------------------------------------------------------
+    // Unsaved-changes confirmation modal (11.9)
+    // -----------------------------------------------------------------------
+    weui_drawUnsavedChangesModal(ctx);
 
     // -----------------------------------------------------------------------
     // Status bar (2.11) — pinned at the bottom of the display

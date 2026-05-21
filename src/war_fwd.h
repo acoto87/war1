@@ -28,6 +28,9 @@ typedef struct _WarRawResource WarRawResource;
 struct _WarFile;
 typedef struct _WarFile WarFile;
 
+struct _WarMapFileHeader;
+typedef struct _WarMapFileHeader WarMapFileHeader;
+
 struct _WarSpriteFrame;
 typedef struct _WarSpriteFrame WarSpriteFrame;
 

@@ -277,6 +277,14 @@ struct _WarContext
     WarMap* nextMap;
 
     WarImuiState imui;
+
+    // Path to a .w1m map file to load instead of the normal intro sequence.
+    // Set from the --map <path> command-line argument before wg_initGame is called.
+    char customMapPath[512];
+
+    // When true, skip the Blizzard intro and go straight to the main menu.
+    // Set from the --skip-intro command-line argument before wg_initGame is called.
+    bool skipIntro;
 };
 
 void wg_setGlobalScale(WarContext* context, f32 scale);

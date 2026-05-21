@@ -1,5 +1,6 @@
 #include "war_editor.h"
 #include "war_editor_canvas.h"
+#include "war_editor_inspector.h"
 #include "war_editor_map.h"
 #include "war_editor_ui.h"
 
@@ -44,9 +45,12 @@ bool we_init(WarEditorContext* ctx)
     weui_init(ctx->window, ctx->renderer);
 
     ctx->running    = true;
+    ctx->showGrid   = true;
     ctx->cameraZoom = 1.0f;
     ctx->activeTool = WE_TOOL_SELECT;
     SDL_strlcpy(ctx->statusText, "Ready", sizeof(ctx->statusText));
+
+    WarEntityIdListInit(&ctx->selectedEntities, WarEntityIdListDefaultOptions);
 
     if (!wemap_createEmpty(ctx))
     {
@@ -90,7 +94,9 @@ void we_run(WarEditorContext* ctx)
 
             if (event.type == SDL_EVENT_QUIT)
             {
-                ctx->running = false;
+                // Route through weui_beginFrame so the unsaved-changes modal
+                // can intercept if ctx->unsavedChanges is true.
+                ctx->quitRequested = true;
             }
         }
 
@@ -110,6 +116,7 @@ void we_run(WarEditorContext* ctx)
 
 void we_quit(WarEditorContext* ctx)
 {
+    WarEntityIdListFree(&ctx->selectedEntities);
     wemap_free(ctx);
     weui_shutdown();
 

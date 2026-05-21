@@ -49,6 +49,7 @@ typedef struct _WarEditorContext
     // Editor lifecycle
     bool            running;
     bool            unsavedChanges;
+    bool            quitRequested;          // set by SDL_EVENT_QUIT; checked in weui_beginFrame
     char            currentFilePath[512];   // empty = new unsaved map
     char            mapName[64];
 
@@ -67,6 +68,11 @@ typedef struct _WarEditorContext
     u16               selectedTileIndex;    // terrain brush
     WarUnitType       selectedUnitType;     // entity placement
     u8                activePlayer;         // which player to assign to placed entities
+
+    // Hover state — set by wecanvas_drawPanel each frame, consumed by wecanvas_render
+    bool              isHoveringCanvas;
+    s32               hoverTx;
+    s32               hoverTy;
 
     // Selection (indices into map->startEntities)
     WarEntityIdList   selectedEntities;

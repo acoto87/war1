@@ -20,6 +20,10 @@
 //     terrain pass; no separate entity overlay is needed for those
 // ---------------------------------------------------------------------------
 
+// 8.2 — Sprite texture cache: decode frame 0 of the DATA.WAR sprite resource and
+// cache the result.  Also used by the entity palette panel for thumbnails.
+SDL_Texture* wecanvas_getSpriteTexture(WarEditorContext* ctx, s32 resourceIndex);
+
 // 4.2 — Allocate an SDL_TEXTUREACCESS_TARGET texture of size (w × h).
 // Returns NULL on failure and logs the SDL error.
 SDL_Texture* wecanvas_createTarget(SDL_Renderer* renderer, int w, int h);
@@ -49,3 +53,13 @@ void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen
 // mapToTile:   convert map-space pixels to tile (column, row) integers.
 vec2  wecanvas_screenToMap(WarEditorContext* ctx, vec2 screenPos, vec2 canvasOrigin);
 vec2  wecanvas_mapToTile(vec2 mapPos);
+
+// 8.4 — Ghost preview of the selected unit type at the hover tile.
+// Renders with 50% alpha; red tint when the position is already occupied.
+// Must be called while ctx->canvasTarget is the active render target.
+void wecanvas_renderEntityGhost(WarEditorContext* ctx);
+
+// 9.3 — Yellow selection border for every entity in ctx->selectedEntities.
+// Applies move-drag offset from wetools_getMoveDelta when a move is in progress.
+// Must be called while ctx->canvasTarget is the active render target.
+void wecanvas_renderSelection(WarEditorContext* ctx);

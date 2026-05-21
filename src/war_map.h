@@ -146,6 +146,21 @@ struct _WarMap
 WarMap* wmap_createMap(WarContext *context, s32 levelInfoIndex);
 void wmap_freeMap(WarContext* context, WarMap* map);
 
+// Reserved resource indices for editor-loaded custom .w1m maps.
+// These are above the normal DATA.WAR range (0-582).
+#define WAR_CUSTOM_LEVEL_INFO_INDEX  576
+#define WAR_CUSTOM_VISUAL_INDEX      577
+#define WAR_CUSTOM_PASSABLE_INDEX    578
+
+// Create a map from inline tile arrays loaded from a .w1m file.
+// levelInfoRes must already be filled at WAR_CUSTOM_LEVEL_INFO_INDEX.
+// Creates visual/passable resources at the reserved indices, wires the
+// levelInfo indices, selects the tileset resource by tilesetType, and
+// returns a WarMap* pointing to WAR_CUSTOM_LEVEL_INFO_INDEX.
+WarMap* wmap_createCustomMap(WarContext* context, WarResource* levelInfoRes,
+                             u16* visual, u16* passable);
+bool wmap_loadCustomMap(WarContext* context, StringView mapPath);
+
 void wmap_enterMap(WarContext* context);
 void wmap_updateMap(WarContext* context);
 void wmap_leaveMap(WarContext* context);
