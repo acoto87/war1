@@ -366,6 +366,8 @@ static bool clear_build_outputs(const Build_Options *options, const char *base_n
     if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.ilk", output_dir, base_name))) return false;
     if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.exp", output_dir, base_name))) return false;
     if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.lib", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.res", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.res.o", output_dir, base_name))) return false;
 
     if (target_is_windows(options->target)) {
         return delete_build_output_if_exists(nob_temp_sprintf("%s/%s.exe", output_dir, base_name));
@@ -445,6 +447,41 @@ static bool compile_msvc_source(const Build_Options *options, const char *source
     return nob_cmd_run(&cmd);
 }
 
+static bool compile_windows_resource_gnu_like(const Build_Options *options,
+                                              const char *rc_path,
+                                              const char *res_object_path)
+{
+    Nob_Cmd cmd = {0};
+
+    (void)options;
+
+    nob_cmd_append(&cmd,
+                   "windres",
+                   "-i",
+                   rc_path,
+                   "-o",
+                   res_object_path);
+
+    return nob_cmd_run(&cmd);
+}
+
+static bool compile_windows_resource_msvc(const Build_Options *options,
+                                          const char *rc_path,
+                                          const char *res_path)
+{
+    Nob_Cmd cmd = {0};
+
+    (void)options;
+
+    nob_cmd_append(&cmd,
+                   "rc",
+                   "/nologo",
+                   nob_temp_sprintf("/fo%s", res_path),
+                   rc_path);
+
+    return nob_cmd_run(&cmd);
+}
+
 static bool copy_runtime_files(const Build_Options *options)
 {
     const char *output_dir = target_output_dir(options->target);
@@ -499,6 +536,7 @@ static bool build_with_gnu_like(const Build_Options *options)
 {
     const char *binary_path = target_binary_path(options->target);
     const char *output_dir = target_output_dir(options->target);
+    const char *res_object_path = NULL;
 
     if (!ensure_output_dirs(options->target)) {
         nob_log(NOB_ERROR, "Could not create output directories");
@@ -518,6 +556,13 @@ static bool build_with_gnu_like(const Build_Options *options)
         return true;
     }
 
+    if (target_is_windows(options->target)) {
+        res_object_path = nob_temp_sprintf("%s/war1.res.o", output_dir);
+        if (!compile_windows_resource_gnu_like(options, "src/war1.rc", res_object_path)) {
+            return false;
+        }
+    }
+
     Nob_Cmd cmd = {0};
     append_gnu_common_flags(&cmd, options);
     nob_cmd_append(&cmd,
@@ -525,6 +570,10 @@ static bool build_with_gnu_like(const Build_Options *options)
                    "-o",
                    binary_path,
                    nob_temp_sprintf("-L%s", target_library_dir(options->target)));
+
+    if (res_object_path) {
+        nob_cmd_append(&cmd, res_object_path);
+    }
 
     if (target_is_windows(options->target)) {
         nob_cmd_append(&cmd, "-lSDL3", "-lws2_32");
@@ -557,6 +606,8 @@ static bool build_with_gnu_like(const Build_Options *options)
 
 static bool build_with_msvc(const Build_Options *options)
 {
+    const char *res_path = NULL;
+
     if (!host_is_windows()) {
         nob_log(NOB_ERROR, "msvc builds are only supported when running nob on Windows");
         return false;
@@ -588,6 +639,11 @@ static bool build_with_msvc(const Build_Options *options)
         return true;
     }
 
+    res_path = nob_temp_sprintf("%s/war1.res", output_dir);
+    if (!compile_windows_resource_msvc(options, "src/war1.rc", res_path)) {
+        return false;
+    }
+
     // Full build: compile + link
     Nob_Cmd cmd = {0};
     append_msvc_common_flags(&cmd, options);
@@ -596,6 +652,7 @@ static bool build_with_msvc(const Build_Options *options)
                    nob_temp_sprintf("/Fe:%s", target_binary_path(options->target)),
                    nob_temp_sprintf("/Fo:%s/", output_dir),
                    "/link",
+                   res_path,
                    nob_temp_sprintf("/LIBPATH:%s", lib_dir),
                    "SDL3.lib",
                    "shell32.lib",
@@ -640,6 +697,7 @@ static bool append_editor_defines_msvc(Nob_Cmd *cmd)
 static bool build_editor_with_gnu_like(const Build_Options *options)
 {
     const char *output_dir = target_output_dir(options->target);
+    const char *res_object_path = NULL;
 
     if (!ensure_output_dirs(options->target)) {
         nob_log(NOB_ERROR, "Could not create output directories");
@@ -663,6 +721,13 @@ static bool build_editor_with_gnu_like(const Build_Options *options)
         return nob_cmd_run(&cmd);
     }
 
+    if (target_is_windows(options->target)) {
+        res_object_path = nob_temp_sprintf("%s/war1_editor.res.o", output_dir);
+        if (!compile_windows_resource_gnu_like(options, "src/war1_editor.rc", res_object_path)) {
+            return false;
+        }
+    }
+
     // Full build: compile + link
     const char *lib_dir = target_library_dir(options->target);
 
@@ -674,6 +739,10 @@ static bool build_editor_with_gnu_like(const Build_Options *options)
                    "-o",
                    editor_binary_path(options->target),
                    nob_temp_sprintf("-L%s", lib_dir));
+
+    if (res_object_path) {
+        nob_cmd_append(&cmd, res_object_path);
+    }
 
     if (target_is_windows(options->target)) {
         nob_cmd_append(&cmd, "-lcimgui", "-lSDL3", "-lws2_32", "-lstdc++");
@@ -705,6 +774,8 @@ static bool build_editor_with_gnu_like(const Build_Options *options)
 
 static bool build_editor_with_msvc(const Build_Options *options)
 {
+    const char *res_path = NULL;
+
     if (!host_is_windows()) {
         nob_log(NOB_ERROR, "msvc builds are only supported when running nob on Windows");
         return false;
@@ -739,6 +810,11 @@ static bool build_editor_with_msvc(const Build_Options *options)
         return nob_cmd_run(&cmd);
     }
 
+    res_path = nob_temp_sprintf("%s/war1_editor.res", output_dir);
+    if (!compile_windows_resource_msvc(options, "src/war1_editor.rc", res_path)) {
+        return false;
+    }
+
     // Full build: compile + link
     Nob_Cmd cmd = {0};
     append_msvc_common_flags(&cmd, options);
@@ -748,6 +824,7 @@ static bool build_editor_with_msvc(const Build_Options *options)
                    nob_temp_sprintf("/Fe:%s/war1_editor.exe", output_dir),
                    nob_temp_sprintf("/Fo:%s/", output_dir),
                    "/link",
+                   res_path,
                    nob_temp_sprintf("/LIBPATH:%s", lib_dir),
                    "SDL3.lib",
                    "cimgui.lib",
