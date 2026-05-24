@@ -72,6 +72,12 @@ static void wetools_sortIndicesAsc(s32* arr, s32 count)
     }
 }
 
+static bool wetools_rectsOverlap(s32 ax, s32 ay, s32 aw, s32 ah,
+                                 s32 bx, s32 by, s32 bw, s32 bh)
+{
+    return (ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by);
+}
+
 // Write selectedTileIndex to the tile at (tx, ty).
 // For autotile groups: marks presence then recomputes the tile and its
 // neighbors so that joining edges update immediately.
@@ -118,6 +124,7 @@ static void wetools_paintTile(WarEditorContext* ctx, s32 tx, s32 ty)
     }
 
     ctx->unsavedChanges = true;
+    ctx->minimapDirty = true;
 
     // Phase 14: snapshot neighborhood after paint; push op only if anything changed.
     u16 newVis[9], newPass[9];
@@ -223,6 +230,7 @@ static void wetools_fillRegion(WarEditorContext* ctx,
     }
 
     ctx->unsavedChanges = true;
+    ctx->minimapDirty = true;
 
     // Capture new state.
     for (s32 y = by0; y <= by1; y++)
@@ -272,6 +280,39 @@ static void wetools_commitFill(WarEditorContext* ctx)
     s_fillDragging = false;
 }
 
+static void wetools_setStartLocation(WarEditorContext* ctx, s32 tx, s32 ty)
+{
+    WarEditorMap* m = ctx->map;
+    if (!m)
+    {
+        return;
+    }
+
+    u16 newX = (u16)tx;
+    u16 newY = (u16)ty;
+    if (m->startX == newX && m->startY == newY)
+    {
+        return;
+    }
+
+    if (ctx->history)
+    {
+        WarEditorOp op;
+        memset(&op, 0, sizeof(op));
+        op.type          = WE_OP_SET_START;
+        op.setStart.oldX = m->startX;
+        op.setStart.oldY = m->startY;
+        op.setStart.newX = newX;
+        op.setStart.newY = newY;
+        wehist_push(ctx->history, op);
+    }
+
+    m->startX = newX;
+    m->startY = newY;
+    ctx->unsavedChanges = true;
+    ctx->minimapDirty = true;
+}
+
 // Erase the tile at (tx, ty): removes autotile presence or clears plain tile.
 // Pushes WE_OP_PAINT_TILE to ctx->history when the tile state changed.
 static void wetools_eraseTile(WarEditorContext* ctx, s32 tx, s32 ty)
@@ -297,6 +338,7 @@ static void wetools_eraseTile(WarEditorContext* ctx, s32 tx, s32 ty)
     }
 
     ctx->unsavedChanges = true;
+    ctx->minimapDirty = true;
 
     // Phase 14: snapshot after erase; push op only if anything changed.
     u16 newVis[9], newPass[9];
@@ -355,6 +397,108 @@ static WarEntityId wetools_entityAtTile(WarEditorContext* ctx, s32 ptx, s32 pty)
     }
 
     return 0;
+}
+
+static void wetools_eraseEntityAtTile(WarEditorContext* ctx, s32 tx, s32 ty)
+{
+    WarEntityId hit = wetools_entityAtTile(ctx, tx, ty);
+    if (!hit)
+    {
+        return;
+    }
+
+    WarEntityIdListClear(&ctx->selectedEntities);
+    WarEntityIdListAdd(&ctx->selectedEntities, hit);
+    wetools_deleteSelected(ctx);
+}
+
+static bool wetools_tryPasteAt(WarEditorContext* ctx, s32 tx, s32 ty)
+{
+    WarEditorMap* m = ctx->map;
+    if (!m || ctx->clipboardCount <= 0)
+    {
+        return false;
+    }
+
+    for (s32 i = 0; i < ctx->clipboardCount; i++)
+    {
+        WarLevelUnit* lu = &ctx->clipboardUnits[i];
+        const WarUnitData* ud = wu_getUnitData(lu->type);
+        if (!ud)
+        {
+            return false;
+        }
+
+        s32 px = tx + (s32)ctx->clipboardDx[i];
+        s32 py = ty + (s32)ctx->clipboardDy[i];
+        if (!wetools_canPlace(ctx, px, py, ud->sizex, ud->sizey))
+        {
+            SDL_strlcpy(ctx->statusText,
+                        "Paste blocked: destination overlaps blocked or occupied tiles.",
+                        sizeof(ctx->statusText));
+            return false;
+        }
+
+        for (s32 j = i + 1; j < ctx->clipboardCount; j++)
+        {
+            WarLevelUnit* lu2 = &ctx->clipboardUnits[j];
+            const WarUnitData* ud2 = wu_getUnitData(lu2->type);
+            if (!ud2)
+            {
+                continue;
+            }
+
+            s32 px2 = tx + (s32)ctx->clipboardDx[j];
+            s32 py2 = ty + (s32)ctx->clipboardDy[j];
+            if (wetools_rectsOverlap(px, py, ud->sizex, ud->sizey,
+                                     px2, py2, ud2->sizex, ud2->sizey))
+            {
+                SDL_strlcpy(ctx->statusText,
+                            "Paste blocked: clipboard entities would overlap each other.",
+                            sizeof(ctx->statusText));
+                return false;
+            }
+        }
+    }
+
+    for (s32 i = 0; i < ctx->clipboardCount; i++)
+    {
+        WarLevelUnit placed = ctx->clipboardUnits[i];
+        placed.x = (u8)(tx + (s32)ctx->clipboardDx[i]);
+        placed.y = (u8)(ty + (s32)ctx->clipboardDy[i]);
+
+        if (ctx->clipboardIsGoldmine[i])
+        {
+            if (m->startGoldminesCount >= MAX_CUSTOM_MAP_GOLDMINES_COUNT)
+            {
+                continue;
+            }
+            m->startGoldmines[m->startGoldminesCount++] = placed;
+        }
+        else
+        {
+            if (m->startEntitiesCount >= MAX_ENTITIES_COUNT)
+            {
+                continue;
+            }
+            m->startEntities[m->startEntitiesCount++] = placed;
+        }
+
+        if (ctx->history)
+        {
+            WarEditorOp op;
+            memset(&op, 0, sizeof(op));
+            op.type = WE_OP_PLACE_ENTITY;
+            op.placeEntity.entity = placed;
+            op.placeEntity.isGoldmine = ctx->clipboardIsGoldmine[i];
+            wehist_push(ctx->history, op);
+        }
+    }
+
+    ctx->unsavedChanges = true;
+    ctx->minimapDirty = true;
+    ctx->pastePending = false;
+    return true;
 }
 
 // Commit the select drag-rect: add all entities whose footprint intersects
@@ -511,6 +655,7 @@ static void wetools_commitMove(WarEditorContext* ctx)
     }
 
     ctx->unsavedChanges = true;
+    ctx->minimapDirty = true;
     s_selectState = WE_SELECT_IDLE;
     s_moveDtx     = 0;
     s_moveDty     = 0;
@@ -702,6 +847,122 @@ void wetools_deleteSelected(WarEditorContext* ctx)
 
     WarEntityIdListClear(&ctx->selectedEntities);
     ctx->unsavedChanges = true;
+    ctx->minimapDirty = true;
+}
+
+void wetools_copySelected(WarEditorContext* ctx)
+{
+    WarEditorMap* m = ctx->map;
+    if (!m || ctx->selectedEntities.count <= 0)
+    {
+        ctx->clipboardCount = 0;
+        SDL_strlcpy(ctx->statusText, "Copy failed: nothing selected.", sizeof(ctx->statusText));
+        return;
+    }
+
+    s32 maxCopy = ctx->selectedEntities.count;
+    if (maxCopy > WE_CLIPBOARD_MAX)
+    {
+        maxCopy = WE_CLIPBOARD_MAX;
+    }
+
+    s32 sumX = 0;
+    s32 sumY = 0;
+    s32 validCount = 0;
+
+    for (s32 i = 0; i < maxCopy; i++)
+    {
+        WarEntityId id = ctx->selectedEntities.items[i];
+        WarLevelUnit* lu = NULL;
+        bool isGoldmine = false;
+
+        if (id & 0x8000u)
+        {
+            u32 idx = (u32)(id & 0x7FFFu);
+            if (idx < m->startGoldminesCount)
+            {
+                lu = &m->startGoldmines[idx];
+                isGoldmine = true;
+            }
+        }
+        else
+        {
+            u32 idx = (u32)(id - 1u);
+            if (idx < m->startEntitiesCount)
+            {
+                lu = &m->startEntities[idx];
+            }
+        }
+
+        if (!lu)
+        {
+            continue;
+        }
+
+        ctx->clipboardUnits[validCount] = *lu;
+        ctx->clipboardIsGoldmine[validCount] = isGoldmine;
+        sumX += (s32)lu->x;
+        sumY += (s32)lu->y;
+        validCount++;
+    }
+
+    if (validCount <= 0)
+    {
+        ctx->clipboardCount = 0;
+        SDL_strlcpy(ctx->statusText, "Copy failed: selection is invalid.", sizeof(ctx->statusText));
+        return;
+    }
+
+    s32 cx = sumX / validCount;
+    s32 cy = sumY / validCount;
+
+    for (s32 i = 0; i < validCount; i++)
+    {
+        ctx->clipboardDx[i] = (s16)((s32)ctx->clipboardUnits[i].x - cx);
+        ctx->clipboardDy[i] = (s16)((s32)ctx->clipboardUnits[i].y - cy);
+    }
+
+    ctx->clipboardCount = validCount;
+    ctx->pastePending = false;
+    SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                 "Copied %d entr%s.",
+                 validCount,
+                 validCount == 1 ? "y" : "ies");
+}
+
+void wetools_beginPaste(WarEditorContext* ctx)
+{
+    if (!ctx || ctx->clipboardCount <= 0)
+    {
+        return;
+    }
+
+    ctx->activeTool = WE_TOOL_PLACE_ENTITY;
+
+    if (ctx->isHoveringCanvas)
+    {
+        if (wetools_tryPasteAt(ctx, ctx->hoverTx, ctx->hoverTy))
+        {
+            SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
+                         "Pasted %d entr%s.",
+                         ctx->clipboardCount,
+                         ctx->clipboardCount == 1 ? "y" : "ies");
+            return;
+        }
+    }
+
+    ctx->pastePending = true;
+    if (!ctx->isHoveringCanvas)
+    {
+        SDL_strlcpy(ctx->statusText,
+                    "Paste armed: move over the canvas and left-click to place the clipboard.",
+                    sizeof(ctx->statusText));
+    }
+}
+
+bool wetools_canPaste(WarEditorContext* ctx)
+{
+    return ctx && ctx->clipboardCount > 0;
 }
 
 void wetools_update(WarEditorContext* ctx)
@@ -738,6 +999,12 @@ void wetools_update(WarEditorContext* ctx)
         // Escape: deselect all
         if (igIsKeyPressed_Bool(ImGuiKey_Escape, false))
             WarEntityIdListClear(&ctx->selectedEntities);
+
+        if (io->KeyCtrl && igIsKeyPressed_Bool(ImGuiKey_C, false))
+            wetools_copySelected(ctx);
+
+        if (io->KeyCtrl && igIsKeyPressed_Bool(ImGuiKey_V, false))
+            wetools_beginPaste(ctx);
     }
 }
 
@@ -752,8 +1019,12 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
     // Right-click: cancel placement tool and clear entity selection.
     if (io->MouseClicked[1])
     {
-        if (ctx->activeTool == WE_TOOL_PLACE_ENTITY)
+        if (ctx->activeTool == WE_TOOL_PLACE_ENTITY ||
+            ctx->activeTool == WE_TOOL_SET_START ||
+            ctx->activeTool == WE_TOOL_ERASE_ENTITY)
+        {
             ctx->activeTool = WE_TOOL_SELECT;
+        }
         WarEntityIdListClear(&ctx->selectedEntities);
         return;
     }
@@ -797,6 +1068,12 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
         {
             if (io->MouseClicked[0])
             {
+                if (ctx->pastePending)
+                {
+                    wetools_tryPasteAt(ctx, tx, ty);
+                    break;
+                }
+
                 const WarUnitData* ud = wu_getUnitData(ctx->selectedUnitType);
                 if (ud && ud->resourceIndex > 0)
                 {
@@ -816,6 +1093,7 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
                             lu->amount       = 0;
                             m->startEntitiesCount++;
                             ctx->unsavedChanges = true;
+                            ctx->minimapDirty = true;
 
                             if (ctx->history)
                             {
@@ -842,6 +1120,7 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
                             lu->amount       = 2500;
                             m->startGoldminesCount++;
                             ctx->unsavedChanges = true;
+                            ctx->minimapDirty = true;
 
                             if (ctx->history)
                             {
@@ -858,6 +1137,20 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
             }
             break;
         }
+
+        case WE_TOOL_SET_START:
+            if (io->MouseClicked[0])
+            {
+                wetools_setStartLocation(ctx, tx, ty);
+            }
+            break;
+
+        case WE_TOOL_ERASE_ENTITY:
+            if (io->MouseDown[0])
+            {
+                wetools_eraseEntityAtTile(ctx, tx, ty);
+            }
+            break;
 
         case WE_TOOL_SELECT:
         {

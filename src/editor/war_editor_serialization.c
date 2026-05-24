@@ -261,6 +261,8 @@ bool wesave_loadMap(const char* path, WarEditorContext* ctx)
 
     fclose(f);
 
+    wemap_normalizeGoldmines(m);
+
     // --- Rebuild terrain sprite from the loaded tilesetType ---
     bool ok = wemap_buildTerrainSprite(ctx);
 

@@ -223,8 +223,13 @@ static void wehist_removeGoldmine(WarEditorMap* m, const s32* indices, s32 count
 // Internal: apply (or reverse) a single operation to the map.
 // direction: +1 = forward (redo), -1 = backward (undo)
 // ---------------------------------------------------------------------------
-static void wehist_applyOp(WarEditorOp* op, WarEditorMap* m, s32 direction)
+static void wehist_applyOp(WarEditorOp* op, WarEditorContext* ctx, WarEditorMap* m, s32 direction)
 {
+    if (!ctx || !m)
+    {
+        return;
+    }
+
     switch (op->type)
     {
         case WE_OP_PAINT_TILE:
@@ -320,6 +325,80 @@ static void wehist_applyOp(WarEditorOp* op, WarEditorMap* m, s32 direction)
             break;
         }
 
+        case WE_OP_EDIT_ENTITY:
+        {
+            const WarLevelUnit* lu = (direction > 0)
+                ? &op->editEntity.newEntity
+                : &op->editEntity.oldEntity;
+
+            if (op->editEntity.isGoldmine)
+            {
+                if (op->editEntity.index >= 0 &&
+                    (u32)op->editEntity.index < m->startGoldminesCount)
+                {
+                    m->startGoldmines[op->editEntity.index] = *lu;
+                }
+            }
+            else
+            {
+                if (op->editEntity.index >= 0 &&
+                    (u32)op->editEntity.index < m->startEntitiesCount)
+                {
+                    m->startEntities[op->editEntity.index] = *lu;
+                }
+            }
+            break;
+        }
+
+        case WE_OP_SET_START:
+        {
+            if (direction > 0)
+            {
+                m->startX = op->setStart.newX;
+                m->startY = op->setStart.newY;
+            }
+            else
+            {
+                m->startX = op->setStart.oldX;
+                m->startY = op->setStart.oldY;
+            }
+            break;
+        }
+
+        case WE_OP_EDIT_MAP:
+        {
+            if (op->editMap.size == 0 ||
+                op->editMap.size > WE_HISTORY_MAP_EDIT_MAX_BYTES ||
+                op->editMap.offset + op->editMap.size > sizeof(*m))
+            {
+                break;
+            }
+
+            u8* dst = ((u8*)m) + op->editMap.offset;
+            if (direction > 0)
+            {
+                memcpy(dst, op->editMap.newData, op->editMap.size);
+            }
+            else
+            {
+                memcpy(dst, op->editMap.oldData, op->editMap.size);
+            }
+            break;
+        }
+
+        case WE_OP_EDIT_MAP_NAME:
+        {
+            if (direction > 0)
+            {
+                SDL_strlcpy(ctx->mapName, op->editMapName.newName, sizeof(ctx->mapName));
+            }
+            else
+            {
+                SDL_strlcpy(ctx->mapName, op->editMapName.oldName, sizeof(ctx->mapName));
+            }
+            break;
+        }
+
         default:
             break;
     }
@@ -356,20 +435,49 @@ void wehist_push(WarEditorHistory* h, WarEditorOp op)
     h->cursor++;
 }
 
-void wehist_undo(WarEditorHistory* h, WarEditorMap* m)
+void wehist_undo(WarEditorHistory* h, WarEditorContext* ctx)
 {
-    if (!h || !m || h->cursor == 0) return;
+    if (!h || !ctx || h->cursor == 0) return;
 
     h->cursor--;
-    wehist_applyOp(&h->ops[h->cursor], m, -1);
+    wehist_applyOp(&h->ops[h->cursor], ctx, ctx->map, -1);
+    ctx->minimapDirty = true;
 }
 
-void wehist_redo(WarEditorHistory* h, WarEditorMap* m)
+void wehist_redo(WarEditorHistory* h, WarEditorContext* ctx)
 {
-    if (!h || !m || h->cursor == h->count) return;
+    if (!h || !ctx || h->cursor == h->count) return;
 
-    wehist_applyOp(&h->ops[h->cursor], m, +1);
+    wehist_applyOp(&h->ops[h->cursor], ctx, ctx->map, +1);
     h->cursor++;
+    ctx->minimapDirty = true;
+}
+
+void wehist_seek(WarEditorHistory* h, WarEditorContext* ctx, s32 targetCursor)
+{
+    if (!h || !ctx)
+    {
+        return;
+    }
+
+    if (targetCursor < 0)
+    {
+        targetCursor = 0;
+    }
+    if (targetCursor > h->count)
+    {
+        targetCursor = h->count;
+    }
+
+    while (h->cursor > targetCursor)
+    {
+        wehist_undo(h, ctx);
+    }
+
+    while (h->cursor < targetCursor)
+    {
+        wehist_redo(h, ctx);
+    }
 }
 
 void wehist_clear(WarEditorHistory* h)

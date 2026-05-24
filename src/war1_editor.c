@@ -225,6 +225,7 @@ int main(int argc, char **argv)
 // Editor-only source files
 // -------------------------------------------------------------------------
 #include "editor/war_editor_ui.c"
+#include "editor/war_editor_config.c"
 #include "editor/war_editor_map.c"
 #include "editor/war_editor_canvas.c"
 #include "editor/war_editor_autotile.c"
@@ -233,5 +234,7 @@ int main(int argc, char **argv)
 #include "editor/war_editor_inspector.c"
 #include "editor/war_editor_serialization.c"
 #include "editor/war_editor_playtest.c"
+#include "editor/war_editor_minimap.c"
+#include "editor/war_editor_validator.c"
 #include "editor/war_editor.c"
 #include "editor/war_editor_stubs.c"

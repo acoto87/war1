@@ -1,17 +1,26 @@
 #include "war_editor_ui.h"
 #include "war_editor.h"
 #include "war_editor_canvas.h"
+#include "war_editor_config.h"
 #include "war_editor_history.h"
 #include "war_editor_inspector.h"
 #include "war_editor_map.h"
+#include "war_editor_minimap.h"
 #include "war_editor_playtest.h"
 #include "war_editor_serialization.h"
 #include "war_editor_tools.h"
+#include "war_editor_validator.h"
+
+#include "icons_codicons.h"
 
 // Module-level storage so weui_beginFrame can access the window without
 // requiring it as a parameter (matching the void signature in the spec).
 static SDL_Window*   s_window   = NULL;
 static SDL_Renderer* s_renderer = NULL;
+static bool          s_showKeyboardShortcutsModal = false;
+static bool          s_showAboutModal = false;
+
+#define WAR1_EDITOR_VERSION "dev"
 
 // -----------------------------------------------------------------------
 // Default ImGui layout — loaded on first run when no imgui.ini exists.
@@ -24,9 +33,9 @@ static const char s_defaultIniLayout[] =
     "\n"
     "[Window][Tiles##tiles]\n"
     "Pos=1457,19\n"
-    "Size=463,494\n"
+    "Size=463,619\n"
     "Collapsed=0\n"
-    "DockId=0x00000003,0\n"
+    "DockId=0x00000009,1\n"
     "\n"
     "[Window][Debug##Default]\n"
     "Pos=60,60\n"
@@ -35,9 +44,9 @@ static const char s_defaultIniLayout[] =
     "\n"
     "[Window][Canvas##canvas]\n"
     "Pos=237,19\n"
-    "Size=1218,998\n"
+    "Size=1218,811\n"
     "Collapsed=0\n"
-    "DockId=0x00000001,0\n"
+    "DockId=0x00000007,0\n"
     "\n"
     "[Window][Toolbox##toolbox]\n"
     "Pos=0,19\n"
@@ -47,29 +56,62 @@ static const char s_defaultIniLayout[] =
     "\n"
     "[Window][Entities##entities]\n"
     "Pos=1457,19\n"
-    "Size=463,494\n"
+    "Size=463,619\n"
     "Collapsed=0\n"
-    "DockId=0x00000003,1\n"
+    "DockId=0x00000009,2\n"
     "\n"
     "[Window][Inspector##inspector]\n"
-    "Pos=1457,515\n"
-    "Size=463,502\n"
+    "Pos=1457,640\n"
+    "Size=463,377\n"
     "Collapsed=0\n"
-    "DockId=0x00000004,0\n"
+    "DockId=0x0000000A,0\n"
     "\n"
     "[Window][Unsaved Changes##modal]\n"
-    "Pos=780,470\n"
-    "Size=360,76\n"
+    "Pos=824,462\n"
+    "Size=272,93\n"
+    "Collapsed=0\n"
+    "\n"
+    "[Window][Validation##validation]\n"
+    "Pos=237,832\n"
+    "Size=1218,185\n"
+    "Collapsed=0\n"
+    "DockId=0x00000008,0\n"
+    "\n"
+    "[Window][History##history]\n"
+    "Pos=1457,19\n"
+    "Size=463,619\n"
+    "Collapsed=0\n"
+    "DockId=0x00000009,3\n"
+    "\n"
+    "[Window][Minimap##minimap]\n"
+    "Pos=1457,19\n"
+    "Size=463,619\n"
+    "Collapsed=0\n"
+    "DockId=0x00000009,0\n"
+    "\n"
+    "[Window][Start Preview##start_preview]\n"
+    "Pos=1457,19\n"
+    "Size=463,619\n"
+    "Collapsed=0\n"
+    "DockId=0x00000009,4\n"
+    "\n"
+    "[Window][Import Campaign Level##modal]\n"
+    "Pos=750,268\n"
+    "Size=420,480\n"
     "Collapsed=0\n"
     "\n"
     "[Docking][Data]\n"
-    "DockSpace       ID=0x08BD597D Window=0x1BBC0F80 Pos=0,19 Size=1920,998 Split=X\n"
-    "  DockNode      ID=0x00000005 Parent=0x08BD597D SizeRef=235,701 Selected=0x67E13F7B\n"
-    "  DockNode      ID=0x00000006 Parent=0x08BD597D SizeRef=1683,701 Split=X\n"
-    "    DockNode    ID=0x00000001 Parent=0x00000006 SizeRef=1218,701 CentralNode=1 Selected=0xA4ED7C79\n"
-    "    DockNode    ID=0x00000002 Parent=0x00000006 SizeRef=463,701 Split=Y Selected=0xBF980F15\n"
-    "      DockNode  ID=0x00000003 Parent=0x00000002 SizeRef=638,494 Selected=0x1639E026\n"
-    "      DockNode  ID=0x00000004 Parent=0x00000002 SizeRef=638,502 Selected=0x5BC9CB1C\n";
+    "DockSpace         ID=0x08BD597D Window=0x1BBC0F80 Pos=0,19 Size=1920,998 Split=X\n"
+    "  DockNode        ID=0x00000005 Parent=0x08BD597D SizeRef=235,701 Selected=0x67E13F7B\n"
+    "  DockNode        ID=0x00000006 Parent=0x08BD597D SizeRef=1683,701 Split=X\n"
+    "    DockNode      ID=0x00000001 Parent=0x00000006 SizeRef=1218,701 Split=Y Selected=0xA4ED7C79\n"
+    "      DockNode    ID=0x00000007 Parent=0x00000001 SizeRef=1218,811 CentralNode=1 Selected=0xA4ED7C79\n"
+    "      DockNode    ID=0x00000008 Parent=0x00000001 SizeRef=1218,185 Selected=0xAA9D166E\n"
+    "    DockNode      ID=0x00000002 Parent=0x00000006 SizeRef=463,701 Split=Y Selected=0xBF980F15\n"
+    "      DockNode    ID=0x00000003 Parent=0x00000002 SizeRef=638,494 Split=Y Selected=0x882B29E1\n"
+    "        DockNode  ID=0x00000009 Parent=0x00000003 SizeRef=463,544 Selected=0x882B29E1\n"
+    "        DockNode  ID=0x0000000A Parent=0x00000003 SizeRef=463,332 Selected=0x5BC9CB1C\n"
+"      DockNode    ID=0x00000004 Parent=0x00000002 SizeRef=638,502 Selected=0x5BC9CB1C\n";
 
 // -----------------------------------------------------------------------
 // File I/O dialog state (Phase 11)
@@ -233,6 +275,7 @@ static void weui_processPendingPaths(WarEditorContext* ctx)
                 SDL_strlcpy(ctx->currentFilePath, s_pendingSavePath,
                             sizeof(ctx->currentFilePath));
                 weui_extractMapName(ctx);
+                wecfg_addRecentFile(ctx, ctx->currentFilePath);
                 ctx->unsavedChanges = false;
                 savedOk = true;
                 SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
@@ -268,7 +311,9 @@ static void weui_processPendingPaths(WarEditorContext* ctx)
                 SDL_strlcpy(ctx->currentFilePath, s_pendingOpenPath,
                             sizeof(ctx->currentFilePath));
                 weui_extractMapName(ctx);
+                wecfg_addRecentFile(ctx, ctx->currentFilePath);
                 ctx->unsavedChanges = false;
+                weminimap_markDirty(ctx);
                 WarEntityIdListClear(&ctx->selectedEntities);
                 SDL_snprintf(ctx->statusText, sizeof(ctx->statusText),
                              "Opened: %s", ctx->currentFilePath);
@@ -280,6 +325,90 @@ static void weui_processPendingPaths(WarEditorContext* ctx)
             }
         }
         // else: user cancelled the open dialog — nothing to do
+    }
+}
+
+static void weui_drawKeyboardShortcutsModal(void)
+{
+    if (s_showKeyboardShortcutsModal)
+    {
+        igOpenPopup_Str("Keyboard Shortcuts##help", 0);
+        s_showKeyboardShortcutsModal = false;
+    }
+
+    ImGuiViewport* vp = igGetMainViewport();
+    ImVec2 centre;
+    centre.x = vp->Pos.x + vp->Size.x * 0.5f;
+    centre.y = vp->Pos.y + vp->Size.y * 0.5f;
+    igSetNextWindowPos(centre, ImGuiCond_Appearing, (ImVec2){ 0.5f, 0.5f });
+    igSetNextWindowSize((ImVec2){ 480.0f, 0.0f }, ImGuiCond_Appearing);
+
+    if (igBeginPopupModal("Keyboard Shortcuts##help", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        igText("File");
+        igBulletText("Ctrl+N  New map");
+        igBulletText("Ctrl+O  Open map");
+        igBulletText("Ctrl+S  Save map");
+        igBulletText("Ctrl+Shift+S  Save map as");
+        igSeparator();
+        igText("Edit");
+        igBulletText("Ctrl+Z  Undo");
+        igBulletText("Ctrl+Y  Redo");
+        igBulletText("Ctrl+C  Copy selection");
+        igBulletText("Ctrl+V  Paste clipboard");
+        igBulletText("Delete  Delete selection");
+        igBulletText("Escape  Clear selection");
+        igSeparator();
+        igText("Viewport");
+        igBulletText("Middle mouse drag  Pan camera");
+        igBulletText("Mouse wheel  Zoom at cursor");
+        igBulletText("G  Toggle grid");
+        igBulletText("P  Toggle passability");
+        igBulletText("L  Toggle start location");
+        igBulletText("F5  Playtest current map");
+        igSeparator();
+
+        if (igButton("Close", (ImVec2){ 96.0f, 0.0f }))
+        {
+            igCloseCurrentPopup();
+        }
+
+        igEndPopup();
+    }
+}
+
+static void weui_drawAboutModal(void)
+{
+    if (s_showAboutModal)
+    {
+        igOpenPopup_Str("About##help", 0);
+        s_showAboutModal = false;
+    }
+
+    ImGuiViewport* vp = igGetMainViewport();
+    ImVec2 centre;
+    centre.x = vp->Pos.x + vp->Size.x * 0.5f;
+    centre.y = vp->Pos.y + vp->Size.y * 0.5f;
+    igSetNextWindowPos(centre, ImGuiCond_Appearing, (ImVec2){ 0.5f, 0.5f });
+    igSetNextWindowSize((ImVec2){ 440.0f, 0.0f }, ImGuiCond_Appearing);
+
+    if (igBeginPopupModal("About##help", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        igText("War1-C Scenario Editor");
+        igSeparator();
+        igText("Version: %s", WAR1_EDITOR_VERSION);
+        igText("Map format: W1M v%u", (unsigned)W1M_VERSION);
+        igText("cimgui / Dear ImGui: %s", igGetVersion());
+        igText("SDL: %d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
+        igSeparator();
+        igTextWrapped("Editor tooling for War1-C custom scenarios and imported Warcraft I campaign levels.");
+
+        if (igButton("Close", (ImVec2){ 96.0f, 0.0f }))
+        {
+            igCloseCurrentPopup();
+        }
+
+        igEndPopup();
     }
 }
 
@@ -544,6 +673,7 @@ static void weui_drawImportDialog(WarEditorContext* ctx)
                 {
                     ctx->unsavedChanges    = true;
                     ctx->currentFilePath[0] = '\0';
+                    weminimap_markDirty(ctx);
                     snprintf(ctx->statusText, sizeof(ctx->statusText),
                              "Imported: %s", assets[s_importDbArrayIdx].name);
                 }
@@ -603,17 +733,19 @@ static void weui_drawToolboxPanel(WarEditorContext* ctx)
         f32 w = igGetContentRegionAvail().x;
 
         // --- Global ---
-        weui_drawToolButton(ctx, WE_TOOL_SELECT, "Select", w);
+        weui_drawToolButton(ctx, WE_TOOL_SELECT, ICON_CI_CURSOR " Select", w);
 
         igSeparator();
         igTextDisabled("Terrain");
-        weui_drawToolButton(ctx, WE_TOOL_PENCIL, "Pencil", w);
-        weui_drawToolButton(ctx, WE_TOOL_FILL,   "Fill",   w);
-        weui_drawToolButton(ctx, WE_TOOL_ERASE,  "Erase",  w);
+        weui_drawToolButton(ctx, WE_TOOL_PENCIL, ICON_CI_EDIT " Pencil", w);
+        weui_drawToolButton(ctx, WE_TOOL_FILL,   ICON_CI_SYMBOL_COLOR " Fill",   w);
+        weui_drawToolButton(ctx, WE_TOOL_ERASE,  ICON_CI_CLEAR_ALL " Erase",  w);
+        weui_drawToolButton(ctx, WE_TOOL_SET_START, ICON_CI_LOCATION " Set Start", w);
 
         igSeparator();
         igTextDisabled("Entities");
-        weui_drawToolButton(ctx, WE_TOOL_PLACE_ENTITY, "Entity", w);
+        weui_drawToolButton(ctx, WE_TOOL_PLACE_ENTITY, ICON_CI_SYMBOL_CLASS " Entity", w);
+        weui_drawToolButton(ctx, WE_TOOL_ERASE_ENTITY, ICON_CI_TRASH " Erase Entity", w);
     }
     igEnd();
 }
@@ -642,12 +774,12 @@ static void weui_drawTilePalettePanel(WarEditorContext* ctx)
         }
 
         // Zoom controls
-        if (igButton("-##zoom", (ImVec2_c){ 24.0f, 0.0f }))
+        if (igButton(ICON_CI_ZOOM_OUT "##zoom", (ImVec2_c){ 24.0f, 0.0f }))
             s_tileZoom = fmaxf(0.5f, s_tileZoom - 0.25f);
         igSameLine(0.0f, 4.0f);
         igText("Zoom: %.2fx", (double)s_tileZoom);
         igSameLine(0.0f, 4.0f);
-        if (igButton("+##zoom", (ImVec2_c){ 24.0f, 0.0f }))
+        if (igButton(ICON_CI_ZOOM_IN "##zoom", (ImVec2_c){ 24.0f, 0.0f }))
             s_tileZoom = fminf(4.0f, s_tileZoom + 0.25f);
 
         igSeparator();
@@ -669,6 +801,19 @@ static void weui_drawTilePalettePanel(WarEditorContext* ctx)
             s32 tilesPerRow = TILESET_TILES_PER_ROW;
             s32 totalRows   = TILESET_HEIGHT / MEGA_TILE_HEIGHT;
             s32 totalTiles  = tilesPerRow * totalRows;
+            u16 highlightedTile = ctx->selectedTileIndex;
+
+            // While hovering the map canvas, mirror the hovered map tile in the
+            // palette highlight so the user can quickly identify the tile index.
+            if (ctx->isHoveringCanvas)
+            {
+                s32 hx = ctx->hoverTx;
+                s32 hy = ctx->hoverTy;
+                if (hx >= 0 && hx < MAP_TILES_WIDTH && hy >= 0 && hy < MAP_TILES_HEIGHT)
+                {
+                    highlightedTile = ctx->map->visualData[hy * MAP_TILES_WIDTH + hx];
+                }
+            }
 
             // Zero padding between buttons so tiles are packed tight.
             igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing,  (ImVec2_c){ 1.0f, 1.0f });
@@ -698,10 +843,11 @@ static void weui_drawTilePalettePanel(WarEditorContext* ctx)
 
                 // Draw hover / selected highlights via ImDrawList so they are
                 // visible on top of the image regardless of FramePadding=0.
-                bool isHovered  = igIsItemHovered(0);
-                bool isSelected = (ctx->selectedTileIndex == (u16)i);
+                bool isHovered     = igIsItemHovered(0);
+                bool isSelected    = (ctx->selectedTileIndex == (u16)i);
+                bool isHighlighted = (highlightedTile == (u16)i);
 
-                if (isHovered || isSelected)
+                if (isHovered || isSelected || isHighlighted)
                 {
                     ImVec2_c itemMax;
                     itemMax.x = itemPos.x + tileSize;
@@ -712,11 +858,23 @@ static void weui_drawTilePalettePanel(WarEditorContext* ctx)
                         ImDrawList_AddRectFilled(dl, itemPos, itemMax,
                                                  0x40FFFFFFu, 0.0f, 0);
 
-                    // Gold 2 px border for selected
+                    // Gold 2 px border for highlighted tile.
                     // IM_COL32(255,215,0,255) = R=0xFF, G=0xD7, B=0x00, A=0xFF
-                    if (isSelected)
+                    if (isHighlighted)
                         ImDrawList_AddRect(dl, itemPos, itemMax,
                                            0xFF00D7FFu, 0.0f, 2.0f, 0);
+
+                    // Keep the active brush tile visible even when highlight follows map hover.
+                    if (isSelected && !isHighlighted)
+                    {
+                        ImDrawList_AddRect(dl, itemPos, itemMax,
+                                           0xFF00A5FFu, 0.0f, 2.0f, 0);
+                    }
+                }
+
+                if (isHovered)
+                {
+                    igSetTooltip("Tile %d", i);
                 }
 
                 // Same-line for every tile except the last in the row
@@ -898,6 +1056,13 @@ static void weui_drawEntityPalettePanel(WarEditorContext* ctx)
                                                      0x30FFFFFFu, 0.0f, 0);
                     }
 
+                    // Codicon marker on thumbnails (Phase 18-pre).
+                    ImDrawList_AddText_Vec2(dl,
+                                       (ImVec2_c){ itemPos.x + 2.0f, itemPos.y + 1.0f },
+                                       0xCCFFFFFFu,
+                                       ICON_CI_SYMBOL_CLASS,
+                                       NULL);
+
                     // Tooltip: unit name
                     if (igIsItemHovered(0) && ud)
                         igSetTooltip("%.*s", (int)ud->name.length, ud->name.data);
@@ -910,6 +1075,240 @@ static void weui_drawEntityPalettePanel(WarEditorContext* ctx)
         }
 
         igPopStyleVar(2);
+    }
+    igEnd();
+}
+
+static const char* weui_historyOpName(WarEditorOpType type)
+{
+    switch (type)
+    {
+        case WE_OP_PAINT_TILE:   return "Paint Tile";
+        case WE_OP_FILL_REGION:  return "Fill Region";
+        case WE_OP_PLACE_ENTITY: return "Place Entity";
+        case WE_OP_DELETE_BATCH: return "Delete Entities";
+        case WE_OP_MOVE_BATCH:   return "Move Entities";
+        case WE_OP_EDIT_ENTITY:  return "Inspector Edit";
+        case WE_OP_SET_START:    return "Set Start Location";
+        case WE_OP_EDIT_MAP:     return "Map Property Edit";
+        case WE_OP_EDIT_MAP_NAME:return "Map Name Edit";
+        default:                 return "Change";
+    }
+}
+
+static void weui_drawHistoryPanel(WarEditorContext* ctx)
+{
+    if (igBegin("History##history", NULL, ImGuiWindowFlags_None))
+    {
+        if (!ctx->history || ctx->history->count == 0)
+        {
+            igTextDisabled("No changes yet.");
+        }
+        else
+        {
+            igText("%d changes", ctx->history->count);
+            igSeparator();
+
+            if (igBeginChild_Str("##historylist", (ImVec2_c){ 0.0f, 0.0f },
+                                 ImGuiChildFlags_Borders, ImGuiWindowFlags_None))
+            {
+                for (s32 i = 0; i < ctx->history->count; i++)
+                {
+                    const WarEditorOp* op = &ctx->history->ops[i];
+                    bool isActive = (i == ctx->history->cursor - 1);
+                    bool isRedo   = (i >= ctx->history->cursor);
+
+                    if (isRedo)
+                    {
+                        igPushStyleColor_Vec4(ImGuiCol_Text,
+                                              (ImVec4_c){ 0.55f, 0.55f, 0.55f, 1.0f });
+                    }
+
+                    char label[128];
+                    SDL_snprintf(label, sizeof(label), "%03d  %s", i + 1,
+                                 weui_historyOpName(op->type));
+                    if (igSelectable_Bool(label, isActive, 0, (ImVec2_c){ 0.0f, 0.0f }))
+                    {
+                        wehist_seek(ctx->history, ctx, i + 1);
+                    }
+
+                    if (isRedo)
+                    {
+                        igPopStyleColor(1);
+                    }
+                }
+            }
+            igEndChild();
+        }
+    }
+    igEnd();
+}
+
+static void weui_drawStartPreviewPanel(WarEditorContext* ctx)
+{
+    if (igBegin("Start Preview##start_preview", NULL, ImGuiWindowFlags_None))
+    {
+        WarEditorMap* m = ctx->map;
+        if (!m || !m->terrainSprite.texture)
+        {
+            igTextDisabled("No map loaded.");
+        }
+        else
+        {
+            const s32 viewTilesW = MAP_VIEWPORT_WIDTH / MEGA_TILE_WIDTH;
+            const s32 viewTilesH = MAP_VIEWPORT_HEIGHT / MEGA_TILE_HEIGHT;
+            f32 availW = igGetContentRegionAvail().x;
+            f32 tilePx = floorf(availW / (f32)viewTilesW);
+            if (tilePx < 8.0f)  tilePx = 8.0f;
+            if (tilePx > 20.0f) tilePx = 20.0f;
+
+            ImTextureRef_c texRef;
+            texRef._TexData = NULL;
+            texRef._TexID   = (ImTextureID)(uintptr_t)m->terrainSprite.texture;
+
+            f32 tileUW = (f32)MEGA_TILE_WIDTH  / (f32)TILESET_WIDTH;
+            f32 tileUH = (f32)MEGA_TILE_HEIGHT / (f32)TILESET_HEIGHT;
+            s32 tilesPerRow = TILESET_TILES_PER_ROW;
+
+            igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing,  (ImVec2_c){ 1.0f, 1.0f });
+            igPushStyleVar_Vec2(ImGuiStyleVar_FramePadding, (ImVec2_c){ 0.0f, 0.0f });
+
+            // Capture the screen-space origin of the tile grid BEFORE drawing
+            // so the entity overlay loop can compute pixel positions correctly.
+            ImVec2_c gridOrigin = igGetCursorScreenPos();
+            f32 tileStep = tilePx + 1.0f;
+
+            for (s32 y = 0; y < viewTilesH; y++)
+            {
+                for (s32 x = 0; x < viewTilesW; x++)
+                {
+                    s32 tx = (s32)m->startX + x;
+                    s32 ty = (s32)m->startY + y;
+                    bool inBounds = (tx >= 0 && tx < MAP_TILES_WIDTH &&
+                                     ty >= 0 && ty < MAP_TILES_HEIGHT);
+
+                    u16 tileIndex = 0;
+                    if (inBounds)
+                    {
+                        tileIndex = m->visualData[ty * MAP_TILES_WIDTH + tx];
+                    }
+
+                    s32 col = tileIndex % tilesPerRow;
+                    s32 row = tileIndex / tilesPerRow;
+                    ImVec2_c uv0 = { col * tileUW,          row * tileUH };
+                    ImVec2_c uv1 = { col * tileUW + tileUW, row * tileUH + tileUH };
+
+                    char id[24];
+                    SDL_snprintf(id, sizeof(id), "##sp_%d_%d", x, y);
+
+                    if (inBounds)
+                    {
+                        igImageButton(id, texRef, (ImVec2_c){ tilePx, tilePx }, uv0, uv1,
+                                      (ImVec4_c){ 0.0f, 0.0f, 0.0f, 0.0f },
+                                      (ImVec4_c){ 1.0f, 1.0f, 1.0f, 1.0f });
+                    }
+                    else
+                    {
+                        igColorButton(id,
+                                      (ImVec4_c){ 0.08f, 0.08f, 0.08f, 1.0f },
+                                      0,
+                                      (ImVec2_c){ tilePx, tilePx });
+                    }
+
+                    if (x < viewTilesW - 1)
+                    {
+                        igSameLine(0.0f, 1.0f);
+                    }
+                }
+            }
+
+            igPopStyleVar(2);
+
+            // Entity overlay in preview (regular entities + goldmines).
+            ImDrawList* dl = igGetWindowDrawList();
+            static const u32 s_previewPlayerColor[5] =
+            {
+                0xFF0000C7u, // blue
+                0xFFC70000u, // red
+                0xFF00C700u, // green
+                0xFF00C7C7u, // yellow
+                0xFFC7C7C7u, // white
+            };
+
+            for (u32 i = 0; i < m->startEntitiesCount; i++)
+            {
+                WarLevelUnit* lu = &m->startEntities[i];
+                const WarUnitData* ud = wu_getUnitData(lu->type);
+                if (!ud)
+                {
+                    continue;
+                }
+
+                s32 vx = (s32)lu->x - (s32)m->startX;
+                s32 vy = (s32)lu->y - (s32)m->startY;
+                if (vx + ud->sizex <= 0 || vy + ud->sizey <= 0 ||
+                    vx >= viewTilesW || vy >= viewTilesH)
+                {
+                    continue;
+                }
+
+                f32 x0 = gridOrigin.x + (f32)vx * tileStep;
+                f32 y0 = gridOrigin.y + (f32)vy * tileStep;
+                f32 x1 = x0 + (f32)ud->sizex * tileStep - 1.0f;
+                f32 y1 = y0 + (f32)ud->sizey * tileStep - 1.0f;
+                u32 col = s_previewPlayerColor[(lu->player < 5) ? lu->player : 0];
+
+                ImDrawList_AddRectFilled(dl,
+                                         (ImVec2_c){ x0, y0 },
+                                         (ImVec2_c){ x1, y1 },
+                                         (col & 0x00FFFFFFu) | 0x66000000u,
+                                         0.0f, 0);
+                ImDrawList_AddRect(dl,
+                                   (ImVec2_c){ x0, y0 },
+                                   (ImVec2_c){ x1, y1 },
+                                   col,
+                                   0.0f, 1.5f, 0);
+            }
+
+            for (u32 i = 0; i < m->startGoldminesCount; i++)
+            {
+                WarLevelUnit* lu = &m->startGoldmines[i];
+                const WarUnitData* ud = wu_getUnitData(lu->type);
+                if (!ud)
+                {
+                    continue;
+                }
+
+                s32 vx = (s32)lu->x - (s32)m->startX;
+                s32 vy = (s32)lu->y - (s32)m->startY;
+                if (vx + ud->sizex <= 0 || vy + ud->sizey <= 0 ||
+                    vx >= viewTilesW || vy >= viewTilesH)
+                {
+                    continue;
+                }
+
+                f32 x0 = gridOrigin.x + (f32)vx * tileStep;
+                f32 y0 = gridOrigin.y + (f32)vy * tileStep;
+                f32 x1 = x0 + (f32)ud->sizex * tileStep - 1.0f;
+                f32 y1 = y0 + (f32)ud->sizey * tileStep - 1.0f;
+                u32 col = 0xFF00D7FFu;
+
+                ImDrawList_AddRectFilled(dl,
+                                         (ImVec2_c){ x0, y0 },
+                                         (ImVec2_c){ x1, y1 },
+                                         0x6600D7FFu,
+                                         0.0f, 0);
+                ImDrawList_AddRect(dl,
+                                   (ImVec2_c){ x0, y0 },
+                                   (ImVec2_c){ x1, y1 },
+                                   col,
+                                   0.0f, 2.0f, 0);
+            }
+
+            igSeparator();
+            igText("Start tile: (%d, %d)", (s32)m->startX, (s32)m->startY);
+            igTextDisabled("Preview matches in-game viewport size.");
+        }
     }
     igEnd();
 }
@@ -945,7 +1344,36 @@ void weui_init(SDL_Window* window, SDL_Renderer* renderer)
     ImGui_ImplSDLRenderer3_Init(renderer);
 
     // Add the default font so text renders at startup.
-    ImFontAtlas_AddFontDefault(io->Fonts, NULL);
+    {
+        ImFontConfig* cfg = ImFontConfig_ImFontConfig();
+        cfg->SizePixels = 13.0f; // Set your desired size in pixels
+        if (!ImFontAtlas_AddFontDefault(io->Fonts, cfg))
+        {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load default font");
+        }
+        ImFontConfig_destroy(cfg);
+    }
+
+    // Phase 18-pre: load Codicon in merge mode for icon labels.
+    {
+        ImFontConfig* cfg = ImFontConfig_ImFontConfig();
+        cfg->MergeMode = true;
+        cfg->PixelSnapH = true;
+        cfg->GlyphOffset.y = 1.0f;
+        static const ImWchar iconRanges[] = { ICON_MIN_CI, ICON_MAX_CI, 0 };
+
+        if (!ImFontAtlas_AddFontFromFileTTF(io->Fonts,
+                                            FONT_ICON_FILE_NAME_CI,
+                                            13.0f,
+                                            cfg,
+                                            iconRanges))
+        {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to load icon font from %s", FONT_ICON_FILE_NAME_CI);
+        }
+
+        ImFontConfig_destroy(cfg);
+    }
 }
 
 void weui_shutdown(void)
@@ -995,11 +1423,11 @@ void weui_beginFrame(WarEditorContext* ctx)
             else if (io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_S, false))
                 weui_requestSaveAs(ctx);
             else if (!io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_Z, false))
-                wehist_undo(ctx->history, ctx->map);
+                wehist_undo(ctx->history, ctx);
             else if (!io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_Y, false))
-                wehist_redo(ctx->history, ctx->map);
+                wehist_redo(ctx->history, ctx);
             else if (io->KeyShift && igIsKeyPressed_Bool(ImGuiKey_Z, false))
-                wehist_redo(ctx->history, ctx->map);
+                wehist_redo(ctx->history, ctx);
         }
         if (igIsKeyPressed_Bool(ImGuiKey_F5, false))
             weplay_startPlaytest(ctx);
@@ -1060,12 +1488,16 @@ void weui_beginFrame(WarEditorContext* ctx)
             bool canRedo = ctx->history && ctx->history->cursor < ctx->history->count;
 
             if (igMenuItem_Bool("Undo", "Ctrl+Z", false, canUndo))
-                wehist_undo(ctx->history, ctx->map);
+                wehist_undo(ctx->history, ctx);
             if (igMenuItem_Bool("Redo", "Ctrl+Y", false, canRedo))
-                wehist_redo(ctx->history, ctx->map);
+                wehist_redo(ctx->history, ctx);
             igSeparator();
-            igMenuItem_Bool("Copy",  "Ctrl+C", false, true);
-            igMenuItem_Bool("Paste", "Ctrl+V", false, true);
+            bool canCopy = ctx->selectedEntities.count > 0;
+            bool canPaste = wetools_canPaste(ctx);
+            if (igMenuItem_Bool("Copy",  "Ctrl+C", false, canCopy))
+                wetools_copySelected(ctx);
+            if (igMenuItem_Bool("Paste", "Ctrl+V", false, canPaste))
+                wetools_beginPaste(ctx);
             igEndMenu();
         }
 
@@ -1084,14 +1516,19 @@ void weui_beginFrame(WarEditorContext* ctx)
 
         if (igBeginMenu("Map", true))
         {
-            igMenuItem_Bool("Validate Map",              NULL, false, true);
+            if (igMenuItem_Bool("Validate Map", NULL, false, true))
+            {
+                wevalid_run(ctx);
+            }
             igEndMenu();
         }
 
         if (igBeginMenu("Help", true))
         {
-            igMenuItem_Bool("Keyboard Shortcuts", NULL, false, true);
-            igMenuItem_Bool("About",              NULL, false, true);
+            if (igMenuItem_Bool("Keyboard Shortcuts", NULL, false, true))
+                s_showKeyboardShortcutsModal = true;
+            if (igMenuItem_Bool("About", NULL, false, true))
+                s_showAboutModal = true;
             igEndMenu();
         }
 
@@ -1102,7 +1539,7 @@ void weui_beginFrame(WarEditorContext* ctx)
         ImVec2 buttonSize;
         buttonSize.x = 0;
         buttonSize.y = 0;
-        if (igButton("Play", buttonSize))
+        if (igButton(ICON_CI_PLAY " Play", buttonSize))
         {
             weplay_startPlaytest(ctx);
         }
@@ -1142,6 +1579,26 @@ void weui_beginFrame(WarEditorContext* ctx)
     weinspect_drawPanel(ctx);
 
     // -----------------------------------------------------------------------
+    // Validation panel (Phase 16)
+    // -----------------------------------------------------------------------
+    wevalid_drawPanel(ctx);
+
+    // -----------------------------------------------------------------------
+    // History panel (undo/redo timeline)
+    // -----------------------------------------------------------------------
+    weui_drawHistoryPanel(ctx);
+
+    // -----------------------------------------------------------------------
+    // Start preview panel (in-game viewport from start tile)
+    // -----------------------------------------------------------------------
+    weui_drawStartPreviewPanel(ctx);
+
+    // -----------------------------------------------------------------------
+    // Minimap panel (Phase 15)
+    // -----------------------------------------------------------------------
+    weminimap_drawPanel(ctx);
+
+    // -----------------------------------------------------------------------
     // Import Campaign Level dialog (Phase 5)
     // -----------------------------------------------------------------------
     weui_drawImportDialog(ctx);
@@ -1155,6 +1612,12 @@ void weui_beginFrame(WarEditorContext* ctx)
     // Playtest error modal (Phase 13)
     // -----------------------------------------------------------------------
     weplay_drawErrorPopup();
+
+    // -----------------------------------------------------------------------
+    // Help modals (Phase 18)
+    // -----------------------------------------------------------------------
+    weui_drawKeyboardShortcutsModal();
+    weui_drawAboutModal();
 
     // -----------------------------------------------------------------------
     // Status bar (2.11) — pinned at the bottom of the display

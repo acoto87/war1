@@ -71,6 +71,11 @@ void wemap_free(WarEditorContext* ctx);
 // logs a warning and returns false if it is not.
 bool wemap_buildTerrainSprite(WarEditorContext* ctx);
 
+// Move any goldmines stored in startEntities[] into startGoldmines[].
+// Used after imports / loads so editor systems can rely on a single
+// goldmine representation.
+void wemap_normalizeGoldmines(WarEditorMap* map);
+
 // Import an existing DATA.WAR level into the editor map.
 //
 // levelInfoIndex — DATA.WAR resource index of a DB_ENTRY_TYPE_LEVEL_INFO entry.

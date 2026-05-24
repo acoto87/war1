@@ -21,7 +21,11 @@ typedef enum
     WE_TOOL_FILL          = 2,
     WE_TOOL_ERASE         = 3,
     WE_TOOL_PLACE_ENTITY  = 4,
+    WE_TOOL_SET_START     = 5,
+    WE_TOOL_ERASE_ENTITY  = 6,
 } WarEditorToolType;
+
+#define WE_CLIPBOARD_MAX 256
 
 // -------------------------------------------------------------------------
 // WarEditorContext — top-level singleton for the editor process.
@@ -93,9 +97,22 @@ typedef struct _WarEditorContext
     bool            showMinimap;
     bool            showStartLocation;
 
+    // Minimap cache state (Phase 15)
+    SDL_Texture*     minimapTexture;
+    bool             minimapDirty;
+    f32              minimapLastRebuildTime;
+
     // Recent files (persisted to war1_editor.cfg)
     char            recentFiles[5][512];
     int             recentFileCount;
+
+    // Copy/paste clipboard (Phase 17)
+    s32             clipboardCount;
+    bool            clipboardIsGoldmine[WE_CLIPBOARD_MAX];
+    WarLevelUnit    clipboardUnits[WE_CLIPBOARD_MAX];
+    s16             clipboardDx[WE_CLIPBOARD_MAX];
+    s16             clipboardDy[WE_CLIPBOARD_MAX];
+    bool            pastePending;
 
 } WarEditorContext;
 

@@ -1,5 +1,6 @@
 #include "war_editor.h"
 #include "war_editor_canvas.h"
+#include "war_editor_config.h"
 #include "war_editor_history.h"
 #include "war_editor_inspector.h"
 #include "war_editor_map.h"
@@ -47,10 +48,14 @@ bool we_init(WarEditorContext* ctx)
 
     ctx->running           = true;
     ctx->showGrid          = true;
+    ctx->showMinimap       = true;
     ctx->showStartLocation = true;
     ctx->cameraZoom        = 1.0f;
     ctx->activeTool        = WE_TOOL_SELECT;
+    ctx->minimapDirty      = true;
     SDL_strlcpy(ctx->statusText, "Ready", sizeof(ctx->statusText));
+
+    wecfg_load(ctx);
 
     WarEntityIdListInit(&ctx->selectedEntities, WarEntityIdListDefaultOptions);
 
@@ -121,9 +126,17 @@ void we_run(WarEditorContext* ctx)
 
 void we_quit(WarEditorContext* ctx)
 {
+    wecfg_save(ctx);
+
     WarEntityIdListFree(&ctx->selectedEntities);
     wemap_free(ctx);
     weui_shutdown();
+
+    if (ctx->minimapTexture)
+    {
+        SDL_DestroyTexture(ctx->minimapTexture);
+        ctx->minimapTexture = NULL;
+    }
 
     if (ctx->renderer)
     {

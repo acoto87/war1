@@ -422,6 +422,34 @@ static void wemap_loadLevelInfoRes(WarEditorContext* ctx, s32 index,
 // documents that tile 0 is the intended ground tile for each tileset.
 static const u16 s_baseTiles[3] = { 0u, 0u, 0u };
 
+void wemap_normalizeGoldmines(WarEditorMap* map)
+{
+    if (!map)
+    {
+        return;
+    }
+
+    for (u32 i = 0; i < map->startEntitiesCount; )
+    {
+        if (map->startEntities[i].type == WAR_UNIT_GOLDMINE)
+        {
+            if (map->startGoldminesCount < MAX_CUSTOM_MAP_GOLDMINES_COUNT)
+            {
+                map->startGoldmines[map->startGoldminesCount++] = map->startEntities[i];
+            }
+
+            map->startEntitiesCount--;
+            for (u32 j = i; j < map->startEntitiesCount; j++)
+            {
+                map->startEntities[j] = map->startEntities[j + 1];
+            }
+            continue;
+        }
+
+        i++;
+    }
+}
+
 bool wemap_createEmpty(WarEditorContext* ctx)
 {
     WarEditorMap* m = (WarEditorMap*)wm_alloc(sizeof(WarEditorMap));
@@ -449,6 +477,7 @@ bool wemap_createEmpty(WarEditorContext* ctx)
         m->visualData[i] = baseTile;
 
     ctx->map = m;
+    ctx->minimapDirty = true;
     return true;
 }
 
@@ -615,6 +644,19 @@ bool wemap_importFromLevelInfo(WarEditorContext* ctx, s32 levelInfoIndex)
     memcpy(m->startEntities, res->levelInfo.startEntities,
            sizeof(WarLevelUnit) * m->startEntitiesCount);
 
+    if (isCustomMap)
+    {
+        m->startGoldminesCount = res->levelInfo.startGoldminesCount;
+        memcpy(m->startGoldmines, res->levelInfo.startGoldmines,
+               sizeof(WarLevelUnit) * m->startGoldminesCount);
+    }
+    else
+    {
+        m->startGoldminesCount = 0;
+    }
+
+    wemap_normalizeGoldmines(m);
+
     m->startRoadsCount = res->levelInfo.startRoadsCount;
     memcpy(m->startRoads, res->levelInfo.startRoads,
            sizeof(WarLevelConstruct) * m->startRoadsCount);
@@ -622,10 +664,6 @@ bool wemap_importFromLevelInfo(WarEditorContext* ctx, s32 levelInfoIndex)
     m->startWallsCount = res->levelInfo.startWallsCount;
     memcpy(m->startWalls, res->levelInfo.startWalls,
            sizeof(WarLevelConstruct) * m->startWallsCount);
-
-    m->startGoldminesCount = res->levelInfo.startGoldminesCount;
-    memcpy(m->startGoldmines, res->levelInfo.startGoldmines,
-           sizeof(WarLevelUnit) * m->startGoldminesCount);
 
     m->startConfigurationsCount = res->levelInfo.startConfigurationsCount;
     memcpy(m->startConfigurations, res->levelInfo.startConfigurations,
@@ -669,6 +707,7 @@ bool wemap_importFromLevelInfo(WarEditorContext* ctx, s32 levelInfoIndex)
 
     // 5. Rebuild the GPU terrain texture.
     bool ok = wemap_buildTerrainSprite(ctx);
+    ctx->minimapDirty = true;
 
     logInfo("wemap_importFromLevelInfo: imported level %d (%s), tilesetType=%d, entities=%d",
             levelInfoIndex, entry->name, (s32)tilesetType, m->startEntitiesCount);
@@ -698,6 +737,7 @@ void wemap_newMap(WarEditorContext* ctx)
     ctx->cameraOffset.x     = 0.0f;
     ctx->cameraOffset.y     = 0.0f;
     ctx->cameraZoom         = 1.0f;
+    ctx->minimapDirty       = true;
 
     WarEntityIdListClear(&ctx->selectedEntities);
 

@@ -1,5 +1,6 @@
 #include "war_editor_playtest.h"
 #include "war_editor_serialization.h"
+#include "war_editor_validator.h"
 
 #include "war_log.h"
 
@@ -27,6 +28,12 @@
 // -----------------------------------------------------------------------
 static bool s_openErrorPopup     = false;
 static char s_errorMessage[256];
+
+static bool s_openValidationPopup = false;
+static bool s_pendingPlaytest = false;
+static WarEditorContext* s_pendingCtx = NULL;
+static WarValidationResult s_pendingValidation[WE_VALIDATION_MAX_RESULTS];
+static s32 s_pendingValidationCount = 0;
 
 // -----------------------------------------------------------------------
 // Internal helpers
@@ -96,13 +103,13 @@ static bool weplay_launchGame(const char* mapPath)
 // Public API
 // -----------------------------------------------------------------------
 
-void weplay_startPlaytest(WarEditorContext* ctx)
+static bool weplay_executeStart(WarEditorContext* ctx)
 {
-    if (!ctx->map)
+    if (!ctx || !ctx->map)
     {
         SDL_strlcpy(s_errorMessage, "No map is open.", sizeof(s_errorMessage));
         s_openErrorPopup = true;
-        return;
+        return false;
     }
 
     // Ensure the temp directory exists.
@@ -115,7 +122,7 @@ void weplay_startPlaytest(WarEditorContext* ctx)
                     "Failed to save temp map.\nCheck the log for details.",
                     sizeof(s_errorMessage));
         s_openErrorPopup = true;
-        return;
+        return false;
     }
 
     if (!weplay_launchGame(WEPLAY_TEMP_MAP_PATH))
@@ -125,10 +132,36 @@ void weplay_startPlaytest(WarEditorContext* ctx)
                      "Make sure the game binary is in the same directory as the editor.",
                      WEPLAY_GAME_BIN);
         s_openErrorPopup = true;
-        return;
+        return false;
     }
 
     logInfo("weplay_startPlaytest: launched %s --map %s", WEPLAY_GAME_BIN, WEPLAY_TEMP_MAP_PATH);
+    return true;
+}
+
+void weplay_startPlaytest(WarEditorContext* ctx)
+{
+    if (!ctx || !ctx->map)
+    {
+        SDL_strlcpy(s_errorMessage, "No map is open.", sizeof(s_errorMessage));
+        s_openErrorPopup = true;
+        return;
+    }
+
+    // Always validate before playtest. Any result opens warnings modal,
+    // but Play Anyway still allows launching regardless of severity.
+    wevalid_run(ctx);
+    s_pendingValidationCount = 0;
+    wevalid_validate(ctx->map, s_pendingValidation, &s_pendingValidationCount);
+    if (s_pendingValidationCount > 0)
+    {
+        s_openValidationPopup = true;
+        s_pendingPlaytest = true;
+        s_pendingCtx = ctx;
+        return;
+    }
+
+    weplay_executeStart(ctx);
 }
 
 void weplay_drawErrorPopup(void)
@@ -155,6 +188,62 @@ void weplay_drawErrorPopup(void)
         {
             igCloseCurrentPopup();
         }
+        igEndPopup();
+    }
+
+    if (s_openValidationPopup)
+    {
+        igOpenPopup_Str("Validation Warnings##modal", 0);
+        s_openValidationPopup = false;
+    }
+
+    vp = igGetMainViewport();
+    centre.x = vp->Pos.x + vp->Size.x * 0.5f;
+    centre.y = vp->Pos.y + vp->Size.y * 0.5f;
+    igSetNextWindowPos(centre, ImGuiCond_Appearing, (ImVec2){ 0.5f, 0.5f });
+    igSetNextWindowSize((ImVec2){ 620.0f, 380.0f }, ImGuiCond_Appearing);
+
+    if (igBeginPopupModal("Validation Warnings##modal", NULL, ImGuiWindowFlags_None))
+    {
+        igText("Validation found %d issue(s):", s_pendingValidationCount);
+        igSeparator();
+
+        if (igBeginChild_Str("##validationlist", (ImVec2){ 0.0f, -40.0f },
+                             ImGuiChildFlags_Borders, ImGuiWindowFlags_None))
+        {
+            for (s32 i = 0; i < s_pendingValidationCount; i++)
+            {
+                const WarValidationResult* r = &s_pendingValidation[i];
+                const char* sev = "INFO";
+                if (r->severity == WE_VALID_ERROR) sev = "ERROR";
+                else if (r->severity == WE_VALID_WARNING) sev = "WARN";
+
+                if (r->hasTile)
+                    igText("[%s] %s (tile %d,%d)", sev, r->message, r->tx, r->ty);
+                else
+                    igText("[%s] %s", sev, r->message);
+            }
+        }
+        igEndChild();
+
+        if (igButton("Play Anyway", (ImVec2){ 120.0f, 0.0f }))
+        {
+            if (s_pendingPlaytest && s_pendingCtx)
+            {
+                weplay_executeStart(s_pendingCtx);
+            }
+            s_pendingPlaytest = false;
+            s_pendingCtx = NULL;
+            igCloseCurrentPopup();
+        }
+        igSameLine(0.0f, 8.0f);
+        if (igButton("Cancel", (ImVec2){ 120.0f, 0.0f }))
+        {
+            s_pendingPlaytest = false;
+            s_pendingCtx = NULL;
+            igCloseCurrentPopup();
+        }
+
         igEndPopup();
     }
 }

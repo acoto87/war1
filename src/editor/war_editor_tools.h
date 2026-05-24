@@ -58,3 +58,12 @@ bool wetools_isSelectDragging(WarEditorContext* ctx);
 // Delete all entities listed in ctx->selectedEntities, compact the arrays,
 // and clear the selection.
 void wetools_deleteSelected(WarEditorContext* ctx);
+
+// Copy selected entities into the editor clipboard.
+void wetools_copySelected(WarEditorContext* ctx);
+
+// Enter paste mode; the next left click in the canvas places the clipboard.
+void wetools_beginPaste(WarEditorContext* ctx);
+
+// Returns true when clipboard has at least one entity.
+bool wetools_canPaste(WarEditorContext* ctx);

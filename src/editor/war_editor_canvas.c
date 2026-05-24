@@ -280,6 +280,100 @@ void wecanvas_renderEntityGhost(WarEditorContext* ctx)
     WarEditorMap* m = ctx->map;
     if (!m) return;
 
+    s32 tx = ctx->hoverTx;
+    s32 ty = ctx->hoverTy;
+    f32 zoom = ctx->cameraZoom;
+    f32 camX = ctx->cameraOffset.x;
+    f32 camY = ctx->cameraOffset.y;
+
+    // Phase 18 - render paste preview if active
+    if (ctx->pastePending && ctx->clipboardCount > 0)
+    {
+        for (s32 i = 0; i < ctx->clipboardCount; i++)
+        {
+            WarLevelUnit* lu = &ctx->clipboardUnits[i];
+            const WarUnitData* ud = wu_getUnitData(lu->type);
+            if (!ud || ud->resourceIndex <= 0) continue;
+
+            SDL_Texture* tex = wecanvas_getSpriteTexture(ctx, ud->resourceIndex);
+            if (!tex) continue;
+
+            float texW, texH;
+            if (!SDL_GetTextureSize(tex, &texW, &texH)) continue;
+
+            s32 ptx = tx + (s32)ctx->clipboardDx[i];
+            s32 pty = ty + (s32)ctx->clipboardDy[i];
+
+            f32 unitW = (f32)(ud->sizex * MEGA_TILE_WIDTH);
+            f32 unitH = (f32)(ud->sizey * MEGA_TILE_HEIGHT);
+            f32 mapX  = (f32)(ptx * MEGA_TILE_WIDTH)  - texW * 0.5f + unitW * 0.5f;
+            f32 mapY  = (f32)(pty * MEGA_TILE_HEIGHT) - texH * 0.5f + unitH * 0.5f;
+
+            f32 dstX = (mapX - camX) * zoom;
+            f32 dstY = (mapY - camY) * zoom;
+            f32 dstW = texW * zoom;
+            f32 dstH = texH * zoom;
+
+            bool occupied = false;
+            // Check against map bounds and existing entities
+            if (ptx < 0 || ptx + ud->sizex > MAP_TILES_WIDTH || 
+                pty < 0 || pty + ud->sizey > MAP_TILES_HEIGHT)
+            {
+                occupied = true;
+            }
+            else
+            {
+                occupied = !wetools_canPlace(ctx, ptx, pty, ud->sizex, ud->sizey);
+            }
+            
+            // Also check for overlaps within the clipboard itself
+            if (!occupied)
+            {
+                for (s32 j = 0; j < ctx->clipboardCount; j++)
+                {
+                    if (i == j) continue;
+                    WarLevelUnit* lu2 = &ctx->clipboardUnits[j];
+                    const WarUnitData* ud2 = wu_getUnitData(lu2->type);
+                    if (!ud2) continue;
+                    
+                    s32 ptx2 = tx + (s32)ctx->clipboardDx[j];
+                    s32 pty2 = ty + (s32)ctx->clipboardDy[j];
+                    if (ptx < ptx2 + ud2->sizex && ptx + ud->sizex > ptx2 &&
+                        pty < pty2 + ud2->sizey && pty + ud->sizey > pty2)
+                    {
+                        occupied = true;
+                        break;
+                    }
+                }
+            }
+
+            SDL_SetTextureAlphaMod(tex, 128);
+            if (occupied)
+                SDL_SetTextureColorMod(tex, 255, 60, 60);
+
+            SDL_FRect dst = { dstX, dstY, dstW, dstH };
+            SDL_RenderTexture(ctx->renderer, tex, NULL, &dst);
+
+            SDL_SetTextureAlphaMod(tex, 255);
+            if (occupied)
+                SDL_SetTextureColorMod(tex, 255, 255, 255);
+
+            if (occupied)
+            {
+                SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_BLEND);
+                SDL_SetRenderDrawColor(ctx->renderer, 255, 0, 0, 80);
+                f32 fx = ((f32)(ptx * MEGA_TILE_WIDTH)  - camX) * zoom;
+                f32 fy = ((f32)(pty * MEGA_TILE_HEIGHT) - camY) * zoom;
+                f32 fw = (f32)(ud->sizex * MEGA_TILE_WIDTH)  * zoom;
+                f32 fh = (f32)(ud->sizey * MEGA_TILE_HEIGHT) * zoom;
+                SDL_FRect fill = { fx, fy, fw, fh };
+                SDL_RenderFillRect(ctx->renderer, &fill);
+                SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_NONE);
+            }
+        }
+        return;
+    }
+
     const WarUnitData* ud = wu_getUnitData(ctx->selectedUnitType);
     if (!ud || ud->resourceIndex <= 0) return;
 
@@ -289,17 +383,10 @@ void wecanvas_renderEntityGhost(WarEditorContext* ctx)
     float texW, texH;
     if (!SDL_GetTextureSize(tex, &texW, &texH)) return;
 
-    s32 tx = ctx->hoverTx;
-    s32 ty = ctx->hoverTy;
-
     f32 unitW = (f32)(ud->sizex * MEGA_TILE_WIDTH);
     f32 unitH = (f32)(ud->sizey * MEGA_TILE_HEIGHT);
     f32 mapX  = (f32)(tx * MEGA_TILE_WIDTH)  - texW * 0.5f + unitW * 0.5f;
     f32 mapY  = (f32)(ty * MEGA_TILE_HEIGHT) - texH * 0.5f + unitH * 0.5f;
-
-    f32 zoom = ctx->cameraZoom;
-    f32 camX = ctx->cameraOffset.x;
-    f32 camY = ctx->cameraOffset.y;
 
     f32 dstX = (mapX - camX) * zoom;
     f32 dstY = (mapY - camY) * zoom;
@@ -425,6 +512,9 @@ void wecanvas_renderStartLocation(WarEditorContext* ctx)
     f32 w = (f32)MEGA_TILE_WIDTH  * zoom;
     f32 h = (f32)MEGA_TILE_HEIGHT * zoom;
 
+    f32 viewW = (f32)MAP_VIEWPORT_WIDTH * zoom;
+    f32 viewH = (f32)MAP_VIEWPORT_HEIGHT * zoom;
+
     // Frustum cull — skip if tile is fully off-screen
     if (x + w < 0.0f || x >= cw || y + h < 0.0f || y >= ch)
         return;
@@ -435,6 +525,10 @@ void wecanvas_renderStartLocation(WarEditorContext* ctx)
     // Tile border rect
     SDL_FRect r = { x, y, w, h };
     SDL_RenderRect(ctx->renderer, &r);
+
+    // In-game viewport preview rectangle from this start location.
+    SDL_FRect view = { x, y, viewW, viewH };
+    SDL_RenderRect(ctx->renderer, &view);
 
     // Diagonal X mark
     SDL_RenderLine(ctx->renderer, x,     y,     x + w, y + h);
@@ -667,7 +761,7 @@ void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen
             {
                 u16 tileIdx  = ctx->map->visualData[ty  * MAP_TILES_WIDTH + tx];
                 u16 passable = ctx->map->passableData[ty * MAP_TILES_WIDTH + tx];
-                igText("Tile 0x%04X", (u32)tileIdx);
+                igText("Tile %u", (u32)tileIdx);
                 igText("%s", passable != 0 ? "Blocked" : "Passable");
                 igEndTooltip();
             }

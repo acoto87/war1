@@ -30,7 +30,13 @@ typedef enum
     WE_OP_PLACE_ENTITY = 3,
     WE_OP_DELETE_BATCH = 4,
     WE_OP_MOVE_BATCH   = 5,
+    WE_OP_EDIT_ENTITY  = 6,
+    WE_OP_SET_START    = 7,
+    WE_OP_EDIT_MAP     = 8,
+    WE_OP_EDIT_MAP_NAME = 9,
 } WarEditorOpType;
+
+#define WE_HISTORY_MAP_EDIT_MAX_BYTES 512
 
 // ---------------------------------------------------------------------------
 // Per-operation data structs
@@ -93,6 +99,40 @@ typedef struct
     s32  dtx, dty;
 } WeMoveEntityOp;
 
+// Single entity field edit snapshot (used by Inspector edits).
+typedef struct
+{
+    s32          index;
+    bool         isGoldmine;
+    WarLevelUnit oldEntity;
+    WarLevelUnit newEntity;
+} WeEditEntityOp;
+
+// Map start-location change snapshot.
+typedef struct
+{
+    u16 oldX;
+    u16 oldY;
+    u16 newX;
+    u16 newY;
+} WeSetStartOp;
+
+// Generic map-field edit snapshot.
+// offset is the byte offset from the beginning of WarEditorMap.
+typedef struct
+{
+    u32 offset;
+    u16 size;
+    u8  oldData[WE_HISTORY_MAP_EDIT_MAX_BYTES];
+    u8  newData[WE_HISTORY_MAP_EDIT_MAX_BYTES];
+} WeEditMapOp;
+
+typedef struct
+{
+    char oldName[64];
+    char newName[64];
+} WeEditMapNameOp;
+
 // ---------------------------------------------------------------------------
 // Operation union
 // ---------------------------------------------------------------------------
@@ -106,6 +146,10 @@ typedef struct
         WePlaceEntityOp placeEntity;
         WeDeleteBatchOp deleteBatch;
         WeMoveEntityOp  moveBatch;
+        WeEditEntityOp  editEntity;
+        WeSetStartOp    setStart;
+        WeEditMapOp     editMap;
+        WeEditMapNameOp editMapName;
     };
 } WarEditorOp;
 
@@ -145,10 +189,14 @@ void wehist_restoreNeighborhood(WarEditorMap* m, s32 cx, s32 cy,
 void wehist_push(WarEditorHistory* h, WarEditorOp op);
 
 // Apply the inverse of ops[--cursor] to map.  No-op when cursor == 0.
-void wehist_undo(WarEditorHistory* h, WarEditorMap* map);
+void wehist_undo(WarEditorHistory* h, WarEditorContext* ctx);
 
 // Re-apply ops[cursor++] to map.  No-op when cursor == count.
-void wehist_redo(WarEditorHistory* h, WarEditorMap* map);
+void wehist_redo(WarEditorHistory* h, WarEditorContext* ctx);
+
+// Move the history cursor to targetCursor by applying undo/redo steps.
+// targetCursor is clamped to [0, count].
+void wehist_seek(WarEditorHistory* h, WarEditorContext* ctx, s32 targetCursor);
 
 // Free all heap-allocated op data and reset count and cursor to 0.
 void wehist_clear(WarEditorHistory* h);
