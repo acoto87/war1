@@ -3,6 +3,16 @@
 #include <stdint.h>
 #include "war_enums.h"
 
+// TinySoundFont types — forward-declared here so headers that use war.h
+// (e.g. the editor) do not need TinySoundFont compiled into their TU.
+// When war1.c compiles the full TinySoundFont implementation these forward
+// declarations are harmlessly compatible with the real struct definitions.
+struct tsf;
+typedef struct tsf tsf;
+
+struct tml_message;
+typedef struct tml_message tml_message;
+
 struct _WarInput;
 typedef struct _WarInput WarInput;
 
@@ -17,6 +27,9 @@ typedef struct _WarRawResource WarRawResource;
 
 struct _WarFile;
 typedef struct _WarFile WarFile;
+
+struct _WarMapFileHeader;
+typedef struct _WarMapFileHeader WarMapFileHeader;
 
 struct _WarSpriteFrame;
 typedef struct _WarSpriteFrame WarSpriteFrame;

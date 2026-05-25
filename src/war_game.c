@@ -15,6 +15,7 @@
 
 #include "shl/memzone.h"
 #include "shl/wstr.h"
+#include "TracyC.h"
 
 #include "war_alloc.h"
 #include "war_actions.h"
@@ -233,8 +234,24 @@ bool wg_initGame(WarContext* context)
             return false;
         }
 
-        WarScene* scene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
-        wg_setNextScene(context, scene, 0.0f);
+        if (context->customMapPath[0] != '\0')
+        {
+            if (!wmap_loadCustomMap(context, wsv_fromCString(context->customMapPath)))
+            {
+                logError("Could not load custom map: %s", context->customMapPath);
+                return false;
+            }
+        }
+        else if (context->skipIntro)
+        {
+            WarScene* scene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
+            wg_setNextScene(context, scene, 0.0f);
+        }
+        else
+        {
+            WarScene* scene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
+            wg_setNextScene(context, scene, 0.0f);
+        }
     }
     else
     {
@@ -301,9 +318,12 @@ void wg_quitGame(WarContext* context)
 
 bool wg_loadDataFile(WarContext* context)
 {
+    TracyCZoneN(ctx, "wg_loadDataFile", true);
+
     context->warFile = wfile_loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
     if (!context->warFile)
     {
+        TracyCZoneEnd(ctx);
         return false;
     }
 
@@ -313,6 +333,7 @@ bool wg_loadDataFile(WarContext* context)
         wres_loadResource(context, &entry);
     }
 
+    TracyCZoneEnd(ctx);
     return true;
 }
 

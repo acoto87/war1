@@ -3259,30 +3259,32 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
             WarState* collapseState = wst_createCollapseState(context, entity);
             wst_changeNextState(context, entity, collapseState, true, true);
 
-            wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_BUILDING_COLLAPSE_1, .randomToId=WAR_BUILDING_COLLAPSE_3, .loop=false));
+#ifndef WAR_EDITOR_BUILD
+            wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId = WAR_BUILDING_COLLAPSE_1, .randomToId = WAR_BUILDING_COLLAPSE_3, .loop = false));
+#endif
         }
         else
         {
-            vec2 position = wu_getUnitCenterPosition(context, entity, false);
-
             WarState* deathState = wst_createDeathState(context, entity);
             wst_changeNextState(context, entity, deathState, true, true);
 
-            if (unit->type == WAR_UNIT_SCORPION ||
-                unit->type == WAR_UNIT_SPIDER)
+#ifndef WAR_EDITOR_BUILD
+            vec2 position = wu_getUnitCenterPosition(context, entity, false);
+
+            if (unit->type == WAR_UNIT_SCORPION || unit->type == WAR_UNIT_SPIDER)
             {
-                wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_DEAD_SPIDER_SCORPION, .position=position, .hasPosition=true, .loop=false));
+                wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_DEAD_SPIDER_SCORPION, .position = position, .hasPosition = true, .loop = false));
             }
-            else if (unit->type == WAR_UNIT_CATAPULT_HUMANS ||
-                     unit->type == WAR_UNIT_CATAPULT_ORCS)
+            else if (unit->type == WAR_UNIT_CATAPULT_HUMANS || unit->type == WAR_UNIT_CATAPULT_ORCS)
             {
-                wa_createAudioRandomWithPosition(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_BUILDING_COLLAPSE_1, .randomToId=WAR_BUILDING_COLLAPSE_3, .position=position, .hasPosition=true, .loop=false));
+                wa_createAudioRandomWithPosition(context, CREATE_AUDIO_ARGS_INIT(.randomFromId = WAR_BUILDING_COLLAPSE_1, .randomToId = WAR_BUILDING_COLLAPSE_3, .position = position, .hasPosition = true, .loop = false));
             }
             else
             {
                 WarAudioId audioId = wu_isHumanUnit(context, entity)? WAR_HUMAN_DEAD : WAR_ORC_DEAD;
-                wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .position=position, .hasPosition=true, .loop=false));
+                wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId = audioId, .position = position, .hasPosition = true, .loop = false));
             }
+#endif
         }
     }
     else if (wu_isBuildingUnit(context, entity))
@@ -3457,7 +3459,9 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
             WarState* collapseState = wst_createCollapseState(context, goldmine);
             wst_changeNextState(context, goldmine, collapseState, true, true);
 
+#ifndef WAR_EDITOR_BUILD
             wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_BUILDING_COLLAPSE_1, .randomToId=WAR_BUILDING_COLLAPSE_3, .loop=false));
+#endif
         }
     }
 

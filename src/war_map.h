@@ -6,6 +6,35 @@
 #include "war_entities.h"
 #include "war_resources.h"
 
+#define isHumanPlayer(player) ((player)->race == WAR_RACE_HUMANS)
+#define isOrcPlayer(player) ((player)->race == WAR_RACE_ORCS)
+#define isNeutralPlayer(player) ((player)->race == WAR_RACE_NEUTRAL)
+
+#define isFeatureAllowed(player, feature) ((player)->features[(feature)/2])
+#define setFeatureAllowed(player, feature, allowed) ((player)->features[(feature/2)] = (allowed))
+
+#define incrementUpgradeLevel(player, upgrade) ((player)->upgrades[(upgrade)/2].level++)
+#define hasAnyUpgrade(player, upgrade) \
+    ((player)->upgrades[(upgrade)/2].allowed > 0 && \
+     (player)->upgrades[(upgrade)/2].level > 0)
+#define hasRemainingUpgrade(player, upgrade) \
+    ((player)->upgrades[(upgrade)/2].level < (player)->upgrades[(upgrade)/2].allowed)
+#define getUpgradeLevel(player, upgrade) \
+    ((player)->upgrades[(upgrade)/2].level)
+#define checkUpgradeLevel(player, upgrade) \
+    ((player)->upgrades[(upgrade)/2].level <= (player)->upgrades[(upgrade)/2].allowed)
+#define setUpgradeAllowed(player, upgrade, value) \
+    ((player)->upgrades[(upgrade)/2].allowed = (value))
+
+#define imageResourceRefFromPlayer(player, hIdx, oIdx) imageResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx))
+#define spriteResourceRefFromPlayer(player, hIdx, oIdx, spriteIndex) wspr_createSpriteResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx), 1, arrayArg(s32, (spriteIndex)))
+
+// Reserved resource indices for editor-loaded custom .w1m maps.
+// These are above the normal DATA.WAR range (0-582).
+#define WAR_CUSTOM_LEVEL_INFO_INDEX  583
+#define WAR_CUSTOM_VISUAL_INDEX      584
+#define WAR_CUSTOM_PASSABLE_INDEX    585
+
 struct _WarMapTile
 {
     WarMapTileState state;
@@ -30,29 +59,6 @@ struct _WarPlayerInfo
     WarUpgrade upgrades[MAX_UPGRADES_COUNT];
     WarAI* ai;
 };
-
-#define isHumanPlayer(player) ((player)->race == WAR_RACE_HUMANS)
-#define isOrcPlayer(player) ((player)->race == WAR_RACE_ORCS)
-#define isNeutralPlayer(player) ((player)->race == WAR_RACE_NEUTRAL)
-
-#define isFeatureAllowed(player, feature) ((player)->features[(feature)/2])
-#define setFeatureAllowed(player, feature, allowed) ((player)->features[(feature/2)] = (allowed))
-
-#define incrementUpgradeLevel(player, upgrade) ((player)->upgrades[(upgrade)/2].level++)
-#define hasAnyUpgrade(player, upgrade) \
-    ((player)->upgrades[(upgrade)/2].allowed > 0 && \
-     (player)->upgrades[(upgrade)/2].level > 0)
-#define hasRemainingUpgrade(player, upgrade) \
-    ((player)->upgrades[(upgrade)/2].level < (player)->upgrades[(upgrade)/2].allowed)
-#define getUpgradeLevel(player, upgrade) \
-    ((player)->upgrades[(upgrade)/2].level)
-#define checkUpgradeLevel(player, upgrade) \
-    ((player)->upgrades[(upgrade)/2].level <= (player)->upgrades[(upgrade)/2].allowed)
-#define setUpgradeAllowed(player, upgrade, value) \
-    ((player)->upgrades[(upgrade)/2].allowed = (value))
-
-#define imageResourceRefFromPlayer(player, hIdx, oIdx) imageResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx))
-#define spriteResourceRefFromPlayer(player, hIdx, oIdx, spriteIndex) wspr_createSpriteResourceRef((player)->race == WAR_RACE_HUMANS ? (hIdx) : (oIdx), 1, arrayArg(s32, (spriteIndex)))
 
 struct _WarMapSettings
 {
@@ -145,6 +151,8 @@ struct _WarMap
 
 WarMap* wmap_createMap(WarContext *context, s32 levelInfoIndex);
 void wmap_freeMap(WarContext* context, WarMap* map);
+
+bool wmap_loadCustomMap(WarContext* context, StringView mapPath);
 
 void wmap_enterMap(WarContext* context);
 void wmap_updateMap(WarContext* context);

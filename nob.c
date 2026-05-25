@@ -25,6 +25,8 @@ typedef enum {
 typedef enum {
     COMMAND_BUILD,
     COMMAND_RUN,
+    COMMAND_EDITOR,
+    COMMAND_RUN_EDITOR,
 } Command;
 
 typedef struct {
@@ -35,6 +37,8 @@ typedef struct {
     bool check_only;
     bool profile;           // enable Tracy profiler instrumentation
     bool build_before_run;  // set when build flags are passed alongside 'run'
+    int app_argc;           // extra args forwarded to the war1 executable (after --)
+    char **app_argv;
 } Build_Options;
 
 static const char *toolchain_name(Toolchain toolchain)
@@ -107,6 +111,23 @@ static const char *target_binary_path(Target target)
     }
 }
 
+static const char *editor_binary_path(Target target)
+{
+    const char *output_dir = target_output_dir(target);
+    switch (target) {
+        case TARGET_WIN32:
+        case TARGET_WIN64:
+            return nob_temp_sprintf("%s/war1_editor.exe", output_dir);
+
+        case TARGET_LINUX64:
+        case TARGET_ARM64:
+            return nob_temp_sprintf("%s/war1_editor", output_dir);
+
+        default:
+            return NULL;
+    }
+}
+
 static bool target_is_windows(Target target)
 {
     return target == TARGET_WIN32 || target == TARGET_WIN64;
@@ -149,7 +170,7 @@ static Toolchain default_toolchain(void)
 
 static void usage(const char *program)
 {
-    printf("Usage: %s [build|run] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile]\n", program);
+    printf("Usage: %s [build|run|editor] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile] [-- <app args>]\n", program);
     printf("\n");
     printf("Examples:\n");
     printf("  %s build --cc gcc --target linux64\n", program);
@@ -159,6 +180,11 @@ static void usage(const char *program)
     printf("  %s run --target linux64\n", program);
     printf("  %s run --cc gcc --target linux64 --debug\n", program);
     printf("  %s build --cc msvc --target win64 --profile\n", program);
+    printf("  %s editor --cc msvc --target win64 --check\n", program);
+    printf("  %s editor --cc gcc --target linux64\n", program);
+    printf("  %s run editor --target win64\n", program);
+    printf("  %s run editor --cc msvc --target win64 --debug\n", program);
+    printf("  %s run -- --map 5 --skip-intro\n", program);
 }
 
 static bool parse_toolchain(const char *value, Toolchain *toolchain)
@@ -221,7 +247,19 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
         }
 
         if (!command_consumed && strcmp(arg, "run") == 0) {
-            options->command = COMMAND_RUN;
+            // Check for optional 'editor' sub-command: "run editor"
+            if (argc > 0 && strcmp(argv[0], "editor") == 0) {
+                nob_shift_args(&argc, &argv); // consume "editor"
+                options->command = COMMAND_RUN_EDITOR;
+            } else {
+                options->command = COMMAND_RUN;
+            }
+            command_consumed = true;
+            continue;
+        }
+
+        if (!command_consumed && strcmp(arg, "editor") == 0) {
+            options->command = COMMAND_EDITOR;
             command_consumed = true;
             continue;
         }
@@ -241,7 +279,7 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
                 return false;
             }
 
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
@@ -258,19 +296,19 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
                 return false;
             }
 
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
         if (strcmp(arg, "--debug") == 0) {
             options->debug = true;
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
         if (strcmp(arg, "--release") == 0) {
             options->debug = false;
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
         }
 
@@ -281,8 +319,15 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
 
         if (strcmp(arg, "--profile") == 0) {
             options->profile = true;
-            if (options->command == COMMAND_RUN) options->build_before_run = true;
+            if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
             continue;
+        }
+
+        if (strcmp(arg, "--") == 0) {
+            // Everything after -- is forwarded to the war1 executable
+            options->app_argc = argc;
+            options->app_argv = argv;
+            break;
         }
 
         if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
@@ -298,55 +343,37 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
     return true;
 }
 
-static bool nob_read_entire_dir_recursively(const char* parent, Nob_File_Paths* file_paths, int idx)
+static bool delete_build_output_if_exists(const char *path)
 {
-    // NOTE: This library to deal with files and directories seems nice: https://github.com/cxong/tinydir
-
-    if (!nob_read_entire_dir(parent, file_paths)) {
-        return false;
+    if (!nob_file_exists(path)) {
+        return true;
     }
 
-    int count = file_paths->count;
-
-    for (int i = idx; i < count; i++) {
-        if (strcmp(file_paths->items[i], ".") == 0) continue;
-        if (strcmp(file_paths->items[i], "..") == 0) continue;
-
-        // NOTE: Here I'm leaking the allocation for each file name on the nob_read_entire_dir call
-        // but I'm don't care that much because that alloc is done on the temp static arena
-        file_paths->items[i] = nob_temp_sprintf("%s/%s", parent, file_paths->items[i]);
-
-        Nob_File_Type file_type = nob_get_file_type(file_paths->items[i]);
-        if (file_type == NOB_FILE_DIRECTORY) {
-            if (!nob_read_entire_dir_recursively(file_paths->items[i], file_paths, file_paths->count)) {
-                return false;
-            }
-        }
-    }
-
-    return true;
+    return nob_delete_file(path);
 }
 
-static bool clear_folder(const char* parent)
+static bool clear_build_outputs(const Build_Options *options, const char *base_name)
 {
-    Nob_File_Paths file_paths = {0};
+    const char *output_dir = target_output_dir(options->target);
 
-    if (!nob_read_entire_dir_recursively(parent, &file_paths, 0)) {
+    if (!output_dir) {
         return false;
     }
 
-    for (int i = 0; i < file_paths.count; i++) {
-        Nob_File_Type file_type = nob_get_file_type(file_paths.items[i]);
-        if (file_type == NOB_FILE_REGULAR) {
-            if (!nob_delete_file(file_paths.items[i])) {
-                return false;
-            }
-        }
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.o", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.obj", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.pdb", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.ilk", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.exp", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.lib", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.res", output_dir, base_name))) return false;
+    if (!delete_build_output_if_exists(nob_temp_sprintf("%s/%s.res.o", output_dir, base_name))) return false;
+
+    if (target_is_windows(options->target)) {
+        return delete_build_output_if_exists(nob_temp_sprintf("%s/%s.exe", output_dir, base_name));
     }
 
-    file_paths.count = 0;
-
-    return true;
+    return delete_build_output_if_exists(nob_temp_sprintf("%s/%s", output_dir, base_name));
 }
 
 static bool ensure_output_dirs(Target target)
@@ -420,6 +447,41 @@ static bool compile_msvc_source(const Build_Options *options, const char *source
     return nob_cmd_run(&cmd);
 }
 
+static bool compile_windows_resource_gnu_like(const Build_Options *options,
+                                              const char *rc_path,
+                                              const char *res_object_path)
+{
+    Nob_Cmd cmd = {0};
+
+    (void)options;
+
+    nob_cmd_append(&cmd,
+                   "windres",
+                   "-i",
+                   rc_path,
+                   "-o",
+                   res_object_path);
+
+    return nob_cmd_run(&cmd);
+}
+
+static bool compile_windows_resource_msvc(const Build_Options *options,
+                                          const char *rc_path,
+                                          const char *res_path)
+{
+    Nob_Cmd cmd = {0};
+
+    (void)options;
+
+    nob_cmd_append(&cmd,
+                   "rc",
+                   "/nologo",
+                   nob_temp_sprintf("/fo%s", res_path),
+                   rc_path);
+
+    return nob_cmd_run(&cmd);
+}
+
 static bool copy_runtime_files(const Build_Options *options)
 {
     const char *output_dir = target_output_dir(options->target);
@@ -474,14 +536,15 @@ static bool build_with_gnu_like(const Build_Options *options)
 {
     const char *binary_path = target_binary_path(options->target);
     const char *output_dir = target_output_dir(options->target);
+    const char *res_object_path = NULL;
 
     if (!ensure_output_dirs(options->target)) {
         nob_log(NOB_ERROR, "Could not create output directories");
         return false;
     }
 
-    if (!clear_folder(output_dir)) {
-        nob_log(NOB_ERROR, "Could not clear output directory");
+    if (!clear_build_outputs(options, "war1")) {
+        nob_log(NOB_ERROR, "Could not clear previous game outputs");
         return false;
     }
 
@@ -493,6 +556,13 @@ static bool build_with_gnu_like(const Build_Options *options)
         return true;
     }
 
+    if (target_is_windows(options->target)) {
+        res_object_path = nob_temp_sprintf("%s/war1.res.o", output_dir);
+        if (!compile_windows_resource_gnu_like(options, "src/war1.rc", res_object_path)) {
+            return false;
+        }
+    }
+
     Nob_Cmd cmd = {0};
     append_gnu_common_flags(&cmd, options);
     nob_cmd_append(&cmd,
@@ -500,6 +570,10 @@ static bool build_with_gnu_like(const Build_Options *options)
                    "-o",
                    binary_path,
                    nob_temp_sprintf("-L%s", target_library_dir(options->target)));
+
+    if (res_object_path) {
+        nob_cmd_append(&cmd, res_object_path);
+    }
 
     if (target_is_windows(options->target)) {
         nob_cmd_append(&cmd, "-lSDL3", "-lws2_32");
@@ -532,6 +606,8 @@ static bool build_with_gnu_like(const Build_Options *options)
 
 static bool build_with_msvc(const Build_Options *options)
 {
+    const char *res_path = NULL;
+
     if (!host_is_windows()) {
         nob_log(NOB_ERROR, "msvc builds are only supported when running nob on Windows");
         return false;
@@ -547,8 +623,8 @@ static bool build_with_msvc(const Build_Options *options)
         return false;
     }
 
-    if (!clear_folder(target_output_dir(options->target))) {
-        nob_log(NOB_ERROR, "Could not clear output directory");
+    if (!clear_build_outputs(options, "war1")) {
+        nob_log(NOB_ERROR, "Could not clear previous game outputs");
         return false;
     }
 
@@ -563,6 +639,11 @@ static bool build_with_msvc(const Build_Options *options)
         return true;
     }
 
+    res_path = nob_temp_sprintf("%s/war1.res", output_dir);
+    if (!compile_windows_resource_msvc(options, "src/war1.rc", res_path)) {
+        return false;
+    }
+
     // Full build: compile + link
     Nob_Cmd cmd = {0};
     append_msvc_common_flags(&cmd, options);
@@ -571,6 +652,7 @@ static bool build_with_msvc(const Build_Options *options)
                    nob_temp_sprintf("/Fe:%s", target_binary_path(options->target)),
                    nob_temp_sprintf("/Fo:%s/", output_dir),
                    "/link",
+                   res_path,
                    nob_temp_sprintf("/LIBPATH:%s", lib_dir),
                    "SDL3.lib",
                    "shell32.lib",
@@ -585,6 +667,198 @@ static bool build_with_msvc(const Build_Options *options)
     }
 
     return copy_runtime_files(options);
+}
+
+static bool append_editor_defines_gnu(Nob_Cmd *cmd)
+{
+    nob_cmd_append(cmd,
+                   "-Isrc",
+                   "-DWAR_EDITOR_BUILD",
+                   "-DCIMGUI_DEFINE_ENUMS_AND_STRUCTS",
+                   "-DCIMGUI_NO_EXPORT",
+                   "-DCIMGUI_USE_SDL3",
+                   "-DCIMGUI_USE_SDLRENDERER3",
+                   "-Ideps/include/cimgui");
+    return true;
+}
+
+static bool append_editor_defines_msvc(Nob_Cmd *cmd)
+{
+    nob_cmd_append(cmd,
+                   "/DWAR_EDITOR_BUILD",
+                   "/DCIMGUI_DEFINE_ENUMS_AND_STRUCTS",
+                   "/DCIMGUI_NO_EXPORT",
+                   "/DCIMGUI_USE_SDL3",
+                   "/DCIMGUI_USE_SDLRENDERER3",
+                   "/Ideps/include/cimgui");
+    return true;
+}
+
+static bool build_editor_with_gnu_like(const Build_Options *options)
+{
+    const char *output_dir = target_output_dir(options->target);
+    const char *res_object_path = NULL;
+
+    if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    if (!clear_build_outputs(options, "war1_editor")) {
+        nob_log(NOB_ERROR, "Could not clear previous editor outputs");
+        return false;
+    }
+
+    if (options->check_only) {
+        Nob_Cmd cmd = {0};
+        append_gnu_common_flags(&cmd, options);
+        append_editor_defines_gnu(&cmd);
+        nob_cmd_append(&cmd,
+                       "-c",
+                       "src/war1_editor.c",
+                       "-o",
+                       nob_temp_sprintf("%s/war1_editor.o", output_dir));
+        return nob_cmd_run(&cmd);
+    }
+
+    if (target_is_windows(options->target)) {
+        res_object_path = nob_temp_sprintf("%s/war1_editor.res.o", output_dir);
+        if (!compile_windows_resource_gnu_like(options, "src/war1_editor.rc", res_object_path)) {
+            return false;
+        }
+    }
+
+    // Full build: compile + link
+    const char *lib_dir = target_library_dir(options->target);
+
+    Nob_Cmd cmd = {0};
+    append_gnu_common_flags(&cmd, options);
+    append_editor_defines_gnu(&cmd);
+    nob_cmd_append(&cmd,
+                   "src/war1_editor.c",
+                   "-o",
+                   editor_binary_path(options->target),
+                   nob_temp_sprintf("-L%s", lib_dir));
+
+    if (res_object_path) {
+        nob_cmd_append(&cmd, res_object_path);
+    }
+
+    if (target_is_windows(options->target)) {
+        nob_cmd_append(&cmd, "-lcimgui", "-lSDL3", "-lws2_32", "-lstdc++");
+        if (options->toolchain == TOOLCHAIN_GCC) {
+            nob_cmd_append(&cmd, "-static-libgcc");
+        }
+    } else {
+        // cimgui is a C++ static lib; must link C++ runtime explicitly from C
+        const char *cimgui_lib = nob_temp_sprintf("%s/libcimgui.a", lib_dir);
+        nob_cmd_append(&cmd,
+                       cimgui_lib,
+                       "-lSDL3",
+                       "-lpthread",
+                       "-lm",
+                       "-ldl",
+                       "-lstdc++",
+                       "-Wl,-rpath,$ORIGIN");
+        if (options->target == TARGET_LINUX64) {
+            nob_cmd_append(&cmd, "-no-pie");
+        }
+    }
+
+    if (!nob_cmd_run(&cmd)) {
+        return false;
+    }
+
+    return copy_runtime_files(options);
+}
+
+static bool build_editor_with_msvc(const Build_Options *options)
+{
+    const char *res_path = NULL;
+
+    if (!host_is_windows()) {
+        nob_log(NOB_ERROR, "msvc builds are only supported when running nob on Windows");
+        return false;
+    }
+
+    if (!target_is_windows(options->target)) {
+        nob_log(NOB_ERROR, "msvc builds require a Windows target");
+        return false;
+    }
+
+    if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    if (!clear_build_outputs(options, "war1_editor")) {
+        nob_log(NOB_ERROR, "Could not clear previous editor outputs");
+        return false;
+    }
+
+    const char *output_dir = target_output_dir(options->target);
+    const char *lib_dir = target_library_dir(options->target);
+
+    if (options->check_only) {
+        Nob_Cmd cmd = {0};
+        append_msvc_common_flags(&cmd, options);
+        append_editor_defines_msvc(&cmd);
+        nob_cmd_append(&cmd,
+                       "/c",
+                       "src/war1_editor.c",
+                       nob_temp_sprintf("/Fo:%s/war1_editor.obj", output_dir));
+        return nob_cmd_run(&cmd);
+    }
+
+    res_path = nob_temp_sprintf("%s/war1_editor.res", output_dir);
+    if (!compile_windows_resource_msvc(options, "src/war1_editor.rc", res_path)) {
+        return false;
+    }
+
+    // Full build: compile + link
+    Nob_Cmd cmd = {0};
+    append_msvc_common_flags(&cmd, options);
+    append_editor_defines_msvc(&cmd);
+    nob_cmd_append(&cmd,
+                   "src/war1_editor.c",
+                   nob_temp_sprintf("/Fe:%s/war1_editor.exe", output_dir),
+                   nob_temp_sprintf("/Fo:%s/", output_dir),
+                   "/link",
+                   res_path,
+                   nob_temp_sprintf("/LIBPATH:%s", lib_dir),
+                   "SDL3.lib",
+                   "cimgui.lib",
+                   "shell32.lib",
+                   "ws2_32.lib");
+
+    if (!nob_cmd_run(&cmd)) {
+        return false;
+    }
+
+    return copy_runtime_files(options);
+}
+
+static bool build_editor(const Build_Options *options)
+{
+    nob_log(NOB_INFO,
+            "Building editor target=%s toolchain=%s mode=%s build=%s",
+            target_name(options->target),
+            toolchain_name(options->toolchain),
+            options->check_only ? "check" : "build",
+            options->debug ? "debug" : "release");
+
+    switch (options->toolchain) {
+        case TOOLCHAIN_GCC:
+        case TOOLCHAIN_CLANG:
+            return build_editor_with_gnu_like(options);
+
+        case TOOLCHAIN_MSVC:
+            return build_editor_with_msvc(options);
+
+        default:
+            nob_log(NOB_ERROR, "unsupported toolchain");
+            return false;
+    }
 }
 
 static bool build_project(const Build_Options *options)
@@ -632,6 +906,36 @@ static bool run_project(const Build_Options *options)
 
     Nob_Cmd cmd = {0};
     nob_cmd_append(&cmd, binary);
+    for (int i = 0; i < options->app_argc; i++) {
+        nob_da_append(&cmd, options->app_argv[i]);
+    }
+    return nob_cmd_run(&cmd);
+}
+
+static bool run_editor_project(const Build_Options *options)
+{
+    if (target_is_windows(options->target) && !host_is_windows()) {
+        nob_log(NOB_ERROR, "Cannot run a Windows binary on a non-Windows host");
+        return false;
+    }
+
+    const char *output_dir = target_output_dir(options->target);
+    const char *binary = target_is_windows(options->target) ? "war1_editor.exe" : "./war1_editor";
+
+    nob_log(NOB_INFO, "Changing directory to: %s", output_dir);
+
+    if (!nob_set_current_dir(output_dir)) {
+        nob_log(NOB_ERROR, "Could not change to directory: %s", output_dir);
+        return false;
+    }
+
+    nob_log(NOB_INFO, "Running: %s", binary);
+
+    Nob_Cmd cmd = {0};
+    nob_cmd_append(&cmd, binary);
+    for (int i = 0; i < options->app_argc; i++) {
+        nob_da_append(&cmd, options->app_argv[i]);
+    }
     return nob_cmd_run(&cmd);
 }
 
@@ -662,6 +966,15 @@ int main(int argc, char **argv)
                 if (!build_project(&options)) return 1;
             }
             if (!run_project(&options)) return 1;
+            break;
+        case COMMAND_EDITOR:
+            if (!build_editor(&options)) return 1;
+            break;
+        case COMMAND_RUN_EDITOR:
+            if (options.build_before_run) {
+                if (!build_editor(&options)) return 1;
+            }
+            if (!run_editor_project(&options)) return 1;
             break;
         default:
             nob_log(NOB_ERROR, "unknown command");

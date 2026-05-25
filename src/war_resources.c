@@ -9,6 +9,7 @@
 #endif
 #include "shl/memory_buffer.h"
 #include "shl/wstr.h"
+#include "TracyC.h"
 
 #include "war_log.h"
 #include "war_audio.h"
@@ -21,12 +22,17 @@
 
 WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
 {
+    TracyCZoneN(ctx, "wres_getOrCreateResource", true);
+
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
     if (!context->resources[index])
     {
         logInfo("Creating resource: %d", index);
         context->resources[index] = (WarResource*)wm_alloc(sizeof(WarResource));
     }
+
+    TracyCZoneEnd(ctx);
+
     return context->resources[index];
 }
 
@@ -76,11 +82,14 @@ void wres_getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, 
 
 void wres_loadPaletteResource(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadPaletteResource", true);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -163,10 +172,14 @@ void wres_loadPaletteResource(WarContext *context, DatabaseEntry *entry)
         resource->paletteData.colors[215 * 3 + 1] = 20;
         resource->paletteData.colors[215 * 3 + 2] = 24;
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadImageResource", true);
+
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
@@ -175,6 +188,7 @@ void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -205,10 +219,14 @@ void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
     resource->imageData.width = width;
     resource->imageData.height = height;
     resource->imageData.pixels = pixels;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadSpriteResource", true);
+
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
@@ -217,6 +235,7 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -283,6 +302,8 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     resource->spriteData.framesCount = framesCount;
     resource->spriteData.frameWidth = frameWidth;
     resource->spriteData.frameHeight = frameHeight;
+
+    TracyCZoneEnd(ctx);
 }
 
 s32 wres_loadStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset)
@@ -428,6 +449,8 @@ s32 wres_loadCustomStartEntities(WarResource* resource, WarRawResource* rawResou
 
 void wres_loadLevelInfo(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadLevelInfo", true);
+
     s32 index = entry->index;
     WarMapTilesetType tilesetType = (WarMapTilesetType)entry->param1;
     bool isCustomMap = entry->param2;
@@ -436,6 +459,7 @@ void wres_loadLevelInfo(WarContext *context, DatabaseEntry *entry)
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -652,15 +676,20 @@ void wres_loadLevelInfo(WarContext *context, DatabaseEntry *entry)
         // skip marker 0xFFFF
         offset += 2;
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadLevelVisual(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadLevelVisual", true);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -670,15 +699,20 @@ void wres_loadLevelVisual(WarContext *context, DatabaseEntry *entry)
     {
         resource->levelVisual.data[i] = readu16(rawResource.data, i * 2);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadLevelPassable(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadLevelPassable", true);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -689,15 +723,20 @@ void wres_loadLevelPassable(WarContext *context, DatabaseEntry *entry)
         // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
         resource->levelPassable.data[i] = readu16(rawResource.data, i * 2);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadTileset", true);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -764,10 +803,14 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     // #endif
 
     mz_destroy(scratch);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadTiles(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadTiles", true);
+
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
@@ -776,6 +819,7 @@ void wres_loadTiles(WarContext *context, DatabaseEntry *entry)
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -785,15 +829,20 @@ void wres_loadTiles(WarContext *context, DatabaseEntry *entry)
     resource->tilesData.palette2 = entry->param2;
     resource->tilesData.data = (u8*)wm_alloc(rawResource.length * sizeof(u8));
     memcpy(resource->tilesData.data, rawResource.data, rawResource.length);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadText(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadText", true);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -802,15 +851,20 @@ void wres_loadText(WarContext *context, DatabaseEntry *entry)
     resource->textData.length = rawResource.length;
     resource->textData.text = (char *)wm_alloc(resource->textData.length * sizeof(char));
     memcpy(resource->textData.text, rawResource.data, resource->textData.length);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadXmi(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadXmi", true);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -822,6 +876,7 @@ void wres_loadXmi(WarContext *context, DatabaseEntry *entry)
     if (!midData)
     {
         logError("Can't convert XMI file of resource %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -830,15 +885,20 @@ void wres_loadXmi(WarContext *context, DatabaseEntry *entry)
     resource->audio.data = midData;
     assert(midLength <= INT32_MAX);
     resource->audio.length = (s32)midLength;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadWave(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadWave", true);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -890,15 +950,20 @@ void wres_loadWave(WarContext *context, DatabaseEntry *entry)
     resource->audio.length = newDataLength;
 
     mz_destroy(scratch);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadVoc(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadVoc", true);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -951,10 +1016,14 @@ void wres_loadVoc(WarContext *context, DatabaseEntry *entry)
     resource->audio.length = newDataLength;
 
     mz_destroy(scratch);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
 {
+    TracyCZoneN(ctx, "wres_loadCursor", true);
+
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
@@ -963,6 +1032,7 @@ void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
     if (rawResource.placeholder)
     {
         logInfo("Placeholder resource found at: %d", index);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -997,10 +1067,14 @@ void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
     resource->cursor.width = width;
     resource->cursor.height = height;
     resource->cursor.pixels = pixels;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wres_loadResource(WarContext *context, DatabaseEntry *entry)
 {
+    TracyCZoneN(ctx, "wres_loadResource", true);
+
     switch (entry->type)
     {
         case DB_ENTRY_TYPE_PALETTE:
@@ -1087,4 +1161,6 @@ void wres_loadResource(WarContext *context, DatabaseEntry *entry)
             break;
         }
     }
+
+    TracyCZoneEnd(ctx);
 }

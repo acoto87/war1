@@ -40,7 +40,7 @@
 #define ONLINE_DEMO_DATAWAR_FILE_URL "http://ia801608.us.archive.org/view_archive.php?archive=/11/items/WarcraftOrcsHumansDemo/WCRFT.ZIP&file=DEMODATA%2FDATA.WAR"
 
 // Counts
-#define MAX_RESOURCES_COUNT 583
+#define MAX_RESOURCES_COUNT 586
 #define MAX_TEXTURES_COUNT 583
 #define MAX_ENTITIES_COUNT 1024
 #define MAX_COMPONENTS_COUNT 30
@@ -277,6 +277,14 @@ struct _WarContext
     WarMap* nextMap;
 
     WarImuiState imui;
+
+    // Path to a .w1m map file to load instead of the normal intro sequence.
+    // Set from the --map <path> command-line argument before wg_initGame is called.
+    char customMapPath[512];
+
+    // When true, skip the Blizzard intro and go straight to the main menu.
+    // Set from the --skip-intro command-line argument before wg_initGame is called.
+    bool skipIntro;
 };
 
 void wg_setGlobalScale(WarContext* context, f32 scale);
