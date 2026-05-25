@@ -494,6 +494,6 @@ void wsc_handleCustomGameOk(WarContext* context, WarEntity* entity)
 
     WarScene* scene = context->scene;
 
-    WarMap* map = createCustomMap(context, scene->menu.customMap, scene->menu.yourRace, scene->menu.enemyRace);
+    WarMap* map = wmap_createCustomMap(context, scene->menu.customMap, scene->menu.yourRace, scene->menu.enemyRace);
     wg_setNextMap(context, map, 1.0f);
 }

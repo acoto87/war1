@@ -45,7 +45,7 @@ static bool weplay_launchGame(const char* mapPath)
 {
 #if defined(_WIN32)
     char cmdLine[512];
-    SDL_snprintf(cmdLine, sizeof(cmdLine), "%s --map %s", WEPLAY_GAME_BIN, mapPath);
+    SDL_snprintf(cmdLine, sizeof(cmdLine), "%s --map \"%s\"", WEPLAY_GAME_BIN, mapPath);
 
     STARTUPINFOA        si;
     PROCESS_INFORMATION pi;

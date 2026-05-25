@@ -40,7 +40,7 @@
 #define ONLINE_DEMO_DATAWAR_FILE_URL "http://ia801608.us.archive.org/view_archive.php?archive=/11/items/WarcraftOrcsHumansDemo/WCRFT.ZIP&file=DEMODATA%2FDATA.WAR"
 
 // Counts
-#define MAX_RESOURCES_COUNT 583
+#define MAX_RESOURCES_COUNT 586
 #define MAX_TEXTURES_COUNT 583
 #define MAX_ENTITIES_COUNT 1024
 #define MAX_COMPONENTS_COUNT 30

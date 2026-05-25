@@ -15,4 +15,4 @@ struct _WarMapFileHeader
 };
 
 WarFile* wfile_loadWarFile(WarContext* context, StringView filePath);
-bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, u16* visual, u16* passable);
+bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarResource* visualInfoRes, WarResource* passableInfoRes);

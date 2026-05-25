@@ -15,6 +15,7 @@
 
 #include "shl/memzone.h"
 #include "shl/wstr.h"
+#include "TracyC.h"
 
 #include "war_alloc.h"
 #include "war_actions.h"
@@ -317,9 +318,12 @@ void wg_quitGame(WarContext* context)
 
 bool wg_loadDataFile(WarContext* context)
 {
+    TracyCZoneN(ctx, "wg_loadDataFile", true);
+
     context->warFile = wfile_loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
     if (!context->warFile)
     {
+        TracyCZoneEnd(ctx);
         return false;
     }
 
@@ -329,6 +333,7 @@ bool wg_loadDataFile(WarContext* context)
         wres_loadResource(context, &entry);
     }
 
+    TracyCZoneEnd(ctx);
     return true;
 }
 

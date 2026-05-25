@@ -7,10 +7,13 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
 {
     NOT_USED(context);
 
+    TracyCZoneN(ctx, "wfile_loadWarFile", true);
+
     SDL_IOStream *stream = SDL_IOFromFile(wsv_data(filePath), "rb");
     if (!stream)
     {
         logError("Couldn't process the DATA.WAR file. The file doesn't exists at %s.", wsv_data(filePath));
+        TracyCZoneEnd(ctx);
         return NULL;
     }
 
@@ -47,6 +50,7 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
         logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.", warFile->archiveID);
         wm_free(warFile);
         SDL_CloseIO(stream);
+        TracyCZoneEnd(ctx);
         return NULL;
     }
 
@@ -200,6 +204,7 @@ tmp.size := finalsize; // Crop the file, just in case
     }
 
     SDL_CloseIO(stream);
+    TracyCZoneEnd(ctx);
     return warFile;
 
 #undef BUFWIN_SIZE
@@ -214,8 +219,12 @@ tmp.size := finalsize; // Crop the file, just in case
 // Read a .w1m stream into a pre-allocated WarResource and two u16 tile arrays.
 // path_ and stream_ are the parameter names expected by the macros above.
 // Returns true on success; closes stream_ and returns false on any error.
-bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, u16* visual, u16* passable)
+bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarResource* visualInfoRes, WarResource* passableInfoRes)
 {
+    assert(levelInfoRes);
+    assert(visualInfoRes);
+    assert(passableInfoRes);
+
 // WFILE_READ_FIELD: read one field of (sz_) bytes from stream_ into (ptr_).
 // On failure, closes the stream and returns false.
 #define WFILE_READ_FIELD(ptr_, sz_) \
@@ -229,8 +238,7 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, u16* v
 
 // WFILE_READ_ARRAY: read (cnt_) elements of (esz_) bytes each from stream_ into (ptr_).
 #define WFILE_READ_ARRAY(ptr_, esz_, cnt_) \
-    if ((cnt_) > 0 && SDL_ReadIO(stream, (ptr_), (size_t)(esz_) * (size_t)(cnt_)) \
-            != (size_t)(esz_) * (size_t)(cnt_)) \
+    if ((cnt_) > 0 && SDL_ReadIO(stream, (ptr_), (size_t)(esz_) * (size_t)(cnt_)) != (size_t)(esz_) * (size_t)(cnt_)) \
     { \
         logError("wfile_loadWarMapFile: unexpected EOF reading array in '%.*s'", \
                  (int)filePath.length, filePath.data); \
@@ -241,7 +249,7 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, u16* v
     SDL_IOStream* stream = SDL_IOFromFile(wsv_data(filePath), "rb");
     if (!stream)
     {
-        logError("wfile_loadCustomMap: cannot open '%.*s'",
+        logError("wfile_loadWarMapFile: cannot open '%.*s'",
                  (int)filePath.length, filePath.data);
         return false;
     }
@@ -353,12 +361,10 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, u16* v
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startConfigurations,
-                 sizeof(WarCustomMapConfiguration),
-                 levelInfoRes->levelInfo.startConfigurationsCount);
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startConfigurations, sizeof(WarCustomMapConfiguration), levelInfoRes->levelInfo.startConfigurationsCount);
 
-    WFILE_READ_ARRAY(visual,   sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
-    WFILE_READ_ARRAY(passable, sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+    WFILE_READ_ARRAY(visualInfoRes->levelVisual.data,     sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
+    WFILE_READ_ARRAY(passableInfoRes->levelPassable.data, sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
 
     SDL_CloseIO(stream);
 
