@@ -313,8 +313,9 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startEntities,
-                 sizeof(WarLevelUnit), levelInfoRes->levelInfo.startEntitiesCount);
+    levelInfoRes->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
+    assert(levelInfoRes->levelInfo.startEntities);
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startEntities, sizeof(WarLevelUnit), levelInfoRes->levelInfo.startEntitiesCount);
 
     WFILE_READ_FIELD(&levelInfoRes->levelInfo.startRoadsCount, sizeof(u32));
     if (levelInfoRes->levelInfo.startRoadsCount > MAX_CONSTRUCTS_COUNT)
@@ -325,8 +326,9 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startRoads,
-                 sizeof(WarLevelConstruct), levelInfoRes->levelInfo.startRoadsCount);
+    levelInfoRes->levelInfo.startRoads = (WarLevelConstruct*)wm_alloc(MAX_CONSTRUCTS_COUNT * sizeof(WarLevelConstruct));
+    assert(levelInfoRes->levelInfo.startRoads);
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startRoads, sizeof(WarLevelConstruct), levelInfoRes->levelInfo.startRoadsCount);
 
     WFILE_READ_FIELD(&levelInfoRes->levelInfo.startWallsCount, sizeof(u32));
     if (levelInfoRes->levelInfo.startWallsCount > MAX_CONSTRUCTS_COUNT)
@@ -337,8 +339,9 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startWalls,
-                 sizeof(WarLevelConstruct), levelInfoRes->levelInfo.startWallsCount);
+    levelInfoRes->levelInfo.startWalls = (WarLevelConstruct*)wm_alloc(MAX_CONSTRUCTS_COUNT * sizeof(WarLevelConstruct));
+    assert(levelInfoRes->levelInfo.startWalls);
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startWalls, sizeof(WarLevelConstruct), levelInfoRes->levelInfo.startWallsCount);
 
     WFILE_READ_FIELD(&levelInfoRes->levelInfo.startGoldminesCount, sizeof(u32));
     if (levelInfoRes->levelInfo.startGoldminesCount > MAX_CUSTOM_MAP_GOLDMINES_COUNT)
@@ -349,8 +352,9 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startGoldmines,
-                 sizeof(WarLevelUnit), levelInfoRes->levelInfo.startGoldminesCount);
+    levelInfoRes->levelInfo.startGoldmines = (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_GOLDMINES_COUNT * sizeof(WarLevelUnit));
+    assert(levelInfoRes->levelInfo.startGoldmines);
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startGoldmines, sizeof(WarLevelUnit), levelInfoRes->levelInfo.startGoldminesCount);
 
     WFILE_READ_FIELD(&levelInfoRes->levelInfo.startConfigurationsCount, sizeof(u32));
     if (levelInfoRes->levelInfo.startConfigurationsCount > MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT)
@@ -362,6 +366,12 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         return false;
     }
     WFILE_READ_ARRAY(levelInfoRes->levelInfo.startConfigurations, sizeof(WarCustomMapConfiguration), levelInfoRes->levelInfo.startConfigurationsCount);
+
+    visualInfoRes->levelVisual.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    assert(visualInfoRes->levelVisual.data);
+
+    passableInfoRes->levelPassable.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    assert(passableInfoRes->levelPassable.data);
 
     WFILE_READ_ARRAY(visualInfoRes->levelVisual.data,     sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
     WFILE_READ_ARRAY(passableInfoRes->levelPassable.data, sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);

@@ -156,10 +156,11 @@ static void wemap_loadTilesetRes(WarEditorContext* ctx, s32 index, s32 tilesInde
     }
 
     WarResource* tiles = wemap_getOrCreateResource(ctx, tilesIndex);
+    assert(tiles);
+    assert(tiles->type == WAR_RESOURCE_TYPE_TILES);
 
-    // Scratch zone for the temporary indexed-colour tile buffer.
-    memzone_t* scratch = mz_init(TILESET_WIDTH * TILESET_HEIGHT + 1024);
-    u8* data = (u8*)mz_alloc(scratch, TILESET_WIDTH * TILESET_HEIGHT);
+    u8* data = (u8*)wm_alloc(TILESET_WIDTH * TILESET_HEIGHT);
+    assert(data);
 
     u32 tilesCount = raw->length / 8;
     for (u32 i = 0; i < tilesCount; i++)
@@ -199,6 +200,8 @@ static void wemap_loadTilesetRes(WarEditorContext* ctx, s32 index, s32 tilesInde
     WarResource* res = wemap_getOrCreateResource(ctx, index);
     res->type = WAR_RESOURCE_TYPE_TILESET;
     res->tilesetData.tilesCount = tilesCount;
+    res->tilesetData.data = (u8*)wm_alloc(TILESET_WIDTH * TILESET_HEIGHT * 4 * sizeof(u8));
+    assert(res->tilesetData.data);
 
     for (s32 i = 0; i < TILESET_WIDTH * TILESET_HEIGHT; i++)
     {
@@ -208,7 +211,7 @@ static void wemap_loadTilesetRes(WarEditorContext* ctx, s32 index, s32 tilesInde
         res->tilesetData.data[i * 4 + 3] = data[i] > 0 ? 255 : 0;
     }
 
-    mz_destroy(scratch);
+    wm_free(data);
 }
 
 // -----------------------------------------------------------------------
@@ -244,6 +247,10 @@ static void wemap_loadLevelVisualRes(WarEditorContext* ctx, s32 index)
 
     WarResource* res = wemap_getOrCreateResource(ctx, index);
     res->type = WAR_RESOURCE_TYPE_LEVEL_VISUAL;
+
+    res->levelVisual.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    assert(res->levelVisual.data);
+
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         res->levelVisual.data[i] = readu16(raw->data, i * 2);
 }
@@ -265,6 +272,10 @@ static void wemap_loadLevelPassableRes(WarEditorContext* ctx, s32 index)
 
     WarResource* res = wemap_getOrCreateResource(ctx, index);
     res->type = WAR_RESOURCE_TYPE_LEVEL_PASSABLE;
+
+    res->levelPassable.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    assert(res->levelPassable.data);
+
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
         res->levelPassable.data[i] = readu16(raw->data, i * 2);
 }
@@ -494,6 +505,12 @@ void wemap_free(WarEditorContext* ctx)
         m->terrainSprite.texture = NULL;
     }
 
+    for (u32 ci = 0; ci < m->startConfigurationsCount; ci++)
+    {
+        wm_free(m->startConfigurations[ci].startEntities);
+        m->startConfigurations[ci].startEntities = NULL;
+    }
+
     wm_free(m);
     ctx->map = NULL;
 }
@@ -666,8 +683,15 @@ bool wemap_importFromLevelInfo(WarEditorContext* ctx, s32 levelInfoIndex)
            sizeof(WarLevelConstruct) * m->startWallsCount);
 
     m->startConfigurationsCount = res->levelInfo.startConfigurationsCount;
-    memcpy(m->startConfigurations, res->levelInfo.startConfigurations,
-           sizeof(WarCustomMapConfiguration) * m->startConfigurationsCount);
+    for (u32 ci = 0; ci < m->startConfigurationsCount; ci++)
+    {
+        WarCustomMapConfiguration* src = &res->levelInfo.startConfigurations[ci];
+        WarCustomMapConfiguration* dst = &m->startConfigurations[ci];
+        dst->startEntitiesCount = src->startEntitiesCount;
+        dst->startEntities = (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_ENTITIES_COUNT * sizeof(WarLevelUnit));
+        assert(dst->startEntities);
+        memcpy(dst->startEntities, src->startEntities, sizeof(WarLevelUnit) * src->startEntitiesCount);
+    }
 
     // 3. Load visual and passable tile arrays.
     u16 visualIdx   = res->levelInfo.visualIndex;

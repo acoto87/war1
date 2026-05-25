@@ -25,15 +25,17 @@ WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
     TracyCZoneN(ctx, "wres_getOrCreateResource", true);
 
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
-    if (!context->resources[index])
+
+    WarResource* resource = &context->resources[index];
+
+    if (resource->type == WAR_RESOURCE_TYPE_UNKNOWN)
     {
         logInfo("Creating resource: %d", index);
-        context->resources[index] = (WarResource*)wm_alloc(sizeof(WarResource));
     }
 
     TracyCZoneEnd(ctx);
 
-    return context->resources[index];
+    return resource;
 }
 
 void wres_getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
@@ -243,10 +245,12 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     u8 frameWidth = readu8(rawResource.data, 2);
     u8 frameHeight = readu8(rawResource.data, 3);
 
-    WarResource *resource = wres_getOrCreateResource(context, index);
+    WarSpriteFrame* frames = (WarSpriteFrame*)wm_alloc(framesCount * sizeof(WarSpriteFrame));
+    assert(frames);
+
     for (s32 i = 0; i < framesCount; ++i)
     {
-        WarSpriteFrame *frame = &resource->spriteData.frames[i];
+        WarSpriteFrame *frame = &   frames[i];
         frame->dx = readu8(rawResource.data, 4 + i * 8 + 0);
         frame->dy = readu8(rawResource.data, 4 + i * 8 + 1);
         frame->w = readu8(rawResource.data, 4 + i * 8 + 2);
@@ -263,7 +267,7 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
 
     for (s32 i = 0; i < framesCount; ++i)
     {
-        WarSpriteFrame* frame = &resource->spriteData.frames[i];
+        WarSpriteFrame* frame = &frames[i];
 
         u32 off = frame->off;
         for (s32 y = frame->dy; y < (frame->dy + frame->h); ++y)
@@ -298,7 +302,9 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
         }
     }
 
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_SPRITE;
+    resource->spriteData.frames = frames;
     resource->spriteData.framesCount = framesCount;
     resource->spriteData.frameWidth = frameWidth;
     resource->spriteData.frameHeight = frameHeight;
@@ -309,6 +315,8 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
 s32 wres_loadStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startEntitiesCount = 0;
+    resource->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
+    assert(resource->levelInfo.startEntities);
 
     while (offset < (s32)rawResource->length)
     {
@@ -342,6 +350,8 @@ s32 wres_loadStartEntities(WarResource* resource, WarRawResource* rawResource, s
 s32 wres_loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startRoadsCount = 0;
+    resource->levelInfo.startRoads = (WarLevelConstruct*)wm_alloc(MAX_CONSTRUCTS_COUNT * sizeof(WarLevelConstruct));
+    assert(resource->levelInfo.startRoads);
 
     while (offset < (s32)rawResource->length)
     {
@@ -370,6 +380,8 @@ s32 wres_loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 
 s32 wres_loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startWallsCount = 0;
+    resource->levelInfo.startWalls = (WarLevelConstruct*)wm_alloc(MAX_CONSTRUCTS_COUNT * sizeof(WarLevelConstruct));
+    assert(resource->levelInfo.startWalls);
 
     while (offset < (s32)rawResource->length)
     {
@@ -398,6 +410,8 @@ s32 wres_loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 
 s32 wres_loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startGoldminesCount = 0;
+    resource->levelInfo.startGoldmines = (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_GOLDMINES_COUNT * sizeof(WarLevelUnit));
+    assert(resource->levelInfo.startGoldmines);
 
     while (offset < (s32)rawResource->length)
     {
@@ -424,6 +438,9 @@ s32 wres_loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawReso
 s32 wres_loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset, WarCustomMapConfiguration* configuration, u8 player)
 {
     NOT_USED(resource);
+
+    configuration->startEntities = (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_ENTITIES_COUNT * sizeof(WarLevelUnit));
+    assert(configuration->startEntities);
 
     while (offset < (s32)rawResource->length)
     {
@@ -695,6 +712,10 @@ void wres_loadLevelVisual(WarContext *context, DatabaseEntry *entry)
 
     WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_VISUAL;
+
+    resource->levelVisual.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    assert(resource->levelVisual.data);
+
     for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
         resource->levelVisual.data[i] = readu16(rawResource.data, i * 2);
@@ -718,6 +739,10 @@ void wres_loadLevelPassable(WarContext *context, DatabaseEntry *entry)
 
     WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_PASSABLE;
+
+    resource->levelPassable.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    assert(resource->levelPassable.data);
+
     for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
         // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
@@ -741,10 +766,13 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     }
 
     WarResource *tiles = wres_getOrCreateResource(context, entry->param1);
+    assert(tiles);
+    assert(tiles->type == WAR_RESOURCE_TYPE_TILES);
 
     // Local scratch zone for the temporary indexed-colour tile buffer.
-    memzone_t* scratch = mz_init(TILESET_WIDTH * TILESET_HEIGHT + 1024);
-    u8 *data = (u8*)mz_alloc(scratch, TILESET_WIDTH * TILESET_HEIGHT);
+    u8 *data = (u8*)wm_alloc(TILESET_WIDTH * TILESET_HEIGHT);
+    assert(data);
+
     u32 tilesCount = rawResource.length / 8;
     for(u32 i = 0; i < tilesCount; i++)
     {
@@ -785,6 +813,8 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TILESET;
     resource->tilesetData.tilesCount = rawResource.length / 8;
+    resource->tilesetData.data = (u8*)wm_alloc(TILESET_WIDTH * TILESET_HEIGHT * 4 * sizeof(u8));
+    assert(resource->tilesetData.data);
 
     for(s32 i = 0; i < TILESET_WIDTH * TILESET_HEIGHT; i++)
     {
@@ -802,7 +832,7 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     // }
     // #endif
 
-    mz_destroy(scratch);
+    wm_free(data);
 
     TracyCZoneEnd(ctx);
 }

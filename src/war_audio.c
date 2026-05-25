@@ -286,8 +286,10 @@ bool wa_playWave(WarContext* context, WarEntity* entity, u32 sampleCount, s16* o
     WarAudioComponent* audio = we_getAudioComponent(context, entity);
     assert(audio);
 
-    WarResource* resource = context->resources[audio->resourceIndex];
-    if (!resource)
+    WarResource* resource = &context->resources[audio->resourceIndex];
+    if (resource->type != WAR_RESOURCE_TYPE_XMID &&
+        resource->type != WAR_RESOURCE_TYPE_WAVE &&
+        resource->type != WAR_RESOURCE_TYPE_VOC)
     {
         logError("Can't play audio %d, resource: %d", entity->id, audio->resourceIndex);
         return false;

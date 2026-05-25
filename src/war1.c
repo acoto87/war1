@@ -114,6 +114,9 @@
 
 int main(int argc, char** argv)
 {
+    printf("Size of WarContext: %zu bytes\n", sizeof(WarContext));
+    printf("Size of WarResource: %zu bytes\n", sizeof(WarResource));
+
     if (!wm_allocInit(PERM_SIZE, FRAME_SIZE, AUDIO_SIZE))
     {
         logError("Failed to initialize memory allocators!");

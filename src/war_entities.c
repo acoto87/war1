@@ -1129,8 +1129,8 @@ WarAudioComponent* we_addAudioComponent(WarContext* context, WarEntity* entity, 
     {
         assert(store->dense[idx].resourceIndex >= 0);
 
-        WarResource* resource = context->resources[store->dense[idx].resourceIndex];
-        assert(resource);
+        WarResource* resource = &context->resources[store->dense[idx].resourceIndex];
+        assert(resource->type == WAR_RESOURCE_TYPE_XMID || resource->type == WAR_RESOURCE_TYPE_WAVE || resource->type == WAR_RESOURCE_TYPE_VOC);
 
         u8* midiData   = resource->audio.data;
         s32 midiLength = resource->audio.length;

@@ -327,6 +327,9 @@ bool wg_loadDataFile(WarContext* context)
         return false;
     }
 
+    context->resources = (WarResource*)wm_alloc(sizeof(WarResource) * MAX_RESOURCES_COUNT);
+    assert(context->resources);
+
     for (int i = 0; i < arrayLength(assets); ++i)
     {
         DatabaseEntry entry = assets[i];
