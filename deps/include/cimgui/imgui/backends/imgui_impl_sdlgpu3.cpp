@@ -392,7 +392,7 @@ void ImGui_ImplSDLGPU3_UpdateTexture(ImTextureData* tex)
         {
             void* texture_ptr = SDL_MapGPUTransferBuffer(v->Device, bd->TexTransferBuffer, true);
             for (int y = 0; y < upload_h; y++)
-                memcpy((void*)((uintptr_t)texture_ptr + y * upload_pitch), tex->GetPixelsAt(upload_x, upload_y + y), upload_pitch);
+                memcpy((void*)((uintptr_t)texture_ptr + (uintptr_t)y * (uintptr_t)upload_pitch), tex->GetPixelsAt(upload_x, upload_y + y), upload_pitch);
             SDL_UnmapGPUTransferBuffer(v->Device, bd->TexTransferBuffer);
         }
 
