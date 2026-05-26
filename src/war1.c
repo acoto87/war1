@@ -104,6 +104,11 @@
 #define SHL_WSTR_IMPLEMENTATION
 #include "shl/wstr.h"
 
+#define X2M_REALLOC(ptr, size) wm_realloc(ptr, size)
+#define X2M_FREE(ptr)          wm_free(ptr)
+#define XMI2MID_IMPLEMENTATION
+#include "xmi2mid.h"
+
 #include "war_log.h"
 #include "war.h"
 #include "war_game.h"

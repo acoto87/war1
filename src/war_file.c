@@ -3,7 +3,7 @@
 #include "war_file.h"
 #include "war_log.h"
 
-WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
+WarFile* wfile_loadWarFile(WarContext* context, StringView filePath, const bool skipDecompress[])
 {
     NOT_USED(context);
 
@@ -17,11 +17,31 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
         return NULL;
     }
 
-    Sint64 fileLength = SDL_GetIOSize(stream);
+    s64 fileLength = SDL_GetIOSize(stream);
+
+    u8* fileBuffer = (u8*)wm_alloc(fileLength);
+    if (!fileBuffer)
+    {
+        logError("Couldn't allocate memory for the DATA.WAR file.");
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
+    size_t bytesRead = SDL_ReadIO(stream, fileBuffer, (size_t)fileLength);
+    if (bytesRead != (size_t)fileLength)
+    {
+        logError("Couldn't read the DATA.WAR file. Wanted to read %lld bytes. Error: %s\n", fileLength, SDL_GetError());
+        wm_free(fileBuffer);
+        SDL_CloseIO(stream);
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
+    SDL_CloseIO(stream);
 
     WarFile *warFile = (WarFile*)wm_alloc(sizeof(WarFile));
-    SDL_ReadU32LE(stream, &warFile->archiveID);
-    SDL_ReadU32LE(stream, &warFile->numberOfEntries);
+    warFile->archiveID       = *(u32*)(fileBuffer + 0);
+    warFile->numberOfEntries = *(u32*)(fileBuffer + 4);
 
     switch (warFile->archiveID)
     {
@@ -54,13 +74,19 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
         return NULL;
     }
 
-    SDL_ReadIO(stream, warFile->offsets, warFile->numberOfEntries * sizeof(u32));
+    memcpy(warFile->offsets, fileBuffer + 8, warFile->numberOfEntries * sizeof(u32));
 
     for (s32 i = 0; i < (s32)warFile->numberOfEntries; ++i)
     {
         // placeholders in demo versions
         if (warFile->offsets[i] == 0xFFFFFFFF ||
             warFile->offsets[i] == 0x00000000)
+        {
+            warFile->resources[i].placeholder = true;
+            continue;
+        }
+
+        if (skipDecompress && skipDecompress[i])
         {
             warFile->resources[i].placeholder = true;
             continue;
@@ -90,17 +116,17 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
             compressedLength = nextOffset - warFile->offsets[i];
         }
 
-        SDL_SeekIO(stream, warFile->offsets[i], SDL_IO_SEEK_SET);
+        const u8* ptr = fileBuffer + warFile->offsets[i];
+        u32 size = *(const u32*)ptr;
+        ptr += 4;
 
-        u32 size;
-        SDL_ReadU32LE(stream, &size);
-        u32 length = (size & 0x1FFFFFFF);
+        u32 length = size & 0x1FFFFFFF;
         bool compressed = (size & 0xE0000000) != 0;
 
         u8 *data = (u8*)wm_alloc(length * sizeof(u8));
         if (!compressed)
         {
-            SDL_ReadIO(stream, data, length);
+            memcpy(data, ptr, length);
         }
         else
         {
@@ -153,18 +179,16 @@ tmp.size := finalsize; // Crop the file, just in case
             s32 b = 0;
             s32 bufwinPos = 0;
 
-            while (b < (s32)compressedLength)
+            while (b < (s32)compressedLength && bufwinPos < (s32)length)
             {
-                u8 cmask;
-                SDL_ReadU8(stream, &cmask);
+                u8 cmask = *ptr++;
                 b++;
 
                 for (s32 a = 0; a < 8 && bufwinPos < (s32)length; ++a)
                 {
                     if (cmask % 2 == 1) // uncompressed byte
                     {
-                        u8 bufbyte;
-                        SDL_ReadU8(stream, &bufbyte);
+                        u8 bufbyte = *ptr++;
                         b++;
 
                         bufwin[bufwinPos % BUFWIN_SIZE] = bufbyte;
@@ -173,8 +197,8 @@ tmp.size := finalsize; // Crop the file, just in case
                     }
                     else // compressed block begin
                     {
-                        u16 offset;
-                        SDL_ReadU16LE(stream, &offset);
+                        u16 offset = *(const u16*)ptr;
+                        ptr += 2;
                         u16 numbytes = offset / BUFWIN_SIZE;
                         offset = offset % BUFWIN_SIZE;
                         b += 2;
@@ -203,7 +227,6 @@ tmp.size := finalsize; // Crop the file, just in case
         warFile->resources[i].data = data;
     }
 
-    SDL_CloseIO(stream);
     TracyCZoneEnd(ctx);
     return warFile;
 

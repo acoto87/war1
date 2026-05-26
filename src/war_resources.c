@@ -20,6 +20,18 @@
 #define reads32(arr, index) (*(s32*)((arr) + (index)))
 #define readu32(arr, index) (*(u32*)((arr) + (index)))
 
+static void buildRgbaLut(const u8* paletteData, u32* rgba)
+{
+    rgba[0] = 0u;
+    for (s32 c = 1; c < 256; ++c)
+    {
+        u8 r = paletteData[c * 3 + 0];
+        u8 g = paletteData[c * 3 + 1];
+        u8 b = paletteData[c * 3 + 2];
+        rgba[c] = (u32)r | ((u32)g << 8) | ((u32)b << 16) | 0xFF000000u;
+    }
+}
+
 WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
 {
     TracyCZoneN(ctx, "wres_getOrCreateResource", true);
@@ -185,6 +197,9 @@ void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
+    u32 rgba[PALETTE_LENGTH/3];
+    buildRgbaLut(paletteData, rgba);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
@@ -201,19 +216,7 @@ void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
-
-        pixels[i * 4 + 0] = readu8(paletteData, colorIndex * 3 + 0);
-        pixels[i * 4 + 1] = readu8(paletteData, colorIndex * 3 + 1);
-        pixels[i * 4 + 2] = readu8(paletteData, colorIndex * 3 + 2);
-
-        // assuming that colorIndex == 0 is the transparent color
-        if (pixels[i * 4 + 0] > 0 ||
-            pixels[i * 4 + 1] > 0 ||
-            pixels[i * 4 + 2] > 0 ||
-            colorIndex != 0)
-        {
-            pixels[i * 4 + 3] = 255;
-        }
+        *(u32*)&pixels[i*4] = rgba[colorIndex];
     }
 
     WarResource *resource = wres_getOrCreateResource(context, index);
@@ -232,6 +235,9 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
+    u32 rgba[PALETTE_LENGTH/3];
+    buildRgbaLut(paletteData, rgba);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
@@ -248,15 +254,19 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     WarSpriteFrame* frames = (WarSpriteFrame*)wm_alloc(framesCount * sizeof(WarSpriteFrame));
     assert(frames);
 
+    u32 framePixelSize = (u32)frameWidth * (u32)frameHeight * 4u;
+    u8* pixelPool = (u8*)wm_alloc(framesCount * framePixelSize);
+    assert(pixelPool);
+
     for (s32 i = 0; i < framesCount; ++i)
     {
-        WarSpriteFrame *frame = &   frames[i];
+        WarSpriteFrame* frame = &frames[i];
         frame->dx = readu8(rawResource.data, 4 + i * 8 + 0);
         frame->dy = readu8(rawResource.data, 4 + i * 8 + 1);
         frame->w = readu8(rawResource.data, 4 + i * 8 + 2);
         frame->h = readu8(rawResource.data, 4 + i * 8 + 3);
         frame->off = readu32(rawResource.data, 4 + i * 8 + 4);
-        frame->data = (u8*)wm_alloc(frameWidth * frameHeight * 4 * sizeof(u8));
+        frame->data = pixelPool + (u32)i * framePixelSize;
 
         // found in war1tool.c, don't know if is needed
         // if (off < 0) {  // High bit of width
@@ -268,7 +278,6 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     for (s32 i = 0; i < framesCount; ++i)
     {
         WarSpriteFrame* frame = &frames[i];
-
         u32 off = frame->off;
         for (s32 y = frame->dy; y < (frame->dy + frame->h); ++y)
         {
@@ -276,28 +285,7 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
             {
                 u32 pixel = (x + y * frameWidth) * 4;
                 u32 colorIndex = rawResource.data[off++];
-
-                frame->data[pixel + 0] = readu8(paletteData, colorIndex * 3 + 0);
-                frame->data[pixel + 1] = readu8(paletteData, colorIndex * 3 + 1);
-                frame->data[pixel + 2] = readu8(paletteData, colorIndex * 3 + 2);
-
-                // assuming that colorIndex == 0 is the transparent color
-                if (frame->data[pixel + 0] > 0 ||
-                    frame->data[pixel + 1] > 0 ||
-                    frame->data[pixel + 2] > 0 ||
-                    colorIndex != 0)
-                {
-                    // Make shadow not so dark
-                    //
-                    // Altough it seem that the original game has (0, 0, 0) as
-                    // the color for shadows
-                    //
-                    // if (colorIndex == 96)
-                    //    frame->data[pixel + 3] = 150;
-
-                    frame->data[pixel + 3] = 255;
-
-                }
+                *(u32*)&frame->data[pixel] = rgba[colorIndex];
             }
         }
     }
@@ -810,6 +798,9 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, tiles->tilesData.palette1, tiles->tilesData.palette2, paletteData);
 
+    u32 rgba[PALETTE_LENGTH/3];
+    buildRgbaLut(paletteData, rgba);
+
     WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TILESET;
     resource->tilesetData.tilesCount = rawResource.length / 8;
@@ -818,10 +809,8 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
 
     for(s32 i = 0; i < TILESET_WIDTH * TILESET_HEIGHT; i++)
     {
-        resource->tilesetData.data[i * 4 + 0] = paletteData[data[i] * 3 + 0];
-        resource->tilesetData.data[i * 4 + 1] = paletteData[data[i] * 3 + 1];
-        resource->tilesetData.data[i * 4 + 2] = paletteData[data[i] * 3 + 2];
-        resource->tilesetData.data[i * 4 + 3] = data[i] > 0 ? 255 : 0;
+        u8 colorIndex = data[i];
+        *(u32*)&resource->tilesetData.data[i * 4] = rgba[colorIndex];
     }
 
     // #if __DEBUG__
@@ -902,7 +891,7 @@ void wres_loadXmi(WarContext *context, DatabaseEntry *entry)
     size32 xmiLength = rawResource.length;
 
     size32 midLength;
-    uint8_t* midData = wa_transcodeXmiToMid(context, xmiData, xmiLength, &midLength);
+    u8* midData = x2m_transcode(xmiData, xmiLength, &midLength);
     if (!midData)
     {
         logError("Can't convert XMI file of resource %d", index);
@@ -1057,6 +1046,9 @@ void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
+    u32 rgba[PALETTE_LENGTH/3];
+    buildRgbaLut(paletteData, rgba);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
@@ -1075,19 +1067,7 @@ void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 8 + i);
-
-        pixels[i * 4 + 0] = readu8(paletteData, colorIndex * 3 + 0);
-        pixels[i * 4 + 1] = readu8(paletteData, colorIndex * 3 + 1);
-        pixels[i * 4 + 2] = readu8(paletteData, colorIndex * 3 + 2);
-
-        // assuming that colorIndex == 0 is the transparent color
-        if (pixels[i * 4 + 0] > 0 ||
-            pixels[i * 4 + 1] > 0 ||
-            pixels[i * 4 + 2] > 0 ||
-            colorIndex != 0)
-        {
-            pixels[i * 4 + 3] = 255;
-        }
+        *(u32*)&pixels[i*4] = rgba[colorIndex];
     }
 
     WarResource *resource = wres_getOrCreateResource(context, index);
