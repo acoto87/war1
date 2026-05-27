@@ -49,7 +49,7 @@
 #define MAX_CONSTRUCTS_COUNT 100
 #define MAX_CUSTOM_MAP_GOLDMINES_COUNT 10
 #define MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT 10
-#define MAX_CUSTOM_MAP_ENTITIES_COUNT 100
+#define MAX_CUSTOM_MAP_ENTITIES_COUNT 1024
 
 // all palettes have 768 colors
 #define PALETTE_LENGTH 768
@@ -231,7 +231,7 @@ struct _WarContext
     s32 renderStateTop;
 
     WarFile* warFile;
-    WarResource* resources[MAX_RESOURCES_COUNT];
+    WarResource* resources;
     WarSprite fontSprites[2];
 
     SDL_AudioStream* audioStream;

@@ -3,7 +3,22 @@
 #include "war_file.h"
 #include "war_log.h"
 
-WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
+// Safe little-endian integer reads — avoid pointer-cast aliasing/alignment UB.
+static u32 wfile_readU32LE(const u8* p)
+{
+    u32 v;
+    memcpy(&v, p, sizeof(v));
+    return v;
+}
+
+static u16 wfile_readU16LE(const u8* p)
+{
+    u16 v;
+    memcpy(&v, p, sizeof(v));
+    return v;
+}
+
+WarFile* wfile_loadWarFile(WarContext* context, StringView filePath, const bool skipDecompress[])
 {
     NOT_USED(context);
 
@@ -17,11 +32,47 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
         return NULL;
     }
 
-    Sint64 fileLength = SDL_GetIOSize(stream);
+    s64 fileLength = SDL_GetIOSize(stream);
+    if (fileLength < 8)
+     {
+         logError("Couldn't determine the DATA.WAR file size. Error: %s", SDL_GetError());
+         SDL_CloseIO(stream);
+         TracyCZoneEnd(ctx);
+         return NULL;
+     }
+
+    u8* fileBuffer = (u8*)wm_alloc((size_t)fileLength);
+    if (!fileBuffer)
+    {
+        logError("Couldn't allocate memory for the DATA.WAR file.");
+        SDL_CloseIO(stream);
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
+    size_t bytesRead = SDL_ReadIO(stream, fileBuffer, (size_t)fileLength);
+    if (bytesRead != (size_t)fileLength)
+    {
+        logError("Couldn't read the DATA.WAR file. Wanted to read %lld bytes. Error: %s\n", fileLength, SDL_GetError());
+        wm_free(fileBuffer);
+        SDL_CloseIO(stream);
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
+    SDL_CloseIO(stream);
 
     WarFile *warFile = (WarFile*)wm_alloc(sizeof(WarFile));
-    SDL_ReadU32LE(stream, &warFile->archiveID);
-    SDL_ReadU32LE(stream, &warFile->numberOfEntries);
+    if (!warFile)
+    {
+        logError("Couldn't allocate memory for the WarFile structure.");
+        wm_free(fileBuffer);
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
+    warFile->archiveID       = wfile_readU32LE(fileBuffer + 0);
+    warFile->numberOfEntries = wfile_readU32LE(fileBuffer + 4);
 
     switch (warFile->archiveID)
     {
@@ -48,13 +99,31 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
     if (warFile->type == WAR_FILE_TYPE_UNKNOWN)
     {
         logError("Couldn't process the DATA.WAR file. The file type %u is not the RETAIL or DEMO version of the game.", warFile->archiveID);
-        wm_free(warFile);
-        SDL_CloseIO(stream);
+        wfile_freeWarFile(warFile);
+        wm_free(fileBuffer);
         TracyCZoneEnd(ctx);
         return NULL;
     }
 
-    SDL_ReadIO(stream, warFile->offsets, warFile->numberOfEntries * sizeof(u32));
+    if (warFile->numberOfEntries > MAX_RESOURCES_COUNT)
+    {
+        logError("DATA.WAR has %u entries, exceeds MAX_RESOURCES_COUNT (%d).", warFile->numberOfEntries, MAX_RESOURCES_COUNT);
+        wfile_freeWarFile(warFile);
+        wm_free(fileBuffer);
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
+    if ((u64)8 + (u64)warFile->numberOfEntries * sizeof(u32) > (u64)fileLength)
+    {
+        logError("DATA.WAR offsets table (%u entries) extends past end of file.", warFile->numberOfEntries);
+        wfile_freeWarFile(warFile);
+        wm_free(fileBuffer);
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
+    memcpy(warFile->offsets, fileBuffer + 8, warFile->numberOfEntries * sizeof(u32));
 
     for (s32 i = 0; i < (s32)warFile->numberOfEntries; ++i)
     {
@@ -66,10 +135,22 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
             continue;
         }
 
+        if (skipDecompress && skipDecompress[i])
+        {
+            warFile->resources[i].placeholder = true;
+            continue;
+        }
+
         u32 compressedLength;
 
         if (i == (s32)warFile->numberOfEntries - 1)
         {
+            if (warFile->offsets[i] >= (u32)fileLength)
+            {
+                logError("Resource %d: offset %u at or past end of file.", i, warFile->offsets[i]);
+                warFile->resources[i].placeholder = true;
+                continue;
+            }
             compressedLength = (u32)fileLength - warFile->offsets[i];
         }
         else
@@ -90,17 +171,42 @@ WarFile* wfile_loadWarFile(WarContext* context, StringView filePath)
             compressedLength = nextOffset - warFile->offsets[i];
         }
 
-        SDL_SeekIO(stream, warFile->offsets[i], SDL_IO_SEEK_SET);
+        if (compressedLength < 4 ||
+            (u64)warFile->offsets[i] + (u64)compressedLength > (u64)fileLength)
+        {
+            logError("Resource %d: offset %u + compressedLength %u out of bounds (fileLength %lld).",
+                     i, warFile->offsets[i], compressedLength, (long long)fileLength);
+            warFile->resources[i].placeholder = true;
+            continue;
+        }
 
-        u32 size;
-        SDL_ReadU32LE(stream, &size);
-        u32 length = (size & 0x1FFFFFFF);
+        const u8* ptr = fileBuffer + warFile->offsets[i];
+        u32 size = wfile_readU32LE(ptr);
+        ptr += 4;
+
+        u32 length = size & 0x1FFFFFFF;
         bool compressed = (size & 0xE0000000) != 0;
 
+        if (!compressed && length > compressedLength - 4)
+        {
+            logError("Resource %d: uncompressed length %u exceeds payload %u.", i, length, compressedLength - 4);
+            warFile->resources[i].placeholder = true;
+            continue;
+        }
+
         u8 *data = (u8*)wm_alloc(length * sizeof(u8));
+        if (!data)
+        {
+            logError("Couldn't allocate memory for resource %d in the DATA.WAR file.", i);
+            wfile_freeWarFile(warFile);
+            wm_free(fileBuffer);
+            TracyCZoneEnd(ctx);
+            return NULL;
+        }
+
         if (!compressed)
         {
-            SDL_ReadIO(stream, data, length);
+            memcpy(data, ptr, length);
         }
         else
         {
@@ -153,18 +259,16 @@ tmp.size := finalsize; // Crop the file, just in case
             s32 b = 0;
             s32 bufwinPos = 0;
 
-            while (b < (s32)compressedLength)
+            while (b < (s32)compressedLength && bufwinPos < (s32)length)
             {
-                u8 cmask;
-                SDL_ReadU8(stream, &cmask);
+                u8 cmask = *ptr++;
                 b++;
 
                 for (s32 a = 0; a < 8 && bufwinPos < (s32)length; ++a)
                 {
                     if (cmask % 2 == 1) // uncompressed byte
                     {
-                        u8 bufbyte;
-                        SDL_ReadU8(stream, &bufbyte);
+                        u8 bufbyte = *ptr++;
                         b++;
 
                         bufwin[bufwinPos % BUFWIN_SIZE] = bufbyte;
@@ -173,8 +277,8 @@ tmp.size := finalsize; // Crop the file, just in case
                     }
                     else // compressed block begin
                     {
-                        u16 offset;
-                        SDL_ReadU16LE(stream, &offset);
+                        u16 offset = wfile_readU16LE(ptr);
+                        ptr += 2;
                         u16 numbytes = offset / BUFWIN_SIZE;
                         offset = offset % BUFWIN_SIZE;
                         b += 2;
@@ -203,18 +307,33 @@ tmp.size := finalsize; // Crop the file, just in case
         warFile->resources[i].data = data;
     }
 
-    SDL_CloseIO(stream);
     TracyCZoneEnd(ctx);
     return warFile;
 
 #undef BUFWIN_SIZE
 }
 
+void wfile_freeWarFile(WarFile* warFile)
+{
+    if (!warFile)
+        return;
+
+    for (s32 i = 0; i < (s32)warFile->numberOfEntries; ++i)
+    {
+        if (!warFile->resources[i].placeholder && warFile->resources[i].data)
+        {
+            wm_free(warFile->resources[i].data);
+        }
+    }
+
+    wm_free(warFile);
+}
+
 // -----------------------------------------------------------------------
 // .w1m custom map loading
 // -----------------------------------------------------------------------
 #define WFILE_W1M_MAGIC   0x57314D41u
-#define WFILE_W1M_VERSION 1u
+#define WFILE_W1M_VERSION 2u
 
 // Read a .w1m stream into a pre-allocated WarResource and two u16 tile arrays.
 // path_ and stream_ are the parameter names expected by the macros above.
@@ -313,8 +432,15 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startEntities,
-                 sizeof(WarLevelUnit), levelInfoRes->levelInfo.startEntitiesCount);
+    levelInfoRes->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
+    if (!levelInfoRes->levelInfo.startEntities)
+    {
+        logError("wfile_loadWarMapFile: couldn't allocate memory for startEntities in '%.*s'",
+                 (int)filePath.length, filePath.data);
+        SDL_CloseIO(stream);
+        return false;
+    }
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startEntities, sizeof(WarLevelUnit), levelInfoRes->levelInfo.startEntitiesCount);
 
     WFILE_READ_FIELD(&levelInfoRes->levelInfo.startRoadsCount, sizeof(u32));
     if (levelInfoRes->levelInfo.startRoadsCount > MAX_CONSTRUCTS_COUNT)
@@ -322,11 +448,20 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         logError("wfile_loadWarMapFile: startRoadsCount %u too large in '%.*s'",
                  levelInfoRes->levelInfo.startRoadsCount,
                  (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startRoads,
-                 sizeof(WarLevelConstruct), levelInfoRes->levelInfo.startRoadsCount);
+    levelInfoRes->levelInfo.startRoads = (WarLevelConstruct*)wm_alloc(MAX_CONSTRUCTS_COUNT * sizeof(WarLevelConstruct));
+    if (!levelInfoRes->levelInfo.startRoads)
+    {
+        logError("wfile_loadWarMapFile: couldn't allocate memory for startRoads in '%.*s'",
+                 (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
+        SDL_CloseIO(stream);
+        return false;
+    }
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startRoads, sizeof(WarLevelConstruct), levelInfoRes->levelInfo.startRoadsCount);
 
     WFILE_READ_FIELD(&levelInfoRes->levelInfo.startWallsCount, sizeof(u32));
     if (levelInfoRes->levelInfo.startWallsCount > MAX_CONSTRUCTS_COUNT)
@@ -334,11 +469,22 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         logError("wfile_loadWarMapFile: startWallsCount %u too large in '%.*s'",
                  levelInfoRes->levelInfo.startWallsCount,
                  (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
+        wm_free(levelInfoRes->levelInfo.startRoads);
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startWalls,
-                 sizeof(WarLevelConstruct), levelInfoRes->levelInfo.startWallsCount);
+    levelInfoRes->levelInfo.startWalls = (WarLevelConstruct*)wm_alloc(MAX_CONSTRUCTS_COUNT * sizeof(WarLevelConstruct));
+    if (!levelInfoRes->levelInfo.startWalls)
+    {
+        logError("wfile_loadWarMapFile: couldn't allocate memory for startWalls in '%.*s'",
+                 (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
+        wm_free(levelInfoRes->levelInfo.startRoads);
+        SDL_CloseIO(stream);
+        return false;
+    }
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startWalls, sizeof(WarLevelConstruct), levelInfoRes->levelInfo.startWallsCount);
 
     WFILE_READ_FIELD(&levelInfoRes->levelInfo.startGoldminesCount, sizeof(u32));
     if (levelInfoRes->levelInfo.startGoldminesCount > MAX_CUSTOM_MAP_GOLDMINES_COUNT)
@@ -346,11 +492,24 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         logError("wfile_loadWarMapFile: startGoldminesCount %u too large in '%.*s'",
                  levelInfoRes->levelInfo.startGoldminesCount,
                  (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
+        wm_free(levelInfoRes->levelInfo.startRoads);
+        wm_free(levelInfoRes->levelInfo.startWalls);
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startGoldmines,
-                 sizeof(WarLevelUnit), levelInfoRes->levelInfo.startGoldminesCount);
+    levelInfoRes->levelInfo.startGoldmines = (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_GOLDMINES_COUNT * sizeof(WarLevelUnit));
+    if (!levelInfoRes->levelInfo.startGoldmines)
+    {
+        logError("wfile_loadWarMapFile: couldn't allocate memory for startGoldmines in '%.*s'",
+                 (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
+        wm_free(levelInfoRes->levelInfo.startRoads);
+        wm_free(levelInfoRes->levelInfo.startWalls);
+        SDL_CloseIO(stream);
+        return false;
+    }
+    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startGoldmines, sizeof(WarLevelUnit), levelInfoRes->levelInfo.startGoldminesCount);
 
     WFILE_READ_FIELD(&levelInfoRes->levelInfo.startConfigurationsCount, sizeof(u32));
     if (levelInfoRes->levelInfo.startConfigurationsCount > MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT)
@@ -358,10 +517,41 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         logError("wfile_loadWarMapFile: startConfigurationsCount %u too large in '%.*s'",
                  levelInfoRes->levelInfo.startConfigurationsCount,
                  (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
+        wm_free(levelInfoRes->levelInfo.startRoads);
+        wm_free(levelInfoRes->levelInfo.startWalls);
+        wm_free(levelInfoRes->levelInfo.startGoldmines);
         SDL_CloseIO(stream);
         return false;
     }
     WFILE_READ_ARRAY(levelInfoRes->levelInfo.startConfigurations, sizeof(WarCustomMapConfiguration), levelInfoRes->levelInfo.startConfigurationsCount);
+
+    visualInfoRes->levelVisual.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    if (!visualInfoRes->levelVisual.data)
+    {
+        logError("wfile_loadWarMapFile: couldn't allocate memory for levelVisual in '%.*s'",
+                 (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
+        wm_free(levelInfoRes->levelInfo.startRoads);
+        wm_free(levelInfoRes->levelInfo.startWalls);
+        wm_free(levelInfoRes->levelInfo.startGoldmines);
+        SDL_CloseIO(stream);
+        return false;
+    }
+
+    passableInfoRes->levelPassable.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    if (!passableInfoRes->levelPassable.data)
+    {
+        logError("wfile_loadWarMapFile: couldn't allocate memory for levelPassable in '%.*s'",
+                 (int)filePath.length, filePath.data);
+        wm_free(levelInfoRes->levelInfo.startEntities);
+        wm_free(levelInfoRes->levelInfo.startRoads);
+        wm_free(levelInfoRes->levelInfo.startWalls);
+        wm_free(levelInfoRes->levelInfo.startGoldmines);
+        wm_free(visualInfoRes->levelVisual.data);
+        SDL_CloseIO(stream);
+        return false;
+    }
 
     WFILE_READ_ARRAY(visualInfoRes->levelVisual.data,     sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);
     WFILE_READ_ARRAY(passableInfoRes->levelPassable.data, sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);

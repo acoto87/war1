@@ -124,6 +124,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] I can hear the sounds of the enemy spawning and doing stuff
 * [ ] Cursor doesn't change when scrolling on screen edges
 * [ ] When building something, as soon as I place the item to build, the click will deselect the current unit (worker or building), it should remain selected.
+* [ ] In custom map with only footmen/grunt, commands are not showing when selecting footmen/grunts and they don't attack. It also take an unusual long time to start.
 
 ## General
 

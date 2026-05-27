@@ -76,7 +76,7 @@ struct _WarTilesetTile
 struct _WarCustomMapConfiguration
 {
     u32 startEntitiesCount;
-    WarLevelUnit startEntities[MAX_CUSTOM_MAP_ENTITIES_COUNT];
+    WarLevelUnit* startEntities;
 };
 
 struct _WarResource
@@ -102,7 +102,7 @@ struct _WarResource
             u16 framesCount;
             u8 frameWidth;
             u8 frameHeight;
-            WarSpriteFrame frames[MAX_SPRITE_FRAME_COUNT];
+            WarSpriteFrame* frames;
         } spriteData;
 
         struct
@@ -128,16 +128,16 @@ struct _WarResource
             char objectives[MAX_OBJECTIVES_LENGTH];
 
             u32 startEntitiesCount;
-            WarLevelUnit startEntities[MAX_ENTITIES_COUNT];
+            WarLevelUnit* startEntities;
 
             u32 startRoadsCount;
-            WarLevelConstruct startRoads[MAX_CONSTRUCTS_COUNT];
+            WarLevelConstruct* startRoads;
 
             u32 startWallsCount;
-            WarLevelConstruct startWalls[MAX_CONSTRUCTS_COUNT];
+            WarLevelConstruct* startWalls;
 
             u32 startGoldminesCount;
-            WarLevelUnit startGoldmines[MAX_CUSTOM_MAP_GOLDMINES_COUNT];
+            WarLevelUnit* startGoldmines;
 
             u32 startConfigurationsCount;
             WarCustomMapConfiguration startConfigurations[MAX_CUSTOM_MAP_CONFIGURATIONS_COUNT];
@@ -145,18 +145,18 @@ struct _WarResource
 
         struct
         {
-            u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+            u16* data;
         } levelVisual;
 
         struct
         {
-            u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+            u16* data;
         } levelPassable;
 
         struct
         {
             u32 tilesCount;
-            u8 data[TILESET_WIDTH * TILESET_HEIGHT * 4];
+            u8* data;
         } tilesetData;
 
         struct

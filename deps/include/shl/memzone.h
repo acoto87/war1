@@ -59,6 +59,10 @@
 #ifndef SHL_MZ_H
 #define SHL_MZ_H
 
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -685,7 +689,14 @@ void* mz_realloc(memzone_t* zone, void* p, size_t size)
                 zone->usedSize += nextSize - mz__headerSize();
                 if (zone->rover == next)
                 {
-                    zone->rover = block->next;
+                    // block->next may be allocated; advance to the next free block
+                    // (falls back to the sentinel if no free blocks remain)
+                    memblock_t* freeNext = block->next;
+                    while (freeNext != &zone->blockList && !MZ__IS_BLOCK_EMPTY(freeNext))
+                    {
+                        freeNext = freeNext->next;
+                    }
+                    zone->rover = freeNext;
                 }
             }
 

@@ -7,7 +7,7 @@
 //  Offset  Size  Field
 //  ------  ----  -----
 //   0       4    magic        = 0x57314D41  ("W1MA")
-//   4       2    version      = 1
+//   4       2    version      = 2
 //   6       2    flags        = 0 (reserved)
 //   8       8    reserved     = 0
 //  16       4    allowId      (u32)
@@ -27,7 +27,8 @@
 // 164       3    pad (align to 4)
 // 167     512    objectives[MAX_OBJECTIVES_LENGTH]
 // 679+          variable-length arrays (count u32 then N × sizeof(element))
-//               startEntities, startRoads, startWalls, startGoldmines, startConfigurations
+//               startEntities, startRoads, startWalls, startGoldmines
+//               startConfigurations: count u32, then per config: (startEntitiesCount u32, N × WarLevelUnit)
 //               followed by: visualData[4096 × u16], passableData[4096 × u16]
 
 #include "war_editor.h"
@@ -36,7 +37,7 @@
 // On-disk file header (16 bytes, static_assert verified)
 // -----------------------------------------------------------------------
 #define W1M_MAGIC    0x57314D41u   // 'W' '1' 'M' 'A' in little-endian form
-#define W1M_VERSION  1u
+#define W1M_VERSION  2u            // v2: startConfigurations serialized element-by-element (ptr layout)
 
 typedef struct
 {

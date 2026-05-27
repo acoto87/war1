@@ -14,5 +14,6 @@ struct _WarMapFileHeader
     u32 reserved[2];
 };
 
-WarFile* wfile_loadWarFile(WarContext* context, StringView filePath);
+WarFile* wfile_loadWarFile(WarContext* context, StringView filePath, const bool skipDecompress[]);
+void wfile_freeWarFile(WarFile* warFile);
 bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarResource* visualInfoRes, WarResource* passableInfoRes);

@@ -1,8 +1,5 @@
 #pragma once
 
-// NOTE: All the enums in the game are defined here
-// Cannot forward declare enums in C, as it's not allowed by the C standard
-
 typedef enum
 {
     DB_ENTRY_TYPE_UNKNOWN,

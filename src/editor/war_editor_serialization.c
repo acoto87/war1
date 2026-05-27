@@ -115,10 +115,14 @@ bool wesave_saveMap(const char* path, const WarEditorContext* ctx)
     }
 
     WSAVE_WRITE(&m->startConfigurationsCount, sizeof(u32));
-    if (m->startConfigurationsCount > 0)
+    for (u32 ci = 0; ci < m->startConfigurationsCount; ci++)
     {
-        WSAVE_WRITE(m->startConfigurations,
-                    sizeof(WarCustomMapConfiguration) * m->startConfigurationsCount);
+        const WarCustomMapConfiguration* cfg = &m->startConfigurations[ci];
+        WSAVE_WRITE(&cfg->startEntitiesCount, sizeof(u32));
+        if (cfg->startEntitiesCount > 0)
+        {
+            WSAVE_WRITE(cfg->startEntities, sizeof(WarLevelUnit) * cfg->startEntitiesCount);
+        }
     }
 
     // --- Tile data ---
@@ -252,8 +256,21 @@ bool wesave_loadMap(const char* path, WarEditorContext* ctx)
         fclose(f);
         return false;
     }
-    WLOAD_ARRAY(m->startConfigurations,
-                sizeof(WarCustomMapConfiguration), m->startConfigurationsCount);
+    for (u32 ci = 0; ci < m->startConfigurationsCount; ci++)
+    {
+        WarCustomMapConfiguration* cfg = &m->startConfigurations[ci];
+        WLOAD_FIELD(&cfg->startEntitiesCount, sizeof(u32));
+        if (cfg->startEntitiesCount > MAX_CUSTOM_MAP_ENTITIES_COUNT)
+        {
+            logError("wesave_loadMap: startConfigurations[%u].startEntitiesCount %u > MAX in '%s'",
+                     ci, cfg->startEntitiesCount, path);
+            fclose(f);
+            return false;
+        }
+        cfg->startEntities = (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_ENTITIES_COUNT * sizeof(WarLevelUnit));
+        assert(cfg->startEntities);
+        WLOAD_ARRAY(cfg->startEntities, sizeof(WarLevelUnit), cfg->startEntitiesCount);
+    }
 
     // --- Tile data ---
     WLOAD_ARRAY(m->visualData,   sizeof(u16), MAP_TILES_WIDTH * MAP_TILES_HEIGHT);

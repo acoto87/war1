@@ -320,12 +320,23 @@ bool wg_loadDataFile(WarContext* context)
 {
     TracyCZoneN(ctx, "wg_loadDataFile", true);
 
-    context->warFile = wfile_loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH));
+    bool skipDecompress[MAX_RESOURCES_COUNT];
+    memset(skipDecompress, 0, sizeof(skipDecompress));
+    for (int i = 0; i < arrayLength(assets); ++i)
+    {
+        if (assets[i].type == DB_ENTRY_TYPE_UNKNOWN)
+            skipDecompress[assets[i].index] = true;
+    }
+
+    context->warFile = wfile_loadWarFile(context, wsv_fromCString(DATAWAR_FILE_PATH), skipDecompress);
     if (!context->warFile)
     {
         TracyCZoneEnd(ctx);
         return false;
     }
+
+    context->resources = (WarResource*)wm_alloc(sizeof(WarResource) * MAX_RESOURCES_COUNT);
+    assert(context->resources);
 
     for (int i = 0; i < arrayLength(assets); ++i)
     {

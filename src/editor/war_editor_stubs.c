@@ -65,24 +65,6 @@ WarEntity* wa_playAttackSound(WarContext* context, vec2 position, WarUnitActionS
     return NULL;
 }
 
-u8* wa_transcodeXmiToMid(WarContext* context, u8* xmiData, size_t xmiLength, size_t* midLength)
-{
-    (void)context;
-    (void)xmiData;
-    (void)xmiLength;
-    if (midLength) *midLength = 0;
-    return NULL;
-}
-
-u8* wa_changeSampleRate(WarContext* context, u8* samplesIn, s32 length, s32 factor)
-{
-    (void)context;
-    (void)samplesIn;
-    (void)length;
-    (void)factor;
-    return NULL;
-}
-
 // ---------------------------------------------------------------------------
 // war_map stubs
 // ---------------------------------------------------------------------------

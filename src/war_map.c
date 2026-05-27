@@ -543,7 +543,9 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO && levelInfo->levelInfo.customMap);
 
     levelInfo->levelInfo.startEntitiesCount = 0;
-    memset(levelInfo->levelInfo.startEntities, 0, sizeof(levelInfo->levelInfo.startEntities));
+
+    levelInfo->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
+    assert(levelInfo->levelInfo.startEntities);
 
     levelInfo->levelInfo.races[0] = yourRace;
     levelInfo->levelInfo.races[1] = enemyRace;
@@ -565,6 +567,9 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
 
     s32 configurationIndex = randomi(0, (s32)levelInfo->levelInfo.startConfigurationsCount);
     WarCustomMapConfiguration* configuration = &levelInfo->levelInfo.startConfigurations[configurationIndex];
+
+    configuration->startEntities = (WarLevelUnit*)wm_alloc(configuration->startEntitiesCount * sizeof(WarLevelUnit));
+    assert(configuration->startEntities);
 
     for (s32 i = 0; i < (s32)configuration->startEntitiesCount; i++)
     {

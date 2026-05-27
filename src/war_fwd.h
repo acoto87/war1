@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+
 #include "war_enums.h"
 
 // TinySoundFont types — forward-declared here so headers that use war.h

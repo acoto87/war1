@@ -20,20 +20,30 @@
 #define reads32(arr, index) (*(s32*)((arr) + (index)))
 #define readu32(arr, index) (*(u32*)((arr) + (index)))
 
+static void buildRgbaLut(const u8* paletteData, u32* rgba)
+{
+    rgba[0] = 0u;
+    for (s32 c = 1; c < 256; ++c)
+    {
+        u8 r = paletteData[c * 3 + 0];
+        u8 g = paletteData[c * 3 + 1];
+        u8 b = paletteData[c * 3 + 2];
+        rgba[c] = (u32)r | ((u32)g << 8) | ((u32)b << 16) | 0xFF000000u;
+    }
+}
+
 WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
 {
-    TracyCZoneN(ctx, "wres_getOrCreateResource", true);
-
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
-    if (!context->resources[index])
+
+    WarResource* resource = &context->resources[index];
+
+    if (resource->type == WAR_RESOURCE_TYPE_UNKNOWN)
     {
         logInfo("Creating resource: %d", index);
-        context->resources[index] = (WarResource*)wm_alloc(sizeof(WarResource));
     }
 
-    TracyCZoneEnd(ctx);
-
-    return context->resources[index];
+    return resource;
 }
 
 void wres_getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
@@ -183,6 +193,9 @@ void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
+    u32 rgba[PALETTE_LENGTH/3];
+    buildRgbaLut(paletteData, rgba);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
@@ -199,19 +212,7 @@ void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
-
-        pixels[i * 4 + 0] = readu8(paletteData, colorIndex * 3 + 0);
-        pixels[i * 4 + 1] = readu8(paletteData, colorIndex * 3 + 1);
-        pixels[i * 4 + 2] = readu8(paletteData, colorIndex * 3 + 2);
-
-        // assuming that colorIndex == 0 is the transparent color
-        if (pixels[i * 4 + 0] > 0 ||
-            pixels[i * 4 + 1] > 0 ||
-            pixels[i * 4 + 2] > 0 ||
-            colorIndex != 0)
-        {
-            pixels[i * 4 + 3] = 255;
-        }
+        memcpy(&pixels[i*4], &rgba[colorIndex], sizeof(u32));
     }
 
     WarResource *resource = wres_getOrCreateResource(context, index);
@@ -230,6 +231,9 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
 
+    u32 rgba[PALETTE_LENGTH/3];
+    buildRgbaLut(paletteData, rgba);
+
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
     if (rawResource.placeholder)
@@ -243,16 +247,22 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
     u8 frameWidth = readu8(rawResource.data, 2);
     u8 frameHeight = readu8(rawResource.data, 3);
 
-    WarResource *resource = wres_getOrCreateResource(context, index);
+    WarSpriteFrame* frames = (WarSpriteFrame*)wm_alloc(framesCount * sizeof(WarSpriteFrame));
+    assert(frames);
+
+    u32 framePixelSize = (u32)frameWidth * (u32)frameHeight * 4u;
+    u8* pixelPool = (u8*)wm_alloc(framesCount * framePixelSize);
+    assert(pixelPool);
+
     for (s32 i = 0; i < framesCount; ++i)
     {
-        WarSpriteFrame *frame = &resource->spriteData.frames[i];
+        WarSpriteFrame* frame = &frames[i];
         frame->dx = readu8(rawResource.data, 4 + i * 8 + 0);
         frame->dy = readu8(rawResource.data, 4 + i * 8 + 1);
         frame->w = readu8(rawResource.data, 4 + i * 8 + 2);
         frame->h = readu8(rawResource.data, 4 + i * 8 + 3);
         frame->off = readu32(rawResource.data, 4 + i * 8 + 4);
-        frame->data = (u8*)wm_alloc(frameWidth * frameHeight * 4 * sizeof(u8));
+        frame->data = pixelPool + (u32)i * framePixelSize;
 
         // found in war1tool.c, don't know if is needed
         // if (off < 0) {  // High bit of width
@@ -263,8 +273,7 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
 
     for (s32 i = 0; i < framesCount; ++i)
     {
-        WarSpriteFrame* frame = &resource->spriteData.frames[i];
-
+        WarSpriteFrame* frame = &frames[i];
         u32 off = frame->off;
         for (s32 y = frame->dy; y < (frame->dy + frame->h); ++y)
         {
@@ -272,33 +281,14 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
             {
                 u32 pixel = (x + y * frameWidth) * 4;
                 u32 colorIndex = rawResource.data[off++];
-
-                frame->data[pixel + 0] = readu8(paletteData, colorIndex * 3 + 0);
-                frame->data[pixel + 1] = readu8(paletteData, colorIndex * 3 + 1);
-                frame->data[pixel + 2] = readu8(paletteData, colorIndex * 3 + 2);
-
-                // assuming that colorIndex == 0 is the transparent color
-                if (frame->data[pixel + 0] > 0 ||
-                    frame->data[pixel + 1] > 0 ||
-                    frame->data[pixel + 2] > 0 ||
-                    colorIndex != 0)
-                {
-                    // Make shadow not so dark
-                    //
-                    // Altough it seem that the original game has (0, 0, 0) as
-                    // the color for shadows
-                    //
-                    // if (colorIndex == 96)
-                    //    frame->data[pixel + 3] = 150;
-
-                    frame->data[pixel + 3] = 255;
-
-                }
+                memcpy(&frame->data[pixel], &rgba[colorIndex], sizeof(u32));
             }
         }
     }
 
+    WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_SPRITE;
+    resource->spriteData.frames = frames;
     resource->spriteData.framesCount = framesCount;
     resource->spriteData.frameWidth = frameWidth;
     resource->spriteData.frameHeight = frameHeight;
@@ -309,6 +299,8 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
 s32 wres_loadStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startEntitiesCount = 0;
+    resource->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
+    assert(resource->levelInfo.startEntities);
 
     while (offset < (s32)rawResource->length)
     {
@@ -342,6 +334,8 @@ s32 wres_loadStartEntities(WarResource* resource, WarRawResource* rawResource, s
 s32 wres_loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startRoadsCount = 0;
+    resource->levelInfo.startRoads = (WarLevelConstruct*)wm_alloc(MAX_CONSTRUCTS_COUNT * sizeof(WarLevelConstruct));
+    assert(resource->levelInfo.startRoads);
 
     while (offset < (s32)rawResource->length)
     {
@@ -370,6 +364,8 @@ s32 wres_loadStartRoads(WarResource* resource, WarRawResource* rawResource, s32 
 s32 wres_loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startWallsCount = 0;
+    resource->levelInfo.startWalls = (WarLevelConstruct*)wm_alloc(MAX_CONSTRUCTS_COUNT * sizeof(WarLevelConstruct));
+    assert(resource->levelInfo.startWalls);
 
     while (offset < (s32)rawResource->length)
     {
@@ -398,6 +394,8 @@ s32 wres_loadStartWalls(WarResource* resource, WarRawResource* rawResource, s32 
 s32 wres_loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawResource, s32 offset)
 {
     resource->levelInfo.startGoldminesCount = 0;
+    resource->levelInfo.startGoldmines = (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_GOLDMINES_COUNT * sizeof(WarLevelUnit));
+    assert(resource->levelInfo.startGoldmines);
 
     while (offset < (s32)rawResource->length)
     {
@@ -410,7 +408,7 @@ s32 wres_loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawReso
         WarLevelUnit* startGoldmine = &resource->levelInfo.startGoldmines[resource->levelInfo.startGoldminesCount];
         startGoldmine->x = readu8(rawResource->data, offset + 0) / 2;
         startGoldmine->y = readu8(rawResource->data, offset + 1) / 2;
-        startGoldmine->type = WAR_UNIT_GOLDMINE;;
+        startGoldmine->type = WAR_UNIT_GOLDMINE;
         startGoldmine->player = 4;
 
         offset += 4;
@@ -424,6 +422,9 @@ s32 wres_loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawReso
 s32 wres_loadCustomStartEntities(WarResource* resource, WarRawResource* rawResource, s32 offset, WarCustomMapConfiguration* configuration, u8 player)
 {
     NOT_USED(resource);
+
+    configuration->startEntities = (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_ENTITIES_COUNT * sizeof(WarLevelUnit));
+    assert(configuration->startEntities);
 
     while (offset < (s32)rawResource->length)
     {
@@ -695,6 +696,10 @@ void wres_loadLevelVisual(WarContext *context, DatabaseEntry *entry)
 
     WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_VISUAL;
+
+    resource->levelVisual.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    assert(resource->levelVisual.data);
+
     for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
         resource->levelVisual.data[i] = readu16(rawResource.data, i * 2);
@@ -718,6 +723,10 @@ void wres_loadLevelPassable(WarContext *context, DatabaseEntry *entry)
 
     WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_LEVEL_PASSABLE;
+
+    resource->levelPassable.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
+    assert(resource->levelPassable.data);
+
     for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
         // 128 -> wood, 64 -> water, 16 -> bridge, 0 -> empty
@@ -741,10 +750,13 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     }
 
     WarResource *tiles = wres_getOrCreateResource(context, entry->param1);
+    assert(tiles);
+    assert(tiles->type == WAR_RESOURCE_TYPE_TILES);
 
     // Local scratch zone for the temporary indexed-colour tile buffer.
-    memzone_t* scratch = mz_init(TILESET_WIDTH * TILESET_HEIGHT + 1024);
-    u8 *data = (u8*)mz_alloc(scratch, TILESET_WIDTH * TILESET_HEIGHT);
+    u8 *data = (u8*)wm_alloc(TILESET_WIDTH * TILESET_HEIGHT);
+    assert(data);
+
     u32 tilesCount = rawResource.length / 8;
     for(u32 i = 0; i < tilesCount; i++)
     {
@@ -782,16 +794,19 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, tiles->tilesData.palette1, tiles->tilesData.palette2, paletteData);
 
+    u32 rgba[PALETTE_LENGTH/3];
+    buildRgbaLut(paletteData, rgba);
+
     WarResource *resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_TILESET;
     resource->tilesetData.tilesCount = rawResource.length / 8;
+    resource->tilesetData.data = (u8*)wm_alloc(TILESET_WIDTH * TILESET_HEIGHT * 4 * sizeof(u8));
+    assert(resource->tilesetData.data);
 
     for(s32 i = 0; i < TILESET_WIDTH * TILESET_HEIGHT; i++)
     {
-        resource->tilesetData.data[i * 4 + 0] = paletteData[data[i] * 3 + 0];
-        resource->tilesetData.data[i * 4 + 1] = paletteData[data[i] * 3 + 1];
-        resource->tilesetData.data[i * 4 + 2] = paletteData[data[i] * 3 + 2];
-        resource->tilesetData.data[i * 4 + 3] = data[i] > 0 ? 255 : 0;
+        u8 colorIndex = data[i];
+        memcpy(&resource->tilesetData.data[i * 4], &rgba[colorIndex], sizeof(u32));
     }
 
     // #if __DEBUG__
@@ -802,7 +817,7 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     // }
     // #endif
 
-    mz_destroy(scratch);
+    wm_free(data);
 
     TracyCZoneEnd(ctx);
 }
@@ -872,7 +887,7 @@ void wres_loadXmi(WarContext *context, DatabaseEntry *entry)
     size32 xmiLength = rawResource.length;
 
     size32 midLength;
-    uint8_t* midData = wa_transcodeXmiToMid(context, xmiData, xmiLength, &midLength);
+    u8* midData = x2m_transcode(xmiData, xmiLength, &midLength);
     if (!midData)
     {
         logError("Can't convert XMI file of resource %d", index);
@@ -902,54 +917,29 @@ void wres_loadWave(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    memory_buffer_t bufInput = {0};
-    mb_initFromMemory(&bufInput, rawResource.data, rawResource.length);
+    mw_audio_buffer buffer = {0};
+    if (!mw_read_memory((const void*)rawResource.data, rawResource.length, &buffer))
+    {
+        logError("Failed to read WAV data for resource %d", index);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
-    // skip "RIFF"
-    assert(mb_skip(&bufInput, 4));
-    // skip file length, always 36 + dataLength
-    assert(mb_skip(&bufInput, sizeof(s32)));
-    // skip "WAVE"
-    assert(mb_skip(&bufInput, 4));
-    // skip "fmt "
-    assert(mb_skip(&bufInput, 4));
-    // skip fmt length, always 10
-    assert(mb_skip(&bufInput, sizeof(s32)));
-    // skip uncompressed, always 1
-    assert(mb_skip(&bufInput, sizeof(s16)));
-    // skip channel count, always 1
-    assert(mb_skip(&bufInput, sizeof(s16)));
-    // skip sample rate, always 11025
-    assert(mb_skip(&bufInput, sizeof(s32)));
-    // skip byte rate, always 11025
-    assert(mb_skip(&bufInput, sizeof(s32)));
-    // skip block align, always 1
-    assert(mb_skip(&bufInput, sizeof(s16)));
-    // skip bits per sample, always 8
-    assert(mb_skip(&bufInput, sizeof(s16)));
-    // skip "data"
-    assert(mb_skip(&bufInput, 4));
-
-    s32 dataLength;
-    assert(mb_readInt32LE(&bufInput, &dataLength));
-    assert(dataLength > 0);
-
-    // Local scratch zone for the intermediate 11025 Hz PCM buffer.
-    memzone_t* scratch = mz_init((size_t)dataLength + 1024);
-    u8* data = (u8*)mz_alloc(scratch, (size_t)dataLength);
-    assert(mb_readBytes(&bufInput, data, dataLength));
-
-    // this data is at 11025khz, and for playing it back I needed at 44100khz
-    // so I need to upsampling it here by a factor of 4
-    u8* newData = wa_changeSampleRate(context, data, dataLength, 4);
-    s32 newDataLength = dataLength * 4;
+    mw_audio_buffer resampledBuffer = {0};
+    if (!mw_resample_pcm(&buffer, &resampledBuffer, 44100))
+    {
+        logError("Failed to resample WAV data for resource %d", index);
+        mw_free_buffer(&buffer);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
     WarResource* resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_WAVE;
-    resource->audio.data = newData;
-    resource->audio.length = newDataLength;
+    resource->audio.data = resampledBuffer.data;
+    resource->audio.length = resampledBuffer.data_length;
 
-    mz_destroy(scratch);
+    mw_free_buffer(&buffer);
 
     TracyCZoneEnd(ctx);
 }
@@ -967,55 +957,29 @@ void wres_loadVoc(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    memory_buffer_t bufInput = {0};
-    mb_initFromMemory(&bufInput, rawResource.data, rawResource.length);
+    mv_audio_buffer buffer = {0};
+    if (!mv_read_memory((const void*)rawResource.data, rawResource.length, &buffer))
+    {
+        logError("Failed to read VOC data for resource %d", index);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
-    char vocHeader[19];
-    assert(mb_readString(&bufInput, vocHeader, sizeof(vocHeader)));
-    assert(strncmp(vocHeader, "Creative Voice File", sizeof(vocHeader)) == 0);
-
-    // skip 0x1A
-    assert(mb_skip(&bufInput, 1));
-
-    // skip offset to data, always 26
-    assert(mb_skip(&bufInput, 2));
-
-    // skip version, always 266
-    assert(mb_skip(&bufInput, 2));
-    // skip 2's comp of version, always 4393
-    assert(mb_skip(&bufInput, 2));
-
-    u8 type;
-    assert(mb_read(&bufInput, &type));
-    assert(type == 1);
-
-    s32 dataLength;
-    assert(mb_readInt24LE(&bufInput, &dataLength));
-    assert(dataLength > 0);
-
-    // the length of the data is this value - 2
-    // for the next two skipped bytes
-    dataLength -= 2;
-
-    // skip sample rate and compression type
-    assert(mb_skip(&bufInput, 2));
-
-    // Local scratch zone for the intermediate 11025 Hz PCM buffer.
-    memzone_t* scratch = mz_init((size_t)dataLength + 1024);
-    u8* data = (u8*)mz_alloc(scratch, (size_t)dataLength);
-    assert(mb_readBytes(&bufInput, data, dataLength));
-
-    // this data is at 11025khz, and for playing it back I needed at 44100khz
-    // so I need to upsampling it here by a factor of 4
-    u8* newData = wa_changeSampleRate(context, data, dataLength, 4);
-    s32 newDataLength = dataLength * 4;
+    mv_audio_buffer resampledBuffer = {0};
+    if (!mv_resample_pcm(&buffer, &resampledBuffer, 44100))
+    {
+        logError("Failed to resample VOC data for resource %d", index);
+        mv_free_buffer(&buffer);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
     WarResource* resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_VOC;
-    resource->audio.data = newData;
-    resource->audio.length = newDataLength;
+    resource->audio.data = resampledBuffer.data;
+    resource->audio.length = resampledBuffer.data_length;
 
-    mz_destroy(scratch);
+    mv_free_buffer(&buffer);
 
     TracyCZoneEnd(ctx);
 }
@@ -1026,6 +990,9 @@ void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
 
     u8 paletteData[PALETTE_LENGTH];
     wres_getPalette(context, entry->param1, entry->param2, paletteData);
+
+    u32 rgba[PALETTE_LENGTH/3];
+    buildRgbaLut(paletteData, rgba);
 
     s32 index = entry->index;
     WarRawResource rawResource = context->warFile->resources[index];
@@ -1045,19 +1012,7 @@ void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 8 + i);
-
-        pixels[i * 4 + 0] = readu8(paletteData, colorIndex * 3 + 0);
-        pixels[i * 4 + 1] = readu8(paletteData, colorIndex * 3 + 1);
-        pixels[i * 4 + 2] = readu8(paletteData, colorIndex * 3 + 2);
-
-        // assuming that colorIndex == 0 is the transparent color
-        if (pixels[i * 4 + 0] > 0 ||
-            pixels[i * 4 + 1] > 0 ||
-            pixels[i * 4 + 2] > 0 ||
-            colorIndex != 0)
-        {
-            pixels[i * 4 + 3] = 255;
-        }
+        memcpy(&pixels[i*4], &rgba[colorIndex], sizeof(u32));
     }
 
     WarResource *resource = wres_getOrCreateResource(context, index);
