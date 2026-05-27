@@ -22,7 +22,7 @@
  *
  *
  * ============================================================================
- * CUSTOM CUSTOM MEMORY ALLOCATOR REGISTRATION
+ * CUSTOM MEMORY ALLOCATOR REGISTRATION
  * ============================================================================
  * You can intercept heap operations by defining X2M_REALLOC and X2M_FREE
  * BEFORE including this header file.

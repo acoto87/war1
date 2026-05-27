@@ -95,9 +95,6 @@
 #define MB_FREE(p) wm_free(p)
 #include "shl/memory_buffer.h"
 
-#define SHL_WAV_IMPLEMENTATION
-#include "shl/wav.h"
-
 #define WSTR_MALLOC(sz)       wm_alloc(sz)
 #define WSTR_REALLOC(p, sz)   wm_realloc((p), (sz))
 #define WSTR_FREE(p)          wm_free(p)
@@ -107,7 +104,19 @@
 #define X2M_REALLOC(ptr, size) wm_realloc(ptr, size)
 #define X2M_FREE(ptr)          wm_free(ptr)
 #define XMI2MID_IMPLEMENTATION
-#include "xmi2mid.h"
+#include "shl/xmi2mid.h"
+
+#define MINIWAVE_MALLOC(sz)       wm_alloc(sz)
+#define MINIWAVE_REALLOC(ptr, sz) wm_realloc((ptr), (sz))
+#define MINIWAVE_FREE(ptr)        wm_free(ptr)
+#define MINIWAVE_IMPLEMENTATION
+#include "shl/wav.h"
+
+#define MINIVOC_MALLOC(sz)       wm_alloc(sz)
+#define MINIVOC_REALLOC(ptr, sz) wm_realloc((ptr), (sz))
+#define MINIVOC_FREE(ptr)        wm_free(ptr)
+#define MINIVOC_IMPLEMENTATION
+#include "shl/voc.h"
 
 #include "war_log.h"
 #include "war.h"

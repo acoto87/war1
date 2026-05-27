@@ -34,8 +34,6 @@ static void buildRgbaLut(const u8* paletteData, u32* rgba)
 
 WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
 {
-    TracyCZoneN(ctx, "wres_getOrCreateResource", true);
-
     assert(index >= 0 && index < MAX_RESOURCES_COUNT);
 
     WarResource* resource = &context->resources[index];
@@ -44,8 +42,6 @@ WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
     {
         logInfo("Creating resource: %d", index);
     }
-
-    TracyCZoneEnd(ctx);
 
     return resource;
 }
@@ -921,54 +917,29 @@ void wres_loadWave(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    memory_buffer_t bufInput = {0};
-    mb_initFromMemory(&bufInput, rawResource.data, rawResource.length);
+    mw_audio_buffer buffer = {0};
+    if (!mw_read_memory((const void*)rawResource.data, rawResource.length, &buffer))
+    {
+        logError("Failed to read WAV data for resource %d", index);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
-    // skip "RIFF"
-    assert(mb_skip(&bufInput, 4));
-    // skip file length, always 36 + dataLength
-    assert(mb_skip(&bufInput, sizeof(s32)));
-    // skip "WAVE"
-    assert(mb_skip(&bufInput, 4));
-    // skip "fmt "
-    assert(mb_skip(&bufInput, 4));
-    // skip fmt length, always 10
-    assert(mb_skip(&bufInput, sizeof(s32)));
-    // skip uncompressed, always 1
-    assert(mb_skip(&bufInput, sizeof(s16)));
-    // skip channel count, always 1
-    assert(mb_skip(&bufInput, sizeof(s16)));
-    // skip sample rate, always 11025
-    assert(mb_skip(&bufInput, sizeof(s32)));
-    // skip byte rate, always 11025
-    assert(mb_skip(&bufInput, sizeof(s32)));
-    // skip block align, always 1
-    assert(mb_skip(&bufInput, sizeof(s16)));
-    // skip bits per sample, always 8
-    assert(mb_skip(&bufInput, sizeof(s16)));
-    // skip "data"
-    assert(mb_skip(&bufInput, 4));
-
-    s32 dataLength;
-    assert(mb_readInt32LE(&bufInput, &dataLength));
-    assert(dataLength > 0);
-
-    // Local scratch zone for the intermediate 11025 Hz PCM buffer.
-    memzone_t* scratch = mz_init((size_t)dataLength + 1024);
-    u8* data = (u8*)mz_alloc(scratch, (size_t)dataLength);
-    assert(mb_readBytes(&bufInput, data, dataLength));
-
-    // this data is at 11025khz, and for playing it back I needed at 44100khz
-    // so I need to upsampling it here by a factor of 4
-    u8* newData = wa_changeSampleRate(context, data, dataLength, 4);
-    s32 newDataLength = dataLength * 4;
+    mw_audio_buffer resampledBuffer = {0};
+    if (!mw_resample_pcm(&buffer, &resampledBuffer, 44100))
+    {
+        logError("Failed to resample WAV data for resource %d", index);
+        mw_free_buffer(&buffer);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
     WarResource* resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_WAVE;
-    resource->audio.data = newData;
-    resource->audio.length = newDataLength;
+    resource->audio.data = resampledBuffer.data;
+    resource->audio.length = resampledBuffer.data_length;
 
-    mz_destroy(scratch);
+    mw_free_buffer(&buffer);
 
     TracyCZoneEnd(ctx);
 }
@@ -986,55 +957,29 @@ void wres_loadVoc(WarContext *context, DatabaseEntry *entry)
         return;
     }
 
-    memory_buffer_t bufInput = {0};
-    mb_initFromMemory(&bufInput, rawResource.data, rawResource.length);
+    mv_audio_buffer buffer = {0};
+    if (!mv_read_memory((const void*)rawResource.data, rawResource.length, &buffer))
+    {
+        logError("Failed to read VOC data for resource %d", index);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
-    char vocHeader[19];
-    assert(mb_readString(&bufInput, vocHeader, sizeof(vocHeader)));
-    assert(strncmp(vocHeader, "Creative Voice File", sizeof(vocHeader)) == 0);
-
-    // skip 0x1A
-    assert(mb_skip(&bufInput, 1));
-
-    // skip offset to data, always 26
-    assert(mb_skip(&bufInput, 2));
-
-    // skip version, always 266
-    assert(mb_skip(&bufInput, 2));
-    // skip 2's comp of version, always 4393
-    assert(mb_skip(&bufInput, 2));
-
-    u8 type;
-    assert(mb_read(&bufInput, &type));
-    assert(type == 1);
-
-    s32 dataLength;
-    assert(mb_readInt24LE(&bufInput, &dataLength));
-    assert(dataLength > 0);
-
-    // the length of the data is this value - 2
-    // for the next two skipped bytes
-    dataLength -= 2;
-
-    // skip sample rate and compression type
-    assert(mb_skip(&bufInput, 2));
-
-    // Local scratch zone for the intermediate 11025 Hz PCM buffer.
-    memzone_t* scratch = mz_init((size_t)dataLength + 1024);
-    u8* data = (u8*)mz_alloc(scratch, (size_t)dataLength);
-    assert(mb_readBytes(&bufInput, data, dataLength));
-
-    // this data is at 11025khz, and for playing it back I needed at 44100khz
-    // so I need to upsampling it here by a factor of 4
-    u8* newData = wa_changeSampleRate(context, data, dataLength, 4);
-    s32 newDataLength = dataLength * 4;
+    mv_audio_buffer resampledBuffer = {0};
+    if (!mv_resample_pcm(&buffer, &resampledBuffer, 44100))
+    {
+        logError("Failed to resample VOC data for resource %d", index);
+        mv_free_buffer(&buffer);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
     WarResource* resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_VOC;
-    resource->audio.data = newData;
-    resource->audio.length = newDataLength;
+    resource->audio.data = resampledBuffer.data;;
+    resource->audio.length = resampledBuffer.data_length;;
 
-    mz_destroy(scratch);
+    mv_free_buffer(&buffer);
 
     TracyCZoneEnd(ctx);
 }

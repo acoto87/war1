@@ -724,33 +724,3 @@ WarEntity* wa_playAcknowledgementSound(WarContext* context, WarPlayerInfo* playe
         ? wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_HUMAN_ACKNOWLEDGEMENT_1, .randomToId=WAR_HUMAN_ACKNOWLEDGEMENT_2, .loop=false))
         : wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_ORC_ACKNOWLEDGEMENT_1, .randomToId=WAR_ORC_ACKNOWLEDGEMENT_4, .loop=false));
 }
-
-u8* wa_changeSampleRate(WarContext* context, u8* samplesIn, s32 length, s32 factor)
-{
-    NOT_USED(context);
-
-    assert(factor >= 1);
-
-    s32 newLength = length * factor;
-    u8* samplesOut = (u8*)wm_alloc(newLength);
-
-    samplesOut[0] = samplesIn[0];
-
-    for (s32 i = 1, j = 0; i < length; i++)
-    {
-        u8 a = samplesIn[i - 1];
-        u8 b = samplesIn[i];
-
-        f32 dt = 1.0f / (f32)factor;
-        for (s32 k = 0; k < factor - 1; k++)
-        {
-            // linear interpolation: a + (b - a) * t
-            f32 t = dt * (f32)(k + 1);
-            samplesOut[j++] = (u8)(a + (b - a) * t);
-        }
-
-        samplesOut[j++] = b;
-    }
-
-    return samplesOut;
-}
