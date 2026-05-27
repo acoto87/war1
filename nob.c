@@ -390,8 +390,6 @@ static bool append_gnu_common_flags(Nob_Cmd *cmd, const Build_Options *options)
                    "-Wall",
                    "-Wno-misleading-indentation",
                    "-Wpedantic",
-                   "-x",
-                   "c",
                    "-Ideps/include");
 
     if (options->debug) {
@@ -455,13 +453,7 @@ static bool compile_windows_resource_gnu_like(const Build_Options *options,
 
     (void)options;
 
-    nob_cmd_append(&cmd,
-                   "windres",
-                   "-i",
-                   rc_path,
-                   "-o",
-                   res_object_path);
-
+    nob_cmd_append(&cmd, "windres", "-i", rc_path, "-O", "coff", "-o", res_object_path);
     return nob_cmd_run(&cmd);
 }
 
@@ -473,12 +465,7 @@ static bool compile_windows_resource_msvc(const Build_Options *options,
 
     (void)options;
 
-    nob_cmd_append(&cmd,
-                   "rc",
-                   "/nologo",
-                   nob_temp_sprintf("/fo%s", res_path),
-                   rc_path);
-
+    nob_cmd_append(&cmd, "rc", "/nologo", nob_temp_sprintf("/fo%s", res_path), rc_path);
     return nob_cmd_run(&cmd);
 }
 

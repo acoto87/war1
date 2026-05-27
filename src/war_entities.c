@@ -2009,9 +2009,6 @@ void renderImage(WarContext* context, WarEntity* entity)
         WarSpriteComponent* sprite = we_getSpriteComponent(context, entity);
         assert(sprite);
 
-        WarUIComponent* ui = we_getUIComponent(context, entity);
-        assert(ui);
-
         if (sprite->frameIndex >= 0)
         {
             wr_save(context);
@@ -3311,6 +3308,7 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
 void we_takeWallDamage(WarContext* context, WarEntity* entity, WarWallPiece* piece, s32 minDamage, s32 rndDamage)
 {
     NOT_USED(context);
+    NOT_USED(entity);
 
     assert(wu_isWall(entity));
 

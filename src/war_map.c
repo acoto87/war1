@@ -470,9 +470,6 @@ s32 wmap_getMapTileIndex(WarContext* context, s32 x, s32 y)
     WarResource* levelVisual = wres_getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
     assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
 
-    WarMapTilesetType tilesetType = map->tilesetType;
-    assert(tilesetType == MAP_TILESET_FOREST || tilesetType == MAP_TILESET_SWAMP);
-
     return levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
 }
 
@@ -1180,9 +1177,6 @@ static void updateSelection(WarContext* context)
                     WarEntity* entity = units->items[i];
                     if (entity)
                     {
-                        WarUnitComponent* unit = we_getUnitComponent(context, entity);
-                        assert(unit);
-
                         if (we_isComponentEnabled(context, entity, COMP_UNIT))
                         {
                             // don't select dead units or corpses
@@ -1223,9 +1217,6 @@ static void updateSelection(WarContext* context)
                 WarEntity* entityUnderCursor = we_findEntityUnderCursor(context, false, false);
                 if (entityUnderCursor)
                 {
-                    WarUnitComponent* unit = we_getUnitComponent(context, entityUnderCursor);
-                    assert(unit);
-
                     if (we_isComponentEnabled(context, entityUnderCursor, COMP_UNIT) &&
                         !wst_isDead(context, entityUnderCursor) &&
                         !wst_isGoingToDie(context, entityUnderCursor) &&

@@ -28,7 +28,7 @@
 #include "war_resources.h"
 #include "war_scenes.h"
 
-static WarKeys wg_getWarKeyFromSDLKey(SDL_Keycode key)
+static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
 {
     switch (key)
     {
@@ -133,7 +133,7 @@ static WarKeys wg_getWarKeyFromSDLKey(SDL_Keycode key)
     }
 }
 
-static void wg_appendCheatTextInput(WarContext* context, StringView text)
+static void appendCheatTextInput(WarContext* context, StringView text)
 {
     WarScene* scene = context->scene;
     WarMap* map = context->map;
@@ -165,6 +165,31 @@ static void wg_appendCheatTextInput(WarContext* context, StringView text)
     }
 }
 
+static void setWindowIcon(SDL_Window* window) {
+    // Load the PNG file. We force 4 channels (RGBA) because SDL prefers it.
+    int width, height, channels;
+    u8* pixels = stbi_load("war1.png", &width, &height, &channels, 4);
+    if (!pixels) {
+        logWarning("Failed to load icon with stb_image: %s", stbi_failure_reason());
+        return;
+    }
+
+    // Calculate the pitch (bytes per row): width * 4 bytes (RGBA)
+    int pitch = width * 4;
+
+    // Create a surface from the raw pixel data
+    // In SDL3, we use SDL_PIXELFORMAT_RGBA32 for standard 32-bit pixel arrays
+    SDL_Surface* iconSurface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_RGBA32, pixels, pitch);
+    if (iconSurface) {
+        SDL_SetWindowIcon(window, iconSurface);
+        SDL_DestroySurface(iconSurface);
+    } else {
+        logWarning("Failed to create SDL surface for icon: %s", SDL_GetError());
+    }
+
+    stbi_image_free(pixels);
+}
+
 bool wg_initGame(WarContext* context)
 {
     context->globalScale = 3;
@@ -181,6 +206,8 @@ bool wg_initGame(WarContext* context)
         SDL_Quit();
         return false;
     }
+
+    setWindowIcon(context->window);
 
     context->renderer = SDL_CreateRenderer(context->window, NULL);
     if (!context->renderer)
@@ -501,7 +528,7 @@ void wg_processGameEvent(WarContext* context, SDL_Event* event)
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
         {
-            WarKeys key = wg_getWarKeyFromSDLKey(event->key.key);
+            WarKeys key = getWarKeyFromSDLKey(event->key.key);
             if (key != WAR_KEY_NONE)
             {
                 bool pressed = event->type == SDL_EVENT_KEY_DOWN;
@@ -527,7 +554,7 @@ void wg_processGameEvent(WarContext* context, SDL_Event* event)
         }
 
         case SDL_EVENT_TEXT_INPUT:
-            wg_appendCheatTextInput(context, wsv_fromCString(event->text.text));
+            appendCheatTextInput(context, wsv_fromCString(event->text.text));
             break;
 
         case SDL_EVENT_WINDOW_FOCUS_GAINED:

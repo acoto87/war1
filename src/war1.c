@@ -34,8 +34,13 @@
 #include <assert.h>
 #include "SDL3/SDL.h"
 
-// Tracy profiler C API — all macros are no-ops unless TRACY_ENABLE is defined
-#include "TracyC.h"
+#ifdef TRACY_ENABLE
+    #include "TracyC.h"
+#else
+    #define TracyCZoneN(c, x, y) ((void)(c), (void)(x), (void)(y))
+    #define TracyCZoneEnd(c) ((void)(c))
+    #define TracyCFrameMark() ((void)0)
+#endif
 
 #define SHL_MZ_IMPLEMENTATION
 #ifdef SHL_MZ_DEBUG

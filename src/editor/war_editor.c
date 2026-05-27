@@ -37,8 +37,16 @@ bool we_init(WarEditorContext* ctx)
         return false;
     }
 
+    bool skipDecompress[MAX_RESOURCES_COUNT];
+    memset(skipDecompress, 0, sizeof(skipDecompress));
+    for (int i = 0; i < arrayLength(assets); ++i)
+    {
+        if (assets[i].type == DB_ENTRY_TYPE_UNKNOWN)
+            skipDecompress[assets[i].index] = true;
+    }
+
     // Load DATA.WAR (ignores context — wfile_loadWarFile uses NULL safely).
-    ctx->warFile = wfile_loadWarFile((WarContext*)NULL, wsv_fromCString(DATAWAR_FILE_PATH));
+    ctx->warFile = wfile_loadWarFile((WarContext*)NULL, wsv_fromCString(DATAWAR_FILE_PATH), skipDecompress);
     if (!ctx->warFile)
     {
         logWarning("DATA.WAR not found at %s; some features will be unavailable.", DATAWAR_FILE_PATH);

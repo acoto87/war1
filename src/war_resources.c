@@ -40,7 +40,7 @@ WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
 
     if (resource->type == WAR_RESOURCE_TYPE_UNKNOWN)
     {
-        logInfo("Creating resource: %d", index);
+        logDebug("Creating resource: %d", index);
     }
 
     return resource;
