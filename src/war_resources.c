@@ -212,7 +212,7 @@ void wres_loadImageResource(WarContext *context, DatabaseEntry *entry)
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 4 + i);
-        *(u32*)&pixels[i*4] = rgba[colorIndex];
+        memcpy(&pixels[i*4], &rgba[colorIndex], sizeof(u32));
     }
 
     WarResource *resource = wres_getOrCreateResource(context, index);
@@ -281,7 +281,7 @@ void wres_loadSpriteResource(WarContext *context, DatabaseEntry *entry)
             {
                 u32 pixel = (x + y * frameWidth) * 4;
                 u32 colorIndex = rawResource.data[off++];
-                *(u32*)&frame->data[pixel] = rgba[colorIndex];
+                memcpy(&frame->data[pixel], &rgba[colorIndex], sizeof(u32));
             }
         }
     }
@@ -408,7 +408,7 @@ s32 wres_loadCustomStartGoldmines(WarResource* resource, WarRawResource* rawReso
         WarLevelUnit* startGoldmine = &resource->levelInfo.startGoldmines[resource->levelInfo.startGoldminesCount];
         startGoldmine->x = readu8(rawResource->data, offset + 0) / 2;
         startGoldmine->y = readu8(rawResource->data, offset + 1) / 2;
-        startGoldmine->type = WAR_UNIT_GOLDMINE;;
+        startGoldmine->type = WAR_UNIT_GOLDMINE;
         startGoldmine->player = 4;
 
         offset += 4;
@@ -806,7 +806,7 @@ void wres_loadTileset(WarContext *context, DatabaseEntry *entry)
     for(s32 i = 0; i < TILESET_WIDTH * TILESET_HEIGHT; i++)
     {
         u8 colorIndex = data[i];
-        *(u32*)&resource->tilesetData.data[i * 4] = rgba[colorIndex];
+        memcpy(&resource->tilesetData.data[i * 4], &rgba[colorIndex], sizeof(u32));
     }
 
     // #if __DEBUG__
@@ -976,8 +976,8 @@ void wres_loadVoc(WarContext *context, DatabaseEntry *entry)
 
     WarResource* resource = wres_getOrCreateResource(context, index);
     resource->type = WAR_RESOURCE_TYPE_VOC;
-    resource->audio.data = resampledBuffer.data;;
-    resource->audio.length = resampledBuffer.data_length;;
+    resource->audio.data = resampledBuffer.data;
+    resource->audio.length = resampledBuffer.data_length;
 
     mv_free_buffer(&buffer);
 
@@ -1012,7 +1012,7 @@ void wres_loadCursor(WarContext* context, DatabaseEntry* entry)
     for (s32 i = 0; i < width * height; ++i)
     {
         u32 colorIndex = readu8(rawResource.data, 8 + i);
-        *(u32*)&pixels[i*4] = rgba[colorIndex];
+        memcpy(&pixels[i*4], &rgba[colorIndex], sizeof(u32));
     }
 
     WarResource *resource = wres_getOrCreateResource(context, index);
