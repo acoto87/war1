@@ -1,5 +1,5 @@
 /*
-    wav.h - Single-header library for WAV I/O and Resampling
+    wav.h - Single-header library for WAV file I/O and PCM resampling.
 
     MIT License
 
@@ -23,22 +23,32 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    Single-header WAVE file writer for streaming 16-bit PCM samples to disk.
-    The API uses the wav_ prefix and writes the final RIFF/WAVE header when the
-    file is flushed and closed.
+    Reads and writes RIFF/WAVE PCM audio files (8-bit and 16-bit, mono and stereo).
+    Includes a PCM resampler with fast paths for 2x/4x integer ratios on 8-bit mono
+    and a general fixed-point 16.16 linear interpolation fallback.
 
     USAGE
-    Include this header in all translation units that need the declarations.
-    Define MINIWAVE_IMPLEMENTATION in exactly one translation unit before the
-    include to compile the implementation:
+    Define MINIWAVE_IMPLEMENTATION in exactly one translation unit before including
+    this header to compile the implementation:
 
         #define MINIWAVE_IMPLEMENTATION
         #include "wav.h"
 
-    Include the header without that define everywhere else:
+    In all other translation units include without the define:
 
         #include "wav.h"
 
+    CUSTOM MEMORY ALLOCATOR
+    Override the three allocator macros before the implementation include:
+
+        #define MINIWAVE_MALLOC(sz)         my_malloc(sz)
+        #define MINIWAVE_REALLOC(ptr, size) my_realloc(ptr, size)
+        #define MINIWAVE_FREE(ptr)          my_free(ptr)
+        #define MINIWAVE_IMPLEMENTATION
+        #include "wav.h"
+
+    REFERENCES
+    https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 */
 
 #ifndef MINIWAVE_H

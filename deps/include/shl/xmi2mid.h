@@ -1,38 +1,60 @@
-/**
- * xmi2mid.h - Single Header XMI to standard MIDI transcoding library.
- *
- * ============================================================================
- * USAGE
- * ============================================================================
- * In EXACTLY ONE C/C++ file, define XMI2MID_IMPLEMENTATION before including
- * this file to build the executable logic compilation path.
- *
- * Example:
- * #define XMI2MID_IMPLEMENTATION
- * #include "xmi2mid.h"
- *
- * This code is a port in C of the XMI2MID converter by Peter "Corsix" Cawley
- * in the War1gus repository. You can find the original C++ code here:
- * https://github.com/Wargus/war1gus/blob/master/xmi2mid.cpp.
- *
- * To understand more about these formats see:
- * http://www.shikadi.net/moddingwiki/XMI_Format
- * http://www.shikadi.net/moddingwiki/MID_Format
- * https://github.com/colxi/midi-parser-js/wiki/MIDI-File-Format-Specifications
- *
- *
- * ============================================================================
- * CUSTOM MEMORY ALLOCATOR REGISTRATION
- * ============================================================================
- * You can intercept heap operations by defining X2M_REALLOC and X2M_FREE
- * BEFORE including this header file.
- *
- * Example:
- * #define X2M_REALLOC(ptr, size) my_custom_realloc(ptr, size)
- * #define X2M_FREE(ptr)          my_custom_free(ptr)
- * #define XMI2MID_IMPLEMENTATION
- * #include "xmi2mid.h"
- */
+/*
+    xmi2mid.h - Single-header XMI to Standard MIDI File (SMF) transcoder.
+
+    MIT License
+
+    Copyright (c) 2026 Alejandro Coto Gutiérrez
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    Transcodes XMI (Extended MIDI, used by Miles Sound System and Origin Systems
+    games) into standard .mid files. Handles IFF-wrapped EVNT chunks, absolute-time
+    note durations, and byte-value delays.
+
+    USAGE
+    Define XMI2MID_IMPLEMENTATION in exactly one translation unit before including
+    this header to compile the implementation:
+
+        #define XMI2MID_IMPLEMENTATION
+        #include "xmi2mid.h"
+
+    In all other translation units include without the define:
+
+        #include "xmi2mid.h"
+
+    CUSTOM MEMORY ALLOCATOR
+    Override the two allocator macros before the implementation include:
+
+        #define X2M_REALLOC(ptr, size) my_realloc(ptr, size)
+        #define X2M_FREE(ptr)          my_free(ptr)
+        #define XMI2MID_IMPLEMENTATION
+        #include "xmi2mid.h"
+
+    ATTRIBUTION
+    This code is a port in C of the XMI2MID converter by Peter "Corsix" Cawley in
+    the War1gus repository: https://github.com/Wargus/war1gus/blob/master/xmi2mid.cpp
+
+    REFERENCES
+    http://www.shikadi.net/moddingwiki/XMI_Format
+    http://www.shikadi.net/moddingwiki/MID_Format
+    https://github.com/colxi/midi-parser-js/wiki/MIDI-File-Format-Specifications
+*/
 
 #ifndef XMI2MID_SINGLE_HEADER_H
 #define XMI2MID_SINGLE_HEADER_H

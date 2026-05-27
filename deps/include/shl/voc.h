@@ -1,37 +1,60 @@
-/**
- * voc.h - Single Header VOC (Creative Voice) audio transcoding library.
- *
- * ============================================================================
- * USAGE
- * ============================================================================
- * In EXACTLY ONE C/C++ file, define MINIVOC_IMPLEMENTATION before including
- * this file to build the executable logic compilation path.
- *
- * Example:
- * #define MINIVOC_IMPLEMENTATION
- * #include "voc.h"
- *
- * This code is a port in C of the VOC converter by Jimmy Salmon
- * in the War1gus repository. You can find the original C++ code here:
- * https://github.com/Wargus/war1gus/blob/master/war1tool.cpp.
- *
- * To understand more about these formats see:
- * https://en.wikipedia.org/wiki/Creative_Voice_file
- *
- *
- * ============================================================================
- * CUSTOM MEMORY ALLOCATOR REGISTRATION
- * ============================================================================
- * You can intercept heap operations by defining MINIVOC_MALLOC, MINIVOC_REALLOC, and MINIVOC_FREE
- * BEFORE including this header file.
- *
- * Example:
- * #define MINIVOC_MALLOC(sz) my_custom_malloc(sz)
- * #define MINIVOC_REALLOC(ptr, sz) my_custom_realloc(ptr, sz)
- * #define MINIVOC_FREE(ptr) my_custom_free(ptr)
- * #define MINIVOC_IMPLEMENTATION
- * #include "voc.h"
- */
+/*
+    voc.h - Single-header library for Creative Voice File (VOC) I/O and PCM resampling.
+
+    MIT License
+
+    Copyright (c) 2026 Alejandro Coto Gutiérrez
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    Reads and writes Creative Voice File (.voc) audio (block types 0x01, 0x08, 0x09).
+    Supports mono and stereo PCM at 8 and 16 bits per sample. Includes a PCM
+    resampler with fast paths for 2x/4x integer ratios on 8-bit mono and a general
+    fixed-point 16.16 linear interpolation fallback.
+
+    USAGE
+    Define MINIVOC_IMPLEMENTATION in exactly one translation unit before including
+    this header to compile the implementation:
+
+        #define MINIVOC_IMPLEMENTATION
+        #include "voc.h"
+
+    In all other translation units include without the define:
+
+        #include "voc.h"
+
+    CUSTOM MEMORY ALLOCATOR
+    Override the three allocator macros before the implementation include:
+
+        #define MINIVOC_MALLOC(sz)         my_malloc(sz)
+        #define MINIVOC_REALLOC(ptr, size) my_realloc(ptr, size)
+        #define MINIVOC_FREE(ptr)          my_free(ptr)
+        #define MINIVOC_IMPLEMENTATION
+        #include "voc.h"
+
+    ATTRIBUTION
+    This code is a port in C of the VOC converter by Jimmy Salmon in the War1gus
+    repository: https://github.com/Wargus/war1gus/blob/master/war1tool.cpp
+
+    REFERENCES
+    https://en.wikipedia.org/wiki/Creative_Voice_file
+*/
 
 #ifndef MINI_VOC_H
 #define MINI_VOC_H
@@ -284,7 +307,7 @@ void* mv_write_memory(const mv_audio_buffer* audio, size_t* out_buffer_size) {
     memcpy(p, "Creative Voice File\x1A", 20); p += 20;
     mv_write_u16_le(p, 26);     p += 2; // Data Offset
     mv_write_u16_le(p, 0x0114); p += 2; // Version v1.20
-    mv_write_u16_le(p, 0x111B); p += 2; // Checksum computation (~0x0114 + 0x1234)
+    mv_write_u16_le(p, 0x111F); p += 2; // Checksum: (uint16_t)(~0x0114 + 0x1234) = 0x111F
 
     /* Setup Block Type 0x09 Entry Header */
     *p = 0x09; p++;
