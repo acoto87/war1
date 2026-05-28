@@ -32,15 +32,9 @@
 
 // #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
-#include "SDL3/SDL.h"
 
-#ifdef TRACY_ENABLE
-    #include "TracyC.h"
-#else
-    #define TracyCZoneN(c, x, y) ((void)(c), (void)(x), (void)(y))
-    #define TracyCZoneEnd(c) ((void)(c))
-    #define TracyCFrameMark() ((void)0)
-#endif
+#include "SDL3/SDL.h"
+#include "TracyC.h"
 
 #define SHL_MZ_IMPLEMENTATION
 #ifdef SHL_MZ_DEBUG
