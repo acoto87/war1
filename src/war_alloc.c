@@ -46,6 +46,7 @@ static bool initZone(size_t size, const char* logFileName, memzone_t** outZone)
 #ifdef SHL_MZ_DEBUG
     *outZone = mz_initAudit(size, SHL_MZ_AUDIT_FORMAT_COMPACT, logFileName);
 #else
+    NOT_USED(logFileName);
     *outZone = mz_init(size);
 #endif
 

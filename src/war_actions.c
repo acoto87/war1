@@ -321,6 +321,8 @@ static WarUnitActionDef createDefaultIdleActionDef(s32 waitTime, bool directiona
 
 static WarUnitActionDef createSpiderScorpionDeathActionDef(s32 framesCount, s32 frames[], bool directional, s32 waitTime)
 {
+    NOT_USED(framesCount);
+
     assert(framesCount == 5);
 
     // Scorpions and Spiders have distinct wait times than other units,
@@ -1030,7 +1032,11 @@ void wact_setAction(WarContext* context, WarEntity* entity, WarUnitActionType ty
     if (type != WAR_ACTION_TYPE_NONE)
     {
         WarUnitActionDef* actionDef = &gUnitActionDefs[unit->type][type];
-        assert(actionDef->type != WAR_ACTION_TYPE_NONE);
+        if (actionDef->type == WAR_ACTION_TYPE_NONE)
+        {
+            logWarning("Unit type %d does not have an action of type %d", unit->type, type);
+            return;
+        }
 
         unit->actionType = type;
 

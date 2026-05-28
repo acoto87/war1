@@ -32,9 +32,8 @@
 
 // #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
-#include "SDL3/SDL.h"
 
-// Tracy profiler C API — all macros are no-ops unless TRACY_ENABLE is defined
+#include "SDL3/SDL.h"
 #include "TracyC.h"
 
 #define SHL_MZ_IMPLEMENTATION

@@ -1,1 +1,2 @@
-APPICON ICON "../assets/war1.ico"
+#define IDI_MAIN_ICON 101
+IDI_MAIN_ICON ICON "assets/war1.ico"
