@@ -6,8 +6,8 @@
 WarState* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
     WarState* state = wst_createState(context, entity, WAR_STATE_MOVE);
-    vec2ListInit(&state->move.positions, vec2ListDefaultOptions);
-    vec2ListAddRange(&state->move.positions, positionCount, positions);
+    Vec2ListInit(&state->move.positions, wm_globalAllocator());
+    Vec2ListAddRange(&state->move.positions, positionCount, positions);
     return state;
 }
 
@@ -259,6 +259,6 @@ void wst_freeMoveState(WarContext* context, WarState* state)
 {
     NOT_USED(context);
 
-    vec2ListFree(&state->move.positions);
+    Vec2ListFree(&state->move.positions);
     wpath_freePath(state->move.path);
 }

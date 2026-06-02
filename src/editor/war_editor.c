@@ -65,7 +65,7 @@ bool we_init(WarEditorContext* ctx)
 
     wecfg_load(ctx);
 
-    WarEntityIdListInit(&ctx->selectedEntities, WarEntityIdListDefaultOptions);
+    WarEntityIdListInit(&ctx->selectedEntities, wm_globalAllocator());
 
     ctx->history = (WarEditorHistory*)wm_alloc(sizeof(WarEditorHistory));
     memset(ctx->history, 0, sizeof(WarEditorHistory));

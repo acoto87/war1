@@ -17,8 +17,6 @@ bool wact_equalsActionStep(const WarUnitActionStep step1, const WarUnitActionSte
 
 shlDeclareList(WarUnitActionStepList, WarUnitActionStep)
 
-#define WarUnitActionStepListDefaultOptions (WarUnitActionStepListOptions){WarUnitActionStepEmpty, wact_equalsActionStep, NULL}
-
 struct _WarUnitActionDef
 {
     WarUnitActionType type;

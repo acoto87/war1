@@ -1160,7 +1160,7 @@ void wetools_handleInput(WarEditorContext* ctx, s32 tx, s32 ty,
                 if (hit)
                 {
                     // Click on an entity: add to or start a new selection.
-                    if (!WarEntityIdListContains(&ctx->selectedEntities, hit))
+                    if (!WarEntityIdListContains(&ctx->selectedEntities, hit, we_equalsEntityId))
                     {
                         WarEntityIdListClear(&ctx->selectedEntities);
                         WarEntityIdListAdd(&ctx->selectedEntities, hit);

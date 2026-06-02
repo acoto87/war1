@@ -1,7 +1,7 @@
 #pragma once
 
 #include <assert.h>
-#include "common.h"
+#include "war_common.h"
 #include "war_math.h"
 #include "war_log.h"
 #include "war.h"

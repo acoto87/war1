@@ -17,6 +17,10 @@ memzone_t* globalZone = NULL;
 memzone_t* frameZone = NULL;
 memzone_t* audioZone = NULL;
 
+shl_allocator_t globalAllocator = {0};
+shl_allocator_t frameAllocator = {0};
+shl_allocator_t audioAllocator = {0};
+
 static void zoneReporter(const memzone_t* zone, mz_report_t report, const void* ptr, const char* message, void* userData)
 {
     NOT_USED(userData);
@@ -121,6 +125,10 @@ bool wm_allocInit(size_t globalSize, size_t frameSize, size_t audioSize)
         return false;
     }
 
+    globalAllocator = shl_zone_alloc(globalZone);
+    frameAllocator = shl_zone_alloc(frameZone);
+    audioAllocator = shl_zone_alloc(audioZone);
+
     mz_setReporter(globalZone, zoneReporter, NULL);
     mz_setReporter(frameZone, zoneReporter, NULL);
     mz_setReporter(audioZone, zoneReporter, NULL);
@@ -135,6 +143,9 @@ void wm_allocFree(void)
     globalZone = NULL;
     frameZone = NULL;
     audioZone = NULL;
+    globalAllocator = (shl_allocator_t){0};
+    frameAllocator = (shl_allocator_t){0};
+    audioAllocator = (shl_allocator_t){0};
 }
 
 void* wm__alloc(size_t sz, const char* file, int line)
@@ -211,4 +222,19 @@ void wm__free(void* p, const char* file, int line)
         NOT_USED(line);
         free(p); // fallback
     }
+}
+
+shl_allocator_t* wm_globalAllocator(void)
+{
+    return &globalAllocator;
+}
+
+shl_allocator_t* wm_frameAllocator(void)
+{
+    return &frameAllocator;
+}
+
+shl_allocator_t* wm_audioAllocator(void)
+{
+    return &audioAllocator;
 }

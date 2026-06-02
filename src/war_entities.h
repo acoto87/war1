@@ -5,7 +5,7 @@
 #include "shl/set.h"
 #include "shl/map.h"
 
-#include "common.h"
+#include "war_common.h"
 #include "war.h"
 #include "war_animations.h"
 #include "war_audio.h"
@@ -76,18 +76,6 @@ bool we_equalsEntityId(const WarEntityId id1, const WarEntityId id2);
 
 u32 we_hashEntityType(const WarEntityType type);
 u32 we_hashEntityId(const WarEntityId id);
-
-void we_freeEntity(WarEntity* e);
-void we_freeEntityList(WarEntityList* list);
-
-#define WarRoadPieceListDefaultOptions (WarRoadPieceListOptions){WarRoadPieceEmpty, we_equalsRoadPiece, NULL}
-#define WarWallPieceListDefaultOptions (WarWallPieceListOptions){WarWallPieceEmpty, we_equalsWallPiece, NULL}
-#define WarRuinPieceListDefaultOptions (WarRuinPieceListOptions){WarRuinPieceEmpty, we_equalsRuinPiece, NULL}
-#define WarTreeListDefaultOptions (WarTreeListOptions){WarTreeEmpty, we_equalsTree, NULL}
-#define WarEntityIdListDefaultOptions (WarEntityIdListOptions){0, we_equalsEntityId, NULL}
-#define WarEntityIdSetDefaultOptions (WarEntityIdSetOptions){0, we_hashEntityId, we_equalsEntityId, NULL}
-#define WarEntityListDefaultOptions (WarEntityListOptions){NULL, we_equalsEntity, we_freeEntity}
-#define WarEntityListNonFreeOptions (WarEntityListOptions){NULL, we_equalsEntity}
 
 struct _WarTransformComponent
 {

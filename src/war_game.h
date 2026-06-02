@@ -2,7 +2,7 @@
 
 #include "SDL3/SDL_events.h"
 
-#include "common.h"
+#include "war_common.h"
 #include "war_fwd.h"
 
 bool wg_initGame(WarContext* context);

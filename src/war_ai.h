@@ -38,9 +38,6 @@ void wai_freeAICommand(WarAICommand* command);
 shlDeclareQueue(WarAICommandQueue, WarAICommand*)
 shlDeclareList(WarAICommandList, WarAICommand*)
 
-#define WarAICommandListDefaultOptions ((WarAICommandListOptions){NULL, wai_equalsAICommand, wai_freeAICommand})
-#define WarAICommandQueueDefaultOptions ((WarAICommandQueueOptions){NULL, wai_equalsAICommand, wai_freeAICommand})
-
 struct _WarAI
 {
     u32 staticCommandId;

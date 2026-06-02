@@ -322,32 +322,3 @@ void rect_print(rect r)
 {
     logDebug("(%f, %f, %f, %f)", r.x, r.y, r.width, r.height);
 }
-
-bool equalsS32(const s32 a, const s32 b)
-{
-    return a == b;
-}
-
-bool compareS32(const s32 a, const s32 b)
-{
-    return a - b;
-}
-
-shlDefineList(s32List, s32)
-
-bool equalsVec2(const vec2 v1, const vec2 v2)
-{
-    return v1.x == v2.x && v1.y == v2.y;
-}
-
-shlDefineList(vec2List, vec2)
-
-bool equalsRect(const rect r1, const rect r2)
-{
-    return r1.x == r2.x && r1.y == r2.y &&
-           r1.width == r2.width && r1.height == r2.height;
-}
-
-shlDefineList(rectList, rect)
-
-shlDefineMap(StringViewMap, StringView, String)

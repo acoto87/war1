@@ -200,7 +200,7 @@ void wui_updateUIButtons(WarContext* context, bool hotKeysEnabled)
     // after in the list, then it will update in this same frame
     // which shouldn't happen
     WarEntityIdSet buttonsToUpdate;
-    WarEntityIdSetInit(&buttonsToUpdate, WarEntityIdSetDefaultOptions);
+    WarEntityIdSetInit(&buttonsToUpdate, wm_frameAllocator(), we_hashEntityId, we_equalsEntityId);
 
     for(s32 i = 0; i < buttons->count; i++)
     {

@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "shl/alloc.h"
+
 // Forward declare memzone_t
 typedef struct memzone_s memzone_t;
 
@@ -21,6 +23,10 @@ void* wm__allocAudio(size_t sz, const char* file, int line);
 void* wm__realloc(void* p, size_t sz, const char* file, int line);
 void* wm__reallocAudio(void* p, size_t sz, const char* file, int line);
 void  wm__free(void* p, const char* file, int line);
+
+shl_allocator_t* wm_globalAllocator(void);
+shl_allocator_t* wm_frameAllocator(void);
+shl_allocator_t* wm_audioAllocator(void);
 
 #define wm_alloc(sz)          wm__alloc((sz), __FILE__, __LINE__)
 #define wm_allocFrame(sz)     wm__allocFrame((sz), __FILE__, __LINE__)

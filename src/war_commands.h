@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "war_common.h"
 #include "war_fwd.h"
 #include "war_units.h"
 

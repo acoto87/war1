@@ -89,16 +89,16 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
                     if(wst_isMoving(context, entity))
                     {
                         WarState* moveState = wst_getMoveState(context, entity);
-                        vec2ListAdd(&moveState->move.positions, target);
+                        Vec2ListAdd(&moveState->move.positions, target);
                     }
 
                     WarState* patrolState = wst_getPatrolState(context, entity);
-                    vec2ListAdd(&patrolState->patrol.positions, target);
+                    Vec2ListAdd(&patrolState->patrol.positions, target);
                 }
                 else if(wst_isMoving(context, entity) && !wst_isAttacking(context, entity))
                 {
                     WarState* moveState = wst_getMoveState(context, entity);
-                    vec2ListAdd(&moveState->move.positions, target);
+                    Vec2ListAdd(&moveState->move.positions, target);
                 }
                 else
                 {

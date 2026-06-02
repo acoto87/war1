@@ -551,7 +551,7 @@ bool wa_initAudio(WarContext* context)
 void wa_removeAudiosOfType(WarContext* context, WarAudioType type)
 {
     WarEntityIdList toRemove;
-    WarEntityIdListInit(&toRemove, WarEntityIdListDefaultOptions);
+    WarEntityIdListInit(&toRemove, wm_frameAllocator());
 
     WarEntityList* audios = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_AUDIO);
     for (s32 i = 0; i < audios->count; i++)

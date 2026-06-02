@@ -31,51 +31,54 @@
     shlDeclareList(name, type) in a header and shlDefineList(name, type) in a
     single C file.
 
-    CUSTOMISATION
-    Provide a default value for out-of-range reads, an equality function for
-    search-related helpers, and a free function when the item type owns
-    resources. The generated list stores values by copy.
+    ALLOCATION
+    Pass an shl_allocator_t* to Init to control where the items buffer lives.
+    Use shl_heap_alloc() for the default system heap.  To use a memzone_t,
+    include memzone.h before this header and call shl_zone_alloc(zone).
 
-    NOTES
-    The implementation is header-only and uses dynamic allocation internally.
-    Call Free when finished with a list instance, and prefer AddRange or
-    InsertRange for bulk operations.
+    For a fixed-capacity list with no heap involvement at all, use InitFixed
+    and supply a caller-owned buffer.  Free is a safe no-op on fixed lists.
+
+    ITEM OWNERSHIP
+    The list stores values by copy and does not manage the lifecycle of the
+    items themselves.  The caller is responsible for freeing any resources
+    owned by items before calling Remove, RemoveAt, RemoveAtRange, Clear, or
+    Free.
+
+    SEARCH
+    IndexOf, Contains, and Remove require an explicit equality function at the
+    call site rather than storing one in the list struct.
+
+    OUT-OF-RANGE READS
+    Get returns a zero-initialised value when the index is out of range.
 */
 
 #ifndef SHL_LIST_H
 #define SHL_LIST_H
 
-#include "shl_internal.h"
+#include "internal.h"
 
 #define shlDeclareList(typeName, itemType) \
     typedef struct \
     { \
-        itemType defaultValue; \
-        bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
-    } typeName ## Options; \
-    \
-    typedef struct \
-    { \
         int32_t count; \
         int32_t capacity; \
-        bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
-        itemType defaultValue; \
+        shl_allocator_t* alloc; \
         itemType* items; \
     } typeName; \
     \
-    void typeName ## Init(typeName* list, typeName ## Options options); \
+    void typeName ## Init(typeName* list, shl_allocator_t* alloc); \
+    void typeName ## InitFixed(typeName* list, itemType* buffer, int32_t capacity); \
     void typeName ## Free(typeName* list); \
     void typeName ## Add(typeName* list, itemType value); \
-    void typeName ## AddRange(typeName* list, int32_t count, itemType value[]); \
+    void typeName ## AddRange(typeName* list, int32_t count, itemType values[]); \
     void typeName ## Insert(typeName* list, int32_t index, itemType value); \
     void typeName ## InsertRange(typeName* list, int32_t index, int32_t count, itemType values[]); \
-    int32_t typeName ## IndexOf(typeName* list, itemType value); \
+    int32_t typeName ## IndexOf(typeName* list, itemType value, bool (*equalsFn)(const itemType, const itemType)); \
     itemType typeName ## Get(typeName* list, int32_t index); \
     void typeName ## Set(typeName* list, int32_t index, itemType value); \
-    bool typeName ## Contains(typeName* list, itemType value); \
-    void typeName ## Remove(typeName* list, itemType value); \
+    bool typeName ## Contains(typeName* list, itemType value, bool (*equalsFn)(const itemType, const itemType)); \
+    void typeName ## Remove(typeName* list, itemType value, bool (*equalsFn)(const itemType, const itemType)); \
     void typeName ## RemoveAt(typeName* list, int32_t index); \
     void typeName ## RemoveAtRange(typeName* list, int32_t index, int32_t count); \
     void typeName ## Clear(typeName* list); \
@@ -113,25 +116,31 @@
         typeName ## __qsort(list, j + 1, right, compareFn, userdata); \
     } \
     \
-    void typeName ## Init(typeName* list, typeName ## Options options) \
+    void typeName ## Init(typeName* list, shl_allocator_t* alloc) \
     { \
-        list->defaultValue = options.defaultValue; \
-        list->equalsFn = options.equalsFn; \
-        list->freeFn = options.freeFn; \
+        *list = (typeName){ 0 }; \
+        if (!alloc) alloc = shl_heap_alloc(); \
+        if (!alloc || !alloc->mallocFn) return; \
+        list->alloc    = alloc; \
         list->capacity = SHL__INITIAL_CAPACITY; \
-        list->count = 0; \
-        list->items = (itemType *)SHL_MALLOC((size_t)list->capacity * sizeof(itemType)); \
+        list->count    = 0; \
+        list->items    = (itemType*)alloc->mallocFn(alloc->ctx, (size_t)list->capacity * sizeof(itemType)); \
+    } \
+    \
+    void typeName ## InitFixed(typeName* list, itemType* buffer, int32_t capacity) \
+    { \
+        list->alloc    = NULL; \
+        list->capacity = capacity; \
+        list->count    = 0; \
+        list->items    = buffer; \
     } \
     \
     void typeName ## Free(typeName* list) \
     { \
-        if (!list->items) \
-            return; \
-        \
-        typeName ## Clear(list); \
-        \
-        SHL_FREE(list->items); \
-        list->items = 0; \
+        list->count = 0; \
+        if (list->items && list->alloc && list->alloc->freeFn) \
+            list->alloc->freeFn(list->alloc->ctx, list->items); \
+        list->items = NULL; \
     } \
     \
     void typeName ## InsertRange(typeName* list, int32_t index, int32_t count, itemType values[]) \
@@ -142,8 +151,11 @@
         if (index < 0 || index > list->count) \
             return; \
         \
-        if (list->count + count >= list->capacity) \
-            shl__resizeArray((void**)&list->items, &list->capacity, list->count + count, sizeof(itemType)); \
+        if (list->count + count > list->capacity) \
+        { \
+            if (!shl__resizeArray((void**)&list->items, &list->capacity, list->count + count, sizeof(itemType), list->alloc)) \
+                return; \
+        } \
         \
         memmove(list->items + index + count, list->items + index, (list->count - index) * sizeof(itemType)); \
         memcpy(list->items + index, values, count * sizeof(itemType)); \
@@ -165,116 +177,90 @@
         typeName ## InsertRange(list, list->count, count, values); \
     } \
     \
-    int32_t typeName ## IndexOf(typeName* list, itemType value) \
+    int32_t typeName ## IndexOf(typeName* list, itemType value, bool (*equalsFn)(const itemType, const itemType)) \
     { \
-        if (!list->items) \
+        if (!list->items || !equalsFn) \
             return -1; \
         \
-        if (!list->equalsFn) \
-            return -1; \
-        \
-        for(int32_t i = 0; i < list->count; i++) \
+        for (int32_t i = 0; i < list->count; i++) \
         { \
-            if (list->equalsFn(list->items[i], value)) \
+            if (equalsFn(list->items[i], value)) \
                 return i; \
         } \
         \
         return -1; \
     } \
     \
-    bool typeName ## Contains(typeName* list, itemType value) \
+    bool typeName ## Contains(typeName* list, itemType value, bool (*equalsFn)(const itemType, const itemType)) \
     { \
-        return typeName ## IndexOf(list, value) >= 0; \
+        return typeName ## IndexOf(list, value, equalsFn) >= 0; \
     } \
     \
     itemType typeName ## Get(typeName* list, int32_t index) \
     { \
-        if (!list->items) \
-            return list->defaultValue; \
-        \
-        if (index < 0 || index >= list->count) \
-            return list->defaultValue; \
-        \
+        if (!list->items || index < 0 || index >= list->count) \
+        { \
+            itemType zero; \
+            memset(&zero, 0, sizeof(itemType)); \
+            return zero; \
+        } \
         return list->items[index]; \
     } \
     \
-    void typeName ## Set(typeName *list, int32_t index, itemType value) \
+    void typeName ## Set(typeName* list, int32_t index, itemType value) \
     { \
-        if (!list->items) \
+        if (!list->items || index < 0 || index >= list->count) \
             return; \
-        \
-        if (index < 0 || index >= list->count) \
-            return; \
-        \
-        itemType currentValue = list->items[index]; \
-        if (list->freeFn) \
-            list->freeFn(currentValue); \
-        \
         list->items[index] = value; \
     } \
     \
-    void typeName ## RemoveAtRange(typeName *list, int32_t index, int32_t count) \
+    void typeName ## RemoveAtRange(typeName* list, int32_t index, int32_t count) \
     { \
-        if (!list->items) \
-            return; \
-        \
-        if (index < 0 || index >= list->count) \
+        if (!list->items || index < 0 || index >= list->count) \
             return; \
         \
         if (index + count > list->count) \
             return; \
         \
-        if (list->freeFn) \
-        { \
-            for(int32_t i = 0; i < count; i++) \
-                list->freeFn(list->items[index + i]); \
-        } \
-        \
         memmove(list->items + index, list->items + index + count, (list->count - index - count) * sizeof(itemType)); \
         list->count -= count; \
     } \
     \
-    void typeName ## RemoveAt(typeName *list, int32_t index) \
+    void typeName ## RemoveAt(typeName* list, int32_t index) \
     { \
         typeName ## RemoveAtRange(list, index, 1); \
     } \
     \
-    void typeName ## Remove(typeName *list, itemType value) \
+    void typeName ## Remove(typeName* list, itemType value, bool (*equalsFn)(const itemType, const itemType)) \
     { \
-        int32_t index = typeName ## IndexOf(list, value); \
+        int32_t index = typeName ## IndexOf(list, value, equalsFn); \
         if (index >= 0) \
             typeName ## RemoveAt(list, index); \
     } \
     \
     void typeName ## Clear(typeName* list) \
     { \
-        if (!list->items) \
-            return; \
-        \
-        if (list->freeFn) \
-        { \
-            for(int32_t i = 0; i < list->count; i++) \
-                list->freeFn(list->items[i]); \
-        } \
-        \
         list->count = 0; \
     } \
     \
-    void typeName ## Reverse(typeName *list) \
+    void typeName ## Reverse(typeName* list) \
     { \
         if (!list->items) \
             return; \
         \
         int32_t count = list->count; \
-        for(int32_t i = 0; i < count / 2; i++) \
+        for (int32_t i = 0; i < count / 2; i++) \
         { \
             itemType tmp = list->items[i]; \
             list->items[i] = list->items[count - i - 1]; \
             list->items[count - i - 1] = tmp; \
         } \
     } \
+    \
     void typeName ## Sort(typeName* list, int32_t (*compareFn)(const itemType item1, const itemType item2, void* userdata), void* userdata) \
     { \
+        if (!list->items || list->count < 2) \
+            return; \
         typeName ## __qsort(list, 0, list->count - 1, compareFn, userdata); \
     } \
     \
@@ -289,11 +275,9 @@
     \
     itemType* typeName ## ToArray(typeName* list) \
     { \
-        if (!list->items) \
-            return 0; \
-        \
-        itemType* array = (itemType*)malloc(list->count * sizeof(itemType)); \
-        memcpy(array, list->items, list->count * sizeof(itemType)); \
+        if (!list->items || !list->alloc || !list->alloc->mallocFn) return NULL; \
+        itemType* array = (itemType*)list->alloc->mallocFn(list->alloc->ctx, list->count * sizeof(itemType)); \
+        if (array) memcpy(array, list->items, list->count * sizeof(itemType)); \
         return array; \
     }
 

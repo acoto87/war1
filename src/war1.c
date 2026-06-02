@@ -78,10 +78,7 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb/stb_image_resize.h"
 
-#define SHL_MALLOC(sz) wm_alloc(sz)
-#define SHL_CALLOC(n, sz) wm_alloc((n) * (sz))
-#define SHL_REALLOC(p, sz) wm_realloc((p), (sz))
-#define SHL_FREE(p) wm_free(p)
+#include "shl/alloc.h"
 #include "shl/list.h"
 #include "shl/queue.h"
 #include "shl/binary_heap.h"
@@ -237,6 +234,7 @@ int main(int argc, char** argv)
 #include "war_log.c"
 #include "war_alloc.c"
 #include "war_math.c"
+#include "war_collections.c"
 #include "war_file.c"
 #include "war_audio.c"
 #include "war_net.c"

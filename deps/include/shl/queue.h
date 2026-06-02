@@ -30,141 +30,147 @@
     Declare a queue type with shlDeclareQueue(name, type), then define it once
     with shlDefineQueue(name, type) in a C source file.
 
-    CUSTOMISATION
-    Provide a default value for empty reads, an equality function for
-    Contains, and a free function if queue elements own resources. Values are
-    stored by copy in a resizable circular buffer.
+    ALLOCATION
+    Pass an shl_allocator_t* to Init to control where the items buffer lives.
+    Use shl_heap_alloc() for the default system heap.  To use a memzone_t,
+    include memzone.h before this header and call shl_zone_alloc(zone).
 
-    NOTES
-    Push appends to the tail, Pop removes from the head, and Peek returns the
-    next item without removing it. Clear releases per-item resources when a
-    free hook is configured.
+    For a fixed-capacity queue with no heap involvement at all, use InitFixed
+    and supply a caller-owned buffer.  Free is a safe no-op on fixed queues.
+
+    ITEM OWNERSHIP
+    The queue stores values by copy and does not manage the lifecycle of
+    items.  The caller is responsible for freeing any resources owned by
+    items before calling Clear or Free.
+
+    SEARCH
+    Contains requires an explicit equality function at the call site rather
+    than storing one in the queue struct.
+
+    OUT-OF-RANGE READS
+    Peek and Pop return a zero-initialised value when the queue is empty.
 */
 
 #ifndef SHL_QUEUE_H
 #define SHL_QUEUE_H
 
-#include "shl_internal.h"
+#include "internal.h"
 
 #define shlDeclareQueue(typeName, itemType) \
-    typedef struct \
-    { \
-        itemType defaultValue; \
-        bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
-    } typeName ## Options; \
-    \
     typedef struct \
     { \
         int32_t head; \
         int32_t tail; \
         int32_t count; \
         int32_t capacity; \
-        bool (*equalsFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
-        itemType defaultValue; \
-        itemType *items; \
+        shl_allocator_t* alloc; \
+        itemType* items; \
     } typeName; \
     \
-    void typeName ## Init(typeName* queue, typeName ## Options options); \
+    void typeName ## Init(typeName* queue, shl_allocator_t* alloc); \
+    void typeName ## InitFixed(typeName* queue, itemType* buffer, int32_t capacity); \
     void typeName ## Free(typeName* queue); \
     void typeName ## Push(typeName* queue, itemType value); \
     itemType typeName ## Peek(typeName* queue); \
     itemType typeName ## Pop(typeName* queue); \
-    bool typeName ## Contains(typeName* queue, itemType value); \
+    bool typeName ## Contains(typeName* queue, itemType value, bool (*equalsFn)(const itemType, const itemType)); \
     void typeName ## Clear(typeName* queue);
 
 #define shlDefineQueue(typeName, itemType) \
-    void typeName ## Init(typeName *queue, typeName ## Options options) \
+    void typeName ## Init(typeName* queue, shl_allocator_t* alloc) \
     { \
-        queue->defaultValue = options.defaultValue; \
-        queue->equalsFn = options.equalsFn; \
-        queue->freeFn = options.freeFn; \
+        *queue = (typeName){ 0 }; \
+        if (!alloc) alloc = shl_heap_alloc(); \
+        if (!alloc || !alloc->mallocFn) return; \
+        queue->alloc    = alloc; \
         queue->capacity = SHL__INITIAL_CAPACITY; \
-        queue->count = 0; \
-        queue->head = 0; \
-        queue->tail = 0; \
-        queue->items = (itemType *)SHL_CALLOC((size_t)queue->capacity, sizeof(itemType)); \
+        queue->count    = 0; \
+        queue->head     = 0; \
+        queue->tail     = 0; \
+        queue->items    = (itemType*)alloc->mallocFn(alloc->ctx, (size_t)queue->capacity * sizeof(itemType)); \
     } \
     \
-    void typeName ## Free(typeName *queue) \
+    void typeName ## InitFixed(typeName* queue, itemType* buffer, int32_t capacity) \
     { \
-        if (!queue->items) \
-            return; \
-        \
-        typeName ## Clear(queue); \
-        \
-        SHL_FREE(queue->items); \
-        queue->items = 0; \
+        queue->alloc    = NULL; \
+        queue->capacity = capacity; \
+        queue->count    = 0; \
+        queue->head     = 0; \
+        queue->tail     = 0; \
+        queue->items    = buffer; \
     } \
     \
-    void typeName ## Push(typeName *queue, itemType value) \
+    void typeName ## Free(typeName* queue) \
+    { \
+        queue->count = 0; \
+        queue->head  = 0; \
+        queue->tail  = 0; \
+        if (queue->items && queue->alloc && queue->alloc->freeFn) \
+            queue->alloc->freeFn(queue->alloc->ctx, queue->items); \
+        queue->items = NULL; \
+    } \
+    \
+    void typeName ## Push(typeName* queue, itemType value) \
     { \
         if (!queue->items) \
             return; \
         \
         if (queue->count == queue->capacity) \
-            shl__resizeCircularArray((void**)&queue->items, &queue->capacity, &queue->head, &queue->tail, queue->count, sizeof(itemType)); \
+        { \
+            if (!shl__resizeCircularArray((void**)&queue->items, &queue->capacity, &queue->head, &queue->tail, queue->count, sizeof(itemType), queue->alloc)) \
+                return; \
+        } \
         \
         queue->items[queue->tail] = value; \
         queue->tail = (queue->tail + 1) % queue->capacity; \
         queue->count++; \
     } \
     \
-    itemType typeName ## Peek(typeName *queue) \
+    itemType typeName ## Peek(typeName* queue) \
     { \
         if (!queue->items || queue->count == 0) \
-            return queue->defaultValue; \
-        \
+        { \
+            itemType zero; \
+            memset(&zero, 0, sizeof(itemType)); \
+            return zero; \
+        } \
         return queue->items[queue->head]; \
     } \
     \
-    itemType typeName ## Pop(typeName *queue) \
+    itemType typeName ## Pop(typeName* queue) \
     { \
         if (!queue->items || queue->count == 0) \
-            return queue->defaultValue; \
+        { \
+            itemType zero; \
+            memset(&zero, 0, sizeof(itemType)); \
+            return zero; \
+        } \
         \
         itemType value = queue->items[queue->head]; \
-        queue->items[queue->head] = queue->defaultValue; \
         queue->head = (queue->head + 1) % queue->capacity; \
         queue->count--; \
         return value; \
     } \
     \
-    bool typeName ## Contains(typeName *queue, itemType value) \
+    bool typeName ## Contains(typeName* queue, itemType value, bool (*equalsFn)(const itemType, const itemType)) \
     { \
-        if (!queue->items) \
+        if (!queue->items || !equalsFn) \
             return false; \
         \
-        if (!queue->equalsFn) \
-            return false; \
-        \
-        for(int32_t i = 0; i < queue->count; i++) \
+        for (int32_t i = 0; i < queue->count; i++) \
         { \
-            if (queue->equalsFn(queue->items[(queue->head + i) % queue->capacity], value)) \
+            if (equalsFn(queue->items[(queue->head + i) % queue->capacity], value)) \
                 return true; \
         } \
         \
         return false; \
     } \
+    \
     void typeName ## Clear(typeName* queue) \
     { \
-        if (!queue->items) \
-            return; \
-        \
-        if (queue->freeFn) \
-        { \
-            for(int32_t i = 0; i < queue->count; i++) \
-            { \
-                int32_t index = (queue->head + i) % queue->capacity; \
-                queue->freeFn(queue->items[index]); \
-                queue->items[index] = queue->defaultValue; \
-            } \
-        } \
-        \
         queue->count = 0; \
-        queue->head = 0; \
-        queue->tail = 0; \
+        queue->head  = 0; \
+        queue->tail  = 0; \
     }
 
 #endif // SHL_QUEUE_H
