@@ -5,7 +5,7 @@
 #include "shl/list.h"
 #include "shl/map.h"
 
-#include "common.h"
+#include "war_common.h"
 
 #define SIGN(x) ((x) < 0 ? -1 : 1)
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -108,25 +108,3 @@ vec2 rect_center(rect r);
 rect rect_expand(rect r, f32 dx, f32 dy);
 vec2 get_closestPointOnRect(vec2 p, rect r);
 void rect_print(rect r);
-
-/*
- * shl list/map types
-*/
-#include "shl/list.h"
-#include "shl/map.h"
-#include "shl/wstr.h"
-
-bool equalsS32(const s32 a, const s32 b);
-bool compareS32(const s32 a, const s32 b);
-bool equalsVec2(const vec2 v1, const vec2 v2);
-bool equalsRect(const rect r1, const rect r2);
-
-shlDeclareList(s32List, s32)
-shlDeclareList(vec2List, vec2)
-shlDeclareList(rectList, rect)
-shlDeclareMap(StringViewMap, StringView, String)
-
-#define s32ListDefaultOptions (s32ListOptions){0, equalsS32, NULL}
-#define vec2ListDefaultOptions (vec2ListOptions){VEC2_ZERO, equalsVec2, NULL}
-#define rectListDefaultOptions (rectListOptions){RECT_EMPTY, equalsRect, NULL}
-#define StringViewMapDefaultOptions (StringViewMapOptions){(String){0}, wsv_hashFNV32, wsv_equals, wstr_free}

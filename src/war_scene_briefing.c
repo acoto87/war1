@@ -23,27 +23,27 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
 
-    WarSpriteAnimation* anim1 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(428), 0.2f, true);
-    anim1->offset = vec2i(83, 37);
-    anim1->loopDelay = 2.0f;
-    wanim_addAnimationFramesRange(anim1, 0, 4);
-    wanim_addAnimationFramesRange(anim1, 4, 0);
+    WarSpriteAnimation anim1 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(428), 0.2f, true);
+    anim1.offset = vec2i(83, 37);
+    anim1.loopDelay = 2.0f;
+    wanim_addAnimationFramesRange(&anim1, 0, 4);
+    wanim_addAnimationFramesRange(&anim1, 4, 0);
     wanim_addAnimation(context, animEntity, anim1);
 
-    WarSpriteAnimation* anim2 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim2"), imageResourceRef(429), 0.2f, true);
-    anim2->offset = vec2i(207, 29);
-    anim1->loopDelay = 2.0f;
-    wanim_addAnimationFramesRange(anim2, 0, 20);
+    WarSpriteAnimation anim2 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim2"), imageResourceRef(429), 0.2f, true);
+    anim2.offset = vec2i(207, 29);
+    anim2.loopDelay = 2.0f;
+    wanim_addAnimationFramesRange(&anim2, 0, 20);
     wanim_addAnimation(context, animEntity, anim2);
 
-    WarSpriteAnimation* anim3 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim3"), imageResourceRef(430), 0.1f, true);
-    anim3->offset = vec2i(21, 17);
-    wanim_addAnimationFramesRange(anim3, 0, 20);
+    WarSpriteAnimation anim3 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim3"), imageResourceRef(430), 0.1f, true);
+    anim3.offset = vec2i(21, 17);
+    wanim_addAnimationFramesRange(&anim3, 0, 20);
     wanim_addAnimation(context, animEntity, anim3);
 
-    WarSpriteAnimation* anim4 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim4"), imageResourceRef(431), 0.1f, true);
-    anim4->offset = vec2i(275, 21);
-    wanim_addAnimationFramesRange(anim4, 0, 20);
+    WarSpriteAnimation anim4 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim4"), imageResourceRef(431), 0.1f, true);
+    anim4.offset = vec2i(275, 21);
+    wanim_addAnimationFramesRange(&anim4, 0, 20);
     wanim_addAnimation(context, animEntity, anim4);
 
     if (!isDemo(context))
@@ -63,25 +63,25 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
     we_addAnimationsComponent(context, animEntity);
 
-    WarSpriteAnimation* anim1 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(426), 0.2f, true);
-    anim1->offset = vec2i(18, 67);
-    anim1->loopDelay = 2.0f;
-    wanim_addAnimationFramesRange(anim1, 0, 4);
-    wanim_addAnimationFramesRange(anim1, 4, 0);
+    WarSpriteAnimation anim1 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim1"), imageResourceRef(426), 0.2f, true);
+    anim1.offset = vec2i(18, 67);
+    anim1.loopDelay = 2.0f;
+    wanim_addAnimationFramesRange(&anim1, 0, 4);
+    wanim_addAnimationFramesRange(&anim1, 4, 0);
     wanim_addAnimation(context, animEntity, anim1);
 
-    WarSpriteAnimation* anim2 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim2"), imageResourceRef(427), 0.2f, true);
-    anim2->offset = vec2i(202, 52);
-    anim1->loopDelay = 2.0f;
-    wanim_addAnimationFramesRange(anim2, 0, 4);
-    wanim_addAnimationFramesRange(anim2, 4, 0);
+    WarSpriteAnimation anim2 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim2"), imageResourceRef(427), 0.2f, true);
+    anim2.offset = vec2i(202, 52);
+    anim2.loopDelay = 2.0f;
+    wanim_addAnimationFramesRange(&anim2, 0, 4);
+    wanim_addAnimationFramesRange(&anim2, 4, 0);
     wanim_addAnimation(context, animEntity, anim2);
 
     if (!isDemo(context))
     {
-        WarSpriteAnimation* anim3 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim3"), imageResourceRef(425), 0.1f, true);
-        anim3->offset = vec2i(140, 66);
-        wanim_addAnimationFramesRange(anim3, 0, 30);
+        WarSpriteAnimation anim3 = wanim_createAnimationFromResourceIndex(context, wstr_fromCString("anim3"), imageResourceRef(425), 0.1f, true);
+        anim3.offset = vec2i(140, 66);
+        wanim_addAnimationFramesRange(&anim3, 0, 30);
         wanim_addAnimation(context, animEntity, anim3);
     }
 

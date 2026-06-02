@@ -12,18 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef SHL_MALLOC
-#define SHL_MALLOC(sz) malloc(sz)
-#endif
-#ifndef SHL_CALLOC
-#define SHL_CALLOC(n, sz) calloc((n), (sz))
-#endif
-#ifndef SHL_REALLOC
-#define SHL_REALLOC(ptr, sz) realloc((ptr), (sz))
-#endif
-#ifndef SHL_FREE
-#define SHL_FREE(ptr) free(ptr)
-#endif
+#include "alloc.h"
 
 #define SHL__INITIAL_CAPACITY 8
 #define SHL__INITIAL_HASH_SHIFT 29
@@ -32,27 +21,30 @@
 static inline int32_t shl__grownCapacity(int32_t currentCapacity, int32_t minSize)
 {
     int32_t newCapacity = currentCapacity > 0 ? (currentCapacity << 1) : SHL__INITIAL_CAPACITY;
-
-    if (newCapacity < minSize)
-        newCapacity = minSize;
-
+    if (newCapacity < minSize) newCapacity = minSize;
     return newCapacity;
 }
 
-static inline void shl__resizeArray(void** items, int32_t* capacity, int32_t minSize, size_t itemSize)
+static inline bool shl__resizeArray(void** items, int32_t* capacity, int32_t minSize, size_t itemSize, shl_allocator_t* alloc)
 {
-    *capacity = shl__grownCapacity(*capacity, minSize);
-    *items = SHL_REALLOC(*items, (size_t)(*capacity) * itemSize);
+    if (!alloc || !alloc->reallocFn) return false;
+    int32_t newCapacity = shl__grownCapacity(*capacity, minSize);
+    void* newItems = alloc->reallocFn(alloc->ctx, *items, (size_t)newCapacity * itemSize);
+    if (!newItems) return false;
+    *capacity = newCapacity;
+    *items = newItems;
+    return true;
 }
 
-static inline void shl__resizeCircularArray(void** items, int32_t* capacity, int32_t* head, int32_t* tail, int32_t count, size_t itemSize)
+static inline bool shl__resizeCircularArray(void** items, int32_t* capacity, int32_t* head, int32_t* tail, int32_t count, size_t itemSize, shl_allocator_t* alloc)
 {
+    if (!alloc || !alloc->mallocFn) return false;
     int32_t oldCapacity = *capacity;
-    unsigned char* oldItems = (unsigned char*)*items;
-    unsigned char* newItems;
-
-    *capacity = shl__grownCapacity(*capacity, *capacity + 1);
-    newItems = (unsigned char*)SHL_CALLOC((size_t)(*capacity), itemSize);
+    uint8_t* oldItems = (uint8_t*)*items;
+    int32_t newCapacity = shl__grownCapacity(*capacity, *capacity + 1);
+    uint8_t* newItems = (uint8_t*)alloc->mallocFn(alloc->ctx, (size_t)newCapacity * itemSize);
+    if (!newItems) return false;
+    memset(newItems, 0, (size_t)newCapacity * itemSize);
 
     if (count > 0)
     {
@@ -72,8 +64,11 @@ static inline void shl__resizeCircularArray(void** items, int32_t* capacity, int
 
     *head = 0;
     *tail = count;
-    SHL_FREE(*items);
+    if (alloc && alloc->freeFn)
+        alloc->freeFn(alloc->ctx, *items);
+    *capacity = newCapacity;
     *items = newItems;
+    return true;
 }
 
 static inline int32_t shl__fibHash(uint32_t hash, int32_t shift)

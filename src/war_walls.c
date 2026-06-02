@@ -128,7 +128,7 @@ void we_removeWallPiece(WarContext* context, WarEntity* entity, WarWallPiece* pi
     assert(wallComp);
 
     WarWallPieceList* pieces = &wallComp->pieces;
-    WarWallPieceListRemove(pieces, *piece);
+    WarWallPieceListRemove(pieces, *piece, we_equalsWallPiece);
 }
 
 WarEntity* we_createWall(WarContext* context)
@@ -136,7 +136,7 @@ WarEntity* we_createWall(WarContext* context)
     WarMap* map = context->map;
 
     WarWallPieceList pieces;
-    WarWallPieceListInit(&pieces, WarWallPieceListDefaultOptions);
+    WarWallPieceListInit(&pieces, wm_globalAllocator());
 
     WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_WALL, true);
     we_addWallComponent(context, entity, pieces);

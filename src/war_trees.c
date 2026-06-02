@@ -50,8 +50,8 @@ void we_determineTreeTiles(WarContext* context, WarEntity* forest)
     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
     const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
 
-    s32List invalidTrees;
-    s32ListInit(&invalidTrees, s32ListDefaultOptions);
+    S32List invalidTrees;
+    S32ListInit(&invalidTrees, wm_frameAllocator());
 
     for (s32 i = 0; i < trees->count; i++)
     {
@@ -85,13 +85,13 @@ void we_determineTreeTiles(WarContext* context, WarEntity* forest)
         ti->type = treeTileTypeMap[index];
 
         if (ti->type == WAR_TREE_NONE)
-            s32ListAdd(&invalidTrees, i);
+            S32ListAdd(&invalidTrees, i);
     }
 
     for (s32 i = invalidTrees.count - 1; i >= 0; i--)
         WarTreeListRemoveAt(trees, invalidTrees.items[i]);
 
-    s32ListFree(&invalidTrees);
+    S32ListFree(&invalidTrees);
 }
 
 void we_determineAllTreeTiles(WarContext* context)
@@ -113,9 +113,9 @@ WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 posit
 
     WarTree* result = NULL;
 
-    vec2List positions;
-    vec2ListInit(&positions, vec2ListDefaultOptions);
-    vec2ListAdd(&positions, position);
+    Vec2List positions;
+    Vec2ListInit(&positions, wm_frameAllocator());
+    Vec2ListAdd(&positions, position);
 
     const s32 dirC = 8;
     const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
@@ -147,13 +147,13 @@ WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 posit
             if (wpath_isInside(map->finder, xx, yy))
             {
                 vec2 newPosition = vec2i(xx, yy);
-                if (!vec2ListContains(&positions, newPosition))
-                    vec2ListAdd(&positions, newPosition);
+                if (!Vec2ListContains(&positions, newPosition, equalsVec2))
+                    Vec2ListAdd(&positions, newPosition);
             }
         }
     }
 
-    vec2ListFree(&positions);
+    Vec2ListFree(&positions);
 
     return result;
 }
@@ -241,7 +241,7 @@ void we_takeTreeDown(WarContext* context, WarEntity* forest, WarTree* tree)
     WarForestComponent* forestComp = we_getForestComponent(context, forest);
     assert(forestComp);
 
-    WarTreeListRemove(&forestComp->trees, choppedTree);
+    WarTreeListRemove(&forestComp->trees, choppedTree, we_equalsTree);
 
     WarTree* aboveTree = we_getTreeAtPosition(context, forest, choppedTree.tilex, choppedTree.tiley - 1);
     if (aboveTree && !we_validTree(context, forest, aboveTree))
@@ -274,7 +274,7 @@ WarEntity* we_createForest(WarContext* context)
     WarMap* map = context->map;
 
     WarTreeList trees;
-    WarTreeListInit(&trees, WarTreeListDefaultOptions);
+    WarTreeListInit(&trees, wm_globalAllocator());
 
     WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
     we_addSpriteComponent(context, entity, WAR_SPRITE_COMPONENT_INIT(

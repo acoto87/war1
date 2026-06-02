@@ -4,9 +4,10 @@
 #include "shl/list.h"
 #include "shl/map.h"
 
-#include "common.h"
+#include "war_common.h"
 #include "war_fwd.h"
 #include "war_math.h"
+#include "war_collections.h"
 
 struct _WarMapNode
 {
@@ -20,7 +21,7 @@ struct _WarMapNode
 
 struct _WarMapPath
 {
-    vec2List nodes;
+    Vec2List nodes;
 };
 
 struct _WarPathFinder
@@ -47,10 +48,6 @@ bool equalsMapNodeId(const s32 key1, const s32 key2);
 shlDeclareList(WarMapNodeList, WarMapNode)
 shlDeclareBinaryHeap(WarMapNodeHeap, WarMapNode)
 shlDeclareMap(WarMapNodeMap, s32, WarMapNode)
-
-#define WarMapNodeListDefaultOptions (WarMapNodeListOptions){WarMapNodeEmpty, equalsMapNode}
-#define WarMapNodeHeapDefaultOptions (WarMapNodeHeapOptions){WarMapNodeEmpty, equalsMapNode, compareFScore}
-#define WarMapNodeMapDefaultOptions (WarMapNodeMapOptions){WarMapNodeEmpty, hashMapNode, equalsMapNodeId}
 
 u16 wpath_getTileValue(WarPathFinder finder, s32 x, s32 y);
 void wpath_setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width, s32 height, u16 value);

@@ -1,6 +1,7 @@
 #include <assert.h>
 
 #include "war_pathfinder.h"
+#include "war_collections.h"
 
 static s32 manhattanDistance(const WarMapNode node1, const WarMapNode node2)
 {
@@ -76,7 +77,7 @@ void wpath_setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width
 static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
     WarMapNodeList nodes;
-    WarMapNodeListInit(&nodes, WarMapNodeListDefaultOptions);
+    WarMapNodeListInit(&nodes, wm_frameAllocator());
 
     WarMapNode startNode = createNode(finder, startX, startY);
     WarMapNode endNode = createNode(finder, endX, endY);
@@ -103,7 +104,7 @@ static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s3
                 WarMapNode newNode = createNode(finder, xx, yy);
                 if (isEmpty(finder, xx, yy) || equalsMapNode(newNode, endNode))
                 {
-                    if (!WarMapNodeListContains(&nodes, newNode))
+                    if (!WarMapNodeListContains(&nodes, newNode, equalsMapNode))
                     {
                         newNode.parent = i;
                         newNode.level = node.level + 1;
@@ -115,20 +116,20 @@ static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s3
     }
 
     WarMapPath path = (WarMapPath){0};
-    vec2ListInit(&path.nodes, vec2ListDefaultOptions);
+    Vec2ListInit(&path.nodes, wm_globalAllocator());
 
     if (i < nodes.count)
     {
         WarMapNode node = nodes.items[i];
-        vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+        Vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
 
         while (node.parent >= 0)
         {
             node = nodes.items[node.parent];
-            vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+            Vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
         }
 
-        vec2ListReverse(&path.nodes);
+        Vec2ListReverse(&path.nodes);
     }
 
     WarMapNodeListFree(&nodes);
@@ -141,11 +142,11 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     TracyCZoneN(ctx, "Astar", 1);
     // The set of currently discovered nodes that are not evaluated yet.
     WarMapNodeHeap openSet;
-    WarMapNodeHeapInit(&openSet, WarMapNodeHeapDefaultOptions);
+    WarMapNodeHeapInit(&openSet, wm_frameAllocator(), compareFScore);
 
     // The set of nodes already evaluated (this could be a simple boolean array to mark the visited nodes)
     WarMapNodeMap closedSet;
-    WarMapNodeMapInit(&closedSet, WarMapNodeMapDefaultOptions);
+    WarMapNodeMapInit(&closedSet, wm_frameAllocator(), hashMapNode, equalsMapNodeId);
 
     WarMapNode startNode = createNode(finder, startX, startY);
     WarMapNode endNode = createNode(finder, endX, endY);
@@ -210,7 +211,7 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
                 s32 gScore = current.gScore + 1 /* cost from current to neighbor, can be a little higher for diagonals */;
 
                 // < 0 indicates that this node need to be inserted into the heap
-                s32 index = WarMapNodeHeapIndexOf(&openSet, neighbor);
+                s32 index = WarMapNodeHeapIndexOf(&openSet, neighbor, equalsMapNode);
 
                 // if the node is already in the heap, check to update its gScore if necessary
                 if (index >= 0)
@@ -236,7 +237,7 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     }
 
     WarMapPath path = (WarMapPath){0};
-    vec2ListInit(&path.nodes, vec2ListDefaultOptions);
+    Vec2ListInit(&path.nodes, wm_globalAllocator());
 
     // only process the path if has at least two points
     if (closedSet.count > 1)
@@ -281,12 +282,12 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
 
         while (node.parent >= 0)
         {
-            vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+            Vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
             node = WarMapNodeMapGet(&closedSet, node.parent);
         }
 
-        vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
-        vec2ListReverse(&path.nodes);
+        Vec2ListAdd(&path.nodes, vec2i(node.x, node.y));
+        Vec2ListReverse(&path.nodes);
     }
 
     WarMapNodeHeapFree(&openSet);
@@ -369,10 +370,10 @@ bool wpath_reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s3
         s32 maxIndex = MAX(fromIndex, toIndex);
 
         // remove the nodes in the range [fromIndex, toIndex] or [toIndex, fromIndex] from current to last remaining nodes of the current path
-        vec2ListRemoveAtRange(&path->nodes, minIndex, maxIndex - minIndex + 1);
+        Vec2ListRemoveAtRange(&path->nodes, minIndex, maxIndex - minIndex + 1);
 
         // if a path was found subsitute the portion of the path with the new one
-        vec2ListInsertRange(&path->nodes, minIndex, newPath.nodes.count, newPath.nodes.items);
+        Vec2ListInsertRange(&path->nodes, minIndex, newPath.nodes.count, newPath.nodes.items);
 
         result = true;
     }
@@ -391,7 +392,7 @@ bool wpath_pathExists(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s3
 
 void wpath_freePath(WarMapPath path)
 {
-    vec2ListFree(&path.nodes);
+    Vec2ListFree(&path.nodes);
 }
 
 vec2 wpath_findEmptyPosition(WarPathFinder finder, vec2 position)
@@ -403,9 +404,9 @@ vec2 wpath_findEmptyPosition(WarPathFinder finder, vec2 position)
     if (isEmpty(finder, (s32)position.x, (s32)position.y))
         return position;
 
-    vec2List positions;
-    vec2ListInit(&positions, vec2ListDefaultOptions);
-    vec2ListAdd(&positions, position);
+    Vec2List positions;
+    Vec2ListInit(&positions, wm_frameAllocator());
+    Vec2ListAdd(&positions, position);
 
     for(s32 i = 0; i < positions.count; i++)
     {
@@ -423,13 +424,13 @@ vec2 wpath_findEmptyPosition(WarPathFinder finder, vec2 position)
             if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
                 vec2 newPosition = vec2i(xx, yy);
-                if (!vec2ListContains(&positions, newPosition))
-                    vec2ListAdd(&positions, newPosition);
+                if (!Vec2ListContains(&positions, newPosition, equalsVec2))
+                    Vec2ListAdd(&positions, newPosition);
             }
         }
     }
 
-    vec2ListFree(&positions);
+    Vec2ListFree(&positions);
 
     return position;
 }

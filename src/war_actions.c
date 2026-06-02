@@ -65,7 +65,7 @@ static WarUnitActionDef createUnitActionDef(WarUnitActionType type, bool directi
     def.type = type;
     def.directional = directional;
     def.loop = loop;
-    WarUnitActionStepListInit(&def.steps, WarUnitActionStepListDefaultOptions);
+    WarUnitActionStepListInit(&def.steps, wm_globalAllocator());
     return def;
 }
 

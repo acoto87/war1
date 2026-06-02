@@ -28,14 +28,14 @@ void wmap_addEntityToSelection(WarContext* context, WarEntityId id)
     WarMap* map = context->map;
 
     // subtitute this with a set data structure that doesn't allow duplicates
-    if (!WarEntityIdListContains(&map->selectedEntities, id))
+    if (!WarEntityIdListContains(&map->selectedEntities, id, we_equalsEntityId))
         WarEntityIdListAdd(&map->selectedEntities, id);
 }
 
 void wmap_removeEntityFromSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
-    WarEntityIdListRemove(&map->selectedEntities, id);
+    WarEntityIdListRemove(&map->selectedEntities, id, we_equalsEntityId);
 }
 
 void wmap_clearSelection(WarContext* context)
@@ -527,7 +527,7 @@ WarMap* wmap_createMap(WarContext* context, s32 levelInfoIndex)
 
     we_initEntityManager(context, &map->entityManager);
 
-    WarEntityIdListInit(&map->selectedEntities, WarEntityIdListDefaultOptions);
+    WarEntityIdListInit(&map->selectedEntities, wm_globalAllocator());
 
     return map;
 }
@@ -648,12 +648,6 @@ void wmap_freeMap(WarContext* context, WarMap* map)
     WarEntityListFree(&manager->uiEntities);
 
     WarEntityIdListFree(&map->selectedEntities);
-
-    // these are already free when the lists and maps are
-    // we_freeEntity(map->forest);
-    // we_freeEntity(map->wall);
-    // we_freeEntity(map->road);
-    // we_freeEntity(map->ruin);
 
     wm_free(map->finder.data);
 }
@@ -801,7 +795,7 @@ void wmap_enterMap(WarContext* context)
                 s32 y = i / MAP_TILES_WIDTH;
 
                 WarTreeList trees;
-                WarTreeListInit(&trees, WarTreeListDefaultOptions);
+                WarTreeListInit(&trees, wm_globalAllocator());
                 WarTreeListAdd(&trees, createTree(x, y, TREE_MAX_WOOD));
                 processed[i] = true;
 
@@ -1164,7 +1158,7 @@ static void updateSelection(WarContext* context)
             input->mapDragRect = rectpf(input->mapDragStartPos.x, input->mapDragStartPos.y, input->pos.x, input->pos.y);
 
             WarEntityList newSelectedEntities;
-            WarEntityListInit(&newSelectedEntities, WarEntityListNonFreeOptions);
+            WarEntityListInit(&newSelectedEntities, wm_frameAllocator());
 
             if (isMapSelectionDrag(input->mapDragRect))
             {
@@ -2841,7 +2835,7 @@ static void renderUnitPaths(WarContext* context)
             WarState* moveState = wst_getDirectState(context, entity, WAR_STATE_MOVE);
             if (moveState)
             {
-                vec2List positions = moveState->move.positions;
+                Vec2List positions = moveState->move.positions;
                 for(s32 k = moveState->move.positionIndex; k < positions.count; k++)
                 {
                     vec2 pos = wmap_tileToMapCoordinatesV(positions.items[k], true);

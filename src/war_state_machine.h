@@ -3,6 +3,7 @@
 #include "war_math.h"
 #include "war_units.h"
 #include "war_pathfinder.h"
+#include "war_collections.h"
 
 struct _WarState
 {
@@ -22,7 +23,7 @@ struct _WarState
         struct
         {
             s32 positionIndex;
-            vec2List positions;
+            Vec2List positions;
 
             s32 pathNodeIndex;
             WarMapPath path;
@@ -34,7 +35,7 @@ struct _WarState
         struct
         {
             s32 positionIndex;
-            vec2List positions;
+            Vec2List positions;
             s32 dir;
         } patrol;
 

@@ -125,7 +125,7 @@ void we_removeRoadPiece(WarContext* context, WarEntity* entity, WarRoadPiece* pi
     assert(road);
 
     WarRoadPieceList* pieces = &road->pieces;
-    WarRoadPieceListRemove(pieces, *piece);
+    WarRoadPieceListRemove(pieces, *piece, we_equalsRoadPiece);
 }
 
 WarEntity* we_createRoad(WarContext* context)
@@ -133,7 +133,7 @@ WarEntity* we_createRoad(WarContext* context)
     WarMap* map = context->map;
 
     WarRoadPieceList pieces;
-    WarRoadPieceListInit(&pieces, WarRoadPieceListDefaultOptions);
+    WarRoadPieceListInit(&pieces, wm_globalAllocator());
 
     WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_ROAD, true);
     we_addRoadComponent(context, entity, pieces);

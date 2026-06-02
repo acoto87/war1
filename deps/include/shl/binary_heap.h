@@ -30,49 +30,50 @@
     Declare a heap type with shlDeclareBinaryHeap(name, type), then define it
     once with shlDefineBinaryHeap(name, type) in a C source file.
 
-    CUSTOMISATION
-    Provide a compare function that orders items, an equality function for
-    lookups, a default value for empty reads, and an optional free function for
-    owned values. Items are stored by copy.
+    ALLOCATION
+    Pass an shl_allocator_t* to Init to control where the items buffer lives.
+    Use shl_heap_alloc() for the default system heap.  To use a memzone_t,
+    include memzone.h before this header and call shl_zone_alloc(zone).
+
+    ITEM OWNERSHIP
+    The heap stores values by copy and does not manage the lifecycle of
+    items.  The caller is responsible for freeing any resources owned by
+    items before calling Clear or Free.
+
+    SEARCH
+    IndexOf and Contains require an explicit equality function at the call
+    site rather than storing one in the heap struct.
+
+    OUT-OF-RANGE READS
+    Peek and Pop return a zero-initialised value when the heap is empty.
 
     NOTES
-    This implementation behaves as a min-heap according to compareFn. Push,
-    Pop, and Update all restore heap order automatically. Call Free to release
-    internal storage and Clear to dispose of retained items.
+    This implementation behaves as a min-heap according to compareFn.  Push,
+    Pop, and Update all restore heap order automatically.
 */
 
 #ifndef SHL_HEAP_H
 #define SHL_HEAP_H
 
-#include "shl_internal.h"
+#include "internal.h"
 
 #define shlDeclareBinaryHeap(typeName, itemType) \
     typedef struct \
     { \
-        itemType defaultValue; \
-        bool (*equalsFn)(const itemType item1, const itemType item2); \
-        int32_t (*compareFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
-    } typeName ## Options; \
-    \
-    typedef struct \
-    { \
         int32_t count; \
         int32_t capacity; \
-        bool (*equalsFn)(const itemType item1, const itemType item2); \
+        shl_allocator_t* alloc; \
         int32_t (*compareFn)(const itemType item1, const itemType item2); \
-        void (*freeFn)(itemType item); \
-        itemType defaultValue; \
         itemType* items; \
     } typeName; \
     \
-    void typeName ## Init(typeName* heap, typeName ## Options options); \
+    void typeName ## Init(typeName* heap, shl_allocator_t* alloc, int32_t (*compareFn)(const itemType item1, const itemType item2)); \
     void typeName ## Free(typeName* heap); \
     void typeName ## Push(typeName* heap, itemType value); \
     itemType typeName ## Peek(typeName* heap); \
     itemType typeName ## Pop(typeName* heap); \
-    int32_t typeName ## IndexOf(typeName* heap, itemType value); \
-    bool typeName ## Contains(typeName* heap, itemType value); \
+    int32_t typeName ## IndexOf(typeName* heap, itemType value, bool (*equalsFn)(const itemType, const itemType)); \
+    bool typeName ## Contains(typeName* heap, itemType value, bool (*equalsFn)(const itemType, const itemType)); \
     void typeName ## Update(typeName* heap, int32_t index, itemType newValue); \
     void typeName ## Clear(typeName* heap);
 
@@ -126,36 +127,36 @@
         } \
     } \
     \
-    void typeName ## Init(typeName* heap, typeName ## Options options) \
+    void typeName ## Init(typeName* heap, shl_allocator_t* alloc, int32_t (*compareFn)(const itemType item1, const itemType item2)) \
     { \
-        heap->capacity = SHL__INITIAL_CAPACITY; \
-        heap->defaultValue = options.defaultValue; \
-        heap->equalsFn = options.equalsFn; \
-        heap->compareFn = options.compareFn; \
-        heap->freeFn = options.freeFn; \
-        heap->count = 0; \
-        heap->items = (itemType *)SHL_MALLOC((size_t)heap->capacity * sizeof(itemType)); \
+        *heap = (typeName){ 0 }; \
+        if (!alloc) alloc = shl_heap_alloc(); \
+        if (!alloc || !alloc->mallocFn || !compareFn) return; \
+        heap->alloc     = alloc; \
+        heap->compareFn = compareFn; \
+        heap->capacity  = SHL__INITIAL_CAPACITY; \
+        heap->count     = 0; \
+        heap->items     = (itemType*)alloc->mallocFn(alloc->ctx, (size_t)heap->capacity * sizeof(itemType)); \
     } \
     \
     void typeName ## Free(typeName* heap) \
     { \
-        if (!heap->items) \
-            return; \
-        \
-        typeName ## Clear(heap); \
-        \
-        SHL_FREE(heap->items); \
-        heap->items = 0; \
+        heap->count = 0; \
+        if (heap->items && heap->alloc && heap->alloc->freeFn) \
+            heap->alloc->freeFn(heap->alloc->ctx, heap->items); \
+        heap->items = NULL; \
     } \
-     \
+    \
     void typeName ## Push(typeName* heap, itemType value) \
     { \
         if (!heap->items) \
             return; \
         \
-        if (heap->count + 1 >= heap->capacity) \
-            shl__resizeArray((void**)&heap->items, &heap->capacity, heap->count + 1, sizeof(itemType)); \
-         \
+        if (heap->count + 1 >= heap->capacity) { \
+            if (!shl__resizeArray((void**)&heap->items, &heap->capacity, heap->count + 1, sizeof(itemType), heap->alloc)) \
+                return; \
+        } \
+        \
         int32_t index = heap->count; \
         heap->items[index] = value; \
         \
@@ -165,22 +166,23 @@
     \
     itemType typeName ## Peek(typeName* heap) \
     { \
-        if (!heap->items) \
-            return heap->defaultValue; \
-        \
-        if (heap->count == 0) \
-            return heap->defaultValue; \
-        \
+        if (!heap->items || heap->count == 0) \
+        { \
+            itemType zero; \
+            memset(&zero, 0, sizeof(itemType)); \
+            return zero; \
+        } \
         return heap->items[0]; \
     } \
     \
     itemType typeName ## Pop(typeName* heap) \
     { \
-        if (!heap->items) \
-            return heap->defaultValue; \
-        \
-        if (heap->count == 0) \
-            return heap->defaultValue; \
+        if (!heap->items || heap->count == 0) \
+        { \
+            itemType zero; \
+            memset(&zero, 0, sizeof(itemType)); \
+            return zero; \
+        } \
         \
         itemType returnValue = heap->items[0]; \
         \
@@ -191,34 +193,28 @@
         return returnValue; \
     } \
     \
-    int32_t typeName ## IndexOf(typeName* heap, itemType value) \
+    int32_t typeName ## IndexOf(typeName* heap, itemType value, bool (*equalsFn)(const itemType, const itemType)) \
     { \
-        if (!heap->items) \
+        if (!heap->items || !equalsFn) \
             return -1; \
         \
-        if (!heap->equalsFn) \
-            return -1; \
-        \
-        for(int32_t i = 0; i < heap->count; i++) \
+        for (int32_t i = 0; i < heap->count; i++) \
         { \
-            if (heap->equalsFn(heap->items[i], value)) \
+            if (equalsFn(heap->items[i], value)) \
                 return i; \
         } \
         \
         return -1; \
     } \
     \
-    bool typeName ## Contains(typeName* heap, itemType value) \
+    bool typeName ## Contains(typeName* heap, itemType value, bool (*equalsFn)(const itemType, const itemType)) \
     { \
-        return typeName ## IndexOf(heap, value) >= 0; \
+        return typeName ## IndexOf(heap, value, equalsFn) >= 0; \
     } \
     \
     void typeName ## Update(typeName* heap, int32_t index, itemType newValue) \
     { \
-        if (!heap->items) \
-            return; \
-        \
-        if (!heap->compareFn) \
+        if (!heap->items || !heap->compareFn) \
             return; \
         \
         if (index < 0 || index >= heap->count) \
@@ -235,15 +231,6 @@
     \
     void typeName ## Clear(typeName* heap) \
     { \
-        if (!heap->items) \
-            return; \
-        \
-        if (heap->freeFn) \
-        { \
-            for(int32_t i = 0; i < heap->count; i++) \
-                heap->freeFn(heap->items[i]); \
-        } \
-        \
         heap->count = 0; \
     }
 

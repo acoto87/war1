@@ -2,7 +2,7 @@
 
 #include "SDL3/SDL.h"
 
-#include "common.h"
+#include "war_common.h"
 #include "war.h"
 #include "war_math.h"
 

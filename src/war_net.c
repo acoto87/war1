@@ -336,10 +336,8 @@ bool wnet_downloadFileFromUrl(WarContext* context, StringView url, StringView fi
         return true;
     }
 
-    StringViewMapOptions options = StringViewMapDefaultOptions;
-
     StringViewMap headers;
-    StringViewMapInit(&headers, options);
+    StringViewMapInit(&headers, wm_frameAllocator(), wsv_hashFNV32, wsv_equals);
 
     s32 readFromResponse = wnet_parseHeadersFromResponse(wsv_fromParts(response, responseLength), responseLength, &headers);
 

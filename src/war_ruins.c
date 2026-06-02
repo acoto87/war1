@@ -50,8 +50,8 @@ void we_determineRuinTypes(WarContext* context, WarEntity* entity)
     const s32 dirX[] = { -1,  0,  1, 1, 1, 0, -1, -1 };
     const s32 dirY[] = { -1, -1, -1, 0, 1, 1,  1,  0 };
 
-    s32List invalidPieces;
-    s32ListInit(&invalidPieces, s32ListDefaultOptions);
+    S32List invalidPieces;
+    S32ListInit(&invalidPieces, wm_frameAllocator());
 
     for(s32 i = 0; i < pieces->count; i++)
     {
@@ -73,13 +73,13 @@ void we_determineRuinTypes(WarContext* context, WarEntity* entity)
         pi->type = ruinTileTypeMap[index];
 
         if (pi->type == WAR_RUIN_PIECE_NONE)
-            s32ListAdd(&invalidPieces, i);
+            S32ListAdd(&invalidPieces, i);
     }
 
     for (s32 i = invalidPieces.count - 1; i >= 0; i--)
         WarRuinPieceListRemoveAt(pieces, invalidPieces.items[i]);
 
-    s32ListFree(&invalidPieces);
+    S32ListFree(&invalidPieces);
 }
 
 WarEntity* we_createRuins(WarContext* context)
@@ -87,7 +87,7 @@ WarEntity* we_createRuins(WarContext* context)
     WarMap* map = context->map;
 
     WarRuinPieceList pieces;
-    WarRuinPieceListInit(&pieces, WarRuinPieceListDefaultOptions);
+    WarRuinPieceListInit(&pieces, wm_globalAllocator());
 
     WarEntity *entity = we_createEntity(context, WAR_ENTITY_TYPE_RUIN, true);
     we_addRuinComponent(context, entity, pieces);
@@ -124,5 +124,5 @@ void we_removeRuinPiece(WarContext* context, WarEntity* entity, WarRuinPiece* pi
     assert(ruinComp);
 
     WarRuinPieceList* pieces = &ruinComp->pieces;
-    WarRuinPieceListRemove(pieces, *piece);
+    WarRuinPieceListRemove(pieces, *piece, we_equalsRuinPiece);
 }

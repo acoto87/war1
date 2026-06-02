@@ -13,6 +13,7 @@
 #include "war_render.h"
 #include "war_sprites.h"
 #include "war_units.h"
+#include "war_collections.h"
 
 shlDefineList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarWallPieceList, WarWallPiece)
@@ -63,13 +64,6 @@ bool we_equalsEntity(const WarEntity* e1, const WarEntity* e2)
     return e1->id == e2->id;
 }
 
-void we_freeEntity(WarEntity* e)
-{
-    // Entities are now stored in the flat pool inside WarEntityManager.
-    // Memory is NOT individually heap-allocated; this is intentionally a no-op.
-    NOT_USED(e);
-}
-
 u32 we_hashEntityType(const WarEntityType type)
 {
     return type;
@@ -78,11 +72,6 @@ u32 we_hashEntityType(const WarEntityType type)
 bool we_equalsEntityType(const WarEntityType t1, const WarEntityType t2)
 {
     return t1 == t2;
-}
-
-void we_freeEntityList(WarEntityList* list)
-{
-    WarEntityListFree(list);
 }
 
 bool we_isComponentEnabled(WarContext* context, WarEntity* entity, WarComponentType componentType)
@@ -821,7 +810,7 @@ WarAnimationsComponent* we_addAnimationsComponent(WarContext* context, WarEntity
     u16 idx = (u16)store->count;
     WarAnimationsComponent* comp = &store->dense[idx];
     *comp = (WarAnimationsComponent){0};
-    WarSpriteAnimationListInit(&comp->animations, WarSpriteAnimationListDefaultOptions);
+    WarSpriteAnimationListInit(&comp->animations, wm_globalAllocator());
 
     store->enabled[idx] = true;
     store->owners[idx] = entity->id;
@@ -841,9 +830,15 @@ void we_removeAnimationsComponent(WarContext* context, WarEntity* entity)
 
     WarEntityManager* manager = we_getEntityManager(context);
     assert(manager);
-    WarAnimationsStorage* store = &manager->animations;
 
-    WarSpriteAnimationListFree(&store->dense[idx].animations);
+    WarAnimationsStorage* store = &manager->animations;
+    WarSpriteAnimationList* animList = &store->dense[idx].animations;
+    for (s32 i = 0; i < animList->count; i++)
+    {
+        S32ListFree(&animList->items[i].frames);
+    }
+
+    WarSpriteAnimationListFree(animList);
 
     u16 lastIdx = (u16)(store->count - 1);
     if (idx != lastIdx)
@@ -1813,18 +1808,18 @@ void we_removeEntity(WarContext* context, WarEntity* entity)
 
     // Update secondary indices
     if (isUI)
-        WarEntityListRemove(&manager->uiEntities, entity);
+        WarEntityListRemove(&manager->uiEntities, entity, we_equalsEntity);
 
     if (isUnitEnt)
     {
         WarEntityList* unitTypeList = WarUnitMapGet(&manager->unitsByType, unitType);
         if (unitTypeList)
-            WarEntityListRemove(unitTypeList, entity);
+            WarEntityListRemove(unitTypeList, entity, we_equalsEntity);
     }
 
     WarEntityList* entityTypeList = WarEntityMapGet(&manager->entitiesByType, entityType);
     if (entityTypeList)
-        WarEntityListRemove(entityTypeList, entity);
+        WarEntityListRemove(entityTypeList, entity, we_equalsEntity);
 
     WarEntityIdMapRemove(&manager->entitiesById, entityId);
 
@@ -1883,42 +1878,28 @@ void we_initEntityManager(WarContext* context, WarEntityManager* manager)
     manager->sights.count        = 1;
 
     // initialize entity by type map
-    WarEntityMapOptions entitiesByTypeOptions = (WarEntityMapOptions){0};
-    entitiesByTypeOptions.defaultValue = NULL;
-    entitiesByTypeOptions.hashFn = we_hashEntityType;
-    entitiesByTypeOptions.equalsFn = we_equalsEntityType;
-    entitiesByTypeOptions.freeFn = we_freeEntityList;
-    WarEntityMapInit(&manager->entitiesByType, entitiesByTypeOptions);
+    WarEntityMapInit(&manager->entitiesByType, wm_globalAllocator(), we_hashEntityType, we_equalsEntityType);
     for (WarEntityType type = WAR_ENTITY_TYPE_IMAGE; type < WAR_ENTITY_TYPE_COUNT; type++)
     {
         WarEntityList* list = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
-        WarEntityListInit(list, WarEntityListNonFreeOptions);
+        WarEntityListInit(list, wm_globalAllocator());
         WarEntityMapSet(&manager->entitiesByType, type, list);
     }
 
     // initialize unit by type map
-    WarUnitMapOptions unitsByTypeOptions = (WarUnitMapOptions){0};
-    unitsByTypeOptions.defaultValue = NULL;
-    unitsByTypeOptions.hashFn = wu_hashUnitType;
-    unitsByTypeOptions.equalsFn = wu_equalsUnitType;
-    unitsByTypeOptions.freeFn = we_freeEntityList;
-    WarUnitMapInit(&manager->unitsByType, unitsByTypeOptions);
+    WarUnitMapInit(&manager->unitsByType, wm_globalAllocator(), wu_hashUnitType, wu_equalsUnitType);
     for (WarUnitType type = WAR_UNIT_FOOTMAN; type < WAR_UNIT_COUNT; type++)
     {
         WarEntityList* list = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
-        WarEntityListInit(list, WarEntityListNonFreeOptions);
+        WarEntityListInit(list, wm_globalAllocator());
         WarUnitMapSet(&manager->unitsByType, type, list);
     }
 
     // initialize the entities by id map
-    WarEntityIdMapOptions entitiesByIdOptions = (WarEntityIdMapOptions){0};
-    entitiesByIdOptions.defaultValue = NULL;
-    entitiesByIdOptions.hashFn = we_hashEntityId;
-    entitiesByIdOptions.equalsFn = we_equalsEntityId;
-    WarEntityIdMapInit(&manager->entitiesById, entitiesByIdOptions);
+    WarEntityIdMapInit(&manager->entitiesById, wm_globalAllocator(), we_hashEntityId, we_equalsEntityId);
 
     // initialize ui entities list
-    WarEntityListInit(&manager->uiEntities, WarEntityListNonFreeOptions);
+    WarEntityListInit(&manager->uiEntities, wm_globalAllocator());
 
     TracyCZoneEnd(ctx);
 }
@@ -2315,7 +2296,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
 
         for (s32 i = 0; i < animations->animations.count; i++)
         {
-            WarSpriteAnimation* anim = animations->animations.items[i];
+            WarSpriteAnimation* anim = &animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
                 wr_save(context);
@@ -2659,7 +2640,7 @@ void renderAnimation(WarContext* context, WarEntity* entity)
 
         for (s32 i = 0; i < animations->animations.count; i++)
         {
-            WarSpriteAnimation* anim = animations->animations.items[i];
+            WarSpriteAnimation* anim = &animations->animations.items[i];
             if (anim->status == WAR_ANIM_STATUS_RUNNING)
             {
                 wr_save(context);
@@ -3106,8 +3087,8 @@ WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 dista
 {
     TracyCZoneN(ctx, "GetNearUnits", 1);
 
-    WarEntityList* nearUnits = (WarEntityList*)wm_alloc(sizeof(WarEntityList));
-    WarEntityListInit(nearUnits, WarEntityListNonFreeOptions);
+    WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
+    WarEntityListInit(nearUnits, wm_frameAllocator());
 
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)

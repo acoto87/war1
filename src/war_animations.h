@@ -2,9 +2,9 @@
 
 #include "shl/list.h"
 
-#include "common.h"
+#include "war_common.h"
 #include "war_sprites.h"
-
+#include "war_collections.h"
 struct _WarSpriteAnimation
 {
     String name;
@@ -15,7 +15,7 @@ struct _WarSpriteAnimation
     vec2 scale;
 
     f32 frameDelay;
-    s32List frames;
+    S32List frames;
     WarSprite sprite;
 
     f32 animTime;
@@ -25,25 +25,22 @@ struct _WarSpriteAnimation
 
 bool wanim_equalsSpriteAnimation(const WarSpriteAnimation* anim1, const WarSpriteAnimation* anim2);
 
-shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation*)
+shlDeclareList(WarSpriteAnimationList, WarSpriteAnimation)
 
-#define WarSpriteAnimationListDefaultOptions (WarSpriteAnimationListOptions){NULL, wanim_equalsSpriteAnimation, wanim_freeAnimation}
-
-WarSpriteAnimation* wanim_createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop);
-WarSpriteAnimation* wanim_createAnimationFromResourceIndex(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, f32 frameDelay, bool loop);
-void wanim_addAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation* animation);
+WarSpriteAnimation wanim_createAnimation(WarContext* context, String name, WarSprite sprite, f32 frameDelay, bool loop);
+WarSpriteAnimation wanim_createAnimationFromResourceIndex(WarContext* context, String name, WarSpriteResourceRef spriteResourceRef, f32 frameDelay, bool loop);
+void wanim_addAnimation(WarContext* context, WarEntity* entity, WarSpriteAnimation animation);
 void wanim_addAnimationFrame(WarSpriteAnimation* animation, s32 frameIndex);
 void wanim_addAnimationFrames(WarSpriteAnimation* animation, s32 count, s32 frameIndices[]);
 void wanim_addAnimationFramesRange(WarSpriteAnimation* animation, s32 from, s32 to);
 f32 wanim_getAnimationDuration(WarSpriteAnimation* animation);
-void wanim_freeAnimation(WarSpriteAnimation* animation);
 void wanim_removeAnimation(WarContext* context, WarEntity* entity, StringView name);
 void wanim_updateAnimations(WarContext* context);
 WarSpriteAnimation* wanim_findAnimation(WarContext* context, WarEntity* entity, StringView name);
 bool wanim_containsAnimation(WarContext* context, WarEntity* entity, StringView name);
-WarSpriteAnimation* wanim_createDamageAnimation(WarContext* context, WarEntity* entity, String name, int damageLevel);
-WarSpriteAnimation* wanim_createCollapseAnimation(WarContext* context, WarEntity* entity, String name);
-WarSpriteAnimation* wanim_createExplosionAnimation(WarContext* context, WarEntity* entity, vec2 position);
-WarSpriteAnimation* wanim_createRainOfFireExplosionAnimation(WarContext* context, WarEntity* entity, vec2 position);
-WarSpriteAnimation* wanim_createSpellAnimation(WarContext* context, WarEntity* entity, vec2 position);
-WarSpriteAnimation* wanim_createPoisonCloudAnimation(WarContext* context, WarEntity* entity, vec2 position);
+WarSpriteAnimation wanim_createDamageAnimation(WarContext* context, WarEntity* entity, String name, int damageLevel);
+WarSpriteAnimation wanim_createCollapseAnimation(WarContext* context, WarEntity* entity, String name);
+WarSpriteAnimation wanim_createExplosionAnimation(WarContext* context, WarEntity* entity, vec2 position);
+WarSpriteAnimation wanim_createRainOfFireExplosionAnimation(WarContext* context, WarEntity* entity, vec2 position);
+WarSpriteAnimation wanim_createSpellAnimation(WarContext* context, WarEntity* entity, vec2 position);
+WarSpriteAnimation wanim_createPoisonCloudAnimation(WarContext* context, WarEntity* entity, vec2 position);
