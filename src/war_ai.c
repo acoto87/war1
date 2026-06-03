@@ -63,7 +63,7 @@ WarAICommand* wai_createWaitForUnit(WarContext* context, WarPlayerInfo* aiPlayer
 WarAICommand* wai_createSleepForTime(WarContext* context, WarPlayerInfo* aiPlayer, f32 time)
 {
     WarAICommand* sleep = wai_createAICommand(context, aiPlayer, WAR_AI_COMMAND_SLEEP);
-    sleep->sleep.time = time;
+    sleep->sleep.endRealTime = context->realTime + time;
     return sleep;
 }
 
@@ -232,9 +232,7 @@ bool wai_executeSleepAICommand(WarContext* context, WarPlayerInfo* aiPlayer, War
     NOT_USED(aiPlayer);
 
     command->status = WAR_AI_COMMAND_STATUS_STARTED;
-    command->sleep.time -= context->deltaTime;
-
-    if (command->sleep.time <= 0)
+    if (context->realTime >= command->sleep.endRealTime)
     {
         command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
         return true;

@@ -16,7 +16,7 @@ void wsbr_enterSceneBriefingHumans(WarContext* context)
 
     WarCampaignMapData data = wcamp_getCampaignData(scene->briefing.mapType);
 
-    scene->briefing.time        = data.briefingDuration;
+    scene->briefing.endRealTime = context->realTime + data.briefingDuration;
     scene->briefing.scrollY     = 160.0f;
     scene->briefing.briefingText = data.briefingText;  // transfer ownership
 
@@ -56,7 +56,7 @@ void wsbr_enterSceneBriefingOrcs(WarContext* context)
 
     WarCampaignMapData data = wcamp_getCampaignData(scene->briefing.mapType);
 
-    scene->briefing.time         = data.briefingDuration;
+    scene->briefing.endRealTime  = context->realTime + data.briefingDuration;
     scene->briefing.scrollY      = 160.0f;
     scene->briefing.briefingText = data.briefingText;  // transfer ownership
 
@@ -120,12 +120,11 @@ void wsc_updateSceneBriefing(WarContext* context)
     WarInput* input = &context->input;
     WarScene* scene = context->scene;
 
-    scene->briefing.time    -= context->deltaTime;
-    scene->briefing.scrollY -= 10.0f * context->deltaTime;
+    scene->briefing.scrollY -= 10.0f * context->realDeltaTime;
 
     wanim_updateAnimations(context);
 
-    if (scene->briefing.time <= 0 ||
+    if (context->realTime >= scene->briefing.endRealTime ||
         isButtonJustPressed(input, WAR_MOUSE_LEFT) ||
         isKeyJustPressed(input, WAR_KEY_ENTER) ||
         isKeyJustPressed(input, WAR_KEY_SPACE))

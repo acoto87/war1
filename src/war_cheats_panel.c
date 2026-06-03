@@ -52,13 +52,13 @@ void wcheatp_setCheatsFeedback(WarContext* context, String feedbackText)
     if (feedbackText.data)
     {
         cheatStatus->feedback = true;
-        cheatStatus->feedbackTime = 3.0f;
+        cheatStatus->feedbackEndRealTime = context->realTime + 3.0;
         cheatStatus->feedbackText = feedbackText;
     }
     else
     {
         cheatStatus->feedback = false;
-        cheatStatus->feedbackTime = 0.0f;
+        cheatStatus->feedbackEndRealTime = 0.0;
     }
 }
 
@@ -99,10 +99,8 @@ void wcheatp_updateCheatsPanel(WarContext* context)
     // Tick feedback timer.
     if (cheatStatus->feedback)
     {
-        cheatStatus->feedbackTime -= context->deltaTime;
-        if (cheatStatus->feedbackTime <= 0)
+        if (context->realTime >= cheatStatus->feedbackEndRealTime)
         {
-            cheatStatus->feedbackTime = 0;
             cheatStatus->feedback = false;
         }
     }

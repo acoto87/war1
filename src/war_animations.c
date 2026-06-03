@@ -144,19 +144,19 @@ void wanim_updateAnimation(WarContext* context, WarEntity* entity, WarSpriteAnim
     if (animation->loopTime > 0)
     {
         if (context->scene)
-            animation->loopTime -= getScaledSpeed(context, context->deltaTime);
+            animation->loopTime -= context->realDeltaTime * context->globalSpeed;
         else if (context->map)
-            animation->loopTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
+            animation->loopTime -= context->gameDeltaTime;
 
         return;
     }
 
-    f32 dt = context->deltaTime / wanim_getAnimationDuration(animation);
+    f32 dt = context->realDeltaTime / wanim_getAnimationDuration(animation);
 
     if (context->scene)
-        dt = getScaledSpeed(context, dt);
+        dt *= context->globalSpeed;
     else if (context->map)
-        dt = wmap_getMapScaledSpeed(context, dt);
+        dt = context->gameDeltaTime / wanim_getAnimationDuration(animation);
 
     animation->animTime += dt;
 

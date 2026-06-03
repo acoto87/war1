@@ -68,7 +68,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         return;
     }
 
-    f32 trainSpeed = wmap_getMapScaledSpeed(context, context->deltaTime);
+    f32 trainSpeed = context->gameDeltaTime;
 
     // if hurry up cheat is enabled, speed up the train time by 5000%
     if (map->hurryUp)

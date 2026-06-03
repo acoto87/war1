@@ -20,7 +20,7 @@ struct _WarScene
 
         struct
         {
-            f32 time;
+            f64 endRealTime;
         } blizzard;
 
         struct
@@ -33,7 +33,7 @@ struct _WarScene
 
         struct
         {
-            f32 time;
+            f64 endRealTime;
             f32 scrollY;
             WarRace race;
             WarCampaignMapType mapType;

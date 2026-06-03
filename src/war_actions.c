@@ -917,6 +917,7 @@ static void resetAction(WarUnitAction* action)
 {
     action->stepIndex = 0;
     action->status = WAR_ACTION_NOT_STARTED;
+    action->waitEndGameTime = 0;
 }
 
 void wact_initUnitActionDefs(void)
@@ -990,7 +991,7 @@ void wact_addUnitActions(WarContext* context, WarEntity* entity)
         WarUnitAction* action = &unit->actions[i];
         action->status = WAR_ACTION_NOT_STARTED;
         action->scale = 1.0f;
-        action->waitCount = 0;
+        action->waitEndGameTime = 0;
         action->stepIndex = -1;
         action->lastActionStep = WAR_ACTION_STEP_NONE;
         action->lastSoundStep = WAR_ACTION_STEP_NONE;
@@ -1084,13 +1085,12 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
     WarUnitActionStep step = actionDef->steps.items[action->stepIndex];
     if (step.type == WAR_ACTION_STEP_WAIT)
     {
-        action->waitCount -= wmap_getMapScaledSpeed(context, context->deltaTime);
-        if (action->waitCount > 0)
+        if (context->gameTime < action->waitEndGameTime)
         {
             return;
         }
 
-        action->waitCount = 0;
+        action->waitEndGameTime = 0;
 
         action->stepIndex++;
         if (action->stepIndex >= actionDef->steps.count)
@@ -1184,7 +1184,7 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
         step = actionDef->steps.items[action->stepIndex];
     }
 
-    action->waitCount = __frameCountToSeconds(step.param) * action->scale;
+    action->waitEndGameTime = context->gameTime + (__frameCountToSeconds(step.param) * action->scale);
 }
 
 void wact_resetAction(WarContext* context, WarEntity* entity, WarUnitActionType type)

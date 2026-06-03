@@ -22,6 +22,7 @@ void wg_setNextMap(WarContext* context, WarMap* map, f32 transitionDelay);
 void wg_setInputButton(WarContext* context, s32 button, bool pressed);
 void wg_setInputKey(WarContext* context, s32 key, bool pressed);
 void wg_beginInputFrame(WarContext* context);
+void wg_beginFrame(WarContext* context);
 void wg_processGameEvent(WarContext* context, SDL_Event* event);
 void wg_updateGame(WarContext* context);
 void wg_renderGame(WarContext *context);

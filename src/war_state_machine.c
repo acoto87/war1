@@ -52,7 +52,7 @@ WarState* wst_createState(WarContext* context, WarEntity* entity, WarStateType t
     WarState* state = (WarState*)wm_alloc(sizeof(WarState));
     state->type = type;
     state->entityId = entity->id;
-    state->nextUpdateTime = 0;
+    state->nextUpdateGameTime = 0;
     state->delay = 0;
     return state;
 }
@@ -232,11 +232,11 @@ void wst_updateStateMachine(WarContext* context, WarEntity* entity)
 
         if (currentState->delay > 0)
         {
-            currentState->nextUpdateTime = context->time + currentState->delay;
+            currentState->nextUpdateGameTime = context->gameTime + currentState->delay;
             currentState->delay = 0;
         }
 
-        if (context->time >= currentState->nextUpdateTime)
+        if (context->gameTime >= currentState->nextUpdateGameTime)
         {
             if (!inRange(currentState->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
             {

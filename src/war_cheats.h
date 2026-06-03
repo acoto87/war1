@@ -10,8 +10,7 @@
 struct _WarFlashStatus
 {
     bool enabled;
-    f32 startTime;
-    f32 duration;
+    f64 endRealTime;
     String text;
 };
 
@@ -22,7 +21,7 @@ struct _WarCheatStatus
     s32 position;
     String text;
     bool feedback;
-    f32 feedbackTime;
+    f64 feedbackEndRealTime;
     String feedbackText;
     // X offset (relative to panel.x + 2) of the blinking cursor rect.
     // Written by the update function; read by the render function.

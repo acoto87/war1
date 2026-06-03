@@ -5,7 +5,7 @@
 WarState* wst_createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 {
     WarState* state = wst_createState(context, entity, WAR_STATE_WAIT);
-    state->wait.waitTime = waitTime;
+    state->wait.waitEndGameTime = (f32)(context->gameTime + waitTime);
     return state;
 }
 
@@ -40,9 +40,7 @@ void wst_leaveWaitState(WarContext* context, WarEntity* entity, WarState* state)
 
 void wst_updateWaitState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    state->wait.waitTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
-
-    if (state->wait.waitTime < 0)
+    if (context->gameTime >= state->wait.waitEndGameTime)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {

@@ -177,13 +177,9 @@ int main(int argc, char** argv)
 
     bool running = true;
 
-    s32 cachedFps = 0;
-    f32 cachedDeltaTime = 0;
-    f32 cachedWaitTime = 0;
-    f32 lastFpsUpdateTime = 0;
-
     while (running)
     {
+        wg_beginFrame(context);
         wg_beginInputFrame(context);
 
         SDL_Event event;
@@ -197,24 +193,15 @@ int main(int argc, char** argv)
             }
         }
 
-        // Update window title with FPS and timing info,
-        // but only once per second to have more stable numbers.
-        if (context->time - lastFpsUpdateTime >= 1.0f)
-        {
-            cachedFps = context->fps;
-            cachedDeltaTime = context->deltaTime;
-            cachedWaitTime = context->waitTime;
-            lastFpsUpdateTime = context->time;
-        }
-
         wstr_setFormat(
             &context->windowTitle,
-            "War 1: %.2fs at %d fps (%.4fs) - Wait time: %.4fs - Frames: %u",
-            context->time,
-            cachedFps,
-            cachedDeltaTime,
-            cachedWaitTime,
-            context->frameCount
+            "War 1: %.2fs at %d avg fps (%.4fs) - Wait time: %.4fs - Frames: %d - Transition Delay: %.4fs",
+            context->realTime,
+            context->fpsMetric.avg,
+            ns2s(context->frameTimeMetric.avg),
+            ns2s(context->waitTimeMetric.avg),
+            context->frameCount,
+            MAX(context->transitionEndRealTime - context->realTime, 0.0)
         );
         SDL_SetWindowTitle(context->window, wstr_cstr(&context->windowTitle));
 

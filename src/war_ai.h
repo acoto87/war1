@@ -27,7 +27,7 @@ struct _WarAICommand
 
         struct
         {
-            f32 time;
+            f64 endRealTime;
         } sleep;
     };
 };

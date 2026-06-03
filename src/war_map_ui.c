@@ -48,8 +48,7 @@ void wmui_setFlashStatus(WarContext* context, f32 duration, String text)
     assert(text.data);
 
     flashStatus->enabled = true;
-    flashStatus->startTime = context->time;
-    flashStatus->duration = duration;
+    flashStatus->endRealTime = context->realTime + duration;
     wstr_free(flashStatus->text);
     flashStatus->text = text;
 }
