@@ -7,7 +7,7 @@
 #include <intrin.h>
 #endif
 
-#if defined(_MSC_VER) && !defined(__clan_)
+#if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
 #ifndef F_OK
 #define F_OK 0
