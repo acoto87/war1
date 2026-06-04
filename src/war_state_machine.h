@@ -51,7 +51,7 @@ struct _WarState
 
         struct
         {
-            f32 waitEndGameTime;
+            f64 waitEndGameTime;
         } wait;
 
         struct

@@ -203,7 +203,6 @@ void wui_changeCursorType(WarContext* context, WarCursorType type);
 
 WarCampaignMapType wmap_getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex);
 
-f32 wmap_getMapScaledSpeed(WarContext* context, f32 t);
 f32 wmap_getMapScaledTime(WarContext* context, f32 t);
 
 #define getMapScrollSpeed(speedValue) ((f32)(100 + (speedValue) * 50))

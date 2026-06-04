@@ -140,12 +140,6 @@ bool wmap_isTileVisible(WarMap* map, s32 x, s32 y)
     return true;
 }
 
-f32 wmap_getMapScaledSpeed(WarContext* context, f32 t)
-{
-    (void)context;
-    return t;
-}
-
 f32 wmap_getMapScaledTime(WarContext* context, f32 t)
 {
     (void)context;
