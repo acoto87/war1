@@ -492,25 +492,11 @@ void wmap_setMapTileIndex(WarContext* context, s32 x, s32 y, s32 tile)
     wmap_updateMinimapTile(context, levelVisual, tileset, x, y);
 }
 
-f32 wmap_getMapScaledSpeed(WarContext* context, f32 t)
-{
-    WarMap* map = context->map;
-
-    t = getScaledSpeed(context, t);
-
-    if (map->settings.gameSpeed < WAR_SPEED_NORMAL)
-        t *= 1.0f - (WAR_SPEED_NORMAL - map->settings.gameSpeed) * 0.25f;
-    else if (map->settings.gameSpeed > WAR_SPEED_NORMAL)
-        t *= 1.0f + (map->settings.gameSpeed - WAR_SPEED_NORMAL) * 0.5f;
-
-    return t;
-}
-
 f32 wmap_getMapScaledTime(WarContext* context, f32 t)
 {
     WarMap* map = context->map;
 
-    t = getScaledTime(context, t);
+    t /= context->globalSpeed;
 
     if (map->settings.gameSpeed < WAR_SPEED_NORMAL)
         t /= 1.0f - (WAR_SPEED_NORMAL - map->settings.gameSpeed) * 0.25f;

@@ -127,9 +127,6 @@
 
 #define isMapDragging(input) ((input)->mapDragActive)
 
-#define getScaledSpeed(context, t) ((t) * (context)->globalSpeed)
-#define getScaledTime(context, t) ((t) / (context)->globalSpeed)
-
 struct _WarInputState
 {
     bool held;

@@ -5,7 +5,7 @@
 WarState* wst_createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 {
     WarState* state = wst_createState(context, entity, WAR_STATE_WAIT);
-    state->wait.waitEndGameTime = (f32)(context->gameTime + waitTime);
+    state->wait.waitEndGameTime = context->gameTime + waitTime;
     return state;
 }
 

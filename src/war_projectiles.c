@@ -166,7 +166,6 @@ bool wproj_updateProjectilePosition(WarContext* context, WarEntity* entity)
     vec2 target = projectile->target;
 
     f32 speed = (f32)projectile->speed;
-    speed = wmap_getMapScaledSpeed(context, speed);
 
     vec2 direction = vec2_subv(target, position);
     f32 directionLength = vec2_length(direction);
