@@ -1015,10 +1015,10 @@ static void updateViewport(WarContext *context)
         else if (keyScroll)
             scrollSpeed = getMapScrollSpeed(map->settings.keyScrollSpeed);
 
-        map->viewport.x += scrollSpeed * dir.x * context->deltaTime;
+        map->viewport.x += scrollSpeed * dir.x * context->realDeltaTime;
         map->viewport.x = CLAMP(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
 
-        map->viewport.y += scrollSpeed * dir.y * context->deltaTime;
+        map->viewport.y += scrollSpeed * dir.y * context->realDeltaTime;
         map->viewport.y = CLAMP(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
     }
     else
@@ -1701,10 +1701,8 @@ static void updateStatus(WarContext* context)
     {
         if (cheatStatus->feedback)
         {
-            cheatStatus->feedbackTime -= context->deltaTime;
-            if (cheatStatus->feedbackTime <= 0)
+            if (context->realTime >= cheatStatus->feedbackEndRealTime)
             {
-                cheatStatus->feedbackTime = 0;
                 cheatStatus->feedback = false;
             }
         }
@@ -1794,7 +1792,7 @@ static void updateStatus(WarContext* context)
 
     if (flashStatus->enabled)
     {
-        if (flashStatus->startTime + flashStatus->duration >= context->time)
+        if (context->realTime <= flashStatus->endRealTime)
         {
             wsv_copyToBuffer(wstr_view(&flashStatus->text), map->hudStatusText, arrayLength(map->hudStatusText));
             map->hudStatusHighlightIndex = NO_HIGHLIGHT;
@@ -2210,7 +2208,7 @@ static void updateMagic(WarContext* context)
             }
             else
             {
-                unit->manaTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
+                unit->manaTime -= context->gameDeltaTime;
             }
         }
     }
@@ -2225,8 +2223,8 @@ static bool updatePoisonCloud(WarContext* context, WarEntity* entity)
     WarPoisonCloudComponent* poisonCloud = we_getPoisonCloudComponent(context, entity);
     assert(poisonCloud);
 
-    poisonCloud->time -= wmap_getMapScaledSpeed(context, context->deltaTime);
-    poisonCloud->damageTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
+    poisonCloud->time -= context->gameDeltaTime;
+    poisonCloud->damageTime -= context->gameDeltaTime;
 
     if (poisonCloud->damageTime <= 0)
     {
@@ -2260,7 +2258,7 @@ static bool updateSight(WarContext* context, WarEntity* entity)
     WarSightComponent* sight = we_getSightComponent(context, entity);
     assert(sight);
 
-    sight->time -= wmap_getMapScaledSpeed(context, context->deltaTime);
+    sight->time -= context->gameDeltaTime;
 
     TracyCZoneEnd(ctx);
 
@@ -2310,7 +2308,7 @@ static void updateSpells(WarContext* context)
 
         if (unit->invisible)
         {
-            unit->invisibilityTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
+            unit->invisibilityTime -= context->gameDeltaTime;
             if (unit->invisibilityTime <= 0)
             {
                 unit->invisible = false;
@@ -2320,7 +2318,7 @@ static void updateSpells(WarContext* context)
 
         if (unit->invulnerable)
         {
-            unit->invulnerabilityTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
+            unit->invulnerabilityTime -= context->gameDeltaTime;
             if (unit->invulnerabilityTime <= 0)
             {
                 unit->invulnerable = false;
@@ -2596,12 +2594,12 @@ WarLevelResult checkObjectives(WarContext* context)
 {
     WarMap* map = context->map;
 
-    map->objectivesTime -= context->deltaTime;
+    map->objectivesTime -= context->realDeltaTime;
 
     if (map->objectivesTime <= 0)
     {
-        WarCampaignMapData data = wcamp_getCampaignData
-            (wmap_getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex)
+        WarCampaignMapData data = wcamp_getCampaignData(
+            wmap_getCampaignMapTypeByLevelInfoIndex(map->levelInfoIndex)
         );
 
         if (data.checkObjectivesFunc)

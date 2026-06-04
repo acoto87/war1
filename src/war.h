@@ -112,6 +112,8 @@
 
 #define MAX_RENDER_STATE_STACK 32
 
+#define METRIC_SAMPLE_COUNT 64
+
 #define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
 #define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)
 
@@ -205,13 +207,41 @@ struct _WarImuiState
     s32 spriteCacheCount;
 };
 
+struct _WarMetricS32
+{
+    s32 sample[METRIC_SAMPLE_COUNT];
+    s32 sampleSum;
+    s32 last;
+    s32 avg;
+    s32 sampleCount;
+};
+
+struct _WarMetricU64
+{
+    u64 sample[METRIC_SAMPLE_COUNT];
+    u64 sampleSum;
+    u64 last;
+    u64 avg;
+    s32 sampleCount;
+};
+
 struct _WarContext
 {
-    f32 time;
-    f32 deltaTime;
-    f32 waitTime;
-    u32 fps;
-    u32 frameCount;
+    u64 frameStartNs;
+    u64 lastFrameStartNs;
+    u64 frameWorkEndNs;
+    u64 frameEndNs;
+
+    f64 realTime;
+    f32 realDeltaTime;
+    f64 gameTime;
+    f32 gameDeltaTime;
+
+    WarMetricU64 frameTimeMetric;
+    WarMetricU64 workTimeMetric;
+    WarMetricU64 waitTimeMetric;
+    WarMetricS32 fpsMetric;
+    s32 frameCount;
 
     bool paused;
 
@@ -270,7 +300,7 @@ struct _WarContext
 
     WarInput input;
 
-    f32 transitionDelay;
+    f64 transitionEndRealTime;
     WarScene* scene;
     WarScene* nextScene;
     WarMap* map;

@@ -171,7 +171,7 @@ bool wproj_updateProjectilePosition(WarContext* context, WarEntity* entity)
     vec2 direction = vec2_subv(target, position);
     f32 directionLength = vec2_length(direction);
 
-    vec2 step = vec2_mulf(vec2_normalize(direction), speed * context->deltaTime);
+    vec2 step = vec2_mulf(vec2_normalize(direction), speed * context->gameDeltaTime);
     f32 stepLength = vec2_length(step);
 
     if (directionLength < stepLength)

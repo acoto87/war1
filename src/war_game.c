@@ -3,7 +3,11 @@
 #include <assert.h>
 #include <math.h>
 
-#if defined(_MSC_VER) && !defined(__clan_)
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
 #ifndef F_OK
 #define F_OK 0
@@ -190,6 +194,122 @@ static void setWindowIcon(SDL_Window* window) {
     stbi_image_free(pixels);
 }
 
+static void updateMetricS32(WarMetricS32* metric, s32 newSample, s32 index)
+{
+    metric->sampleSum -= metric->sample[index];
+    metric->sample[index] = newSample;
+    metric->sampleSum += metric->sample[index];
+    if (metric->sampleCount < arrayLength(metric->sample))
+    {
+        metric->sampleCount++;
+    }
+    metric->avg = metric->sampleCount > 0 ? metric->sampleSum / metric->sampleCount : 0;
+    metric->last = newSample;
+}
+
+static void updateMetricU64(WarMetricU64* metric, u64 newSample, s32 index)
+{
+    metric->sampleSum -= metric->sample[index];
+    metric->sample[index] = newSample;
+    metric->sampleSum += metric->sample[index];
+    if (metric->sampleCount < arrayLength(metric->sample))
+    {
+        metric->sampleCount++;
+    }
+    metric->avg = metric->sampleCount > 0 ? metric->sampleSum / (u64)metric->sampleCount : 0;
+    metric->last = newSample;
+}
+
+static void cpuRelax(void)
+{
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+    _mm_pause();
+#elif defined(__i386__) || defined(__x86_64__)
+    __builtin_ia32_pause();
+#else
+    SDL_Delay(0);
+#endif
+}
+
+static u64 waitUntilFrameDeadlineNs(u64 targetNs)
+{
+    u64 now = SDL_GetTicksNS();
+    if (now >= targetNs)
+    {
+        return now;
+    }
+
+    u64 remainingNs = targetNs - now;
+    const u64 spinThresholdNs = 2 * 1000 * 1000;
+
+    if (remainingNs > spinThresholdNs)
+    {
+        u64 sleepNs = remainingNs - spinThresholdNs;
+        SDL_Delay((u32)(sleepNs / 1000000));
+    }
+
+    do
+    {
+        cpuRelax();
+        now = SDL_GetTicksNS();
+    } while (now < targetNs);
+
+    return now;
+}
+
+void wg_beginFrame(WarContext* context)
+{
+    u64 currentFrameStartNs = SDL_GetTicksNS();
+
+    if (context->lastFrameStartNs == 0)
+    {
+        context->lastFrameStartNs = currentFrameStartNs;
+    }
+
+    context->frameStartNs = currentFrameStartNs;
+
+    u64 frameDeltaNs = currentFrameStartNs - context->lastFrameStartNs;
+    if (frameDeltaNs == 0)
+    {
+        frameDeltaNs = 1;
+    }
+
+    context->realDeltaTime = (f32)ns2s(frameDeltaNs);
+    context->realTime += context->realDeltaTime;
+
+    f32 gameSpeedScale = context->globalSpeed;
+
+    if (context->map)
+    {
+        WarMap* map = context->map;
+
+        f32 speedScale = 1.0f;
+
+        if (map->settings.gameSpeed < WAR_SPEED_NORMAL)
+        {
+            speedScale = 1.0f - (WAR_SPEED_NORMAL - map->settings.gameSpeed) * 0.25f;
+        }
+        else if (map->settings.gameSpeed > WAR_SPEED_NORMAL)
+        {
+            speedScale = 1.0f + (map->settings.gameSpeed - WAR_SPEED_NORMAL) * 0.5f;
+        }
+
+        gameSpeedScale *= speedScale;
+    }
+
+    if (context->paused)
+    {
+        context->gameDeltaTime = 0.0f;
+    }
+    else
+    {
+        context->gameDeltaTime = context->realDeltaTime * gameSpeedScale;
+        context->gameTime += context->gameDeltaTime;
+    }
+
+    context->lastFrameStartNs = currentFrameStartNs;
+}
+
 bool wg_initGame(WarContext* context)
 {
     context->globalScale = 3;
@@ -232,7 +352,7 @@ bool wg_initGame(WarContext* context)
     // Initialize render state stack
     wr_init(context);
 
-    context->transitionDelay = 0.0f;
+    context->transitionEndRealTime = 0.0;
     context->cheatsEnabled = true;
 
     context->__mutex = SDL_CreateMutex();
@@ -288,7 +408,14 @@ bool wg_initGame(WarContext* context)
 
     wact_initUnitActionDefs();
 
-    context->time = SDL_GetTicks() / 1000.0f;
+    context->frameStartNs = SDL_GetTicksNS();
+    context->lastFrameStartNs = context->frameStartNs;
+    context->frameWorkEndNs = context->frameStartNs;
+    context->frameEndNs = context->frameStartNs;
+    context->realTime = 0.0;
+    context->realDeltaTime = 0.0f;
+    context->gameTime = 0.0;
+    context->gameDeltaTime = 0.0f;
     return true;
 }
 
@@ -433,13 +560,13 @@ void wg_changeSoundVolume(WarContext* context, f32 deltaVolume)
 void wg_setNextScene(WarContext* context, WarScene* scene, f32 transitionDelay)
 {
     context->nextScene = scene;
-    context->transitionDelay = transitionDelay;
+    context->transitionEndRealTime = context->realTime + transitionDelay;
 }
 
 void wg_setNextMap(WarContext* context, WarMap* map, f32 transitionDelay)
 {
     context->nextMap = map;
-    context->transitionDelay = transitionDelay;
+    context->transitionEndRealTime = context->realTime + transitionDelay;
 }
 
 void wg_setInputButton(WarContext* context, s32 button, bool pressed)
@@ -669,9 +796,8 @@ void wg_updateGame(WarContext* context)
         context->audioEnabled = true;
     }
 
-    if (context->transitionDelay > 0)
+    if (context->realTime < context->transitionEndRealTime)
     {
-        context->transitionDelay = MAX(context->transitionDelay - context->deltaTime, 0.0f);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -701,7 +827,7 @@ void wg_renderGame(WarContext *context)
     SDL_RenderClear(context->renderer);
 
     // don't render anything if it's transitioning
-    if (context->transitionDelay > 0)
+    if (context->realTime < context->transitionEndRealTime)
     {
         TracyCZoneEnd(ctx);
         return;
@@ -730,20 +856,32 @@ void wg_renderGame(WarContext *context)
 
 void wg_presentGame(WarContext *context)
 {
+    u64 targetFrameEndNs = context->frameStartNs + (u64)s2ns(SECONDS_PER_FRAME);
+
     SDL_RenderPresent(context->renderer);
 
-    f32 currentTime = SDL_GetTicks() / 1000.0f;
-    context->deltaTime = (currentTime - context->time);
+    context->frameWorkEndNs = SDL_GetTicksNS();
 
     TracyCZoneN(waitCtx, "FrameWait", 1);
-    // sleep until the end of the frame to save CPU and battery, but only if we have time left in the frame
-    SDL_Delay((s32)(MAX(0.0f, SECONDS_PER_FRAME - context->deltaTime) * 1000));
-    context->waitTime = SDL_GetTicks() / 1000.0f - currentTime;
+    context->frameEndNs = waitUntilFrameDeadlineNs(targetFrameEndNs);
     TracyCZoneEnd(waitCtx);
 
-    context->time = currentTime;
-    context->fps = (u32)(1.0f / context->deltaTime);
+    s32 index = context->frameCount % METRIC_SAMPLE_COUNT;
+    u64 workTimeNs = context->frameWorkEndNs - context->frameStartNs;
+    u64 waitTimeNs = context->frameEndNs - context->frameWorkEndNs;
+    u64 frameTimeNs = context->frameEndNs - context->frameStartNs;
 
-    TracyCPlotI("FPS", (s64)context->fps);
-    TracyCPlotF("DeltaTime_ms", context->deltaTime * 1000.0f);
+    updateMetricU64(&context->workTimeMetric, workTimeNs, index);
+    updateMetricU64(&context->waitTimeMetric, waitTimeNs, index);
+    updateMetricU64(&context->frameTimeMetric, frameTimeNs, index);
+
+    s32 fps = 0;
+    if (context->frameTimeMetric.sampleSum > 0)
+    {
+        fps = (s32)((f64)context->frameTimeMetric.sampleCount * 1000000000.0 / (f64)context->frameTimeMetric.sampleSum);
+    }
+    updateMetricS32(&context->fpsMetric, fps, index);
+
+    TracyCPlotI("FPS", (s64)context->fpsMetric.avg);
+    TracyCPlotF("DT", (f32)ns2ms(context->frameTimeMetric.avg));
 }

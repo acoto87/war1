@@ -65,7 +65,7 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
         return;
     }
 
-    f32 buildSpeed = wmap_getMapScaledSpeed(context, context->deltaTime);
+    f32 buildSpeed = context->gameDeltaTime;
 
     // if hurry up cheat is enabled, speed up the build time by 5000%
     if (map->hurryUp)

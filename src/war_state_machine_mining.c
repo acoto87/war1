@@ -87,7 +87,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    state->mine.miningTime -= wmap_getMapScaledSpeed(context, context->deltaTime);
+    state->mine.miningTime -= context->gameDeltaTime;
 
     if (state->mine.miningTime < 0)
     {

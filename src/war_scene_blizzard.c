@@ -7,7 +7,7 @@
 void wsc_enterSceneBlizzard(WarContext* context)
 {
     WarScene* scene = context->scene;
-    scene->blizzard.time = 3.0f;
+    scene->blizzard.endRealTime = context->realTime + 3.0;
 
     wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_LOGO, .loop=true));
 }
@@ -16,9 +16,7 @@ void wsc_updateSceneBlizzard(WarContext* context)
 {
     WarScene* scene = context->scene;
 
-    scene->blizzard.time -= context->deltaTime;
-
-    if (scene->blizzard.time <= 0)
+    if (context->realTime >= scene->blizzard.endRealTime)
     {
         WarScene* nextScene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
         wg_setNextScene(context, nextScene, 0.3f);

@@ -254,6 +254,12 @@ typedef struct _WarImuiSpriteEntry WarImuiSpriteEntry;
 struct _WarImuiState;
 typedef struct _WarImuiState WarImuiState;
 
+struct _WarMetricS32;
+typedef struct _WarMetricS32 WarMetricS32;
+
+struct _WarMetricU64;
+typedef struct _WarMetricU64 WarMetricU64;
+
 struct _WarContext;
 typedef struct _WarContext WarContext;
 

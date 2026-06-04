@@ -339,7 +339,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
         return;
     }
 
-    if (!context->audioEnabled || context->transitionDelay > 0)
+    if (!context->audioEnabled || context->realTime < context->transitionEndRealTime)
     {
         tsf_note_off_all(context->soundFont, TSF_TRUE);
         return;

@@ -9,7 +9,7 @@ struct _WarState
 {
     WarStateType type;
     s32 entityId;
-    f32 nextUpdateTime;
+    f64 nextUpdateGameTime;
     f32 delay;
     struct _WarState* nextState;
 
@@ -51,7 +51,7 @@ struct _WarState
 
         struct
         {
-            f32 waitTime;
+            f32 waitEndGameTime;
         } wait;
 
         struct

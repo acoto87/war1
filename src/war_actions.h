@@ -29,7 +29,7 @@ struct _WarUnitAction
 {
     WarUnitActionStatus status;
     f32 scale;
-    f32 waitCount;
+    f64 waitEndGameTime;
     s32 stepIndex;
     WarUnitActionStepType lastActionStep;
     WarUnitActionStepType lastSoundStep;
