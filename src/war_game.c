@@ -297,8 +297,15 @@ void wg_beginFrame(WarContext* context)
         gameSpeedScale *= speedScale;
     }
 
-    context->gameDeltaTime = context->realDeltaTime * gameSpeedScale;
-    context->gameTime += context->gameDeltaTime;
+    if (context->paused)
+    {
+        context->gameDeltaTime = 0.0f;
+    }
+    else
+    {
+        context->gameDeltaTime = context->realDeltaTime * gameSpeedScale;
+        context->gameTime += context->gameDeltaTime;
+    }
 
     context->lastFrameStartNs = currentFrameStartNs;
 }
