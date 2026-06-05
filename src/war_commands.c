@@ -10,6 +10,12 @@
 #include "war_ui.h"
 #include "war_units.h"
 
+static inline void consumeCommand(WarMap* map, WarUnitCommand* command)
+{
+    map->suppressSelectionOnRelease = true;
+    command->type = WAR_COMMAND_NONE;
+}
+
 void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
 {
     WarMap* map = context->map;
@@ -54,7 +60,8 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
         targetPoint.x - 0.5f * bbox.width,
         targetPoint.y - 0.5f * bbox.height,
         bbox.width,
-        bbox.height);
+        bbox.height
+    );
 
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
@@ -64,7 +71,8 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
 
         vec2 position = vec2f(
             rs[i].x + 0.5f * rs[i].width,
-            rs[i].y + 0.5f * rs[i].height);
+            rs[i].y + 0.5f * rs[i].height
+        );
 
         position = wmap_mapToTileCoordinatesV(position);
 
@@ -72,11 +80,13 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
             targetbbox.x + (rs[i].x - bbox.x),
             targetbbox.y + (rs[i].y - bbox.y),
             rs[i].width,
-            rs[i].height);
+            rs[i].height
+        );
 
         vec2 target = vec2f(
             targetRect.x + 0.5f * targetRect.width,
-            targetRect.y + 0.5f * targetRect.height);
+            targetRect.y + 0.5f * targetRect.height
+        );
 
         target = wmap_mapToTileCoordinatesV(target);
 
@@ -603,8 +613,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
 
                     wcmd_executeMoveCommand(context, targetPoint);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
@@ -612,23 +621,19 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
                     wcmd_executeMoveCommand(context, targetPoint);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_STOP:
         {
             wcmd_executeStopCommand(context);
-
-            command->type = WAR_COMMAND_NONE;
+            consumeCommand(map, command);
             return true;
         }
-
         case WAR_COMMAND_HARVEST:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -671,22 +676,20 @@ bool wcmd_executeCommand(WarContext* context)
                         }
                     }
 
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_DELIVER:
         {
             wcmd_executeDeliverCommand(context, NULL);
 
-            command->type = WAR_COMMAND_NONE;
+            consumeCommand(map, command);
             return true;
         }
-
         case WAR_COMMAND_REPAIR:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -706,14 +709,13 @@ bool wcmd_executeCommand(WarContext* context)
                         }
                     }
 
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_ATTACK:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -742,8 +744,7 @@ bool wcmd_executeCommand(WarContext* context)
                     }
 
                     wcmd_executeAttackCommand(context, targetEntity, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
@@ -751,14 +752,13 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeAttackCommand(context, NULL, targetTile);
 
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_TRAIN_FOOTMAN:
         case WAR_COMMAND_TRAIN_GRUNT:
         case WAR_COMMAND_TRAIN_PEASANT:
@@ -796,10 +796,9 @@ bool wcmd_executeCommand(WarContext* context)
                 wst_changeNextState(context, selectedEntity, trainState, true, true);
             }
 
-            command->type = WAR_COMMAND_NONE;
+            consumeCommand(map, command);
             return true;
         }
-
         case WAR_COMMAND_UPGRADE_SWORDS:
         case WAR_COMMAND_UPGRADE_AXES:
         case WAR_COMMAND_UPGRADE_SHIELD_HUMANS:
@@ -845,10 +844,9 @@ bool wcmd_executeCommand(WarContext* context)
                 wst_changeNextState(context, selectedEntity, upgradeState, true, true);
             }
 
-            command->type = WAR_COMMAND_NONE;
+            consumeCommand(map, command);
             return true;
         }
-
         case WAR_COMMAND_BUILD_FARM_HUMANS:
         case WAR_COMMAND_BUILD_FARM_ORCS:
         case WAR_COMMAND_BUILD_BARRACKS_HUMANS:
@@ -896,7 +894,7 @@ bool wcmd_executeCommand(WarContext* context)
                             WarState* repairState = wst_createRepairState(context, worker, building->id);
                             wst_changeNextState(context, worker, repairState, true, true);
 
-                            command->type = WAR_COMMAND_NONE;
+                            consumeCommand(map, command);
                         }
                     }
                     else
@@ -910,7 +908,6 @@ bool wcmd_executeCommand(WarContext* context)
 
             return false;
         }
-
         case WAR_COMMAND_BUILD_WALL:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -945,7 +942,7 @@ bool wcmd_executeCommand(WarContext* context)
                             // don't reset the current command if the player is building
                             // roads or walls, to allow rapid construction of those structures
                             //
-                            // command->type = WAR_COMMAND_NONE;
+                            // consumeCommand(map, command);
 
                             wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_BUILD_ROAD, .loop=false));
                         }
@@ -961,7 +958,6 @@ bool wcmd_executeCommand(WarContext* context)
 
             return false;
         }
-
         case WAR_COMMAND_BUILD_ROAD:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -994,7 +990,7 @@ bool wcmd_executeCommand(WarContext* context)
                             // don't reset the current command if the player is building
                             // roads or walls, to allow rapid construction of those structures
                             //
-                            // command->type = WAR_COMMAND_NONE;
+                            // consumeCommand(map, command);
 
                             wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_BUILD_ROAD, .loop=false));
                         }
@@ -1010,18 +1006,15 @@ bool wcmd_executeCommand(WarContext* context)
 
             return false;
         }
-
         case WAR_COMMAND_SUMMON_SPIDER:
         case WAR_COMMAND_SUMMON_SCORPION:
         case WAR_COMMAND_SUMMON_DAEMON:
         case WAR_COMMAND_SUMMON_WATER_ELEMENTAL:
         {
             wcmd_executeSummonCommand(context, command->type);
-
-            command->type = WAR_COMMAND_NONE;
+            consumeCommand(map, command);
             return true;
         }
-
         case WAR_COMMAND_SPELL_RAIN_OF_FIRE:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -1032,23 +1025,20 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     wcmd_executeRainOfFireCommand(context, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeRainOfFireCommand(context, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_SPELL_POISON_CLOUD:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -1059,23 +1049,20 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
                     wcmd_executePoisonCloudCommand(context, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executePoisonCloudCommand(context, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_SPELL_HEALING:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -1089,15 +1076,13 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeHealingCommand(context, targetEntity, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_SPELL_INVISIBILITY:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -1111,15 +1096,13 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeInvisiblityCommand(context, targetEntity, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_SPELL_UNHOLY_ARMOR:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -1133,15 +1116,13 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeUnholyArmorCommand(context, targetEntity, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_SPELL_RAISE_DEAD:
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
@@ -1150,17 +1131,14 @@ bool wcmd_executeCommand(WarContext* context)
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-
                     wcmd_executeRaiseDeadCommand(context, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_SPELL_FAR_SIGHT:
         case WAR_COMMAND_SPELL_DARK_VISION:
         {
@@ -1170,32 +1148,27 @@ bool wcmd_executeCommand(WarContext* context)
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-
                     wcmd_executeSightCommand(context, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     wcmd_executeSightCommand(context, targetTile);
-
-                    command->type = WAR_COMMAND_NONE;
+                    consumeCommand(map, command);
                     return true;
                 }
             }
 
             return false;
         }
-
         case WAR_COMMAND_BUILD_BASIC:
         case WAR_COMMAND_BUILD_ADVANCED:
         {
             // do nothing here
             break;
         }
-
         default:
         {
             logError("Not implemented command: %d", command->type);

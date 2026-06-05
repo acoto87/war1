@@ -20,6 +20,9 @@ typedef struct _WarInput WarInput;
 struct _WarInputState;
 typedef struct _WarInputState WarInputState;
 
+struct _WarDragState;
+typedef struct _WarDragState WarDragState;
+
 struct _WarFontData;
 typedef struct _WarFontData WarFontData;
 

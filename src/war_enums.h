@@ -1139,3 +1139,11 @@ typedef enum _WarComponentType
     COMP_SIGHT          = 17,
     COMP_COUNT          = 18
 } WarComponentType;
+
+typedef enum _WarDragStatus
+{
+    WAR_DRAG_NONE,
+    WAR_DRAG_STARTED,
+    WAR_DRAG_ACTIVE,
+    WAR_DRAG_RELEASED
+} WarDragStatus;

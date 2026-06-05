@@ -35,6 +35,17 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     if (state->follow.targetEntityId)
     {
         WarEntity* targetEntity = we_findEntity(context, (WarEntityId)state->follow.targetEntityId);
+        if (!targetEntity)
+        {
+            // if the target entity doesn't exist anymore, go to idle
+            if (!wst_changeStateNextState(context, entity, state))
+            {
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
+            }
+
+            return;
+        }
 
         if (wu_isUnit(targetEntity))
         {

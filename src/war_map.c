@@ -1020,31 +1020,56 @@ static void updateDragRect(WarContext* context)
 
     if (map->isScrolling)
     {
-        input->mapDragActive = false;
-        input->mapDragStartPos = VEC2_ZERO;
-        input->mapDragRect = RECT_EMPTY;
+        input->mapDragState.status = WAR_DRAG_NONE;
+        input->mapDragState.startPos = VEC2_ZERO;
+        input->mapDragState.rect = RECT_EMPTY;
         return;
     }
 
-    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
+    switch (input->mapDragState.status)
     {
-        if (!input->capturedUIButtonId && rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        case WAR_DRAG_STARTED:
+        case WAR_DRAG_ACTIVE:
         {
-            input->mapDragActive = true;
-            input->mapDragStartPos = input->pos;
-            input->mapDragRect = rectv(input->pos, VEC2_ZERO);
+            if (isButtonHeld(input, WAR_MOUSE_LEFT))
+            {
+                input->mapDragState.status = WAR_DRAG_ACTIVE;
+            }
+            else if (isButtonJustReleased(input, WAR_MOUSE_LEFT))
+            {
+                input->mapDragState.status = WAR_DRAG_RELEASED;
+            }
+
+            input->mapDragState.rect = rectpf(input->mapDragState.startPos.x, input->mapDragState.startPos.y, input->pos.x, input->pos.y);
+            break;
         }
-    }
-    else if (input->mapDragActive && isButtonHeld(input, WAR_MOUSE_LEFT))
-    {
-        input->mapDragRect = rectpf(input->mapDragStartPos.x, input->mapDragStartPos.y, input->pos.x, input->pos.y);
+        case WAR_DRAG_RELEASED:
+        {
+            input->mapDragState.status = WAR_DRAG_NONE;
+            input->mapDragState.startPos = VEC2_ZERO;
+            input->mapDragState.rect = RECT_EMPTY;
+            break;
+        }
+        default:
+        {
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
+            {
+                if (!input->capturedUIButtonId && rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                {
+                    input->mapDragState.status = WAR_DRAG_STARTED;
+                    input->mapDragState.startPos = input->pos;
+                    input->mapDragState.rect = rectv(input->pos, VEC2_ZERO);
+                }
+            }
+            break;
+        }
     }
 }
 
-static bool isMapSelectionDrag(rect dragRect)
+static bool isMapSelectionRect(rect rect)
 {
-    return dragRect.width >= MAP_SELECTION_DRAG_THRESHOLD ||
-           dragRect.height >= MAP_SELECTION_DRAG_THRESHOLD;
+    return rect.width >= MAP_SELECTION_DRAG_THRESHOLD ||
+           rect.height >= MAP_SELECTION_DRAG_THRESHOLD;
 }
 
 static void updateSelectionFromList(WarContext* context, WarEntityList* newSelectedEntities)
@@ -1136,106 +1161,105 @@ static void updateSelection(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (isButtonJustReleased(input, WAR_MOUSE_LEFT) && input->mapDragActive)
+    // if it was scrolling last frame, don't perform any selection this frame
+    // also if the mouse is still dragging, don't perform any selection, the selection will be performed when the mouse will be released
+    if (map->wasScrolling || input->mapDragState.status != WAR_DRAG_RELEASED)
     {
-        // if it was scrolling last frame, don't perform any selection this frame
-        if (!map->wasScrolling)
-        {
-            input->mapDragRect = rectpf(input->mapDragStartPos.x, input->mapDragStartPos.y, input->pos.x, input->pos.y);
-
-            WarEntityList newSelectedEntities;
-            WarEntityListInit(&newSelectedEntities, wm_frameAllocator());
-
-            if (isMapSelectionDrag(input->mapDragRect))
-            {
-                rect pointerRect = wmap_screenToMapCoordinatesR(context, input->mapDragRect);
-
-                // select the entities inside the dragging rect
-                WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-                for (s32 i = 0; i < units->count; i++)
-                {
-                    WarEntity* entity = units->items[i];
-                    if (entity)
-                    {
-                        if (we_isComponentEnabled(context, entity, COMP_UNIT))
-                        {
-                            // don't select dead units or corpses
-                            if (wst_isDead(context, entity) || wst_isGoingToDie(context, entity) || wu_isCorpseUnit(context, entity))
-                            {
-                                continue;
-                            }
-
-                            // don't select collased buildings
-                            if (wst_isCollapsing(context, entity) || wst_isGoingToCollapse(context, entity))
-                            {
-                                continue;
-                            }
-
-                            // don't select workers inside buildings
-                            if (wu_isWorkerUnit(context, entity) && wst_isInsideBuilding(context, entity))
-                            {
-                                continue;
-                            }
-
-                            // don't select non-visible units
-                            if (!wmap_isUnitPartiallyVisible(context, map, entity))
-                            {
-                                continue;
-                            }
-
-                            rect unitRect = wu_getUnitRect(context, entity);
-                            if (rect_intersects(pointerRect, unitRect))
-                            {
-                                WarEntityListAdd(&newSelectedEntities, entity);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                WarEntity* entityUnderCursor = we_findEntityUnderCursor(context, false, false);
-                if (entityUnderCursor)
-                {
-                    if (we_isComponentEnabled(context, entityUnderCursor, COMP_UNIT) &&
-                        !wst_isDead(context, entityUnderCursor) &&
-                        !wst_isGoingToDie(context, entityUnderCursor) &&
-                        !wu_isCorpseUnit(context, entityUnderCursor) &&
-                        !wst_isCollapsing(context, entityUnderCursor) &&
-                        !wst_isGoingToCollapse(context, entityUnderCursor) &&
-                        !(
-                            wu_isWorkerUnit(context, entityUnderCursor) &&
-                            wst_isInsideBuilding(context, entityUnderCursor)
-                        ) &&
-                        wmap_isUnitPartiallyVisible(context, map, entityUnderCursor))
-                    {
-                        WarEntityListAdd(&newSelectedEntities, entityUnderCursor);
-                    }
-                }
-            }
-
-            // include the already selected entities if the Ctrl key is pressed
-            if (isKeyHeld(input, WAR_KEY_CTRL))
-            {
-                // the max number of selected entities is 4, so there is no much
-                // throuble looking for the actual entities here, it will also
-                // improve when a hash is make for looking up the entities
-                for (s32 i = 0; i < map->selectedEntities.count; i++)
-                {
-                    WarEntity* entity = we_findEntity(context, map->selectedEntities.items[i]);
-                    if (entity)
-                        WarEntityListAdd(&newSelectedEntities, entity);
-                }
-            }
-
-            updateSelectionFromList(context, &newSelectedEntities);
-            WarEntityListFree(&newSelectedEntities);
-        }
-
-        input->mapDragActive = false;
-        input->mapDragStartPos = VEC2_ZERO;
-        input->mapDragRect = RECT_EMPTY;
+        return;
     }
+
+    if (map->suppressSelectionOnRelease)
+    {
+        map->suppressSelectionOnRelease = false;
+        return;
+    }
+
+    WarEntityList newSelectedEntities;
+    WarEntityListInit(&newSelectedEntities, wm_frameAllocator());
+
+    if (isMapSelectionRect(input->mapDragState.rect))
+    {
+        rect pointerRect = wmap_screenToMapCoordinatesR(context, input->mapDragState.rect);
+
+        WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+        for (s32 i = 0; i < units->count; i++)
+        {
+            WarEntity* entity = units->items[i];
+            if (entity && we_isComponentEnabled(context, entity, COMP_UNIT))
+            {
+                if (
+                    // don't select dead units
+                    wst_isDead(context, entity) ||
+                    wst_isGoingToDie(context, entity) ||
+                    // don't select corpses
+                    wu_isCorpseUnit(context, entity) ||
+                    // don't select collased buildings
+                    wst_isCollapsing(context, entity) ||
+                    wst_isGoingToCollapse(context, entity) ||
+                    // don't select workers inside buildings
+                    (
+                        wu_isWorkerUnit(context, entity) &&
+                        wst_isInsideBuilding(context, entity)
+                    ) ||
+                    // don't select non-visible units
+                    !wmap_isUnitPartiallyVisible(context, map, entity)
+                )
+                {
+                    continue;
+                }
+
+                rect unitRect = wu_getUnitRect(context, entity);
+                if (rect_intersects(pointerRect, unitRect))
+                {
+                    WarEntityListAdd(&newSelectedEntities, entity);
+                }
+            }
+        }
+    }
+    else
+    {
+        WarEntity* entityUnderCursor = we_findEntityUnderCursor(context, false, false);
+        if (entityUnderCursor)
+        {
+            if (
+                we_isComponentEnabled(context, entityUnderCursor, COMP_UNIT) &&
+                // don't select dead units
+                !wst_isDead(context, entityUnderCursor) &&
+                !wst_isGoingToDie(context, entityUnderCursor) &&
+                // don't select corpses
+                !wu_isCorpseUnit(context, entityUnderCursor) &&
+                // don't select collapsing buildings
+                !wst_isCollapsing(context, entityUnderCursor) &&
+                !wst_isGoingToCollapse(context, entityUnderCursor) &&
+                // don't select workers inside buildings
+                !(
+                    wu_isWorkerUnit(context, entityUnderCursor) &&
+                    wst_isInsideBuilding(context, entityUnderCursor)
+                ) &&
+                // don't select non-visible units
+                wmap_isUnitPartiallyVisible(context, map, entityUnderCursor))
+            {
+                WarEntityListAdd(&newSelectedEntities, entityUnderCursor);
+            }
+        }
+    }
+
+    // include the already selected entities if the Ctrl key is pressed
+    if (isKeyHeld(input, WAR_KEY_CTRL))
+    {
+        // the max number of selected entities is 4, so there is no much
+        // throuble looking for the actual entities here, it will also
+        // improve when a hash is make for looking up the entities
+        for (s32 i = 0; i < map->selectedEntities.count; i++)
+        {
+            WarEntity* entity = we_findEntity(context, map->selectedEntities.items[i]);
+            if (entity)
+                WarEntityListAdd(&newSelectedEntities, entity);
+        }
+    }
+
+    updateSelectionFromList(context, &newSelectedEntities);
+    WarEntityListFree(&newSelectedEntities);
 }
 
 static void updateTreesEdit(WarContext* context)
@@ -2638,9 +2662,10 @@ void wmap_updateMap(WarContext* context)
     if (!map->playing)
     {
         WarInput* input = &context->input;
-        input->mapDragActive = false;
-        input->mapDragStartPos = VEC2_ZERO;
-        input->mapDragRect = RECT_EMPTY;
+
+        input->mapDragState.status = WAR_DRAG_NONE;
+        input->mapDragState.startPos = VEC2_ZERO;
+        input->mapDragState.rect = RECT_EMPTY;
 
         wui_updateUIButtons(context, !map->cheatStatus.visible);
         TracyCZoneEnd(ctx);

@@ -130,6 +130,7 @@ struct _WarMap
 
     WarPathFinder finder;
     WarUnitCommand command;
+    bool suppressSelectionOnRelease;
     WarFlashStatus flashStatus;
     WarCheatStatus cheatStatus;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];

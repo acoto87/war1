@@ -4,7 +4,7 @@
 #include "war_editor.h"
 
 // ---------------------------------------------------------------------------
-// Phase 7 — Terrain Editing Tools
+// — Terrain Editing Tools
 //
 // wetools_update      — call once per frame (before panels) to handle
 //                       global tool state (e.g. fill-drag release when the
@@ -31,7 +31,7 @@ void wetools_drawOverlay(WarEditorContext* ctx, ImDrawList* drawList,
                          vec2 canvasOrigin);
 
 // ---------------------------------------------------------------------------
-// Phase 8/9 helpers
+///9 helpers
 // ---------------------------------------------------------------------------
 
 // Returns true if any tile in the [tx, tx+w-1] × [ty, ty+h-1] region is

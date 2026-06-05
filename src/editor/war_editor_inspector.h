@@ -3,7 +3,7 @@
 #include "war_editor.h"
 
 // ---------------------------------------------------------------------------
-// Phase 10 — Inspector Panel
+// — Inspector Panel
 //
 // Draws a cimgui window with three collapsing sections:
 //

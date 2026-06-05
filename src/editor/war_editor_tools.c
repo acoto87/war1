@@ -12,7 +12,7 @@ static s32  s_fillCurTx     = 0;
 static s32  s_fillCurTy     = 0;
 
 // ---------------------------------------------------------------------------
-// Phase 9 — Select tool state
+// — Select tool state
 // ---------------------------------------------------------------------------
 typedef enum
 {
@@ -92,7 +92,7 @@ static void wetools_paintTile(WarEditorContext* ctx, s32 tx, s32 ty)
     WeAutotileGroup newGroup = weautotile_detectGroup(ctx);
     WeAutotileGroup oldGroup = weautotile_groupAtTile(m, tx, ty);
 
-    // Phase 14: snapshot neighborhood before paint.
+    //: snapshot neighborhood before paint.
     u16 oldVis[9], oldPass[9];
     wehist_captureNeighborhood(m, tx, ty, oldVis, oldPass);
 
@@ -126,7 +126,7 @@ static void wetools_paintTile(WarEditorContext* ctx, s32 tx, s32 ty)
     ctx->unsavedChanges = true;
     ctx->minimapDirty = true;
 
-    // Phase 14: snapshot neighborhood after paint; push op only if anything changed.
+    //: snapshot neighborhood after paint; push op only if anything changed.
     u16 newVis[9], newPass[9];
     wehist_captureNeighborhood(m, tx, ty, newVis, newPass);
 
@@ -320,7 +320,7 @@ static void wetools_eraseTile(WarEditorContext* ctx, s32 tx, s32 ty)
     WarEditorMap* m = ctx->map;
     if (!m) return;
 
-    // Phase 14: snapshot neighborhood before erase.
+    //: snapshot neighborhood before erase.
     u16 oldVis[9], oldPass[9];
     wehist_captureNeighborhood(m, tx, ty, oldVis, oldPass);
 
@@ -340,7 +340,7 @@ static void wetools_eraseTile(WarEditorContext* ctx, s32 tx, s32 ty)
     ctx->unsavedChanges = true;
     ctx->minimapDirty = true;
 
-    // Phase 14: snapshot after erase; push op only if anything changed.
+    //: snapshot after erase; push op only if anything changed.
     u16 newVis[9], newPass[9];
     wehist_captureNeighborhood(m, tx, ty, newVis, newPass);
 
@@ -570,7 +570,7 @@ static void wetools_commitMove(WarEditorContext* ctx)
         return;
     }
 
-    // Phase 14: collect sorted entity indices before moving, push history op.
+    //: collect sorted entity indices before moving, push history op.
     s32 regularCount  = 0;
     s32 goldmineCount = 0;
     for (s32 i = 0; i < ctx->selectedEntities.count; i++)
@@ -742,7 +742,7 @@ void wetools_deleteSelected(WarEditorContext* ctx)
     WarEditorMap* m = ctx->map;
     if (!m || ctx->selectedEntities.count == 0) return;
 
-    // Phase 14: collect sorted ascending indices + entity snapshots for history.
+    //: collect sorted ascending indices + entity snapshots for history.
     s32 regularCount  = 0;
     s32 goldmineCount = 0;
     for (s32 i = 0; i < ctx->selectedEntities.count; i++)

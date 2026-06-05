@@ -62,7 +62,7 @@ typedef struct _WarEditorContext
     int             canvasPanelW;           // tracked for resize detection
     int             canvasPanelH;
     vec2            cameraOffset;           // scroll in map pixels
-    f32             cameraZoom;             // 0.5x – 4.0x
+    f32             cameraZoom;             //x – 4.0x
 
     // Active map data (editor-owned; NOT a WarMap)
     WarEditorMap*   map;

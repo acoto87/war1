@@ -1082,6 +1082,12 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
     action->status = WAR_ACTION_RUNNING;
 
     WarUnitActionDef* actionDef = &gUnitActionDefs[unit->type][unit->actionType];
+    if (actionDef->type == WAR_ACTION_TYPE_NONE)
+    {
+        logWarning("Unit type %d does not have an action of type %d", unit->type, unit->actionType);
+        return;
+    }
+
     WarUnitActionStep step = actionDef->steps.items[action->stepIndex];
     if (step.type == WAR_ACTION_STEP_WAIT)
     {

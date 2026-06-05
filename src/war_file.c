@@ -391,8 +391,6 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         return false;
     }
 
-    levelInfoRes->type = WAR_RESOURCE_TYPE_LEVEL_INFO;
-
     u8 allowedHuman  = 0u;
     u8 allowedOrcs   = 0u;
     u8 customMapByte = 0u;
@@ -524,7 +522,48 @@ bool wfile_loadWarMapFile(StringView filePath, WarResource* levelInfoRes, WarRes
         SDL_CloseIO(stream);
         return false;
     }
-    WFILE_READ_ARRAY(levelInfoRes->levelInfo.startConfigurations, sizeof(WarCustomMapConfiguration), levelInfoRes->levelInfo.startConfigurationsCount);
+
+    // v2 format: startConfigurations serialized element-by-element
+    // (u32 startEntitiesCount followed by N x WarLevelUnit). Read each
+    // configuration and allocate the entity arrays accordingly.
+    for (u32 ci = 0; ci < levelInfoRes->levelInfo.startConfigurationsCount; ci++)
+    {
+        WFILE_READ_FIELD(&levelInfoRes->levelInfo.startConfigurations[ci].startEntitiesCount, sizeof(u32));
+        if (levelInfoRes->levelInfo.startConfigurations[ci].startEntitiesCount > MAX_CUSTOM_MAP_ENTITIES_COUNT)
+        {
+            logError("wfile_loadWarMapFile: startConfigurations[%u].startEntitiesCount %u too large in '%.*s'",
+                     ci, levelInfoRes->levelInfo.startConfigurations[ci].startEntitiesCount,
+                     (int)filePath.length, filePath.data);
+            wm_free(levelInfoRes->levelInfo.startEntities);
+            wm_free(levelInfoRes->levelInfo.startRoads);
+            wm_free(levelInfoRes->levelInfo.startWalls);
+            wm_free(levelInfoRes->levelInfo.startGoldmines);
+            for (u32 cj = 0; cj < ci; cj++)
+                wm_free(levelInfoRes->levelInfo.startConfigurations[cj].startEntities);
+            SDL_CloseIO(stream);
+            return false;
+        }
+
+        levelInfoRes->levelInfo.startConfigurations[ci].startEntities =
+            (WarLevelUnit*)wm_alloc(MAX_CUSTOM_MAP_ENTITIES_COUNT * sizeof(WarLevelUnit));
+        if (!levelInfoRes->levelInfo.startConfigurations[ci].startEntities)
+        {
+            logError("wfile_loadWarMapFile: couldn't allocate memory for startConfigurations[%u].startEntities in '%.*s'",
+                     ci, (int)filePath.length, filePath.data);
+            wm_free(levelInfoRes->levelInfo.startEntities);
+            wm_free(levelInfoRes->levelInfo.startRoads);
+            wm_free(levelInfoRes->levelInfo.startWalls);
+            wm_free(levelInfoRes->levelInfo.startGoldmines);
+            for (u32 cj = 0; cj < ci; cj++)
+                wm_free(levelInfoRes->levelInfo.startConfigurations[cj].startEntities);
+            SDL_CloseIO(stream);
+            return false;
+        }
+
+        WFILE_READ_ARRAY(levelInfoRes->levelInfo.startConfigurations[ci].startEntities,
+                        sizeof(WarLevelUnit),
+                        levelInfoRes->levelInfo.startConfigurations[ci].startEntitiesCount);
+    }
 
     visualInfoRes->levelVisual.data = (u16*)wm_alloc(MAP_TILES_WIDTH * MAP_TILES_HEIGHT * sizeof(u16));
     if (!visualInfoRes->levelVisual.data)

@@ -762,7 +762,7 @@ static void weui_drawTilePalettePanel(WarEditorContext* ctx)
 {
     if (igBegin("Tiles##tiles", NULL, ImGuiWindowFlags_None))
     {
-        // 7.9 — Tileset type combo box
+        // — Tileset type combo box
         s32 currentType = (s32)((ctx->map) ? ctx->map->tilesetType : MAP_TILESET_FOREST);
         if (igCombo_Str("Tileset", &currentType, "Forest\0Swamp\0Dungeon\0", 3))
         {
@@ -784,7 +784,7 @@ static void weui_drawTilePalettePanel(WarEditorContext* ctx)
 
         igSeparator();
 
-        // 7.8 — Tile thumbnail grid
+        // — Tile thumbnail grid
         WarEditorMap* m = ctx->map;
         if (m && m->terrainSprite.texture)
         {
@@ -1354,7 +1354,7 @@ void weui_init(SDL_Window* window, SDL_Renderer* renderer)
         ImFontConfig_destroy(cfg);
     }
 
-    // Phase 18-pre: load Codicon in merge mode for icon labels.
+    //-pre: load Codicon in merge mode for icon labels.
     {
         ImFontConfig* cfg = ImFontConfig_ImFontConfig();
         cfg->MergeMode = true;
