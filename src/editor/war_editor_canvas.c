@@ -2,7 +2,7 @@
 #include "war_editor_tools.h"
 
 // ---------------------------------------------------------------------------
-// Phase 6 — Sprite texture cache
+// — Sprite texture cache
 //
 // Unit sprites are global DATA.WAR assets that do not vary between map
 // imports; the cache is built lazily and lives for the entire editor session.
@@ -114,7 +114,7 @@ SDL_Texture* wecanvas_getSpriteTexture(WarEditorContext* ctx, s32 resourceIndex)
 }
 
 // ---------------------------------------------------------------------------
-// Phase 6 — Render start entities (units, buildings) and goldmines
+// — Render start entities (units, buildings) and goldmines
 //
 // For each entity the sprite frame is centered over the unit's tile footprint,
 // mirroring the wr_translate sequence in renderUnit():
@@ -201,7 +201,7 @@ static void wecanvas_renderEntities(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
-// 4.2 — Create an off-screen SDL_TEXTUREACCESS_TARGET texture
+// — Create an off-screen SDL_TEXTUREACCESS_TARGET texture
 // ---------------------------------------------------------------------------
 SDL_Texture* wecanvas_createTarget(SDL_Renderer* renderer, int w, int h)
 {
@@ -223,7 +223,7 @@ SDL_Texture* wecanvas_createTarget(SDL_Renderer* renderer, int w, int h)
 }
 
 // ---------------------------------------------------------------------------
-// 4.4 — Render visible terrain tiles to the active SDL render target.
+// — Render visible terrain tiles to the active SDL render target.
 //        Called only from wecanvas_render (render target already set).
 // ---------------------------------------------------------------------------
 static void wecanvas_renderTerrain(WarEditorContext* ctx)
@@ -268,7 +268,7 @@ static void wecanvas_renderTerrain(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
-// 8.4 — Ghost preview of the selected unit type at the hover tile.
+// — Ghost preview of the selected unit type at the hover tile.
 // Renders with 50% alpha; red tint + fill when position is already occupied.
 // Must be called while ctx->canvasTarget is the active render target.
 // ---------------------------------------------------------------------------
@@ -286,7 +286,7 @@ void wecanvas_renderEntityGhost(WarEditorContext* ctx)
     f32 camX = ctx->cameraOffset.x;
     f32 camY = ctx->cameraOffset.y;
 
-    // Phase 18 - render paste preview if active
+    // - render paste preview if active
     if (ctx->pastePending && ctx->clipboardCount > 0)
     {
         for (s32 i = 0; i < ctx->clipboardCount; i++)
@@ -316,7 +316,7 @@ void wecanvas_renderEntityGhost(WarEditorContext* ctx)
 
             bool occupied = false;
             // Check against map bounds and existing entities
-            if (ptx < 0 || ptx + ud->sizex > MAP_TILES_WIDTH || 
+            if (ptx < 0 || ptx + ud->sizex > MAP_TILES_WIDTH ||
                 pty < 0 || pty + ud->sizey > MAP_TILES_HEIGHT)
             {
                 occupied = true;
@@ -325,7 +325,7 @@ void wecanvas_renderEntityGhost(WarEditorContext* ctx)
             {
                 occupied = !wetools_canPlace(ctx, ptx, pty, ud->sizex, ud->sizey);
             }
-            
+
             // Also check for overlaps within the clipboard itself
             if (!occupied)
             {
@@ -335,7 +335,7 @@ void wecanvas_renderEntityGhost(WarEditorContext* ctx)
                     WarLevelUnit* lu2 = &ctx->clipboardUnits[j];
                     const WarUnitData* ud2 = wu_getUnitData(lu2->type);
                     if (!ud2) continue;
-                    
+
                     s32 ptx2 = tx + (s32)ctx->clipboardDx[j];
                     s32 pty2 = ty + (s32)ctx->clipboardDy[j];
                     if (ptx < ptx2 + ud2->sizex && ptx + ud->sizex > ptx2 &&
@@ -424,7 +424,7 @@ void wecanvas_renderEntityGhost(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
-// 9.3 — Yellow selection border for every entity in ctx->selectedEntities.
+// — Yellow selection border for every entity in ctx->selectedEntities.
 // Applies move-drag offset while a move drag is in progress.
 // Must be called while ctx->canvasTarget is the active render target.
 // ---------------------------------------------------------------------------
@@ -566,7 +566,7 @@ void wecanvas_render(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
-// 7.6 — Semi-transparent passability overlay
+// — Semi-transparent passability overlay
 // ---------------------------------------------------------------------------
 void wecanvas_renderPassability(WarEditorContext* ctx)
 {
@@ -606,7 +606,7 @@ void wecanvas_renderPassability(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
-// 7.7 — Grid overlay
+// — Grid overlay
 // ---------------------------------------------------------------------------
 void wecanvas_renderGrid(WarEditorContext* ctx)
 {
@@ -651,7 +651,7 @@ void wecanvas_renderGrid(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
-// 4.5 + 4.6 + 4.7 + 4.8 — cimgui canvas panel
+// cimgui canvas panel
 // ---------------------------------------------------------------------------
 void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen)
 {
@@ -700,14 +700,14 @@ void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen
         ImVec2_c origin = igGetItemRectMin();
         vec2 canvasOrigin = vec2f(origin.x, origin.y);
 
-        // 7.4 — Fill-tool preview overlay (drawn into the window's draw list)
+        // — Fill-tool preview overlay (drawn into the window's draw list)
         wetools_drawOverlay(ctx, igGetWindowDrawList(), canvasOrigin);
 
         // --- 4.6 + 4.7 + 4.8 + 7.3/7.4/7.5 + 7.10: input when canvas is hovered ---
         ImGuiIO* io = igGetIO_Nil();
         if (igIsItemHovered(0))
         {
-            // 4.6 — Camera pan with middle mouse button
+            // — Camera pan with middle mouse button
             if (io->MouseDown[2])
             {
                 f32 zoom = ctx->cameraZoom;
@@ -715,7 +715,7 @@ void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen
                 ctx->cameraOffset.y -= io->MouseDelta.y / zoom;
             }
 
-            // 4.7 — Zoom with mouse wheel, anchored to pointer position
+            // — Zoom with mouse wheel, anchored to pointer position
             if (io->MouseWheel != 0.0f)
             {
                 f32 oldZoom = ctx->cameraZoom;
@@ -740,23 +740,23 @@ void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen
             s32  tx        = (s32)tilePos.x;
             s32  ty        = (s32)tilePos.y;
 
-            // 8.3 — Update hover state so ghost/selection renderers can read it.
+            // — Update hover state so ghost/selection renderers can read it.
             ctx->isHoveringCanvas = true;
             ctx->hoverTx          = tx;
             ctx->hoverTy          = ty;
 
-            // 4.8 — Tile coordinate in status bar
+            // — Tile coordinate in status bar
             if (statusBuf && statusBufLen > 0)
             {
                 SDL_snprintf(statusBuf, (size_t)statusBufLen,
                              "Tile (%d, %d)", tx, ty);
             }
 
-            // 7.3/7.4/7.5 — Dispatch to active tool (only when not panning)
+            // — Dispatch to active tool (only when not panning)
             if (!io->MouseDown[2])
                 wetools_handleInput(ctx, tx, ty, io, canvasOrigin);
 
-            // 7.10 — Tile hover tooltip
+            // — Tile hover tooltip
             if (ctx->map && igBeginTooltip())
             {
                 u16 tileIdx  = ctx->map->visualData[ty  * MAP_TILES_WIDTH + tx];

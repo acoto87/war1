@@ -120,6 +120,11 @@ void wanim_removeAnimation(WarContext* context, WarEntity* entity, StringView na
         WarAnimationsComponent* animations = we_getAnimationsComponent(context, entity);
         assert(animations);
 
+        WarSpriteAnimation* anim = &animations->animations.items[index];
+        wstr_free(anim->name);
+        wspr_freeSprite(context, anim->sprite);
+        S32ListFree(&anim->frames);
+
         WarSpriteAnimationListRemoveAt(&animations->animations, index);
     }
 }

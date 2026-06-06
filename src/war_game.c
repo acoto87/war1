@@ -710,9 +710,9 @@ void wg_processGameEvent(WarContext* context, SDL_Event* event)
             }
 
             input->capturedUIButtonId = 0;
-            input->mapDragActive = false;
-            input->mapDragStartPos = VEC2_ZERO;
-            input->mapDragRect = RECT_EMPTY;
+            input->mapDragState.status = WAR_DRAG_NONE;
+            input->mapDragState.startPos = VEC2_ZERO;
+            input->mapDragState.rect = RECT_EMPTY;
 
             if (!SDL_SetWindowMouseGrab(context->window, false))
             {
@@ -836,7 +836,6 @@ void wg_renderGame(WarContext *context)
     // Reset render state for this frame
     wr_init(context);
 
-    // Begin IMGUI pass — resets hot item, tooltip deferral, and is_mouse_over_ui.
     imui_begin(context);
 
     if (context->scene)
@@ -848,7 +847,6 @@ void wg_renderGame(WarContext *context)
         wmap_renderMap(context);
     }
 
-    // End IMGUI pass — draws deferred tooltip on top of everything, clears active item.
     imui_end(context);
 
     TracyCZoneEnd(ctx);

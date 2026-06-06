@@ -3,7 +3,7 @@
 #include "war_editor_map.h"
 
 // ---------------------------------------------------------------------------
-// Phase 14 — Undo / Redo history stack
+// — Undo / Redo history stack
 //
 // The stack holds up to WE_HISTORY_MAX operations.  Each operation stores
 // enough data to apply the change forward (redo) or in reverse (undo).

@@ -118,7 +118,7 @@ WarSprite wspr_createSpriteFromResource(WarContext* context, WarResource* resour
 
             if (frameIndicesCount > 0)
             {
-                // frames lives in frameZone — no explicit free needed
+                wm_free(frames);
             }
 
             break;

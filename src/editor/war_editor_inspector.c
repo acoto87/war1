@@ -109,7 +109,7 @@ static bool weinspect_canEntityOccupy(WarEditorContext* ctx,
 }
 
 // ---------------------------------------------------------------------------
-// Phase 10 — Inspector Panel
+// — Inspector Panel
 // ---------------------------------------------------------------------------
 
 // Helper: resource kind names for the entity inspector combo.

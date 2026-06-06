@@ -125,13 +125,20 @@
 #define isKeyJustPressed(input, key) ((input)->keys[key].justPressed)
 #define isKeyJustReleased(input, key) ((input)->keys[key].justReleased)
 
-#define isMapDragging(input) ((input)->mapDragActive)
+#define isMapDragging(input) ((input)->mapDragState.status != WAR_DRAG_NONE)
 
 struct _WarInputState
 {
     bool held;
     bool justPressed;
     bool justReleased;
+};
+
+struct _WarDragState
+{
+    WarDragStatus status;
+    vec2 startPos;
+    rect rect;
 };
 
 struct _WarInput
@@ -149,9 +156,7 @@ struct _WarInput
     WarEntityId capturedUIButtonId;
 
     // map selection drag that started inside mapPanel
-    bool mapDragActive;
-    vec2 mapDragStartPos;
-    rect mapDragRect;
+    WarDragState mapDragState;
 };
 
 struct _WarRenderState
