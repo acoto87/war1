@@ -1354,7 +1354,7 @@ void weui_init(SDL_Window* window, SDL_Renderer* renderer)
         ImFontConfig_destroy(cfg);
     }
 
-    //-pre: load Codicon in merge mode for icon labels.
+    // load Codicon in merge mode for icon labels.
     {
         ImFontConfig* cfg = ImFontConfig_ImFontConfig();
         cfg->MergeMode = true;

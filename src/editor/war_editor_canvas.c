@@ -651,7 +651,7 @@ void wecanvas_renderGrid(WarEditorContext* ctx)
 }
 
 // ---------------------------------------------------------------------------
-// + 4.6 + 4.7 + 4.8 — cimgui canvas panel
+// cimgui canvas panel
 // ---------------------------------------------------------------------------
 void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen)
 {

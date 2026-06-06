@@ -12,7 +12,16 @@
 
 static inline void consumeCommand(WarMap* map, WarUnitCommand* command)
 {
-    map->suppressSelectionOnRelease = true;
+    // Only suppress the subsequent map-selection-on-release for commands that
+     // are executed via a left click on the map/minimap.
+     map->suppressSelectionOnRelease =
+         command->type == WAR_COMMAND_MOVE ||
+         command->type == WAR_COMMAND_HARVEST ||
+         command->type == WAR_COMMAND_REPAIR ||
+         command->type == WAR_COMMAND_ATTACK ||
+         (command->type >= WAR_COMMAND_SPELL_HEALING && command->type <= WAR_COMMAND_SPELL_UNHOLY_ARMOR) ||
+         (command->type >= WAR_COMMAND_BUILD_FARM_HUMANS && command->type <= WAR_COMMAND_BUILD_WALL);
+
     command->type = WAR_COMMAND_NONE;
 }
 

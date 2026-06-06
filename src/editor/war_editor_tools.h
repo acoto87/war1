@@ -31,7 +31,7 @@ void wetools_drawOverlay(WarEditorContext* ctx, ImDrawList* drawList,
                          vec2 canvasOrigin);
 
 // ---------------------------------------------------------------------------
-///9 helpers
+/// helpers
 // ---------------------------------------------------------------------------
 
 // Returns true if any tile in the [tx, tx+w-1] × [ty, ty+h-1] region is

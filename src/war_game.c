@@ -867,7 +867,7 @@ void wg_presentGame(WarContext *context)
     s32 index = context->frameCount % METRIC_SAMPLE_COUNT;
     u64 workTimeNs = context->frameWorkEndNs - context->frameStartNs;
     u64 waitTimeNs = context->frameEndNs - context->frameWorkEndNs;
-    u64 frameTimeNs = context->frameWorkEndNs - context->frameStartNs;
+    u64 frameTimeNs = context->frameEndNs - context->frameStartNs;
 
     updateMetricU64(&context->workTimeMetric, workTimeNs, index);
     updateMetricU64(&context->waitTimeMetric, waitTimeNs, index);

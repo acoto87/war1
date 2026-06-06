@@ -1084,7 +1084,10 @@ void wact_updateAction(WarContext* context, WarEntity* entity)
     WarUnitActionDef* actionDef = &gUnitActionDefs[unit->type][unit->actionType];
     if (actionDef->type == WAR_ACTION_TYPE_NONE)
     {
-        logWarning("Unit type %d does not have an action of type %d", unit->type, unit->actionType);
+        logWarning("Unit type %d does not have an action of type %d.", unit->type, unit->actionType);
+
+        action->status = WAR_ACTION_FINISHED;
+        unit->actionType = WAR_ACTION_TYPE_NONE;
         return;
     }
 

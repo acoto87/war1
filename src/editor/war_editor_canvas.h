@@ -3,7 +3,7 @@
 #include "war_editor.h"
 
 // ---------------------------------------------------------------------------
-//+6 — Terrain + entity canvas (read-only SDL3 offscreen render target)
+// Terrain + entity canvas (read-only SDL3 offscreen render target)
 //
 // Rendering pipeline each frame:
 //   1. weui_beginFrame → wecanvas_drawPanel  (builds ImGui draw commands,

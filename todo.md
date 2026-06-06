@@ -112,7 +112,7 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [x] Clicking Cancel button crash the game
 * [x] Check if the `changeSampleRate` introduces the tiny pop bug at the end of short sounds.
 * [x] Check for memory leaks in the removing animations functionality.
-* [x] Sometimes you order a worker to mine, and it will enter the mine (dissapear) but it doesn't perform the mining. You can also give other orders like move, and the invisible worker will go there and do other stuff.... on the bright side, I have invisible units! :D... But wait.. I already have invisible units with Invisibility spells..., damn! :(
+* [x] Sometimes you order a worker to mine, and it will enter the mine (disappear) but it doesn't perform the mining. You can also give other orders like move, and the invisible worker will go there and do other stuff.... on the bright side, I have invisible units! :D... But wait.. I already have invisible units with Invisibility spells..., damn! :(
 * [x] Cursor doesn't change when scrolling on screen edges
 * [x] In custom map with only footmen/grunt, commands are not showing when selecting footmen/grunts and they don't attack. It also take an unusual long time to start.
 * [x] When building something, as soon as I place the item to build, the click will deselect the current unit (worker or building), it should remain selected.
