@@ -27,6 +27,9 @@ void wmap_addEntityToSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
 
+    if (map->selectedEntities.count >= MAX_SELECTED_ENTITIES_COUNT)
+        return;
+
     // subtitute this with a set data structure that doesn't allow duplicates
     if (!WarEntityIdListContains(&map->selectedEntities, id, we_equalsEntityId))
         WarEntityIdListAdd(&map->selectedEntities, id);
@@ -403,6 +406,18 @@ bool wmap_isTileVisible(WarMap* map, s32 x, s32 y)
     return wmap_isTileInState(map, x, y, MAP_TILE_STATE_VISIBLE);
 }
 
+bool wmap_isPositionVisible(WarMap* map, vec2 position)
+{
+    vec2 tilePos = wmap_mapToTileCoordinatesV(position);
+    s32 tileX = (s32)tilePos.x;
+    s32 tileY = (s32)tilePos.y;
+    if (tileX < 0 || tileX >= MAP_TILES_WIDTH || tileY < 0 || tileY >= MAP_TILES_HEIGHT)
+    {
+        return false;
+    }
+    return wmap_isTileVisible(map, tileX, tileY);
+}
+
 
 WarColor wmap_getMapTileAverage(WarResource* levelVisual, WarResource* tileset, s32 x, s32 y)
 {
@@ -514,6 +529,10 @@ WarMap* wmap_createMap(WarContext* context, s32 levelInfoIndex)
     we_initEntityManager(context, &map->entityManager);
 
     WarEntityIdListInit(&map->selectedEntities, wm_globalAllocator());
+    for (s32 i = 0; i < MAX_SELECTION_GROUPS; i++)
+    {
+        WarEntityIdListInit(&map->selectionGroups[i], wm_globalAllocator());
+    }
 
     return map;
 }
@@ -524,10 +543,12 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
 
     WarResource* levelInfo = wres_getOrCreateResource(context, levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO && levelInfo->levelInfo.customMap);
+    assert(levelInfo->levelInfo.startConfigurationsCount > 0);
 
     levelInfo->levelInfo.startEntitiesCount = 0;
 
-    levelInfo->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
+    if (!levelInfo->levelInfo.startEntities)
+        levelInfo->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
     assert(levelInfo->levelInfo.startEntities);
 
     levelInfo->levelInfo.races[0] = yourRace;
@@ -537,6 +558,7 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
     {
         WarLevelUnit* startUnitConf = &levelInfo->levelInfo.startGoldmines[i];
 
+        assert(levelInfo->levelInfo.startEntitiesCount < MAX_ENTITIES_COUNT);
         WarLevelUnit* startUnit = &levelInfo->levelInfo.startEntities[levelInfo->levelInfo.startEntitiesCount];
         startUnit->x = startUnitConf->x;
         startUnit->y = startUnitConf->y;
@@ -550,14 +572,13 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
 
     s32 configurationIndex = randomi(0, (s32)levelInfo->levelInfo.startConfigurationsCount);
     WarCustomMapConfiguration* configuration = &levelInfo->levelInfo.startConfigurations[configurationIndex];
-
-    configuration->startEntities = (WarLevelUnit*)wm_alloc(configuration->startEntitiesCount * sizeof(WarLevelUnit));
     assert(configuration->startEntities);
 
     for (s32 i = 0; i < (s32)configuration->startEntitiesCount; i++)
     {
         WarLevelUnit* startUnitConf = &configuration->startEntities[i];
 
+        assert(levelInfo->levelInfo.startEntitiesCount < MAX_ENTITIES_COUNT);
         WarLevelUnit* startUnit = &levelInfo->levelInfo.startEntities[levelInfo->levelInfo.startEntitiesCount];
         startUnit->x = startUnitConf->x;
         startUnit->y = startUnitConf->y;
@@ -634,6 +655,10 @@ void wmap_freeMap(WarContext* context, WarMap* map)
     WarEntityListFree(&manager->uiEntities);
 
     WarEntityIdListFree(&map->selectedEntities);
+    for (s32 i = 0; i < MAX_SELECTION_GROUPS; i++)
+    {
+        WarEntityIdListFree(&map->selectionGroups[i]);
+    }
 
     wm_free(map->finder.data);
 }
@@ -912,7 +937,7 @@ void wmap_enterMap(WarContext* context)
         for (s32 i = 0; i < (s32)levelInfo->levelInfo.startEntitiesCount; i++)
         {
             WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
-            we_createUnit(context, CREATE_UNIT_ARGS_INIT(
+            WarEntity* startEntity = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
                 .type=startUnit.type,
                 .x=startUnit.x,
                 .y=startUnit.y,
@@ -921,6 +946,7 @@ void wmap_enterMap(WarContext* context)
                 .amount=startUnit.amount,
                 .addToMap=true
             ));
+            we_setInitialIdleState(context, startEntity);
         }
     }
 
@@ -950,13 +976,23 @@ static void updateViewport(WarContext *context)
 
     map->wasScrolling = false;
 
+    if (map->suppressMinimapViewportOnRelease)
+    {
+        map->isScrolling = false;
+
+        if (!isButtonHeld(input, WAR_MOUSE_LEFT))
+            map->suppressMinimapViewportOnRelease = false;
+
+        return;
+    }
+
     vec2 dir = VEC2_ZERO;
     bool wasScrolling = map->isScrolling;
     bool mouseScroll = false;
     bool keyScroll = false;
 
     // if there was a click in the minimap, then update the position of the viewport
-    if (isButtonHeld(input, WAR_MOUSE_LEFT))
+    if (isButtonHeld(input, WAR_MOUSE_LEFT) && map->command.type == WAR_COMMAND_NONE)
     {
         // check if the click is inside the minimap panel
         if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
@@ -1072,9 +1108,50 @@ static bool isMapSelectionRect(rect rect)
            rect.height >= MAP_SELECTION_DRAG_THRESHOLD;
 }
 
+static bool isEntitySelectable(WarContext* context, WarMap* map, WarEntity* entity)
+{
+    if (!entity || !we_isComponentEnabled(context, entity, COMP_UNIT))
+        return false;
+
+    if (wst_isDead(context, entity) ||
+        wst_isGoingToDie(context, entity) ||
+        wu_isCorpseUnit(context, entity) ||
+        wst_isCollapsing(context, entity) ||
+        wst_isGoingToCollapse(context, entity) ||
+        (wu_isWorkerUnit(context, entity) && wst_isInsideBuilding(context, entity)) ||
+        !wmap_isUnitPartiallyVisible(context, map, entity))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 static void updateSelectionFromList(WarContext* context, WarEntityList* newSelectedEntities)
 {
+    TracyCZoneN(ctx, "UpdateSelectionFromList", 1);
+
     WarMap* map = context->map;
+
+    for (s32 i = newSelectedEntities->count - 1; i >= 0; i--)
+    {
+        WarEntity* entity = newSelectedEntities->items[i];
+        for (s32 j = 0; j < i; j++)
+        {
+            if (newSelectedEntities->items[j] == entity)
+            {
+                WarEntityListRemoveAt(newSelectedEntities, i);
+                break;
+            }
+        }
+    }
+
+    for (s32 i = newSelectedEntities->count - 1; i >= 0; i--)
+    {
+        WarEntity* entity = newSelectedEntities->items[i];
+        if (!isEntitySelectable(context, map, entity))
+            WarEntityListRemoveAt(newSelectedEntities, i);
+    }
 
     bool areDudesSelected = false;
     bool areBuildingSelected = false;
@@ -1148,12 +1225,15 @@ static void updateSelectionFromList(WarContext* context, WarEntityList* newSelec
     wmap_clearSelection(context);
 
     // and add the new selection
-    s32 selectedEntitiesCount = MIN(newSelectedEntities->count, 4);
+    s32 selectedEntitiesCount = MIN(newSelectedEntities->count, MAX_SELECTED_ENTITIES_COUNT);
     for (s32 i = 0; i < selectedEntitiesCount; i++)
     {
         WarEntity* entity = newSelectedEntities->items[i];
         wmap_addEntityToSelection(context, entity->id);
     }
+
+    TracyCPlotI("SelectedEntities", (s64)map->selectedEntities.count);
+    TracyCZoneEnd(ctx);
 }
 
 static void updateSelection(WarContext* context)
@@ -1185,29 +1265,8 @@ static void updateSelection(WarContext* context)
         for (s32 i = 0; i < units->count; i++)
         {
             WarEntity* entity = units->items[i];
-            if (entity && we_isComponentEnabled(context, entity, COMP_UNIT))
+            if (isEntitySelectable(context, map, entity))
             {
-                if (
-                    // don't select dead units
-                    wst_isDead(context, entity) ||
-                    wst_isGoingToDie(context, entity) ||
-                    // don't select corpses
-                    wu_isCorpseUnit(context, entity) ||
-                    // don't select collased buildings
-                    wst_isCollapsing(context, entity) ||
-                    wst_isGoingToCollapse(context, entity) ||
-                    // don't select workers inside buildings
-                    (
-                        wu_isWorkerUnit(context, entity) &&
-                        wst_isInsideBuilding(context, entity)
-                    ) ||
-                    // don't select non-visible units
-                    !wmap_isUnitPartiallyVisible(context, map, entity)
-                )
-                {
-                    continue;
-                }
-
                 rect unitRect = wu_getUnitRect(context, entity);
                 if (rect_intersects(pointerRect, unitRect))
                 {
@@ -1219,37 +1278,15 @@ static void updateSelection(WarContext* context)
     else
     {
         WarEntity* entityUnderCursor = we_findEntityUnderCursor(context, false, false);
-        if (entityUnderCursor)
+        if (isEntitySelectable(context, map, entityUnderCursor))
         {
-            if (
-                we_isComponentEnabled(context, entityUnderCursor, COMP_UNIT) &&
-                // don't select dead units
-                !wst_isDead(context, entityUnderCursor) &&
-                !wst_isGoingToDie(context, entityUnderCursor) &&
-                // don't select corpses
-                !wu_isCorpseUnit(context, entityUnderCursor) &&
-                // don't select collapsing buildings
-                !wst_isCollapsing(context, entityUnderCursor) &&
-                !wst_isGoingToCollapse(context, entityUnderCursor) &&
-                // don't select workers inside buildings
-                !(
-                    wu_isWorkerUnit(context, entityUnderCursor) &&
-                    wst_isInsideBuilding(context, entityUnderCursor)
-                ) &&
-                // don't select non-visible units
-                wmap_isUnitPartiallyVisible(context, map, entityUnderCursor))
-            {
-                WarEntityListAdd(&newSelectedEntities, entityUnderCursor);
-            }
+            WarEntityListAdd(&newSelectedEntities, entityUnderCursor);
         }
     }
 
     // include the already selected entities if the Ctrl key is pressed
     if (isKeyHeld(input, WAR_KEY_CTRL))
     {
-        // the max number of selected entities is 4, so there is no much
-        // throuble looking for the actual entities here, it will also
-        // improve when a hash is make for looking up the entities
         for (s32 i = 0; i < map->selectedEntities.count; i++)
         {
             WarEntity* entity = we_findEntity(context, map->selectedEntities.items[i]);
@@ -1260,6 +1297,62 @@ static void updateSelection(WarContext* context)
 
     updateSelectionFromList(context, &newSelectedEntities);
     WarEntityListFree(&newSelectedEntities);
+}
+
+static void updateSelectionGroups(WarContext* context)
+{
+    TracyCZoneN(ctx, "UpdateSelectionGroups", 1);
+
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if (map->cheatStatus.visible)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    for (s32 i = 0; i < MAX_SELECTION_GROUPS; i++)
+    {
+        WarKeys key = (WarKeys)(WAR_KEY_1 + i);
+        if (!isKeyJustPressed(input, key))
+            continue;
+
+        WarEntityIdList* selectionGroup = &map->selectionGroups[i];
+        if (isKeyHeld(input, WAR_KEY_CTRL))
+        {
+            WarEntityIdListClear(selectionGroup);
+
+            s32 selectedEntitiesCount = MIN(map->selectedEntities.count, MAX_SELECTED_ENTITIES_COUNT);
+            for (s32 j = 0; j < selectedEntitiesCount; j++)
+            {
+                WarEntityIdListAdd(selectionGroup, map->selectedEntities.items[j]);
+            }
+
+            TracyCPlotI("ControlGroupSize", (s64)selectionGroup->count);
+            break;
+        }
+
+        if (selectionGroup->count == 0)
+            break;
+
+        WarEntityList newSelectedEntities;
+        WarEntityListInit(&newSelectedEntities, wm_frameAllocator());
+
+        for (s32 j = 0; j < selectionGroup->count; j++)
+        {
+            WarEntity* entity = we_findEntity(context, selectionGroup->items[j]);
+            if (isEntitySelectable(context, map, entity))
+                WarEntityListAdd(&newSelectedEntities, entity);
+        }
+
+        TracyCPlotI("ControlGroupRecallSize", (s64)newSelectedEntities.count);
+        updateSelectionFromList(context, &newSelectedEntities);
+        WarEntityListFree(&newSelectedEntities);
+        break;
+    }
+
+    TracyCZoneEnd(ctx);
 }
 
 static void updateTreesEdit(WarContext* context)
@@ -1461,7 +1554,8 @@ static void updateAddUnit(WarContext* context)
                 {
                     if (map->players[i].race == addingUnitRace)
                     {
-                        we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=map->addingUnitType, .x=x, .y=y, .player=map->players[i].index, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
+                        WarEntity* addedUnit = we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=map->addingUnitType, .x=x, .y=y, .player=map->players[i].index, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
+                        we_setInitialIdleState(context, addedUnit);
                         break;
                     }
                 }
@@ -2684,6 +2778,8 @@ void wmap_updateMap(WarContext* context)
         // selection shouldn't be lost
         updateSelection(context);
     }
+
+    updateSelectionGroups(context);
 
     wai_updateAIPlayers(context);
 

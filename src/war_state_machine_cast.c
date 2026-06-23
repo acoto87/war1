@@ -204,7 +204,8 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         if (we_decreaseUnitMana(context, entity, stats->manaCost))
                         {
                             vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, true);
-                            we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=WAR_UNIT_SKELETON, .x=(s32)targetPosition.x, .y=(s32)targetPosition.y, .player=unit->player, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
+                            WarEntity* skeleton = we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=WAR_UNIT_SKELETON, .x=(s32)targetPosition.x, .y=(s32)targetPosition.y, .player=unit->player, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
+                            we_setInitialIdleState(context, skeleton);
 
                             targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
 

@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 #include "war_map.h"
 #include "war_actions.h"
@@ -125,8 +125,11 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
-        WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;
-        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
+        if (unit->player == 0)
+        {
+            WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;
+            wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
+        }
 
         return;
     }

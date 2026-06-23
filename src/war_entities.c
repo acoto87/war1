@@ -1511,8 +1511,9 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
         uc->armor = stats->armor;
     }
 
-    WarState* idleState = wst_createIdleState(context, entity, wu_isDudeUnit(context, entity));
-    wst_changeNextState(context, entity, idleState, true, true);
+    // NOTE: we_createUnit does NOT set an initial state.
+    // The caller is responsible for calling we_setInitialIdleState or
+    // wst_changeNextState with the appropriate initial state.
 
     if (addToMap)
     {
@@ -1555,8 +1556,18 @@ WarEntity* we_createBuilding(WarContext* context, const CreateUnitArgs* args)
         WarState* buildState = wst_createBuildState(context, entity, (f32)stats->buildTime);
         wst_changeNextState(context, entity, buildState, true, true);
     }
+    else
+    {
+        we_setInitialIdleState(context, entity);
+    }
 
     return entity;
+}
+
+void we_setInitialIdleState(WarContext* context, WarEntity* entity)
+{
+    WarState* idleState = wst_createIdleState(context, entity, wu_isDudeUnit(context, entity));
+    wst_changeNextState(context, entity, idleState, true, true);
 }
 
 WarEntity* we_findEntity(WarContext* context, WarEntityId id)
@@ -1948,19 +1959,33 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2, void* userdata)
     assert(wu_isUnit(e1));
     assert(wu_isUnit(e2));
 
+    if (e1->id == e2->id)
+    {
+        return 0;
+    }
+
     bool isDead1 = wu_isCorpseUnit(context, (WarEntity*)e1) || wst_isDead(context, (WarEntity*)e1) || wst_isGoingToDie(context, (WarEntity*)e1);
     bool isDead2 = wu_isCorpseUnit(context, (WarEntity*)e2) || wst_isDead(context, (WarEntity*)e2) || wst_isGoingToDie(context, (WarEntity*)e2);
 
     if (isDead1 && !isDead2)
+    {
         return -1;
+    }
 
     if (!isDead1 && isDead2)
+    {
         return 1;
+    }
 
     vec2 p1 = wu_getUnitPosition(context, (WarEntity*)e1, false);
     vec2 p2 = wu_getUnitPosition(context, (WarEntity*)e2, false);
 
-    return (s32)(p1.y - p2.y);
+    if (p1.y != p2.y)
+    {
+        return (p1.y < p2.y) ? -1 : 1;
+    }
+
+    return (e1->id < e2->id) ? -1 : 1;
 }
 
 s32 renderCompareProjectiles(const WarEntity* e1, const WarEntity* e2, void* userdata)
@@ -1968,13 +1993,23 @@ s32 renderCompareProjectiles(const WarEntity* e1, const WarEntity* e2, void* use
     WarContext* context = (WarContext*)userdata;
     assert(context != NULL);
 
+    if (e1->id == e2->id)
+    {
+        return 0;
+    }
+
     WarTransformComponent* t1 = we_getTransformComponent(context, (WarEntity*)e1);
     WarTransformComponent* t2 = we_getTransformComponent(context, (WarEntity*)e2);
 
     vec2 p1 = t1 ? t1->position : VEC2_ZERO;
     vec2 p2 = t2 ? t2->position : VEC2_ZERO;
 
-    return (s32)(p1.y - p2.y);
+    if (p1.y != p2.y)
+    {
+        return (p1.y < p2.y) ? -1 : 1;
+    }
+
+    return (e1->id < e2->id) ? -1 : 1;
 }
 
 void renderImage(WarContext* context, WarEntity* entity)
@@ -3238,7 +3273,8 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
             wst_changeNextState(context, entity, collapseState, true, true);
 
 #ifndef WAR_EDITOR_BUILD
-            wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId = WAR_BUILDING_COLLAPSE_1, .randomToId = WAR_BUILDING_COLLAPSE_3, .loop = false));
+            vec2 position = wu_getUnitCenterPosition(context, entity, false);
+            wa_createAudioRandomWithPosition(context, CREATE_AUDIO_ARGS_INIT(.randomFromId = WAR_BUILDING_COLLAPSE_1, .randomToId = WAR_BUILDING_COLLAPSE_3, .position = position, .hasPosition = true, .loop = false));
 #endif
         }
         else
@@ -3439,7 +3475,8 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
             wst_changeNextState(context, goldmine, collapseState, true, true);
 
 #ifndef WAR_EDITOR_BUILD
-            wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_BUILDING_COLLAPSE_1, .randomToId=WAR_BUILDING_COLLAPSE_3, .loop=false));
+            vec2 position = wu_getUnitCenterPosition(context, goldmine, false);
+            wa_createAudioRandomWithPosition(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_BUILDING_COLLAPSE_1, .randomToId=WAR_BUILDING_COLLAPSE_3, .position=position, .hasPosition=true, .loop=false));
 #endif
         }
     }
