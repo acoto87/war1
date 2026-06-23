@@ -27,6 +27,8 @@ static inline void consumeCommand(WarMap* map, WarUnitCommand* command)
 
 void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
 {
+    TracyCZoneN(ctx, "wcmd_executeMoveCommand", 1);
+
     WarMap* map = context->map;
     WarInput* input = &context->input;
     WarPlayerInfo* player = &map->players[0];
@@ -34,6 +36,13 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
     bool goingToMove = false;
 
     s32 selEntitiesCount = map->selectedEntities.count;
+    if (selEntitiesCount == 0)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    TracyCPlotI("MoveSelectionCount", (s64)selEntitiesCount);
 
     // move the selected units to the target point,
     // but keeping the bounding box that the
@@ -142,6 +151,8 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
     {
         wa_playAcknowledgementSound(context, player);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wcmd_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
@@ -382,6 +393,8 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
                     .amount = 0,
                     .addToMap = true
                 ));
+                we_setInitialIdleState(context, summonedUnit);
+
 
                 vec2 unitSize = wu_getUnitSize(context, summonedUnit);
                 setStaticEntity(map->finder, (s32)spawnPosition.x, (s32)spawnPosition.y,
@@ -629,6 +642,7 @@ bool wcmd_executeCommand(WarContext* context)
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
+                    map->suppressMinimapViewportOnRelease = true;
                     wcmd_executeMoveCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
@@ -759,6 +773,7 @@ bool wcmd_executeCommand(WarContext* context)
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    map->suppressMinimapViewportOnRelease = true;
                     wcmd_executeAttackCommand(context, NULL, targetTile);
 
                     consumeCommand(map, command);
@@ -1040,6 +1055,7 @@ bool wcmd_executeCommand(WarContext* context)
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    map->suppressMinimapViewportOnRelease = true;
                     wcmd_executeRainOfFireCommand(context, targetTile);
                     consumeCommand(map, command);
                     return true;
@@ -1064,6 +1080,7 @@ bool wcmd_executeCommand(WarContext* context)
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    map->suppressMinimapViewportOnRelease = true;
                     wcmd_executePoisonCloudCommand(context, targetTile);
                     consumeCommand(map, command);
                     return true;
@@ -1164,6 +1181,7 @@ bool wcmd_executeCommand(WarContext* context)
                 else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    map->suppressMinimapViewportOnRelease = true;
                     wcmd_executeSightCommand(context, targetTile);
                     consumeCommand(map, command);
                     return true;

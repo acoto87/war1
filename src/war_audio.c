@@ -4,9 +4,10 @@
 #include "TracyC.h"
 
 #include "war_audio.h"
-#include "war_log.h"
-#include "war_math.h"
 #include "war_entities.h"
+#include "war_log.h"
+#include "war_map.h"
+#include "war_math.h"
 #include "war_units.h"
 
 typedef struct
@@ -609,6 +610,16 @@ WarEntity* wa_createAudioWithPosition(WarContext* context, const CreateAudioArgs
     WarAudioId audioId = args->audioId;
     vec2 position = args->position;
     bool loop = args->loop;
+
+    WarMap* map = context->map;
+    if (map && map->fowEnabled)
+    {
+        if (!wmap_isPositionVisible(map, position))
+        {
+            return NULL;
+        }
+    }
+
     WarAudioData data = wa_getAudioData(audioId);
 
     s32 resourceIndex = (s32)audioId;

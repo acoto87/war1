@@ -1,4 +1,4 @@
-﻿#include <assert.h>
+#include <assert.h>
 
 #include "war_state_machine.h"
 
@@ -95,6 +95,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         vec2 position = wu_getUnitCenterPosition(context, entity, true);
         vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
         wu_setUnitCenterPosition(context, unitToBuild, spawnPosition, true);
+        we_setInitialIdleState(context, unitToBuild);
 
         if (!wst_changeStateNextState(context, entity, state))
         {
@@ -102,8 +103,11 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
-        WarAudioId audioId = wu_isHumanUnit(context, unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
-        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
+        if (unit->player == 0)
+        {
+            WarAudioId audioId = wu_isHumanUnit(context, unitToBuild) ? WAR_HUMAN_READY : WAR_ORC_READY;
+            wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
+        }
 
         return;
     }

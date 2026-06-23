@@ -763,6 +763,7 @@ void wecanvas_drawPanel(WarEditorContext* ctx, char* statusBuf, s32 statusBufLen
                 u16 passable = ctx->map->passableData[ty * MAP_TILES_WIDTH + tx];
                 igText("Tile %u", (u32)tileIdx);
                 igText("%s", passable != 0 ? "Blocked" : "Passable");
+                igText("Coordinates: (%d, %d)", tx, ty);
                 igEndTooltip();
             }
         }

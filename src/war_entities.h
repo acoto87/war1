@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "shl/memzone.h"
 #include "shl/list.h"
@@ -604,6 +604,11 @@ typedef struct {
 WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args);
 WarEntity* we_createDude(WarContext* context, const CreateUnitArgs* args);
 WarEntity* we_createBuilding(WarContext* context, const CreateUnitArgs* args);
+
+// Sets the initial idle state on a freshly created unit.
+// Must be called by callers of we_createUnit that do not immediately
+// transition to a different state (e.g. death, build).
+void we_setInitialIdleState(WarContext* context, WarEntity* entity);
 
 WarEntity* we_findEntity(WarContext* context, WarEntityId id);
 WarEntity* we_findClosestUnitOfType(WarContext* context, WarEntity* entity, WarUnitType type);

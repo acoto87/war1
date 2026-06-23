@@ -111,6 +111,7 @@ struct _WarMap
 
     WarEntityManager entityManager;
     WarEntityIdList selectedEntities;
+    WarEntityIdList selectionGroups[MAX_SELECTION_GROUPS];
 
     WarEntity* forest;
     WarEntity* wall;
@@ -131,6 +132,7 @@ struct _WarMap
     WarPathFinder finder;
     WarUnitCommand command;
     bool suppressSelectionOnRelease;
+    bool suppressMinimapViewportOnRelease;
     WarFlashStatus flashStatus;
     WarCheatStatus cheatStatus;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
@@ -199,6 +201,7 @@ bool wmap_isUnitUnknown(WarContext* context, WarMap* map, WarEntity* entity);
 bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y);
 bool wmap_isTileFog(WarMap* map, s32 x, s32 y);
 bool wmap_isTileVisible(WarMap* map, s32 x, s32 y);
+bool wmap_isPositionVisible(WarMap* map, vec2 position);
 
 void wui_changeCursorType(WarContext* context, WarCursorType type);
 
