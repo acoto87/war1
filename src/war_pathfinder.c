@@ -3,9 +3,15 @@
 #include "war_pathfinder.h"
 #include "war_collections.h"
 
+static const s32 wpath_dirC = 8;
+static const s32 wpath_dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
+static const s32 wpath_dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
+
 static s32 manhattanDistance(const WarMapNode node1, const WarMapNode node2)
 {
-    return ABS(node1.x - node2.x) + ABS(node1.y - node2.y);
+    s32 xx = node1.x - node2.x;
+    s32 yy = node1.y - node2.y;
+    return ABS(xx) + ABS(yy);
 }
 
 static s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
@@ -15,22 +21,22 @@ static s32 nodeDistanceSqr(const WarMapNode node1, const WarMapNode node2)
     return xx * xx + yy * yy;
 }
 
-bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
+static bool equalsMapNode(const WarMapNode node1, const WarMapNode node2)
 {
     return node1.x == node2.x && node1.y == node2.y;
 }
 
-s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
+static s32 compareFScore(const WarMapNode node1, const WarMapNode node2)
 {
     return node1.fScore - node2.fScore;
 }
 
-u32 hashMapNode(const s32 key)
+static u32 hashMapNode(const s32 key)
 {
     return (u32)key;
 }
 
-bool equalsMapNodeId(const s32 key1, const s32 key2)
+static bool equalsMapNodeId(const s32 key1, const s32 key2)
 {
     return key1 == key2;
 }
@@ -84,10 +90,6 @@ static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s3
 
     WarMapNodeListAdd(&nodes, startNode);
 
-    const s32 dirC = 8;
-    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
-    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
-
     s32 i;
     for(i = 0; i < nodes.count; i++)
     {
@@ -95,10 +97,10 @@ static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s3
         if (equalsMapNode(node, endNode))
             break;
 
-        for(s32 d = 0; d < dirC; d++)
+        for(s32 d = 0; d < wpath_dirC; d++)
         {
-            s32 xx = node.x + dirX[d];
-            s32 yy = node.y + dirY[d];
+            s32 xx = node.x + wpath_dirX[d];
+            s32 yy = node.y + wpath_dirY[d];
             if (wpath_isInside(finder, xx, yy))
             {
                 WarMapNode newNode = createNode(finder, xx, yy);
@@ -140,6 +142,7 @@ static WarMapPath bfs(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s3
 static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
     TracyCZoneN(ctx, "Astar", 1);
+
     // The set of currently discovered nodes that are not evaluated yet.
     WarMapNodeHeap openSet;
     WarMapNodeHeapInit(&openSet, wm_frameAllocator(), compareFScore);
@@ -150,10 +153,6 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
 
     WarMapNode startNode = createNode(finder, startX, startY);
     WarMapNode endNode = createNode(finder, endX, endY);
-
-    const s32 dirC = 8;
-    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
-    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
 
     // The cost of going from start to start is zero.
     startNode.gScore = 0;
@@ -179,10 +178,10 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
         if (equalsMapNode(current, endNode))
             break;
 
-        for(s32 d = 0; d < dirC; d++)
+        for(s32 d = 0; d < wpath_dirC; d++)
         {
-            s32 xx = current.x + dirX[d];
-            s32 yy = current.y + dirY[d];
+            s32 xx = current.x + wpath_dirX[d];
+            s32 yy = current.y + wpath_dirY[d];
             if (wpath_isInside(finder, xx, yy))
             {
                 // if the neighbor position is occupied by a static entity,
@@ -297,6 +296,108 @@ static WarMapPath astar(WarPathFinder finder, s32 startX, s32 startY, s32 endX, 
     return path;
 }
 
+static void computeflowField(WarPathFinder finder, s32 x, s32 y, WarDirection* field)
+{
+    // The set of currently discovered nodes that are not evaluated yet.
+    WarMapNodeHeap openSet;
+    WarMapNodeHeapInit(&openSet, wm_frameAllocator(), compareFScore);
+
+    // The set of nodes already evaluated (this could be a simple boolean array to mark the visited nodes)
+    WarMapNodeMap closedSet;
+    WarMapNodeMapInit(&closedSet, wm_frameAllocator(), hashMapNode, equalsMapNodeId);
+
+    WarMapNode startNode = createNode(finder, x, y);
+
+    // The cost of going from start to start is zero.
+    startNode.gScore = 0;
+
+    // For the first node, the fScore is the same as the gScore
+    startNode.fScore = 0;
+
+    // Initially, only the start node is known.
+    WarMapNodeHeapPush(&openSet, startNode);
+
+    while (openSet.count > 0)
+    {
+        // the node in openSet having the lowest fScore value
+        WarMapNode current = WarMapNodeHeapPop(&openSet);
+        WarMapNodeMapSet(&closedSet, current.id, current);
+
+        for(s32 d = 0; d < wpath_dirC; d++)
+        {
+            s32 xx = current.x + wpath_dirX[d];
+            s32 yy = current.y + wpath_dirY[d];
+            if (wpath_isInside(finder, xx, yy))
+            {
+                if (isEmpty(finder, xx, yy))
+                {
+                    WarMapNode neighbor = createNode(finder, xx, yy);
+
+                    // Ignore the neighbor which is already evaluated.
+                    if (WarMapNodeMapContains(&closedSet, neighbor.id))
+                        continue;
+
+                    // The cost from start -> current node -> neighbor
+                    // cost from current to neighbor, can be a little higher for diagonals
+                    s32 gScore = current.gScore + ((d % 2 != 0) ? 141 : 100);
+
+                    // < 0 indicates that this node need to be inserted into the heap
+                    s32 index = WarMapNodeHeapIndexOf(&openSet, neighbor, equalsMapNode);
+
+                    // if the node is already in the heap, check to update its gScore if necessary
+                    if (index >= 0)
+                    {
+                        neighbor = openSet.items[index];
+
+                        // going from the current node through this neighbor is not the best way, skip it
+                        if (gScore >= neighbor.gScore)
+                            continue;
+                    }
+
+                    // This path is the best until now. Record it!
+                    neighbor.parent = current.id;
+                    neighbor.gScore = gScore;
+                    neighbor.fScore = gScore;
+
+                    if (index >= 0)
+                        WarMapNodeHeapUpdate(&openSet, index, neighbor);
+                    else
+                        WarMapNodeHeapPush(&openSet, neighbor);
+                }
+            }
+        }
+    }
+
+    if (closedSet.count > 1)
+    {
+        for(s32 k = 0; k < closedSet.capacity; k++)
+        {
+            if (closedSet.entries[k].active)
+            {
+                WarMapNode node = closedSet.entries[k].value;
+                if (node.parent >= 0)
+                {
+                    WarMapNode parent = WarMapNodeMapGet(&closedSet, node.parent);
+                    s32 dx = parent.x - node.x;
+                    s32 dy = parent.y - node.y;
+
+                    for(s32 d = 0; d < wpath_dirC; d++)
+                    {
+                        if (dx == wpath_dirX[d] && dy == wpath_dirY[d])
+                        {
+                            field[node.y * finder.width + node.x] = (WarDirection)d;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    WarMapNodeHeapFree(&openSet);
+    WarMapNodeMapFree(&closedSet);
+}
+
 WarPathFinder wpath_initPathFinder(WarContext* context, PathFindingType type, s32 width, s32 height, u16 data[])
 {
     NOT_USED(context);
@@ -334,6 +435,7 @@ bool wpath_isInside(WarPathFinder finder, s32 x, s32 y)
 WarMapPath wpath_findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY)
 {
     TracyCZoneN(ctx, "FindPath", 1);
+
     WarMapPath path;
     switch (finder.type)
     {
@@ -346,8 +448,22 @@ WarMapPath wpath_findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX
             break;
         }
     }
+
     TracyCZoneEnd(ctx);
     return path;
+}
+
+WarMapFlowField wpath_computeFlowField(WarPathFinder finder, s32 x, s32 y)
+{
+    TracyCZoneN(ctx, "ComputeFlowField", 1);
+
+    WarMapFlowField flowField = (WarMapFlowField){0};
+    flowField.field = (WarDirection*)wm_alloc(finder.width * finder.height * sizeof(WarDirection));
+
+    computeflowField(finder, x, y, flowField.field);
+
+    TracyCZoneEnd(ctx);
+    return flowField;
 }
 
 bool wpath_reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIndex)
@@ -397,10 +513,6 @@ void wpath_freePath(WarMapPath path)
 
 vec2 wpath_findEmptyPosition(WarPathFinder finder, vec2 position)
 {
-    const s32 dirC = 8;
-    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
-    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
-
     if (isEmpty(finder, (s32)position.x, (s32)position.y))
         return position;
 
@@ -417,10 +529,10 @@ vec2 wpath_findEmptyPosition(WarPathFinder finder, vec2 position)
             break;
         }
 
-        for(s32 d = 0; d < dirC; d++)
+        for(s32 d = 0; d < wpath_dirC; d++)
         {
-            s32 xx = (s32)currentPosition.x + dirX[d];
-            s32 yy = (s32)currentPosition.y + dirY[d];
+            s32 xx = (s32)currentPosition.x + wpath_dirX[d];
+            s32 yy = (s32)currentPosition.y + wpath_dirY[d];
             if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
             {
                 vec2 newPosition = vec2i(xx, yy);
@@ -437,14 +549,10 @@ vec2 wpath_findEmptyPosition(WarPathFinder finder, vec2 position)
 
 bool wpath_isPositionAccesible(WarPathFinder finder, vec2 position)
 {
-    const s32 dirC = 8;
-    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
-    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
-
-    for(s32 d = 0; d < dirC; d++)
+    for(s32 d = 0; d < wpath_dirC; d++)
     {
-        s32 xx = (s32)position.x + dirX[d];
-        s32 yy = (s32)position.y + dirY[d];
+        s32 xx = (s32)position.x + wpath_dirX[d];
+        s32 yy = (s32)position.y + wpath_dirY[d];
         if (inRange(xx, 0, finder.width) && inRange(yy, 0, finder.height))
         {
             if (isEmpty(finder, xx, yy))

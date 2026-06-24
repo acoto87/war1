@@ -164,7 +164,7 @@ typedef enum _WarRace
     WAR_RACE_ORCS
 } WarRace;
 
-typedef enum _WarUnitDirection
+typedef enum _WarDirection
 {
     WAR_DIRECTION_NORTH,
     WAR_DIRECTION_NORTH_EAST,
@@ -176,7 +176,7 @@ typedef enum _WarUnitDirection
     WAR_DIRECTION_NORTH_WEST,
 
     WAR_DIRECTION_COUNT
-} WarUnitDirection;
+} WarDirection;
 
 typedef enum _WarUnitType
 {

@@ -131,6 +131,11 @@ struct _WarMap
 
     WarPathFinder finder;
     WarUnitCommand command;
+
+    WarDirection* debugFlowField;
+    s32 debugFlowFieldX;
+    s32 debugFlowFieldY;
+
     bool suppressSelectionOnRelease;
     bool suppressMinimapViewportOnRelease;
     WarFlashStatus flashStatus;

@@ -660,6 +660,12 @@ void wmap_freeMap(WarContext* context, WarMap* map)
         WarEntityIdListFree(&map->selectionGroups[i]);
     }
 
+    if (map->debugFlowField)
+    {
+        wm_free(map->debugFlowField);
+        map->debugFlowField = NULL;
+    }
+
     wm_free(map->finder.data);
 }
 
@@ -1563,6 +1569,43 @@ static void updateAddUnit(WarContext* context)
         }
     }
 }
+
+#ifdef DEBUG_RENDER_FLOW_FIELD
+static void updateFlowFieldDebug(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if (!isButtonJustPressed(input, WAR_MOUSE_LEFT))
+        return;
+
+    if (input->capturedUIButtonId)
+        return;
+
+    if (!rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        return;
+
+    vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
+    pointerPos = wmap_mapToTileCoordinatesV(pointerPos);
+
+    s32 x = (s32)pointerPos.x;
+    s32 y = (s32)pointerPos.y;
+
+    if (!wpath_isInside(map->finder, x, y))
+        return;
+
+    if (map->debugFlowField)
+    {
+        wm_free(map->debugFlowField);
+        map->debugFlowField = NULL;
+    }
+
+    WarMapFlowField flowField = wpath_computeFlowField(map->finder, x, y);
+    map->debugFlowField = flowField.field;
+    map->debugFlowFieldX = x;
+    map->debugFlowFieldY = y;
+}
+#endif
 
 static void updateCommandButtons(WarContext* context)
 {
@@ -2805,6 +2848,10 @@ void wmap_updateMap(WarContext* context)
     updateRainOfFireEdit(context);
     updateAddUnit(context);
 
+#ifdef DEBUG_RENDER_FLOW_FIELD
+    updateFlowFieldDebug(context);
+#endif
+
     updateObjectives(context);
 
     TracyCZoneEnd(ctx);
@@ -3012,6 +3059,69 @@ static void renderMapGrid(WarContext* context)
     }
 }
 
+#ifdef DEBUG_RENDER_FLOW_FIELD
+static void renderFlowField(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    if (!map->debugFlowField)
+        return;
+
+    s32 startX = (s32)(map->viewport.x / MEGA_TILE_WIDTH);
+    s32 startY = (s32)(map->viewport.y / MEGA_TILE_HEIGHT);
+    s32 endX = (s32)((map->viewport.x + map->viewport.width) / MEGA_TILE_WIDTH) + 1;
+    s32 endY = (s32)((map->viewport.y + map->viewport.height) / MEGA_TILE_HEIGHT) + 1;
+
+    startX = MAX(startX, 0);
+    startY = MAX(startY, 0);
+    endX = MIN(endX, MAP_TILES_WIDTH);
+    endY = MIN(endY, MAP_TILES_HEIGHT);
+
+    static const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
+    static const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
+
+    WarColor arrowColor = WAR_COLOR_RGB(0, 255, 255);
+    f32 shaftLen = MEGA_TILE_WIDTH * 0.35f;
+    f32 headLen = 3.0f;
+
+    for (s32 y = startY; y < endY; y++)
+    {
+        for (s32 x = startX; x < endX; x++)
+        {
+            if (x == map->debugFlowFieldX && y == map->debugFlowFieldY)
+                continue;
+
+            if (isStatic(map->finder, x, y))
+                continue;
+
+            WarDirection dir = map->debugFlowField[y * MAP_TILES_WIDTH + x];
+            if (dir < WAR_DIRECTION_NORTH || dir >= WAR_DIRECTION_COUNT)
+                continue;
+
+            vec2 center = wmap_tileToMapCoordinatesV(vec2i(x, y), true);
+
+            s32 dx = dirX[dir];
+            s32 dy = dirY[dir];
+
+            vec2 end = vec2f(center.x + dx * shaftLen, center.y + dy * shaftLen);
+
+            wr_strokeLine(context, center, end, arrowColor, 1.0f);
+
+            f32 angle = atan2f((f32)dy, (f32)dx);
+            vec2 head1 = vec2f(
+                end.x - headLen * cosf(angle - PI / 6.0f),
+                end.y - headLen * sinf(angle - PI / 6.0f));
+            vec2 head2 = vec2f(
+                end.x - headLen * cosf(angle + PI / 6.0f),
+                end.y - headLen * sinf(angle + PI / 6.0f));
+
+            wr_strokeLine(context, end, head1, arrowColor, 1.0f);
+            wr_strokeLine(context, end, head2, arrowColor, 1.0f);
+        }
+    }
+}
+#endif
+
 static void renderMapPanel(WarContext *context)
 {
     TracyCZoneN(ctx, "RenderMapPanel", 1);
@@ -3039,6 +3149,10 @@ static void renderMapPanel(WarContext *context)
 
 #ifdef DEBUG_RENDER_MAP_GRID
     renderMapGrid(context);
+#endif
+
+#ifdef DEBUG_RENDER_FLOW_FIELD
+    renderFlowField(context);
 #endif
 
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);

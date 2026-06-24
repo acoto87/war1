@@ -1486,7 +1486,7 @@ void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 posit
     transform->position = vec2_subv(position, unitCenter);
 }
 
-WarUnitDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
+WarDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
 {
     assert(wu_isUnit(entity));
 
@@ -1496,7 +1496,7 @@ WarUnitDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
     return unit->direction;
 }
 
-WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
+WarDirection wu_getDirectionFromDiff(f32 x, f32 y)
 {
     if (x < 0 && y < 0)
         return WAR_DIRECTION_NORTH_WEST;
@@ -1520,7 +1520,7 @@ WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
     return WAR_DIRECTION_NORTH;
 }
 
-void wu_setUnitDirection(WarContext* context, WarEntity* entity, WarUnitDirection direction)
+void wu_setUnitDirection(WarContext* context, WarEntity* entity, WarDirection direction)
 {
     assert(wu_isUnit(entity));
 
@@ -1534,7 +1534,7 @@ void wu_setUnitDirectionFromDiff(WarContext* context, WarEntity* entity, f32 dx,
 {
     assert(wu_isUnit(entity));
 
-    WarUnitDirection direction = wu_getDirectionFromDiff(dx, dy);
+    WarDirection direction = wu_getDirectionFromDiff(dx, dy);
     wu_setUnitDirection(context, entity, direction);
 }
 

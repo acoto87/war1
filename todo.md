@@ -205,6 +205,7 @@ This was the result of deleting the entity and the engine trying to free the spr
   * [ ] State machine transitions
   * [ ] DATA.WAR file parsing
 * [ ] Use SLD_rand instead of rand
+* [ ] Create a mechanism for all debug information currently enabled by macros to be enabled/disabled at runtime, and not at compile time. This will allow to enable/disable debug information without recompiling the game.
 
 ## Gameplay
 
@@ -384,8 +385,8 @@ This was the result of deleting the entity and the engine trying to free the spr
 * [ ] Remove BFS implementation.
 * [ ] Check again the path finding stuff, because now the units will go for side edges of buildings when a corner is closest.
 * [ ] Workers don't collide well while harvesting wood or gold when near the townhall.
-* [ ] Rethink the pathfinding system
-    * [ ] Keep the current pathfinding system but add a flow field system to support better pathfinding for large groups of units.
+> * [ ] Rethink the pathfinding system
+    * > [ ] Keep the current pathfinding system but add a flow field system to support better pathfinding for large groups of units.
     * [ ] Remove the current pathfinding system and implement a flow field system for pathfinding. This will allow better pathfinding for large groups of units, but maybe worse for small groups or single units.
     * [ ] Need to take care of collissions with other units, and maybe add a system to manage that, like a collision avoidance system.
     * [ ] Add a data structure (e.g., a grid) to find nearby units

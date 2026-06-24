@@ -143,6 +143,9 @@ typedef struct _WarMapNode WarMapNode;
 struct _WarMapPath;
 typedef struct _WarMapPath WarMapPath;
 
+struct _WarMapFlowField;
+typedef struct _WarMapFlowField WarMapFlowField;
+
 struct _WarPathFinder;
 typedef struct _WarPathFinder WarPathFinder;
 

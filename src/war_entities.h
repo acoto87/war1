@@ -110,7 +110,7 @@ struct _WarSpriteComponent
 struct _WarUnitComponent
 {
     WarUnitType type;
-    WarUnitDirection direction;
+    WarDirection direction;
 
     // position in tiles
     s32 tilex, tiley;

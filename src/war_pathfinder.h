@@ -24,6 +24,11 @@ struct _WarMapPath
     Vec2List nodes;
 };
 
+struct _WarMapFlowField
+{
+    WarDirection* field;
+};
+
 struct _WarPathFinder
 {
     PathFindingType type;
@@ -38,12 +43,6 @@ struct _WarPathFinder
 #define DISTANCE_SQR_AVOID_DYNAMIC_POSITIONS 2.0f
 
 #define WarMapNodeEmpty (WarMapNode){0}
-
-bool equalsMapNode(const WarMapNode node1, const WarMapNode node2);
-s32 compareFScore(const WarMapNode node1, const WarMapNode node2);
-
-u32 hashMapNode(const s32 key);
-bool equalsMapNodeId(const s32 key1, const s32 key2);
 
 shlDeclareList(WarMapNodeList, WarMapNode)
 shlDeclareBinaryHeap(WarMapNodeHeap, WarMapNode)
@@ -66,6 +65,7 @@ void wpath_setTilesValue(WarPathFinder finder, s32 startX, s32 startY, s32 width
 WarPathFinder wpath_initPathFinder(WarContext* context, PathFindingType type, s32 width, s32 height, u16 data[]);
 bool wpath_isInside(WarPathFinder finder, s32 x, s32 y);
 WarMapPath wpath_findPath(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY);
+WarMapFlowField wpath_computeFlowField(WarPathFinder finder, s32 x, s32 y);
 bool wpath_reRoutePath(WarPathFinder finder, WarMapPath* path, s32 fromIndex, s32 toIndex);
 bool wpath_pathExists(WarPathFinder finder, s32 startX, s32 startY, s32 endX, s32 endY);
 void wpath_freePath(WarMapPath path);
