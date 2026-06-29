@@ -1950,7 +1950,7 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
     assert(wu_isUnit(entity));
 
     WarMap* map = context->map;
-    WarUnitCommand* command = &map->command;
+    WarUnitCommand* command = &map->commandState.command;
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);

@@ -236,6 +236,27 @@ typedef struct _WarMapSettings WarMapSettings;
 struct _WarEntityManager;
 typedef struct _WarEntityManager WarEntityManager;
 
+struct _WarMapUI;
+typedef struct _WarMapUI WarMapUI;
+
+struct _WarMapCamera;
+typedef struct _WarMapCamera WarMapCamera;
+
+struct _WarMapEditing;
+typedef struct _WarMapEditing WarMapEditing;
+
+struct _WarMapCommandState;
+typedef struct _WarMapCommandState WarMapCommandState;
+
+struct _WarMapCommandPanel;
+typedef struct _WarMapCommandPanel WarMapCommandPanel;
+
+struct _WarMapDebug;
+typedef struct _WarMapDebug WarMapDebug;
+
+struct _WarMapStatus;
+typedef struct _WarMapStatus WarMapStatus;
+
 struct _WarMap;
 typedef struct _WarMap WarMap;
 

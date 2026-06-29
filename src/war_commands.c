@@ -13,14 +13,14 @@
 static inline void consumeCommand(WarMap* map, WarUnitCommand* command)
 {
     // Only suppress the subsequent map-selection-on-release for commands that
-     // are executed via a left click on the map/minimap.
-     map->suppressSelectionOnRelease =
-         command->type == WAR_COMMAND_MOVE ||
-         command->type == WAR_COMMAND_HARVEST ||
-         command->type == WAR_COMMAND_REPAIR ||
-         command->type == WAR_COMMAND_ATTACK ||
-         (command->type >= WAR_COMMAND_SPELL_HEALING && command->type <= WAR_COMMAND_SPELL_UNHOLY_ARMOR) ||
-         (command->type >= WAR_COMMAND_BUILD_FARM_HUMANS && command->type <= WAR_COMMAND_BUILD_WALL);
+    // are executed via a left click on the map/minimap.
+    map->commandState.suppressSelectionOnRelease =
+        command->type == WAR_COMMAND_MOVE ||
+        command->type == WAR_COMMAND_HARVEST ||
+        command->type == WAR_COMMAND_REPAIR ||
+        command->type == WAR_COMMAND_ATTACK ||
+        (command->type >= WAR_COMMAND_SPELL_HEALING && command->type <= WAR_COMMAND_SPELL_UNHOLY_ARMOR) ||
+        (command->type >= WAR_COMMAND_BUILD_FARM_HUMANS && command->type <= WAR_COMMAND_BUILD_WALL);
 
     command->type = WAR_COMMAND_NONE;
 }
@@ -617,7 +617,7 @@ bool wcmd_executeCommand(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
     WarPlayerInfo* player = &map->players[0];
-    WarUnitCommand* command = &map->command;
+    WarUnitCommand* command = &map->commandState.command;
 
     if (command->type == WAR_COMMAND_NONE)
     {
@@ -630,7 +630,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
 
@@ -638,11 +638,11 @@ bool wcmd_executeCommand(WarContext* context)
                     consumeCommand(map, command);
                     return true;
                 }
-                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
-                    map->suppressMinimapViewportOnRelease = true;
+                    map->commandState.suppressMinimapViewportOnRelease = true;
                     wcmd_executeMoveCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
@@ -661,7 +661,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -717,7 +717,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -743,7 +743,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -770,10 +770,10 @@ bool wcmd_executeCommand(WarContext* context)
                     consumeCommand(map, command);
                     return true;
                 }
-                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
-                    map->suppressMinimapViewportOnRelease = true;
+                    map->commandState.suppressMinimapViewportOnRelease = true;
                     wcmd_executeAttackCommand(context, NULL, targetTile);
 
                     consumeCommand(map, command);
@@ -890,7 +890,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     assert(map->selectedEntities.count > 0);
 
@@ -936,7 +936,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     assert(map->selectedEntities.count > 0);
 
@@ -956,7 +956,7 @@ bool wcmd_executeCommand(WarContext* context)
                     {
                         if (we_decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
                         {
-                            WarEntity* wall = map->wall;
+                            WarEntity* wall = map->editing.wall;
                             WarWallPiece* piece = we_addWallPiece(context, wall, (s32)targetTile.x, (s32)targetTile.y, 0);
                             piece->hp = WAR_WALL_MAX_HP;
                             piece->maxhp = WAR_WALL_MAX_HP;
@@ -986,7 +986,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     assert(map->selectedEntities.count > 0);
 
@@ -1006,7 +1006,7 @@ bool wcmd_executeCommand(WarContext* context)
                     {
                         if (we_decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
                         {
-                            WarEntity* road = map->road;
+                            WarEntity* road = map->editing.road;
                             we_addRoadPiece(context, road, (s32)targetTile.x, (s32)targetTile.y, 0);
 
                             we_determineRoadTypes(context, road);
@@ -1043,7 +1043,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1052,10 +1052,10 @@ bool wcmd_executeCommand(WarContext* context)
                     consumeCommand(map, command);
                     return true;
                 }
-                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
-                    map->suppressMinimapViewportOnRelease = true;
+                    map->commandState.suppressMinimapViewportOnRelease = true;
                     wcmd_executeRainOfFireCommand(context, targetTile);
                     consumeCommand(map, command);
                     return true;
@@ -1068,7 +1068,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1077,10 +1077,10 @@ bool wcmd_executeCommand(WarContext* context)
                     consumeCommand(map, command);
                     return true;
                 }
-                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
-                    map->suppressMinimapViewportOnRelease = true;
+                    map->commandState.suppressMinimapViewportOnRelease = true;
                     wcmd_executePoisonCloudCommand(context, targetTile);
                     consumeCommand(map, command);
                     return true;
@@ -1093,7 +1093,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1113,7 +1113,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1133,7 +1133,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1153,7 +1153,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1170,7 +1170,7 @@ bool wcmd_executeCommand(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if(rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1178,10 +1178,10 @@ bool wcmd_executeCommand(WarContext* context)
                     consumeCommand(map, command);
                     return true;
                 }
-                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
-                    map->suppressMinimapViewportOnRelease = true;
+                    map->commandState.suppressMinimapViewportOnRelease = true;
                     wcmd_executeSightCommand(context, targetTile);
                     consumeCommand(map, command);
                     return true;
@@ -1211,9 +1211,9 @@ void wcmd_trainUnit(WarContext* context, WarUnitCommandType commandType, WarUnit
 {
     WarMap* map = context->map;
 
-    map->command.type = commandType;
-    map->command.train.unitToTrain = unitToTrain;
-    map->command.train.buildingUnit = buildingUnit;
+    map->commandState.command.type = commandType;
+    map->commandState.command.train.unitToTrain = unitToTrain;
+    map->commandState.command.train.buildingUnit = buildingUnit;
 }
 
 void wcmd_trainFootman(WarContext* context, WarEntity* entity)
@@ -1305,9 +1305,9 @@ void wcmd_upgradeUpgrade(WarContext* context, WarUnitCommandType commandType, Wa
 {
     WarMap* map = context->map;
 
-    map->command.type = commandType;
-    map->command.upgrade.upgradeToBuild = upgradeToBuild;
-    map->command.upgrade.buildingUnit = buildingUnit;
+    map->commandState.command.type = commandType;
+    map->commandState.command.upgrade.upgradeToBuild = upgradeToBuild;
+    map->commandState.command.upgrade.buildingUnit = buildingUnit;
 }
 
 void wcmd_upgradeSwords(WarContext* context, WarEntity* entity)
@@ -1438,7 +1438,7 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    map->command.type = WAR_COMMAND_NONE;
+    map->commandState.command.type = WAR_COMMAND_NONE;
 
     for (s32 i = 0; i < map->selectedEntities.count; i++)
     {
@@ -1495,7 +1495,7 @@ void move(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_MOVE;
+    map->commandState.command.type = WAR_COMMAND_MOVE;
 }
 
 void wcmd_stop(WarContext* context, WarEntity* entity)
@@ -1503,7 +1503,7 @@ void wcmd_stop(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_STOP;
+    map->commandState.command.type = WAR_COMMAND_STOP;
 }
 
 void wcmd_harvest(WarContext* context, WarEntity* entity)
@@ -1511,7 +1511,7 @@ void wcmd_harvest(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_HARVEST;
+    map->commandState.command.type = WAR_COMMAND_HARVEST;
 }
 
 void deliver(WarContext* context, WarEntity* entity)
@@ -1519,7 +1519,7 @@ void deliver(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_DELIVER;
+    map->commandState.command.type = WAR_COMMAND_DELIVER;
 }
 
 void repair(WarContext* context, WarEntity* entity)
@@ -1527,7 +1527,7 @@ void repair(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_REPAIR;
+    map->commandState.command.type = WAR_COMMAND_REPAIR;
 }
 
 void attack(WarContext* context, WarEntity* entity)
@@ -1535,7 +1535,7 @@ void attack(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_ATTACK;
+    map->commandState.command.type = WAR_COMMAND_ATTACK;
 }
 
 void wcmd_buildBasic(WarContext* context, WarEntity* entity)
@@ -1543,7 +1543,7 @@ void wcmd_buildBasic(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_BUILD_BASIC;
+    map->commandState.command.type = WAR_COMMAND_BUILD_BASIC;
 }
 
 void wcmd_buildAdvanced(WarContext* context, WarEntity* entity)
@@ -1551,15 +1551,15 @@ void wcmd_buildAdvanced(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_BUILD_ADVANCED;
+    map->commandState.command.type = WAR_COMMAND_BUILD_ADVANCED;
 }
 
 void wcmd_buildBuilding(WarContext* context, WarUnitCommandType commandType, WarUnitType buildingToBuild)
 {
     WarMap* map = context->map;
 
-    map->command.type = commandType;
-    map->command.build.buildingToBuild = buildingToBuild;
+    map->commandState.command.type = commandType;
+    map->commandState.command.build.buildingToBuild = buildingToBuild;
 }
 
 void wcmd_buildFarmHumans(WarContext* context, WarEntity* entity)
@@ -1663,7 +1663,7 @@ void wcmd_buildWall(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_BUILD_WALL;
+    map->commandState.command.type = WAR_COMMAND_BUILD_WALL;
 }
 
 void wcmd_buildRoad(WarContext* context, WarEntity* entity)
@@ -1671,7 +1671,7 @@ void wcmd_buildRoad(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_BUILD_ROAD;
+    map->commandState.command.type = WAR_COMMAND_BUILD_ROAD;
 }
 
 // spells
@@ -1680,7 +1680,7 @@ void wcmd_castRainOfFire(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
+    map->commandState.command.type = WAR_COMMAND_SPELL_RAIN_OF_FIRE;
 }
 
 void wcmd_castPoisonCloud(WarContext* context, WarEntity* entity)
@@ -1688,7 +1688,7 @@ void wcmd_castPoisonCloud(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SPELL_POISON_CLOUD;
+    map->commandState.command.type = WAR_COMMAND_SPELL_POISON_CLOUD;
 }
 
 void wcmd_castHeal(WarContext* context, WarEntity* entity)
@@ -1696,7 +1696,7 @@ void wcmd_castHeal(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SPELL_HEALING;
+    map->commandState.command.type = WAR_COMMAND_SPELL_HEALING;
 }
 
 void wcmd_castFarSight(WarContext* context, WarEntity* entity)
@@ -1704,7 +1704,7 @@ void wcmd_castFarSight(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SPELL_FAR_SIGHT;
+    map->commandState.command.type = WAR_COMMAND_SPELL_FAR_SIGHT;
 }
 
 void wcmd_castDarkVision(WarContext* context, WarEntity* entity)
@@ -1712,7 +1712,7 @@ void wcmd_castDarkVision(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SPELL_DARK_VISION;
+    map->commandState.command.type = WAR_COMMAND_SPELL_DARK_VISION;
 }
 
 void wcmd_castInvisibility(WarContext* context, WarEntity* entity)
@@ -1720,7 +1720,7 @@ void wcmd_castInvisibility(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SPELL_INVISIBILITY;
+    map->commandState.command.type = WAR_COMMAND_SPELL_INVISIBILITY;
 }
 
 void wcmd_castUnHolyArmor(WarContext* context, WarEntity* entity)
@@ -1728,7 +1728,7 @@ void wcmd_castUnHolyArmor(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
+    map->commandState.command.type = WAR_COMMAND_SPELL_UNHOLY_ARMOR;
 }
 
 void wcmd_castRaiseDead(WarContext* context, WarEntity* entity)
@@ -1736,7 +1736,7 @@ void wcmd_castRaiseDead(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SPELL_RAISE_DEAD;
+    map->commandState.command.type = WAR_COMMAND_SPELL_RAISE_DEAD;
 }
 
 // summons
@@ -1745,7 +1745,7 @@ void wcmd_summonSpider(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SUMMON_SPIDER;
+    map->commandState.command.type = WAR_COMMAND_SUMMON_SPIDER;
 }
 
 void wcmd_summonScorpion(WarContext* context, WarEntity* entity)
@@ -1753,7 +1753,7 @@ void wcmd_summonScorpion(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SUMMON_SCORPION;
+    map->commandState.command.type = WAR_COMMAND_SUMMON_SCORPION;
 }
 
 void wcmd_summonDaemon(WarContext* context, WarEntity* entity)
@@ -1761,7 +1761,7 @@ void wcmd_summonDaemon(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SUMMON_DAEMON;
+    map->commandState.command.type = WAR_COMMAND_SUMMON_DAEMON;
 }
 
 void wcmd_summonWaterElemental(WarContext* context, WarEntity* entity)
@@ -1769,5 +1769,5 @@ void wcmd_summonWaterElemental(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
     WarMap* map = context->map;
 
-    map->command.type = WAR_COMMAND_SUMMON_WATER_ELEMENTAL;
+    map->commandState.command.type = WAR_COMMAND_SUMMON_WATER_ELEMENTAL;
 }

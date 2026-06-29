@@ -2650,7 +2650,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     wspr_renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
     // render viewport
-    wr_translate(context, (f32)map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
+    wr_translate(context, (f32)map->camera.viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->camera.viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
     wr_strokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
 
     wr_restore(context);

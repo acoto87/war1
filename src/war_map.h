@@ -69,28 +69,8 @@ struct _WarMapSettings
     WarMapSpeed keyScrollSpeed;
 };
 
-struct _WarMap
+struct _WarMapUI
 {
-    bool playing;
-    bool custom;
-    WarLevelResult result;
-    WarMenuState menuState;
-
-    s32 levelInfoIndex;
-    f32 objectivesTime;
-
-    // scroll
-    bool isScrolling;
-    bool wasScrolling;
-
-    WarMapSettings settings;
-    WarMapSettings settings2;
-
-    // viewport in map coordinates,
-    // this is the portion of the map that the player see
-    rect viewport;
-
-    // panels of the ui, in screen coordinates
     rect leftTopPanel;
     rect leftBottomPanel;
     rect topPanel;
@@ -101,6 +81,76 @@ struct _WarMap
     rect menuPanel;
     rect messagePanel;
     rect saveLoadPanel;
+};
+
+struct _WarMapCamera
+{
+    // viewport in map coordinates, this is the portion of the map that the player see
+    rect viewport;
+    bool isScrolling;
+    bool wasScrolling;
+};
+
+struct _WarMapEditing
+{
+    WarMapEditMode mode;
+    WarUnitType pendingUnitType;
+    WarEntity* forest;
+    WarEntity* wall;
+    WarEntity* road;
+    WarEntity* ruin;
+};
+
+struct _WarMapCommandState
+{
+    WarUnitCommand command;
+    bool suppressSelectionOnRelease;
+    bool suppressMinimapViewportOnRelease;
+};
+
+struct _WarMapCommandPanel
+{
+    WarUnitCommandData slots[6];
+    bool slotsActive[6];
+
+    char texts[4][32];
+    s32 textsHighlightIndex[4];
+    s32 textsHighlightCount[4];
+    bool textsVisible[4];
+};
+
+struct _WarMapDebug
+{
+    WarDirection* flowField;
+    s32 flowFieldX;
+    s32 flowFieldY;
+};
+
+struct _WarMapStatus
+{
+    char statusLineText[256];
+    s32 statusLineHighlightIndex;
+    s32 statusLineHighlightCount;
+    s32 statusLineGold;
+    s32 statusLineWood;
+    WarFlashStatus flashStatus;
+    WarCheatStatus cheatStatus;
+};
+
+struct _WarMap
+{
+    bool playing;
+    bool custom;
+    WarLevelResult result;
+    WarMenuState menuState;
+
+    s32 levelInfoIndex;
+    f32 objectivesTime;
+
+    WarMapSettings settings;
+    WarMapSettings pendingSettings;
+    WarMapCamera camera;
+    WarMapUI ui;
 
     WarSprite sprite;
     WarSprite minimapSprite;
@@ -113,48 +163,16 @@ struct _WarMap
     WarEntityIdList selectedEntities;
     WarEntityIdList selectionGroups[MAX_SELECTION_GROUPS];
 
-    WarEntity* forest;
-    WarEntity* wall;
-    WarEntity* road;
-    WarEntity* ruin;
-
-    bool editingTrees;
-    bool editingWalls;
-    bool editingRoads;
-    bool editingRuins;
-    bool editingRainOfFire;
-    bool addingUnit;
-    WarUnitType addingUnitType;
+    WarMapEditing editing;
+    WarPathFinder finder;
+    WarMapCommandState commandState;
+    WarMapCommandPanel commandPanel;
+    WarMapDebug debug;
+    WarPlayerInfo players[MAX_PLAYERS_COUNT];
+    WarMapStatus status;
 
     bool hurryUp;
     bool fowEnabled;
-
-    WarPathFinder finder;
-    WarUnitCommand command;
-
-    WarDirection* debugFlowField;
-    s32 debugFlowFieldX;
-    s32 debugFlowFieldY;
-
-    bool suppressSelectionOnRelease;
-    bool suppressMinimapViewportOnRelease;
-    WarFlashStatus flashStatus;
-    WarCheatStatus cheatStatus;
-    WarPlayerInfo players[MAX_PLAYERS_COUNT];
-
-    char hudStatusText[256];
-    s32 hudStatusHighlightIndex;
-    s32 hudStatusHighlightCount;
-    s32 hudStatusGold;
-    s32 hudStatusWood;
-
-    WarUnitCommandData commandSlots[6];
-    bool commandSlotActive[6];
-
-    char commandTexts[4][32];
-    s32 commandTextHighlightIndex[4];
-    s32 commandTextHighlightCount[4];
-    bool commandTextVisible[4];
 };
 
 WarMap* wmap_createMap(WarContext *context, s32 levelInfoIndex);

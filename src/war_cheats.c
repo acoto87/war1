@@ -498,12 +498,7 @@ void wcheat_applyEditCheat(WarContext* context, StringView argument)
     if (!map)
         return;
 
-    map->editingTrees = false;
-    map->editingWalls = false;
-    map->editingRoads = false;
-    map->editingRuins = false;
-    map->editingRainOfFire = false;
-    map->addingUnit = false;
+    map->editing.mode = WAR_MAP_EDIT_MODE_NONE;
 
     if (wsv_equalsIgnoreCase(argument, wsv_fromCString("off")))
     {
@@ -513,22 +508,22 @@ void wcheat_applyEditCheat(WarContext* context, StringView argument)
 
     if (wsv_equalsIgnoreCase(argument, wsv_fromCString("trees")))
     {
-        map->editingTrees = true;
+        map->editing.mode = WAR_MAP_EDIT_MODE_TREES;
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit trees on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("walls")))
     {
-        map->editingWalls = true;
+        map->editing.mode = WAR_MAP_EDIT_MODE_WALLS;
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit walls on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("roads")))
     {
-        map->editingRoads = true;
+        map->editing.mode = WAR_MAP_EDIT_MODE_ROADS;
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit roads on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("ruins")))
     {
-        map->editingRuins = true;
+        map->editing.mode = WAR_MAP_EDIT_MODE_RUINS;
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit ruins on"));
     }
 }
@@ -544,14 +539,11 @@ void wcheat_applyRainOfFireCheat(WarContext* context, StringView argument)
     if (!map)
         return;
 
-    map->editingTrees = false;
-    map->editingWalls = false;
-    map->editingRoads = false;
-    map->editingRuins = false;
-    map->editingRainOfFire = !map->editingRainOfFire;
-    map->addingUnit = false;
+    map->editing.mode = map->editing.mode == WAR_MAP_EDIT_MODE_RAIN_OF_FIRE
+        ? WAR_MAP_EDIT_MODE_NONE
+        : WAR_MAP_EDIT_MODE_RAIN_OF_FIRE;
 
-    if (map->editingRainOfFire)
+    if (map->editing.mode == WAR_MAP_EDIT_MODE_RAIN_OF_FIRE)
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Rain of fire on"));
     else
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Rain of fire off"));
@@ -566,13 +558,7 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
     if (!map)
         return;
 
-    map->editingTrees = false;
-    map->editingWalls = false;
-    map->editingRoads = false;
-    map->editingRuins = false;
-    map->editingRainOfFire = false;
-
-    map->addingUnit = false;
+    map->editing.mode = WAR_MAP_EDIT_MODE_NONE;
 
     if (wsv_startsWithIgnoreCase(argument, wsv_fromCString("off")))
     {
@@ -591,52 +577,52 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_CATAPULT_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_CATAPULT_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_CATAPULT_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_CATAPULT_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("FARM")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_FARM_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_FARM_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_FARM_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_FARM_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("BARRACKS")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_BARRACKS_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_BARRACKS_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_BARRACKS_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_BARRACKS_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("TOWER")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_TOWER_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_TOWER_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_TOWER_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_TOWER_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("TOWN")) && wsv_equalsIgnoreCase(part2, wsv_fromCString("HALL")))
@@ -646,52 +632,52 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
 
         if (wsv_startsWithIgnoreCase(part3, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_TOWNHALL_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_TOWNHALL_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part3, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_TOWNHALL_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_TOWNHALL_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("MILL")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_LUMBERMILL_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_LUMBERMILL_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_LUMBERMILL_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_LUMBERMILL_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("BLACKSMITH")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_BLACKSMITH_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_BLACKSMITH_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_BLACKSMITH_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_BLACKSMITH_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("CORPSE")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_HUMAN_CORPSE;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_HUMAN_CORPSE;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_ORC_CORPSE;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_ORC_CORPSE;
         }
     }
     else
@@ -700,14 +686,14 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
         {
             if (wsv_equalsIgnoreCase(part1, unitsData[i].name))
             {
-                map->addingUnit = true;
-                map->addingUnitType = (WarUnitType)i;
+                map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+                map->editing.pendingUnitType = (WarUnitType)i;
                 break;
             }
         }
     }
 
-    if (map->addingUnit)
+    if (map->editing.mode == WAR_MAP_EDIT_MODE_ADD_UNIT)
     {
         wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Add unit %.*s", (int)argument.length, argument.data));
     }

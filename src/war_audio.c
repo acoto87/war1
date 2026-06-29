@@ -416,7 +416,7 @@ void SDLCALL audioDataCallback(void* userdata, SDL_AudioStream* stream, int addi
                             // it's a positional audio, so check if the audio is inside the viewport
                             vec2 position = transform->position;
 
-                            rect viewport = map->viewport;
+                            rect viewport = map->camera.viewport;
                             if (!rect_containsf(viewport, position.x, position.y))
                             {
                                 vec2 viewportCenter = rect_center(viewport);

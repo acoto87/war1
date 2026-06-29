@@ -91,8 +91,8 @@ vec2 wmap_screenToMapCoordinatesV(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
 
-    rect mapPanel = map->mapPanel;
-    rect viewport = map->viewport;
+    rect mapPanel = map->ui.mapPanel;
+    rect viewport = map->camera.viewport;
 
     v = vec2_translatef(v, -mapPanel.x, -mapPanel.y);
     v = vec2_translatef(v, viewport.x, viewport.y);
@@ -103,7 +103,7 @@ vec2 wmap_screenToMinimapCoordinatesV(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
 
-    rect minimapPanel = map->minimapPanel;
+    rect minimapPanel = map->ui.minimapPanel;
 
     v = vec2_translatef(v, -minimapPanel.x, -minimapPanel.y);
     return v;
@@ -113,8 +113,8 @@ rect wmap_screenToMapCoordinatesR(WarContext* context, rect r)
 {
     WarMap* map = context->map;
 
-    rect mapPanel = map->mapPanel;
-    rect viewport = map->viewport;
+    rect mapPanel = map->ui.mapPanel;
+    rect viewport = map->camera.viewport;
 
     r = rect_translatef(r, -mapPanel.x, -mapPanel.y);
     r = rect_translatef(r, viewport.x, viewport.y);
@@ -125,8 +125,8 @@ vec2 wmap_mapToScreenCoordinatesV(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
 
-    v = vec2_translatef(v, -map->viewport.x, -map->viewport.y);
-    v = vec2_translatef(v, map->mapPanel.x, map->mapPanel.y);
+    v = vec2_translatef(v, -map->camera.viewport.x, -map->camera.viewport.y);
+    v = vec2_translatef(v, map->ui.mapPanel.x, map->ui.mapPanel.y);
     return v;
 }
 
@@ -134,8 +134,8 @@ rect wmap_mapToScreenCoordinatesR(WarContext* context, rect r)
 {
     WarMap* map = context->map;
 
-    r = rect_translatef(r, -map->viewport.x, -map->viewport.y);
-    r = rect_translatef(r, map->mapPanel.x, map->mapPanel.y);
+    r = rect_translatef(r, -map->camera.viewport.x, -map->camera.viewport.y);
+    r = rect_translatef(r, map->ui.mapPanel.x, map->ui.mapPanel.y);
     return r;
 }
 
@@ -164,7 +164,7 @@ vec2 wmap_minimapToViewportCoordinatesV(WarContext* context, vec2 v)
 {
     WarMap* map = context->map;
 
-    rect minimapPanel = map->minimapPanel;
+    rect minimapPanel = map->ui.minimapPanel;
     vec2 minimapPanelSize = vec2f(minimapPanel.width, minimapPanel.height);
 
     vec2 minimapViewportSize = vec2f(MINIMAP_VIEWPORT_WIDTH, MINIMAP_VIEWPORT_HEIGHT);
@@ -660,10 +660,10 @@ void wmap_freeMap(WarContext* context, WarMap* map)
         WarEntityIdListFree(&map->selectionGroups[i]);
     }
 
-    if (map->debugFlowField)
+    if (map->debug.flowField)
     {
-        wm_free(map->debugFlowField);
-        map->debugFlowField = NULL;
+        wm_free(map->debug.flowField);
+        map->debug.flowField = NULL;
     }
 
     wm_free(map->finder.data);
@@ -692,20 +692,20 @@ void wmap_enterMap(WarContext* context)
     map->settings.mouseScrollSpeed = WAR_SPEED_NORMAL;
     map->settings.keyScrollSpeed = WAR_SPEED_NORMAL;
 
-    map->leftTopPanel = recti(0, 0, 72, 72);
-    map->leftBottomPanel = recti(0, 72, 72, 128);
-    map->rightPanel = recti(312, 0, 8, 200);
-    map->topPanel = recti(72, 0, 240, 12);
-    map->bottomPanel = recti(72, 188, 240, 12);
-    map->mapPanel = recti(72, 12, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
-    map->minimapPanel = recti(3, 6, MINIMAP_WIDTH, MINIMAP_HEIGHT);
-    map->menuPanel = recti(84, 32, 152, 136);
-    map->messagePanel = recti(17, 76, 286, 48);
-    map->saveLoadPanel = recti(48, 27, 223, 146);
+    map->ui.leftTopPanel = recti(0, 0, 72, 72);
+    map->ui.leftBottomPanel = recti(0, 72, 72, 128);
+    map->ui.rightPanel = recti(312, 0, 8, 200);
+    map->ui.topPanel = recti(72, 0, 240, 12);
+    map->ui.bottomPanel = recti(72, 188, 240, 12);
+    map->ui.mapPanel = recti(72, 12, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
+    map->ui.minimapPanel = recti(3, 6, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+    map->ui.menuPanel = recti(84, 32, 152, 136);
+    map->ui.messagePanel = recti(17, 76, 286, 48);
+    map->ui.saveLoadPanel = recti(48, 27, 223, 146);
 
     s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
     s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
-    map->viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
+    map->camera.viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
 
     map->finder = wpath_initPathFinder(context, PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
 
@@ -854,7 +854,7 @@ void wmap_enterMap(WarContext* context)
             }
         }
 
-        map->forest = we_createForest(context);;
+        map->editing.forest = we_createForest(context);;
     }
 
     // create the starting roads
@@ -872,7 +872,7 @@ void wmap_enterMap(WarContext* context)
 
         we_determineRoadTypes(context, road);
 
-        map->road = road;
+        map->editing.road = road;
     }
 
     // create the starting walls
@@ -905,12 +905,12 @@ void wmap_enterMap(WarContext* context)
         WarState* idleState = wst_createIdleState(context, wall, false);
         wst_changeNextState(context, wall, idleState, true, true);
 
-        map->wall = wall;
+        map->editing.wall = wall;
     }
 
     // create ruins
     {
-        map->ruin = we_createRuins(context);
+        map->editing.ruin = we_createRuins(context);
     }
 
     // create players info
@@ -980,35 +980,35 @@ static void updateViewport(WarContext *context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    map->wasScrolling = false;
+    map->camera.wasScrolling = false;
 
-    if (map->suppressMinimapViewportOnRelease)
+    if (map->commandState.suppressMinimapViewportOnRelease)
     {
-        map->isScrolling = false;
+        map->camera.isScrolling = false;
 
         if (!isButtonHeld(input, WAR_MOUSE_LEFT))
-            map->suppressMinimapViewportOnRelease = false;
+            map->commandState.suppressMinimapViewportOnRelease = false;
 
         return;
     }
 
     vec2 dir = VEC2_ZERO;
-    bool wasScrolling = map->isScrolling;
+    bool wasScrolling = map->camera.isScrolling;
     bool mouseScroll = false;
     bool keyScroll = false;
 
     // if there was a click in the minimap, then update the position of the viewport
-    if (isButtonHeld(input, WAR_MOUSE_LEFT) && map->command.type == WAR_COMMAND_NONE)
+    if (isButtonHeld(input, WAR_MOUSE_LEFT) && map->commandState.command.type == WAR_COMMAND_NONE)
     {
         // check if the click is inside the minimap panel
-        if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
         {
             vec2 minimapSize = vec2i(MINIMAP_WIDTH, MINIMAP_HEIGHT);
             vec2 offset = wmap_screenToMinimapCoordinatesV(context, input->pos);
             offset = wmap_minimapToViewportCoordinatesV(context, offset);
 
-            map->viewport.x = offset.x * MAP_WIDTH / minimapSize.x;
-            map->viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
+            map->camera.viewport.x = offset.x * MAP_WIDTH / minimapSize.x;
+            map->camera.viewport.y = offset.y * MAP_HEIGHT / minimapSize.y;
         }
     }
     // check for the arrows keys and update the position of the viewport
@@ -1025,15 +1025,15 @@ static void updateViewport(WarContext *context)
         if (!mouseScroll &&
             !isKeyHeld(input, WAR_KEY_CTRL) &&
             !isKeyHeld(input, WAR_KEY_SHIFT) &&
-            !cheatsEnabledAndVisible(map))
+            !(map->status.cheatStatus.enabled && map->status.cheatStatus.visible))
         {
             dir = wmap_getDirFromArrowKeys(context);
             keyScroll = !VEC2_IS_ZERO(dir);
         }
     }
 
-    map->isScrolling = !VEC2_IS_ZERO(dir);
-    if (map->isScrolling)
+    map->camera.isScrolling = !VEC2_IS_ZERO(dir);
+    if (map->camera.isScrolling)
     {
         assert(mouseScroll || keyScroll);
 
@@ -1043,15 +1043,15 @@ static void updateViewport(WarContext *context)
         else if (keyScroll)
             scrollSpeed = getMapScrollSpeed(map->settings.keyScrollSpeed);
 
-        map->viewport.x += scrollSpeed * dir.x * context->realDeltaTime;
-        map->viewport.x = CLAMP(map->viewport.x, 0.0f, MAP_WIDTH - map->viewport.width);
+        map->camera.viewport.x += scrollSpeed * dir.x * context->realDeltaTime;
+        map->camera.viewport.x = CLAMP(map->camera.viewport.x, 0.0f, MAP_WIDTH - map->camera.viewport.width);
 
-        map->viewport.y += scrollSpeed * dir.y * context->realDeltaTime;
-        map->viewport.y = CLAMP(map->viewport.y, 0.0f, MAP_HEIGHT - map->viewport.height);
+        map->camera.viewport.y += scrollSpeed * dir.y * context->realDeltaTime;
+        map->camera.viewport.y = CLAMP(map->camera.viewport.y, 0.0f, MAP_HEIGHT - map->camera.viewport.height);
     }
     else
     {
-        map->wasScrolling = wasScrolling;
+        map->camera.wasScrolling = wasScrolling;
     }
 }
 
@@ -1060,7 +1060,7 @@ static void updateDragRect(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (map->isScrolling)
+    if (map->camera.isScrolling)
     {
         input->mapDragState.status = WAR_DRAG_NONE;
         input->mapDragState.startPos = VEC2_ZERO;
@@ -1096,7 +1096,7 @@ static void updateDragRect(WarContext* context)
         {
             if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
             {
-                if (!input->capturedUIButtonId && rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if (!input->capturedUIButtonId && rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     input->mapDragState.status = WAR_DRAG_STARTED;
                     input->mapDragState.startPos = input->pos;
@@ -1219,12 +1219,12 @@ static void updateSelectionFromList(WarContext* context, WarEntityList* newSelec
         WarEntityId selectedEntityId = map->selectedEntities.items[0];
         if (selectedEntityId != newSelectedEntity->id)
         {
-            map->command.type = WAR_COMMAND_NONE;
+            map->commandState.command.type = WAR_COMMAND_NONE;
         }
     }
     else
     {
-        map->command.type = WAR_COMMAND_NONE;
+        map->commandState.command.type = WAR_COMMAND_NONE;
     }
 
     // clear the current selection
@@ -1249,14 +1249,14 @@ static void updateSelection(WarContext* context)
 
     // if it was scrolling last frame, don't perform any selection this frame
     // also if the mouse is still dragging, don't perform any selection, the selection will be performed when the mouse will be released
-    if (map->wasScrolling || input->mapDragState.status != WAR_DRAG_RELEASED)
+    if (map->camera.wasScrolling || input->mapDragState.status != WAR_DRAG_RELEASED)
     {
         return;
     }
 
-    if (map->suppressSelectionOnRelease)
+    if (map->commandState.suppressSelectionOnRelease)
     {
-        map->suppressSelectionOnRelease = false;
+        map->commandState.suppressSelectionOnRelease = false;
         return;
     }
 
@@ -1312,7 +1312,7 @@ static void updateSelectionGroups(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (map->cheatStatus.visible)
+    if (map->status.cheatStatus.visible)
     {
         TracyCZoneEnd(ctx);
         return;
@@ -1366,12 +1366,12 @@ static void updateTreesEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (!map->editingTrees)
+    if (map->editing.mode != WAR_MAP_EDIT_MODE_TREES)
         return;
 
     if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1383,7 +1383,7 @@ static void updateTreesEdit(WarContext* context)
             WarEntity* entity = we_findEntity(context, entityId);
             if (!entity)
             {
-                entity = map->forest;
+                entity = map->editing.forest;
 
                 we_plantTree(context, entity, x, y);
                 we_determineAllTreeTiles(context);
@@ -1406,12 +1406,12 @@ void updateRoadsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (!map->editingRoads)
+    if (map->editing.mode != WAR_MAP_EDIT_MODE_ROADS)
         return;
 
     if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1419,7 +1419,7 @@ void updateRoadsEdit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntity* road = map->road;
+            WarEntity* road = map->editing.road;
 
             WarRoadPiece* piece = we_getRoadPieceAtPosition(context, road, x, y);
             if (!piece)
@@ -1441,12 +1441,12 @@ static void updateWallsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (!map->editingWalls)
+    if (map->editing.mode != WAR_MAP_EDIT_MODE_WALLS)
         return;
 
     if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1454,7 +1454,7 @@ static void updateWallsEdit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntity* wall = map->wall;
+            WarEntity* wall = map->editing.wall;
 
             WarWallPiece* piece = we_getWallPieceAtPosition(context, wall, x, y);
             if (!piece)
@@ -1481,12 +1481,12 @@ void updateRuinsEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (!map->editingRuins)
+    if (map->editing.mode != WAR_MAP_EDIT_MODE_RUINS)
         return;
 
     if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1494,7 +1494,7 @@ void updateRuinsEdit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntity* ruin = map->ruin;
+            WarEntity* ruin = map->editing.ruin;
 
             WarRuinPiece* piece = we_getRuinPieceAtPosition(context, ruin, x, y);
             if (!piece)
@@ -1516,14 +1516,14 @@ static void updateRainOfFireEdit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (!map->editingRainOfFire)
+    if (map->editing.mode != WAR_MAP_EDIT_MODE_RAIN_OF_FIRE)
         return;
 
     if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
         {
-            rect viewport = map->viewport;
+            rect viewport = map->camera.viewport;
 
             vec2 target = wmap_screenToMapCoordinatesV(context, input->pos);
             vec2 origin = vec2f(target.x, viewport.y);
@@ -1539,12 +1539,12 @@ static void updateAddUnit(WarContext* context)
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
-    if (!map->addingUnit)
+    if (map->editing.mode != WAR_MAP_EDIT_MODE_ADD_UNIT)
         return;
 
     if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
     {
-        if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+        if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
         {
             vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
             pointerPos =  wmap_mapToTileCoordinatesV(pointerPos);
@@ -1555,12 +1555,12 @@ static void updateAddUnit(WarContext* context)
             WarEntityId entityId = getTileEntityId(map->finder, x, y);
             if (!entityId)
             {
-                WarRace addingUnitRace = wu_getUnitTypeRace(map->addingUnitType);
+                WarRace addingUnitRace = wu_getUnitTypeRace(map->editing.pendingUnitType);
                 for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
                 {
                     if (map->players[i].race == addingUnitRace)
                     {
-                        WarEntity* addedUnit = we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=map->addingUnitType, .x=x, .y=y, .player=map->players[i].index, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
+                        WarEntity* addedUnit = we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=map->editing.pendingUnitType, .x=x, .y=y, .player=map->players[i].index, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
                         we_setInitialIdleState(context, addedUnit);
                         break;
                     }
@@ -1582,7 +1582,7 @@ static void updateFlowFieldDebug(WarContext* context)
     if (input->capturedUIButtonId)
         return;
 
-    if (!rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+    if (!rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
         return;
 
     vec2 pointerPos = wmap_screenToMapCoordinatesV(context, input->pos);
@@ -1594,16 +1594,16 @@ static void updateFlowFieldDebug(WarContext* context)
     if (!wpath_isInside(map->finder, x, y))
         return;
 
-    if (map->debugFlowField)
+    if (map->debug.flowField)
     {
-        wm_free(map->debugFlowField);
-        map->debugFlowField = NULL;
+        wm_free(map->debug.flowField);
+        map->debug.flowField = NULL;
     }
 
     WarMapFlowField flowField = wpath_computeFlowField(map->finder, x, y);
-    map->debugFlowField = flowField.field;
-    map->debugFlowFieldX = x;
-    map->debugFlowFieldY = y;
+    map->debug.flowField = flowField.field;
+    map->debug.flowFieldX = x;
+    map->debug.flowFieldY = y;
 }
 #endif
 
@@ -1616,16 +1616,16 @@ static void updateCommandButtons(WarContext* context)
     // Reset all IMGUI command panel state.
     for (s32 i = 0; i < 6; i++)
     {
-        map->commandSlotActive[i]   = false;
-        map->commandSlots[i]        = (WarUnitCommandData){0};
+        map->commandPanel.slotsActive[i]   = false;
+        map->commandPanel.slots[i]        = (WarUnitCommandData){0};
     }
 
     for (s32 i = 0; i < 4; i++)
     {
-        map->commandTextVisible[i]         = false;
-        map->commandTexts[i][0]            = '\0';
-        map->commandTextHighlightIndex[i]  = NO_HIGHLIGHT;
-        map->commandTextHighlightCount[i]  = 0;
+        map->commandPanel.textsVisible[i]         = false;
+        map->commandPanel.texts[i][0]            = '\0';
+        map->commandPanel.textsHighlightIndex[i]  = NO_HIGHLIGHT;
+        map->commandPanel.textsHighlightCount[i]  = 0;
     }
 
     s32 selectedEntitiesCount = map->selectedEntities.count;
@@ -1652,12 +1652,12 @@ static void updateCommandButtons(WarContext* context)
             s32 farmsCount = wu_getNumberOfBuildingsOfType(context, unit->player, unit->type, true);
             s32 dudesCount = wu_getTotalNumberOfDudes(context, unit->player);
 
-            snprintf(map->commandTexts[0], sizeof(map->commandTexts[0]), "FOOD USAGE:");
-            map->commandTextVisible[0] = true;
-            snprintf(map->commandTexts[1], sizeof(map->commandTexts[1]), "GROWN %d", farmsCount * 4 + 1);
-            map->commandTextVisible[1] = true;
-            snprintf(map->commandTexts[2], sizeof(map->commandTexts[2]), " USED %d", dudesCount);
-            map->commandTextVisible[2] = true;
+            snprintf(map->commandPanel.texts[0], sizeof(map->commandPanel.texts[0]), "FOOD USAGE:");
+            map->commandPanel.textsVisible[0] = true;
+            snprintf(map->commandPanel.texts[1], sizeof(map->commandPanel.texts[1]), "GROWN %d", farmsCount * 4 + 1);
+            map->commandPanel.textsVisible[1] = true;
+            snprintf(map->commandPanel.texts[2], sizeof(map->commandPanel.texts[2]), " USED %d", dudesCount);
+            map->commandPanel.textsVisible[2] = true;
 
             TracyCZoneEnd(ctx);
             return;
@@ -1670,10 +1670,10 @@ static void updateCommandButtons(WarContext* context)
     {
         s32 gold = unit->amount;
 
-        snprintf(map->commandTexts[0], sizeof(map->commandTexts[0]), "GOLD LEFT");
-        map->commandTextVisible[0] = true;
-        snprintf(map->commandTexts[3], sizeof(map->commandTexts[3]), "%d", gold);
-        map->commandTextVisible[3] = true;
+        snprintf(map->commandPanel.texts[0], sizeof(map->commandPanel.texts[0]), "GOLD LEFT");
+        map->commandPanel.textsVisible[0] = true;
+        snprintf(map->commandPanel.texts[3], sizeof(map->commandPanel.texts[3]), "%d", gold);
+        map->commandPanel.textsVisible[3] = true;
 
         TracyCZoneEnd(ctx);
         return;
@@ -1708,8 +1708,8 @@ static void updateCommandButtons(WarContext* context)
     {
         if (commands[i] != WAR_COMMAND_NONE)
         {
-            map->commandSlots[i]       = wu_getUnitCommandData(context, entity, commands[i]);
-            map->commandSlotActive[i]  = true;
+            map->commandPanel.slots[i]       = wu_getUnitCommandData(context, entity, commands[i]);
+            map->commandPanel.slotsActive[i]  = true;
         }
     }
 
@@ -1721,7 +1721,7 @@ void updateCommandFromRightClick(WarContext* context)
     TracyCZoneN(ctx, "UpdateCommandFromRightClick", 1);
 
     WarMap* map = context->map;
-    WarUnitCommand* command = &map->command;
+    WarUnitCommand* command = &map->commandState.command;
     WarInput* input = &context->input;
 
     if (isButtonJustPressed(input, WAR_MOUSE_RIGHT))
@@ -1732,7 +1732,7 @@ void updateCommandFromRightClick(WarContext* context)
             if (selEntitiesCount > 0)
             {
                 // if the right click was on the map
-                if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+                if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
@@ -1811,7 +1811,7 @@ void updateCommandFromRightClick(WarContext* context)
                     }
                 }
                 // if the right click was on the minimap
-                else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+                else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 offset = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     vec2 targetPoint = wmap_tileToMapCoordinatesV(offset, true);
@@ -1835,14 +1835,15 @@ static void updateStatus(WarContext* context)
 
     WarMap* map = context->map;
     WarInput* input = &context->input;
-    WarCheatStatus* cheatStatus = &map->cheatStatus;
-    WarFlashStatus* flashStatus = &map->flashStatus;
+    WarMapStatus* status = &map->status;
+    WarCheatStatus* cheatStatus = &status->cheatStatus;
+    WarFlashStatus* flashStatus = &status->flashStatus;
 
-    memset(map->hudStatusText, 0, sizeof(map->hudStatusText));
-    map->hudStatusHighlightIndex = NO_HIGHLIGHT;
-    map->hudStatusHighlightCount = 0;
-    map->hudStatusGold = 0;
-    map->hudStatusWood = 0;
+    memset(status->statusLineText, 0, sizeof(status->statusLineText));
+    status->statusLineHighlightIndex = NO_HIGHLIGHT;
+    status->statusLineHighlightCount = 0;
+    status->statusLineGold = 0;
+    status->statusLineWood = 0;
 
     if (cheatStatus->enabled)
     {
@@ -1918,18 +1919,18 @@ static void updateStatus(WarContext* context)
                 cheatStatus->position = length;
             }
 
-            StringView statusText = wsv_fromCStringFormat(map->hudStatusText, arrayLength(map->hudStatusText), "MSG: %.*s", (s32)cheatStatus->text.length, cheatStatus->text.data);
+            StringView statusText = wsv_fromCStringFormat(status->statusLineText, arrayLength(status->statusLineText), "MSG: %.*s", (s32)cheatStatus->text.length, cheatStatus->text.data);
             WarFontParams params = { .fontSize = 6.0f, .fontData = getFontData(0) };
             vec2 statusTextSize = wfont_measureSingleSpriteText(statusText, (s32)statusText.length, params);
 
             // Store cursor X offset (relative to bottomPanel.x + 2) for renderHUD.
-            map->cheatStatus.cursorX = 2.0f + statusTextSize.x;
+            cheatStatus->cursorX = 2.0f + statusTextSize.x;
 
             TracyCZoneEnd(ctx);
             return;
         }
 
-        map->cheatStatus.cursorX = -1.0f; // sentinel: cursor not visible
+        cheatStatus->cursorX = -1.0f; // sentinel: cursor not visible
 
         if (isKeyJustReleased(input, WAR_KEY_ENTER))
         {
@@ -1941,11 +1942,11 @@ static void updateStatus(WarContext* context)
     {
         if (context->realTime <= flashStatus->endRealTime)
         {
-            wsv_copyToBuffer(wstr_view(&flashStatus->text), map->hudStatusText, arrayLength(map->hudStatusText));
-            map->hudStatusHighlightIndex = NO_HIGHLIGHT;
-            map->hudStatusHighlightCount = 0;
-            map->hudStatusGold = 0;
-            map->hudStatusWood = 0;
+            wsv_copyToBuffer(wstr_view(&flashStatus->text), status->statusLineText, arrayLength(status->statusLineText));
+            status->statusLineHighlightIndex = NO_HIGHLIGHT;
+            status->statusLineHighlightCount = 0;
+            status->statusLineGold = 0;
+            status->statusLineWood = 0;
             TracyCZoneEnd(ctx);
             return;
         }
@@ -1971,7 +1972,7 @@ static void updateStatus(WarContext* context)
                     const WarUnitCommandMapping* commandMapping = wu_getCommandMappingFromUnitType(unitToBuild);
                     const WarUnitCommandBaseData* commandData = wu_getCommandBaseData(commandMapping->type);
 
-                    wsv_copyToBuffer(commandData->tooltip2, map->hudStatusText, arrayLength(map->hudStatusText));
+                    wsv_copyToBuffer(commandData->tooltip2, status->statusLineText, arrayLength(status->statusLineText));
                 }
                 else if (wst_isUpgrading(context, selectedEntity) || wst_isGoingToUpgrade(context, selectedEntity))
                 {
@@ -1980,7 +1981,7 @@ static void updateStatus(WarContext* context)
                     const WarUnitCommandMapping* commandMapping = wu_getCommandMappingFromUpgradeType(upgradeToBuild);
                     const WarUnitCommandBaseData* commandData = wu_getCommandBaseData(commandMapping->type);
 
-                    wsv_copyToBuffer(commandData->tooltip2, map->hudStatusText, arrayLength(map->hudStatusText));
+                    wsv_copyToBuffer(commandData->tooltip2, status->statusLineText, arrayLength(status->statusLineText));
                 }
                 else
                 {
@@ -1997,7 +1998,7 @@ static void updateStatus(WarContext* context)
                         // wood and gold would be 200 * 0.12 = 24.
                         //
                         s32 repairCost = (s32)ceil((maxhp - hp) * 0.12f);
-                        wsv_fromCStringFormat(map->hudStatusText, arrayLength(map->hudStatusText), "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
+                        wsv_fromCStringFormat(status->statusLineText, arrayLength(status->statusLineText), "FULL REPAIRS WILL COST %d GOLD & LUMBER", repairCost);
                     }
                 }
             }
@@ -2010,11 +2011,11 @@ static void updateStatus(WarContext* context)
 
                     if (selUnit->resourceKind == WAR_RESOURCE_GOLD)
                     {
-                        wsv_copyToBuffer(wsv_fromCString("CARRYING GOLD"), map->hudStatusText, arrayLength(map->hudStatusText));
+                        wsv_copyToBuffer(wsv_fromCString("CARRYING GOLD"), status->statusLineText, arrayLength(status->statusLineText));
                     }
                     else if (selUnit->resourceKind == WAR_RESOURCE_WOOD)
                     {
-                        wsv_copyToBuffer(wsv_fromCString("CARRYING LUMBER"), map->hudStatusText, arrayLength(map->hudStatusText));
+                        wsv_copyToBuffer(wsv_fromCString("CARRYING LUMBER"), status->statusLineText, arrayLength(status->statusLineText));
                     }
                 }
             }
@@ -2034,12 +2035,12 @@ static void updateStatus(WarContext* context)
 
                 if (button->interactive && button->hot)
                 {
-                    memset(map->hudStatusText, 0, sizeof(map->hudStatusText));
-                    wsv_copyToBuffer(wstr_view(&button->tooltip), map->hudStatusText, arrayLength(map->hudStatusText));
-                    map->hudStatusHighlightIndex = button->highlightIndex;
-                    map->hudStatusHighlightCount = button->highlightCount;
-                    map->hudStatusGold = button->gold;
-                    map->hudStatusWood = button->wood;
+                    memset(status->statusLineText, 0, sizeof(status->statusLineText));
+                    wsv_copyToBuffer(wstr_view(&button->tooltip), status->statusLineText, arrayLength(status->statusLineText));
+                    status->statusLineHighlightIndex = button->highlightIndex;
+                    status->statusLineHighlightCount = button->highlightCount;
+                    status->statusLineGold = button->gold;
+                    status->statusLineWood = button->wood;
                     break;
                 }
             }
@@ -2070,9 +2071,9 @@ static void updateMapCursor(WarContext* context)
         return;
     }
 
-    if (rect_containsf(map->mapPanel, input->pos.x, input->pos.y))
+    if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
     {
-        WarUnitCommand* command = &map->command;
+        WarUnitCommand* command = &map->commandState.command;
         switch (command->type)
         {
             case WAR_COMMAND_ATTACK:
@@ -2201,9 +2202,9 @@ static void updateMapCursor(WarContext* context)
             }
         }
     }
-    else if (rect_containsf(map->minimapPanel, input->pos.x, input->pos.y))
+    else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
     {
-        WarUnitCommand* command = &map->command;
+        WarUnitCommand* command = &map->commandState.command;
         switch (command->type)
         {
             case WAR_COMMAND_ATTACK:
@@ -2804,7 +2805,7 @@ void wmap_updateMap(WarContext* context)
         input->mapDragState.startPos = VEC2_ZERO;
         input->mapDragState.rect = RECT_EMPTY;
 
-        wui_updateUIButtons(context, !map->cheatStatus.visible);
+        wui_updateUIButtons(context, !map->status.cheatStatus.visible);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -3064,13 +3065,13 @@ static void renderFlowField(WarContext* context)
 {
     WarMap* map = context->map;
 
-    if (!map->debugFlowField)
+    if (!map->debug.flowField)
         return;
 
-    s32 startX = (s32)(map->viewport.x / MEGA_TILE_WIDTH);
-    s32 startY = (s32)(map->viewport.y / MEGA_TILE_HEIGHT);
-    s32 endX = (s32)((map->viewport.x + map->viewport.width) / MEGA_TILE_WIDTH) + 1;
-    s32 endY = (s32)((map->viewport.y + map->viewport.height) / MEGA_TILE_HEIGHT) + 1;
+    s32 startX = (s32)(map->camera.viewport.x / MEGA_TILE_WIDTH);
+    s32 startY = (s32)(map->camera.viewport.y / MEGA_TILE_HEIGHT);
+    s32 endX = (s32)((map->camera.viewport.x + map->camera.viewport.width) / MEGA_TILE_WIDTH) + 1;
+    s32 endY = (s32)((map->camera.viewport.y + map->camera.viewport.height) / MEGA_TILE_HEIGHT) + 1;
 
     startX = MAX(startX, 0);
     startY = MAX(startY, 0);
@@ -3088,13 +3089,13 @@ static void renderFlowField(WarContext* context)
     {
         for (s32 x = startX; x < endX; x++)
         {
-            if (x == map->debugFlowFieldX && y == map->debugFlowFieldY)
+            if (x == map->debug.flowFieldX && y == map->debug.flowFieldY)
                 continue;
 
             if (isStatic(map->finder, x, y))
                 continue;
 
-            WarDirection dir = map->debugFlowField[y * MAP_TILES_WIDTH + x];
+            WarDirection dir = map->debug.flowField[y * MAP_TILES_WIDTH + x];
             if (dir < WAR_DIRECTION_NORTH || dir >= WAR_DIRECTION_COUNT)
                 continue;
 
@@ -3130,8 +3131,8 @@ static void renderMapPanel(WarContext *context)
 
     wr_save(context);
 
-    wr_translate(context, map->mapPanel.x, map->mapPanel.y);
-    wr_translate(context, -map->viewport.x, -map->viewport.y);
+    wr_translate(context, map->ui.mapPanel.x, map->ui.mapPanel.y);
+    wr_translate(context, -map->camera.viewport.x, -map->camera.viewport.y);
 
     renderTerrain(context);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_RUIN);

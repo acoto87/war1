@@ -144,7 +144,7 @@ static void appendCheatTextInput(WarContext* context, StringView text)
     assert(scene || map);
 
     WarCheatStatus* cheatStatus = scene
-        ? &scene->cheatStatus : &map->cheatStatus;
+        ? &scene->cheatStatus : &map->status.cheatStatus;
 
     if (!cheatStatus->enabled || !cheatStatus->visible)
     {

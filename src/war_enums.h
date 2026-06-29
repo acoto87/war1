@@ -1031,6 +1031,17 @@ typedef enum _WarMapTileState
     MAP_TILE_STATE_VISIBLE = 4
 } WarMapTileState;
 
+typedef enum _WarMapEditMode
+{
+    WAR_MAP_EDIT_MODE_NONE,
+    WAR_MAP_EDIT_MODE_TREES,
+    WAR_MAP_EDIT_MODE_WALLS,
+    WAR_MAP_EDIT_MODE_ROADS,
+    WAR_MAP_EDIT_MODE_RUINS,
+    WAR_MAP_EDIT_MODE_RAIN_OF_FIRE,
+    WAR_MAP_EDIT_MODE_ADD_UNIT,
+} WarMapEditMode;
+
 typedef enum _WarAICommandStatus
 {
     WAR_AI_COMMAND_STATUS_CREATED,

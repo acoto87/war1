@@ -179,7 +179,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         vec2 target = vec2_addv(targetTilePosition, vec2f(offsetx, offsety));
 
                         offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
-                        vec2 origin = vec2f(target.x, map->viewport.y - offsety);
+                        vec2 origin = vec2f(target.x, map->camera.viewport.y - offsety);
 
                         wproj_createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
                     }
