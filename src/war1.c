@@ -264,6 +264,7 @@ int main(int argc, char** argv)
 #include "war_cheats.c"
 #include "war_map_menu.c"
 #include "war_map_ui.c"
+#include "war_map_grid.c"
 #include "war_map.c"
 #include "war_cheats_panel.c"
 #include "war_scene_download.c"

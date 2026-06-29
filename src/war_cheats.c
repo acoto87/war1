@@ -536,8 +536,7 @@ void wcheat_applyRainOfFireCheat(WarContext* context, StringView argument)
         return;
 
     WarMap* map = context->map;
-    if (!map)
-        return;
+    if (!map) return;
 
     map->editing.mode = map->editing.mode == WAR_MAP_EDIT_MODE_RAIN_OF_FIRE
         ? WAR_MAP_EDIT_MODE_NONE

@@ -80,7 +80,10 @@ void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 
     WarEntity* sourceEntity = we_findEntity(context, projectile->sourceEntityId);
     if (sourceEntity)
     {
-        WarEntityList* nearUnits = we_getNearUnits(context, targetTile, splashRadius);
+        WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
+        WarEntityListInit(nearUnits, wm_frameAllocator());
+        we_getNearUnits(context, targetTile, splashRadius, nearUnits);
+
         for (s32 i = 0; i < nearUnits->count; i++)
         {
             WarEntity* targetEntity = nearUnits->items[i];
@@ -89,6 +92,7 @@ void wproj_doProjectileSplashDamage(WarContext* context, WarEntity* entity, s32 
                 we_meleeAttack(context, sourceEntity, targetEntity);
             }
         }
+
         WarEntityListFree(nearUnits);
 
         WarEntityList* walls = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
@@ -120,7 +124,10 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
 
     vec2 targetTile = wmap_mapToTileCoordinatesV(projectile->target);
 
-    WarEntityList* nearUnits = we_getNearUnits(context, targetTile, splashRadius);
+    WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
+    WarEntityListInit(nearUnits, wm_frameAllocator());
+    we_getNearUnits(context, targetTile, splashRadius, nearUnits);
+
     for (s32 i = 0; i < nearUnits->count; i++)
     {
         WarEntity* targetEntity = nearUnits->items[i];
@@ -131,6 +138,7 @@ void wproj_doRainOfFireProjectileSplashDamage(WarContext* context, WarEntity* en
             we_takeDamage(context, targetEntity, 0, RAIN_OF_FIRE_PROJECTILE_DAMAGE);
         }
     }
+
     WarEntityListFree(nearUnits);
 
     WarEntityList* walls = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);

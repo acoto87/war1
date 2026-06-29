@@ -23,6 +23,267 @@
 
 #define MAP_SELECTION_DRAG_THRESHOLD 3.0f
 
+static void initCamera(WarMap *map, WarResource *levelInfo)
+{
+    s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
+    s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
+    map->camera.viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
+    map->camera.isScrolling = false;
+    map->camera.wasScrolling = false;
+}
+
+static void initPathFinder(WarContext* context, WarMap* map, WarResource* levelPassable)
+{
+    map->finder = wpath_initPathFinder(context, PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
+}
+
+static void initBlackSprite(WarContext* context, WarMap* map)
+{
+    u8 data[MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT * 4];
+    memset(data, 0, MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT * 4);
+    for (s32 i = 0; i < MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT; i++)
+        data[4 * i + 3] = 255;
+
+    map->blackSprite = wspr_createSprite(context, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT, data);
+}
+
+static void setInitialTileState(WarMap* map)
+{
+    for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+    {
+        WarMapTile* tile = &map->tiles[i];
+
+        tile->state = MAP_TILE_STATE_UNKOWN;
+        tile->type = WAR_FOG_PIECE_NONE;
+        tile->boundary = WAR_FOG_BOUNDARY_NONE;
+    }
+}
+
+static void createMapAndMinimapSprites(WarContext* context, WarMap* map, WarResource* levelInfo)
+{
+    WarResource* levelVisual = wres_getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
+    assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
+
+    WarResource* tileset = wres_getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
+    assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
+
+    // DEBUG:
+    // print level visual data to console to see the sprites of the map
+    //
+    // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    // {
+    //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+    //     {
+    //         // index of the tile in the tilesheet
+    //         u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
+    //         printf("%d ", tileIndex);
+    //     }
+
+    //     printf("\n");
+    // }
+
+    map->sprite = wspr_createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
+
+    // the minimap sprite will be a 2 frames sprite
+    // the first one will be the frame that actually render
+    // the second one will be the minimap for the terrain, created at startup time,
+    // that way I only have to memcpy to the first frame and do the work only for the units
+    // that way I also don't have to allocate memory for the minimap each frame
+    WarSpriteFrame minimapFrames[2];
+
+    for(s32 i = 0; i < 2; i++)
+    {
+        minimapFrames[i].dx = 0;
+        minimapFrames[i].dy = 0;
+        minimapFrames[i].w = MINIMAP_WIDTH;
+        minimapFrames[i].h = MINIMAP_HEIGHT;
+        minimapFrames[i].off = 0;
+        minimapFrames[i].data = (u8*)wm_alloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4 * sizeof(u8));
+
+        // make the frame black
+        for (s32 k = 0; k < MINIMAP_WIDTH * MINIMAP_HEIGHT; k++)
+            minimapFrames[i].data[k * 4 + 3] = 255;
+    }
+
+    for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
+    {
+        for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
+        {
+            WarColor color = wmap_getMapTileAverage(levelVisual, tileset, x, y);
+            s32 index = y * MAP_TILES_WIDTH + x;
+            minimapFrames[1].data[index * 4 + 0] = color.r;
+            minimapFrames[1].data[index * 4 + 1] = color.g;
+            minimapFrames[1].data[index * 4 + 2] = color.b;
+            minimapFrames[1].data[index * 4 + 3] = color.a;
+        }
+    }
+
+    map->minimapSprite = wspr_createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, arrayLength(minimapFrames), minimapFrames);
+}
+
+static void createForestEntities(WarContext* context, WarMap* map, WarResource* levelPassable)
+{
+    const s32 dirC = 8;
+    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
+    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
+
+    bool processed[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+    for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+        processed[i] = false;
+
+    u16* passableData = levelPassable->levelPassable.data;
+    for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
+    {
+        if (!processed[i] && passableData[i] == 128)
+        {
+            s32 x = i % MAP_TILES_WIDTH;
+            s32 y = i / MAP_TILES_WIDTH;
+
+            WarTreeList trees;
+            WarTreeListInit(&trees, wm_globalAllocator());
+            WarTreeListAdd(&trees, createTree(x, y, TREE_MAX_WOOD));
+            processed[i] = true;
+
+            for(s32 j = 0; j < trees.count; j++)
+            {
+                WarTree tree = trees.items[j];
+                for(s32 d = 0; d < dirC; d++)
+                {
+                    s32 xx = tree.tilex + dirX[d];
+                    s32 yy = tree.tiley + dirY[d];
+                    if (wpath_isInside(map->finder, xx, yy))
+                    {
+                        s32 k = yy * MAP_TILES_WIDTH + xx;
+                        if (!processed[k] && passableData[k] == 128)
+                        {
+                            // mark it processed right away, to not process it later
+                            processed[k] = true;
+
+                            WarTree newTree = createTree(xx, yy, TREE_MAX_WOOD);
+                            WarTreeListAdd(&trees, newTree);
+                        }
+                    }
+                }
+            }
+
+            WarEntity* forest = we_createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
+            we_addSpriteComponent(context, forest, WAR_SPRITE_COMPONENT_INIT(
+                .sprite = map->sprite
+            ));
+            we_addForestComponent(context, forest, trees);
+
+            for (s32 treeIndex = 0; treeIndex < trees.count; treeIndex++)
+            {
+                WarTree* tree = &trees.items[treeIndex];
+                setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, forest->id);
+            }
+
+            we_determineTreeTiles(context, forest);
+        }
+    }
+
+    map->editing.forest = we_createForest(context);
+}
+
+static void createStartingRoads(WarContext* context, WarMap* map, WarResource* levelInfo)
+{
+    WarEntity* road = we_createRoad(context);
+
+    for(s32 i = 0; i < (s32)levelInfo->levelInfo.startRoadsCount; i++)
+    {
+        WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
+        if (construct->type == WAR_CONSTRUCT_ROAD)
+        {
+            we_addRoadPiecesFromConstruct(context, road, construct);
+        }
+    }
+
+    we_determineRoadTypes(context, road);
+
+    map->editing.road = road;
+}
+
+static void createStartingWalls(WarContext* context, WarMap* map, WarResource* levelInfo)
+{
+    WarEntity* wall = we_createWall(context);
+
+    for(s32 i = 0; i < (s32)levelInfo->levelInfo.startWallsCount; i++)
+    {
+        WarLevelConstruct *construct = &levelInfo->levelInfo.startWalls[i];
+        if (construct->type == WAR_CONSTRUCT_WALL)
+        {
+            we_addWallPiecesFromConstruct(context, wall, construct);
+        }
+    }
+
+    we_determineWallTypes(context, wall);
+
+    WarWallComponent* wallComp = we_getWallComponent(context, wall);
+    assert(wallComp);
+
+    for(s32 i = 0; i < wallComp->pieces.count; i++)
+    {
+        WarWallPiece* piece = &wallComp->pieces.items[i];
+        piece->hp = WAR_WALL_MAX_HP;
+        piece->maxhp = WAR_WALL_MAX_HP;
+    }
+
+    we_addStateMachineComponent(context, wall);
+
+    WarState* idleState = wst_createIdleState(context, wall, false);
+    wst_changeNextState(context, wall, idleState, true, true);
+
+    map->editing.wall = wall;
+}
+
+static void createRuinEntity(WarContext* context, WarMap* map)
+{
+    map->editing.ruin = we_createRuins(context);
+}
+
+static void initPlayersInfo(WarMap* map, WarResource* levelInfo)
+{
+    for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
+    {
+        WarPlayerInfo* player = &map->players[i];
+
+        player->index = (u8)i;
+        player->race = levelInfo->levelInfo.races[i];
+        player->gold = 4000; // levelInfo->levelInfo.gold[i];
+        player->wood = 4000; // levelInfo->levelInfo.lumber[i];
+        player->godMode = false;
+
+        for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
+        {
+            player->features[j] = levelInfo->levelInfo.allowedFeatures[j];
+        }
+
+        for (s32 j = 0; j < MAX_UPGRADES_COUNT; j++)
+        {
+            player->upgrades[j].allowed = levelInfo->levelInfo.allowedUpgrades[j][i];
+            player->upgrades[j].level = 0;
+        }
+    }
+}
+
+static void createStartingEntities(WarContext* context, WarResource* levelInfo)
+{
+    for (s32 i = 0; i < (s32)levelInfo->levelInfo.startEntitiesCount; i++)
+    {
+        WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
+        WarEntity* startEntity = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
+            .type=startUnit.type,
+            .x=startUnit.x,
+            .y=startUnit.y,
+            .player=startUnit.player,
+            .resourceKind=startUnit.resourceKind,
+            .amount=startUnit.amount,
+            .addToMap=true
+        ));
+        we_setInitialIdleState(context, startEntity);
+    }
+}
+
 void wmap_addEntityToSelection(WarContext* context, WarEntityId id)
 {
     WarMap* map = context->map;
@@ -521,6 +782,16 @@ f32 wmap_getMapScaledTime(WarContext* context, f32 t)
     return t;
 }
 
+f32 wmap_getMapScrollSpeed(WarContext* context, f32 value)
+{
+    NOT_USED(context);
+
+    const f32 baseSpeed = 100.0f;
+    const f32 speedMultiplier = 50.0f;
+
+    return baseSpeed + value * speedMultiplier;
+}
+
 WarMap* wmap_createMap(WarContext* context, s32 levelInfoIndex)
 {
     WarMap *map = (WarMap*)wm_alloc(sizeof(WarMap));
@@ -703,263 +974,19 @@ void wmap_enterMap(WarContext* context)
     map->ui.messagePanel = recti(17, 76, 286, 48);
     map->ui.saveLoadPanel = recti(48, 27, 223, 146);
 
-    s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
-    s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
-    map->camera.viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
-
-    map->finder = wpath_initPathFinder(context, PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
-
-    const s32 dirC = 8;
-    const s32 dirX[] = {  0,  1, 1, 1, 0, -1, -1, -1 };
-    const s32 dirY[] = { -1, -1, 0, 1, 1,  1,  0, -1 };
-
-    // create the black sprite
-    {
-        u8 data[MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT * 4];
-        memset(data, 0, MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT * 4);
-        for (s32 i = 0; i < MEGA_TILE_WIDTH * MEGA_TILE_HEIGHT; i++)
-            data[4 * i + 3] = 255;
-
-        map->blackSprite = wspr_createSprite(context, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT, data);
-    }
-
-    // set the initial state for the tiles
-    {
-        for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-        {
-            WarMapTile* tile = &map->tiles[i];
-
-            tile->state = MAP_TILE_STATE_UNKOWN;
-            tile->type = WAR_FOG_PIECE_NONE;
-            tile->boundary = WAR_FOG_BOUNDARY_NONE;
-        }
-    }
-
-    // create the map sprite
-    {
-        WarResource* levelVisual = wres_getOrCreateResource(context, levelInfo->levelInfo.visualIndex);
-        assert(levelVisual && levelVisual->type == WAR_RESOURCE_TYPE_LEVEL_VISUAL);
-
-        WarResource* tileset = wres_getOrCreateResource(context, levelInfo->levelInfo.tilesetIndex);
-        assert(tileset && tileset->type == WAR_RESOURCE_TYPE_TILESET);
-
-        // DEBUG:
-        // print level visual data to console to see the sprites of the map
-        //
-        // for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-        // {
-        //     for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-        //     {
-        //         // index of the tile in the tilesheet
-        //         u16 tileIndex = levelVisual->levelVisual.data[y * MAP_TILES_WIDTH + x];
-        //         printf("%d ", tileIndex);
-        //     }
-
-        //     printf("\n");
-        // }
-
-        map->sprite = wspr_createSprite(context, TILESET_WIDTH, TILESET_HEIGHT, tileset->tilesetData.data);
-
-        // the minimap sprite will be a 2 frames sprite
-        // the first one will be the frame that actually render
-        // the second one will be the minimap for the terrain, created at startup time,
-        // that way I only have to memcpy to the first frame and do the work only for the units
-        // that way I also don't have to allocate memory for the minimap each frame
-        WarSpriteFrame minimapFrames[2];
-
-        for(s32 i = 0; i < 2; i++)
-        {
-            minimapFrames[i].dx = 0;
-            minimapFrames[i].dy = 0;
-            minimapFrames[i].w = MINIMAP_WIDTH;
-            minimapFrames[i].h = MINIMAP_HEIGHT;
-            minimapFrames[i].off = 0;
-            minimapFrames[i].data = (u8*)wm_alloc(MINIMAP_WIDTH * MINIMAP_HEIGHT * 4 * sizeof(u8));
-
-            // make the frame black
-            for (s32 k = 0; k < MINIMAP_WIDTH * MINIMAP_HEIGHT; k++)
-                minimapFrames[i].data[k * 4 + 3] = 255;
-        }
-
-        for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
-        {
-            for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
-            {
-                WarColor color = wmap_getMapTileAverage(levelVisual, tileset, x, y);
-                s32 index = y * MAP_TILES_WIDTH + x;
-                minimapFrames[1].data[index * 4 + 0] = color.r;
-                minimapFrames[1].data[index * 4 + 1] = color.g;
-                minimapFrames[1].data[index * 4 + 2] = color.b;
-                minimapFrames[1].data[index * 4 + 3] = color.a;
-            }
-        }
-
-        map->minimapSprite = wspr_createSpriteFromFrames(context, MINIMAP_WIDTH, MINIMAP_HEIGHT, arrayLength(minimapFrames), minimapFrames);
-    }
-
-    // create the forest entities
-    {
-        bool processed[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
-        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-            processed[i] = false;
-
-        u16* passableData = levelPassable->levelPassable.data;
-        for(s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
-        {
-            if (!processed[i] && passableData[i] == 128)
-            {
-                s32 x = i % MAP_TILES_WIDTH;
-                s32 y = i / MAP_TILES_WIDTH;
-
-                WarTreeList trees;
-                WarTreeListInit(&trees, wm_globalAllocator());
-                WarTreeListAdd(&trees, createTree(x, y, TREE_MAX_WOOD));
-                processed[i] = true;
-
-                for(s32 j = 0; j < trees.count; j++)
-                {
-                    WarTree tree = trees.items[j];
-                    for(s32 d = 0; d < dirC; d++)
-                    {
-                        s32 xx = tree.tilex + dirX[d];
-                        s32 yy = tree.tiley + dirY[d];
-                        if (wpath_isInside(map->finder, xx, yy))
-                        {
-                            s32 k = yy * MAP_TILES_WIDTH + xx;
-                            if (!processed[k] && passableData[k] == 128)
-                            {
-                                // mark it processed right away, to not process it later
-                                processed[k] = true;
-
-                                WarTree newTree = createTree(xx, yy, TREE_MAX_WOOD);
-                                WarTreeListAdd(&trees, newTree);
-                            }
-                        }
-                    }
-                }
-
-                WarEntity* forest = we_createEntity(context, WAR_ENTITY_TYPE_FOREST, true);
-                we_addSpriteComponent(context, forest, WAR_SPRITE_COMPONENT_INIT(
-                    .sprite = map->sprite
-                ));
-                we_addForestComponent(context, forest, trees);
-
-                for (s32 treeIndex = 0; treeIndex < trees.count; treeIndex++)
-                {
-                    WarTree* tree = &trees.items[treeIndex];
-                    setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, forest->id);
-                }
-
-                we_determineTreeTiles(context, forest);
-            }
-        }
-
-        map->editing.forest = we_createForest(context);;
-    }
-
-    // create the starting roads
-    {
-        WarEntity* road = we_createRoad(context);
-
-        for(s32 i = 0; i < (s32)levelInfo->levelInfo.startRoadsCount; i++)
-        {
-            WarLevelConstruct *construct = &levelInfo->levelInfo.startRoads[i];
-            if (construct->type == WAR_CONSTRUCT_ROAD)
-            {
-                we_addRoadPiecesFromConstruct(context, road, construct);
-            }
-        }
-
-        we_determineRoadTypes(context, road);
-
-        map->editing.road = road;
-    }
-
-    // create the starting walls
-    {
-        WarEntity* wall = we_createWall(context);
-
-        for(s32 i = 0; i < (s32)levelInfo->levelInfo.startWallsCount; i++)
-        {
-            WarLevelConstruct *construct = &levelInfo->levelInfo.startWalls[i];
-            if (construct->type == WAR_CONSTRUCT_WALL)
-            {
-                we_addWallPiecesFromConstruct(context, wall, construct);
-            }
-        }
-
-        we_determineWallTypes(context, wall);
-
-        WarWallComponent* wallComp = we_getWallComponent(context, wall);
-        assert(wallComp);
-
-        for(s32 i = 0; i < wallComp->pieces.count; i++)
-        {
-            WarWallPiece* piece = &wallComp->pieces.items[i];
-            piece->hp = WAR_WALL_MAX_HP;
-            piece->maxhp = WAR_WALL_MAX_HP;
-        }
-
-        we_addStateMachineComponent(context, wall);
-
-        WarState* idleState = wst_createIdleState(context, wall, false);
-        wst_changeNextState(context, wall, idleState, true, true);
-
-        map->editing.wall = wall;
-    }
-
-    // create ruins
-    {
-        map->editing.ruin = we_createRuins(context);
-    }
-
-    // create players info
-    {
-        for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
-        {
-            WarPlayerInfo* player = &map->players[i];
-
-            player->index = (u8)i;
-            player->race = levelInfo->levelInfo.races[i];
-            player->gold = 4000; // levelInfo->levelInfo.gold[i];
-            player->wood = 4000; // levelInfo->levelInfo.lumber[i];
-            player->godMode = false;
-
-            for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
-            {
-                player->features[j] = levelInfo->levelInfo.allowedFeatures[j];
-            }
-
-            for (s32 j = 0; j < MAX_UPGRADES_COUNT; j++)
-            {
-                player->upgrades[j].allowed = levelInfo->levelInfo.allowedUpgrades[j][i];
-                player->upgrades[j].level = 0;
-            }
-        }
-    }
-
-    // create the starting entities
-    {
-        for (s32 i = 0; i < (s32)levelInfo->levelInfo.startEntitiesCount; i++)
-        {
-            WarLevelUnit startUnit = levelInfo->levelInfo.startEntities[i];
-            WarEntity* startEntity = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
-                .type=startUnit.type,
-                .x=startUnit.x,
-                .y=startUnit.y,
-                .player=startUnit.player,
-                .resourceKind=startUnit.resourceKind,
-                .amount=startUnit.amount,
-                .addToMap=true
-            ));
-            we_setInitialIdleState(context, startEntity);
-        }
-    }
-
-    // init AI
+    initCamera(map, levelInfo);
+    initPathFinder(context, map, levelPassable);
+    wgrid_clear(context);
+    initBlackSprite(context, map);
+    setInitialTileState(map);
+    createMapAndMinimapSprites(context, map, levelInfo);
+    createForestEntities(context, map, levelPassable);
+    createStartingRoads(context, map, levelInfo);
+    createStartingWalls(context, map, levelInfo);
+    createRuinEntity(context, map);
+    initPlayersInfo(map, levelInfo);
+    createStartingEntities(context, levelInfo);
     wai_initAIPlayers(context);
-
-    // add ui entities
     wmui_createMapUI(context);
 
     if (!isDemo(context))
@@ -1039,9 +1066,9 @@ static void updateViewport(WarContext *context)
 
         f32 scrollSpeed = 0.0f;
         if (mouseScroll)
-            scrollSpeed = getMapScrollSpeed(map->settings.mouseScrollSpeed);
+            scrollSpeed = wmap_getMapScrollSpeed(context, map->settings.mouseScrollSpeed);
         else if (keyScroll)
-            scrollSpeed = getMapScrollSpeed(map->settings.keyScrollSpeed);
+            scrollSpeed = wmap_getMapScrollSpeed(context, map->settings.keyScrollSpeed);
 
         map->camera.viewport.x += scrollSpeed * dir.x * context->realDeltaTime;
         map->camera.viewport.x = CLAMP(map->camera.viewport.x, 0.0f, MAP_WIDTH - map->camera.viewport.width);
@@ -2376,7 +2403,9 @@ static bool updatePoisonCloud(WarContext* context, WarEntity* entity)
 
     if (poisonCloud->damageTime <= 0)
     {
-        WarEntityList* nearUnits = we_getNearUnits(context, poisonCloud->position, 2);
+        WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
+        WarEntityListInit(nearUnits, wm_frameAllocator());
+        we_getNearUnits(context, poisonCloud->position, 2, nearUnits);
 
         for (s32 i = 0; i < nearUnits->count; i++)
         {
@@ -2813,6 +2842,8 @@ void wmap_updateMap(WarContext* context)
     updateViewport(context);
     updateDragRect(context);
 
+    wgrid_build(context);
+
     if (!wcmd_executeCommand(context))
     {
         // only update the selection if the current command doesn't get
@@ -3007,7 +3038,9 @@ static void renderUnitPaths(WarContext* context)
                         vec2 pos = wmap_tileToMapCoordinatesV(path.nodes.items[k], true);
 
                         if (k > 0)
-                            wr_strokeLine(context, prevPos, pos, wr_getColorFromList(entity->id), 0.5f);
+                        {
+                            wr_strokeLine(context, prevPos, pos, wr_getColorFromList(entity->id));
+                        }
 
                         wr_fillRect(context, rectv(pos, VEC2_ONE), k == index ? WAR_COLOR_RGB(255, 0, 255) : WAR_COLOR_RGB(255, 255, 0));
 
@@ -3049,14 +3082,14 @@ static void renderMapGrid(WarContext* context)
     {
         vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
         vec2 p2 = vec2i(x * MEGA_TILE_WIDTH, MAP_TILES_HEIGHT * MEGA_TILE_HEIGHT);
-        wr_strokeLine(context, p1, p2, WAR_COLOR_WHITE, 0.25f);
+        wr_strokeLine(context, p1, p2, WAR_COLOR_WHITE);
     }
 
     for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
     {
         vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
         vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
-        wr_strokeLine(context, p1, p2, WAR_COLOR_WHITE, 0.25f);
+        wr_strokeLine(context, p1, p2, WAR_COLOR_WHITE);
     }
 }
 
@@ -3106,7 +3139,7 @@ static void renderFlowField(WarContext* context)
 
             vec2 end = vec2f(center.x + dx * shaftLen, center.y + dy * shaftLen);
 
-            wr_strokeLine(context, center, end, arrowColor, 1.0f);
+            wr_strokeLine(context, center, end, arrowColor);
 
             f32 angle = atan2f((f32)dy, (f32)dx);
             vec2 head1 = vec2f(
@@ -3116,8 +3149,8 @@ static void renderFlowField(WarContext* context)
                 end.x - headLen * cosf(angle + PI / 6.0f),
                 end.y - headLen * sinf(angle + PI / 6.0f));
 
-            wr_strokeLine(context, end, head1, arrowColor, 1.0f);
-            wr_strokeLine(context, end, head2, arrowColor, 1.0f);
+            wr_strokeLine(context, end, head1, arrowColor);
+            wr_strokeLine(context, end, head2, arrowColor);
         }
     }
 }

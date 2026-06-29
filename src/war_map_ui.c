@@ -1086,7 +1086,7 @@ static void renderSelectionRect(WarContext* context)
     if (isMapDragging(input))
     {
         rect pointerRect = input->mapDragState.rect;
-        wr_strokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
+        wr_strokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION);
     }
 
     wr_restore(context);

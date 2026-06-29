@@ -5,6 +5,7 @@
 #include "war_cheats.h"
 #include "war_entities.h"
 #include "war_resources.h"
+#include "war_map_grid.h"
 
 #define isHumanPlayer(player) ((player)->race == WAR_RACE_HUMANS)
 #define isOrcPlayer(player) ((player)->race == WAR_RACE_ORCS)
@@ -165,6 +166,7 @@ struct _WarMap
 
     WarMapEditing editing;
     WarPathFinder finder;
+    WarMapGrid grid;
     WarMapCommandState commandState;
     WarMapCommandPanel commandPanel;
     WarMapDebug debug;
@@ -180,7 +182,7 @@ void wmap_freeMap(WarContext* context, WarMap* map);
 
 bool wmap_loadCustomMap(WarContext* context, StringView mapPath);
 
-void wmap_enterMap(WarContext* context);
+void wmap_enterMap(WarContext *context);
 void wmap_updateMap(WarContext* context);
 void wmap_leaveMap(WarContext* context);
 void wmap_renderMap(WarContext* context);
@@ -231,5 +233,4 @@ void wui_changeCursorType(WarContext* context, WarCursorType type);
 WarCampaignMapType wmap_getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex);
 
 f32 wmap_getMapScaledTime(WarContext* context, f32 t);
-
-#define getMapScrollSpeed(speedValue) ((f32)(100 + (speedValue) * 50))
+f32 wmap_getMapScrollSpeed(WarContext* context, f32 value);

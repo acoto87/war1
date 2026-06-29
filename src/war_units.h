@@ -8,8 +8,6 @@
 #include "war_color.h"
 #include "war_commands.h"
 
-#define directionByIndex(i) ((WarDirection)(WAR_DIRECTION_NORTH + i))
-
 extern const StringView features[];
 extern const StringView upgradeNames[];
 

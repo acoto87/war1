@@ -596,7 +596,7 @@ void wfont_renderSingleSpriteText(WarContext* context, StringView text, f32 x, f
 
 #ifdef DEBUG_RENDER_FONT
     rect outline = rectf(0, 0, textSize.x / scale, 1.5f);
-    wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION, 3);
+    wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION);
 #endif
 
     if (params.highlightIndex >= 0)
@@ -667,7 +667,7 @@ void wfont_renderMultiSpriteText(WarContext* context, StringView text, f32 x, f3
 
 #ifdef DEBUG_RENDER_FONT
     rect outline = rectf(0, 0, textSize.x, textSize.y);
-    wr_strokeRect(context, outline, WAR_COLOR_RED_SELECTION, 1);
+    wr_strokeRect(context, outline, WAR_COLOR_RED_SELECTION);
 #endif
 
     s32 lineStartIndex = 0;
@@ -689,7 +689,7 @@ void wfont_renderMultiSpriteText(WarContext* context, StringView text, f32 x, f3
 
 #ifdef DEBUG_RENDER_FONT
         rect outline = rectf(0, 0, lines[i].width / scale, lineHeight);
-        wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION, 1);
+        wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION);
 #endif
 
         if (params.highlightIndex >= lineStartIndex && params.highlightIndex < lineStartIndex + lineLength)

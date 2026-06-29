@@ -14,6 +14,7 @@
 #include "war_sprites.h"
 #include "war_units.h"
 #include "war_collections.h"
+#include "war_map_grid.h"
 
 shlDefineList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarWallPieceList, WarWallPiece)
@@ -2262,6 +2263,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
     TracyCZoneN(ctx, "renderUnit", 1);
 
     WarMap* map = context->map;
+    assert(map);
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -2269,22 +2271,18 @@ void renderUnit(WarContext* context, WarEntity* entity)
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
 
-    // position of the unit in the map
     vec2 position = transform->position;
+    vec2 frameSize = wu_getUnitFrameSize(context, entity);
+    vec2 unitSize = wu_getUnitSpriteSize(context, entity);
 
     // scale of the unit: this is modified by animations when the animation indicates that it
     // should flip horizontally or vertically or both
     vec2 scale = transform->scale;
 
-    // size of the original sprite
-    vec2 frameSize = wu_getUnitFrameSize(context, entity);
-
-    // size of the unit
-    vec2 unitSize = wu_getUnitSpriteSize(context, entity);
-
     // the unit is visible if it's partially on the clear areas of the fog
     bool isVisible = wmap_isUnitPartiallyVisible(context, map, entity);
 
+    // translate the unit to the center of its frame, then to the center of its sprite, then to its position
     wr_translate(context, -0.5f * frameSize.x, -0.5f * frameSize.y);
     wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
     wr_translate(context, position.x, position.y);
@@ -2313,7 +2311,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
             {
                 rect unitRect = wu_getUnitSpriteRect(context, entity);
                 unitRect = rect_expand(unitRect, -1, -1);
-                wr_strokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
+                wr_strokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE);
             }
         }
 
@@ -2551,7 +2549,7 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 
             wr_save(context);
 
-            wr_strokeLine(context, projectile->origin, projectile->target, wr_getColorFromList(entity->id), 0.5f);
+            wr_strokeLine(context, projectile->origin, projectile->target, wr_getColorFromList(entity->id));
             wr_fillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
             wr_fillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
 
@@ -2651,7 +2649,7 @@ void renderMinimap(WarContext* context, WarEntity* entity)
 
     // render viewport
     wr_translate(context, (f32)map->camera.viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->camera.viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
-    wr_strokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
+    wr_strokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE);
 
     wr_restore(context);
 
@@ -2843,7 +2841,7 @@ void we_renderUnitSelection(WarContext* context)
             else if (wu_isEnemyUnit(context, entity))
                 color = WAR_COLOR_RED_SELECTION;
 
-            wr_strokeRect(context, selr, color, 1.0f);
+            wr_strokeRect(context, selr, color);
 
             wr_restore(context);
         }
@@ -3118,12 +3116,11 @@ bool we_checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
     return true;
 }
 
-WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
+void we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits)
 {
-    TracyCZoneN(ctx, "GetNearUnits", 1);
+    assert(nearUnits);
 
-    WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
-    WarEntityListInit(nearUnits, wm_frameAllocator());
+    TracyCZoneN(ctx, "GetNearUnits", 1);
 
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
@@ -3136,7 +3133,47 @@ WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 dista
     }
 
     TracyCZoneEnd(ctx);
-    return nearUnits;
+}
+
+void we_getNearUnits2(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits)
+{
+    TracyCZoneN(ctx, "GetNearUnits2", 1);
+
+    WarMap* map = context->map;
+    assert(map);
+
+    WarEntityManager* entityManager = &map->entityManager;
+    WarMapGrid* grid = &map->grid;
+
+    vec2 gridTile = wgrid_tileFromMapTile(tilePosition);
+
+    s32 gridDistanceRadius = (s32)ceilf((f32)distance / MAP_GRID_TILE_SIZE) / 2;
+    if (gridDistanceRadius < 1) gridDistanceRadius = 1;
+
+    for (s32 oy = -gridDistanceRadius; oy <= gridDistanceRadius; oy++)
+    {
+        for (s32 ox = -gridDistanceRadius; ox <= gridDistanceRadius; ox++)
+        {
+            s32 x = (s32)gridTile.x + ox;
+            s32 y = (s32)gridTile.y + oy;
+
+            if (inRange(x, 0, MAP_GRID_TILES_WIDTH) && inRange(y, 0, MAP_GRID_TILES_HEIGHT))
+            {
+                s32 idx = wgrid_getTileIndex(vec2i(x, y));
+
+                for (s32 i = grid->head[idx]; i != -1; i = grid->next[i])
+                {
+                    WarEntity* entity = &entityManager->entities[i];
+                    if (entity && wu_isUnit(entity))
+                    {
+                        WarEntityListAdd(nearUnits, entity);
+                    }
+                }
+            }
+        }
+    }
+
+    TracyCZoneEnd(ctx);
 }
 
 WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity)

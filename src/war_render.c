@@ -105,18 +105,16 @@ void wr_fillRects(WarContext* context, s32 count, rect r[], WarColor color)
         wr_fillRect(context, r[i], color);
 }
 
-void wr_strokeRect(WarContext* context, rect r, WarColor color, f32 width)
+void wr_strokeRect(WarContext* context, rect r, WarColor color)
 {
-    NOT_USED(width); // SDL_RenderRect always draws 1px lines; good enough at 320x200
     SDL_FRect dr = renderTransformRect(context, r);
     wr_renderSetDrawColor(context, color);
     SDL_SetRenderDrawBlendMode(context->renderer, SDL_BLENDMODE_BLEND);
     SDL_RenderRect(context->renderer, &dr);
 }
 
-void wr_strokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color, f32 width)
+void wr_strokeLine(WarContext* context, vec2 p1, vec2 p2, WarColor color)
 {
-    NOT_USED(width);
     f32 x1, y1, x2, y2;
     wr_renderTransformPoint(context, p1.x, p1.y, &x1, &y1);
     wr_renderTransformPoint(context, p2.x, p2.y, &x2, &y2);

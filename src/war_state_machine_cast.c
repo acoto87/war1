@@ -195,7 +195,10 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
 
             case WAR_SPELL_RAISE_DEAD:
             {
-                WarEntityList* nearUnits = we_getNearUnits(context, targetTile, 4);
+                WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
+                WarEntityListInit(nearUnits, wm_frameAllocator());
+                we_getNearUnits(context, targetTile, 4, nearUnits);
+
                 for (s32 i = 0; i < nearUnits->count; i++)
                 {
                     WarEntity* targetEntity = nearUnits->items[i];
@@ -219,11 +222,11 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         }
                     }
                 }
+
                 WarEntityListFree(nearUnits);
 
                 WarState* idleState = wst_createIdleState(context, entity, true);
                 wst_changeNextState(context, entity, idleState, true, true);
-
                 break;
             }
 

@@ -236,6 +236,9 @@ typedef struct _WarMapSettings WarMapSettings;
 struct _WarEntityManager;
 typedef struct _WarEntityManager WarEntityManager;
 
+struct _WarMapGrid;
+typedef struct _WarMapGrid WarMapGrid;
+
 struct _WarMapUI;
 typedef struct _WarMapUI WarMapUI;
 
