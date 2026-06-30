@@ -9,6 +9,9 @@
 
 struct _WarMapGrid
 {
+    // true when entity positions have changed and the grid needs to be rebuilt before the next query
+    bool dirty;
+
     // head of the linked list for each cell in the spatial grid
     s32 head[MAP_GRID_CELLS];
 
@@ -18,5 +21,6 @@ struct _WarMapGrid
 
 void wgrid_clear(WarContext* context);
 void wgrid_build(WarContext* context);
+void wgrid_rebuildIfDirty(WarContext* context);
 vec2 wgrid_tileFromMapTile(vec2 tilePosition);
 s32 wgrid_getTileIndex(vec2 tile);

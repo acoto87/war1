@@ -35,6 +35,9 @@ const WarCheatDescriptor cheatDescriptors[] =
     { WAR_CHEAT_EDIT,           "Edit",                     true,   wcheat_applyEditCheat          },
     { WAR_CHEAT_ADD_UNIT,       "Add unit",                 true,   wcheat_applyAddUnitCheat       },
     { WAR_CHEAT_RAIN_OF_FIRE,   "Rain of fire",             false,  wcheat_applyRainOfFireCheat    },
+    { WAR_CHEAT_POISON_CLOUD,   "Poison cloud",             false,  wcheat_applyPoisonCloudCheat   },
+    { WAR_CHEAT_RAISE_DEAD,     "Raise dead",               false,  wcheat_applyRaiseDeadCheat     },
+    { WAR_CHEAT_DEBUG_RENDER,   "debug render",             true,   wcheat_applyDebugRenderCheat    },
 };
 
 void wcheat_applyCheat(WarContext* context, StringView text)
@@ -548,6 +551,48 @@ void wcheat_applyRainOfFireCheat(WarContext* context, StringView argument)
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Rain of fire off"));
 }
 
+void wcheat_applyPoisonCloudCheat(WarContext* context, StringView argument)
+{
+    NOT_USED(argument);
+
+    if (!context->cheatsEnabled)
+        return;
+
+    WarMap* map = context->map;
+    if (!map)
+        return;
+
+    map->editing.mode = map->editing.mode == WAR_MAP_EDIT_MODE_POISON_CLOUD
+        ? WAR_MAP_EDIT_MODE_NONE
+        : WAR_MAP_EDIT_MODE_POISON_CLOUD;
+
+    if (map->editing.mode == WAR_MAP_EDIT_MODE_POISON_CLOUD)
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Poison cloud on"));
+    else
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Poison cloud off"));
+}
+
+void wcheat_applyRaiseDeadCheat(WarContext* context, StringView argument)
+{
+    NOT_USED(argument);
+
+    if (!context->cheatsEnabled)
+        return;
+
+    WarMap* map = context->map;
+    if (!map)
+        return;
+
+    map->editing.mode = map->editing.mode == WAR_MAP_EDIT_MODE_RAISE_DEAD
+        ? WAR_MAP_EDIT_MODE_NONE
+        : WAR_MAP_EDIT_MODE_RAISE_DEAD;
+
+    if (map->editing.mode == WAR_MAP_EDIT_MODE_RAISE_DEAD)
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Raise dead on"));
+    else
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Raise dead off"));
+}
+
 void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
 {
     if (!context->cheatsEnabled)
@@ -696,4 +741,117 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
     {
         wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Add unit %.*s", (int)argument.length, argument.data));
     }
+}
+
+static const char* debugRenderFlagNames[WAR_DEBUG_RENDER_COUNT] =
+{
+    "map-grid",
+    "spatial-grid",
+    "near-units",
+    "passable-info",
+    "unit-paths",
+    "unit-info",
+    "unit-animations",
+    "map-animations",
+    "font",
+    "projectiles",
+    "flow-field",
+};
+
+static const char* debugRenderFlagShortcuts[WAR_DEBUG_RENDER_COUNT] =
+{
+    "Ctrl+Shift+G",
+    "Ctrl+Shift+S",
+    "Ctrl+Shift+N",
+    "Ctrl+Shift+P",
+    "(none)",
+    "Ctrl+Shift+I",
+    "Ctrl+Shift+U",
+    "Ctrl+Shift+A",
+    "Ctrl+Shift+F",
+    "Ctrl+Shift+J",
+    "Ctrl+Shift+W",
+};
+
+static bool parseDebugRenderFlag(StringView name, WarDebugRenderFlag* outFlag)
+{
+    for (s32 i = 0; i < WAR_DEBUG_RENDER_COUNT; i++)
+    {
+        if (wsv_equalsIgnoreCase(name, wsv_fromCString(debugRenderFlagNames[i])))
+        {
+            *outFlag = (WarDebugRenderFlag)i;
+            return true;
+        }
+    }
+    return false;
+}
+
+void wcheat_applyDebugRenderCheat(WarContext* context, StringView argument)
+{
+    if (!context->cheatsEnabled)
+        return;
+
+    argument = wsv_trim(argument);
+
+    if (wsv_equalsIgnoreCase(argument, wsv_fromCString("status")))
+    {
+        s32 enabledCount = 0;
+        for (s32 i = 0; i < WAR_DEBUG_RENDER_COUNT; i++)
+            if (context->debugRender.flags[i])
+                enabledCount++;
+
+        wcheatp_setCheatsFeedback(context,
+            wstr_fromCStringFormat("%d/%d debug render flags on (see log)", enabledCount, WAR_DEBUG_RENDER_COUNT));
+
+        logInfo("=== Debug Render Flags ===");
+        for (s32 i = 0; i < WAR_DEBUG_RENDER_COUNT; i++)
+        {
+            logInfo("  %-18s [%s]  %s",
+                debugRenderFlagNames[i],
+                context->debugRender.flags[i] ? "ON " : "off",
+                debugRenderFlagShortcuts[i]);
+        }
+        logInfo("=========================");
+        return;
+    }
+
+    // Split into feature name + optional value
+    StringView featurePart;
+    StringView valuePart;
+    wsv_splitOnce(argument, wsv_fromCString(" "), &featurePart, &valuePart);
+    featurePart = wsv_trim(featurePart);
+    valuePart   = wsv_trim(valuePart);
+
+    WarDebugRenderFlag flag;
+    if (!parseDebugRenderFlag(featurePart, &flag))
+    {
+        wcheatp_setCheatsFeedback(context,
+            wstr_fromCStringFormat("Unknown debug render flag: %.*s", (int)featurePart.length, featurePart.data));
+        return;
+    }
+
+    bool newValue;
+    if (valuePart.length == 0)
+    {
+        newValue = !context->debugRender.flags[flag];
+    }
+    else if (wsv_equalsIgnoreCase(valuePart, wsv_fromCString("0")))
+    {
+        newValue = false;
+    }
+    else if (wsv_equalsIgnoreCase(valuePart, wsv_fromCString("1")))
+    {
+        newValue = true;
+    }
+    else
+    {
+        wcheatp_setCheatsFeedback(context,
+            wstr_fromCStringFormat("Invalid value: %.*s (use 0 or 1)", (int)valuePart.length, valuePart.data));
+        return;
+    }
+
+    context->debugRender.flags[flag] = newValue;
+
+    wcheatp_setCheatsFeedback(context,
+        wstr_fromCStringFormat("%s %s", debugRenderFlagNames[flag], newValue ? "on" : "off"));
 }

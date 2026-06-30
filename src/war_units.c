@@ -1469,6 +1469,12 @@ void wu_setUnitPosition(WarContext* context, WarEntity* entity, vec2 position, b
     assert(transform);
 
     transform->position = position;
+
+    WarMap* map = context->map;
+    if (map)
+    {
+        map->grid.dirty = true;
+    }
 }
 
 void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles)
@@ -1484,6 +1490,12 @@ void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 posit
     vec2 spriteSize = wu_getUnitSpriteSize(context, entity);
     vec2 unitCenter = vec2_half(spriteSize);
     transform->position = vec2_subv(position, unitCenter);
+
+    WarMap* map = context->map;
+    if (map)
+    {
+        map->grid.dirty = true;
+    }
 }
 
 WarDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
@@ -2909,3 +2921,4 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
 
     return data;
 }
+

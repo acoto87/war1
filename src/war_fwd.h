@@ -284,6 +284,9 @@ typedef struct _WarImuiSpriteEntry WarImuiSpriteEntry;
 struct _WarImuiState;
 typedef struct _WarImuiState WarImuiState;
 
+struct _WarDebugRenderFlags;
+typedef struct _WarDebugRenderFlags WarDebugRenderFlags;
+
 struct _WarMetricS32;
 typedef struct _WarMetricS32 WarMetricS32;
 

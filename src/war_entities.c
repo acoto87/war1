@@ -1521,6 +1521,8 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
         WarEntityManager* manager = &map->entityManager;
         WarEntityList* list = WarUnitMapGet(&manager->unitsByType, type);
         WarEntityListAdd(list, entity);
+
+        map->grid.dirty = true;
     }
 
     TracyCZoneEnd(ctx);
@@ -1838,6 +1840,12 @@ void we_removeEntity(WarContext* context, WarEntity* entity)
     // Free the flat-pool slot and return it for reuse
     *entity = (WarEntity){0};
     manager->entityCount--;
+
+    WarMap* map = context->map;
+    if (map)
+    {
+        map->grid.dirty = true;
+    }
 
     TracyCZoneEnd(ctx);
 }
@@ -2287,11 +2295,12 @@ void renderUnit(WarContext* context, WarEntity* entity)
     wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
     wr_translate(context, position.x, position.y);
 
-#ifdef DEBUG_RENDER_UNIT_INFO
-    wr_fillRect(context, wu_getUnitFrameRect(context, entity), WAR_COLOR_RGBA(0, 0, 128, 128));
-    wr_fillRect(context, wu_getUnitSpriteRect(context, entity), WAR_COLOR_GRAY_TRANSPARENT);
-    wr_fillRect(context, rectv(wu_getUnitSpriteCenter(context, entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
-#endif
+    if (context->debugRender.flags[WAR_DEBUG_RENDER_UNIT_INFO])
+    {
+        wr_fillRect(context, wu_getUnitFrameRect(context, entity), WAR_COLOR_RGBA(0, 0, 128, 128));
+        wr_fillRect(context, wu_getUnitSpriteRect(context, entity), WAR_COLOR_GRAY_TRANSPARENT);
+        wr_fillRect(context, rectv(wu_getUnitSpriteCenter(context, entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
+    }
 
     if (we_isComponentEnabled(context, entity, COMP_SPRITE) && (isVisible || unit->hasBeenSeen))
     {
@@ -2337,12 +2346,13 @@ void renderUnit(WarContext* context, WarEntity* entity)
                 wr_translate(context, anim->offset.x, anim->offset.y);
                 wr_scale(context, anim->scale.x, anim->scale.y);
 
-#ifdef DEBUG_RENDER_UNIT_ANIMATIONS
-                // size of the original sprite
-                vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+                if (context->debugRender.flags[WAR_DEBUG_RENDER_UNIT_ANIMATIONS])
+                {
+                    // size of the original sprite
+                    vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
 
-                wr_fillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
-#endif
+                    wr_fillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
+                }
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
                 animFrameIndex = CLAMP(animFrameIndex, 0, anim->frames.count - 1);
@@ -2518,44 +2528,45 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 
         WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
 
-#ifdef DEBUG_RENDER_PROJECTILES
+        if (context->debugRender.flags[WAR_DEBUG_RENDER_PROJECTILES])
         {
-            wr_save(context);
+            {
+                wr_save(context);
 
-            wr_translate(context, -sprite->sprite.frameWidth/2,-sprite->sprite.frameHeight/2);
-            wr_translate(context, position.x, position.y);
+                wr_translate(context, -(f32)sprite->sprite.frameWidth/2,-(f32)sprite->sprite.frameHeight/2);
+                wr_translate(context, position.x, position.y);
 
-            rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-            wr_fillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
+                rect r = rectf(0, 0, (f32)sprite->sprite.frameWidth, (f32)sprite->sprite.frameHeight);
+                wr_fillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
 
-            wr_restore(context);
+                wr_restore(context);
+            }
+
+            {
+                wr_save(context);
+
+                wr_translate(context, -(f32)frame.w/2,-(f32)frame.h/2);
+                wr_translate(context, position.x, position.y);
+
+                rect r = rectf(0, 0, (f32)frame.w, (f32)frame.h);
+                wr_fillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
+
+                wr_restore(context);
+            }
+
+            {
+                WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+                assert(projectile);
+
+                wr_save(context);
+
+                wr_strokeLine(context, projectile->origin, projectile->target, wr_getColorFromList(entity->id));
+                wr_fillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+                wr_fillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+
+                wr_restore(context);
+            }
         }
-
-        {
-            wr_save(context);
-
-            wr_translate(context, -frame.w/2,-frame.h/2);
-            wr_translate(context, position.x, position.y);
-
-            rect r = rectf(0, 0, frame.w, frame.h);
-            wr_fillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
-
-            wr_restore(context);
-        }
-
-        {
-            WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
-            assert(projectile);
-
-            wr_save(context);
-
-            wr_strokeLine(context, projectile->origin, projectile->target, wr_getColorFromList(entity->id));
-            wr_fillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
-            wr_fillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
-
-            wr_restore(context);
-        }
-#endif
 
         wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
         wr_translate(context, -0.5f * frame.w, -0.5f * frame.h);
@@ -3137,37 +3148,39 @@ void we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance, WarEn
 
 void we_getNearUnits2(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits)
 {
+    assert(nearUnits);
+
     TracyCZoneN(ctx, "GetNearUnits2", 1);
 
     WarMap* map = context->map;
     assert(map);
 
+    wgrid_rebuildIfDirty(context);
+
     WarEntityManager* entityManager = &map->entityManager;
     WarMapGrid* grid = &map->grid;
 
-    vec2 gridTile = wgrid_tileFromMapTile(tilePosition);
+    // Compute the exact range of grid cells that overlap the query bounding box.
+    // Using floorf ensures we cover the full [tilePosition ± distance] range
+    // regardless of where tilePosition falls within its cell.
+    s32 gxMin = MAX(0,                     (s32)floorf((tilePosition.x - (f32)distance) / MAP_GRID_TILE_SIZE));
+    s32 gxMax = MIN(MAP_GRID_TILES_WIDTH  - 1, (s32)floorf((tilePosition.x + (f32)distance) / MAP_GRID_TILE_SIZE));
+    s32 gyMin = MAX(0,                     (s32)floorf((tilePosition.y - (f32)distance) / MAP_GRID_TILE_SIZE));
+    s32 gyMax = MIN(MAP_GRID_TILES_HEIGHT - 1, (s32)floorf((tilePosition.y + (f32)distance) / MAP_GRID_TILE_SIZE));
 
-    s32 gridDistanceRadius = (s32)ceilf((f32)distance / MAP_GRID_TILE_SIZE) / 2;
-    if (gridDistanceRadius < 1) gridDistanceRadius = 1;
-
-    for (s32 oy = -gridDistanceRadius; oy <= gridDistanceRadius; oy++)
+    for (s32 gy = gyMin; gy <= gyMax; gy++)
     {
-        for (s32 ox = -gridDistanceRadius; ox <= gridDistanceRadius; ox++)
+        for (s32 gx = gxMin; gx <= gxMax; gx++)
         {
-            s32 x = (s32)gridTile.x + ox;
-            s32 y = (s32)gridTile.y + oy;
+            s32 idx = wgrid_getTileIndex(vec2i(gx, gy));
+            assert(idx >= 0);
 
-            if (inRange(x, 0, MAP_GRID_TILES_WIDTH) && inRange(y, 0, MAP_GRID_TILES_HEIGHT))
+            for (s32 i = grid->head[idx]; i != -1; i = grid->next[i])
             {
-                s32 idx = wgrid_getTileIndex(vec2i(x, y));
-
-                for (s32 i = grid->head[idx]; i != -1; i = grid->next[i])
+                WarEntity* entity = &entityManager->entities[i];
+                if (entity && entity->id != 0 && wu_isUnit(entity) && wu_tileInRange(context, entity, tilePosition, distance))
                 {
-                    WarEntity* entity = &entityManager->entities[i];
-                    if (entity && wu_isUnit(entity))
-                    {
-                        WarEntityListAdd(nearUnits, entity);
-                    }
+                    WarEntityListAdd(nearUnits, entity);
                 }
             }
         }
@@ -3520,3 +3533,5 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
 
     return amount;
 }
+
+

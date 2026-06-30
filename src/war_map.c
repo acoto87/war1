@@ -23,6 +23,155 @@
 
 #define MAP_SELECTION_DRAG_THRESHOLD 3.0f
 
+// Sets the near-units debug overlay to show we_getNearUnits2 results at (targetTile, distance).
+// The render path replays the query each frame, so the display stays current as units move.
+// Skips the update while a spell-cheat edit mode is active so the cheat overlay persists.
+static void setNearUnitsDebugParams(WarContext* context, vec2 targetTile, s32 distance)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_NEAR_UNITS])
+        return;
+
+    WarMap* map = context->map;
+    assert(map);
+
+    map->debug.nearUnitsEnabled  = true;
+    map->debug.nearUnitsTargetTile = targetTile;
+    map->debug.nearUnitsDistance   = distance;
+}
+
+static void clearNearUnitsDebug(WarContext* context)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_NEAR_UNITS])
+        return;
+
+    WarMap* map = context->map;
+    assert(map);
+
+    map->debug.nearUnitsEnabled = false;
+}
+
+static bool isSpellCheatEditModeActive(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarMapEditMode mode = map->editing.mode;
+    return mode == WAR_MAP_EDIT_MODE_RAIN_OF_FIRE  ||
+           mode == WAR_MAP_EDIT_MODE_POISON_CLOUD  ||
+           mode == WAR_MAP_EDIT_MODE_RAISE_DEAD;
+}
+
+// Called at the end of each game update. When exactly one unit is selected and
+// no spell-cheat edit mode is active, updates the overlay to follow that unit.
+static void refreshSelectedUnitNearUnitsDebug(WarContext* context)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_NEAR_UNITS])
+        return;
+
+    WarMap* map = context->map;
+    assert(map);
+
+    // Let cheat edit modes hold their own overlay parameters.
+    if (isSpellCheatEditModeActive(context))
+        return;
+
+    if (map->selectedEntities.count != 1)
+    {
+        clearNearUnitsDebug(context);
+        return;
+    }
+
+    WarEntity* entity = we_findEntity(context, map->selectedEntities.items[0]);
+    if (!entity || !wu_isUnit(entity))
+    {
+        clearNearUnitsDebug(context);
+        return;
+    }
+
+    setNearUnitsDebugParams(context, wu_getUnitCenterPosition(context, entity, true), NEAR_ENEMY_RADIUS);
+}
+
+static void castDebugRainOfFire(WarContext* context, vec2 targetTile)
+{
+    setNearUnitsDebugParams(context, targetTile, NEAR_RAIN_OF_FIRE_RADIUS);
+
+    vec2 targetTilePosition = wmap_tileToMapCoordinatesV(targetTile, true);
+    s32 radius = 2 * MEGA_TILE_WIDTH;
+
+    s32 projectilesCount = 5;
+    while (projectilesCount--)
+    {
+        f32 offsetx = randomf(-radius, radius);
+        f32 offsety = randomf(-radius, radius);
+        vec2 target = vec2_addv(targetTilePosition, vec2f(offsetx, offsety));
+
+        offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
+        vec2 origin = vec2f(target.x, context->map->camera.viewport.y - offsety);
+
+        wproj_createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+    }
+}
+
+static void castDebugPoisonCloud(WarContext* context, vec2 targetTile)
+{
+    const WarSpellStats* stats = wu_getSpellStats(WAR_SPELL_POISON_CLOUD);
+    assert(stats);
+
+    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
+
+    WarEntity* poisonCloud = we_createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
+    we_addPoisonCloudComponent(context, poisonCloud, WAR_POISON_CLOUD_COMPONENT_INIT(
+        .position = targetTile,
+        .time     = stats->time,
+    ));
+    we_addAnimationsComponent(context, poisonCloud);
+
+    wanim_createPoisonCloudAnimation(context, poisonCloud, targetPosition);
+    wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
+
+    // Show the cloud's damage radius. The render path re-runs the query each
+    // frame so the unit highlights stay current as units move in/out.
+    setNearUnitsDebugParams(context, targetTile, 2);
+}
+
+static void castDebugRaiseDead(WarContext* context, vec2 targetTile)
+{
+    setNearUnitsDebugParams(context, targetTile, 4);
+
+    WarEntityList nearUnits;
+    WarEntityListInit(&nearUnits, wm_frameAllocator());
+    we_getNearUnits(context, targetTile, 4, &nearUnits);
+
+    for (s32 i = 0; i < nearUnits.count; i++)
+    {
+        WarEntity* targetEntity = nearUnits.items[i];
+        if (targetEntity && wu_isCorpseUnit(context, targetEntity))
+        {
+            vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, true);
+            WarEntity* skeleton = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
+                .type=WAR_UNIT_SKELETON,
+                .x=(s32)targetPosition.x,
+                .y=(s32)targetPosition.y,
+                .player=0,
+                .resourceKind=WAR_RESOURCE_NONE,
+                .amount=0,
+                .addToMap=true
+            ));
+            we_setInitialIdleState(context, skeleton);
+
+            targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
+
+            WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
+            we_addAnimationsComponent(context, animEntity);
+
+            wanim_createSpellAnimation(context, animEntity, targetPosition);
+            wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
+
+            we_removeEntityById(context, targetEntity->id);
+        }
+    }
+
+    WarEntityListFree(&nearUnits);
+}
+
 static void initCamera(WarMap *map, WarResource *levelInfo)
 {
     s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
@@ -1332,6 +1481,40 @@ static void updateSelection(WarContext* context)
     WarEntityListFree(&newSelectedEntities);
 }
 
+static void updateDebugRenderShortcuts(WarContext* context)
+{
+    if (!context->cheatsEnabled)
+        return;
+
+    WarInput* input = &context->input;
+
+    if (!isKeyHeld(input, WAR_KEY_CTRL) || !isKeyHeld(input, WAR_KEY_SHIFT))
+        return;
+
+    struct { WarKeys key; WarDebugRenderFlag flag; } shortcuts[] =
+    {
+        { WAR_KEY_G, WAR_DEBUG_RENDER_MAP_GRID         },
+        { WAR_KEY_S, WAR_DEBUG_RENDER_SPATIAL_GRID      },
+        { WAR_KEY_N, WAR_DEBUG_RENDER_NEAR_UNITS       },
+        { WAR_KEY_P, WAR_DEBUG_RENDER_PASSABLE_INFO    },
+        { WAR_KEY_I, WAR_DEBUG_RENDER_UNIT_INFO        },
+        { WAR_KEY_U, WAR_DEBUG_RENDER_UNIT_ANIMATIONS  },
+        { WAR_KEY_A, WAR_DEBUG_RENDER_MAP_ANIMATIONS   },
+        { WAR_KEY_F, WAR_DEBUG_RENDER_FONT             },
+        { WAR_KEY_J, WAR_DEBUG_RENDER_PROJECTILES      },
+        { WAR_KEY_W, WAR_DEBUG_RENDER_FLOW_FIELD       },
+    };
+
+    for (s32 i = 0; i < arrayLength(shortcuts); i++)
+    {
+        if (isKeyJustPressed(input, shortcuts[i].key))
+        {
+            context->debugRender.flags[shortcuts[i].flag] =
+                !context->debugRender.flags[shortcuts[i].flag];
+        }
+    }
+}
+
 static void updateSelectionGroups(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateSelectionGroups", 1);
@@ -1550,14 +1733,46 @@ static void updateRainOfFireEdit(WarContext* context)
     {
         if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
         {
-            rect viewport = map->camera.viewport;
-
             vec2 target = wmap_screenToMapCoordinatesV(context, input->pos);
-            vec2 origin = vec2f(target.x, viewport.y);
-
-            wproj_createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
+            castDebugRainOfFire(context, wmap_mapToTileCoordinatesV(target));
         }
 
+    }
+}
+
+static void updatePoisonCloudEdit(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if (map->editing.mode != WAR_MAP_EDIT_MODE_POISON_CLOUD)
+        return;
+
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
+    {
+        if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
+        {
+            vec2 target = wmap_screenToMapCoordinatesV(context, input->pos);
+            castDebugPoisonCloud(context, wmap_mapToTileCoordinatesV(target));
+        }
+    }
+}
+
+static void updateRaiseDeadEdit(WarContext* context)
+{
+    WarMap* map = context->map;
+    WarInput* input = &context->input;
+
+    if (map->editing.mode != WAR_MAP_EDIT_MODE_RAISE_DEAD)
+        return;
+
+    if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
+    {
+        if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
+        {
+            vec2 target = wmap_screenToMapCoordinatesV(context, input->pos);
+            castDebugRaiseDead(context, wmap_mapToTileCoordinatesV(target));
+        }
     }
 }
 
@@ -1597,9 +1812,11 @@ static void updateAddUnit(WarContext* context)
     }
 }
 
-#ifdef DEBUG_RENDER_FLOW_FIELD
 static void updateFlowFieldDebug(WarContext* context)
 {
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_FLOW_FIELD])
+        return;
+
     WarMap* map = context->map;
     WarInput* input = &context->input;
 
@@ -1632,7 +1849,6 @@ static void updateFlowFieldDebug(WarContext* context)
     map->debug.flowFieldX = x;
     map->debug.flowFieldY = y;
 }
-#endif
 
 static void updateCommandButtons(WarContext* context)
 {
@@ -2839,10 +3055,10 @@ void wmap_updateMap(WarContext* context)
         return;
     }
 
+    clearNearUnitsDebug(context);
+
     updateViewport(context);
     updateDragRect(context);
-
-    wgrid_build(context);
 
     if (!wcmd_executeCommand(context))
     {
@@ -2856,10 +3072,13 @@ void wmap_updateMap(WarContext* context)
 
     updateSelectionGroups(context);
 
+    updateDebugRenderShortcuts(context);
+
     wai_updateAIPlayers(context);
 
     updateStateMachines(context);
     updateActions(context);
+    wgrid_rebuildIfDirty(context);
     wanim_updateAnimations(context);
     updateProjectiles(context);
     updateMagic(context);
@@ -2878,15 +3097,32 @@ void wmap_updateMap(WarContext* context)
     updateWallsEdit(context);
     updateRuinsEdit(context);
     updateRainOfFireEdit(context);
+    updatePoisonCloudEdit(context);
+    updateRaiseDeadEdit(context);
     updateAddUnit(context);
 
-#ifdef DEBUG_RENDER_FLOW_FIELD
+    refreshSelectedUnitNearUnitsDebug(context);
+
     updateFlowFieldDebug(context);
-#endif
 
     updateObjectives(context);
 
     TracyCZoneEnd(ctx);
+}
+
+// Called each tick when context->paused is true.
+// Handles only viewport scrolling, debug shortcuts, and the cheat panel so the
+// player can review the map and enter cheats while the game simulation is frozen.
+void wmap_updateMapPaused(WarContext* context)
+{
+    WarMap* map = context->map;
+
+    if (!map->playing)
+        return;
+
+    updateViewport(context);
+    updateDebugRenderShortcuts(context);
+    updateStatus(context);
 }
 
 static void renderTerrain(WarContext* context)
@@ -3010,6 +3246,9 @@ static void renderFoW(WarContext* context)
 
 static void renderUnitPaths(WarContext* context)
 {
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_UNIT_PATHS])
+        return;
+
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
     {
@@ -3054,6 +3293,9 @@ static void renderUnitPaths(WarContext* context)
 
 static void renderPassableInfo(WarContext* context)
 {
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_PASSABLE_INFO])
+        return;
+
     WarMap *map = context->map;
 
     for(s32 y = 0; y < MAP_TILES_HEIGHT; y++)
@@ -3078,6 +3320,9 @@ static void renderPassableInfo(WarContext* context)
 
 static void renderMapGrid(WarContext* context)
 {
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_MAP_GRID])
+        return;
+
     for(s32 x = 1; x < MAP_TILES_WIDTH; x++)
     {
         vec2 p1 = vec2i(x * MEGA_TILE_WIDTH, 0);
@@ -3093,9 +3338,96 @@ static void renderMapGrid(WarContext* context)
     }
 }
 
-#ifdef DEBUG_RENDER_FLOW_FIELD
+static void renderSpatialGrid(WarContext* context)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_SPATIAL_GRID])
+        return;
+
+    for (s32 x = 1; x < MAP_GRID_TILES_WIDTH; x++)
+    {
+        vec2 p1 = wmap_tileToMapCoordinatesV(vec2i(x * MAP_GRID_TILE_SIZE, 0), false);
+        vec2 p2 = wmap_tileToMapCoordinatesV(vec2i(x * MAP_GRID_TILE_SIZE, MAP_TILES_HEIGHT), false);
+        wr_strokeLine(context, p1, p2, WAR_COLOR_RGB(0, 255, 255));
+    }
+
+    for (s32 y = 1; y < MAP_GRID_TILES_HEIGHT; y++)
+    {
+        vec2 p1 = wmap_tileToMapCoordinatesV(vec2i(0, y * MAP_GRID_TILE_SIZE), false);
+        vec2 p2 = wmap_tileToMapCoordinatesV(vec2i(MAP_TILES_WIDTH, y * MAP_GRID_TILE_SIZE), false);
+        wr_strokeLine(context, p1, p2, WAR_COLOR_RGB(0, 255, 255));
+    }
+}
+
+static void renderNearUnitsDebug(WarContext* context)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_NEAR_UNITS])
+        return;
+
+    TracyCZoneN(ctx, "RenderNearUnitsDebug", 1);
+
+    WarMap* map = context->map;
+    if (!map->debug.nearUnitsEnabled)
+        return;
+
+    vec2 targetTile = map->debug.nearUnitsTargetTile;
+    s32 distance    = map->debug.nearUnitsDistance;
+
+    // Draw the query bounding box (Chebyshev radius matches vec2_distanceInTiles semantics).
+    vec2 center = wmap_tileToMapCoordinatesV(targetTile, true);
+    vec2 size   = vec2i((distance * 2 + 1) * MEGA_TILE_WIDTH,
+                        (distance * 2 + 1) * MEGA_TILE_HEIGHT);
+    rect area   = rectf(center.x - size.x * 0.5f, center.y - size.y * 0.5f, size.x, size.y);
+    wr_strokeRect(context, area, WAR_COLOR_YELLOW);
+
+    if (context->debugRender.flags[WAR_DEBUG_RENDER_SPATIAL_GRID])
+    {
+        // Highlight exactly the grid cells that we_getNearUnits2 visits.
+        // Uses the same floorf-based bounds as the query so the highlighted
+        // cells match the yellow bounding box as tightly as possible.
+        s32 gxMin = MAX(0,                     (s32)floorf((targetTile.x - (f32)distance) / MAP_GRID_TILE_SIZE));
+        s32 gxMax = MIN(MAP_GRID_TILES_WIDTH  - 1, (s32)floorf((targetTile.x + (f32)distance) / MAP_GRID_TILE_SIZE));
+        s32 gyMin = MAX(0,                     (s32)floorf((targetTile.y - (f32)distance) / MAP_GRID_TILE_SIZE));
+        s32 gyMax = MIN(MAP_GRID_TILES_HEIGHT - 1, (s32)floorf((targetTile.y + (f32)distance) / MAP_GRID_TILE_SIZE));
+
+        for (s32 gy = gyMin; gy <= gyMax; gy++)
+        {
+            for (s32 gx = gxMin; gx <= gxMax; gx++)
+            {
+                vec2 pos      = wmap_tileToMapCoordinatesV(vec2i(gx * MAP_GRID_TILE_SIZE, gy * MAP_GRID_TILE_SIZE), false);
+                vec2 cellSize = vec2i(MAP_GRID_TILE_SIZE * MEGA_TILE_WIDTH, MAP_GRID_TILE_SIZE * MEGA_TILE_HEIGHT);
+                rect cellRect = rectv(pos, cellSize);
+                wr_fillRect(context, cellRect, WAR_COLOR_RGBA(0, 128, 255, 48));
+                wr_strokeRect(context, cellRect, WAR_COLOR_RGB(0, 255, 255));
+            }
+        }
+    }
+
+    // Replay we_getNearUnits2 to get current results — no stored result arrays needed.
+    WarEntityList nearUnits;
+    WarEntityListInit(&nearUnits, wm_frameAllocator());
+    we_getNearUnits(context, targetTile, distance, &nearUnits);
+
+    for (s32 i = 0; i < nearUnits.count; i++)
+    {
+        WarEntity* entity = nearUnits.items[i];
+        if (!entity || !wu_isUnit(entity))
+            continue;
+
+        rect unitRect = wu_getUnitRect(context, entity);
+        wr_fillRect(context, unitRect, WAR_COLOR_RGBA(255, 255, 0, 48));
+        wr_strokeRect(context, unitRect, WAR_COLOR_YELLOW);
+    }
+
+    WarEntityListFree(&nearUnits);
+
+    TracyCZoneEnd(ctx);
+}
+
 static void renderFlowField(WarContext* context)
 {
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_FLOW_FIELD])
+        return;
+
     WarMap* map = context->map;
 
     if (!map->debug.flowField)
@@ -3154,7 +3486,6 @@ static void renderFlowField(WarContext* context)
         }
     }
 }
-#endif
 
 static void renderMapPanel(WarContext *context)
 {
@@ -3173,21 +3504,12 @@ static void renderMapPanel(WarContext *context)
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
 
-#ifdef DEBUG_RENDER_UNIT_PATHS
     renderUnitPaths(context);
-#endif
-
-#ifdef DEBUG_RENDER_PASSABLE_INFO
     renderPassableInfo(context);
-#endif
-
-#ifdef DEBUG_RENDER_MAP_GRID
     renderMapGrid(context);
-#endif
-
-#ifdef DEBUG_RENDER_FLOW_FIELD
+    renderSpatialGrid(context);
     renderFlowField(context);
-#endif
+    renderNearUnitsDebug(context);
 
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     we_renderUnitSelection(context);
@@ -3212,3 +3534,4 @@ void wmap_renderMap(WarContext *context)
 
     TracyCZoneEnd(ctx);
 }
+

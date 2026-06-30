@@ -125,6 +125,13 @@ struct _WarMapDebug
     WarDirection* flowField;
     s32 flowFieldX;
     s32 flowFieldY;
+
+    // Parameters for the WAR_DEBUG_RENDER_NEAR_UNITS overlay.
+    // Set each frame by the selection probe or by cheat edit-mode handlers.
+    // The render path replays we_getNearUnits2 from these to compute results.
+    bool nearUnitsEnabled;
+    vec2 nearUnitsTargetTile;
+    s32  nearUnitsDistance;
 };
 
 struct _WarMapStatus
@@ -184,6 +191,7 @@ bool wmap_loadCustomMap(WarContext* context, StringView mapPath);
 
 void wmap_enterMap(WarContext *context);
 void wmap_updateMap(WarContext* context);
+void wmap_updateMapPaused(WarContext* context);
 void wmap_leaveMap(WarContext* context);
 void wmap_renderMap(WarContext* context);
 

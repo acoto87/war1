@@ -1,4 +1,5 @@
 #include "war_map_grid.h"
+#include "war_entities.h"
 #include "war_state_machine.h"
 #include "war_units.h"
 
@@ -20,6 +21,8 @@ void wgrid_clear(WarContext* context)
     {
         grid->next[i] = -1;
     }
+
+    grid->dirty = true;
 }
 
 void wgrid_build(WarContext* context)
@@ -43,17 +46,17 @@ void wgrid_build(WarContext* context)
         grid->next[i] = -1;
     }
 
-    // Iterate over all entities in the entity manager
     WarEntityManager* entityManager = &map->entityManager;
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
 
-    for (s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+    for (s32 unitIndex = 0; unitIndex < units->count; unitIndex++)
     {
-        WarEntity* entity = &entityManager->entities[i];
+        WarEntity* entity = units->items[unitIndex];
+        if (!entity)
+            continue;
 
-        if (!wu_isUnit(entity))
-        {
-            continue; // Skip non-unit entities
-        }
+        s32 i = (s32)(entity - entityManager->entities);
+        assert(inRange(i, 0, MAX_ENTITIES_COUNT));
 
         WarTransformComponent* transform = we_getTransformComponent(context, entity);
         if (!transform)
@@ -61,9 +64,9 @@ void wgrid_build(WarContext* context)
             continue; // Skip entities without a transform component
         }
 
-        if (wst_isDead(context, entity) || wst_isGoingToDie(context, entity) || wu_isCorpseUnit(context, entity))
+        if (wst_isGoingToDie(context, entity))
         {
-            continue; // Skip dead entities and corpses
+            continue; // Skip units that are about to be removed this frame.
         }
 
         if (wst_isCollapsing(context, entity) || wst_isGoingToCollapse(context, entity))
@@ -71,13 +74,12 @@ void wgrid_build(WarContext* context)
             continue; // Skip collapsed and collapsing building
         }
 
-        // Calculate the grid cell index based on the entity's position
-        s32 cellX = (s32)(transform->position.x / MAP_GRID_TILE_SIZE);
-        s32 cellY = (s32)(transform->position.y / MAP_GRID_TILE_SIZE);
-        s32 cellIndex = cellY * MAP_GRID_TILES_WIDTH + cellX;
+        vec2 entityTile = wu_getUnitCenterPosition(context, entity, true);
+        vec2 gridTile = wgrid_tileFromMapTile(entityTile);
+        s32 cellIndex = wgrid_getTileIndex(gridTile);
 
         // Ensure the cell index is within bounds
-        if (cellIndex < 0 || cellIndex >= MAP_GRID_CELLS)
+        if (cellIndex < 0)
         {
             continue;
         }
@@ -87,7 +89,20 @@ void wgrid_build(WarContext* context)
         grid->head[cellIndex] = i;
     }
 
+    grid->dirty = false;
+
     TracyCZoneEnd(ctx);
+}
+
+void wgrid_rebuildIfDirty(WarContext* context)
+{
+    WarMap* map = context->map;
+    assert(map);
+
+    if (map->grid.dirty)
+    {
+        wgrid_build(context);
+    }
 }
 
 vec2 wgrid_tileFromMapTile(vec2 tilePosition)

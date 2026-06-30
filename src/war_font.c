@@ -554,9 +554,8 @@ f32 wfont_renderSingleSpriteTextSpan(WarContext* context, StringView text,
                 rect rs = fontData.data[getCharIndex(c)];
                 rect rd = rectf(x, y, rs.width, rs.height);
 
-#ifdef DEBUG_RENDER_FONT
-                wr_fillRect(context, rd, WAR_COLOR_GREEN_SELECTION);
-#endif
+                if (context->debugRender.flags[WAR_DEBUG_RENDER_FONT])
+                    wr_fillRect(context, rd, WAR_COLOR_GREEN_SELECTION);
 
                 if (c != ' ')
                 {
@@ -594,10 +593,11 @@ void wfont_renderSingleSpriteText(WarContext* context, StringView text, f32 x, f
 
     wr_scale(context, scale, scale);
 
-#ifdef DEBUG_RENDER_FONT
-    rect outline = rectf(0, 0, textSize.x / scale, 1.5f);
-    wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION);
-#endif
+    if (context->debugRender.flags[WAR_DEBUG_RENDER_FONT])
+    {
+        rect outline = rectf(0, 0, textSize.x / scale, 1.5f);
+        wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION);
+    }
 
     if (params.highlightIndex >= 0)
     {
@@ -665,10 +665,11 @@ void wfont_renderMultiSpriteText(WarContext* context, StringView text, f32 x, f3
     vec2 textOffset = wfont_getAlignmentOffset(params.horizontalAlign, params.verticalAlign, params.boundings, textSize);
     wr_translate(context, textOffset.x, textOffset.y);
 
-#ifdef DEBUG_RENDER_FONT
-    rect outline = rectf(0, 0, textSize.x, textSize.y);
-    wr_strokeRect(context, outline, WAR_COLOR_RED_SELECTION);
-#endif
+    if (context->debugRender.flags[WAR_DEBUG_RENDER_FONT])
+    {
+        rect outline = rectf(0, 0, textSize.x, textSize.y);
+        wr_strokeRect(context, outline, WAR_COLOR_RED_SELECTION);
+    }
 
     s32 lineStartIndex = 0;
 
@@ -687,10 +688,11 @@ void wfont_renderMultiSpriteText(WarContext* context, StringView text, f32 x, f3
         wr_scale(context, scale, scale);
         wr_translate(context, 0, lineOffset.y);
 
-#ifdef DEBUG_RENDER_FONT
-        rect outline = rectf(0, 0, lines[i].width / scale, lineHeight);
-        wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION);
-#endif
+        if (context->debugRender.flags[WAR_DEBUG_RENDER_FONT])
+        {
+            rect outline = rectf(0, 0, lines[i].width / scale, lineHeight);
+            wr_strokeRect(context, outline, WAR_COLOR_GREEN_SELECTION);
+        }
 
         if (params.highlightIndex >= lineStartIndex && params.highlightIndex < lineStartIndex + lineLength)
         {
