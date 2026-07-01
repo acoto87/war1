@@ -368,7 +368,11 @@ WarCampaignMapData wcamp_getCampaignData(WarCampaignMapType type)
     while (index < length && campaignsData[index].type != type)
         index++;
 
-    assert(index < length);
+    if (index >= length)
+    {
+        logWarning("wcamp_getCampaignData: unknown type %d. Defaulting to custom map.", type);
+        index = WAR_CAMPAIGN_CUSTOM;
+    }
 
     const WarCampaignMapRawData* rawData = &campaignsData[index];
 

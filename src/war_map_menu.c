@@ -257,6 +257,13 @@ void wmm_handleGameOverContinue(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
     s32 levelInfoIndex = map->levelInfoIndex;
 
+    if (map->custom || levelInfoIndex < WAR_CAMPAIGN_HUMANS_01 || levelInfoIndex > WAR_CAMPAIGN_ORCS_12)
+    {
+        WarScene* scene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
+        wg_setNextScene(context, scene, 1.0f);
+        return;
+    }
+
     if (map->custom)
     {
         WarScene* scene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);

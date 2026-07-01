@@ -1460,7 +1460,7 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
     ));
     we_addUnitComponent(context, entity, WAR_UNIT_COMPONENT_INIT(
         .type         = type,
-        .direction    = rand() % WAR_DIRECTION_COUNT,
+        .direction    = randomi(0, WAR_DIRECTION_COUNT),
         .tilex        = x,
         .tiley        = y,
         .sizex        = unitData->sizex,

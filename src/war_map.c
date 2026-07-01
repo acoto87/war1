@@ -967,8 +967,10 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
     levelInfo->levelInfo.startEntitiesCount = 0;
 
     if (!levelInfo->levelInfo.startEntities)
+    {
         levelInfo->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
-    assert(levelInfo->levelInfo.startEntities);
+        assert(levelInfo->levelInfo.startEntities);
+    }
 
     levelInfo->levelInfo.races[0] = yourRace;
     levelInfo->levelInfo.races[1] = enemyRace;
@@ -984,7 +986,7 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
         startUnit->type = startUnitConf->type;
         startUnit->player = startUnitConf->player;
         startUnit->resourceKind = WAR_RESOURCE_GOLD;
-        startUnit->amount = randomi(20000, 30000);
+        startUnit->amount = (u16)randomi(20000, 30000);
 
         levelInfo->levelInfo.startEntitiesCount++;
     }
@@ -1051,6 +1053,7 @@ bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
         return false;
     }
 
+    map->custom = true;
     wg_setNextMap(context, map, 0.0f);
 
     logInfo("wmap_loadCustomMap: loaded '%.*s' (entities=%u, tilesetType=%d)",

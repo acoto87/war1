@@ -7,9 +7,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <time.h>
 #include <math.h>
 #include <string.h>
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -129,8 +127,6 @@ int main(int argc, char** argv)
         logError("Failed to initialize memory allocators!");
         return -1;
     }
-
-    srand((unsigned int)time(NULL));
 
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
 
