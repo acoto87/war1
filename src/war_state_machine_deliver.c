@@ -54,7 +54,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     {
         // find a valid spawn position for the unit
         vec2 position = wu_getUnitCenterPosition(context, townHall, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
         wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         const WarUnitData* unitData = wu_getUnitData(unit->type);

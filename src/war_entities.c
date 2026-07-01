@@ -3092,7 +3092,7 @@ bool we_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
             s32 yy = y + dy;
             if (inRange(xx, 0, MAP_TILES_WIDTH) && inRange(yy, 0, MAP_TILES_HEIGHT))
             {
-                if (!isEmpty(map->finder, xx, yy) || wmap_isTileUnkown(map, xx, yy))
+                if (!isEmpty(&map->finder, xx, yy) || wmap_isTileUnkown(map, xx, yy))
                 {
                     return false;
                 }

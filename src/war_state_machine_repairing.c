@@ -56,7 +56,7 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
         vec2 position = wu_getUnitCenterPosition(context, entity, true);
         vec2 targetPosition = wu_getUnitCenterPosition(context, building, true);
 
-        setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         wu_setUnitDirectionFromDiff(context, entity, targetPosition.x - position.x, targetPosition.y - position.y);
         wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
@@ -70,7 +70,7 @@ void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* s
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wu_getUnitCenterPosition(context, entity, true);
-    setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+    setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 }
 
 void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* state)
@@ -91,7 +91,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
 
             // find a valid spawn position for the unit
             vec2 position = wu_getUnitCenterPosition(context, entity, true);
-            vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+            vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
             wu_setUnitCenterPosition(context, entity, spawnPosition, true);
         }
 
@@ -145,7 +145,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
 
         // find a valid spawn position for the unit
         vec2 position = wu_getUnitCenterPosition(context, entity, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
         wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         WarState* idleState = wst_createIdleState(context, entity, true);

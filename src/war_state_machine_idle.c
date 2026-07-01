@@ -20,7 +20,7 @@ void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
         WarMap* map = context->map;
         vec2 unitSize = wu_getUnitSize(context, entity);
         vec2 position = wu_getUnitPosition(context, entity, true);
-        setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
 }
@@ -34,7 +34,7 @@ void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
         WarMap* map = context->map;
         vec2 unitSize = wu_getUnitSize(context, entity);
         vec2 position = wu_getUnitPosition(context, entity, true);
-        setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+        setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     }
 }
 
@@ -84,9 +84,9 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             WarWallPiece* piece = &wall->pieces.items[i];
             s32 hpPercent = PERCENTABI(piece->hp, piece->maxhp);
             if (hpPercent <= 0)
-                setFreeTiles(map->finder, piece->tilex, piece->tiley, 1, 1);
+                setFreeTiles(&map->finder, piece->tilex, piece->tiley, 1, 1);
             else
-                setStaticEntity(map->finder, piece->tilex, piece->tiley, 1, 1, entity->id);
+                setStaticEntity(&map->finder, piece->tilex, piece->tiley, 1, 1, entity->id);
         }
     }
 }

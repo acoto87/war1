@@ -45,7 +45,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     vec2 treePosition = state->wood.position;
     WarTree* tree = we_getTreeAtPosition(context, forest, (s32)treePosition.x, (s32)treePosition.y);
 
-    if (!tree || tree->amount == 0 || !wpath_isPositionAccesible(map->finder, treePosition))
+    if (!tree || tree->amount == 0 || !wpath_isPositionAccesible(&map->finder, treePosition))
     {
         tree = we_findAccesibleTree(context, forest, treePosition);
 

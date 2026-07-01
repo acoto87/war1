@@ -67,7 +67,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
     {
         // find a valid spawn position for the unit
         vec2 position = wu_getUnitCenterPosition(context, entity, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
         wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         WarState* idleState = wst_createIdleState(context, entity, true);
@@ -79,7 +79,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
     {
         // find a valid spawn position for the unit
         vec2 position = wu_getUnitCenterPosition(context, goldmine, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
         wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         WarState* idleState = wst_createIdleState(context, entity, true);
@@ -99,7 +99,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
 
         // find a valid spawn position for the unit
         vec2 position = wu_getUnitCenterPosition(context, goldmine, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
         wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         // set the carrying gold sprites

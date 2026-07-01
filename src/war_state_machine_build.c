@@ -30,7 +30,7 @@ void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-    setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     // remove the current sprite...
     we_removeSpriteComponent(context, entity);
@@ -59,7 +59,7 @@ void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-    setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+    setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
 }
@@ -109,7 +109,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
         // ...find an empty position to put it
         vec2 position = wu_getUnitCenterPosition(context, entity, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
         wu_setUnitCenterPosition(context, worker, spawnPosition, true);
 
         // remove the building sprite...

@@ -75,7 +75,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    WarMapPath path = wpath_findPath(map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
+    WarMapPath path = wpath_findPath(&map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
 
     // if there is no path to the target, go to idle
     if (path.nodes.count <= 1)
@@ -86,7 +86,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
-        wpath_freePath(path);
+        Vec2ListFree(&path.nodes);
         return;
     }
 
@@ -94,7 +94,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     moveState->nextState = state;
     wst_changeNextState(context, entity, moveState, false, true);
 
-    wpath_freePath(path);
+    Vec2ListFree(&path.nodes);
 }
 
 void wst_freeFollowState(WarContext* context, WarState* state)

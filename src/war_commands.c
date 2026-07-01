@@ -382,7 +382,7 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
             while (we_decreaseUnitMana(context, entity, stats->manaCost))
             {
                 vec2 position = wu_getUnitCenterPosition(context, entity, true);
-                vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+                vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
 
                 WarEntity* summonedUnit = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
                     .type = spellMapping->mappedType,
@@ -397,7 +397,7 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
 
 
                 vec2 unitSize = wu_getUnitSize(context, summonedUnit);
-                setStaticEntity(map->finder, (s32)spawnPosition.x, (s32)spawnPosition.y,
+                setStaticEntity(&map->finder, (s32)spawnPosition.x, (s32)spawnPosition.y,
                                 (s32)unitSize.x, (s32)unitSize.y, summonedUnit->id);
 
                 WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
@@ -666,7 +666,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
@@ -724,7 +724,7 @@ bool wcmd_executeCommand(WarContext* context)
                     if (wmap_isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
                         wmap_isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                        WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                         WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                         if (targetEntity && wu_isBuildingUnit(context, targetEntity))
                         {
@@ -748,7 +748,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
@@ -1098,7 +1098,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeHealingCommand(context, targetEntity, targetTile);
@@ -1118,7 +1118,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeInvisiblityCommand(context, targetEntity, targetTile);
@@ -1138,7 +1138,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeUnholyArmorCommand(context, targetEntity, targetTile);

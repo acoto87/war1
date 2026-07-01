@@ -122,7 +122,7 @@ struct _WarMapCommandPanel
 
 struct _WarMapDebug
 {
-    WarDirection* flowField;
+    WarMapFlowField flowField;
     s32 flowFieldX;
     s32 flowFieldY;
 

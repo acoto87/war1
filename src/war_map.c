@@ -181,9 +181,9 @@ static void initCamera(WarMap *map, WarResource *levelInfo)
     map->camera.wasScrolling = false;
 }
 
-static void initPathFinder(WarContext* context, WarMap* map, WarResource* levelPassable)
+static void initPathFinder(WarMap* map, WarResource* levelPassable)
 {
-    map->finder = wpath_initPathFinder(context, PATH_FINDING_ASTAR, MAP_TILES_WIDTH, MAP_TILES_HEIGHT, levelPassable->levelPassable.data);
+    map->finder = wpath_initPathFinder(PATH_FINDING_ASTAR, levelPassable->levelPassable.data);
 }
 
 static void initBlackSprite(WarContext* context, WarMap* map)
@@ -300,7 +300,7 @@ static void createForestEntities(WarContext* context, WarMap* map, WarResource* 
                 {
                     s32 xx = tree.tilex + dirX[d];
                     s32 yy = tree.tiley + dirY[d];
-                    if (wpath_isInside(map->finder, xx, yy))
+                    if (wpath_isInside(xx, yy))
                     {
                         s32 k = yy * MAP_TILES_WIDTH + xx;
                         if (!processed[k] && passableData[k] == 128)
@@ -324,7 +324,7 @@ static void createForestEntities(WarContext* context, WarMap* map, WarResource* 
             for (s32 treeIndex = 0; treeIndex < trees.count; treeIndex++)
             {
                 WarTree* tree = &trees.items[treeIndex];
-                setStaticEntity(map->finder, tree->tilex, tree->tiley, 1, 1, forest->id);
+                setStaticEntity(&map->finder, tree->tilex, tree->tiley, 1, 1, forest->id);
             }
 
             we_determineTreeTiles(context, forest);
@@ -1079,14 +1079,6 @@ void wmap_freeMap(WarContext* context, WarMap* map)
     {
         WarEntityIdListFree(&map->selectionGroups[i]);
     }
-
-    if (map->debug.flowField)
-    {
-        wm_free(map->debug.flowField);
-        map->debug.flowField = NULL;
-    }
-
-    wm_free(map->finder.data);
 }
 
 void wmap_enterMap(WarContext* context)
@@ -1124,7 +1116,7 @@ void wmap_enterMap(WarContext* context)
     map->ui.saveLoadPanel = recti(48, 27, 223, 146);
 
     initCamera(map, levelInfo);
-    initPathFinder(context, map, levelPassable);
+    initPathFinder(map, levelPassable);
     wgrid_clear(context);
     initBlackSprite(context, map);
     setInitialTileState(map);
@@ -1589,7 +1581,7 @@ static void updateTreesEdit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntityId entityId = getTileEntityId(map->finder, x, y);
+            WarEntityId entityId = getTileEntityId(&map->finder, x, y);
             WarEntity* entity = we_findEntity(context, entityId);
             if (!entity)
             {
@@ -1677,7 +1669,7 @@ static void updateWallsEdit(WarContext* context)
             }
             else
             {
-                setFreeTiles(map->finder, piece->tilex, piece->tiley, 1, 1);
+                setFreeTiles(&map->finder, piece->tilex, piece->tiley, 1, 1);
 
                 we_removeWallPiece(context, wall, piece);
                 we_determineWallTypes(context, wall);
@@ -1794,7 +1786,7 @@ static void updateAddUnit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntityId entityId = getTileEntityId(map->finder, x, y);
+            WarEntityId entityId = getTileEntityId(&map->finder, x, y);
             if (!entityId)
             {
                 WarRace addingUnitRace = wu_getUnitTypeRace(map->editing.pendingUnitType);
@@ -1835,17 +1827,10 @@ static void updateFlowFieldDebug(WarContext* context)
     s32 x = (s32)pointerPos.x;
     s32 y = (s32)pointerPos.y;
 
-    if (!wpath_isInside(map->finder, x, y))
+    if (!wpath_isInside(x, y))
         return;
 
-    if (map->debug.flowField)
-    {
-        wm_free(map->debug.flowField);
-        map->debug.flowField = NULL;
-    }
-
-    WarMapFlowField flowField = wpath_computeFlowField(map->finder, x, y);
-    map->debug.flowField = flowField.field;
+    map->debug.flowField = wpath_computeFlowField(&map->finder, x, y);
     map->debug.flowFieldX = x;
     map->debug.flowFieldY = y;
 }
@@ -1980,7 +1965,7 @@ void updateCommandFromRightClick(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
@@ -3302,13 +3287,13 @@ static void renderPassableInfo(WarContext* context)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            if (isStatic(map->finder, x, y))
+            if (isStatic(&map->finder, x, y))
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 wr_fillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 0, 0, 100));
             }
-            else if(isDynamic(map->finder, x, y))
+            else if(isDynamic(&map->finder, x, y))
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
@@ -3430,9 +3415,6 @@ static void renderFlowField(WarContext* context)
 
     WarMap* map = context->map;
 
-    if (!map->debug.flowField)
-        return;
-
     s32 startX = (s32)(map->camera.viewport.x / MEGA_TILE_WIDTH);
     s32 startY = (s32)(map->camera.viewport.y / MEGA_TILE_HEIGHT);
     s32 endX = (s32)((map->camera.viewport.x + map->camera.viewport.width) / MEGA_TILE_WIDTH) + 1;
@@ -3457,10 +3439,10 @@ static void renderFlowField(WarContext* context)
             if (x == map->debug.flowFieldX && y == map->debug.flowFieldY)
                 continue;
 
-            if (isStatic(map->finder, x, y))
+            if (isStatic(&map->finder, x, y))
                 continue;
 
-            WarDirection dir = map->debug.flowField[y * MAP_TILES_WIDTH + x];
+            WarDirection dir = (WarDirection)map->debug.flowField.dirs[y * MAP_TILES_WIDTH + x];
             if (dir < WAR_DIRECTION_NORTH || dir >= WAR_DIRECTION_COUNT)
                 continue;
 
