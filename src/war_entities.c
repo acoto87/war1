@@ -14,6 +14,7 @@
 #include "war_sprites.h"
 #include "war_units.h"
 #include "war_collections.h"
+#include "war_map_grid.h"
 
 shlDefineList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarWallPieceList, WarWallPiece)
@@ -1520,6 +1521,8 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
         WarEntityManager* manager = &map->entityManager;
         WarEntityList* list = WarUnitMapGet(&manager->unitsByType, type);
         WarEntityListAdd(list, entity);
+
+        map->grid.dirty = true;
     }
 
     TracyCZoneEnd(ctx);
@@ -1837,6 +1840,12 @@ void we_removeEntity(WarContext* context, WarEntity* entity)
     // Free the flat-pool slot and return it for reuse
     *entity = (WarEntity){0};
     manager->entityCount--;
+
+    WarMap* map = context->map;
+    if (map)
+    {
+        map->grid.dirty = true;
+    }
 
     TracyCZoneEnd(ctx);
 }
@@ -2262,6 +2271,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
     TracyCZoneN(ctx, "renderUnit", 1);
 
     WarMap* map = context->map;
+    assert(map);
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -2269,31 +2279,28 @@ void renderUnit(WarContext* context, WarEntity* entity)
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
 
-    // position of the unit in the map
     vec2 position = transform->position;
+    vec2 frameSize = wu_getUnitFrameSize(context, entity);
+    vec2 unitSize = wu_getUnitSpriteSize(context, entity);
 
     // scale of the unit: this is modified by animations when the animation indicates that it
     // should flip horizontally or vertically or both
     vec2 scale = transform->scale;
 
-    // size of the original sprite
-    vec2 frameSize = wu_getUnitFrameSize(context, entity);
-
-    // size of the unit
-    vec2 unitSize = wu_getUnitSpriteSize(context, entity);
-
     // the unit is visible if it's partially on the clear areas of the fog
     bool isVisible = wmap_isUnitPartiallyVisible(context, map, entity);
 
+    // translate the unit to the center of its frame, then to the center of its sprite, then to its position
     wr_translate(context, -0.5f * frameSize.x, -0.5f * frameSize.y);
     wr_translate(context, 0.5f * unitSize.x, 0.5f * unitSize.y);
     wr_translate(context, position.x, position.y);
 
-#ifdef DEBUG_RENDER_UNIT_INFO
-    wr_fillRect(context, wu_getUnitFrameRect(context, entity), WAR_COLOR_RGBA(0, 0, 128, 128));
-    wr_fillRect(context, wu_getUnitSpriteRect(context, entity), WAR_COLOR_GRAY_TRANSPARENT);
-    wr_fillRect(context, rectv(wu_getUnitSpriteCenter(context, entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
-#endif
+    if (context->debugRender.flags[WAR_DEBUG_RENDER_UNIT_INFO])
+    {
+        wr_fillRect(context, wu_getUnitFrameRect(context, entity), WAR_COLOR_RGBA(0, 0, 128, 128));
+        wr_fillRect(context, wu_getUnitSpriteRect(context, entity), WAR_COLOR_GRAY_TRANSPARENT);
+        wr_fillRect(context, rectv(wu_getUnitSpriteCenter(context, entity), VEC2_ONE), WAR_COLOR_RGB(255, 0, 0));
+    }
 
     if (we_isComponentEnabled(context, entity, COMP_SPRITE) && (isVisible || unit->hasBeenSeen))
     {
@@ -2313,7 +2320,7 @@ void renderUnit(WarContext* context, WarEntity* entity)
             {
                 rect unitRect = wu_getUnitSpriteRect(context, entity);
                 unitRect = rect_expand(unitRect, -1, -1);
-                wr_strokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE, 1);
+                wr_strokeRect(context, unitRect, WAR_COLOR_BLUE_INVULNERABLE);
             }
         }
 
@@ -2339,12 +2346,13 @@ void renderUnit(WarContext* context, WarEntity* entity)
                 wr_translate(context, anim->offset.x, anim->offset.y);
                 wr_scale(context, anim->scale.x, anim->scale.y);
 
-#ifdef DEBUG_RENDER_UNIT_ANIMATIONS
-                // size of the original sprite
-                vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
+                if (context->debugRender.flags[WAR_DEBUG_RENDER_UNIT_ANIMATIONS])
+                {
+                    // size of the original sprite
+                    vec2 animFrameSize = vec2i(anim->sprite.frameWidth, anim->sprite.frameHeight);
 
-                wr_fillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
-#endif
+                    wr_fillRect(context, rectv(VEC2_ZERO, animFrameSize), WAR_COLOR_GRAY_TRANSPARENT);
+                }
 
                 s32 animFrameIndex = (s32)(anim->animTime * anim->frames.count);
                 animFrameIndex = CLAMP(animFrameIndex, 0, anim->frames.count - 1);
@@ -2520,44 +2528,45 @@ void renderProjectile(WarContext* context, WarEntity* entity)
 
         WarSpriteFrame frame = wspr_getSpriteFrame(context, sprite->sprite, sprite->frameIndex);
 
-#ifdef DEBUG_RENDER_PROJECTILES
+        if (context->debugRender.flags[WAR_DEBUG_RENDER_PROJECTILES])
         {
-            wr_save(context);
+            {
+                wr_save(context);
 
-            wr_translate(context, -sprite->sprite.frameWidth/2,-sprite->sprite.frameHeight/2);
-            wr_translate(context, position.x, position.y);
+                wr_translate(context, -(f32)sprite->sprite.frameWidth/2,-(f32)sprite->sprite.frameHeight/2);
+                wr_translate(context, position.x, position.y);
 
-            rect r = rectf(0, 0, sprite->sprite.frameWidth, sprite->sprite.frameHeight);
-            wr_fillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
+                rect r = rectf(0, 0, (f32)sprite->sprite.frameWidth, (f32)sprite->sprite.frameHeight);
+                wr_fillRect(context, r, WAR_COLOR_GRAY_TRANSPARENT);
 
-            wr_restore(context);
+                wr_restore(context);
+            }
+
+            {
+                wr_save(context);
+
+                wr_translate(context, -(f32)frame.w/2,-(f32)frame.h/2);
+                wr_translate(context, position.x, position.y);
+
+                rect r = rectf(0, 0, (f32)frame.w, (f32)frame.h);
+                wr_fillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
+
+                wr_restore(context);
+            }
+
+            {
+                WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
+                assert(projectile);
+
+                wr_save(context);
+
+                wr_strokeLine(context, projectile->origin, projectile->target, wr_getColorFromList(entity->id));
+                wr_fillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+                wr_fillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
+
+                wr_restore(context);
+            }
         }
-
-        {
-            wr_save(context);
-
-            wr_translate(context, -frame.w/2,-frame.h/2);
-            wr_translate(context, position.x, position.y);
-
-            rect r = rectf(0, 0, frame.w, frame.h);
-            wr_fillRect(context, r, WAR_COLOR_RED_TRANSPARENT);
-
-            wr_restore(context);
-        }
-
-        {
-            WarProjectileComponent* projectile = we_getProjectileComponent(context, entity);
-            assert(projectile);
-
-            wr_save(context);
-
-            wr_strokeLine(context, projectile->origin, projectile->target, wr_getColorFromList(entity->id), 0.5f);
-            wr_fillRect(context, rectv(projectile->origin, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
-            wr_fillRect(context, rectv(projectile->target, VEC2_ONE), WAR_COLOR_RGB(255, 0, 255));
-
-            wr_restore(context);
-        }
-#endif
 
         wr_translate(context, -(f32)frame.dx, -(f32)frame.dy);
         wr_translate(context, -0.5f * frame.w, -0.5f * frame.h);
@@ -2650,8 +2659,8 @@ void renderMinimap(WarContext* context, WarEntity* entity)
     wspr_renderSprite(context, map->minimapSprite, VEC2_ZERO, VEC2_ONE);
 
     // render viewport
-    wr_translate(context, (f32)map->viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
-    wr_strokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE, 1.0f);
+    wr_translate(context, (f32)map->camera.viewport.x * MINIMAP_MAP_WIDTH_RATIO, (f32)map->camera.viewport.y * MINIMAP_MAP_HEIGHT_RATIO);
+    wr_strokeRect(context, rectf(0.0f, 0.0f, (f32)MINIMAP_VIEWPORT_WIDTH, (f32)MINIMAP_VIEWPORT_HEIGHT), WAR_COLOR_WHITE);
 
     wr_restore(context);
 
@@ -2843,7 +2852,7 @@ void we_renderUnitSelection(WarContext* context)
             else if (wu_isEnemyUnit(context, entity))
                 color = WAR_COLOR_RED_SELECTION;
 
-            wr_strokeRect(context, selr, color, 1.0f);
+            wr_strokeRect(context, selr, color);
 
             wr_restore(context);
         }
@@ -3083,7 +3092,7 @@ bool we_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
             s32 yy = y + dy;
             if (inRange(xx, 0, MAP_TILES_WIDTH) && inRange(yy, 0, MAP_TILES_HEIGHT))
             {
-                if (!isEmpty(map->finder, xx, yy) || wmap_isTileUnkown(map, xx, yy))
+                if (!isEmpty(&map->finder, xx, yy) || wmap_isTileUnkown(map, xx, yy))
                 {
                     return false;
                 }
@@ -3118,12 +3127,11 @@ bool we_checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y)
     return true;
 }
 
-WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance)
+void we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits)
 {
-    TracyCZoneN(ctx, "GetNearUnits", 1);
+    assert(nearUnits);
 
-    WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
-    WarEntityListInit(nearUnits, wm_frameAllocator());
+    TracyCZoneN(ctx, "GetNearUnits", 1);
 
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
@@ -3136,7 +3144,49 @@ WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 dista
     }
 
     TracyCZoneEnd(ctx);
-    return nearUnits;
+}
+
+void we_getNearUnits2(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits)
+{
+    assert(nearUnits);
+
+    TracyCZoneN(ctx, "GetNearUnits2", 1);
+
+    WarMap* map = context->map;
+    assert(map);
+
+    wgrid_rebuildIfDirty(context);
+
+    WarEntityManager* entityManager = &map->entityManager;
+    WarMapGrid* grid = &map->grid;
+
+    // Compute the exact range of grid cells that overlap the query bounding box.
+    // Using floorf ensures we cover the full [tilePosition ± distance] range
+    // regardless of where tilePosition falls within its cell.
+    s32 gxMin = MAX(0,                     (s32)floorf((tilePosition.x - (f32)distance) / MAP_GRID_TILE_SIZE));
+    s32 gxMax = MIN(MAP_GRID_TILES_WIDTH  - 1, (s32)floorf((tilePosition.x + (f32)distance) / MAP_GRID_TILE_SIZE));
+    s32 gyMin = MAX(0,                     (s32)floorf((tilePosition.y - (f32)distance) / MAP_GRID_TILE_SIZE));
+    s32 gyMax = MIN(MAP_GRID_TILES_HEIGHT - 1, (s32)floorf((tilePosition.y + (f32)distance) / MAP_GRID_TILE_SIZE));
+
+    for (s32 gy = gyMin; gy <= gyMax; gy++)
+    {
+        for (s32 gx = gxMin; gx <= gxMax; gx++)
+        {
+            s32 idx = wgrid_getTileIndex(vec2i(gx, gy));
+            assert(idx >= 0);
+
+            for (s32 i = grid->head[idx]; i != -1; i = grid->next[i])
+            {
+                WarEntity* entity = &entityManager->entities[i];
+                if (entity && entity->id != 0 && wu_isUnit(entity) && wu_tileInRange(context, entity, tilePosition, distance))
+                {
+                    WarEntityListAdd(nearUnits, entity);
+                }
+            }
+        }
+    }
+
+    TracyCZoneEnd(ctx);
 }
 
 WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity)
@@ -3483,3 +3533,5 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
 
     return amount;
 }
+
+

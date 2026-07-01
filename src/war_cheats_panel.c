@@ -17,7 +17,7 @@ void wcheatp_setCheatsPanelVisible(WarContext* context, bool visible)
     assert(scene || map);
 
     WarCheatStatus* cheatStatus = scene
-        ? &scene->cheatStatus : &map->cheatStatus;
+        ? &scene->cheatStatus : &map->status.cheatStatus;
 
     wstr_clear(&cheatStatus->text);
     cheatStatus->position = 0;
@@ -41,7 +41,7 @@ void wcheatp_setCheatsFeedback(WarContext* context, String feedbackText)
     assert(scene || map);
 
     WarCheatStatus* cheatStatus = scene
-        ? &scene->cheatStatus : &map->cheatStatus;
+        ? &scene->cheatStatus : &map->status.cheatStatus;
 
     if (cheatStatus->feedbackText.data)
     {

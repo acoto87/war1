@@ -38,8 +38,6 @@ void we_determineWallTypes(WarContext* context, WarEntity* entity)
 {
     assert(entity->type == WAR_ENTITY_TYPE_WALL);
 
-    WarMap* map = context->map;
-
     WarWallComponent* wallComp = we_getWallComponent(context, entity);
     assert(wallComp);
 
@@ -61,7 +59,7 @@ void we_determineWallTypes(WarContext* context, WarEntity* entity)
             s32 xx = pi->tilex + dirX[d];
             s32 yy = pi->tiley + dirY[d];
 
-            if (!wpath_isInside(map->finder, xx, yy) || we_hasWallPieceAtPosition(context, entity, xx, yy))
+            if (!wpath_isInside(xx, yy) || we_hasWallPieceAtPosition(context, entity, xx, yy))
             {
                 index = index | (1 << d);
             }

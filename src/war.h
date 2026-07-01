@@ -27,14 +27,7 @@
 
 #define FOG_OF_WAR_UPDATE_TIME 1.0f
 
-// #define DEBUG_RENDER_MAP_GRID
-// #define DEBUG_RENDER_PASSABLE_INFO
-// #define DEBUG_RENDER_UNIT_PATHS
-// #define DEBUG_RENDER_UNIT_INFO
-// #define DEBUG_RENDER_UNIT_ANIMATIONS
-// #define DEBUG_RENDER_MAP_ANIMATIONS
-// #define DEBUG_RENDER_FONT
-// #define DEBUG_RENDER_PROJECTILES
+
 
 #define DATAWAR_FILE_PATH "./DATA.WAR"
 #define ONLINE_DEMO_DATAWAR_FILE_URL "http://ia801608.us.archive.org/view_archive.php?archive=/11/items/WarcraftOrcsHumansDemo/WCRFT.ZIP&file=DEMODATA%2FDATA.WAR"
@@ -229,6 +222,11 @@ struct _WarMetricU64
     s32 sampleCount;
 };
 
+struct _WarDebugRenderFlags
+{
+    bool flags[WAR_DEBUG_RENDER_COUNT];
+};
+
 struct _WarContext
 {
     u64 frameStartNs;
@@ -295,6 +293,7 @@ struct _WarContext
     s32         audioRemovePendingCount;
 
     bool cheatsEnabled;
+    WarDebugRenderFlags debugRender;
 
     // this is a mutex used to make the deletion of the entities thread-safe
     // since the audio thread will delete audio entities, that could lead

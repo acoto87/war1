@@ -35,6 +35,39 @@ const WarCheatDescriptor cheatDescriptors[] =
     { WAR_CHEAT_EDIT,           "Edit",                     true,   wcheat_applyEditCheat          },
     { WAR_CHEAT_ADD_UNIT,       "Add unit",                 true,   wcheat_applyAddUnitCheat       },
     { WAR_CHEAT_RAIN_OF_FIRE,   "Rain of fire",             false,  wcheat_applyRainOfFireCheat    },
+    { WAR_CHEAT_POISON_CLOUD,   "Poison cloud",             false,  wcheat_applyPoisonCloudCheat   },
+    { WAR_CHEAT_RAISE_DEAD,     "Raise dead",               false,  wcheat_applyRaiseDeadCheat     },
+    { WAR_CHEAT_DEBUG_RENDER,   "Debug render",             true,   wcheat_applyDebugRenderCheat    },
+};
+
+static const char* debugRenderFlagNames[WAR_DEBUG_RENDER_COUNT] =
+{
+    "map-grid",
+    "spatial-grid",
+    "near-units",
+    "passable-info",
+    "unit-paths",
+    "unit-info",
+    "unit-animations",
+    "map-animations",
+    "font",
+    "projectiles",
+    "flow-field",
+};
+
+static const char* debugRenderFlagShortcuts[WAR_DEBUG_RENDER_COUNT] =
+{
+    "Ctrl+Shift+G",
+    "Ctrl+Shift+S",
+    "Ctrl+Shift+N",
+    "Ctrl+Shift+P",
+    "(none)",
+    "Ctrl+Shift+I",
+    "Ctrl+Shift+U",
+    "Ctrl+Shift+A",
+    "Ctrl+Shift+F",
+    "Ctrl+Shift+J",
+    "Ctrl+Shift+W",
 };
 
 void wcheat_applyCheat(WarContext* context, StringView text)
@@ -97,7 +130,7 @@ void wcheat_applySpellsCheat(WarContext* context, StringView argument)
 
     WarPlayerInfo* player = &map->players[0];
 
-    WarFeatureType spellFeatures[] =
+    static const WarFeatureType spellFeatures[] =
     {
         WAR_FEATURE_SPELL_HEALING,
         WAR_FEATURE_SPELL_RAISE_DEAD,
@@ -118,7 +151,7 @@ void wcheat_applySpellsCheat(WarContext* context, StringView argument)
         setFeatureAllowed(player, spellFeatures[i], true);
     }
 
-    WarUpgradeType upgradeFeatures[] =
+    static const WarUpgradeType upgradeFeatures[] =
     {
         WAR_UPGRADE_SCORPIONS,
         WAR_UPGRADE_SPIDERS,
@@ -160,7 +193,7 @@ void wcheat_applyUpgradesCheat(WarContext* context, StringView argument)
 
     WarPlayerInfo* player = &map->players[0];
 
-    WarUpgradeType upgrades[] =
+    static const WarUpgradeType upgrades[] =
     {
         WAR_UPGRADE_ARROWS,
         WAR_UPGRADE_SPEARS,
@@ -498,12 +531,7 @@ void wcheat_applyEditCheat(WarContext* context, StringView argument)
     if (!map)
         return;
 
-    map->editingTrees = false;
-    map->editingWalls = false;
-    map->editingRoads = false;
-    map->editingRuins = false;
-    map->editingRainOfFire = false;
-    map->addingUnit = false;
+    map->editing.mode = WAR_MAP_EDIT_MODE_NONE;
 
     if (wsv_equalsIgnoreCase(argument, wsv_fromCString("off")))
     {
@@ -513,22 +541,22 @@ void wcheat_applyEditCheat(WarContext* context, StringView argument)
 
     if (wsv_equalsIgnoreCase(argument, wsv_fromCString("trees")))
     {
-        map->editingTrees = true;
+        map->editing.mode = WAR_MAP_EDIT_MODE_TREES;
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit trees on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("walls")))
     {
-        map->editingWalls = true;
+        map->editing.mode = WAR_MAP_EDIT_MODE_WALLS;
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit walls on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("roads")))
     {
-        map->editingRoads = true;
+        map->editing.mode = WAR_MAP_EDIT_MODE_ROADS;
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit roads on"));
     }
     else if (wsv_equalsIgnoreCase(argument, wsv_fromCString("ruins")))
     {
-        map->editingRuins = true;
+        map->editing.mode = WAR_MAP_EDIT_MODE_RUINS;
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Edit ruins on"));
     }
 }
@@ -541,20 +569,58 @@ void wcheat_applyRainOfFireCheat(WarContext* context, StringView argument)
         return;
 
     WarMap* map = context->map;
-    if (!map)
-        return;
+    if (!map) return;
 
-    map->editingTrees = false;
-    map->editingWalls = false;
-    map->editingRoads = false;
-    map->editingRuins = false;
-    map->editingRainOfFire = !map->editingRainOfFire;
-    map->addingUnit = false;
+    map->editing.mode = map->editing.mode == WAR_MAP_EDIT_MODE_RAIN_OF_FIRE
+        ? WAR_MAP_EDIT_MODE_NONE
+        : WAR_MAP_EDIT_MODE_RAIN_OF_FIRE;
 
-    if (map->editingRainOfFire)
+    if (map->editing.mode == WAR_MAP_EDIT_MODE_RAIN_OF_FIRE)
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Rain of fire on"));
     else
         wcheatp_setCheatsFeedback(context, wstr_fromCString("Rain of fire off"));
+}
+
+void wcheat_applyPoisonCloudCheat(WarContext* context, StringView argument)
+{
+    NOT_USED(argument);
+
+    if (!context->cheatsEnabled)
+        return;
+
+    WarMap* map = context->map;
+    if (!map)
+        return;
+
+    map->editing.mode = map->editing.mode == WAR_MAP_EDIT_MODE_POISON_CLOUD
+        ? WAR_MAP_EDIT_MODE_NONE
+        : WAR_MAP_EDIT_MODE_POISON_CLOUD;
+
+    if (map->editing.mode == WAR_MAP_EDIT_MODE_POISON_CLOUD)
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Poison cloud on"));
+    else
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Poison cloud off"));
+}
+
+void wcheat_applyRaiseDeadCheat(WarContext* context, StringView argument)
+{
+    NOT_USED(argument);
+
+    if (!context->cheatsEnabled)
+        return;
+
+    WarMap* map = context->map;
+    if (!map)
+        return;
+
+    map->editing.mode = map->editing.mode == WAR_MAP_EDIT_MODE_RAISE_DEAD
+        ? WAR_MAP_EDIT_MODE_NONE
+        : WAR_MAP_EDIT_MODE_RAISE_DEAD;
+
+    if (map->editing.mode == WAR_MAP_EDIT_MODE_RAISE_DEAD)
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Raise dead on"));
+    else
+        wcheatp_setCheatsFeedback(context, wstr_fromCString("Raise dead off"));
 }
 
 void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
@@ -566,13 +632,7 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
     if (!map)
         return;
 
-    map->editingTrees = false;
-    map->editingWalls = false;
-    map->editingRoads = false;
-    map->editingRuins = false;
-    map->editingRainOfFire = false;
-
-    map->addingUnit = false;
+    map->editing.mode = WAR_MAP_EDIT_MODE_NONE;
 
     if (wsv_startsWithIgnoreCase(argument, wsv_fromCString("off")))
     {
@@ -591,52 +651,52 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_CATAPULT_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_CATAPULT_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_CATAPULT_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_CATAPULT_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("FARM")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_FARM_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_FARM_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_FARM_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_FARM_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("BARRACKS")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_BARRACKS_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_BARRACKS_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_BARRACKS_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_BARRACKS_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("TOWER")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_TOWER_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_TOWER_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_TOWER_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_TOWER_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("TOWN")) && wsv_equalsIgnoreCase(part2, wsv_fromCString("HALL")))
@@ -646,52 +706,52 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
 
         if (wsv_startsWithIgnoreCase(part3, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_TOWNHALL_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_TOWNHALL_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part3, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_TOWNHALL_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_TOWNHALL_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("MILL")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_LUMBERMILL_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_LUMBERMILL_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_LUMBERMILL_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_LUMBERMILL_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("BLACKSMITH")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_BLACKSMITH_HUMANS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_BLACKSMITH_HUMANS;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_BLACKSMITH_ORCS;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_BLACKSMITH_ORCS;
         }
     }
     else if (wsv_equalsIgnoreCase(part1, wsv_fromCString("CORPSE")))
     {
         if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("HUMANS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_HUMAN_CORPSE;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_HUMAN_CORPSE;
         }
         else if (wsv_startsWithIgnoreCase(part2, wsv_fromCString("ORCS")))
         {
-            map->addingUnit = true;
-            map->addingUnitType = WAR_UNIT_ORC_CORPSE;
+            map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+            map->editing.pendingUnitType = WAR_UNIT_ORC_CORPSE;
         }
     }
     else
@@ -700,15 +760,102 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
         {
             if (wsv_equalsIgnoreCase(part1, unitsData[i].name))
             {
-                map->addingUnit = true;
-                map->addingUnitType = (WarUnitType)i;
+                map->editing.mode = WAR_MAP_EDIT_MODE_ADD_UNIT;
+                map->editing.pendingUnitType = (WarUnitType)i;
                 break;
             }
         }
     }
 
-    if (map->addingUnit)
+    if (map->editing.mode == WAR_MAP_EDIT_MODE_ADD_UNIT)
     {
         wcheatp_setCheatsFeedback(context, wstr_fromCStringFormat("Add unit %.*s", (int)argument.length, argument.data));
     }
+}
+
+static bool parseDebugRenderFlag(StringView name, WarDebugRenderFlag* outFlag)
+{
+    for (s32 i = 0; i < WAR_DEBUG_RENDER_COUNT; i++)
+    {
+        if (wsv_equalsIgnoreCase(name, wsv_fromCString(debugRenderFlagNames[i])))
+        {
+            *outFlag = (WarDebugRenderFlag)i;
+            return true;
+        }
+    }
+    return false;
+}
+
+void wcheat_applyDebugRenderCheat(WarContext* context, StringView argument)
+{
+    if (!context->cheatsEnabled)
+        return;
+
+    argument = wsv_trim(argument);
+
+    if (wsv_equalsIgnoreCase(argument, wsv_fromCString("status")))
+    {
+        s32 enabledCount = 0;
+        for (s32 i = 0; i < WAR_DEBUG_RENDER_COUNT; i++)
+            if (context->debugRender.flags[i])
+                enabledCount++;
+
+        wcheatp_setCheatsFeedback(context,
+            wstr_fromCStringFormat("%d/%d debug render flags on (see log)", enabledCount, WAR_DEBUG_RENDER_COUNT)
+        );
+
+        logInfo("=== Debug Render Flags ===");
+        for (s32 i = 0; i < WAR_DEBUG_RENDER_COUNT; i++)
+        {
+            logInfo("  %-18s [%s]  %s",
+                debugRenderFlagNames[i],
+                context->debugRender.flags[i] ? "ON " : "off",
+                debugRenderFlagShortcuts[i]);
+        }
+        logInfo("=========================");
+        return;
+    }
+
+    // Split into feature name + optional value
+    StringView featurePart;
+    StringView valuePart;
+    wsv_splitOnce(argument, wsv_fromCString(" "), &featurePart, &valuePart);
+    featurePart = wsv_trim(featurePart);
+    valuePart   = wsv_trim(valuePart);
+
+    WarDebugRenderFlag flag;
+    if (!parseDebugRenderFlag(featurePart, &flag))
+    {
+        wcheatp_setCheatsFeedback(context,
+            wstr_fromCStringFormat("Unknown debug render flag: %.*s", (int)featurePart.length, featurePart.data)
+        );
+        return;
+    }
+
+    bool newValue;
+    if (valuePart.length == 0)
+    {
+        newValue = !context->debugRender.flags[flag];
+    }
+    else if (wsv_equalsIgnoreCase(valuePart, wsv_fromCString("0")))
+    {
+        newValue = false;
+    }
+    else if (wsv_equalsIgnoreCase(valuePart, wsv_fromCString("1")))
+    {
+        newValue = true;
+    }
+    else
+    {
+        wcheatp_setCheatsFeedback(context,
+            wstr_fromCStringFormat("Invalid value: %.*s (use 0 or 1)", (int)valuePart.length, valuePart.data)
+        );
+        return;
+    }
+
+    context->debugRender.flags[flag] = newValue;
+
+    wcheatp_setCheatsFeedback(context,
+        wstr_fromCStringFormat("%s %s", debugRenderFlagNames[flag], newValue ? "on" : "off")
+    );
 }

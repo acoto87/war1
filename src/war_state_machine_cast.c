@@ -60,7 +60,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
         }
     }
 
-    setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     wu_setUnitDirectionFromDiff(context, entity, targetTile.x - position.x, targetTile.y - position.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
@@ -179,7 +179,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         vec2 target = vec2_addv(targetTilePosition, vec2f(offsetx, offsety));
 
                         offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
-                        vec2 origin = vec2f(target.x, map->viewport.y - offsety);
+                        vec2 origin = vec2f(target.x, map->camera.viewport.y - offsety);
 
                         wproj_createProjectile(context, WAR_PROJECTILE_RAIN_OF_FIRE, 0, 0, origin, target);
                     }
@@ -195,7 +195,10 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
 
             case WAR_SPELL_RAISE_DEAD:
             {
-                WarEntityList* nearUnits = we_getNearUnits(context, targetTile, 4);
+                WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
+                WarEntityListInit(nearUnits, wm_frameAllocator());
+                we_getNearUnits(context, targetTile, 4, nearUnits);
+
                 for (s32 i = 0; i < nearUnits->count; i++)
                 {
                     WarEntity* targetEntity = nearUnits->items[i];
@@ -219,11 +222,11 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         }
                     }
                 }
+
                 WarEntityListFree(nearUnits);
 
                 WarState* idleState = wst_createIdleState(context, entity, true);
                 wst_changeNextState(context, entity, idleState, true, true);
-
                 break;
             }
 

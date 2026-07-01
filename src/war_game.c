@@ -144,7 +144,7 @@ static void appendCheatTextInput(WarContext* context, StringView text)
     assert(scene || map);
 
     WarCheatStatus* cheatStatus = scene
-        ? &scene->cheatStatus : &map->cheatStatus;
+        ? &scene->cheatStatus : &map->status.cheatStatus;
 
     if (!cheatStatus->enabled || !cheatStatus->visible)
     {
@@ -354,6 +354,10 @@ bool wg_initGame(WarContext* context)
 
     context->transitionEndRealTime = 0.0;
     context->cheatsEnabled = true;
+
+    // Debug render defaults — match the old compile-time #define defaults.
+    context->debugRender.flags[WAR_DEBUG_RENDER_MAP_GRID]   = true;
+    context->debugRender.flags[WAR_DEBUG_RENDER_FLOW_FIELD] = true;
 
     context->__mutex = SDL_CreateMutex();
 
@@ -752,6 +756,7 @@ void wg_updateGame(WarContext* context)
     WarInput* input = &context->input;
 
     if (isKeyHeld(input, WAR_KEY_CTRL) &&
+        !isKeyHeld(input, WAR_KEY_SHIFT) &&
         isKeyJustReleased(input, WAR_KEY_P))
     {
         context->paused = !context->paused;
@@ -759,6 +764,9 @@ void wg_updateGame(WarContext* context)
 
     if (context->paused)
     {
+        // Allow scrolling and cheat panel input even while the simulation is frozen.
+        if (context->map)
+            wmap_updateMapPaused(context);
         TracyCZoneEnd(ctx);
         return;
     }

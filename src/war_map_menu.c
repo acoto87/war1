@@ -42,10 +42,10 @@ void wmm_handleOptions(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    // copy live volume values into settings, then snapshot into settings2
+    // copy live volume values into settings, then snapshot into pendingSettings
     map->settings.musicVol = (s32)(context->musicVolume * 100);
     map->settings.sfxVol = (s32)(context->soundVolume * 100);
-    memcpy(&map->settings2, &map->settings, sizeof(WarMapSettings));
+    memcpy(&map->pendingSettings, &map->settings, sizeof(WarMapSettings));
 
     map->menuState = WAR_MENU_STATE_OPTIONS;
     map->playing = false;
@@ -97,8 +97,8 @@ void wmm_handleGameSpeedDec(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    if (map->settings2.gameSpeed > WAR_SPEED_SLOWEST)
-        map->settings2.gameSpeed--;
+    if (map->pendingSettings.gameSpeed > WAR_SPEED_SLOWEST)
+        map->pendingSettings.gameSpeed--;
 }
 
 void wmm_handleGameSpeedInc(WarContext* context, WarEntity* entity)
@@ -107,8 +107,8 @@ void wmm_handleGameSpeedInc(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    if (map->settings2.gameSpeed < WAR_SPEED_FASTEST)
-        map->settings2.gameSpeed++;
+    if (map->pendingSettings.gameSpeed < WAR_SPEED_FASTEST)
+        map->pendingSettings.gameSpeed++;
 }
 
 void wmm_handleMusicVolDec(WarContext* context, WarEntity* entity)
@@ -117,7 +117,7 @@ void wmm_handleMusicVolDec(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    map->settings2.musicVol = CLAMP(map->settings2.musicVol - 5, 0, 100);
+    map->pendingSettings.musicVol = CLAMP(map->pendingSettings.musicVol - 5, 0, 100);
 }
 
 void wmm_handleMusicVolInc(WarContext* context, WarEntity* entity)
@@ -126,7 +126,7 @@ void wmm_handleMusicVolInc(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    map->settings2.musicVol = CLAMP(map->settings2.musicVol + 5, 0, 100);
+    map->pendingSettings.musicVol = CLAMP(map->pendingSettings.musicVol + 5, 0, 100);
 }
 
 void wmm_handleSfxVolDec(WarContext* context, WarEntity* entity)
@@ -135,7 +135,7 @@ void wmm_handleSfxVolDec(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    map->settings2.sfxVol = CLAMP(map->settings2.sfxVol - 5, 0, 100);
+    map->pendingSettings.sfxVol = CLAMP(map->pendingSettings.sfxVol - 5, 0, 100);
 }
 
 void wmm_handleSfxVolInc(WarContext* context, WarEntity* entity)
@@ -144,7 +144,7 @@ void wmm_handleSfxVolInc(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    map->settings2.sfxVol = CLAMP(map->settings2.sfxVol + 5, 0, 100);
+    map->pendingSettings.sfxVol = CLAMP(map->pendingSettings.sfxVol + 5, 0, 100);
 }
 
 void wmm_handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
@@ -153,8 +153,8 @@ void wmm_handleMouseScrollSpeedDec(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    if (map->settings2.mouseScrollSpeed > WAR_SPEED_SLOWEST)
-        map->settings2.mouseScrollSpeed--;
+    if (map->pendingSettings.mouseScrollSpeed > WAR_SPEED_SLOWEST)
+        map->pendingSettings.mouseScrollSpeed--;
 }
 
 void wmm_handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity)
@@ -163,8 +163,8 @@ void wmm_handleMouseScrollSpeedInc(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    if (map->settings2.mouseScrollSpeed < WAR_SPEED_FASTEST)
-        map->settings2.mouseScrollSpeed++;
+    if (map->pendingSettings.mouseScrollSpeed < WAR_SPEED_FASTEST)
+        map->pendingSettings.mouseScrollSpeed++;
 }
 
 void wmm_handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity)
@@ -173,8 +173,8 @@ void wmm_handleKeyScrollSpeedDec(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    if (map->settings2.keyScrollSpeed > WAR_SPEED_SLOWEST)
-        map->settings2.keyScrollSpeed--;
+    if (map->pendingSettings.keyScrollSpeed > WAR_SPEED_SLOWEST)
+        map->pendingSettings.keyScrollSpeed--;
 }
 
 void wmm_handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
@@ -183,8 +183,8 @@ void wmm_handleKeyScrollSpeedInc(WarContext* context, WarEntity* entity)
 
     WarMap* map = context->map;
 
-    if (map->settings2.keyScrollSpeed < WAR_SPEED_FASTEST)
-        map->settings2.keyScrollSpeed++;
+    if (map->pendingSettings.keyScrollSpeed < WAR_SPEED_FASTEST)
+        map->pendingSettings.keyScrollSpeed++;
 }
 
 void wmm_handleOptionsOk(WarContext* context, WarEntity* entity)
@@ -194,7 +194,7 @@ void wmm_handleOptionsOk(WarContext* context, WarEntity* entity)
     WarMap* map = context->map;
 
     // persist the changes
-    memcpy(&map->settings, &map->settings2, sizeof(WarMapSettings));
+    memcpy(&map->settings, &map->pendingSettings, sizeof(WarMapSettings));
     context->musicVolume = (f32)map->settings.musicVol / 100;
     context->soundVolume = (f32)map->settings.sfxVol / 100;
 

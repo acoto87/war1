@@ -38,8 +38,6 @@ void we_determineRoadTypes(WarContext* context, WarEntity* entity)
 {
     assert(entity->type == WAR_ENTITY_TYPE_ROAD);
 
-    WarMap* map = context->map;
-
     WarRoadComponent* roadComponent = we_getRoadComponent(context, entity);
     assert(roadComponent);
 
@@ -59,7 +57,7 @@ void we_determineRoadTypes(WarContext* context, WarEntity* entity)
             s32 xx = pi->tilex + dirX[d];
             s32 yy = pi->tiley + dirY[d];
 
-            if (!wpath_isInside(map->finder, xx, yy) || we_hasRoadPieceAtPosition(context, entity, xx, yy))
+            if (!wpath_isInside(xx, yy) || we_hasRoadPieceAtPosition(context, entity, xx, yy))
             {
                 index = index | (1 << d);
             }

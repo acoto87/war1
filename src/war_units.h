@@ -8,8 +8,6 @@
 #include "war_color.h"
 #include "war_commands.h"
 
-#define directionByIndex(i) ((WarUnitDirection)(WAR_DIRECTION_NORTH + i))
-
 extern const StringView features[];
 extern const StringView upgradeNames[];
 
@@ -356,10 +354,10 @@ vec2 wu_getUnitCenterPosition(WarContext* context, WarEntity* entity, bool inTil
 void wu_setUnitPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles);
 void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles);
 
-WarUnitDirection wu_getUnitDirection(WarContext* context, WarEntity* entity);
-WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y);
+WarDirection wu_getUnitDirection(WarContext* context, WarEntity* entity);
+WarDirection wu_getDirectionFromDiff(f32 x, f32 y);
 
-void wu_setUnitDirection(WarContext* context, WarEntity* entity, WarUnitDirection direction);
+void wu_setUnitDirection(WarContext* context, WarEntity* entity, WarDirection direction);
 void wu_setUnitDirectionFromDiff(WarContext* context, WarEntity* entity, f32 dx, f32 dy);
 f32 wu_getUnitActionScale(WarContext* context, WarEntity* entity);
 vec2 wu_unitPointOnTarget(WarContext* context, WarEntity* entity, WarEntity* targetEntity);

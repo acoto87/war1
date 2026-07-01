@@ -70,7 +70,10 @@ void wcheat_applyGlobalScaleCheat(WarContext* context, StringView argument);
 void wcheat_applyGlobalSpeedCheat(WarContext* context, StringView argument);
 void wcheat_applyEditCheat(WarContext* context, StringView argument);
 void wcheat_applyRainOfFireCheat(WarContext* context, StringView argument);
+void wcheat_applyPoisonCloudCheat(WarContext* context, StringView argument);
+void wcheat_applyRaiseDeadCheat(WarContext* context, StringView argument);
 void wcheat_applyAddUnitCheat(WarContext* context, StringView argument);
+void wcheat_applyDebugRenderCheat(WarContext* context, StringView argument);
 
 // ui
 void wcheatp_setCheatsPanelVisible(WarContext* context, bool visible);

@@ -1469,6 +1469,12 @@ void wu_setUnitPosition(WarContext* context, WarEntity* entity, vec2 position, b
     assert(transform);
 
     transform->position = position;
+
+    WarMap* map = context->map;
+    if (map)
+    {
+        map->grid.dirty = true;
+    }
 }
 
 void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles)
@@ -1484,9 +1490,15 @@ void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 posit
     vec2 spriteSize = wu_getUnitSpriteSize(context, entity);
     vec2 unitCenter = vec2_half(spriteSize);
     transform->position = vec2_subv(position, unitCenter);
+
+    WarMap* map = context->map;
+    if (map)
+    {
+        map->grid.dirty = true;
+    }
 }
 
-WarUnitDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
+WarDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
 {
     assert(wu_isUnit(entity));
 
@@ -1496,7 +1508,7 @@ WarUnitDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
     return unit->direction;
 }
 
-WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
+WarDirection wu_getDirectionFromDiff(f32 x, f32 y)
 {
     if (x < 0 && y < 0)
         return WAR_DIRECTION_NORTH_WEST;
@@ -1520,7 +1532,7 @@ WarUnitDirection wu_getDirectionFromDiff(f32 x, f32 y)
     return WAR_DIRECTION_NORTH;
 }
 
-void wu_setUnitDirection(WarContext* context, WarEntity* entity, WarUnitDirection direction)
+void wu_setUnitDirection(WarContext* context, WarEntity* entity, WarDirection direction)
 {
     assert(wu_isUnit(entity));
 
@@ -1534,7 +1546,7 @@ void wu_setUnitDirectionFromDiff(WarContext* context, WarEntity* entity, f32 dx,
 {
     assert(wu_isUnit(entity));
 
-    WarUnitDirection direction = wu_getDirectionFromDiff(dx, dy);
+    WarDirection direction = wu_getDirectionFromDiff(dx, dy);
     wu_setUnitDirection(context, entity, direction);
 }
 
@@ -1950,7 +1962,7 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
     assert(wu_isUnit(entity));
 
     WarMap* map = context->map;
-    WarUnitCommand* command = &map->command;
+    WarUnitCommand* command = &map->commandState.command;
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -2909,3 +2921,4 @@ WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity,
 
     return data;
 }
+

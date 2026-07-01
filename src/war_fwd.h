@@ -143,6 +143,9 @@ typedef struct _WarMapNode WarMapNode;
 struct _WarMapPath;
 typedef struct _WarMapPath WarMapPath;
 
+struct _WarMapFlowField;
+typedef struct _WarMapFlowField WarMapFlowField;
+
 struct _WarPathFinder;
 typedef struct _WarPathFinder WarPathFinder;
 
@@ -233,6 +236,30 @@ typedef struct _WarMapSettings WarMapSettings;
 struct _WarEntityManager;
 typedef struct _WarEntityManager WarEntityManager;
 
+struct _WarMapGrid;
+typedef struct _WarMapGrid WarMapGrid;
+
+struct _WarMapUI;
+typedef struct _WarMapUI WarMapUI;
+
+struct _WarMapCamera;
+typedef struct _WarMapCamera WarMapCamera;
+
+struct _WarMapEditing;
+typedef struct _WarMapEditing WarMapEditing;
+
+struct _WarMapCommandState;
+typedef struct _WarMapCommandState WarMapCommandState;
+
+struct _WarMapCommandPanel;
+typedef struct _WarMapCommandPanel WarMapCommandPanel;
+
+struct _WarMapDebug;
+typedef struct _WarMapDebug WarMapDebug;
+
+struct _WarMapStatus;
+typedef struct _WarMapStatus WarMapStatus;
+
 struct _WarMap;
 typedef struct _WarMap WarMap;
 
@@ -256,6 +283,9 @@ typedef struct _WarImuiSpriteEntry WarImuiSpriteEntry;
 
 struct _WarImuiState;
 typedef struct _WarImuiState WarImuiState;
+
+struct _WarDebugRenderFlags;
+typedef struct _WarDebugRenderFlags WarDebugRenderFlags;
 
 struct _WarMetricS32;
 typedef struct _WarMetricS32 WarMetricS32;

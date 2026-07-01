@@ -27,7 +27,7 @@ void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-    setStaticEntity(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
     unit->building = true;
     unit->buildPercent = 0;
@@ -46,7 +46,7 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-    setFreeTiles(map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+    setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
 }
@@ -93,7 +93,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 
         // ...find an empty position to put it
         vec2 position = wu_getUnitCenterPosition(context, entity, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(map->finder, position);
+        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
         wu_setUnitCenterPosition(context, unitToBuild, spawnPosition, true);
         we_setInitialIdleState(context, unitToBuild);
 

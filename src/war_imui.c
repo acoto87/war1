@@ -169,7 +169,7 @@ void imui_end(WarContext* context)
         // If the tooltip includes gold or wood costs, render those icons + amounts to the right of the text.
         if (imui->tooltip_gold > 0 || imui->tooltip_wood > 0)
         {
-            vec2 bottomPanel = RECT_TOP_LEFT(map->bottomPanel);
+            vec2 bottomPanel = RECT_TOP_LEFT(map->ui.bottomPanel);
 
             if (imui->tooltip_wood > 0)
             {

@@ -5,6 +5,7 @@
 #include "war_cheats.h"
 #include "war_entities.h"
 #include "war_resources.h"
+#include "war_map_grid.h"
 
 #define isHumanPlayer(player) ((player)->race == WAR_RACE_HUMANS)
 #define isOrcPlayer(player) ((player)->race == WAR_RACE_ORCS)
@@ -69,28 +70,8 @@ struct _WarMapSettings
     WarMapSpeed keyScrollSpeed;
 };
 
-struct _WarMap
+struct _WarMapUI
 {
-    bool playing;
-    bool custom;
-    WarLevelResult result;
-    WarMenuState menuState;
-
-    s32 levelInfoIndex;
-    f32 objectivesTime;
-
-    // scroll
-    bool isScrolling;
-    bool wasScrolling;
-
-    WarMapSettings settings;
-    WarMapSettings settings2;
-
-    // viewport in map coordinates,
-    // this is the portion of the map that the player see
-    rect viewport;
-
-    // panels of the ui, in screen coordinates
     rect leftTopPanel;
     rect leftBottomPanel;
     rect topPanel;
@@ -101,6 +82,83 @@ struct _WarMap
     rect menuPanel;
     rect messagePanel;
     rect saveLoadPanel;
+};
+
+struct _WarMapCamera
+{
+    // viewport in map coordinates, this is the portion of the map that the player see
+    rect viewport;
+    bool isScrolling;
+    bool wasScrolling;
+};
+
+struct _WarMapEditing
+{
+    WarMapEditMode mode;
+    WarUnitType pendingUnitType;
+    WarEntity* forest;
+    WarEntity* wall;
+    WarEntity* road;
+    WarEntity* ruin;
+};
+
+struct _WarMapCommandState
+{
+    WarUnitCommand command;
+    bool suppressSelectionOnRelease;
+    bool suppressMinimapViewportOnRelease;
+};
+
+struct _WarMapCommandPanel
+{
+    WarUnitCommandData slots[6];
+    bool slotsActive[6];
+
+    char texts[4][32];
+    s32 textsHighlightIndex[4];
+    s32 textsHighlightCount[4];
+    bool textsVisible[4];
+};
+
+struct _WarMapDebug
+{
+    WarMapFlowField flowField;
+    s32 flowFieldX;
+    s32 flowFieldY;
+
+    // Parameters for the WAR_DEBUG_RENDER_NEAR_UNITS overlay.
+    // Set each frame by the selection probe or by cheat edit-mode handlers.
+    // The render path replays we_getNearUnits2 from these to compute results.
+    bool nearUnitsEnabled;
+    vec2 nearUnitsTargetTile;
+    s32  nearUnitsDistance;
+};
+
+struct _WarMapStatus
+{
+    char statusLineText[256];
+    s32 statusLineHighlightIndex;
+    s32 statusLineHighlightCount;
+    s32 statusLineGold;
+    s32 statusLineWood;
+    WarFlashStatus flashStatus;
+    WarCheatStatus cheatStatus;
+};
+
+struct _WarMap
+{
+    bool playing;
+    bool custom;
+    WarLevelResult result;
+    WarMenuState menuState;
+
+    s32 levelInfoIndex;
+    f32 objectivesTime;
+
+    WarMapSettings settings;
+    WarMapSettings pendingSettings;
+    WarMapCamera camera;
+    WarMapUI ui;
 
     WarSprite sprite;
     WarSprite minimapSprite;
@@ -113,43 +171,17 @@ struct _WarMap
     WarEntityIdList selectedEntities;
     WarEntityIdList selectionGroups[MAX_SELECTION_GROUPS];
 
-    WarEntity* forest;
-    WarEntity* wall;
-    WarEntity* road;
-    WarEntity* ruin;
-
-    bool editingTrees;
-    bool editingWalls;
-    bool editingRoads;
-    bool editingRuins;
-    bool editingRainOfFire;
-    bool addingUnit;
-    WarUnitType addingUnitType;
+    WarMapEditing editing;
+    WarPathFinder finder;
+    WarMapGrid grid;
+    WarMapCommandState commandState;
+    WarMapCommandPanel commandPanel;
+    WarMapDebug debug;
+    WarPlayerInfo players[MAX_PLAYERS_COUNT];
+    WarMapStatus status;
 
     bool hurryUp;
     bool fowEnabled;
-
-    WarPathFinder finder;
-    WarUnitCommand command;
-    bool suppressSelectionOnRelease;
-    bool suppressMinimapViewportOnRelease;
-    WarFlashStatus flashStatus;
-    WarCheatStatus cheatStatus;
-    WarPlayerInfo players[MAX_PLAYERS_COUNT];
-
-    char hudStatusText[256];
-    s32 hudStatusHighlightIndex;
-    s32 hudStatusHighlightCount;
-    s32 hudStatusGold;
-    s32 hudStatusWood;
-
-    WarUnitCommandData commandSlots[6];
-    bool commandSlotActive[6];
-
-    char commandTexts[4][32];
-    s32 commandTextHighlightIndex[4];
-    s32 commandTextHighlightCount[4];
-    bool commandTextVisible[4];
 };
 
 WarMap* wmap_createMap(WarContext *context, s32 levelInfoIndex);
@@ -157,8 +189,9 @@ void wmap_freeMap(WarContext* context, WarMap* map);
 
 bool wmap_loadCustomMap(WarContext* context, StringView mapPath);
 
-void wmap_enterMap(WarContext* context);
+void wmap_enterMap(WarContext *context);
 void wmap_updateMap(WarContext* context);
+void wmap_updateMapPaused(WarContext* context);
 void wmap_leaveMap(WarContext* context);
 void wmap_renderMap(WarContext* context);
 
@@ -208,5 +241,4 @@ void wui_changeCursorType(WarContext* context, WarCursorType type);
 WarCampaignMapType wmap_getCampaignMapTypeByLevelInfoIndex(s32 levelInfoIndex);
 
 f32 wmap_getMapScaledTime(WarContext* context, f32 t);
-
-#define getMapScrollSpeed(speedValue) ((f32)(100 + (speedValue) * 50))
+f32 wmap_getMapScrollSpeed(WarContext* context, f32 value);

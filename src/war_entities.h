@@ -110,7 +110,7 @@ struct _WarSpriteComponent
 struct _WarUnitComponent
 {
     WarUnitType type;
-    WarUnitDirection direction;
+    WarDirection direction;
 
     // position in tiles
     s32 tilex, tiley;
@@ -639,7 +639,8 @@ bool we_checkFarmFood(WarContext* context, WarPlayerInfo* player);
 bool we_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h);
 bool we_checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y);
 bool we_checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y);
-WarEntityList* we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance);
+void we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits);
+void we_getNearUnits2(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits);
 WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity);
 bool we_isBeingAttackedBy(WarContext* context, WarEntity* entity, WarEntity* other);
 bool we_isBeingAttacked(WarContext* context, WarEntity* entity);

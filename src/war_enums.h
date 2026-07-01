@@ -164,7 +164,7 @@ typedef enum _WarRace
     WAR_RACE_ORCS
 } WarRace;
 
-typedef enum _WarUnitDirection
+typedef enum _WarDirection
 {
     WAR_DIRECTION_NORTH,
     WAR_DIRECTION_NORTH_EAST,
@@ -176,7 +176,7 @@ typedef enum _WarUnitDirection
     WAR_DIRECTION_NORTH_WEST,
 
     WAR_DIRECTION_COUNT
-} WarUnitDirection;
+} WarDirection;
 
 typedef enum _WarUnitType
 {
@@ -1031,6 +1031,19 @@ typedef enum _WarMapTileState
     MAP_TILE_STATE_VISIBLE = 4
 } WarMapTileState;
 
+typedef enum _WarMapEditMode
+{
+    WAR_MAP_EDIT_MODE_NONE,
+    WAR_MAP_EDIT_MODE_TREES,
+    WAR_MAP_EDIT_MODE_WALLS,
+    WAR_MAP_EDIT_MODE_ROADS,
+    WAR_MAP_EDIT_MODE_RUINS,
+    WAR_MAP_EDIT_MODE_RAIN_OF_FIRE,
+    WAR_MAP_EDIT_MODE_POISON_CLOUD,
+    WAR_MAP_EDIT_MODE_RAISE_DEAD,
+    WAR_MAP_EDIT_MODE_ADD_UNIT,
+} WarMapEditMode;
+
 typedef enum _WarAICommandStatus
 {
     WAR_AI_COMMAND_STATUS_CREATED,
@@ -1077,6 +1090,9 @@ typedef enum _WarCheat
     WAR_CHEAT_EDIT,
     WAR_CHEAT_ADD_UNIT,
     WAR_CHEAT_RAIN_OF_FIRE,
+    WAR_CHEAT_POISON_CLOUD,
+    WAR_CHEAT_RAISE_DEAD,
+    WAR_CHEAT_DEBUG_RENDER,
 
     WAR_CHEAT_COUNT
 } WarCheat;
@@ -1147,3 +1163,19 @@ typedef enum _WarDragStatus
     WAR_DRAG_ACTIVE,
     WAR_DRAG_RELEASED
 } WarDragStatus;
+
+typedef enum _WarDebugRenderFlag
+{
+    WAR_DEBUG_RENDER_MAP_GRID,
+    WAR_DEBUG_RENDER_SPATIAL_GRID,
+    WAR_DEBUG_RENDER_NEAR_UNITS,
+    WAR_DEBUG_RENDER_PASSABLE_INFO,
+    WAR_DEBUG_RENDER_UNIT_PATHS,
+    WAR_DEBUG_RENDER_UNIT_INFO,
+    WAR_DEBUG_RENDER_UNIT_ANIMATIONS,
+    WAR_DEBUG_RENDER_MAP_ANIMATIONS,
+    WAR_DEBUG_RENDER_FONT,
+    WAR_DEBUG_RENDER_PROJECTILES,
+    WAR_DEBUG_RENDER_FLOW_FIELD,
+    WAR_DEBUG_RENDER_COUNT
+} WarDebugRenderFlag;

@@ -117,7 +117,9 @@ f32 vec2_distance(vec2 v1, vec2 v2)
 f32 vec2_distanceInTiles(vec2 v1, vec2 v2)
 {
     vec2 diff = vec2_subv(v1, v2);
-    return MAX(ABS(diff.x), ABS(diff.y));
+    f32 dx = ABS(diff.x);
+    f32 dy = ABS(diff.y);
+    return MAX(dx, dy);
 }
 
 vec2 vec2_normalize(vec2 v)

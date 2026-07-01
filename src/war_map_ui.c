@@ -17,9 +17,9 @@
 void wmui_createMapUI(WarContext* context)
 {
     WarMap* map = context->map;
-    vec2 minimapPanel = RECT_TOP_LEFT(map->minimapPanel);
+    vec2 minimapPanel = RECT_TOP_LEFT(map->ui.minimapPanel);
 
-    WarCheatStatus* cheatStatus = &map->cheatStatus;
+    WarCheatStatus* cheatStatus = &map->status.cheatStatus;
     cheatStatus->enabled = true;
     cheatStatus->visible = false;
     cheatStatus->position = 0;
@@ -42,7 +42,7 @@ WarEntity* wmui_createUIMinimap(WarContext* context, String name, vec2 position)
 void wmui_setFlashStatus(WarContext* context, f32 duration, String text)
 {
     WarMap* map = context->map;
-    WarFlashStatus* flashStatus = &map->flashStatus;
+    WarFlashStatus* flashStatus = &map->status.flashStatus;
 
     assert(duration >= 0);
     assert(text.data);
@@ -89,8 +89,8 @@ static void renderMenus(WarContext* context)
     WarSpriteResourceRef rightArrowNormal = imageResourceRef(246);
     WarSpriteResourceRef rightArrowPressed = imageResourceRef(247);
 
-    vec2 mp   = RECT_TOP_LEFT(map->menuPanel);
-    vec2 msgp = RECT_TOP_LEFT(map->messagePanel);
+    vec2 mp   = RECT_TOP_LEFT(map->ui.menuPanel);
+    vec2 msgp = RECT_TOP_LEFT(map->ui.messagePanel);
 
     char buf[256];
 
@@ -116,7 +116,7 @@ static void renderMenus(WarContext* context)
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(0, 10)),
                     .fontIndex       = 1,
-                    .boundings       = vec2f(map->menuPanel.width, 12),
+                    .boundings       = vec2f(map->ui.menuPanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
                     .text = wsv_fromCString("Warcraft")
@@ -227,7 +227,7 @@ static void renderMenus(WarContext* context)
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(0, 10)),
                     .fontIndex       = 1,
-                    .boundings       = vec2f(map->menuPanel.width, 12),
+                    .boundings       = vec2f(map->ui.menuPanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
                     .text = wsv_fromCString("Options")
@@ -252,7 +252,7 @@ static void renderMenus(WarContext* context)
             }
 
             // Value texts (centred in 42px)
-            snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->settings2.gameSpeed));
+            snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->pendingSettings.gameSpeed));
             imui_text(context, "txtOptionsGameSpeedValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 25)),
@@ -263,7 +263,7 @@ static void renderMenus(WarContext* context)
                     .text = wsv_fromCString(buf)
                 ));
 
-            snprintf(buf, sizeof(buf), "%d", map->settings2.musicVol);
+            snprintf(buf, sizeof(buf), "%d", map->pendingSettings.musicVol);
             imui_text(context, "txtOptionsMusicVolValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 42)),
@@ -274,7 +274,7 @@ static void renderMenus(WarContext* context)
                     .text = wsv_fromCString(buf)
                 ));
 
-            snprintf(buf, sizeof(buf), "%d", map->settings2.sfxVol);
+            snprintf(buf, sizeof(buf), "%d", map->pendingSettings.sfxVol);
             imui_text(context, "txtOptionsSFXVolValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 59)),
@@ -285,7 +285,7 @@ static void renderMenus(WarContext* context)
                     .text = wsv_fromCString(buf)
                 ));
 
-            snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->settings2.mouseScrollSpeed));
+            snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->pendingSettings.mouseScrollSpeed));
             imui_text(context, "txtOptionsMouseScrollValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 76)),
@@ -296,7 +296,7 @@ static void renderMenus(WarContext* context)
                     .text = wsv_fromCString(buf)
                 ));
 
-            snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->settings2.keyScrollSpeed));
+            snprintf(buf, sizeof(buf), "%s", getSpeedStr(map->pendingSettings.keyScrollSpeed));
             imui_text(context, "txtOptionsKeyScrollValue",
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(92, 93)),
@@ -433,7 +433,7 @@ static void renderMenus(WarContext* context)
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(0, 10)),
                     .fontIndex       = 1,
-                    .boundings       = vec2f(map->menuPanel.width, 12),
+                    .boundings       = vec2f(map->ui.menuPanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
                     .text = wsv_fromCString("Objectives")
@@ -444,7 +444,7 @@ static void renderMenus(WarContext* context)
                     .position  = vec2_addv(mp, vec2i(10, 26)),
                     .fontIndex = 1,
                     .multiline = true,
-                    .boundings = vec2f(map->menuPanel.width - 20, 75),
+                    .boundings = vec2f(map->ui.menuPanel.width - 20, 75),
                     .wrapping  = WAR_TEXT_WRAP_CHAR,
                     .trimming  = WAR_TEXT_TRIM_SPACES,
                     .text = campaignData.objectives
@@ -478,7 +478,7 @@ static void renderMenus(WarContext* context)
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(msgp, vec2i(0, 10)),
                     .fontIndex       = 1,
-                    .boundings       = vec2f(map->messagePanel.width, 12),
+                    .boundings       = vec2f(map->ui.messagePanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
                     .text = wsv_fromCString("Are you sure you want to restart?")
@@ -529,7 +529,7 @@ static void renderMenus(WarContext* context)
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(msgp, vec2i(0, 10)),
                     .fontIndex       = 1,
-                    .boundings       = vec2f(map->messagePanel.width, 12),
+                    .boundings       = vec2f(map->ui.messagePanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
                     .text = wsv_fromCString(gameOverText)
@@ -594,7 +594,7 @@ static void renderMenus(WarContext* context)
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(msgp, vec2i(0, 10)),
                     .fontIndex       = 1,
-                    .boundings       = vec2f(map->messagePanel.width, 12),
+                    .boundings       = vec2f(map->ui.messagePanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
                     .text = wsv_fromCString("Are you sure you want to quit?")
@@ -654,7 +654,7 @@ static void renderMenus(WarContext* context)
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position        = vec2_addv(mp, vec2i(0, 10)),
                     .fontIndex       = 1,
-                    .boundings       = vec2f(map->menuPanel.width, 12),
+                    .boundings       = vec2f(map->ui.menuPanel.width, 12),
                     .horizontalAlign = WAR_TEXT_ALIGN_CENTER,
                     .verticalAlign   = WAR_TEXT_ALIGN_MIDDLE,
                     .text            = wsv_fromCString("Thanks for playing!")
@@ -666,7 +666,7 @@ static void renderMenus(WarContext* context)
                     .fontIndex = 1,
                     .fontSize  = 7,
                     .multiline = true,
-                    .boundings = vec2f(map->menuPanel.width - 16, 75),
+                    .boundings = vec2f(map->ui.menuPanel.width - 16, 75),
                     .wrapping  = WAR_TEXT_WRAP_CHAR,
                     .text = wsv_fromCString(
                         "This is a non-profit project with\n"
@@ -711,7 +711,7 @@ static void renderHUD(WarContext* context)
     WarMap* map = context->map;
     WarImuiState* imui = &context->imui;
     WarPlayerInfo* player = &map->players[0];
-    WarCheatStatus* cheatStatus = &map->cheatStatus;
+    WarCheatStatus* cheatStatus = &map->status.cheatStatus;
 
     // Suppress imui button hotkeys while the cheat panel is open so that
     // key presses intended as cheat input don't trigger command shortcuts.
@@ -720,9 +720,9 @@ static void renderHUD(WarContext* context)
         context->imui.hotkeys_enabled = false;
     }
 
-    vec2 topPanel        = RECT_TOP_LEFT(map->topPanel);
-    vec2 bottomPanel     = RECT_TOP_LEFT(map->bottomPanel);
-    vec2 leftBottomPanel = RECT_TOP_LEFT(map->leftBottomPanel);
+    vec2 topPanel        = RECT_TOP_LEFT(map->ui.topPanel);
+    vec2 bottomPanel     = RECT_TOP_LEFT(map->ui.bottomPanel);
+    vec2 leftBottomPanel = RECT_TOP_LEFT(map->ui.leftBottomPanel);
 
     char buf[32];
 
@@ -933,7 +933,7 @@ static void renderHUD(WarContext* context)
 
         for (s32 i = 0; i < 6; i++)
         {
-            if (!map->commandSlotActive[i])
+            if (!map->commandPanel.slotsActive[i])
                 continue;
 
             char btnId[16];
@@ -944,18 +944,18 @@ static void renderHUD(WarContext* context)
                         .backgroundNormalRef  = normalRef,
                         .backgroundPressedRef = pressedRef,
                         .foregroundRef        = portraitsRef,
-                        .foregroundFrameIndex = map->commandSlots[i].frameIndex,
+                        .foregroundFrameIndex = map->commandPanel.slots[i].frameIndex,
                         .position             = vec2_addv(leftBottomPanel, vec2i(cmdOffX[i], cmdOffY[i])),
-                        .hotKey               = map->commandSlots[i].hotKey,
-                        .tooltip               = map->commandSlots[i].tooltip,
-                        .tooltipHighlightIndex = map->commandSlots[i].highlightIndex,
-                        .tooltipHighlightCount = map->commandSlots[i].highlightCount,
-                        .gold                  = map->commandSlots[i].gold,
-                        .wood                  = map->commandSlots[i].wood,
+                        .hotKey               = map->commandPanel.slots[i].hotKey,
+                        .tooltip               = map->commandPanel.slots[i].tooltip,
+                        .tooltipHighlightIndex = map->commandPanel.slots[i].highlightIndex,
+                        .tooltipHighlightCount = map->commandPanel.slots[i].highlightCount,
+                        .gold                  = map->commandPanel.slots[i].gold,
+                        .wood                  = map->commandPanel.slots[i].wood,
                     )))
             {
-                if (map->commandSlots[i].clickHandler)
-                    map->commandSlots[i].clickHandler(context, NULL);
+                if (map->commandPanel.slots[i].clickHandler)
+                    map->commandPanel.slots[i].clickHandler(context, NULL);
             }
         }
 
@@ -965,7 +965,7 @@ static void renderHUD(WarContext* context)
 
         for (s32 i = 0; i < 4; i++)
         {
-            if (!map->commandTextVisible[i])
+            if (!map->commandPanel.textsVisible[i])
                 continue;
 
             char txtId[16];
@@ -975,9 +975,9 @@ static void renderHUD(WarContext* context)
                 CREATE_UI_TEXT_ARGS_INIT(
                     .position       = vec2_addv(leftBottomPanel, vec2i(txtOffX[i], txtOffY[i])),
                     .fontSize       = 6,
-                    .highlightIndex = map->commandTextHighlightIndex[i],
-                    .highlightCount = map->commandTextHighlightCount[i],
-                    .text = wsv_fromCString(map->commandTexts[i])
+                    .highlightIndex = map->commandPanel.textsHighlightIndex[i],
+                    .highlightCount = map->commandPanel.textsHighlightCount[i],
+                    .text = wsv_fromCString(map->commandPanel.texts[i])
                 ));
         }
 
@@ -997,14 +997,14 @@ static void renderHUD(WarContext* context)
         }
     }
 
-    if (!imui->show_tooltip && map->hudStatusText[0] != '\0')
+    if (!imui->show_tooltip && map->status.statusLineText[0] != '\0')
     {
         imui_deferTooltip(context,
-            wsv_fromCString(map->hudStatusText),
-            map->hudStatusHighlightIndex,
-            map->hudStatusHighlightCount,
-            map->hudStatusGold,
-            map->hudStatusWood
+            wsv_fromCString(map->status.statusLineText),
+            map->status.statusLineHighlightIndex,
+            map->status.statusLineHighlightCount,
+            map->status.statusLineGold,
+            map->status.statusLineWood
         );
     }
 
@@ -1040,11 +1040,11 @@ static void renderStaticPanels(WarContext* context)
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
 
-    vec2 leftTopPanel    = RECT_TOP_LEFT(map->leftTopPanel);
-    vec2 leftBottomPanel = RECT_TOP_LEFT(map->leftBottomPanel);
-    vec2 topPanel        = RECT_TOP_LEFT(map->topPanel);
-    vec2 rightPanel      = RECT_TOP_LEFT(map->rightPanel);
-    vec2 bottomPanel     = RECT_TOP_LEFT(map->bottomPanel);
+    vec2 leftTopPanel    = RECT_TOP_LEFT(map->ui.leftTopPanel);
+    vec2 leftBottomPanel = RECT_TOP_LEFT(map->ui.leftBottomPanel);
+    vec2 topPanel        = RECT_TOP_LEFT(map->ui.topPanel);
+    vec2 rightPanel      = RECT_TOP_LEFT(map->ui.rightPanel);
+    vec2 bottomPanel     = RECT_TOP_LEFT(map->ui.bottomPanel);
 
     imui_image(context, "panelLeftTop", CREATE_UI_IMAGE_ARGS_INIT(
         .spriteRef = imageResourceRefFromPlayer(player, 224, 225),
@@ -1086,7 +1086,7 @@ static void renderSelectionRect(WarContext* context)
     if (isMapDragging(input))
     {
         rect pointerRect = input->mapDragState.rect;
-        wr_strokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION, 1.0f);
+        wr_strokeRect(context, pointerRect, WAR_COLOR_GREEN_SELECTION);
     }
 
     wr_restore(context);
@@ -1099,7 +1099,7 @@ static void renderCommand(WarContext* context)
     TracyCZoneN(ctx, "RenderCommand", 1);
 
     WarMap* map = context->map;
-    WarUnitCommand* command = &map->command;
+    WarUnitCommand* command = &map->commandState.command;
 
     WarInput* input = &context->input;
 
