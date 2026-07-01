@@ -23,9 +23,8 @@
 
 #define MAP_SELECTION_DRAG_THRESHOLD 3.0f
 
-// Sets the near-units debug overlay to show we_getNearUnits2 results at (targetTile, distance).
+// Sets the near-units debug overlay to show `we_getNearUnits` results at (targetTile, distance).
 // The render path replays the query each frame, so the display stays current as units move.
-// Skips the update while a spell-cheat edit mode is active so the cheat overlay persists.
 static void setNearUnitsDebugParams(WarContext* context, vec2 targetTile, s32 distance)
 {
     if (!context->debugRender.flags[WAR_DEBUG_RENDER_NEAR_UNITS])
@@ -3318,7 +3317,7 @@ static void renderMapGrid(WarContext* context)
     for(s32 y = 1; y < MAP_TILES_HEIGHT; y++)
     {
         vec2 p1 = vec2i(0, y * MEGA_TILE_HEIGHT);
-        vec2 p2 = vec2i(MAP_TILES_WIDTH * MAP_TILES_WIDTH, y * MEGA_TILE_HEIGHT);
+        vec2 p2 = vec2i(MAP_TILES_WIDTH * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
         wr_strokeLine(context, p1, p2, WAR_COLOR_WHITE);
     }
 }

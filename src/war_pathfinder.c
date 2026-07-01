@@ -428,7 +428,7 @@ WarMapFlowField wpath_computeFlowField(WarPathFinder* finder, s32 x, s32 y)
 
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
-        flowField.cost[i] = UINT16_MAX;
+        flowField.cost[i] = INT32_MAX;
         flowField.dirs[i] = WAR_DIRECTION_COUNT;
     }
 

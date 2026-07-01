@@ -37,7 +37,37 @@ const WarCheatDescriptor cheatDescriptors[] =
     { WAR_CHEAT_RAIN_OF_FIRE,   "Rain of fire",             false,  wcheat_applyRainOfFireCheat    },
     { WAR_CHEAT_POISON_CLOUD,   "Poison cloud",             false,  wcheat_applyPoisonCloudCheat   },
     { WAR_CHEAT_RAISE_DEAD,     "Raise dead",               false,  wcheat_applyRaiseDeadCheat     },
-    { WAR_CHEAT_DEBUG_RENDER,   "debug render",             true,   wcheat_applyDebugRenderCheat    },
+    { WAR_CHEAT_DEBUG_RENDER,   "Debug render",             true,   wcheat_applyDebugRenderCheat    },
+};
+
+static const char* debugRenderFlagNames[WAR_DEBUG_RENDER_COUNT] =
+{
+    "map-grid",
+    "spatial-grid",
+    "near-units",
+    "passable-info",
+    "unit-paths",
+    "unit-info",
+    "unit-animations",
+    "map-animations",
+    "font",
+    "projectiles",
+    "flow-field",
+};
+
+static const char* debugRenderFlagShortcuts[WAR_DEBUG_RENDER_COUNT] =
+{
+    "Ctrl+Shift+G",
+    "Ctrl+Shift+S",
+    "Ctrl+Shift+N",
+    "Ctrl+Shift+P",
+    "(none)",
+    "Ctrl+Shift+I",
+    "Ctrl+Shift+U",
+    "Ctrl+Shift+A",
+    "Ctrl+Shift+F",
+    "Ctrl+Shift+J",
+    "Ctrl+Shift+W",
 };
 
 void wcheat_applyCheat(WarContext* context, StringView text)
@@ -100,7 +130,7 @@ void wcheat_applySpellsCheat(WarContext* context, StringView argument)
 
     WarPlayerInfo* player = &map->players[0];
 
-    WarFeatureType spellFeatures[] =
+    static const WarFeatureType spellFeatures[] =
     {
         WAR_FEATURE_SPELL_HEALING,
         WAR_FEATURE_SPELL_RAISE_DEAD,
@@ -121,7 +151,7 @@ void wcheat_applySpellsCheat(WarContext* context, StringView argument)
         setFeatureAllowed(player, spellFeatures[i], true);
     }
 
-    WarUpgradeType upgradeFeatures[] =
+    static const WarUpgradeType upgradeFeatures[] =
     {
         WAR_UPGRADE_SCORPIONS,
         WAR_UPGRADE_SPIDERS,
@@ -163,7 +193,7 @@ void wcheat_applyUpgradesCheat(WarContext* context, StringView argument)
 
     WarPlayerInfo* player = &map->players[0];
 
-    WarUpgradeType upgrades[] =
+    static const WarUpgradeType upgrades[] =
     {
         WAR_UPGRADE_ARROWS,
         WAR_UPGRADE_SPEARS,
@@ -743,36 +773,6 @@ void wcheat_applyAddUnitCheat(WarContext* context, StringView argument)
     }
 }
 
-static const char* debugRenderFlagNames[WAR_DEBUG_RENDER_COUNT] =
-{
-    "map-grid",
-    "spatial-grid",
-    "near-units",
-    "passable-info",
-    "unit-paths",
-    "unit-info",
-    "unit-animations",
-    "map-animations",
-    "font",
-    "projectiles",
-    "flow-field",
-};
-
-static const char* debugRenderFlagShortcuts[WAR_DEBUG_RENDER_COUNT] =
-{
-    "Ctrl+Shift+G",
-    "Ctrl+Shift+S",
-    "Ctrl+Shift+N",
-    "Ctrl+Shift+P",
-    "(none)",
-    "Ctrl+Shift+I",
-    "Ctrl+Shift+U",
-    "Ctrl+Shift+A",
-    "Ctrl+Shift+F",
-    "Ctrl+Shift+J",
-    "Ctrl+Shift+W",
-};
-
 static bool parseDebugRenderFlag(StringView name, WarDebugRenderFlag* outFlag)
 {
     for (s32 i = 0; i < WAR_DEBUG_RENDER_COUNT; i++)
@@ -801,7 +801,8 @@ void wcheat_applyDebugRenderCheat(WarContext* context, StringView argument)
                 enabledCount++;
 
         wcheatp_setCheatsFeedback(context,
-            wstr_fromCStringFormat("%d/%d debug render flags on (see log)", enabledCount, WAR_DEBUG_RENDER_COUNT));
+            wstr_fromCStringFormat("%d/%d debug render flags on (see log)", enabledCount, WAR_DEBUG_RENDER_COUNT)
+        );
 
         logInfo("=== Debug Render Flags ===");
         for (s32 i = 0; i < WAR_DEBUG_RENDER_COUNT; i++)
@@ -826,7 +827,8 @@ void wcheat_applyDebugRenderCheat(WarContext* context, StringView argument)
     if (!parseDebugRenderFlag(featurePart, &flag))
     {
         wcheatp_setCheatsFeedback(context,
-            wstr_fromCStringFormat("Unknown debug render flag: %.*s", (int)featurePart.length, featurePart.data));
+            wstr_fromCStringFormat("Unknown debug render flag: %.*s", (int)featurePart.length, featurePart.data)
+        );
         return;
     }
 
@@ -846,12 +848,14 @@ void wcheat_applyDebugRenderCheat(WarContext* context, StringView argument)
     else
     {
         wcheatp_setCheatsFeedback(context,
-            wstr_fromCStringFormat("Invalid value: %.*s (use 0 or 1)", (int)valuePart.length, valuePart.data));
+            wstr_fromCStringFormat("Invalid value: %.*s (use 0 or 1)", (int)valuePart.length, valuePart.data)
+        );
         return;
     }
 
     context->debugRender.flags[flag] = newValue;
 
     wcheatp_setCheatsFeedback(context,
-        wstr_fromCStringFormat("%s %s", debugRenderFlagNames[flag], newValue ? "on" : "off"));
+        wstr_fromCStringFormat("%s %s", debugRenderFlagNames[flag], newValue ? "on" : "off")
+    );
 }
