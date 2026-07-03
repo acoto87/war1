@@ -156,6 +156,9 @@ struct _WarUnitComponent
     f32 invisibilityTime;
     // time remainder (in seconds) until the unit invulnerability ceases
     f32 invulnerabilityTime;
+
+    // game-time of last attack sound played
+    f64 lastAttackSoundGameTime;
 };
 
 #define WAR_UNIT_COMPONENT_INIT_CONST(...) {                  \

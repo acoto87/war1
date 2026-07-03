@@ -1,28 +1,44 @@
 #include "war_state_machine.h"
 
+#include "TracyC.h"
+
 WarState* wst_createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
 {
+    TracyCZoneN(ctx, "wst_createRepairState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_REPAIR);
     state->repair.buildingId = buildingId;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterRepairState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveRepairState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateRepairState", true);
+
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
@@ -35,6 +51,7 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
     {
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -46,17 +63,23 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
         WarState* followState = wst_createFollowState(context, entity, building->id, targetTile, stats->range);
         followState->nextState = state;
         wst_changeNextState(context, entity, followState, false, true);
+        TracyCZoneEnd(ctx);
         return;
     }
 
     // the unit arrive to the building, go repairing
     WarState* repairingState = wst_createRepairingState(context, entity, building->id);
     wst_changeNextState(context, entity, repairingState, true, true);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeRepairState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeRepairState", true);
+
     NOT_USED(context);
     NOT_USED(state);
-}
 
+    TracyCZoneEnd(ctx);
+}

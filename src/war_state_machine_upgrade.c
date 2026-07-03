@@ -1,17 +1,25 @@
 ﻿#include "war_state_machine.h"
 
+#include "TracyC.h"
+
 WarState* wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
 {
+    TracyCZoneN(ctx, "wst_createUpgradeState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_UPGRADE);
     state->upgrade.upgradeToBuild = upgradeToBuild;
     state->upgrade.buildTime = 0;
     state->upgrade.totalBuildTime = buildTime;
     state->upgrade.cancelled = false;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterUpgradeState", true);
+
     NOT_USED(state);
 
     WarMap* map = context->map;
@@ -27,10 +35,14 @@ void wst_enterUpgradeState(WarContext* context, WarEntity* entity, WarState* sta
 
     unit->building = true;
     unit->buildPercent = 0;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveUpgradeState", true);
+
     NOT_USED(state);
 
     WarMap* map = context->map;
@@ -45,10 +57,14 @@ void wst_leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* sta
     setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateUpgradeState", true);
+
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -62,6 +78,7 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -90,14 +107,21 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
     unit->buildPercent = PERCENTF01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeUpgradeState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeUpgradeState", true);
+
     NOT_USED(context);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }

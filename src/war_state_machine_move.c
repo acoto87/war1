@@ -1,22 +1,89 @@
-#include "war_state_machine.h"
+#include <float.h>
 
+#include "TracyC.h"
+
+#include "war_state_machine.h"
 #include "war_actions.h"
 #include "war_units.h"
+#include "war_rvo.h"
+
+// Collect moving units near `centrePixel` within `radiusPx`.
+// Returns count (capped at RVO_MAX_NB).
+static s32 rvo_gatherNeighbours(
+    WarContext* context,
+    s32         selfId,
+    vec2        centrePixel,
+    f32         radiusPx,
+    WarRvoNeighbour out[RVO_MAX_NB])
+{
+    WarMap*     map  = context->map;
+    WarEntityManager* entityManager = &map->entityManager;
+    WarMapGrid* grid = &map->grid;
+    s32         count = 0;
+
+    vec2 ct    = wmap_mapToTileCoordinatesV(centrePixel);
+    f32  rt    = radiusPx / (f32)MEGA_TILE_WIDTH;
+    s32  gxMin = MAX(0, (s32)floorf((ct.x - rt) / MAP_GRID_TILE_SIZE));
+    s32  gxMax = MIN(MAP_GRID_TILES_WIDTH - 1, (s32)floorf((ct.x + rt) / MAP_GRID_TILE_SIZE));
+    s32  gyMin = MAX(0, (s32)floorf((ct.y - rt) / MAP_GRID_TILE_SIZE));
+    s32  gyMax = MIN(MAP_GRID_TILES_HEIGHT - 1, (s32)floorf((ct.y + rt) / MAP_GRID_TILE_SIZE));
+
+    for (s32 gy = gyMin; gy <= gyMax && count < RVO_MAX_NB; gy++)
+    {
+        for (s32 gx = gxMin; gx <= gxMax && count < RVO_MAX_NB; gx++)
+        {
+            for (s32 idx = grid->head[gy * MAP_GRID_TILES_WIDTH + gx];
+                 idx >= 0 && count < RVO_MAX_NB;
+                 idx = grid->next[idx])
+            {
+                WarEntity* other = &entityManager->entities[idx];
+                if (other->id == selfId) continue;
+                if (!we_isComponentEnabled(context, other, COMP_UNIT)) continue;
+
+                vec2 oPos = wu_getUnitCenterPosition(context, other, false);
+                f32  dx   = oPos.x - centrePixel.x;
+                f32  dy   = oPos.y - centrePixel.y;
+                if (dx*dx + dy*dy > radiusPx*radiusPx) continue;
+
+                // Read the neighbour's last RVO velocity (zero if not moving).
+                vec2 oVel = VEC2_ZERO;
+
+                WarState* moveState = wst_getMoveState(context, other);
+                if (moveState)
+                {
+                    oVel = moveState->move.rvoVelocity;
+                }
+
+                out[count].position = oPos;
+                out[count].velocity = oVel;
+                out[count].radius   = (f32)MEGA_TILE_WIDTH * 0.45f;
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
 
 WarState* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
+    TracyCZoneN(ctx, "wst_createMoveState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_MOVE);
-    Vec2ListInit(&state->move.positions, wm_globalAllocator());
-    Vec2ListAddRange(&state->move.positions, positionCount, positions);
+    memcpy(state->move.positions, positions, positionCount * sizeof(vec2));
+    state->move.positionCount = positionCount;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(context, entity);
+    TracyCZoneN(ctx, "wst_enterMoveState", true);
 
-    if (state->move.positions.count <= 1)
+    WarMap* map = context->map;
+
+    if (state->move.positionCount <= 1)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
@@ -24,77 +91,92 @@ void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
     state->move.positionIndex = 0;
-    state->move.pathNodeIndex = 0;
-    state->move.waitCount = 0;
 
-    vec2 start = state->move.positions.items[state->move.positionIndex];
-    vec2 end = state->move.positions.items[state->move.positionIndex + 1];
+    state->move.rvoVelocity       = VEC2_ZERO;
+    state->move.settleTimer       = 0.0f;
+    state->move.closestGoalDistSq = FLT_MAX;
 
-    WarMapPath path = state->move.path = wpath_findPath(&map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
-
-    // if the is no path to the next position, go to idle
-    if (path.nodes.count <= 1)
+    state->move.rvoPreferredVelocity = VEC2_ZERO;
+    state->move.rvoPosition          = VEC2_ZERO;
+    state->move.rvoRadius            = 0.0f;
+    state->move.rvoNumCandidates     = 0;
+    state->move.rvoBestIndex         = 0;
+    for (s32 i = 0; i < RVO_MAX_CANDIDATES; i++)
     {
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
-        }
-
-        return;
+        state->move.rvoCandidates[i]            = VEC2_ZERO;
+        state->move.rvoCandidateHadCollision[i] = false;
     }
 
-    vec2 currentNode = path.nodes.items[state->move.pathNodeIndex];
-    setDynamicEntity(&map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    vec2 nextPosition = state->move.positions[state->move.positionIndex + 1];
 
-    vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
-    setDynamicEntity(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    WarMapFlowField* flowField = wpath_getFlowField(&map->finder, (s32)nextPosition.x, (s32)nextPosition.y);
+    if (!flowField)
+    {
+        flowField = wpath_computeFlowField(&map->finder, (s32)nextPosition.x, (s32)nextPosition.y);
 
-    wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
+        if (!flowField)
+        {
+            if (!wst_changeStateNextState(context, entity, state))
+            {
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
+            }
+
+            TracyCZoneEnd(ctx);
+            return;
+        }
+    }
+
     wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(context, entity));
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(context, entity);
-    WarMapPath* path = &state->move.path;
+    TracyCZoneN(ctx, "wst_leaveMoveState", true);
 
-    if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
+    NOT_USED(context);
+    NOT_USED(entity);
+
+    state->move.rvoVelocity = VEC2_ZERO;
+
+    state->move.rvoPreferredVelocity = VEC2_ZERO;
+    state->move.rvoPosition          = VEC2_ZERO;
+    state->move.rvoRadius            = 0.0f;
+    state->move.rvoNumCandidates     = 0;
+    state->move.rvoBestIndex         = 0;
+    for (s32 i = 0; i < RVO_MAX_CANDIDATES; i++)
     {
-        vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
-        if (isDynamicOfEntity(&map->finder, (s32)currentNode.x, (s32)currentNode.y, entity->id))
-            setFreeTiles(&map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
+        state->move.rvoCandidates[i]            = VEC2_ZERO;
+        state->move.rvoCandidateHadCollision[i] = false;
     }
 
-    if (inRange(state->move.pathNodeIndex + 1, 0, path->nodes.count))
-    {
-        vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-        if (isDynamicOfEntity(&map->finder, (s32)nextNode.x, (s32)nextNode.y, entity->id))
-            setFreeTiles(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
-    }
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-    WarMapPath* path = &state->move.path;
+    TracyCZoneN(ctx, "wst_updateMoveState", true);
 
-    assert(path->nodes.count > 1);
-    assert(inRange(state->move.pathNodeIndex, 0, path->nodes.count - 1));
+    NOT_USED(state);
+
+    WarMap* map = context->map;
+
+    assert(state->move.positionCount > 1);
+    assert(inRange(state->move.positionIndex, 0, state->move.positionCount - 1));
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
-    vec2 unitSize = wu_getUnitSize(context, entity);
 
-    vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
-    vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
+    vec2 nextPosition = state->move.positions[state->move.positionIndex + 1];
 
     if (state->move.checkForAttacks)
     {
@@ -105,160 +187,162 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
             WarState* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
             wst_changeNextState(context, entity, attackState, true, true);
 
+            TracyCZoneEnd(ctx);
             return;
         }
     }
 
-    // if this unit is waiting
-    if (state->move.waitCount > 0)
-    {
-        if (!isEmpty(&map->finder, (s32)nextNode.x, (s32)nextNode.y))
-        {
-            // wait for a number of times before re-route
-            if (state->move.waitCount < MOVE_WAIT_INTENTS)
-            {
-                state->move.waitCount++;
-
-                WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
-                waitState->nextState = state;
-                wst_changeNextState(context, entity, waitState, false, true);
-
-                return;
-            }
-
-            state->move.waitCount = 0;
-
-            // if there is no re-routing possible, go to idle
-            if (!wpath_reRoutePath(&map->finder, path, state->move.pathNodeIndex, path->nodes.count - 1))
-            {
-                if (!wst_changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-        }
-        else
-        {
-            state->move.waitCount = 0;
-        }
-
-        setDynamicEntity(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-        wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(context, entity));
-    }
+    WarMapFlowField* flowField = wpath_getFlowField(&map->finder, (s32)nextPosition.x, (s32)nextPosition.y);
+    assert(flowField);
 
     vec2 position = wu_getUnitCenterPosition(context, entity, false);
-    vec2 target = wmap_tileToMapCoordinatesV(nextNode, true);
+    vec2 tile = wmap_mapToTileCoordinatesV(position);
 
-    vec2 direction = vec2_subv(target, position);
-    f32 directionLength = vec2_length(direction);
+    // ── 1. CROWD SETTLING: detect lack of progress toward the final goal ─────
+    // The final commanded destination (last element of the positions list, stored in tile coords).
+
+    vec2 nextGoal = wmap_tileToMapCoordinatesV(nextPosition, true);
+
+    f32 gx           = position.x - nextGoal.x;
+    f32 gy           = position.y - nextGoal.y;
+    f32 distToGoalSq = gx*gx + gy*gy;
+
+    // Reset the timer whenever we get meaningfully closer to the goal.
+#define RVO_SETTLE_PROGRESS_SQ      16.0f   // must improve by 4 px to count
+#define RVO_SETTLE_GOAL_RADIUS      (MEGA_TILE_WIDTH * 2.0f)  // 32 px = 2 tiles
+#define RVO_SETTLE_TIME_THRESHOLD   0.75f   // game-seconds before giving up
+
+    if (distToGoalSq < state->move.closestGoalDistSq - RVO_SETTLE_PROGRESS_SQ)
+    {
+        state->move.closestGoalDistSq = distToGoalSq;
+        state->move.settleTimer       = 0.0f;
+    }
+    else
+    {
+        state->move.settleTimer += context->gameDeltaTime;
+    }
+
+    // Settle: within the goal radius AND stuck for long enough -> idle.
+    if (distToGoalSq <= RVO_SETTLE_GOAL_RADIUS * RVO_SETTLE_GOAL_RADIUS &&
+        state->move.settleTimer >= RVO_SETTLE_TIME_THRESHOLD)
+    {
+        if (!wst_changeStateNextState(context, entity, state))
+        {
+            WarState* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, idleState, true, true);
+        }
+
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    // ── 2. PREFERRED VELOCITY WITH ARRIVAL DECELERATION ──────────────────────
+    // Scale down preferredVelocity as the unit nears the final goal. The scoring function
+    // will then find that the zero-velocity candidate (full stop) or a
+    // low-speed candidate wins over the full-speed one — naturally encouraging
+    // the unit to coast to a halt inside the crowd rather than fighting it.
+#define RVO_ARRIVAL_SLOWDOWN_RADIUS (MEGA_TILE_WIDTH * 3.0f)  // 48 px = 3 tiles
+#define RVO_ARRIVAL_MIN_SCALE       0.25f
+
+    vec2 direction = wpath_flowFieldSample(flowField, (s32)tile.x, (s32)tile.y);
+    wu_setUnitDirection(context, entity, wu_getDirectionFromDiff(direction.x, direction.y));
 
     f32 speed = (f32)stats->speeds[unit->speed];
-    vec2 step = vec2_mulf(vec2_normalize(direction), speed * context->gameDeltaTime);
-    f32 stepLength = vec2_length(step);
+    vec2 preferredVelocity = vec2_mulf(direction, speed);
 
-    if (directionLength < stepLength)
+    f32 distToGoal = sqrtf(distToGoalSq);
+    if (distToGoal < RVO_ARRIVAL_SLOWDOWN_RADIUS)
     {
-        step = direction;
+        f32 scale = distToGoal / RVO_ARRIVAL_SLOWDOWN_RADIUS;
+        scale = MAX(scale, RVO_ARRIVAL_MIN_SCALE);
+        preferredVelocity = vec2_mulf(preferredVelocity, scale);
     }
+
+    // ── 3. RVO STEERING ───────────────────────────────────────────────────────
+    const f32 SEARCH_RADIUS_PX = 80.0f;    // ~5 tiles
+    f32       myRadius         = (f32)MEGA_TILE_WIDTH * 0.45f;
+
+    WarRvoNeighbour neighbours[RVO_MAX_NB];
+    s32 numNeighbours = rvo_gatherNeighbours(context, entity->id, position, SEARCH_RADIUS_PX, neighbours);
+
+    logDebug("RVO: unit %d pos=(%.2f, %.2f) goal=(%.2f, %.2f) distToGoal=%.2f numNeighbours=%d",
+        entity->id,
+        position.x, position.y,
+        nextGoal.x, nextGoal.y,
+        distToGoal,
+        numNeighbours
+    );
+
+    vec2  candidates[RVO_MAX_CANDIDATES];
+    bool  hadCollision[RVO_MAX_CANDIDATES] = { 0 };
+    s32   numCandidates = 0;
+    s32   bestIndex     = 0;
+
+    vec2 newVelocity = wrvo_computeNewVelocity(
+        preferredVelocity,
+        position, state->move.rvoVelocity, myRadius,
+        speed,
+        context->gameDeltaTime,
+        neighbours, numNeighbours,
+        candidates, &numCandidates, &bestIndex, hadCollision
+    );
+
+    logDebug("RVO: unit %d pos=(%.2f, %.2f) vel=(%.2f, %.2f) prefVel=(%.2f, %.2f) newVel=(%.2f, %.2f) bestIdx=%d numCand=%d",
+        entity->id,
+        position.x, position.y,
+        state->move.rvoVelocity.x, state->move.rvoVelocity.y,
+        preferredVelocity.x, preferredVelocity.y,
+        newVelocity.x, newVelocity.y,
+        bestIndex, numCandidates
+    );
+
+    state->move.rvoVelocity          = newVelocity;
+    state->move.rvoPreferredVelocity = preferredVelocity;
+    state->move.rvoPosition          = position;
+    state->move.rvoRadius            = myRadius;
+    state->move.rvoNumCandidates     = numCandidates;
+    state->move.rvoBestIndex         = bestIndex;
+    for (s32 i = 0; i < numCandidates; i++)
+    {
+        state->move.rvoCandidates[i]            = candidates[i];
+        state->move.rvoCandidateHadCollision[i] = hadCollision[i];
+    }
+
+    // Overshoot clamp: if step would carry us past the waypoint, snap to it.
+    vec2 step = vec2_mulf(newVelocity, context->gameDeltaTime);
+    // if (vec2_lenSq(step) > vec2_lenSq(direction)) step = direction;
 
     vec2 newPosition = vec2_addv(position, step);
     wu_setUnitCenterPosition(context, entity, newPosition, false);
 
-    f32 distance = vec2_distance(newPosition, target);
+    f32 distance = vec2_distance(newPosition, nextPosition);
     if (distance < MOVE_EPSILON)
     {
-        newPosition = target;
+        newPosition = nextPosition;
         wu_setUnitCenterPosition(context, entity, newPosition, false);
 
-        setFreeTiles(&map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
-        setFreeTiles(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
+        state->move.positionIndex++;
 
-        state->move.pathNodeIndex++;
-
-        // if there is no more path nodes to check, go to idle
-        if (state->move.pathNodeIndex >= path->nodes.count - 1)
+        if (state->move.positionIndex >= state->move.positionCount - 1)
         {
-            state->move.positionIndex++;
-
-            // if this is no more segments, go to idle
-            if (state->move.positionIndex >= state->move.positions.count - 1)
+            if (!wst_changeStateNextState(context, entity, state))
             {
-                if (!wst_changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
+                WarState* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, idleState, true, true);
             }
 
-            // free the previous path and check if there is a new one
-            Vec2ListFree(&path->nodes);
-
-            vec2 start = state->move.positions.items[state->move.positionIndex];
-            vec2 end = state->move.positions.items[state->move.positionIndex + 1];
-
-            *path = wpath_findPath(&map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
-
-            // if there is no path for the next segment, go to idle
-            if (path->nodes.count <= 1)
-            {
-                if (!wst_changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            state->move.pathNodeIndex = 0;
-        }
-
-        currentNode = path->nodes.items[state->move.pathNodeIndex];
-        setDynamicEntity(&map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-
-        nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-
-        // if the next node is occupied, check if the unit have to wait to re-route if necessary
-        if (!isEmpty(&map->finder, (s32)nextNode.x, (s32)nextNode.y))
-        {
-            // if the next node is occupied but is the last one, don't wait to re-route, go idle
-            if (state->move.pathNodeIndex + 1 == path->nodes.count - 1)
-            {
-                if (!wst_changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            state->move.waitCount++;
-
-            WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
-            waitState->nextState = state;
-            wst_changeNextState(context, entity, waitState, false, true);
-
+            TracyCZoneEnd(ctx);
             return;
         }
-
-        setDynamicEntity(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeMoveState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeMoveState", true);
     NOT_USED(context);
-
-    Vec2ListFree(&state->move.positions);
-    Vec2ListFree(&state->move.path.nodes);
+    NOT_USED(state);
+    TracyCZoneEnd(ctx);
 }

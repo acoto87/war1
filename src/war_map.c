@@ -1497,6 +1497,7 @@ static void updateDebugRenderShortcuts(WarContext* context)
         { WAR_KEY_F, WAR_DEBUG_RENDER_FONT             },
         { WAR_KEY_J, WAR_DEBUG_RENDER_PROJECTILES      },
         { WAR_KEY_W, WAR_DEBUG_RENDER_FLOW_FIELD       },
+        { WAR_KEY_R, WAR_DEBUG_RENDER_RVO              },
     };
 
     for (s32 i = 0; i < arrayLength(shortcuts); i++)
@@ -3231,53 +3232,6 @@ static void renderFoW(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-static void renderUnitPaths(WarContext* context)
-{
-    if (!context->debugRender.flags[WAR_DEBUG_RENDER_UNIT_PATHS])
-        return;
-
-    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-    for(s32 i = 0; i < units->count; i++)
-    {
-        WarEntity *entity = units->items[i];
-        if (entity)
-        {
-            WarState* moveState = wst_getDirectState(context, entity, WAR_STATE_MOVE);
-            if (moveState)
-            {
-                Vec2List positions = moveState->move.positions;
-                for(s32 k = moveState->move.positionIndex; k < positions.count; k++)
-                {
-                    vec2 pos = wmap_tileToMapCoordinatesV(positions.items[k], true);
-                    pos = vec2_subv(pos, vec2i(2, 2));
-                    wr_fillRect(context, rectv(pos, vec2i(4, 4)), wr_getColorFromList(entity->id));
-                }
-
-                s32 index = moveState->move.pathNodeIndex;
-                WarMapPath path = moveState->move.path;
-
-                if (index >= 0)
-                {
-                    vec2 prevPos = VEC2_ZERO;
-                    for(s32 k = 0; k < path.nodes.count; k++)
-                    {
-                        vec2 pos = wmap_tileToMapCoordinatesV(path.nodes.items[k], true);
-
-                        if (k > 0)
-                        {
-                            wr_strokeLine(context, prevPos, pos, wr_getColorFromList(entity->id));
-                        }
-
-                        wr_fillRect(context, rectv(pos, VEC2_ONE), k == index ? WAR_COLOR_RGB(255, 0, 255) : WAR_COLOR_RGB(255, 255, 0));
-
-                        prevPos = pos;
-                    }
-                }
-            }
-        }
-    }
-}
-
 static void renderPassableInfo(WarContext* context)
 {
     if (!context->debugRender.flags[WAR_DEBUG_RENDER_PASSABLE_INFO])
@@ -3417,6 +3371,9 @@ static void renderFlowField(WarContext* context)
 
     WarMap* map = context->map;
 
+    if (!map->debug.flowField)
+        return;
+
     s32 startX = (s32)(map->camera.viewport.x / MEGA_TILE_WIDTH);
     s32 startY = (s32)(map->camera.viewport.y / MEGA_TILE_HEIGHT);
     s32 endX = (s32)((map->camera.viewport.x + map->camera.viewport.width) / MEGA_TILE_WIDTH) + 1;
@@ -3444,7 +3401,7 @@ static void renderFlowField(WarContext* context)
             if (isStatic(&map->finder, x, y))
                 continue;
 
-            WarDirection dir = (WarDirection)map->debug.flowField.dirs[y * MAP_TILES_WIDTH + x];
+            WarDirection dir = (WarDirection)map->debug.flowField->dirs[y * MAP_TILES_WIDTH + x];
             if (dir < WAR_DIRECTION_NORTH || dir >= WAR_DIRECTION_COUNT)
                 continue;
 
@@ -3471,6 +3428,103 @@ static void renderFlowField(WarContext* context)
     }
 }
 
+static void renderRvoDebug(WarContext* context)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_RVO])
+        return;
+
+    TracyCZoneN(ctx, "RenderRvoDebug", 1);
+
+#define CANDIDATE_DRAW_SCALE 1.0f
+#define ARROW_HEAD_LEN 3.0f
+#define DOT_RADIUS_PX 1.5f
+#define BEST_DOT_RADIUS_PX 3.0f
+
+    WarColor radiusColor   = WAR_COLOR_RGBA(255, 255, 255, 64);
+    WarColor rvoVelColor   = WAR_COLOR_RGB(0, 255, 0);
+    WarColor prefVelColor  = WAR_COLOR_RGB(255, 255, 0);
+    WarColor cleanColor    = WAR_COLOR_RGB(255, 255, 255);
+    WarColor penaltyColor  = WAR_COLOR_RGB(255, 0, 0);
+    WarColor bestColor     = WAR_COLOR_RGB(0, 255, 0);
+
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (!entity || entity->id < 0) continue;
+
+        WarState* moveState = wst_getMoveState(context, entity);
+        if (!moveState) continue;
+        if (moveState->move.rvoNumCandidates <= 0) continue;
+
+        vec2 pos    = moveState->move.rvoPosition;
+        f32  radius = moveState->move.rvoRadius;
+
+        // rect radiusRect = rectf(
+        //     pos.x - radius, pos.y - radius,
+        //     radius * 2.0f,  radius * 2.0f
+        // );
+        // wr_strokeRect(context, radiusRect, radiusColor);
+
+        if (vec2_lengthSqr(moveState->move.rvoVelocity) > 0.01f)
+        {
+            vec2 rvoEnd = vec2f(
+                pos.x + moveState->move.rvoVelocity.x * CANDIDATE_DRAW_SCALE,
+                pos.y + moveState->move.rvoVelocity.y * CANDIDATE_DRAW_SCALE
+            );
+            wr_strokeLine(context, pos, rvoEnd, rvoVelColor);
+            f32 angle = atan2f(moveState->move.rvoVelocity.y, moveState->move.rvoVelocity.x);
+            vec2 h1 = vec2f(rvoEnd.x - ARROW_HEAD_LEN * cosf(angle - PI / 6.0f),
+                            rvoEnd.y - ARROW_HEAD_LEN * sinf(angle - PI / 6.0f));
+            vec2 h2 = vec2f(rvoEnd.x - ARROW_HEAD_LEN * cosf(angle + PI / 6.0f),
+                            rvoEnd.y - ARROW_HEAD_LEN * sinf(angle + PI / 6.0f));
+            wr_strokeLine(context, rvoEnd, h1, rvoVelColor);
+            wr_strokeLine(context, rvoEnd, h2, rvoVelColor);
+        }
+
+        if (vec2_lengthSqr(moveState->move.rvoPreferredVelocity) > 0.01f)
+        {
+            vec2 prefEnd = vec2f(
+                pos.x + moveState->move.rvoPreferredVelocity.x * CANDIDATE_DRAW_SCALE,
+                pos.y + moveState->move.rvoPreferredVelocity.y * CANDIDATE_DRAW_SCALE
+            );
+            wr_strokeLine(context, pos, prefEnd, prefVelColor);
+            f32 angle = atan2f(moveState->move.rvoPreferredVelocity.y, moveState->move.rvoPreferredVelocity.x);
+            vec2 h1 = vec2f(prefEnd.x - ARROW_HEAD_LEN * cosf(angle - PI / 6.0f),
+                            prefEnd.y - ARROW_HEAD_LEN * sinf(angle - PI / 6.0f));
+            vec2 h2 = vec2f(prefEnd.x - ARROW_HEAD_LEN * cosf(angle + PI / 6.0f),
+                            prefEnd.y - ARROW_HEAD_LEN * sinf(angle + PI / 6.0f));
+            wr_strokeLine(context, prefEnd, h1, prefVelColor);
+            wr_strokeLine(context, prefEnd, h2, prefVelColor);
+        }
+
+        // s32 n = moveState->move.rvoNumCandidates;
+        // for (s32 c = 0; c < n; c++)
+        // {
+        //     vec2 cv = moveState->move.rvoCandidates[c];
+        //     vec2 dot = vec2f(pos.x + cv.x * CANDIDATE_DRAW_SCALE,
+        //                      pos.y + cv.y * CANDIDATE_DRAW_SCALE);
+        //     rect r = rectf(dot.x - DOT_RADIUS_PX, dot.y - DOT_RADIUS_PX,
+        //                    DOT_RADIUS_PX * 2.0f, DOT_RADIUS_PX * 2.0f);
+        //     WarColor col = moveState->move.rvoCandidateHadCollision[c] ? penaltyColor : cleanColor;
+        //     wr_fillRect(context, r, col);
+        // }
+
+        // if (moveState->move.rvoBestIndex >= 0 &&
+        //     moveState->move.rvoBestIndex < n)
+        // {
+        //     vec2 cv = moveState->move.rvoCandidates[moveState->move.rvoBestIndex];
+        //     vec2 dot = vec2f(pos.x + cv.x * CANDIDATE_DRAW_SCALE,
+        //                      pos.y + cv.y * CANDIDATE_DRAW_SCALE);
+        //     rect r = rectf(dot.x - BEST_DOT_RADIUS_PX, dot.y - BEST_DOT_RADIUS_PX,
+        //                    BEST_DOT_RADIUS_PX * 2.0f, BEST_DOT_RADIUS_PX * 2.0f);
+        //     wr_fillRect(context, r, bestColor);
+        // }
+    }
+
+    TracyCZoneEnd(ctx);
+}
+
 static void renderMapPanel(WarContext *context)
 {
     TracyCZoneN(ctx, "RenderMapPanel", 1);
@@ -3488,7 +3542,6 @@ static void renderMapPanel(WarContext *context)
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
 
-    renderUnitPaths(context);
     renderPassableInfo(context);
     renderMapGrid(context);
     renderSpatialGrid(context);
@@ -3500,6 +3553,9 @@ static void renderMapPanel(WarContext *context)
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
+
+    renderRvoDebug(context);
+
     renderFoW(context);
 
     wr_restore(context);

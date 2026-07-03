@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "war_alloc.h"
 #include "war_pathfinder.h"
 #include "war_collections.h"
 
@@ -299,7 +300,7 @@ static void computeFlowField(WarPathFinder* finder, s32 x, s32 y, WarMapFlowFiel
             s32 yy = current.y + wpath_dirY[d];
             if (wpath_isInside(xx, yy))
             {
-                if (isEmpty(finder, xx, yy))
+                if (!isStatic(finder, xx, yy))
                 {
                     WarMapNode neighbor = createNode(xx, yy);
 
@@ -420,22 +421,75 @@ WarMapPath wpath_findPath(WarPathFinder* finder, s32 startX, s32 startY, s32 end
     return path;
 }
 
-WarMapFlowField wpath_computeFlowField(WarPathFinder* finder, s32 x, s32 y)
+WarMapFlowField* wpath_computeFlowField(WarPathFinder* finder, s32 x, s32 y)
 {
+    assert(inRange(x, 0, MAP_TILES_WIDTH));
+    assert(inRange(y, 0, MAP_TILES_HEIGHT));
+
     TracyCZoneN(ctx, "ComputeFlowField", 1);
 
-    WarMapFlowField flowField = (WarMapFlowField){0};
+    s32 fieldIndex = y * MAP_TILES_WIDTH + x;
+    if (fieldIndex < 0 || fieldIndex >= MAP_TILES_WIDTH * MAP_TILES_HEIGHT)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
+    WarMapFlowField* flowField = finder->fields[fieldIndex];
+    if (!flowField)
+    {
+        flowField = (WarMapFlowField*)wm_alloc(sizeof(WarMapFlowField));
+        finder->fields[fieldIndex] = flowField;
+    }
 
     for (s32 i = 0; i < MAP_TILES_WIDTH * MAP_TILES_HEIGHT; i++)
     {
-        flowField.cost[i] = INT32_MAX;
-        flowField.dirs[i] = WAR_DIRECTION_COUNT;
+        flowField->cost[i] = INT32_MAX;
+        flowField->dirs[i] = WAR_DIRECTION_COUNT;
     }
 
-    computeFlowField(finder, x, y, &flowField);
+    computeFlowField(finder, x, y, flowField);
 
     TracyCZoneEnd(ctx);
+
     return flowField;
+}
+
+WarMapFlowField* wpath_getFlowField(WarPathFinder* finder, s32 x, s32 y)
+{
+    assert(inRange(x, 0, MAP_TILES_WIDTH));
+    assert(inRange(y, 0, MAP_TILES_HEIGHT));
+
+    s32 fieldIndex = y * MAP_TILES_WIDTH + x;
+
+    if (fieldIndex < 0 || fieldIndex >= MAP_TILES_WIDTH * MAP_TILES_HEIGHT)
+    {
+        return NULL;
+    }
+
+    return finder->fields[fieldIndex];
+}
+
+vec2 wpath_flowFieldSample(WarMapFlowField* flowField, s32 x, s32 y)
+{
+    assert(inRange(x, 0, MAP_TILES_WIDTH));
+    assert(inRange(y, 0, MAP_TILES_HEIGHT));
+
+    s32 fieldIndex = y * MAP_TILES_WIDTH + x;
+
+    if (fieldIndex < 0 || fieldIndex >= MAP_TILES_WIDTH * MAP_TILES_HEIGHT)
+    {
+        return vec2i(0, 0);
+    }
+
+    u8 dir = flowField->dirs[fieldIndex];
+    if (dir < 0 || dir >= WAR_DIRECTION_COUNT)
+    {
+        return vec2i(0, 0);
+    }
+
+    vec2 result = vec2i(wpath_dirX[dir], wpath_dirY[dir]);
+    return vec2_normalize(result);
 }
 
 bool wpath_reRoutePath(WarPathFinder* finder, WarMapPath* path, s32 fromIndex, s32 toIndex)
@@ -532,6 +586,8 @@ u16 wpath_getTileValue(WarPathFinder* finder, s32 x, s32 y)
 
 void wpath_setTilesValue(WarPathFinder* finder, s32 startX, s32 startY, s32 width, s32 height, u16 value)
 {
+    return;
+
     if (!inRange(startX, 0, MAP_TILES_WIDTH) || !inRange(startY, 0, MAP_TILES_HEIGHT))
         return;
 

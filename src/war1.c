@@ -236,6 +236,7 @@ int main(int argc, char** argv)
 #include "war_projectiles.c"
 #include "war_entities.c"
 #include "war_pathfinder.c"
+#include "war_rvo.c"
 #include "war_state_machine_idle.c"
 #include "war_state_machine_move.c"
 #include "war_state_machine_follow.c"

@@ -2,31 +2,47 @@
 
 #include "war_units.h"
 
+#include "TracyC.h"
+
 WarState* wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
 {
+    TracyCZoneN(ctx, "wst_createFollowState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_FOLLOW);
     state->follow.targetEntityId = targetEntityId;
     state->follow.targetTile = targetTile;
     state->follow.distance = distance;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterFollowState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveFollowState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateFollowState", true);
+
     WarMap* map = context->map;
 
     vec2 start = wu_getUnitCenterPosition(context, entity, true);
@@ -44,6 +60,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
                 wst_changeNextState(context, entity, idleState, true, true);
             }
 
+            TracyCZoneEnd(ctx);
             return;
         }
 
@@ -72,6 +89,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
             wst_changeNextState(context, entity, waitState, false, true);
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -87,6 +105,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         }
 
         Vec2ListFree(&path.nodes);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -95,10 +114,16 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     wst_changeNextState(context, entity, moveState, false, true);
 
     Vec2ListFree(&path.nodes);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeFollowState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeFollowState", true);
+
     NOT_USED(context);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }

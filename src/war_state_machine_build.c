@@ -7,18 +7,26 @@
 #include "war_cheats.h"
 #include "war_pathfinder.h"
 
+#include "TracyC.h"
+
 WarState* wst_createBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
 {
+    TracyCZoneN(ctx, "wst_createBuildState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_BUILD);
     state->build.workerId = 0;
     state->build.buildTime = 0;
     state->build.totalBuildTime = buildTime;
     state->build.cancelled = false;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterBuildState", true);
+
     NOT_USED(state);
 
     WarMap* map = context->map;
@@ -44,10 +52,14 @@ void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state
 
     unit->building = true;
     unit->buildPercent = 0;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveBuildState", true);
+
     NOT_USED(state);
 
     WarMap* map = context->map;
@@ -62,10 +74,14 @@ void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state
     setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateBuildState", true);
+
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -79,12 +95,14 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
             wst_changeNextState(context, entity, collapseState, true, true);
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
     // if there is no worker building the building, don't advance build time
     if (state->build.workerId <= 0)
     {
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -131,6 +149,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
             wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -156,10 +175,16 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         }
     }
     sprite->frameIndex = frameIndex;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeBuildState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeBuildState", true);
+
     NOT_USED(context);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }

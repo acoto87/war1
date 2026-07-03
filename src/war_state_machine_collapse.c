@@ -4,14 +4,22 @@
 
 #include "war_animations.h"
 
+#include "TracyC.h"
+
 WarState* wst_createCollapseState(WarContext* context, WarEntity* entity)
 {
+    TracyCZoneN(ctx, "wst_createCollapseState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_COLLAPSE);
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterCollapseState", true);
+
     WarMap* map = context->map;
     vec2 unitSize = wu_getUnitSize(context, entity);
 
@@ -35,25 +43,39 @@ void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* st
 
     setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     wmap_removeEntityFromSelection(context, entity->id);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveCollapseState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateCollapseState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateCollapseState", true);
+
     NOT_USED(context);
     NOT_USED(state);
 
     we_removeEntityById(context, entity->id);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeCollapseState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeCollapseState", true);
+
     NOT_USED(context);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }

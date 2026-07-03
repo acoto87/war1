@@ -4,16 +4,24 @@
 #include "war_units.h"
 #include "war_pathfinder.h"
 
+#include "TracyC.h"
+
 WarState* wst_createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
 {
+    TracyCZoneN(ctx, "wst_createRepairingState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_REPAIRING);
     state->repairing.buildingId = buildingId;
     state->repairing.insideBuilding = false;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterRepairingState", true);
+
     WarMap* map = context->map;
 
     WarEntity* building = we_findEntity(context, state->repairing.buildingId);
@@ -24,6 +32,7 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -39,6 +48,7 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
             WarState* idleState = wst_createIdleState(context, entity, true);
             wst_changeNextState(context, entity, idleState, true, true);
 
+            TracyCZoneEnd(ctx);
             return;
         }
 
@@ -60,10 +70,14 @@ void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* s
         wu_setUnitDirectionFromDiff(context, entity, targetPosition.x - position.x, targetPosition.y - position.y);
         wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveRepairingState", true);
+
     NOT_USED(state);
 
     WarMap* map = context->map;
@@ -71,10 +85,14 @@ void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* s
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wu_getUnitCenterPosition(context, entity, true);
     setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateRepairingState", true);
+
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -98,6 +116,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -112,6 +131,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
             {
                 WarState* idleState = wst_createIdleState(context, entity, true);
                 wst_changeNextState(context, entity, idleState, true, true);
+                TracyCZoneEnd(ctx);
                 return;
             }
 
@@ -151,11 +171,16 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeRepairingState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeRepairingState", true);
+
     NOT_USED(context);
     NOT_USED(state);
-}
 
+    TracyCZoneEnd(ctx);
+}

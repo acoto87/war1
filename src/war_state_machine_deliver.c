@@ -1,28 +1,44 @@
 #include "war_state_machine.h"
 
+#include "TracyC.h"
+
 WarState* wst_createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId)
 {
+    TracyCZoneN(ctx, "wst_createDeliverState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_DELIVER);
     state->deliver.townHallId = townHallId;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterDeliverState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveDeliverState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateDeliverState", true);
+
     WarMap* map = context->map;
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -37,6 +53,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     {
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -47,6 +64,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
         WarState* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats->range);
         followState->nextState = state;
         wst_changeNextState(context, entity, followState, false, true);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -67,6 +85,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -94,11 +113,16 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     // simulate the time inside the townhall
     state->delay = wmap_getMapScaledTime(context, 1.0f);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeDeliverState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeDeliverState", true);
+
     NOT_USED(context);
     NOT_USED(state);
-}
 
+    TracyCZoneEnd(ctx);
+}

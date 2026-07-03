@@ -4,18 +4,26 @@
 
 #include "war_audio.h"
 
+#include "TracyC.h"
+
 WarState* wst_createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
 {
+    TracyCZoneN(ctx, "wst_createTrainState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_TRAIN);
     state->train.unitToBuild = unitToBuild;
     state->train.buildTime = 0;
     state->train.totalBuildTime = buildTime;
     state->train.cancelled = false;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterTrainState", true);
+
     NOT_USED(state);
 
     WarMap* map = context->map;
@@ -31,10 +39,14 @@ void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state
 
     unit->building = true;
     unit->buildPercent = 0;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveTrainState", true);
+
     NOT_USED(state);
 
     WarMap* map = context->map;
@@ -49,10 +61,14 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
     setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateTrainState", true);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -65,6 +81,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
             wst_changeNextState(context, entity, idleState, true, true);
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -109,14 +126,21 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
             wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
     unit->buildPercent = PERCENTF01(state->train.buildTime, state->train.totalBuildTime);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeTrainState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeTrainState", true);
+
     NOT_USED(context);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }

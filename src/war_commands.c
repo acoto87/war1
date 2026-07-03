@@ -1,14 +1,15 @@
-#include "war_commands.h"
-
 #include <assert.h>
 #include <stdlib.h>
 
+#include "war_commands.h"
+#include "war_alloc.h"
 #include "war_audio.h"
 #include "war_entities.h"
 #include "war_projectiles.h"
 #include "war_state_machine.h"
 #include "war_ui.h"
 #include "war_units.h"
+#include "war_pathfinder.h"
 
 static inline void consumeCommand(WarMap* map, WarUnitCommand* command)
 {
@@ -32,6 +33,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
     WarMap* map = context->map;
     WarInput* input = &context->input;
     WarPlayerInfo* player = &map->players[0];
+    WarPathFinder* finder = &map->finder;
 
     bool goingToMove = false;
 
@@ -42,71 +44,14 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
         return;
     }
 
-    TracyCPlotI("MoveSelectionCount", (s64)selEntitiesCount);
-
-    // move the selected units to the target point,
-    // but keeping the bounding box that the
-    // selected units make, this is an intent to keep the
-    // formation of the selected units
-    //
-    rect* rs = (rect*)wm_allocFrame(selEntitiesCount * sizeof(rect));
+    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
+    wpath_computeFlowField(finder, (s32)targetTile.x, (s32)targetTile.y);
 
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
-
-        rs[i] = wu_getUnitRect(context, entity);
-    }
-
-    rect bbox = rs[0];
-
-    for(s32 i = 1; i < selEntitiesCount; i++)
-    {
-        if (rs[i].x < bbox.x)
-            bbox.x = rs[i].x;
-        if (rs[i].y < bbox.y)
-            bbox.y = rs[i].y;
-        if (rs[i].x + rs[i].width > bbox.x + bbox.width)
-            bbox.width = (rs[i].x + rs[i].width) - bbox.x;
-        if (rs[i].y + rs[i].height > bbox.y + bbox.height)
-            bbox.height = (rs[i].y + rs[i].height) - bbox.y;
-    }
-
-    rect targetbbox = rectf(
-        targetPoint.x - 0.5f * bbox.width,
-        targetPoint.y - 0.5f * bbox.height,
-        bbox.width,
-        bbox.height
-    );
-
-    for(s32 i = 0; i < selEntitiesCount; i++)
-    {
-        WarEntityId entityId = map->selectedEntities.items[i];
-        WarEntity* entity = we_findEntity(context, entityId);
-        assert(entity);
-
-        vec2 position = vec2f(
-            rs[i].x + 0.5f * rs[i].width,
-            rs[i].y + 0.5f * rs[i].height
-        );
-
-        position = wmap_mapToTileCoordinatesV(position);
-
-        rect targetRect = rectf(
-            targetbbox.x + (rs[i].x - bbox.x),
-            targetbbox.y + (rs[i].y - bbox.y),
-            rs[i].width,
-            rs[i].height
-        );
-
-        vec2 target = vec2f(
-            targetRect.x + 0.5f * targetRect.width,
-            targetRect.y + 0.5f * targetRect.height
-        );
-
-        target = wmap_mapToTileCoordinatesV(target);
 
         if (wu_isDudeUnit(context, entity) && wu_isFriendlyUnit(context, entity))
         {
@@ -117,30 +62,31 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
                     if(wst_isMoving(context, entity))
                     {
                         WarState* moveState = wst_getMoveState(context, entity);
-                        Vec2ListAdd(&moveState->move.positions, target);
+                        moveState->move.positions[moveState->move.positionCount] = targetTile;
+                        moveState->move.positionCount++;
                     }
 
                     WarState* patrolState = wst_getPatrolState(context, entity);
-                    Vec2ListAdd(&patrolState->patrol.positions, target);
+                    Vec2ListAdd(&patrolState->patrol.positions, targetTile);
                 }
                 else if(wst_isMoving(context, entity) && !wst_isAttacking(context, entity))
                 {
                     WarState* moveState = wst_getMoveState(context, entity);
-                    Vec2ListAdd(&moveState->move.positions, target);
+                    moveState->move.positions[moveState->move.positionCount] = targetTile;
+                    moveState->move.positionCount++;
                 }
                 else
                 {
-                    WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, target));
+                    vec2 entityTile = wu_getUnitCenterPosition(context, entity, true);
+                    WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, entityTile, targetTile));
                     wst_changeNextState(context, entity, moveState, true, true);
                 }
             }
             else
             {
-                WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, target));
+                vec2 entityTile = wu_getUnitCenterPosition(context, entity, true);
+                WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, entityTile, targetTile));
                 wst_changeNextState(context, entity, moveState, true, true);
-
-                // WarState* patrolState = wst_createPatrolState(context, entity, 2, arrayArg(vec2, position, target));
-                // wst_changeNextState(context, entity, patrolState, true, true);
             }
 
             goingToMove = true;

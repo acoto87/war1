@@ -1,7 +1,10 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "war_math.h"
 #include "war_units.h"
+#include "war_rvo.h"
 #include "war_pathfinder.h"
 #include "war_collections.h"
 
@@ -23,13 +26,22 @@ struct _WarState
         struct
         {
             s32 positionIndex;
-            Vec2List positions;
+            s32 positionCount;
+            vec2 positions[64];
 
-            s32 pathNodeIndex;
-            WarMapPath path;
-
-            s32 waitCount;
             bool checkForAttacks;
+
+            vec2 rvoVelocity;       // last frame's RVO output, pixels/sec
+            f32 settleTimer;        // seconds without progress toward final goal
+            f32 closestGoalDistSq;  // best squared distance to final goal achieved
+
+            vec2 rvoPreferredVelocity;
+            vec2 rvoPosition;
+            f32  rvoRadius;
+            s32  rvoNumCandidates;
+            s32  rvoBestIndex;
+            vec2 rvoCandidates[RVO_MAX_CANDIDATES];
+            bool rvoCandidateHadCollision[RVO_MAX_CANDIDATES];
         } move;
 
         struct

@@ -1,28 +1,44 @@
 ﻿#include "war_state_machine.h"
 
+#include "TracyC.h"
+
 WarState* wst_createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
 {
+    TracyCZoneN(ctx, "wst_createGatherGoldState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_GOLD);
     state->gold.goldmineId = goldmineId;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterGatherGoldState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveGatherGoldState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateGatherGoldState", true);
+
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
@@ -37,6 +53,7 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     {
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -46,17 +63,23 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
         WarState* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats->range);
         followState->nextState = state;
         wst_changeNextState(context, entity, followState, false, true);
+        TracyCZoneEnd(ctx);
         return;
     }
 
     // the unit arrive to the goldmine, go mining
     WarState* miningState = wst_createMiningState(context, entity, goldmine->id);
     wst_changeNextState(context, entity, miningState, true, true);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeGatherGoldState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeGatherGoldState", true);
+
     NOT_USED(context);
     NOT_USED(state);
-}
 
+    TracyCZoneEnd(ctx);
+}

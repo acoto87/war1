@@ -1,15 +1,23 @@
 #include "war_state_machine.h"
 
+#include "TracyC.h"
+
 WarState* wst_createMiningState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
 {
+    TracyCZoneN(ctx, "wst_createMiningState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_MINING);
     state->mine.goldmineId = goldmineId;
     state->mine.miningTime = 0;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterMiningState", true);
+
     // remove the sprite to simulate the mining process
     we_removeSpriteComponent(context, entity);
 
@@ -24,10 +32,14 @@ void wst_enterMiningState(WarContext* context, WarEntity* entity, WarState* stat
 
     // remove the unit from selection to avoid the player giving it orders while inside the mine
     wmap_removeEntityFromSelection(context, entity->id);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveMiningState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
@@ -50,10 +62,14 @@ void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* stat
         }
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(spriteIndex));
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateMiningState", true);
+
     WarMap* map = context->map;
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
@@ -72,6 +88,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
 
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -84,6 +101,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
 
         WarState* idleState = wst_createIdleState(context, entity, true);
         wst_changeNextState(context, entity, idleState, true, true);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -116,6 +134,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         {
             WarState* idleState = wst_createIdleState(context, entity, true);
             wst_changeNextState(context, entity, idleState, true, true);
+            TracyCZoneEnd(ctx);
             return;
         }
 
@@ -123,11 +142,16 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         deliverState->nextState = wst_createGatherGoldState(context, entity, goldmine->id);
         wst_changeNextState(context, entity, deliverState, true, true);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeMiningState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeMiningState", true);
+
     NOT_USED(context);
     NOT_USED(state);
-}
 
+    TracyCZoneEnd(ctx);
+}

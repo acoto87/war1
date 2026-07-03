@@ -4,15 +4,23 @@
 #include "war_map.h"
 #include "war_units.h"
 
+#include "TracyC.h"
+
 WarState* wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround)
 {
+    TracyCZoneN(ctx, "wst_createIdleState", true);
+
     WarState* state = wst_createState(context, entity, WAR_STATE_IDLE);
     state->idle.lookAround = lookAround;
+
+    TracyCZoneEnd(ctx);
     return state;
 }
 
 void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_enterIdleState", true);
+
     NOT_USED(state);
 
     if (wu_isUnit(entity))
@@ -23,10 +31,14 @@ void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
         setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
         wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveIdleState", true);
+
     NOT_USED(state);
 
     if (wu_isUnit(entity))
@@ -36,10 +48,14 @@ void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
         vec2 position = wu_getUnitPosition(context, entity, true);
         setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateIdleState", true);
+
     WarMap* map = context->map;
 
     if (wu_isUnit(entity))
@@ -89,10 +105,16 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
                 setStaticEntity(&map->finder, piece->tilex, piece->tiley, 1, 1, entity->id);
         }
     }
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_freeIdleState(WarContext* context, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_freeIdleState", true);
+
     NOT_USED(context);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }

@@ -35,6 +35,7 @@ struct _WarPathFinder
 {
     PathFindingType type;
     u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+    WarMapFlowField* fields[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
 };
 
 // NOTE: this value is the distance squared to avoid dynamic units
@@ -52,7 +53,9 @@ shlDeclareMap(WarMapNodeMap, s32, WarMapNode)
 WarPathFinder wpath_initPathFinder(PathFindingType type, u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT]);
 bool wpath_isInside(s32 x, s32 y);
 WarMapPath wpath_findPath(WarPathFinder* finder, s32 startX, s32 startY, s32 endX, s32 endY);
-WarMapFlowField wpath_computeFlowField(WarPathFinder* finder, s32 x, s32 y);
+WarMapFlowField* wpath_computeFlowField(WarPathFinder* finder, s32 x, s32 y);
+WarMapFlowField* wpath_getFlowField(WarPathFinder* finder, s32 x, s32 y);
+vec2 wpath_flowFieldSample(WarMapFlowField* flowField, s32 x, s32 y);
 bool wpath_reRoutePath(WarPathFinder* finder, WarMapPath* path, s32 fromIndex, s32 toIndex);
 vec2 wpath_findEmptyPosition(WarPathFinder* finder, vec2 position);
 bool wpath_isPositionAccesible(WarPathFinder* finder, vec2 position);

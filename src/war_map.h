@@ -122,7 +122,7 @@ struct _WarMapCommandPanel
 
 struct _WarMapDebug
 {
-    WarMapFlowField flowField;
+    WarMapFlowField* flowField;
     s32 flowFieldX;
     s32 flowFieldY;
 
@@ -154,6 +154,9 @@ struct _WarMap
 
     s32 levelInfoIndex;
     f32 objectivesTime;
+
+    // real-time of last acknowledgement sound
+    f64 lastAcknowledgementRealTime;
 
     WarMapSettings settings;
     WarMapSettings pendingSettings;
