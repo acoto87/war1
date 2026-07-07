@@ -1,6 +1,7 @@
 #include <math.h>
 #include <float.h>
 
+#include "war.h"
 #include "war_rvo.h"
 
 // -----------------------------------------------------------------------
@@ -11,7 +12,7 @@
 // Returns the earliest positive time at which the two discs would touch,
 // or FLT_MAX if no collision is predicted.
 // -----------------------------------------------------------------------
-static f32 ttc_rvo(
+static f32 wrvo_tcc(
     vec2 positionA, vec2 velocityA,
     vec2 positionB, vec2 velocityB,
     f32  radius,
@@ -45,8 +46,8 @@ static f32 ttc_rvo(
 // Score a candidate velocity.
 // Lower score = better (less collision risk, less deviation from goal).
 // -----------------------------------------------------------------------
-static f32 score(
-    vec2 candidate,
+static f32 wrvo_score(
+    vec2 candidate, f32 maxSpeed,
     vec2 preferredVelocity,
     vec2 positionA, vec2 velocityA, f32 radiusA,
     const WarRvoNeighbour* neighbours, s32 numNeighbours)
@@ -59,11 +60,11 @@ static f32 score(
     // Collision penalties.
     for (s32 i = 0; i < numNeighbours; i++)
     {
-        f32 r   = radiusA + neighbours[i].radius;
-        f32 t   = ttc_rvo(positionA, velocityA, neighbours[i].position, neighbours[i].velocity, r, candidate);
+        f32 r = radiusA + neighbours[i].radius;
+        f32 t = wrvo_tcc(positionA, velocityA, neighbours[i].position, neighbours[i].velocity, r, candidate);
         if (t < RVO_TIME_HORIZON)
         {
-            s += RVO_COLLISION_W * (RVO_TIME_HORIZON - t);
+            s += (RVO_COLLISION_W * maxSpeed) * (RVO_TIME_HORIZON - t);
         }
     }
 
@@ -72,7 +73,9 @@ static f32 score(
 
 vec2 wrvo_computeNewVelocity(
     vec2  preferredVelocity,
-    vec2  positionA, vec2  velocityA, f32   radiusA,
+    vec2  positionA,
+    vec2  velocityA,
+    f32   radiusA,
     f32   maxSpeed,
     f32   dt,
     const WarRvoNeighbour* neighbours,
@@ -128,11 +131,11 @@ vec2 wrvo_computeNewVelocity(
 
     // ---- Score and pick ----
     s32 bestIndex = 0;
-    f32 bestScore = score(candidates[0], preferredVelocity, positionA, velocityA, radiusA, neighbours, numNeighbours);
+    f32 bestScore = wrvo_score(candidates[0], maxSpeed, preferredVelocity, positionA, velocityA, radiusA, neighbours, numNeighbours);
 
     for (s32 i = 1; i < numCandidates; i++)
     {
-        f32 s = score(candidates[i], preferredVelocity, positionA, velocityA, radiusA, neighbours, numNeighbours);
+        f32 s = wrvo_score(candidates[i], maxSpeed, preferredVelocity, positionA, velocityA, radiusA, neighbours, numNeighbours);
         if (s < bestScore)
         {
             bestScore = s;
@@ -149,7 +152,7 @@ vec2 wrvo_computeNewVelocity(
             for (s32 n = 0; n < numNeighbours; n++)
             {
                 f32 r = radiusA + neighbours[n].radius;
-                f32 t = ttc_rvo(positionA, velocityA,
+                f32 t = wrvo_tcc(positionA, velocityA,
                                 neighbours[n].position, neighbours[n].velocity,
                                 r, candidates[i]);
                 if (t < RVO_TIME_HORIZON)
@@ -166,4 +169,62 @@ vec2 wrvo_computeNewVelocity(
         *outBestIndex = bestIndex;
 
     return candidates[bestIndex];
+}
+
+// Collect moving units near `centrePixel` within `radiusPx`.
+// Returns count (capped at RVO_MAX_NB).
+s32 wrvo_gatherNeighbours(
+    WarContext* context,
+    s32         selfId,
+    vec2        centrePixel,
+    f32         radiusPx,
+    WarRvoNeighbour out[RVO_MAX_NB])
+{
+    WarMap*     map  = context->map;
+    WarEntityManager* entityManager = &map->entityManager;
+    WarMapGrid* grid = &map->grid;
+    s32         count = 0;
+
+    vec2 ct    = wmap_mapToTileCoordinatesV(centrePixel);
+    f32  rt    = radiusPx / (f32)MEGA_TILE_WIDTH;
+    s32  gxMin = MAX(0, (s32)floorf((ct.x - rt) / MAP_GRID_TILE_SIZE));
+    s32  gxMax = MIN(MAP_GRID_TILES_WIDTH - 1, (s32)floorf((ct.x + rt) / MAP_GRID_TILE_SIZE));
+    s32  gyMin = MAX(0, (s32)floorf((ct.y - rt) / MAP_GRID_TILE_SIZE));
+    s32  gyMax = MIN(MAP_GRID_TILES_HEIGHT - 1, (s32)floorf((ct.y + rt) / MAP_GRID_TILE_SIZE));
+
+    for (s32 gy = gyMin; gy <= gyMax && count < RVO_MAX_NB; gy++)
+    {
+        for (s32 gx = gxMin; gx <= gxMax && count < RVO_MAX_NB; gx++)
+        {
+            for (s32 idx = grid->head[gy * MAP_GRID_TILES_WIDTH + gx];
+                 idx >= 0 && count < RVO_MAX_NB;
+                 idx = grid->next[idx])
+            {
+                WarEntity* other = &entityManager->entities[idx];
+                if (other->id == selfId) continue;
+                if (!we_isComponentEnabled(context, other, COMP_UNIT)) continue;
+
+                vec2 oPos = wu_getUnitCenterPosition(context, other, false);
+                f32  dx   = oPos.x - centrePixel.x;
+                f32  dy   = oPos.y - centrePixel.y;
+                if (dx*dx + dy*dy > radiusPx*radiusPx) continue;
+
+                // Read the neighbour's last RVO velocity (zero if not moving).
+                vec2 oVel = VEC2_ZERO;
+
+                WarState* moveState = wst_getMoveState(context, other);
+                if (moveState)
+                {
+                    oVel = moveState->move.rvoVelocity;
+                }
+
+                out[count].position = oPos;
+                out[count].velocity = oVel;
+                out[count].radius   = (f32)MEGA_TILE_WIDTH * 0.45f;
+                count++;
+            }
+        }
+    }
+
+    return count;
 }

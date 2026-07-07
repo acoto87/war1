@@ -4,13 +4,13 @@
 
 #include "war_math.h"
 
-#define RVO_MAX_NB       16
-#define RVO_RING_N       16
-#define RVO_MAX_CANDIDATES    (1 + RVO_RING_N*2 + 1)  // 34
+#define RVO_MAX_NB 16
+#define RVO_RING_N 16
+#define RVO_MAX_CANDIDATES (1 + RVO_RING_N*2 + 1) // 34
 
-#define RVO_TIME_HORIZON  2.0f   // seconds
-#define RVO_COLLISION_W   1.5f
-#define RVO_DEVIATION_W   1.0f
+#define RVO_TIME_HORIZON 2.0f // seconds
+#define RVO_COLLISION_W  1.5f
+#define RVO_DEVIATION_W  1.0f
 
 typedef struct {
     vec2 position;
@@ -34,3 +34,12 @@ vec2 wrvo_computeNewVelocity(
     s32*  outNumCandidates,               // [out]
     s32*  outBestIndex,                   // [out] index in outCandidates
     bool* outCandidateHadCollision);      // [out] per-candidate penalty flag
+
+// Collect moving units near `centrePixel` within `radiusPx`.
+// Returns count (capped at RVO_MAX_NB).
+s32 wrvo_gatherNeighbours(
+    WarContext* context,
+    s32         selfId,
+    vec2        centrePixel,
+    f32         radiusPx,
+    WarRvoNeighbour out[RVO_MAX_NB]);

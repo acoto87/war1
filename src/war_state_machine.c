@@ -776,6 +776,13 @@ void wst_updateStateMachine(WarContext* context, WarEntity* entity)
 
         WarState* currentState = stateMachine->currentState;
 
+        if (currentState->type == WAR_STATE_MOVE)
+        {
+            // NOTE: Move state are updated in `updateMoveStates` function
+            // This will be fixed removed later after restructuring the state machines memory layout
+            return;
+        }
+
         if (currentState->delay > 0)
         {
             currentState->nextUpdateGameTime = context->gameTime + currentState->delay;

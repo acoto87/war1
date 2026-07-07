@@ -45,7 +45,15 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
     }
 
     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-    wpath_computeFlowField(finder, (s32)targetTile.x, (s32)targetTile.y);
+    WarMapFlowField* flowField = wpath_computeFlowField(finder, (s32)targetTile.x, (s32)targetTile.y);
+    if (!flowField)
+    {
+        logWarning("Failed to compute flow field for move command at tile (%.2f, %.2f)", targetTile.x, targetTile.y);
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
 
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
@@ -62,30 +70,30 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
                     if(wst_isMoving(context, entity))
                     {
                         WarState* moveState = wst_getMoveState(context, entity);
-                        moveState->move.positions[moveState->move.positionCount] = targetTile;
-                        moveState->move.positionCount++;
+                        moveState->move.waypoints[moveState->move.waypointsCount] = targetPosition;
+                        moveState->move.waypointsCount++;
                     }
 
                     WarState* patrolState = wst_getPatrolState(context, entity);
-                    Vec2ListAdd(&patrolState->patrol.positions, targetTile);
+                    Vec2ListAdd(&patrolState->patrol.positions, targetPosition);
                 }
                 else if(wst_isMoving(context, entity) && !wst_isAttacking(context, entity))
                 {
                     WarState* moveState = wst_getMoveState(context, entity);
-                    moveState->move.positions[moveState->move.positionCount] = targetTile;
-                    moveState->move.positionCount++;
+                    moveState->move.waypoints[moveState->move.waypointsCount] = targetPosition;
+                    moveState->move.waypointsCount++;
                 }
                 else
                 {
                     vec2 entityTile = wu_getUnitCenterPosition(context, entity, true);
-                    WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, entityTile, targetTile));
+                    WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, entityTile, targetPosition));
                     wst_changeNextState(context, entity, moveState, true, true);
                 }
             }
             else
             {
                 vec2 entityTile = wu_getUnitCenterPosition(context, entity, true);
-                WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, entityTile, targetTile));
+                WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, entityTile, targetPosition));
                 wst_changeNextState(context, entity, moveState, true, true);
             }
 

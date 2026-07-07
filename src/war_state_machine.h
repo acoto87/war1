@@ -25,9 +25,9 @@ struct _WarState
 
         struct
         {
-            s32 positionIndex;
-            s32 positionCount;
-            vec2 positions[64];
+            s32 waypointsIndex;
+            s32 waypointsCount;
+            vec2 waypoints[64];
 
             bool checkForAttacks;
 
@@ -36,6 +36,7 @@ struct _WarState
             f32 closestGoalDistSq;  // best squared distance to final goal achieved
 
             vec2 rvoPreferredVelocity;
+            vec2 rvoAdjustedVelocity;
             vec2 rvoPosition;
             f32  rvoRadius;
             s32  rvoNumCandidates;
@@ -46,7 +47,7 @@ struct _WarState
 
         struct
         {
-            s32 positionIndex;
+            s32 waypointsIndex;
             Vec2List positions;
             s32 dir;
         } patrol;

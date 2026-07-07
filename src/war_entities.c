@@ -3155,8 +3155,6 @@ void we_getNearUnits2(WarContext* context, vec2 tilePosition, s32 distance, WarE
     WarMap* map = context->map;
     assert(map);
 
-    wgrid_rebuildIfDirty(context);
-
     WarEntityManager* entityManager = &map->entityManager;
     WarMapGrid* grid = &map->grid;
 
