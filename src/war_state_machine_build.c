@@ -9,15 +9,16 @@
 
 #include "TracyC.h"
 
-WarState* wst_createBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
+WarStateBuild* wst_createBuildState(WarContext* context, WarEntity* entity, f32 buildTime)
 {
     TracyCZoneN(ctx, "wst_createBuildState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_BUILD);
-    state->build.workerId = 0;
-    state->build.buildTime = 0;
-    state->build.totalBuildTime = buildTime;
-    state->build.cancelled = false;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_BUILD, entity->id);
+    WarStateBuild* state = (WarStateBuild*)wst_deref(context, ref);
+    state->workerId = 0;
+    state->buildTime = 0;
+    state->totalBuildTime = buildTime;
+    state->cancelled = false;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -82,17 +83,19 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 {
     TracyCZoneN(ctx, "wst_updateBuildState", true);
 
+    WarStateBuild* s = (WarStateBuild*)state;
+
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    if (state->build.cancelled)
+    if (s->cancelled)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* collapseState = wst_createCollapseState(context, entity);
-            wst_changeNextState(context, entity, collapseState, true, true);
+            WarStateCollapse* collapseState = wst_createCollapseState(context, entity);
+            wst_changeNextState(context, entity, (WarStateBase*)collapseState, true, true);
         }
 
         TracyCZoneEnd(ctx);
@@ -100,7 +103,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
     }
 
     // if there is no worker building the building, don't advance build time
-    if (state->build.workerId <= 0)
+    if (s->workerId <= 0)
     {
         TracyCZoneEnd(ctx);
         return;
@@ -114,15 +117,15 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         buildSpeed *= CHEAT_SPEED_UP_FACTOR;
     }
 
-    state->build.buildTime += buildSpeed;
+    s->buildTime += buildSpeed;
 
     // if the building is finished...
-    if (state->build.buildTime >= state->build.totalBuildTime)
+    if (s->buildTime >= s->totalBuildTime)
     {
         unit->buildPercent = 1;
 
         // find the worker that is building the building
-        WarEntity* worker = we_findEntity(context, state->build.workerId);
+        WarEntity* worker = we_findEntity(context, s->workerId);
         assert(worker);
 
         // ...find an empty position to put it
@@ -139,8 +142,8 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
 
         if (unit->player == 0)
@@ -153,7 +156,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         return;
     }
 
-    unit->buildPercent = PERCENTF01(state->build.buildTime, state->build.totalBuildTime);
+    unit->buildPercent = PERCENTF01(s->buildTime, s->totalBuildTime);
 
     // update the sprite of the building to show the construction steps
     //

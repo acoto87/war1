@@ -2,12 +2,13 @@
 
 #include "TracyC.h"
 
-WarState* wst_createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
+WarStateRepair* wst_createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId)
 {
     TracyCZoneN(ctx, "wst_createRepairState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_REPAIR);
-    state->repair.buildingId = buildingId;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_REPAIR, entity->id);
+    WarStateRepair* state = (WarStateRepair*)wst_deref(context, ref);
+    state->buildingId = buildingId;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -39,18 +40,20 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
 {
     TracyCZoneN(ctx, "wst_updateRepairState", true);
 
+    WarStateRepair* s = (WarStateRepair*)state;
+
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-    WarEntity* building = we_findEntity(context, state->repair.buildingId);
+    WarEntity* building = we_findEntity(context, s->buildingId);
 
     // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
     if (!building || wst_isCollapsing(context, building) || wst_isGoingToCollapse(context, building))
     {
-        WarState* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, idleState, true, true);
+        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -60,16 +63,16 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
     {
         vec2 targetTile = wu_unitPointOnTarget(context, entity, building);
 
-        WarState* followState = wst_createFollowState(context, entity, building->id, targetTile, stats->range);
-        followState->nextState = state;
-        wst_changeNextState(context, entity, followState, false, true);
+        WarStateFollow* followState = wst_createFollowState(context, entity, building->id, targetTile, stats->range);
+        wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
+        wst_changeNextState(context, entity, (WarStateBase*)followState, false, true);
         TracyCZoneEnd(ctx);
         return;
     }
 
     // the unit arrive to the building, go repairing
-    WarState* repairingState = wst_createRepairingState(context, entity, building->id);
-    wst_changeNextState(context, entity, repairingState, true, true);
+    WarStateRepairing* repairingState = wst_createRepairingState(context, entity, building->id);
+    wst_changeNextState(context, entity, (WarStateBase*)repairingState, true, true);
 
     TracyCZoneEnd(ctx);
 }

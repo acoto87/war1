@@ -163,8 +163,8 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
                         {
                             if (we_decreasePlayerResources(context, aiPlayer, stats->goldCost, stats->woodCost))
                             {
-                                WarState* trainState = wst_createTrainState(context, entity, unitType, (f32)stats->buildTime);
-                                wst_changeNextState(context, entity, trainState, true, true);
+                                WarStateTrain* trainState = wst_createTrainState(context, entity, unitType, (f32)stats->buildTime);
+                                wst_changeNextState(context, entity, (WarStateBase*)trainState, true, true);
                             }
 
                             return true;

@@ -4,14 +4,15 @@
 
 #include "TracyC.h"
 
-WarState* wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
+WarStateFollow* wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance)
 {
     TracyCZoneN(ctx, "wst_createFollowState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_FOLLOW);
-    state->follow.targetEntityId = targetEntityId;
-    state->follow.targetTile = targetTile;
-    state->follow.distance = distance;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_FOLLOW, entity->id);
+    WarStateFollow* state = (WarStateFollow*)wst_deref(context, ref);
+    state->targetEntityId = targetEntityId;
+    state->targetTile = targetTile;
+    state->distance = distance;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -43,21 +44,23 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
 {
     TracyCZoneN(ctx, "wst_updateFollowState", true);
 
+    WarStateFollow* s = (WarStateFollow*)state;
+
     WarMap* map = context->map;
 
     vec2 start = wu_getUnitCenterPosition(context, entity, true);
-    vec2 end = state->follow.targetTile;
+    vec2 end = s->targetTile;
 
-    if (state->follow.targetEntityId)
+    if (s->targetEntityId)
     {
-        WarEntity* targetEntity = we_findEntity(context, (WarEntityId)state->follow.targetEntityId);
+        WarEntity* targetEntity = we_findEntity(context, (WarEntityId)s->targetEntityId);
         if (!targetEntity)
         {
             // if the target entity doesn't exist anymore, go to idle
             if (!wst_changeStateNextState(context, entity, state))
             {
-                WarState* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, idleState, true, true);
+                WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
             }
 
             TracyCZoneEnd(ctx);
@@ -80,13 +83,13 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     f32 distance = vec2_distanceInTiles(start, end);
 
     // if the unit is already in distance, go to idle
-    if (distance <= state->follow.distance)
+    if (distance <= s->distance)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
-            waitState->nextState = state;
-            wst_changeNextState(context, entity, waitState, false, true);
+            WarStateWait* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
+            wst_chainNext(context, (WarStateBase*)waitState, (WarStateBase*)state);
+            wst_changeNextState(context, entity, (WarStateBase*)waitState, false, true);
         }
 
         TracyCZoneEnd(ctx);
@@ -100,8 +103,8 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
 
         Vec2ListFree(&path.nodes);
@@ -109,9 +112,9 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
-    moveState->nextState = state;
-    wst_changeNextState(context, entity, moveState, false, true);
+    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
+    wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
+    wst_changeNextState(context, entity, (WarStateBase*)moveState, false, true);
 
     Vec2ListFree(&path.nodes);
 

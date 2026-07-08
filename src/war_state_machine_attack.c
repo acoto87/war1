@@ -8,13 +8,14 @@
 
 #include "TracyC.h"
 
-WarState* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
+WarStateAttack* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
 {
     TracyCZoneN(ctx, "wst_createAttackState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_ATTACK);
-    state->attack.targetEntityId = targetEntityId;
-    state->attack.targetTile = targetTile;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_ATTACK, entity->id);
+    WarStateAttack* state = (WarStateAttack*)wst_deref(context, ref);
+    state->targetEntityId = targetEntityId;
+    state->targetTile = targetTile;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -46,6 +47,8 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 {
     TracyCZoneN(ctx, "wst_updateAttackState", true);
 
+    WarStateAttack* s = (WarStateAttack*)state;
+
     WarMap* map = context->map;
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -59,10 +62,10 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-    WarEntityId targetEntityId = (WarEntityId)state->attack.targetEntityId;
+    WarEntityId targetEntityId = (WarEntityId)s->targetEntityId;
     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-    vec2 targetTile = state->attack.targetTile;
+    vec2 targetTile = s->targetTile;
 
     // if the entity to attack doesn't exists, go to the attacking point or go idle
     if (!targetEntity)
@@ -72,16 +75,16 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // of the attacking unit is greater
         if(!wu_tileInRange(context, entity, targetTile, 1))
         {
-            WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
-            moveState->nextState = state;
-            moveState->move.checkForAttacks = true;
-            wst_changeNextState(context, entity, moveState, false, true);
+            WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
+            wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
+            moveState->checkForAttacks = true;
+            wst_changeNextState(context, entity, (WarStateBase*)moveState, false, true);
             TracyCZoneEnd(ctx);
             return;
         }
 
-        WarState* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, idleState, true, true);
+        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -97,18 +100,18 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     // if the unit is not in range to attack, chase it
     if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats->range))
     {
-        WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
-        followState->nextState = state;
-        wst_changeNextState(context, entity, followState, false, true);
+        WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
+        wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
+        wst_changeNextState(context, entity, (WarStateBase*)followState, false, true);
         TracyCZoneEnd(ctx);
         return;
     }
 
     if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats->range))
     {
-        WarState* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range);
-        followState->nextState = state;
-        wst_changeNextState(context, entity, followState, false, true);
+        WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range);
+        wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
+        wst_changeNextState(context, entity, (WarStateBase*)followState, false, true);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -117,9 +120,9 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     // wcmd_stop the attacking for a moment until the unit come out again
     if (wst_isInsideBuilding(context, targetEntity))
     {
-        WarState* waitState = wst_createWaitState(context, entity, 1.0f);
-        waitState->nextState = state;
-        wst_changeNextState(context, entity, waitState, false, true);
+        WarStateWait* waitState = wst_createWaitState(context, entity, 1.0f);
+        wst_chainNext(context, (WarStateBase*)waitState, (WarStateBase*)state);
+        wst_changeNextState(context, entity, (WarStateBase*)waitState, false, true);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -144,8 +147,8 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             if (wst_isDead(context, targetEntity) || wst_isGoingToDie(context, targetEntity) ||
                 wst_isCollapsing(context, targetEntity) || wst_isGoingToCollapse(context, targetEntity))
             {
-                WarState* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, idleState, true, true);
+                WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
             }
             else
             {
@@ -176,8 +179,8 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 // one of them could destroy the piece, so the other should wcmd_stop doing further damage.
                 if (piece->hp == 0)
                 {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
+                    WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+                    wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
                 }
                 else
                 {

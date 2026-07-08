@@ -4,12 +4,13 @@
 
 #include "TracyC.h"
 
-WarState* wst_createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
+WarStateWait* wst_createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 {
     TracyCZoneN(ctx, "wst_createWaitState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_WAIT);
-    state->wait.waitEndGameTime = context->gameTime + waitTime;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_WAIT, entity->id);
+    WarStateWait* state = (WarStateWait*)wst_deref(context, ref);
+    state->waitEndGameTime = context->gameTime + waitTime;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -56,12 +57,14 @@ void wst_updateWaitState(WarContext* context, WarEntity* entity, WarState* state
 {
     TracyCZoneN(ctx, "wst_updateWaitState", true);
 
-    if (context->gameTime >= state->wait.waitEndGameTime)
+    WarStateWait* s = (WarStateWait*)state;
+
+    if (context->gameTime >= s->waitEndGameTime)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
     }
 

@@ -212,10 +212,10 @@ s32 wrvo_gatherNeighbours(
                 // Read the neighbour's last RVO velocity (zero if not moving).
                 vec2 oVel = VEC2_ZERO;
 
-                WarState* moveState = wst_getMoveState(context, other);
+                WarStateMove* moveState = wst_getMoveState(context, other);
                 if (moveState)
                 {
-                    oVel = moveState->move.rvoVelocity;
+                    oVel = moveState->rvoVelocity;
                 }
 
                 out[count].position = oPos;

@@ -4,11 +4,12 @@
 
 #include "TracyC.h"
 
-WarState* wst_createDeathState(WarContext* context, WarEntity* entity)
+WarStateDeath* wst_createDeathState(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "wst_createDeathState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_DEATH);
+    WarStateRef ref = wst_allocState(context, WAR_STATE_DEATH, entity->id);
+    WarStateDeath* state = (WarStateDeath*)wst_deref(context, ref);
 
     TracyCZoneEnd(ctx);
     return state;
@@ -74,8 +75,8 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
 
         wu_setUnitDirection(context, corpse, wu_getUnitDirection(context, entity));
 
-        WarState* deathState = wst_createDeathState(context, corpse);
-        wst_changeNextState(context, corpse, deathState, true, true);
+        WarStateDeath* deathState = wst_createDeathState(context, corpse);
+        wst_changeNextState(context, corpse, (WarStateBase*)deathState, true, true);
     }
 
     we_removeEntityById(context, entity->id);

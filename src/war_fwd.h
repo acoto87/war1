@@ -149,8 +149,72 @@ typedef struct _WarMapFlowField WarMapFlowField;
 struct _WarPathFinder;
 typedef struct _WarPathFinder WarPathFinder;
 
-struct _WarState;
-typedef struct _WarState WarState;
+struct _WarStateRef;
+typedef struct _WarStateRef WarStateRef;
+
+struct _WarStateBase;
+typedef struct _WarStateBase WarStateBase;
+typedef WarStateBase WarState;
+
+struct _WarStateIdle;
+typedef struct _WarStateIdle WarStateIdle;
+
+struct _WarStateMove;
+typedef struct _WarStateMove WarStateMove;
+
+struct _WarStatePatrol;
+typedef struct _WarStatePatrol WarStatePatrol;
+
+struct _WarStateFollow;
+typedef struct _WarStateFollow WarStateFollow;
+
+struct _WarStateAttack;
+typedef struct _WarStateAttack WarStateAttack;
+
+struct _WarStateGold;
+typedef struct _WarStateGold WarStateGold;
+
+struct _WarStateMining;
+typedef struct _WarStateMining WarStateMining;
+
+struct _WarStateWood;
+typedef struct _WarStateWood WarStateWood;
+
+struct _WarStateChopping;
+typedef struct _WarStateChopping WarStateChopping;
+
+struct _WarStateDeliver;
+typedef struct _WarStateDeliver WarStateDeliver;
+
+struct _WarStateDeath;
+typedef struct _WarStateDeath WarStateDeath;
+
+struct _WarStateCollapse;
+typedef struct _WarStateCollapse WarStateCollapse;
+
+struct _WarStateTrain;
+typedef struct _WarStateTrain WarStateTrain;
+
+struct _WarStateUpgrade;
+typedef struct _WarStateUpgrade WarStateUpgrade;
+
+struct _WarStateBuild;
+typedef struct _WarStateBuild WarStateBuild;
+
+struct _WarStateRepair;
+typedef struct _WarStateRepair WarStateRepair;
+
+struct _WarStateRepairing;
+typedef struct _WarStateRepairing WarStateRepairing;
+
+struct _WarStateCast;
+typedef struct _WarStateCast WarStateCast;
+
+struct _WarStateWait;
+typedef struct _WarStateWait WarStateWait;
+
+struct _WarStateStorage;
+typedef struct _WarStateStorage WarStateStorage;
 
 struct _WarCampaignMapData;
 typedef struct _WarCampaignMapData WarCampaignMapData;

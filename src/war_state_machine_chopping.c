@@ -7,13 +7,14 @@
 
 #include "TracyC.h"
 
-WarState* wst_createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
+WarStateChopping* wst_createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
 {
     TracyCZoneN(ctx, "wst_createChoppingState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_CHOPPING);
-    state->chop.forestId = forestId;
-    state->chop.position = position;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_CHOPPING, entity->id);
+    WarStateChopping* state = (WarStateChopping*)wst_deref(context, ref);
+    state->forestId = forestId;
+    state->position = position;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -23,11 +24,13 @@ void wst_enterChoppingState(WarContext* context, WarEntity* entity, WarState* st
 {
     TracyCZoneN(ctx, "wst_enterChoppingState", true);
 
+    WarStateChopping* s = (WarStateChopping*)state;
+
     WarMap* map = context->map;
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wu_getUnitCenterPosition(context, entity, true);
-    vec2 treePosition = state->chop.position;
+    vec2 treePosition = s->position;
 
     setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     wu_setUnitDirectionFromDiff(context, entity, treePosition.x - position.x, treePosition.y - position.y);
@@ -51,27 +54,29 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
 {
     TracyCZoneN(ctx, "wst_updateChoppingState", true);
 
+    WarStateChopping* s = (WarStateChopping*)state;
+
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    WarEntity* forest = we_findEntity(context, (WarEntityId)state->chop.forestId);
+    WarEntity* forest = we_findEntity(context, (WarEntityId)s->forestId);
 
     // if the forest doesn't exists, go idle
     if (!forest)
     {
-        WarState* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, idleState, true, true);
+        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+        wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         TracyCZoneEnd(ctx);
         return;
     }
 
-    vec2 treePosition = state->chop.position;
+    vec2 treePosition = s->position;
     WarTree* tree = we_getTreeAtPosition(context, forest, (s32)treePosition.x, (s32)treePosition.y);
 
     if (!tree || tree->amount == 0)
     {
-        WarState* gatherWoodState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
-        wst_changeNextState(context, entity, gatherWoodState, true, true);
+        WarStateWood* gatherWoodState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
+        wst_changeNextState(context, entity, (WarStateBase*)gatherWoodState, true, true);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -112,15 +117,15 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
             // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
             if (!townHall)
             {
-                WarState* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, idleState, true, true);
+                WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
                 TracyCZoneEnd(ctx);
                 return;
             }
 
-            WarState* deliverState = wst_createDeliverState(context, entity, townHall->id);
-            deliverState->nextState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
-            wst_changeNextState(context, entity, deliverState, true, true);
+            WarStateDeliver* deliverState = wst_createDeliverState(context, entity, townHall->id);
+            wst_chainNext(context, (WarStateBase*)deliverState, (WarStateBase*)wst_createGatherWoodState(context, entity, forest->id, treePosition));
+            wst_changeNextState(context, entity, (WarStateBase*)deliverState, true, true);
         }
 
         // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow

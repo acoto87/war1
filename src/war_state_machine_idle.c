@@ -6,12 +6,13 @@
 
 #include "TracyC.h"
 
-WarState* wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround)
+WarStateIdle* wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround)
 {
     TracyCZoneN(ctx, "wst_createIdleState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_IDLE);
-    state->idle.lookAround = lookAround;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_IDLE, entity->id);
+    WarStateIdle* state = (WarStateIdle*)wst_deref(context, ref);
+    state->lookAround = lookAround;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -58,9 +59,11 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
 
     WarMap* map = context->map;
 
+    WarStateIdle* s = (WarStateIdle*)state;
+
     if (wu_isUnit(entity))
     {
-        if (state->idle.lookAround)
+        if (s->lookAround)
         {
             if (chance(20))
             {
@@ -82,8 +85,8 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             if (enemy)
             {
                 vec2 enemyPosition = wu_getUnitPosition(context, enemy, true);
-                WarState* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
-                wst_changeNextState(context, entity, attackState, true, true);
+                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
+                wst_changeNextState(context, entity, (WarStateBase*)attackState, true, true);
             }
         }
 

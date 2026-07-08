@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "TracyC.h"
 #include "shl/wstr.h"
 
 #include "war_entities.h"
@@ -15,6 +16,7 @@
 #include "war_units.h"
 #include "war_collections.h"
 #include "war_map_grid.h"
+#include "war_state_machine.h"
 
 shlDefineList(WarRoadPieceList, WarRoadPiece)
 shlDefineList(WarWallPieceList, WarWallPiece)
@@ -747,10 +749,10 @@ WarStateMachineComponent* we_addStateMachineComponent(WarContext* context, WarEn
     u16 idx = (u16)store->count;
     WarStateMachineComponent* comp = &store->dense[idx];
     *comp = (WarStateMachineComponent){0};
-    comp->currentState   = NULL;
-    comp->nextState      = NULL;
-    comp->leaveState = false;
-    comp->enterState = false;
+    comp->currentRef  = WAR_STATE_REF_INVALID;
+    comp->nextRef     = WAR_STATE_REF_INVALID;
+    comp->leaveState  = false;
+    comp->enterState  = false;
 
     store->enabled[idx] = true;
     store->owners[idx] = entity->id;
@@ -773,11 +775,11 @@ void we_removeStateMachineComponent(WarContext* context, WarEntity* entity)
     WarStateMachineStorage* store = &manager->stateMachines;
     WarStateMachineComponent* comp = &store->dense[idx];
 
-    if (comp->currentState)
-        wst_leaveState(context, entity, comp->currentState);
+    if (WAR_STATE_REF_IS_VALID(comp->currentRef))
+        wst_leaveState(context, entity, wst_deref(context, comp->currentRef));
 
-    if (comp->nextState)
-        wst_leaveState(context, entity, comp->nextState);
+    if (WAR_STATE_REF_IS_VALID(comp->nextRef))
+        wst_leaveState(context, entity, wst_deref(context, comp->nextRef));
 
     u16 lastIdx = (u16)(store->count - 1);
     if (idx != lastIdx)
@@ -1556,8 +1558,8 @@ WarEntity* we_createBuilding(WarContext* context, const CreateUnitArgs* args)
     if (isGoingToBuild)
     {
         const WarBuildingStats* stats = wu_getBuildingStats(type);
-        WarState* buildState = wst_createBuildState(context, entity, (f32)stats->buildTime);
-        wst_changeNextState(context, entity, buildState, true, true);
+        WarStateBuild* buildState = wst_createBuildState(context, entity, (f32)stats->buildTime);
+        wst_changeNextState(context, entity, (WarStateBase*)buildState, true, true);
     }
     else
     {
@@ -1569,8 +1571,8 @@ WarEntity* we_createBuilding(WarContext* context, const CreateUnitArgs* args)
 
 void we_setInitialIdleState(WarContext* context, WarEntity* entity)
 {
-    WarState* idleState = wst_createIdleState(context, entity, wu_isDudeUnit(context, entity));
-    wst_changeNextState(context, entity, idleState, true, true);
+    WarStateIdle* idleState = wst_createIdleState(context, entity, wu_isDudeUnit(context, entity));
+    wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
 }
 
 WarEntity* we_findEntity(WarContext* context, WarEntityId id)
@@ -1896,6 +1898,9 @@ void we_initEntityManager(WarContext* context, WarEntityManager* manager)
     manager->projectiles.count   = 1;
     manager->poisonClouds.count  = 1;
     manager->sights.count        = 1;
+
+    // initialize per-type state storage (free-lists, occupancy, counts)
+    wst_initStorage(&manager->stateStorage);
 
     // initialize entity by type map
     WarEntityMapInit(&manager->entitiesByType, wm_globalAllocator(), we_hashEntityType, we_equalsEntityType);
@@ -3222,8 +3227,8 @@ bool we_isBeingAttackedBy(WarContext* context, WarEntity* entity, WarEntity* oth
 {
     if (!wst_isFollowing(context, other) && !wst_isMoving(context, other))
     {
-        WarState* attackState = wst_getAttackState(context, other);
-        return attackState && attackState->attack.targetEntityId == entity->id;
+        WarStateAttack* attackState = wst_getAttackState(context, other);
+        return attackState && attackState->targetEntityId == entity->id;
     }
 
     return false;
@@ -3277,10 +3282,10 @@ WarEntity* we_getAttackTarget(WarContext* context, WarEntity* entity)
 {
     if (!wst_isFollowing(context, entity) && !wst_isMoving(context, entity))
     {
-        WarState* attackState = wst_getAttackState(context, entity);
+        WarStateAttack* attackState = wst_getAttackState(context, entity);
         if (attackState)
         {
-            WarEntityId targetEntityId = (WarEntityId)attackState->attack.targetEntityId;
+            WarEntityId targetEntityId = (WarEntityId)attackState->targetEntityId;
             return we_findEntity(context, targetEntityId);
         }
     }
@@ -3317,8 +3322,8 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
     {
         if (wu_isBuildingUnit(context, entity))
         {
-            WarState* collapseState = wst_createCollapseState(context, entity);
-            wst_changeNextState(context, entity, collapseState, true, true);
+            WarStateCollapse* collapseState = wst_createCollapseState(context, entity);
+            wst_changeNextState(context, entity, (WarStateBase*)collapseState, true, true);
 
 #ifndef WAR_EDITOR_BUILD
             vec2 position = wu_getUnitCenterPosition(context, entity, false);
@@ -3327,8 +3332,8 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
         }
         else
         {
-            WarState* deathState = wst_createDeathState(context, entity);
-            wst_changeNextState(context, entity, deathState, true, true);
+            WarStateDeath* deathState = wst_createDeathState(context, entity);
+            wst_changeNextState(context, entity, (WarStateBase*)deathState, true, true);
 
 #ifndef WAR_EDITOR_BUILD
             vec2 position = wu_getUnitCenterPosition(context, entity, false);
@@ -3404,8 +3409,8 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
         else
         {
             // wcmd_stop attacking if the magic unit rans out of mana
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
     }
     else
@@ -3438,8 +3443,8 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
         else
         {
             // wcmd_stop attacking if the magic unit rans out of mana
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
     }
     else
@@ -3519,8 +3524,8 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
     {
         if (!wst_isCollapsing(context, goldmine) && !wst_isGoingToCollapse(context, goldmine))
         {
-            WarState* collapseState = wst_createCollapseState(context, goldmine);
-            wst_changeNextState(context, goldmine, collapseState, true, true);
+            WarStateCollapse* collapseState = wst_createCollapseState(context, goldmine);
+            wst_changeNextState(context, goldmine, (WarStateBase*)collapseState, true, true);
 
 #ifndef WAR_EDITOR_BUILD
             vec2 position = wu_getUnitCenterPosition(context, goldmine, false);

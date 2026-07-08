@@ -2,15 +2,16 @@
 
 #include "TracyC.h"
 
-WarState* wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
+WarStateUpgrade* wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
 {
     TracyCZoneN(ctx, "wst_createUpgradeState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_UPGRADE);
-    state->upgrade.upgradeToBuild = upgradeToBuild;
-    state->upgrade.buildTime = 0;
-    state->upgrade.totalBuildTime = buildTime;
-    state->upgrade.cancelled = false;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_UPGRADE, entity->id);
+    WarStateUpgrade* state = (WarStateUpgrade*)wst_deref(context, ref);
+    state->upgradeToBuild = upgradeToBuild;
+    state->buildTime = 0;
+    state->totalBuildTime = buildTime;
+    state->cancelled = false;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -65,17 +66,19 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
 {
     TracyCZoneN(ctx, "wst_updateUpgradeState", true);
 
+    WarStateUpgrade* s = (WarStateUpgrade*)state;
+
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    if (state->upgrade.cancelled)
+    if (s->cancelled)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
 
         TracyCZoneEnd(ctx);
@@ -90,28 +93,28 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
         buildSpeed *= CHEAT_SPEED_UP_FACTOR;
     }
 
-    state->upgrade.buildTime += buildSpeed;
+    s->buildTime += buildSpeed;
 
     // if the building is finished...
-    if (state->upgrade.buildTime >= state->upgrade.totalBuildTime)
+    if (s->buildTime >= s->totalBuildTime)
     {
         unit->buildPercent = 1;
 
         // increase the level of the upgrade
-        we_increaseUpgradeLevel(context, player, state->upgrade.upgradeToBuild);
-        assert(checkUpgradeLevel(player, state->upgrade.upgradeToBuild));
+        we_increaseUpgradeLevel(context, player, s->upgradeToBuild);
+        assert(checkUpgradeLevel(player, s->upgradeToBuild));
 
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
 
         TracyCZoneEnd(ctx);
         return;
     }
 
-    unit->buildPercent = PERCENTF01(state->upgrade.buildTime, state->upgrade.totalBuildTime);
+    unit->buildPercent = PERCENTF01(s->buildTime, s->totalBuildTime);
 
     TracyCZoneEnd(ctx);
 }

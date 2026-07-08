@@ -6,15 +6,16 @@
 
 #include "TracyC.h"
 
-WarState* wst_createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
+WarStateTrain* wst_createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
 {
     TracyCZoneN(ctx, "wst_createTrainState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_TRAIN);
-    state->train.unitToBuild = unitToBuild;
-    state->train.buildTime = 0;
-    state->train.totalBuildTime = buildTime;
-    state->train.cancelled = false;
+    WarStateRef ref = wst_allocState(context, WAR_STATE_TRAIN, entity->id);
+    WarStateTrain* state = (WarStateTrain*)wst_deref(context, ref);
+    state->unitToBuild = unitToBuild;
+    state->buildTime = 0;
+    state->totalBuildTime = buildTime;
+    state->cancelled = false;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -69,16 +70,18 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 {
     TracyCZoneN(ctx, "wst_updateTrainState", true);
 
+    WarStateTrain* s = (WarStateTrain*)state;
+
     WarMap* map = context->map;
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    if (state->train.cancelled)
+    if (s->cancelled)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
 
         TracyCZoneEnd(ctx);
@@ -93,16 +96,16 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         trainSpeed *= CHEAT_SPEED_UP_FACTOR;
     }
 
-    state->train.buildTime += trainSpeed;
+    s->buildTime += trainSpeed;
 
     // if the building is finished...
-    if (state->train.buildTime >= state->train.totalBuildTime)
+    if (s->buildTime >= s->totalBuildTime)
     {
         unit->buildPercent = 1;
 
         // ...create the unit
         WarEntity* unitToBuild = we_createDude(context, CREATE_UNIT_ARGS_INIT(
-            .type=state->train.unitToBuild,
+            .type=s->unitToBuild,
             .x=0, .y=0,
             .player=unit->player,
             .isGoingToTrain=false
@@ -116,8 +119,8 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 
         if (!wst_changeStateNextState(context, entity, state))
         {
-            WarState* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, idleState, true, true);
+            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
         }
 
         if (unit->player == 0)
@@ -130,7 +133,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         return;
     }
 
-    unit->buildPercent = PERCENTF01(state->train.buildTime, state->train.totalBuildTime);
+    unit->buildPercent = PERCENTF01(s->buildTime, s->totalBuildTime);
 
     TracyCZoneEnd(ctx);
 }

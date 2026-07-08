@@ -221,18 +221,18 @@ struct _WarForestComponent
 
 struct _WarStateMachineComponent
 {
-    WarState* currentState;
-    WarState* nextState;
+    WarStateRef currentRef;
+    WarStateRef nextRef;
     bool leaveState;
     bool enterState;
 };
 
 #define WAR_STATE_MACHINE_COMPONENT_INIT_CONST(...) { \
-    .currentState   = NULL,                            \
-    .nextState      = NULL,                            \
-    .leaveState = false,                               \
-    .enterState = false,                               \
-    __VA_ARGS__                                        \
+    .currentRef  = WAR_STATE_REF_INVALID,              \
+    .nextRef     = WAR_STATE_REF_INVALID,              \
+    .leaveState  = false,                               \
+    .enterState  = false,                               \
+    __VA_ARGS__                                         \
 }
 #define WAR_STATE_MACHINE_COMPONENT_INIT(...) ((WarStateMachineComponent)WAR_STATE_MACHINE_COMPONENT_INIT_CONST(__VA_ARGS__))
 
@@ -424,6 +424,40 @@ DEFINE_COMPONENT_STORAGE(WarProjectileStorage, WarProjectileComponent);
 DEFINE_COMPONENT_STORAGE(WarPoisonCloudStorage, WarPoisonCloudComponent);
 DEFINE_COMPONENT_STORAGE(WarSightStorage, WarSightComponent);
 
+// Per-type dense state arrays (Option A restructure). One homogeneous array
+// per WarStateType; references between states use WarStateRef (type, idx).
+#define MAX_STATES_PER_TYPE 512
+
+struct _WarStateStorage
+{
+    // --- Dense arrays per type ---
+    WarStateIdle      idle[MAX_STATES_PER_TYPE];
+    WarStateMove      move[MAX_STATES_PER_TYPE];
+    WarStatePatrol    patrol[MAX_STATES_PER_TYPE];
+    WarStateFollow    follow[MAX_STATES_PER_TYPE];
+    WarStateAttack    attack[MAX_STATES_PER_TYPE];
+    WarStateGold      gold[MAX_STATES_PER_TYPE];
+    WarStateMining    mining[MAX_STATES_PER_TYPE];
+    WarStateWood      wood[MAX_STATES_PER_TYPE];
+    WarStateChopping  chopping[MAX_STATES_PER_TYPE];
+    WarStateDeliver   deliver[MAX_STATES_PER_TYPE];
+    WarStateDeath     death[MAX_STATES_PER_TYPE];
+    WarStateCollapse  collapse[MAX_STATES_PER_TYPE];
+    WarStateTrain     train[MAX_STATES_PER_TYPE];
+    WarStateUpgrade   upgrade[MAX_STATES_PER_TYPE];
+    WarStateBuild     build[MAX_STATES_PER_TYPE];
+    WarStateRepair    repair[MAX_STATES_PER_TYPE];
+    WarStateRepairing repairing[MAX_STATES_PER_TYPE];
+    WarStateCast      cast[MAX_STATES_PER_TYPE];
+    WarStateWait      wait[MAX_STATES_PER_TYPE];
+
+    // --- Per-type occupancy and free-lists (LIFO) ---
+    bool occupied[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
+    s32  freeLists[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
+    s32  freeCounts[WAR_STATE_COUNT];
+    s32  activeCounts[WAR_STATE_COUNT];
+};
+
 struct _WarEntityManager
 {
     // --- Entity pool (flat array, slot 0 reserved/empty) ---
@@ -447,6 +481,7 @@ struct _WarEntityManager
     WarRuinStorage         ruins;
     WarForestStorage       forests;
     WarStateMachineStorage stateMachines;
+    WarStateStorage        stateStorage;
     WarUIStorage           uis;
     WarTextStorage         texts;
     WarRectStorage         rects;

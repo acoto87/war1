@@ -6,11 +6,12 @@
 
 #include "TracyC.h"
 
-WarState* wst_createCollapseState(WarContext* context, WarEntity* entity)
+WarStateCollapse* wst_createCollapseState(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "wst_createCollapseState", true);
 
-    WarState* state = wst_createState(context, entity, WAR_STATE_COLLAPSE);
+    WarStateRef ref = wst_allocState(context, WAR_STATE_COLLAPSE, entity->id);
+    WarStateCollapse* state = (WarStateCollapse*)wst_deref(context, ref);
 
     TracyCZoneEnd(ctx);
     return state;
