@@ -21,17 +21,6 @@ WarStateAttack* wst_createAttackState(WarContext* context, WarEntity* entity, Wa
     return state;
 }
 
-void wst_enterAttackState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_enterAttackState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveAttackState", true);
@@ -78,13 +67,13 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
             wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
             moveState->checkForAttacks = true;
-            wst_changeNextState(context, entity, (WarStateBase*)moveState, false, true);
+            wst_changeNextState(context, entity, (WarStateBase*)moveState, false);
             TracyCZoneEnd(ctx);
             return;
         }
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -102,7 +91,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
         wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false, true);
+        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -111,7 +100,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range);
         wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false, true);
+        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -122,7 +111,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     {
         WarStateWait* waitState = wst_createWaitState(context, entity, 1.0f);
         wst_chainNext(context, (WarStateBase*)waitState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)waitState, false, true);
+        wst_changeNextState(context, entity, (WarStateBase*)waitState, false);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -148,7 +137,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 wst_isCollapsing(context, targetEntity) || wst_isGoingToCollapse(context, targetEntity))
             {
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
             }
             else
             {
@@ -180,7 +169,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 if (piece->hp == 0)
                 {
                     WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                    wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
                 }
                 else
                 {
@@ -211,12 +200,39 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     TracyCZoneEnd(ctx);
 }
 
-void wst_freeAttackState(WarContext* context, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_freeAttackState", true);
 
-    NOT_USED(context);
-    NOT_USED(state);
+void wst_updateAttackStates(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_updateAttackStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateAttack*      states  = storage->attack;
+    bool*             occupied = storage->occupied[WAR_STATE_ATTACK];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateAttack*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->currentRef.type != WAR_STATE_ATTACK || sm->currentRef.idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateAttackState(context, entity, (WarStateBase*)state);
+    }
 
     TracyCZoneEnd(ctx);
 }

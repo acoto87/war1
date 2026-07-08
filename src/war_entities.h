@@ -224,14 +224,12 @@ struct _WarStateMachineComponent
     WarStateRef currentRef;
     WarStateRef nextRef;
     bool leaveState;
-    bool enterState;
 };
 
 #define WAR_STATE_MACHINE_COMPONENT_INIT_CONST(...) { \
     .currentRef  = WAR_STATE_REF_INVALID,              \
     .nextRef     = WAR_STATE_REF_INVALID,              \
     .leaveState  = false,                               \
-    .enterState  = false,                               \
     __VA_ARGS__                                         \
 }
 #define WAR_STATE_MACHINE_COMPONENT_INIT(...) ((WarStateMachineComponent)WAR_STATE_MACHINE_COMPONENT_INIT_CONST(__VA_ARGS__))

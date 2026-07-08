@@ -23,17 +23,6 @@ WarStateCast* wst_createCastState(WarContext* context, WarEntity* entity, WarSpe
     return state;
 }
 
-void wst_enterCastState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_enterCastState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveCastState", true);
@@ -74,7 +63,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
         {
             WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
             wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-            wst_changeNextState(context, entity, (WarStateBase*)followState, false, true);
+            wst_changeNextState(context, entity, (WarStateBase*)followState, false);
             TracyCZoneEnd(ctx);
             return;
         }
@@ -126,7 +115,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                 }
 
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
 
                 break;
             }
@@ -150,7 +139,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                 }
 
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
 
                 break;
             }
@@ -179,7 +168,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                 }
 
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
 
                 break;
             }
@@ -207,7 +196,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                 else
                 {
                     WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                    wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
                 }
 
                 break;
@@ -246,7 +235,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                 WarEntityListFree(nearUnits);
 
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
                 break;
             }
 
@@ -276,7 +265,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                 }
 
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
 
                 break;
             }
@@ -299,7 +288,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                 }
 
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
 
                 break;
             }
@@ -319,12 +308,39 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
     TracyCZoneEnd(ctx);
 }
 
-void wst_freeCastState(WarContext* context, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_freeCastState", true);
 
-    NOT_USED(context);
-    NOT_USED(state);
+void wst_updateCastStates(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_updateCastStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateCast*      states  = storage->cast;
+    bool*             occupied = storage->occupied[WAR_STATE_CAST];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateCast*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->currentRef.type != WAR_STATE_CAST || sm->currentRef.idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateCastState(context, entity, (WarStateBase*)state);
+    }
 
     TracyCZoneEnd(ctx);
 }

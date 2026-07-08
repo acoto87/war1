@@ -18,17 +18,6 @@ WarStateFollow* wst_createFollowState(WarContext* context, WarEntity* entity, Wa
     return state;
 }
 
-void wst_enterFollowState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_enterFollowState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveFollowState", true);
@@ -60,7 +49,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
             if (!wst_changeStateNextState(context, entity, state))
             {
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
             }
 
             TracyCZoneEnd(ctx);
@@ -89,7 +78,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         {
             WarStateWait* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
             wst_chainNext(context, (WarStateBase*)waitState, (WarStateBase*)state);
-            wst_changeNextState(context, entity, (WarStateBase*)waitState, false, true);
+            wst_changeNextState(context, entity, (WarStateBase*)waitState, false);
         }
 
         TracyCZoneEnd(ctx);
@@ -104,7 +93,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         if (!wst_changeStateNextState(context, entity, state))
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
         }
 
         Vec2ListFree(&path.nodes);
@@ -114,19 +103,46 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
 
     WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
     wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
-    wst_changeNextState(context, entity, (WarStateBase*)moveState, false, true);
+    wst_changeNextState(context, entity, (WarStateBase*)moveState, false);
 
     Vec2ListFree(&path.nodes);
 
     TracyCZoneEnd(ctx);
 }
 
-void wst_freeFollowState(WarContext* context, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_freeFollowState", true);
 
-    NOT_USED(context);
-    NOT_USED(state);
+void wst_updateFollowStates(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_updateFollowStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateFollow*      states  = storage->follow;
+    bool*             occupied = storage->occupied[WAR_STATE_FOLLOW];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateFollow*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->currentRef.type != WAR_STATE_FOLLOW || sm->currentRef.idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateFollowState(context, entity, (WarStateBase*)state);
+    }
 
     TracyCZoneEnd(ctx);
 }

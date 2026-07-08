@@ -14,17 +14,6 @@ WarStateDeliver* wst_createDeliverState(WarContext* context, WarEntity* entity, 
     return state;
 }
 
-void wst_enterDeliverState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_enterDeliverState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveDeliverState", true);
@@ -55,7 +44,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     if (!townHall)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -66,7 +55,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
         WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats->range);
         wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false, true);
+        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -85,7 +74,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
         if (!wst_changeStateNextState(context, entity, state))
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
         }
 
         TracyCZoneEnd(ctx);
@@ -120,12 +109,39 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     TracyCZoneEnd(ctx);
 }
 
-void wst_freeDeliverState(WarContext* context, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_freeDeliverState", true);
 
-    NOT_USED(context);
-    NOT_USED(state);
+void wst_updateDeliverStates(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_updateDeliverStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateDeliver*      states  = storage->deliver;
+    bool*             occupied = storage->occupied[WAR_STATE_DELIVER];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateDeliver*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->currentRef.type != WAR_STATE_DELIVER || sm->currentRef.idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateDeliverState(context, entity, (WarStateBase*)state);
+    }
 
     TracyCZoneEnd(ctx);
 }

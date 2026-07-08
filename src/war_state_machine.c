@@ -7,25 +7,25 @@
 
 WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
 {
-    { WAR_STATE_IDLE,       wst_enterIdleState,       wst_leaveIdleState,       wst_updateIdleState,       wst_freeIdleState       },
-    { WAR_STATE_MOVE,       wst_enterMoveState,       wst_leaveMoveState,       wst_updateMoveState,       wst_freeMoveState       },
-    { WAR_STATE_PATROL,     wst_enterPatrolState,     wst_leavePatrolState,     wst_updatePatrolState,     wst_freePatrolState     },
-    { WAR_STATE_FOLLOW,     wst_enterFollowState,     wst_leaveFollowState,     wst_updateFollowState,     wst_freeFollowState     },
-    { WAR_STATE_ATTACK,     wst_enterAttackState,     wst_leaveAttackState,     wst_updateAttackState,     wst_freeAttackState     },
-    { WAR_STATE_GOLD,       wst_enterGatherGoldState, wst_leaveGatherGoldState, wst_updateGatherGoldState, wst_freeGatherGoldState },
-    { WAR_STATE_MINING,     wst_enterMiningState,     wst_leaveMiningState,     wst_updateMiningState,     wst_freeMiningState     },
-    { WAR_STATE_WOOD,       wst_enterGatherWoodState, wst_leaveGatherWoodState, wst_updateGatherWoodState, wst_freeGatherWoodState },
-    { WAR_STATE_CHOPPING,   wst_enterChoppingState,   wst_leaveChoppingState,   wst_updateChoppingState,   wst_freeChoppingState   },
-    { WAR_STATE_DELIVER,    wst_enterDeliverState,    wst_leaveDeliverState,    wst_updateDeliverState,    wst_freeDeliverState    },
-    { WAR_STATE_DEATH,      wst_enterDeathState,      wst_leaveDeathState,      wst_updateDeathState,      wst_freeDeathState      },
-    { WAR_STATE_COLLAPSE,   wst_enterCollapseState,   wst_leaveCollapseState,   wst_updateCollapseState,   wst_freeCollapseState   },
-    { WAR_STATE_TRAIN,      wst_enterTrainState,      wst_leaveTrainState,      wst_updateTrainState,      wst_freeTrainState      },
-    { WAR_STATE_UPGRADE,    wst_enterUpgradeState,    wst_leaveUpgradeState,    wst_updateUpgradeState,    wst_freeUpgradeState    },
-    { WAR_STATE_BUILD,      wst_enterBuildState,      wst_leaveBuildState,      wst_updateBuildState,      wst_freeBuildState      },
-    { WAR_STATE_REPAIR,     wst_enterRepairState,     wst_leaveRepairState,     wst_updateRepairState,     wst_freeRepairState     },
-    { WAR_STATE_REPAIRING,  wst_enterRepairingState,  wst_leaveRepairingState,  wst_updateRepairingState,  wst_freeRepairingState  },
-    { WAR_STATE_CAST,       wst_enterCastState,       wst_leaveCastState,       wst_updateCastState,       wst_freeCastState       },
-    { WAR_STATE_WAIT,       wst_enterWaitState,       wst_leaveWaitState,       wst_updateWaitState,       wst_freeWaitState       },
+    { WAR_STATE_IDLE,       wst_leaveIdleState       },
+    { WAR_STATE_MOVE,       wst_leaveMoveState       },
+    { WAR_STATE_PATROL,     wst_leavePatrolState     },
+    { WAR_STATE_FOLLOW,     wst_leaveFollowState     },
+    { WAR_STATE_ATTACK,     wst_leaveAttackState     },
+    { WAR_STATE_GOLD,       wst_leaveGatherGoldState },
+    { WAR_STATE_MINING,     wst_leaveMiningState     },
+    { WAR_STATE_WOOD,       wst_leaveGatherWoodState },
+    { WAR_STATE_CHOPPING,   wst_leaveChoppingState   },
+    { WAR_STATE_DELIVER,    wst_leaveDeliverState    },
+    { WAR_STATE_DEATH,      wst_leaveDeathState      },
+    { WAR_STATE_COLLAPSE,   wst_leaveCollapseState   },
+    { WAR_STATE_TRAIN,      wst_leaveTrainState      },
+    { WAR_STATE_UPGRADE,    wst_leaveUpgradeState    },
+    { WAR_STATE_BUILD,      wst_leaveBuildState      },
+    { WAR_STATE_REPAIR,     wst_leaveRepairState     },
+    { WAR_STATE_REPAIRING,  wst_leaveRepairingState  },
+    { WAR_STATE_CAST,       wst_leaveCastState       },
+    { WAR_STATE_WAIT,       wst_leaveWaitState       },
 };
 
 bool wst_isInsideBuilding(WarContext* context, WarEntity* entity)
@@ -177,7 +177,13 @@ void wst_freeStateRef(WarContext* context, WarStateRef ref)
     WarStateStorage* s = &we_getEntityManager(context)->stateStorage;
     WarStateBase* state = wst_deref(context, ref);
     assert(state);
-    assert(s->occupied[ref.type][ref.idx]);
+
+    // Idempotent: the slot may already have been freed as part of a chain cycle.
+    if (!s->occupied[ref.type][ref.idx])
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
     // Recursively free chained next state.
     if (WAR_STATE_REF_IS_VALID(state->nextRef))
@@ -185,9 +191,6 @@ void wst_freeStateRef(WarContext* context, WarStateRef ref)
         wst_freeStateRef(context, state->nextRef);
         state->nextRef = WAR_STATE_REF_INVALID;
     }
-
-    // Run the type-specific free callback (releases Vec2List etc.).
-    stateDescriptors[ref.type].freeFunc(context, state);
 
     s->occupied[ref.type][ref.idx] = false;
     s->freeLists[ref.type][s->freeCounts[ref.type]++] = ref.idx;
@@ -201,16 +204,41 @@ void wst_chainNext(WarContext* context, WarStateBase* from, WarStateBase* to)
     from->nextRef = wst_refOf(context, to);
 }
 
-void wst_changeNextState(WarContext* context, WarEntity* entity, WarStateBase* state, bool leaveState, bool enterState)
+static void wst_freeStateRefExcluding(WarContext* context, WarStateRef ref, WarStateRef exclude)
+{
+    if (!WAR_STATE_REF_IS_VALID(ref))
+        return;
+
+    if (ref.type == exclude.type && ref.idx == exclude.idx)
+        return;
+
+    WarStateBase* state = wst_deref(context, ref);
+    if (state && WAR_STATE_REF_IS_VALID(state->nextRef))
+    {
+        WarStateRef next = state->nextRef;
+        state->nextRef = WAR_STATE_REF_INVALID;
+        wst_freeStateRefExcluding(context, next, exclude);
+    }
+
+    wst_freeStateRef(context, ref);
+}
+
+void wst_changeNextState(WarContext* context, WarEntity* entity, WarStateBase* state, bool leaveState)
 {
     TracyCZoneN(ctx, "wst_changeNextState", true);
 
     WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
     assert(stateMachine);
 
+    // Free any previously queued next state before overwriting it. The current state
+    // is excluded because the old queued state may chain back to it (e.g. PATROL->MOVE).
+    if (WAR_STATE_REF_IS_VALID(stateMachine->nextRef))
+    {
+        wst_freeStateRefExcluding(context, stateMachine->nextRef, stateMachine->currentRef);
+    }
+
     stateMachine->nextRef    = wst_refOf(context, state);
     stateMachine->leaveState = leaveState;
-    stateMachine->enterState = enterState;
 
     TracyCZoneEnd(ctx);
 }
@@ -222,7 +250,7 @@ bool wst_changeStateNextState(WarContext* context, WarEntity* entity, WarStateBa
     if (WAR_STATE_REF_IS_VALID(state->nextRef))
     {
         WarStateBase* next = wst_deref(context, state->nextRef);
-        wst_changeNextState(context, entity, next, true, false);
+        wst_changeNextState(context, entity, next, true);
         state->nextRef = WAR_STATE_REF_INVALID;
 
         TracyCZoneEnd(ctx);
@@ -854,22 +882,6 @@ bool wst_isGoingToCast(WarContext* context, WarEntity* entity)
     return result;
 }
 
-void wst_enterState(WarContext* context, WarEntity* entity, WarStateBase* state)
-{
-    TracyCZoneN(ctx, "wst_enterState", true);
-
-    if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
-    {
-        logError("Unkown state %d for entity %d", state->type, entity->id);
-        TracyCZoneEnd(ctx);
-        return;
-    }
-
-    stateDescriptors[state->type].enterFunc(context, entity, state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveState(WarContext* context, WarEntity* entity, WarStateBase* state)
 {
     TracyCZoneN(ctx, "wst_leaveState", true);
@@ -888,90 +900,37 @@ void wst_leaveState(WarContext* context, WarEntity* entity, WarStateBase* state)
     }
 
     stateDescriptors[state->type].leaveFunc(context, entity, state);
-    wst_freeState(context, state);
-
-    TracyCZoneEnd(ctx);
-}
-
-void wst_updateStateMachine(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_updateStateMachine", true);
-
-    if (we_isComponentEnabled(context, entity, COMP_STATE_MACHINE))
-    {
-        WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
-        assert(stateMachine);
-
-        // the wst_enterState could potentially change state if it determine that is not ready to start the current state
-        while (WAR_STATE_REF_IS_VALID(stateMachine->nextRef))
-        {
-            WarStateBase* current = wst_deref(context, stateMachine->currentRef);
-
-            if (stateMachine->leaveState && current)
-                wst_leaveState(context, entity, current);
-
-            stateMachine->currentRef = stateMachine->nextRef;
-            stateMachine->nextRef    = WAR_STATE_REF_INVALID;
-
-            WarStateBase* next = wst_deref(context, stateMachine->currentRef);
-            if (stateMachine->enterState)
-                wst_enterState(context, entity, next);
-        }
-
-        WarStateBase* currentState = wst_deref(context, stateMachine->currentRef);
-        if (!currentState)
-        {
-            TracyCZoneEnd(ctx);
-            return;
-        }
-
-        if (currentState->type == WAR_STATE_MOVE)
-        {
-            // NOTE: Move state are updated in `updateMoveStates` function
-            TracyCZoneEnd(ctx);
-            return;
-        }
-
-        if (currentState->delay > 0)
-        {
-            currentState->nextUpdateGameTime = context->gameTime + currentState->delay;
-            currentState->delay = 0;
-        }
-
-        if (context->gameTime >= currentState->nextUpdateGameTime)
-        {
-            if (!inRange(currentState->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
-            {
-                logError("Unkown state %d for entity %d", currentState->type, entity->id);
-                TracyCZoneEnd(ctx);
-                return;
-            }
-
-            stateDescriptors[currentState->type].updateFunc(context, entity, currentState);
-        }
-    }
-
-    TracyCZoneEnd(ctx);
-}
-
-void wst_freeState(WarContext* context, WarStateBase* state)
-{
-    TracyCZoneN(ctx, "wst_freeState", true);
-
-    if (!state)
-    {
-        TracyCZoneEnd(ctx);
-        return;
-    }
-
-    if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
-    {
-        logError("Unkown state %d", state->type);
-        TracyCZoneEnd(ctx);
-        return;
-    }
-
     wst_freeStateRef(context, wst_refOf(context, state));
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_processStateMachineTransitions(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_processStateMachineTransitions", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
+
+    for (s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
+    {
+        WarEntity* entity = &manager->entities[i];
+        if (entity->id == 0) continue;
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (!WAR_STATE_REF_IS_VALID(sm->nextRef)) continue;
+
+        WarStateBase* current = wst_deref(context, sm->currentRef);
+        if (sm->leaveState && current)
+            wst_leaveState(context, entity, current);
+
+        sm->currentRef = sm->nextRef;
+        sm->nextRef    = WAR_STATE_REF_INVALID;
+        sm->leaveState = false;
+    }
 
     TracyCZoneEnd(ctx);
 }

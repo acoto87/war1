@@ -21,32 +21,15 @@ WarStateTrain* wst_createTrainState(WarContext* context, WarEntity* entity, WarU
     return state;
 }
 
-void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_enterTrainState", true);
-
-    NOT_USED(state);
-
-    WarMap* map = context->map;
-    WarUnitComponent* unit = we_getUnitComponent(context, entity);
-    assert(unit);
-
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    vec2 unitSize = wu_getUnitSize(context, entity);
-    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-
-    unit->building = true;
-    unit->buildPercent = 0;
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveTrainState", true);
+
+    if (!state->initialized)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
     NOT_USED(state);
 
@@ -76,12 +59,29 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
+    if (!state->initialized)
+    {
+        WarTransformComponent* transform = we_getTransformComponent(context, entity);
+        assert(transform);
+
+        vec2 unitSize = wu_getUnitSize(context, entity);
+        vec2 position = wmap_mapToTileCoordinatesV(transform->position);
+        setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+
+        unit->building = true;
+        unit->buildPercent = 0;
+
+        state->initialized = true;
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
     if (s->cancelled)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
         }
 
         TracyCZoneEnd(ctx);
@@ -120,7 +120,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         if (!wst_changeStateNextState(context, entity, state))
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
         }
 
         if (unit->player == 0)
@@ -138,12 +138,39 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
     TracyCZoneEnd(ctx);
 }
 
-void wst_freeTrainState(WarContext* context, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_freeTrainState", true);
 
-    NOT_USED(context);
-    NOT_USED(state);
+void wst_updateTrainStates(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_updateTrainStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateTrain*      states  = storage->train;
+    bool*             occupied = storage->occupied[WAR_STATE_TRAIN];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateTrain*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->currentRef.type != WAR_STATE_TRAIN || sm->currentRef.idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateTrainState(context, entity, (WarStateBase*)state);
+    }
 
     TracyCZoneEnd(ctx);
 }

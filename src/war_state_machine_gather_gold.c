@@ -14,17 +14,6 @@ WarStateGold* wst_createGatherGoldState(WarContext* context, WarEntity* entity, 
     return state;
 }
 
-void wst_enterGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_enterGatherGoldState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveGatherGoldState", true);
@@ -55,7 +44,7 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     if (!goldmine || wst_isCollapsing(context, goldmine) || wst_isGoingToCollapse(context, goldmine))
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -65,24 +54,51 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats->range);
         wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false, true);
+        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
         TracyCZoneEnd(ctx);
         return;
     }
 
     // the unit arrive to the goldmine, go mining
     WarStateMining* miningState = wst_createMiningState(context, entity, goldmine->id);
-    wst_changeNextState(context, entity, (WarStateBase*)miningState, true, true);
+    wst_changeNextState(context, entity, (WarStateBase*)miningState, true);
 
     TracyCZoneEnd(ctx);
 }
 
-void wst_freeGatherGoldState(WarContext* context, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_freeGatherGoldState", true);
 
-    NOT_USED(context);
-    NOT_USED(state);
+void wst_updateGoldStates(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_updateGoldStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateGold*      states  = storage->gold;
+    bool*             occupied = storage->occupied[WAR_STATE_GOLD];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateGold*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->currentRef.type != WAR_STATE_GOLD || sm->currentRef.idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateGatherGoldState(context, entity, (WarStateBase*)state);
+    }
 
     TracyCZoneEnd(ctx);
 }

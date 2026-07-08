@@ -18,29 +18,15 @@ WarStateIdle* wst_createIdleState(WarContext* context, WarEntity* entity, bool l
     return state;
 }
 
-void wst_enterIdleState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_enterIdleState", true);
-
-    NOT_USED(state);
-
-    if (wu_isUnit(entity))
-    {
-        WarMap* map = context->map;
-        vec2 unitSize = wu_getUnitSize(context, entity);
-        vec2 position = wu_getUnitPosition(context, entity, true);
-        setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
-    }
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveIdleState", true);
 
-    NOT_USED(state);
+    if (!state->initialized)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
     if (wu_isUnit(entity))
     {
@@ -60,6 +46,18 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
     WarMap* map = context->map;
 
     WarStateIdle* s = (WarStateIdle*)state;
+
+    if (!state->initialized)
+    {
+        if (wu_isUnit(entity))
+        {
+            vec2 unitSize = wu_getUnitSize(context, entity);
+            vec2 position = wu_getUnitPosition(context, entity, true);
+            setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+            wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
+        }
+        state->initialized = true;
+    }
 
     if (wu_isUnit(entity))
     {
@@ -86,7 +84,7 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             {
                 vec2 enemyPosition = wu_getUnitPosition(context, enemy, true);
                 WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
-                wst_changeNextState(context, entity, (WarStateBase*)attackState, true, true);
+                wst_changeNextState(context, entity, (WarStateBase*)attackState, true);
             }
         }
 
@@ -112,12 +110,39 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
     TracyCZoneEnd(ctx);
 }
 
-void wst_freeIdleState(WarContext* context, WarState* state)
+void wst_updateIdleStates(WarContext* context)
 {
-    TracyCZoneN(ctx, "wst_freeIdleState", true);
+    TracyCZoneN(ctx, "wst_updateIdleStates", true);
 
-    NOT_USED(context);
-    NOT_USED(state);
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateIdle*     states  = storage->idle;
+    bool*             occupied = storage->occupied[WAR_STATE_IDLE];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateIdle* state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->currentRef.type != WAR_STATE_IDLE || sm->currentRef.idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateIdleState(context, entity, (WarStateBase*)state);
+    }
 
     TracyCZoneEnd(ctx);
 }
+

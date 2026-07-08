@@ -24,42 +24,15 @@ WarStateBuild* wst_createBuildState(WarContext* context, WarEntity* entity, f32 
     return state;
 }
 
-void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_enterBuildState", true);
-
-    NOT_USED(state);
-
-    WarMap* map = context->map;
-    WarUnitComponent* unit = we_getUnitComponent(context, entity);
-    assert(unit);
-
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    vec2 unitSize = wu_getUnitSize(context, entity);
-    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-
-    // remove the current sprite...
-    we_removeSpriteComponent(context, entity);
-
-    // ...and add the sprite for the construction of the building
-    const WarBuildingData* buildingData = wu_getBuildingData(unit->type);
-    we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->buildingResource));
-
-    // set the action to NONE because the sprite changes will be handled by this state
-    wact_setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
-
-    unit->building = true;
-    unit->buildPercent = 0;
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveBuildState", true);
+
+    if (!state->initialized)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
     NOT_USED(state);
 
@@ -90,12 +63,39 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
+    if (!state->initialized)
+    {
+        WarTransformComponent* transform = we_getTransformComponent(context, entity);
+        assert(transform);
+
+        vec2 unitSize = wu_getUnitSize(context, entity);
+        vec2 position = wmap_mapToTileCoordinatesV(transform->position);
+        setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+
+        // remove the current sprite...
+        we_removeSpriteComponent(context, entity);
+
+        // ...and add the sprite for the construction of the building
+        const WarBuildingData* buildingData = wu_getBuildingData(unit->type);
+        we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->buildingResource));
+
+        // set the action to NONE because the sprite changes will be handled by this state
+        wact_setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
+
+        unit->building = true;
+        unit->buildPercent = 0;
+
+        state->initialized = true;
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
     if (s->cancelled)
     {
         if (!wst_changeStateNextState(context, entity, state))
         {
             WarStateCollapse* collapseState = wst_createCollapseState(context, entity);
-            wst_changeNextState(context, entity, (WarStateBase*)collapseState, true, true);
+            wst_changeNextState(context, entity, (WarStateBase*)collapseState, true);
         }
 
         TracyCZoneEnd(ctx);
@@ -143,7 +143,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         if (!wst_changeStateNextState(context, entity, state))
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true, true);
+            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
         }
 
         if (unit->player == 0)
@@ -182,12 +182,39 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
     TracyCZoneEnd(ctx);
 }
 
-void wst_freeBuildState(WarContext* context, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_freeBuildState", true);
 
-    NOT_USED(context);
-    NOT_USED(state);
+void wst_updateBuildStates(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_updateBuildStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateBuild*      states  = storage->build;
+    bool*             occupied = storage->occupied[WAR_STATE_BUILD];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateBuild*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->currentRef.type != WAR_STATE_BUILD || sm->currentRef.idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateBuildState(context, entity, (WarStateBase*)state);
+    }
 
     TracyCZoneEnd(ctx);
 }
