@@ -1,4 +1,4 @@
-﻿#include "war_ai.h"
+#include "war_ai.h"
 
 #include <assert.h>
 
@@ -164,7 +164,7 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
                             if (we_decreasePlayerResources(context, aiPlayer, stats->goldCost, stats->woodCost))
                             {
                                 WarStateTrain* trainState = wst_createTrainState(context, entity, unitType, (f32)stats->buildTime);
-                                wst_changeNextState(context, entity, (WarStateBase*)trainState, true);
+                                wst_resetState(context, entity, (WarStateBase*)trainState);
                             }
 
                             return true;

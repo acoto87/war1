@@ -94,7 +94,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -107,7 +107,7 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         wu_setUnitCenterPosition(context, entity, spawnPosition, true);
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -140,14 +140,16 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         if (!townHall)
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+            wst_replaceState(context, entity, (WarStateBase*)idleState);
             TracyCZoneEnd(ctx);
             return;
         }
 
         WarStateDeliver* deliverState = wst_createDeliverState(context, entity, townHall->id);
-        wst_chainNext(context, (WarStateBase*)deliverState, (WarStateBase*)wst_createGatherGoldState(context, entity, goldmine->id));
-        wst_changeNextState(context, entity, (WarStateBase*)deliverState, true);
+        deliverState->cycle = true;
+        deliverState->sourceKind = WAR_RESOURCE_GOLD;
+        deliverState->sourceId = goldmine->id;
+        wst_replaceState(context, entity, (WarStateBase*)deliverState);
     }
 
     TracyCZoneEnd(ctx);
@@ -175,7 +177,7 @@ void wst_updateMiningStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_MINING || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MINING || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

@@ -63,7 +63,7 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
     if (!forest)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -74,7 +74,7 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
     if (!tree || tree->amount == 0)
     {
         WarStateWood* gatherWoodState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
-        wst_changeNextState(context, entity, (WarStateBase*)gatherWoodState, true);
+        wst_replaceState(context, entity, (WarStateBase*)gatherWoodState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -116,14 +116,17 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
             if (!townHall)
             {
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+                wst_replaceState(context, entity, (WarStateBase*)idleState);
                 TracyCZoneEnd(ctx);
                 return;
             }
 
             WarStateDeliver* deliverState = wst_createDeliverState(context, entity, townHall->id);
-            wst_chainNext(context, (WarStateBase*)deliverState, (WarStateBase*)wst_createGatherWoodState(context, entity, forest->id, treePosition));
-            wst_changeNextState(context, entity, (WarStateBase*)deliverState, true);
+            deliverState->cycle = true;
+            deliverState->sourceKind = WAR_RESOURCE_WOOD;
+            deliverState->sourceId = forest->id;
+            deliverState->sourcePosition = treePosition;
+            wst_replaceState(context, entity, (WarStateBase*)deliverState);
         }
 
         // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
@@ -156,7 +159,7 @@ void wst_updateChoppingStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_CHOPPING || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_CHOPPING || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

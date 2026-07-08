@@ -35,6 +35,9 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
 
     WarStateFollow* s = (WarStateFollow*)state;
 
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
     WarMap* map = context->map;
 
     vec2 start = wu_getUnitCenterPosition(context, entity, true);
@@ -45,12 +48,9 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         WarEntity* targetEntity = we_findEntity(context, (WarEntityId)s->targetEntityId);
         if (!targetEntity)
         {
-            // if the target entity doesn't exist anymore, go to idle
-            if (!wst_changeStateNextState(context, entity, state))
-            {
-                WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-            }
+            // if the target entity doesn't exist anymore, pop to resume any
+            // previous behavior, or fall back to idle if the stack empties.
+            wst_popState(context, entity);
 
             TracyCZoneEnd(ctx);
             return;
@@ -71,14 +71,18 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
 
     f32 distance = vec2_distanceInTiles(start, end);
 
-    // if the unit is already in distance, go to idle
+    // if the unit is already in distance, pop to resume any previous behavior,
+    // or wait briefly and resume following if this is the bottom state.
     if (distance <= s->distance)
     {
-        if (!wst_changeStateNextState(context, entity, state))
+        if (sm->depth > 1)
+        {
+            wst_popState(context, entity);
+        }
+        else
         {
             WarStateWait* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
-            wst_chainNext(context, (WarStateBase*)waitState, (WarStateBase*)state);
-            wst_changeNextState(context, entity, (WarStateBase*)waitState, false);
+            wst_pushState(context, entity, (WarStateBase*)waitState);
         }
 
         TracyCZoneEnd(ctx);
@@ -87,14 +91,11 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
 
     WarMapPath path = wpath_findPath(&map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
 
-    // if there is no path to the target, go to idle
+    // if there is no path to the target, pop to resume any previous behavior,
+    // or fall back to idle if the stack empties.
     if (path.nodes.count <= 1)
     {
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-        }
+        wst_popState(context, entity);
 
         Vec2ListFree(&path.nodes);
         TracyCZoneEnd(ctx);
@@ -102,8 +103,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, path.nodes.items[0], path.nodes.items[1]));
-    wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
-    wst_changeNextState(context, entity, (WarStateBase*)moveState, false);
+    wst_pushState(context, entity, (WarStateBase*)moveState);
 
     Vec2ListFree(&path.nodes);
 
@@ -132,7 +132,7 @@ void wst_updateFollowStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_FOLLOW || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_FOLLOW || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

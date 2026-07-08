@@ -28,7 +28,6 @@ struct _WarStateBase
     f64          nextUpdateGameTime;
     f32          delay;
     bool         initialized;     // false until first update call
-    WarStateRef  nextRef;
 };
 
 struct _WarStateIdle
@@ -112,7 +111,12 @@ struct _WarStateChopping
 struct _WarStateDeliver
 {
     WarStateBase base;
-    s32 townHallId; bool insideBuilding;
+    s32 townHallId;
+    bool insideBuilding;
+    bool cycle;             // if true, resume gathering after delivery
+    WarResourceKind sourceKind; // resource type to gather after delivery
+    WarEntityId sourceId;   // goldmine or forest id for the cycle
+    vec2 sourcePosition;    // tree position for wood cycle
 };
 
 struct _WarStateDeath
@@ -209,7 +213,6 @@ WarStateRef    wst_allocState(WarContext* context, WarStateType type, WarEntityI
 void           wst_freeStateRef(WarContext* context, WarStateRef ref);
 WarStateBase*  wst_deref(WarContext* context, WarStateRef ref);
 WarStateRef    wst_refOf(WarContext* context, const WarStateBase* state);
-void           wst_chainNext(WarContext* context, WarStateBase* from, WarStateBase* to);
 
 WarStateIdle*      wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround);
 WarStateMove*      wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
@@ -231,12 +234,17 @@ WarStateRepair*    wst_createRepairState(WarContext* context, WarEntity* entity,
 WarStateRepairing* wst_createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
 WarStateCast*      wst_createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile);
 
-void wst_changeNextState(WarContext* context, WarEntity* entity, WarStateBase* state, bool leaveState);
-bool wst_changeStateNextState(WarContext* context, WarEntity* entity, WarStateBase* state);
+void wst_pushState(WarContext* context, WarEntity* entity, WarStateBase* state);
+void wst_popState(WarContext* context, WarEntity* entity);
+void wst_replaceState(WarContext* context, WarEntity* entity, WarStateBase* state);
+void wst_resetState(WarContext* context, WarEntity* entity, WarStateBase* state);
 
-WarStateBase*   wst_getState(WarContext* context, WarEntity* entity, WarStateType type);
-WarStateBase*   wst_getDirectState(WarContext* context, WarEntity* entity, WarStateType type);
-WarStateBase*   wst_getNextState(WarContext* context, WarEntity* entity, WarStateType type);
+WarStateBase* wst_currentState(WarContext* context, WarEntity* entity);
+bool          wst_hasStateInStack(WarContext* context, WarEntity* entity, WarStateType type);
+WarStateBase* wst_peekAt(WarContext* context, WarEntity* entity, u8 index);
+
+WarStateBase* wst_getState(WarContext* context, WarEntity* entity, WarStateType type);
+WarStateBase* wst_getDirectState(WarContext* context, WarEntity* entity, WarStateType type);
 
 WarStateIdle*      wst_getIdleState(WarContext* context, WarEntity* entity);
 WarStateMove*      wst_getMoveState(WarContext* context, WarEntity* entity);
@@ -259,7 +267,6 @@ WarStateCast*      wst_getCastState(WarContext* context, WarEntity* entity);
 
 bool wst_hasState(WarContext* context, WarEntity* entity, WarStateType type);
 bool wst_hasDirectState(WarContext* context, WarEntity* entity, WarStateType type);
-bool wst_hasNextState(WarContext* context, WarEntity* entity, WarStateType type);
 
 bool wst_isIdle(WarContext* context, WarEntity* entity);
 bool wst_isMoving(WarContext* context, WarEntity* entity);
@@ -279,6 +286,8 @@ bool wst_isBuilding(WarContext* context, WarEntity* entity);
 bool wst_isRepairing(WarContext* context, WarEntity* entity);
 bool wst_isRepairing2(WarContext* context, WarEntity* entity);
 bool wst_isCasting(WarContext* context, WarEntity* entity);
+
+bool wst_hasNextState(WarContext* context, WarEntity* entity, WarStateType type);
 
 bool wst_isGoingToIdle(WarContext* context, WarEntity* entity);
 bool wst_isGoingToMove(WarContext* context, WarEntity* entity);

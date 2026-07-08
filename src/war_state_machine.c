@@ -151,7 +151,6 @@ WarStateRef wst_allocState(WarContext* context, WarStateType type, WarEntityId e
     memset(state, 0, stateTypeSizes[type]);
     state->type     = type;
     state->entityId = entityId;
-    state->nextRef  = WAR_STATE_REF_INVALID;
 
     TracyCZoneEnd(ctx);
     return (WarStateRef){ type, idx };
@@ -175,21 +174,13 @@ void wst_freeStateRef(WarContext* context, WarStateRef ref)
     }
 
     WarStateStorage* s = &we_getEntityManager(context)->stateStorage;
-    WarStateBase* state = wst_deref(context, ref);
-    assert(state);
+    assert(wst_deref(context, ref) != NULL);
 
-    // Idempotent: the slot may already have been freed as part of a chain cycle.
+    // Idempotent: the slot may already have been freed.
     if (!s->occupied[ref.type][ref.idx])
     {
         TracyCZoneEnd(ctx);
         return;
-    }
-
-    // Recursively free chained next state.
-    if (WAR_STATE_REF_IS_VALID(state->nextRef))
-    {
-        wst_freeStateRef(context, state->nextRef);
-        state->nextRef = WAR_STATE_REF_INVALID;
     }
 
     s->occupied[ref.type][ref.idx] = false;
@@ -199,85 +190,157 @@ void wst_freeStateRef(WarContext* context, WarStateRef ref)
     TracyCZoneEnd(ctx);
 }
 
-void wst_chainNext(WarContext* context, WarStateBase* from, WarStateBase* to)
+static void wst_clearPendingState(WarContext* context, WarStateMachineComponent* sm)
 {
-    from->nextRef = wst_refOf(context, to);
+    if (WAR_STATE_REF_IS_VALID(sm->pendingRef))
+    {
+        // The pending state was never active, so just free its slot.
+        wst_freeStateRef(context, sm->pendingRef);
+        sm->pendingRef = WAR_STATE_REF_INVALID;
+    }
+    sm->pendingOp = WAR_FSM_OP_NONE;
+    sm->leaveCurrent = false;
 }
 
-static void wst_freeStateRefExcluding(WarContext* context, WarStateRef ref, WarStateRef exclude)
+void wst_pushState(WarContext* context, WarEntity* entity, WarStateBase* state)
 {
-    if (!WAR_STATE_REF_IS_VALID(ref))
-        return;
+    TracyCZoneN(ctx, "wst_pushState", true);
 
-    if (ref.type == exclude.type && ref.idx == exclude.idx)
-        return;
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
 
-    WarStateBase* state = wst_deref(context, ref);
-    if (state && WAR_STATE_REF_IS_VALID(state->nextRef))
+    wst_clearPendingState(context, sm);
+
+    if (sm->depth >= WAR_STATE_STACK_DEPTH)
     {
-        WarStateRef next = state->nextRef;
-        state->nextRef = WAR_STATE_REF_INVALID;
-        wst_freeStateRefExcluding(context, next, exclude);
+        logWarning("State stack overflow for entity %d; replacing top state", entity->id);
+        wst_replaceState(context, entity, state);
+        TracyCZoneEnd(ctx);
+        return;
     }
 
-    wst_freeStateRef(context, ref);
-}
-
-void wst_changeNextState(WarContext* context, WarEntity* entity, WarStateBase* state, bool leaveState)
-{
-    TracyCZoneN(ctx, "wst_changeNextState", true);
-
-    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
-    assert(stateMachine);
-
-    // Free any previously queued next state before overwriting it. The current state
-    // is excluded because the old queued state may chain back to it (e.g. PATROL->MOVE).
-    if (WAR_STATE_REF_IS_VALID(stateMachine->nextRef))
-    {
-        wst_freeStateRefExcluding(context, stateMachine->nextRef, stateMachine->currentRef);
-    }
-
-    stateMachine->nextRef    = wst_refOf(context, state);
-    stateMachine->leaveState = leaveState;
+    sm->pendingRef = wst_refOf(context, state);
+    sm->pendingOp = WAR_FSM_OP_PUSH;
+    sm->leaveCurrent = false;
 
     TracyCZoneEnd(ctx);
 }
 
-bool wst_changeStateNextState(WarContext* context, WarEntity* entity, WarStateBase* state)
+void wst_popState(WarContext* context, WarEntity* entity)
 {
-    TracyCZoneN(ctx, "wst_changeStateNextState", true);
+    TracyCZoneN(ctx, "wst_popState", true);
 
-    if (WAR_STATE_REF_IS_VALID(state->nextRef))
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+    assert(sm->depth > 0);
+
+    wst_clearPendingState(context, sm);
+
+    sm->pendingOp = WAR_FSM_OP_POP;
+    sm->leaveCurrent = true;
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_replaceState(WarContext* context, WarEntity* entity, WarStateBase* state)
+{
+    TracyCZoneN(ctx, "wst_replaceState", true);
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+    assert(sm->depth > 0);
+
+    wst_clearPendingState(context, sm);
+
+    sm->pendingRef = wst_refOf(context, state);
+    sm->pendingOp = WAR_FSM_OP_REPLACE;
+    sm->leaveCurrent = true;
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_resetState(WarContext* context, WarEntity* entity, WarStateBase* state)
+{
+    TracyCZoneN(ctx, "wst_resetState", true);
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
+    wst_clearPendingState(context, sm);
+
+    sm->pendingRef = wst_refOf(context, state);
+    sm->pendingOp = WAR_FSM_OP_RESET;
+    sm->leaveCurrent = true;
+
+    TracyCZoneEnd(ctx);
+}
+
+WarStateBase* wst_currentState(WarContext* context, WarEntity* entity)
+{
+    TracyCZoneN(ctx, "wst_currentState", true);
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
+    WarStateBase* result = NULL;
+    if (sm->depth > 0)
+        result = wst_deref(context, sm->stack[sm->depth - 1]);
+
+    TracyCZoneEnd(ctx);
+    return result;
+}
+
+bool wst_hasStateInStack(WarContext* context, WarEntity* entity, WarStateType type)
+{
+    TracyCZoneN(ctx, "wst_hasStateInStack", true);
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
+    for (u8 i = 0; i < sm->depth; i++)
     {
-        WarStateBase* next = wst_deref(context, state->nextRef);
-        wst_changeNextState(context, entity, next, true);
-        state->nextRef = WAR_STATE_REF_INVALID;
-
-        TracyCZoneEnd(ctx);
-        return true;
+        if (sm->stack[i].type == type)
+        {
+            TracyCZoneEnd(ctx);
+            return true;
+        }
     }
 
     TracyCZoneEnd(ctx);
     return false;
 }
 
+WarStateBase* wst_peekAt(WarContext* context, WarEntity* entity, u8 index)
+{
+    TracyCZoneN(ctx, "wst_peekAt", true);
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
+    WarStateBase* result = NULL;
+    if (index < sm->depth)
+        result = wst_deref(context, sm->stack[index]);
+
+    TracyCZoneEnd(ctx);
+    return result;
+}
+
 WarStateBase* wst_getState(WarContext* context, WarEntity* entity, WarStateType type)
 {
     TracyCZoneN(ctx, "wst_getState", true);
 
-    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
-    assert(stateMachine);
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
 
-    WarStateRef ref = stateMachine->currentRef;
-    while (WAR_STATE_REF_IS_VALID(ref))
+    for (s32 i = (s32)sm->depth - 1; i >= 0; i--)
     {
-        WarStateBase* state = wst_deref(context, ref);
+        WarStateRef ref = sm->stack[i];
         if (ref.type == type)
         {
+            WarStateBase* state = wst_deref(context, ref);
             TracyCZoneEnd(ctx);
             return state;
         }
-        ref = state->nextRef;
     }
 
     TracyCZoneEnd(ctx);
@@ -288,25 +351,16 @@ WarStateBase* wst_getDirectState(WarContext* context, WarEntity* entity, WarStat
 {
     TracyCZoneN(ctx, "wst_getDirectState", true);
 
-    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
-    assert(stateMachine);
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
 
-    WarStateRef ref = stateMachine->currentRef;
-    WarStateBase* result = WAR_STATE_REF_IS_VALID(ref) && ref.type == type ? wst_deref(context, ref) : NULL;
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateBase* wst_getNextState(WarContext* context, WarEntity* entity, WarStateType type)
-{
-    TracyCZoneN(ctx, "wst_getNextState", true);
-
-    WarStateMachineComponent* stateMachine = we_getStateMachineComponent(context, entity);
-    assert(stateMachine);
-
-    WarStateRef ref = stateMachine->nextRef;
-    WarStateBase* result = WAR_STATE_REF_IS_VALID(ref) && ref.type == type ? wst_deref(context, ref) : NULL;
+    WarStateBase* result = NULL;
+    if (sm->depth > 0)
+    {
+        WarStateRef ref = sm->stack[sm->depth - 1];
+        if (ref.type == type)
+            result = wst_deref(context, ref);
+    }
 
     TracyCZoneEnd(ctx);
     return result;
@@ -516,7 +570,10 @@ bool wst_hasNextState(WarContext* context, WarEntity* entity, WarStateType type)
 {
     TracyCZoneN(ctx, "wst_hasNextState", true);
 
-    bool result = wst_getNextState(context, entity, type) != NULL;
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
+    bool result = WAR_STATE_REF_IS_VALID(sm->pendingRef) && sm->pendingRef.type == type;
 
     TracyCZoneEnd(ctx);
     return result;
@@ -894,7 +951,7 @@ void wst_leaveState(WarContext* context, WarEntity* entity, WarStateBase* state)
 
     if (!inRange(state->type, WAR_STATE_IDLE, WAR_STATE_COUNT))
     {
-        logError("Unkown state %d for entity %d", state->type, entity->id);
+        logError("Unknown state %d for entity %d", state->type, entity->id);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -921,15 +978,60 @@ void wst_processStateMachineTransitions(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (!WAR_STATE_REF_IS_VALID(sm->nextRef)) continue;
+        if (sm->pendingOp == WAR_FSM_OP_NONE) continue;
 
-        WarStateBase* current = wst_deref(context, sm->currentRef);
-        if (sm->leaveState && current)
-            wst_leaveState(context, entity, current);
+        switch (sm->pendingOp)
+        {
+            case WAR_FSM_OP_PUSH:
+            {
+                assert(sm->depth < WAR_STATE_STACK_DEPTH);
+                sm->stack[sm->depth] = sm->pendingRef;
+                sm->depth++;
+                break;
+            }
+            case WAR_FSM_OP_POP:
+            {
+                assert(sm->depth > 0);
+                WarStateRef topRef = sm->stack[sm->depth - 1];
+                WarStateBase* top = wst_deref(context, topRef);
+                if (sm->leaveCurrent && top)
+                    wst_leaveState(context, entity, top);
+                sm->depth--;
+                if (sm->depth == 0)
+                {
+                    WarStateIdle* idle = wst_createIdleState(context, entity, true);
+                    sm->stack[0] = wst_refOf(context, (WarStateBase*)idle);
+                    sm->depth = 1;
+                }
+                break;
+            }
+            case WAR_FSM_OP_REPLACE:
+            {
+                assert(sm->depth > 0);
+                WarStateRef topRef = sm->stack[sm->depth - 1];
+                WarStateBase* top = wst_deref(context, topRef);
+                if (sm->leaveCurrent && top)
+                    wst_leaveState(context, entity, top);
+                sm->stack[sm->depth - 1] = sm->pendingRef;
+                break;
+            }
+            case WAR_FSM_OP_RESET:
+            {
+                for (s32 d = (s32)sm->depth - 1; d >= 0; d--)
+                {
+                    WarStateBase* s = wst_deref(context, sm->stack[d]);
+                    if (s) wst_leaveState(context, entity, s);
+                }
+                sm->stack[0] = sm->pendingRef;
+                sm->depth = 1;
+                break;
+            }
+            default: break;
+        }
 
-        sm->currentRef = sm->nextRef;
-        sm->nextRef    = WAR_STATE_REF_INVALID;
-        sm->leaveState = false;
+        sm->pendingOp    = WAR_FSM_OP_NONE;
+        sm->pendingRef   = WAR_STATE_REF_INVALID;
+        sm->leaveCurrent = false;
     }
 
     TracyCZoneEnd(ctx);

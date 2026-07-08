@@ -381,7 +381,7 @@ static void createStartingWalls(WarContext* context, WarMap* map, WarResource* l
     we_addStateMachineComponent(context, wall);
 
     WarStateIdle* idleState = wst_createIdleState(context, wall, false);
-    wst_changeNextState(context, wall, (WarStateBase*)idleState, true);
+    wst_resetState(context, wall, (WarStateBase*)idleState);
 
     map->editing.wall = wall;
 }
@@ -2551,7 +2551,7 @@ static void updateMagic(WarContext* context)
                         vec2 position = wu_getUnitCenterPosition(context, entity, false);
 
                         WarStateDeath* deathState = wst_createDeathState(context, entity);
-                        wst_changeNextState(context, entity, (WarStateBase*)deathState, true);
+                        wst_resetState(context, entity, (WarStateBase*)deathState);
 
                         if (unit->type == WAR_UNIT_SCORPION || unit->type == WAR_UNIT_SPIDER)
                         {

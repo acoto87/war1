@@ -46,7 +46,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     if (!forest)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -62,7 +62,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
         if (!tree)
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+            wst_replaceState(context, entity, (WarStateBase*)idleState);
             TracyCZoneEnd(ctx);
             return;
         }
@@ -75,15 +75,14 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     if (!wu_tileInRange(context, entity, treePosition, stats->range))
     {
         WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition));
-        wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)moveState, false);
+        wst_pushState(context, entity, (WarStateBase*)moveState);
         TracyCZoneEnd(ctx);
         return;
     }
 
     // the unit arrive to the tree, go chopping
     WarStateChopping* choppingState = wst_createChoppingState(context, entity, forest->id, treePosition);
-    wst_changeNextState(context, entity, (WarStateBase*)choppingState, true);
+    wst_replaceState(context, entity, (WarStateBase*)choppingState);
 
     TracyCZoneEnd(ctx);
 }
@@ -110,7 +109,7 @@ void wst_updateWoodStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_WOOD || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_WOOD || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

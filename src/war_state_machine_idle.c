@@ -84,7 +84,7 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             {
                 vec2 enemyPosition = wu_getUnitPosition(context, enemy, true);
                 WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
-                wst_changeNextState(context, entity, (WarStateBase*)attackState, true);
+                wst_replaceState(context, entity, (WarStateBase*)attackState);
             }
         }
 
@@ -131,7 +131,7 @@ void wst_updateIdleStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_IDLE || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_IDLE || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

@@ -75,11 +75,7 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
 
     if (s->cancelled)
     {
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-        }
+        wst_popState(context, entity);
 
         TracyCZoneEnd(ctx);
         return;
@@ -104,11 +100,7 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
         we_increaseUpgradeLevel(context, player, s->upgradeToBuild);
         assert(checkUpgradeLevel(player, s->upgradeToBuild));
 
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-        }
+        wst_popState(context, entity);
 
         TracyCZoneEnd(ctx);
         return;
@@ -141,7 +133,7 @@ void wst_updateUpgradeStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_UPGRADE || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_UPGRADE || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

@@ -221,16 +221,23 @@ struct _WarForestComponent
 
 struct _WarStateMachineComponent
 {
-    WarStateRef currentRef;
-    WarStateRef nextRef;
-    bool leaveState;
+    // The state stack (bottom-to-top). stack[depth-1] is the active state.
+    WarStateRef stack[WAR_STATE_STACK_DEPTH];
+    u8          depth;
+
+    // Deferred transition request (processed in batch at end of frame)
+    WarStateRef pendingRef;
+    u8          pendingOp;
+    bool        leaveCurrent;
 };
 
 #define WAR_STATE_MACHINE_COMPONENT_INIT_CONST(...) { \
-    .currentRef  = WAR_STATE_REF_INVALID,              \
-    .nextRef     = WAR_STATE_REF_INVALID,              \
-    .leaveState  = false,                               \
-    __VA_ARGS__                                         \
+    .stack        = {0},                               \
+    .depth        = 0,                                 \
+    .pendingRef   = WAR_STATE_REF_INVALID,             \
+    .pendingOp    = WAR_FSM_OP_NONE,                   \
+    .leaveCurrent = false,                             \
+    __VA_ARGS__                                        \
 }
 #define WAR_STATE_MACHINE_COMPONENT_INIT(...) ((WarStateMachineComponent)WAR_STATE_MACHINE_COMPONENT_INIT_CONST(__VA_ARGS__))
 

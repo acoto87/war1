@@ -78,11 +78,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 
     if (s->cancelled)
     {
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-        }
+        wst_popState(context, entity);
 
         TracyCZoneEnd(ctx);
         return;
@@ -117,11 +113,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         wu_setUnitCenterPosition(context, unitToBuild, spawnPosition, true);
         we_setInitialIdleState(context, unitToBuild);
 
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-        }
+        wst_popState(context, entity);
 
         if (unit->player == 0)
         {
@@ -160,7 +152,7 @@ void wst_updateTrainStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_TRAIN || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_TRAIN || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

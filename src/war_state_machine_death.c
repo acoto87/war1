@@ -73,7 +73,7 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
         wu_setUnitDirection(context, corpse, wu_getUnitDirection(context, entity));
 
         WarStateDeath* deathState = wst_createDeathState(context, corpse);
-        wst_changeNextState(context, corpse, (WarStateBase*)deathState, true);
+        wst_resetState(context, corpse, (WarStateBase*)deathState);
     }
 
     we_removeEntityById(context, entity->id);
@@ -103,7 +103,7 @@ void wst_updateDeathStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_DEATH || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_DEATH || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

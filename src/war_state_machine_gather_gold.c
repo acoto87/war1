@@ -44,7 +44,7 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     if (!goldmine || wst_isCollapsing(context, goldmine) || wst_isGoingToCollapse(context, goldmine))
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -53,15 +53,14 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     if (!wu_unitInRange(context, entity, goldmine, stats->range))
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats->range);
-        wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
+        wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
     }
 
     // the unit arrive to the goldmine, go mining
     WarStateMining* miningState = wst_createMiningState(context, entity, goldmine->id);
-    wst_changeNextState(context, entity, (WarStateBase*)miningState, true);
+    wst_replaceState(context, entity, (WarStateBase*)miningState);
 
     TracyCZoneEnd(ctx);
 }
@@ -88,7 +87,7 @@ void wst_updateGoldStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_GOLD || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_GOLD || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

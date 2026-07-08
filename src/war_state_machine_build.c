@@ -58,6 +58,9 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
     WarStateBuild* s = (WarStateBuild*)state;
 
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -92,10 +95,14 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
     if (s->cancelled)
     {
-        if (!wst_changeStateNextState(context, entity, state))
+        if (sm->depth > 1)
+        {
+            wst_popState(context, entity);
+        }
+        else
         {
             WarStateCollapse* collapseState = wst_createCollapseState(context, entity);
-            wst_changeNextState(context, entity, (WarStateBase*)collapseState, true);
+            wst_replaceState(context, entity, (WarStateBase*)collapseState);
         }
 
         TracyCZoneEnd(ctx);
@@ -140,11 +147,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         const WarUnitData* buildingData = wu_getUnitData(unit->type);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->resourceIndex));
 
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarStateIdle* idleState = wst_createIdleState(context, entity, false);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-        }
+        wst_popState(context, entity);
 
         if (unit->player == 0)
         {
@@ -204,7 +207,7 @@ void wst_updateBuildStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_BUILD || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_BUILD || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

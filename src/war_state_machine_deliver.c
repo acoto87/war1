@@ -9,6 +9,11 @@ WarStateDeliver* wst_createDeliverState(WarContext* context, WarEntity* entity, 
     WarStateRef ref = wst_allocState(context, WAR_STATE_DELIVER, entity->id);
     WarStateDeliver* state = (WarStateDeliver*)wst_deref(context, ref);
     state->townHallId = townHallId;
+    state->insideBuilding = false;
+    state->cycle = false;
+    state->sourceKind = WAR_RESOURCE_NONE;
+    state->sourceId = 0;
+    state->sourcePosition = VEC2_ZERO;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -31,6 +36,9 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     WarStateDeliver* s = (WarStateDeliver*)state;
 
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
     WarMap* map = context->map;
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -44,7 +52,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     if (!townHall)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -54,8 +62,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
         vec2 targetTile = wu_unitPointOnTarget(context, entity, townHall);
 
         WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats->range);
-        wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
+        wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -71,10 +78,27 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
         we_removeSpriteComponent(context, entity);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(unitData->resourceIndex));
 
-        if (!wst_changeStateNextState(context, entity, state))
+        if (s->cycle)
+        {
+            if (s->sourceKind == WAR_RESOURCE_GOLD)
+            {
+                WarStateGold* gatherGoldState = wst_createGatherGoldState(context, entity, s->sourceId);
+                wst_replaceState(context, entity, (WarStateBase*)gatherGoldState);
+            }
+            else
+            {
+                WarStateWood* gatherWoodState = wst_createGatherWoodState(context, entity, s->sourceId, s->sourcePosition);
+                wst_replaceState(context, entity, (WarStateBase*)gatherWoodState);
+            }
+        }
+        else if (sm->depth > 1)
+        {
+            wst_popState(context, entity);
+        }
+        else
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+            wst_replaceState(context, entity, (WarStateBase*)idleState);
         }
 
         TracyCZoneEnd(ctx);
@@ -131,7 +155,7 @@ void wst_updateDeliverStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_DELIVER || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_DELIVER || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

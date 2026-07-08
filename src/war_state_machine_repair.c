@@ -42,7 +42,7 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
     if (!building || wst_isCollapsing(context, building) || wst_isGoingToCollapse(context, building))
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -53,15 +53,14 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
         vec2 targetTile = wu_unitPointOnTarget(context, entity, building);
 
         WarStateFollow* followState = wst_createFollowState(context, entity, building->id, targetTile, stats->range);
-        wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
+        wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
     }
 
     // the unit arrive to the building, go repairing
     WarStateRepairing* repairingState = wst_createRepairingState(context, entity, building->id);
-    wst_changeNextState(context, entity, (WarStateBase*)repairingState, true);
+    wst_replaceState(context, entity, (WarStateBase*)repairingState);
 
     TracyCZoneEnd(ctx);
 }
@@ -88,7 +87,7 @@ void wst_updateRepairStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_REPAIR || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_REPAIR || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

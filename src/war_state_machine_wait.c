@@ -65,11 +65,7 @@ void wst_updateWaitState(WarContext* context, WarEntity* entity, WarState* state
 
     if (context->gameTime >= s->waitEndGameTime)
     {
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-        }
+        wst_popState(context, entity);
     }
 
     TracyCZoneEnd(ctx);
@@ -97,7 +93,7 @@ void wst_updateWaitStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_WAIT || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_WAIT || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

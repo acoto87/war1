@@ -65,15 +65,13 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         if(!wu_tileInRange(context, entity, targetTile, 1))
         {
             WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
-            wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
             moveState->checkForAttacks = true;
-            wst_changeNextState(context, entity, (WarStateBase*)moveState, false);
+            wst_pushState(context, entity, (WarStateBase*)moveState);
             TracyCZoneEnd(ctx);
             return;
         }
 
-        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_popState(context, entity);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -90,8 +88,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats->range))
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
-        wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
+        wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -99,8 +96,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats->range))
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range);
-        wst_chainNext(context, (WarStateBase*)followState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)followState, false);
+        wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -110,8 +106,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     if (wst_isInsideBuilding(context, targetEntity))
     {
         WarStateWait* waitState = wst_createWaitState(context, entity, 1.0f);
-        wst_chainNext(context, (WarStateBase*)waitState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)waitState, false);
+        wst_pushState(context, entity, (WarStateBase*)waitState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -136,8 +131,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             if (wst_isDead(context, targetEntity) || wst_isGoingToDie(context, targetEntity) ||
                 wst_isCollapsing(context, targetEntity) || wst_isGoingToCollapse(context, targetEntity))
             {
-                WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+                wst_popState(context, entity);
             }
             else
             {
@@ -168,8 +162,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 // one of them could destroy the piece, so the other should wcmd_stop doing further damage.
                 if (piece->hp == 0)
                 {
-                    WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+                    wst_popState(context, entity);
                 }
                 else
                 {
@@ -222,7 +215,7 @@ void wst_updateAttackStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_ATTACK || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_ATTACK || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

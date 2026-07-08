@@ -90,7 +90,7 @@ void wst_updateCollapseStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_COLLAPSE || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_COLLAPSE || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {

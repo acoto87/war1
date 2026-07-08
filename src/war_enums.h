@@ -678,6 +678,15 @@ typedef enum _WarStateType
     WAR_STATE_COUNT
 } WarStateType;
 
+typedef enum
+{
+    WAR_FSM_OP_NONE = 0,
+    WAR_FSM_OP_PUSH,
+    WAR_FSM_OP_POP,
+    WAR_FSM_OP_REPLACE,
+    WAR_FSM_OP_RESET,
+} WarFsmOp;
+
 typedef enum _WarTextAlignment
 {
     WAR_TEXT_ALIGN_LEFT,

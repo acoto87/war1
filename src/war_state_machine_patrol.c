@@ -42,18 +42,13 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
 
         if (s->waypointsCount <= 1)
         {
-            if (!wst_changeStateNextState(context, entity, state))
-            {
-                WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
-            }
+            wst_popState(context, entity);
             TracyCZoneEnd(ctx);
             return;
         }
 
         WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
-        wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
-        wst_changeNextState(context, entity, (WarStateBase*)moveState, false);
+        wst_pushState(context, entity, (WarStateBase*)moveState);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -69,7 +64,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     if (distance >= MOVE_EPSILON)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, (WarStateBase*)idleState, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
 
         TracyCZoneEnd(ctx);
         return;
@@ -87,8 +82,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
-    wst_chainNext(context, (WarStateBase*)moveState, (WarStateBase*)state);
-    wst_changeNextState(context, entity, (WarStateBase*)moveState, false);
+    wst_pushState(context, entity, (WarStateBase*)moveState);
 
     TracyCZoneEnd(ctx);
 }
@@ -115,7 +109,7 @@ void wst_updatePatrolStates(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->currentRef.type != WAR_STATE_PATROL || sm->currentRef.idx != i) continue;
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_PATROL || sm->stack[sm->depth - 1].idx != i) continue;
 
         if (state->base.delay > 0)
         {
