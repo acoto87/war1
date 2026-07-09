@@ -8,14 +8,14 @@
 
 #include "TracyC.h"
 
-WarStateAttack* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
+WarStateAttack* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition)
 {
     TracyCZoneN(ctx, "wst_createAttackState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_ATTACK, entity->id);
     WarStateAttack* state = (WarStateAttack*)wst_deref(context, ref);
     state->targetEntityId = targetEntityId;
-    state->targetTile = targetTile;
+    state->targetPosition = targetPosition;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -39,22 +39,22 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     WarStateAttack* s = (WarStateAttack*)state;
 
     WarMap* map = context->map;
+    assert(map);
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
+    vec2 position = wu_getUnitCenterPosition(context, entity);
+    vec2 unitTile = wu_getUnitCenterTile(context, entity);
     vec2 unitSize = wu_getUnitSize(context, entity);
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
 
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
     WarEntityId targetEntityId = (WarEntityId)s->targetEntityId;
     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-    vec2 targetTile = s->targetTile;
+    vec2 targetPosition = s->targetPosition;
+    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPosition);
 
     // if the entity to attack doesn't exists, go to the attacking point or go idle
     if (!targetEntity)
@@ -64,7 +64,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // of the attacking unit is greater
         if(!wu_tileInRange(context, entity, targetTile, 1))
         {
-            WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
+            WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
             moveState->checkForAttacks = true;
             wst_pushState(context, entity, (WarStateBase*)moveState);
             TracyCZoneEnd(ctx);
@@ -81,13 +81,14 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // if the target entity is an unit the instead of using the tile where
         // the player click, use a point on the target unit that is closer to
         // the attacking unit
-        targetTile = wu_unitTileOnTarget(context, entity, targetEntity);
+        targetPosition = wu_unitPointOnTarget(context, entity, targetEntity);
+        targetTile = wmap_mapToTileCoordinatesV(targetPosition);
     }
 
     // if the unit is not in range to attack, chase it
     if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats->range))
     {
-        WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range * MEGA_TILE_WIDTH);
+        WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetPosition, stats->range * MEGA_TILE_WIDTH);
         wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
@@ -95,7 +96,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
     if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats->range))
     {
-        WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range * MEGA_TILE_WIDTH);
+        WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetPosition, stats->range * MEGA_TILE_WIDTH);
         wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
@@ -111,8 +112,8 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    wu_setUnitDirectionFromDiff(context, entity, targetTile.x - position.x, targetTile.y - position.y);
+    wpath_setStaticEntity(&map->finder, (s32)unitTile.x, (s32)unitTile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    wu_setUnitDirectionFromDiff(context, entity, targetTile.x - unitTile.x, targetTile.y - unitTile.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
@@ -146,8 +147,8 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
                 if (context->gameTime - unit->lastAttackSoundGameTime >= MIN_ATTACK_SOUND_INTERVAL)
                 {
-                    vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity);
-                    wa_playAttackSound(context, targetPosition, action->lastSoundStep);
+                    vec2 targetEntityPosition = wu_getUnitCenterPosition(context, targetEntity);
+                    wa_playAttackSound(context, targetEntityPosition, action->lastSoundStep);
                     unit->lastAttackSoundGameTime = context->gameTime;
                 }
             }
@@ -177,8 +178,8 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
                     if (context->gameTime - unit->lastAttackSoundGameTime >= MIN_ATTACK_SOUND_INTERVAL)
                     {
-                        vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
-                        wa_playAttackSound(context, targetPosition, action->lastSoundStep);
+                        vec2 targetEntityPosition = wmap_tileToMapCoordinatesV(targetTile, true);
+                        wa_playAttackSound(context, targetEntityPosition, action->lastSoundStep);
                         unit->lastAttackSoundGameTime = context->gameTime;
                     }
                 }

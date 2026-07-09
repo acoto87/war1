@@ -79,7 +79,7 @@ struct _WarStateAttack
 {
     WarStateBase base;
     WarEntityId targetEntityId;
-    vec2 targetTile;
+    vec2 targetPosition;
 };
 
 struct _WarStateGold
@@ -175,7 +175,7 @@ struct _WarStateCast
     WarStateBase base;
     WarSpellType spellType;
     WarEntityId  targetEntityId;
-    vec2         targetTile;
+    vec2         targetPosition;
 };
 
 struct _WarStateWait
@@ -218,8 +218,8 @@ WarStateRef    wst_refOf(WarContext* context, const WarStateBase* state);
 WarStateIdle*      wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround);
 WarStateMove*      wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
 WarStatePatrol*    wst_createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
-WarStateFollow*    wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 targetDistance);
-WarStateAttack*    wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile);
+WarStateFollow*    wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition, s32 targetDistance);
+WarStateAttack*    wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition);
 WarStateDeath*     wst_createDeathState(WarContext* context, WarEntity* entity);
 WarStateCollapse*  wst_createCollapseState(WarContext* context, WarEntity* entity);
 WarStateWait*      wst_createWaitState(WarContext* context, WarEntity* entity, f32 waitTime);
@@ -233,7 +233,7 @@ WarStateUpgrade*   wst_createUpgradeState(WarContext* context, WarEntity* entity
 WarStateBuild*     wst_createBuildState(WarContext* context, WarEntity* entity, f32 buildTime);
 WarStateRepair*    wst_createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
 WarStateRepairing* wst_createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
-WarStateCast*      wst_createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetTile);
+WarStateCast*      wst_createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetPosition);
 
 void wst_pushState(WarContext* context, WarEntity* entity, WarStateBase* state);
 void wst_popState(WarContext* context, WarEntity* entity);

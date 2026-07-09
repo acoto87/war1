@@ -59,9 +59,8 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     if (!wu_unitInRange(context, entity, townHall, stats->range))
     {
-        vec2 targetTile = wu_unitTileOnTarget(context, entity, townHall);
-
-        WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats->range * MEGA_TILE_WIDTH);
+        vec2 targetPosition = wu_unitPointOnTarget(context, entity, townHall);
+        WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, targetPosition, stats->range * MEGA_TILE_WIDTH);
         wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;

@@ -84,8 +84,8 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             WarEntity* enemy = we_getNearEnemy(context, entity);
             if (enemy)
             {
-                vec2 enemyTile = wu_getUnitTile(context, enemy);
-                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyTile);
+                vec2 enemyPosition = wu_getUnitPosition(context, enemy);
+                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
                 wst_replaceState(context, entity, (WarStateBase*)attackState);
             }
         }

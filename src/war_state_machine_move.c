@@ -138,7 +138,7 @@ static void updatePreferredVelocity(WarContext* context, WarEntity* entity, WarS
     vec2 nextPosition = state->waypoints[state->waypointsIndex + 1];
     vec2 nextTile = wmap_mapToTileCoordinatesV(nextPosition);
 
-    WarMapFlowField* flowField = wpath_getFlowField(&map->finder, (s32)nextTile.x, (s32)nextTile.y);
+    WarMapFlowField* flowField = wpath_ensureFlowField(&map->finder, (s32)nextTile.x, (s32)nextTile.y);
     if (flowField)
     {
         vec2 direction = wpath_flowFieldSample(flowField, (s32)tile.x, (s32)tile.y);
@@ -174,7 +174,7 @@ static void updatePreferredVelocity(WarContext* context, WarEntity* entity, WarS
     }
     else
     {
-            wst_popState(context, entity);
+        wst_popState(context, entity);
     }
 
     TracyCZoneEnd(ctx);
@@ -358,8 +358,8 @@ void wst_updateMoveStates(WarContext* context)
             WarEntity* enemy = we_getAttacker(context, entity);
             if (enemy && wu_areEnemies(context, entity, enemy) && wu_canAttack(context, entity, enemy))
             {
-                vec2 enemyTile = wu_getUnitTile(context, enemy);
-                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyTile);
+                vec2 enemyPosition = wu_getUnitPosition(context, enemy);
+                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
                 wst_pushState(context, entity, (WarStateBase*)attackState);
             }
         }

@@ -54,14 +54,11 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     // if the unit isn't where is suppose to be, then there must have been a problem in the move, so abort and go idle
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    vec2 actualPosition = wmap_mapToTileCoordinatesV(transform->position);
+    vec2 actualPosition = wu_getUnitCenterPosition(context, entity);
     vec2 shouldBeAt = s->waypoints[s->waypointsCount - 1];
 
-    f32 distance = vec2_distance(actualPosition, shouldBeAt);
-    if (distance >= MOVE_EPSILON)
+    f32 distanceSq = vec2_distanceSqr(actualPosition, shouldBeAt);
+    if (distanceSq >= MOVE_EPSILON * MOVE_EPSILON)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
         wst_replaceState(context, entity, (WarStateBase*)idleState);

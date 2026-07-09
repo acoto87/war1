@@ -50,9 +50,8 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
     // if the building is not in range, go to it
     if (!wu_unitInRange(context, entity, building, stats->range))
     {
-        vec2 targetTile = wu_unitTileOnTarget(context, entity, building);
-
-        WarStateFollow* followState = wst_createFollowState(context, entity, building->id, targetTile, stats->range * MEGA_TILE_WIDTH);
+        vec2 targetPosition = wu_unitPointOnTarget(context, entity, building);
+        WarStateFollow* followState = wst_createFollowState(context, entity, building->id, targetPosition, stats->range * MEGA_TILE_WIDTH);
         wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;

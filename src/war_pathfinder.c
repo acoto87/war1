@@ -413,6 +413,26 @@ WarMapFlowField* wpath_getFlowField(WarPathFinder* finder, s32 x, s32 y)
     return finder->fields[fieldIndex];
 }
 
+WarMapFlowField* wpath_ensureFlowField(WarPathFinder* finder, s32 x, s32 y)
+{
+    assert(inRange(x, 0, MAP_TILES_WIDTH));
+    assert(inRange(y, 0, MAP_TILES_HEIGHT));
+
+    s32 fieldIndex = y * MAP_TILES_WIDTH + x;
+
+    if (fieldIndex < 0 || fieldIndex >= MAP_TILES_WIDTH * MAP_TILES_HEIGHT)
+    {
+        return NULL;
+    }
+
+    if (!finder->fields[fieldIndex])
+    {
+        return wpath_computeFlowField(finder, x, y);
+    }
+
+    return finder->fields[fieldIndex];
+}
+
 vec2 wpath_flowFieldSample(WarMapFlowField* flowField, s32 x, s32 y)
 {
     assert(inRange(x, 0, MAP_TILES_WIDTH));

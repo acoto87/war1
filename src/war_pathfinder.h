@@ -34,6 +34,7 @@ void wpath_astar(WarPathFinder* finder, s32 startX, s32 startY, s32 endX, s32 en
 void wpath_flowField(WarPathFinder* finder, s32 x, s32 y, WarMapFlowField* flowField);
 WarMapFlowField* wpath_computeFlowField(WarPathFinder* finder, s32 x, s32 y);
 WarMapFlowField* wpath_getFlowField(WarPathFinder* finder, s32 x, s32 y);
+WarMapFlowField* wpath_ensureFlowField(WarPathFinder* finder, s32 x, s32 y);
 vec2 wpath_flowFieldSample(WarMapFlowField* flowField, s32 x, s32 y);
 vec2 wpath_findEmptyTile(WarPathFinder* finder, vec2 tile);
 bool wpath_isTileAccesible(WarPathFinder* finder, vec2 tile);

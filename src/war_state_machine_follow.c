@@ -4,14 +4,14 @@
 
 #include "TracyC.h"
 
-WarStateFollow* wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 targetDistance)
+WarStateFollow* wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition, s32 targetDistance)
 {
     TracyCZoneN(ctx, "wst_createFollowState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_FOLLOW, entity->id);
     WarStateFollow* state = (WarStateFollow*)wst_deref(context, ref);
     state->targetEntityId = targetEntityId;
-    state->targetPosition = targetTile;
+    state->targetPosition = targetPosition;
     state->targetDistance = targetDistance;
 
     TracyCZoneEnd(ctx);

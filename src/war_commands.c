@@ -379,7 +379,7 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
     }
 }
 
-void wcmd_executeRainOfFireCommand(WarContext* context, vec2 targetTile)
+void wcmd_executeRainOfFireCommand(WarContext* context, vec2 targetPosition)
 {
     WarMap* map = context->map;
 
@@ -392,13 +392,13 @@ void wcmd_executeRainOfFireCommand(WarContext* context, vec2 targetTile)
 
         if (wu_isConjurerOrWarlockUnit(context, entity))
         {
-            WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetTile);
+            WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetPosition);
             wst_resetState(context, entity, (WarStateBase*)castState);
         }
     }
 }
 
-void wcmd_executePoisonCloudCommand(WarContext* context, vec2 targetTile)
+void wcmd_executePoisonCloudCommand(WarContext* context, vec2 targetPosition)
 {
     WarMap* map = context->map;
 
@@ -411,13 +411,13 @@ void wcmd_executePoisonCloudCommand(WarContext* context, vec2 targetTile)
 
         if (wu_isConjurerOrWarlockUnit(context, entity))
         {
-            WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetTile);
+            WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetPosition);
             wst_resetState(context, entity, (WarStateBase*)castState);
         }
     }
 }
 
-void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, vec2 targetPosition)
 {
     WarMap* map = context->map;
 
@@ -435,7 +435,7 @@ void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, ve
                 // the unit can't heal itself
                 if (entity->id != targetEntity->id)
                 {
-                    WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_HEALING, targetEntity->id, targetTile);
+                    WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_HEALING, targetEntity->id, targetPosition);
                     wst_resetState(context, entity, (WarStateBase*)castState);
                 }
             }
@@ -443,7 +443,7 @@ void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, ve
     }
 }
 
-void wcmd_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity, vec2 targetPosition)
 {
     WarMap* map = context->map;
 
@@ -458,14 +458,14 @@ void wcmd_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity
 
             if (wu_isClericOrNecrolyteUnit(context, entity))
             {
-                WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetTile);
+                WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetPosition);
                 wst_resetState(context, entity, (WarStateBase*)castState);
             }
         }
     }
 }
 
-void wcmd_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity, vec2 targetPosition)
 {
     WarMap* map = context->map;
 
@@ -480,14 +480,14 @@ void wcmd_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity
 
             if (wu_isClericOrNecrolyteUnit(context, entity))
             {
-                WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetTile);
+                WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetPosition);
                 wst_resetState(context, entity, (WarStateBase*)castState);
             }
         }
     }
 }
 
-void wcmd_executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
+void wcmd_executeRaiseDeadCommand(WarContext* context, vec2 targetPosition)
 {
     WarMap* map = context->map;
 
@@ -500,13 +500,13 @@ void wcmd_executeRaiseDeadCommand(WarContext* context, vec2 targetTile)
 
         if (wu_isClericOrNecrolyteUnit(context, entity))
         {
-            WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetTile);
+            WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetPosition);
             wst_resetState(context, entity, (WarStateBase*)castState);
         }
     }
 }
 
-void wcmd_executeSightCommand(WarContext* context, vec2 targetTile)
+void wcmd_executeSightCommand(WarContext* context, vec2 targetPosition)
 {
     WarMap* map = context->map;
 
@@ -520,13 +520,13 @@ void wcmd_executeSightCommand(WarContext* context, vec2 targetTile)
         if (wu_isClericOrNecrolyteUnit(context, entity))
         {
             WarSpellType spellType = wu_isHumanUnit(context, entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
-            WarStateCast* castState = wst_createCastState(context, entity, spellType, 0, targetTile);
+            WarStateCast* castState = wst_createCastState(context, entity, spellType, 0, targetPosition);
             wst_resetState(context, entity, (WarStateBase*)castState);
         }
     }
 }
 
-void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
+void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetPosition)
 {
     WarMap* map = context->map;
     WarPlayerInfo* player = &map->players[0];
@@ -549,7 +549,7 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
                 {
                     if (wu_canAttack(context, entity, targetEntity))
                     {
-                        WarStateAttack* attackState = wst_createAttackState(context, entity, targetEntity->id, targetTile);
+                        WarStateAttack* attackState = wst_createAttackState(context, entity, targetEntity->id, targetPosition);
                         wst_resetState(context, entity, (WarStateBase*)attackState);
 
                         playSound = true;
@@ -563,7 +563,7 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
             }
             else
             {
-                WarStateAttack* attackState = wst_createAttackState(context, entity, 0, targetTile);
+                WarStateAttack* attackState = wst_createAttackState(context, entity, 0, targetPosition);
                 wst_resetState(context, entity, (WarStateBase*)attackState);
 
                 playSound = true;
@@ -731,15 +731,16 @@ bool wcmd_executeCommand(WarContext* context)
                         }
                     }
 
-                    wcmd_executeAttackCommand(context, targetEntity, targetTile);
+                    wcmd_executeAttackCommand(context, targetEntity, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
                     map->commandState.suppressMinimapViewportOnRelease = true;
-                    wcmd_executeAttackCommand(context, NULL, targetTile);
+                    wcmd_executeAttackCommand(context, NULL, targetPoint);
 
                     consumeCommand(map, command);
                     return true;
@@ -1011,17 +1012,16 @@ bool wcmd_executeCommand(WarContext* context)
                 if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-
-                    wcmd_executeRainOfFireCommand(context, targetTile);
+                    wcmd_executeRainOfFireCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     map->commandState.suppressMinimapViewportOnRelease = true;
-                    wcmd_executeRainOfFireCommand(context, targetTile);
+                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
+                    wcmd_executeRainOfFireCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
@@ -1036,17 +1036,16 @@ bool wcmd_executeCommand(WarContext* context)
                 if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-
-                    wcmd_executePoisonCloudCommand(context, targetTile);
+                    wcmd_executePoisonCloudCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     map->commandState.suppressMinimapViewportOnRelease = true;
-                    wcmd_executePoisonCloudCommand(context, targetTile);
+                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
+                    wcmd_executePoisonCloudCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
@@ -1066,7 +1065,7 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-                    wcmd_executeHealingCommand(context, targetEntity, targetTile);
+                    wcmd_executeHealingCommand(context, targetEntity, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
@@ -1086,7 +1085,7 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-                    wcmd_executeInvisiblityCommand(context, targetEntity, targetTile);
+                    wcmd_executeInvisiblityCommand(context, targetEntity, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
@@ -1106,7 +1105,7 @@ bool wcmd_executeCommand(WarContext* context)
                     WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-                    wcmd_executeUnholyArmorCommand(context, targetEntity, targetTile);
+                    wcmd_executeUnholyArmorCommand(context, targetEntity, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
@@ -1121,8 +1120,7 @@ bool wcmd_executeCommand(WarContext* context)
                 if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-                    wcmd_executeRaiseDeadCommand(context, targetTile);
+                    wcmd_executeRaiseDeadCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
@@ -1138,16 +1136,16 @@ bool wcmd_executeCommand(WarContext* context)
                 if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
                 {
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-                    wcmd_executeSightCommand(context, targetTile);
+                    wcmd_executeSightCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }
                 else if (rect_containsf(map->ui.minimapPanel, input->pos.x, input->pos.y))
                 {
-                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
                     map->commandState.suppressMinimapViewportOnRelease = true;
-                    wcmd_executeSightCommand(context, targetTile);
+                    vec2 targetTile = wmap_screenToMinimapCoordinatesV(context, input->pos);
+                    vec2 targetPoint = wmap_tileToMapCoordinatesV(targetTile, true);
+                    wcmd_executeSightCommand(context, targetPoint);
                     consumeCommand(map, command);
                     return true;
                 }

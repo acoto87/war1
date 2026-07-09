@@ -2009,7 +2009,7 @@ void updateCommandFromRightClick(WarContext* context)
                             {
                                 if (wu_isEnemyUnit(context, targetEntity))
                                 {
-                                    wcmd_executeAttackCommand(context, targetEntity, targetTile);
+                                    wcmd_executeAttackCommand(context, targetEntity, targetPoint);
                                 }
                                 else
                                 {
@@ -2031,7 +2031,7 @@ void updateCommandFromRightClick(WarContext* context)
                         {
                             if (wu_isEnemyUnit(context, targetEntity))
                             {
-                                wcmd_executeAttackCommand(context, targetEntity, targetTile);
+                                wcmd_executeAttackCommand(context, targetEntity, targetPoint);
                             }
                             else
                             {
@@ -2756,29 +2756,33 @@ void updateFoW(WarContext* context)
             wmap_setMapTileState(map, (s32)unitRect.x, (s32)unitRect.y, (s32)unitRect.width, (s32)unitRect.height, MAP_TILE_STATE_VISIBLE);
 
             // reveal the attack target of the unit
-            WarEntity* targetEntity = we_getAttackTarget(context, entity);
-            if (targetEntity)
+            WarStateAttack* attackState = wst_getAttackState(context, entity);
+            if (attackState)
             {
-                const WarUnitStats* stats = wu_getUnitStats(unit->type);
-
-                if (wu_isUnit(targetEntity))
+                WarEntity* targetEntity = we_findEntity(context, attackState->targetEntityId);
+                if (targetEntity)
                 {
-                    if (wu_unitInRange(context, entity, targetEntity, stats->range))
-                    {
-                        wmap_setUnitMapTileState(context, map, targetEntity, MAP_TILE_STATE_VISIBLE);
-                    }
-                }
-                else if (wu_isWall(targetEntity))
-                {
-                    WarStateAttack* attackState = wst_getAttackState(context, entity);
-                    vec2 targetTile = attackState->targetTile;
+                    const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-                    if (wu_tileInRange(context, entity, targetTile, stats->range))
+                    if (wu_isUnit(targetEntity))
                     {
-                        WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
-                        if (piece)
+                        if (wu_unitInRange(context, entity, targetEntity, stats->range))
                         {
-                            wmap_setMapTileState(map, (s32)targetTile.x, (s32)targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                            wmap_setUnitMapTileState(context, map, targetEntity, MAP_TILE_STATE_VISIBLE);
+                        }
+                    }
+                    else if (wu_isWall(targetEntity))
+                    {
+                        vec2 targetPosition = attackState->targetPosition;
+                        vec2 targetTile = wmap_mapToTileCoordinatesV(targetPosition);
+
+                        if (wu_tileInRange(context, entity, targetTile, stats->range))
+                        {
+                            WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
+                            if (piece)
+                            {
+                                wmap_setMapTileState(map, (s32)targetTile.x, (s32)targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                            }
                         }
                     }
                 }
@@ -2788,12 +2792,7 @@ void updateFoW(WarContext* context)
             WarEntity* attacker = we_getAttacker(context, entity);
             if (attacker)
             {
-                // if the attacker is the same the unit is attacking to
-                // don't change tile state because already happened above
-                if (!targetEntity || attacker->id != targetEntity->id)
-                {
-                    wmap_setUnitMapTileState(context, map, attacker, MAP_TILE_STATE_VISIBLE);
-                }
+                wmap_setUnitMapTileState(context, map, attacker, MAP_TILE_STATE_VISIBLE);
             }
         }
     }
