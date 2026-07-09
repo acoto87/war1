@@ -1,3 +1,4 @@
+#include <string.h>
 #include <float.h>
 
 #include "TracyC.h"
@@ -14,8 +15,10 @@ WarStateMove* wst_createMoveState(WarContext* context, WarEntity* entity, s32 po
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_MOVE, entity->id);
     WarStateMove* state = (WarStateMove*)wst_deref(context, ref);
-    memcpy(state->waypoints, positions, positionCount * sizeof(vec2));
-    state->waypointsCount = positionCount;
+
+    const s32 count = MIN(positionCount, arrayLength(state->waypoints));
+    memcpy(state->waypoints, positions, count * sizeof(vec2));
+    state->waypointsCount = count;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -293,7 +296,7 @@ void wst_updateMoveStates(WarContext* context)
     WarStateMove* moveStates = storage->move;
     bool* occupied = storage->occupied[WAR_STATE_MOVE];
 
-    // Initialize newly-created MOVE states before the first RVO pass.
+    // 1. Initialize newly-created MOVE states before the first RVO pass.
     for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
         if (!occupied[i]) continue;
@@ -320,7 +323,7 @@ void wst_updateMoveStates(WarContext* context)
         state->closestGoalDistSq = FLT_MAX;
     }
 
-    // 0. Reset the RVO velocity for all units to their current velocity.
+    // 2. Reset the RVO velocity for all units to their current velocity.
     for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
         if (!occupied[i]) continue;
@@ -339,7 +342,7 @@ void wst_updateMoveStates(WarContext* context)
         memset(state->rvoCandidateHadCollision, 0, sizeof(state->rvoCandidateHadCollision));
     }
 
-    // 0.5. Check for attacks before doing any RVO calculations.
+    // 3. Check for attacks before doing any RVO calculations.
     for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
         if (!occupied[i]) continue;
@@ -362,7 +365,7 @@ void wst_updateMoveStates(WarContext* context)
         }
     }
 
-    // 1. Update already-arrived units to zero velocity.
+    // 4. Update already-arrived units to zero velocity.
     for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
         if (!occupied[i]) continue;
@@ -375,7 +378,7 @@ void wst_updateMoveStates(WarContext* context)
         updateArrivalDecay(context, entity, state);
     }
 
-    // 2. Update preferred velocities for all units.
+    // 5. Update preferred velocities for all units.
     for(s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
         if (!occupied[i]) continue;
@@ -388,10 +391,7 @@ void wst_updateMoveStates(WarContext* context)
         updatePreferredVelocity(context, entity, state);
     }
 
-    // 3. Update spatial grid with the new preferred velocities and positions of the units.
-    wgrid_rebuildIfDirty(context);
-
-    // 4. Update adjusted velocities from RVO calculations for all units.
+    // 6. Update adjusted velocities from RVO calculations for all units.
     for(s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
         if (!occupied[i]) continue;
@@ -404,7 +404,7 @@ void wst_updateMoveStates(WarContext* context)
         updateAdjustedVelocity(context, entity, state);
     }
 
-    // 5. Update positions based on the adjusted velocities.
+    // 7. Update positions based on the adjusted velocities.
     for(s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
         if (!occupied[i]) continue;
@@ -417,7 +417,7 @@ void wst_updateMoveStates(WarContext* context)
         updatePosition(context, entity, state);
     }
 
-    // 6. Update rvoVelocity for all units (after position updates).
+    // 8. Update rvoVelocity for all units (after position updates).
     for(s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
         if (!occupied[i]) continue;
@@ -429,9 +429,6 @@ void wst_updateMoveStates(WarContext* context)
         if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
         state->rvoVelocity = state->rvoAdjustedVelocity;
     }
-
-    // 7. Rebuild the spatial grid again to reflect the new positions of the units.
-    wgrid_rebuildIfDirty(context);
 
     TracyCZoneEnd(ctx);
 }

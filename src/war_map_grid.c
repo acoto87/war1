@@ -21,8 +21,6 @@ void wgrid_clear(WarContext* context)
     {
         grid->next[i] = -1;
     }
-
-    grid->dirty = true;
 }
 
 void wgrid_build(WarContext* context)
@@ -52,57 +50,27 @@ void wgrid_build(WarContext* context)
     for (s32 unitIndex = 0; unitIndex < units->count; unitIndex++)
     {
         WarEntity* entity = units->items[unitIndex];
-        if (!entity)
-            continue;
+        if (!entity) continue;
 
         s32 i = (s32)(entity - entityManager->entities);
         assert(inRange(i, 0, MAX_ENTITIES_COUNT));
 
-        WarTransformComponent* transform = we_getTransformComponent(context, entity);
-        if (!transform)
-        {
-            continue; // Skip entities without a transform component
-        }
-
-        if (wst_isGoingToDie(context, entity))
-        {
-            continue; // Skip units that are about to be removed this frame.
-        }
-
-        if (wst_isCollapsing(context, entity) || wst_isGoingToCollapse(context, entity))
-        {
-            continue; // Skip collapsed and collapsing building
-        }
+        if (!we_isComponentEnabled(context, entity, COMP_TRANSFORM)) continue;
+        if (wst_isGoingToDie(context, entity)) continue;
+        if (wst_isCollapsing(context, entity) || wst_isGoingToCollapse(context, entity)) continue;
 
         vec2 entityTile = wu_getUnitCenterTile(context, entity);
         vec2 gridTile = wgrid_tileFromMapTile(entityTile);
         s32 cellIndex = wgrid_getTileIndex(gridTile);
 
-        // Ensure the cell index is within bounds
-        if (cellIndex < 0)
-        {
-            continue;
-        }
+        if (cellIndex < 0 || cellIndex >= MAP_GRID_CELLS) continue;
 
         // Insert the entity into the linked list for the corresponding grid cell
         grid->next[i] = grid->head[cellIndex];
         grid->head[cellIndex] = i;
     }
 
-    grid->dirty = false;
-
     TracyCZoneEnd(ctx);
-}
-
-void wgrid_rebuildIfDirty(WarContext* context)
-{
-    WarMap* map = context->map;
-    assert(map);
-
-    if (map->grid.dirty)
-    {
-        wgrid_build(context);
-    }
 }
 
 vec2 wgrid_tileFromMapTile(vec2 tilePosition)

@@ -1483,12 +1483,6 @@ void wu_setUnitPosition(WarContext* context, WarEntity* entity, vec2 position)
     assert(transform);
 
     transform->position = position;
-
-    WarMap* map = context->map;
-    if (map)
-    {
-        map->grid.dirty = true;
-    }
 }
 
 void wu_setUnitTile(WarContext* context, WarEntity* entity, vec2 tile)
@@ -1505,12 +1499,6 @@ void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 posit
     vec2 spriteSize = wu_getUnitSpriteSize(context, entity);
     vec2 unitCenter = vec2_half(spriteSize);
     transform->position = vec2_subv(position, unitCenter);
-
-    WarMap* map = context->map;
-    if (map)
-    {
-        map->grid.dirty = true;
-    }
 }
 
 void wu_setUnitCenterTile(WarContext* context, WarEntity* entity, vec2 tile)

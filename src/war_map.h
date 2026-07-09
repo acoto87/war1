@@ -128,7 +128,7 @@ struct _WarMapDebug
 
     // Parameters for the WAR_DEBUG_RENDER_NEAR_UNITS overlay.
     // Set each frame by the selection probe or by cheat edit-mode handlers.
-    // The render path replays we_getNearUnits2 from these to compute results.
+    // The render path replays we_getNearUnits from these to compute results.
     bool nearUnitsEnabled;
     vec2 nearUnitsTargetTile;
     s32  nearUnitsDistance;

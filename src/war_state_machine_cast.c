@@ -285,7 +285,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
 
                     WarEntity* poisonCloud = we_createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
                     we_addPoisonCloudComponent(context, poisonCloud, WAR_POISON_CLOUD_COMPONENT_INIT(
-                        .position = targetTile,
+                        .tile = targetTile,
                         .time     = stats->time,
                     ));
                     we_addAnimationsComponent(context, poisonCloud);

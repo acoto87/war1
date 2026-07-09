@@ -84,11 +84,7 @@ bool we_isComponentEnabled(WarContext* context, WarEntity* entity, WarComponentT
     assert(componentType >= 0 && componentType < COMP_COUNT);
 
     u16 idx = entity->components[(s32)componentType];
-    if (idx == INVALID_COMP_INDEX)
-    {
-        // Component not present;
-        return false;
-    }
+    if (idx == INVALID_COMP_INDEX) return false;
 
     WarEntityManager* manager = we_getEntityManager(context);
     assert(manager);
@@ -113,7 +109,7 @@ bool we_isComponentEnabled(WarContext* context, WarEntity* entity, WarComponentT
         case COMP_PROJECTILE: return manager->projectiles.enabled[idx];
         case COMP_POISON_CLOUD: return manager->poisonClouds.enabled[idx];
         case COMP_SIGHT: return manager->sights.enabled[idx];
-        default: assert(false && "Invalid component type"); return false; break;
+        default: assert(false && "Invalid component type"); return false;
     }
 }
 
@@ -124,11 +120,7 @@ void we_setComponentEnabled(WarContext* context, WarEntity* entity, WarComponent
     assert(componentType >= 0 && componentType < COMP_COUNT);
 
     u16 idx = entity->components[(s32)componentType];
-    if (idx == INVALID_COMP_INDEX)
-    {
-        // Component not present; nothing to enable/disable
-        return;
-    }
+    if (idx == INVALID_COMP_INDEX) return;
 
     WarEntityManager* manager = we_getEntityManager(context);
     assert(manager);
@@ -167,167 +159,34 @@ void we_disableComponent(WarContext* context, WarEntity* entity, WarComponentTyp
     we_setComponentEnabled(context, entity, componentType, false);
 }
 
-WarTransformComponent* we_getTransformComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_TRANSFORM];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->transforms.dense[idx];
+#define GET_COMPONENT_FUNC(COMP_TYPE, COMP_ENUM, COMP_STORAGE) \
+War##COMP_TYPE##Component* we_get##COMP_TYPE##Component(WarContext* context, const WarEntity* entity) \
+{ \
+    if (!entity) return NULL; \
+    u16 idx = entity->components[COMP_ENUM]; \
+    if (idx == INVALID_COMP_INDEX) return NULL; \
+    WarEntityManager* manager = we_getEntityManager(context); \
+    return &manager->COMP_STORAGE.dense[idx]; \
 }
 
-WarSpriteComponent* we_getSpriteComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_SPRITE];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->sprites.dense[idx];
-}
-
-WarUnitComponent* we_getUnitComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_UNIT];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->units.dense[idx];
-}
-
-WarAnimationsComponent* we_getAnimationsComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_ANIMATIONS];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->animations.dense[idx];
-}
-
-WarRoadComponent* we_getRoadComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_ROAD];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->roads.dense[idx];
-}
-
-WarWallComponent* we_getWallComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_WALL];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->walls.dense[idx];
-}
-
-WarRuinComponent* we_getRuinComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_RUIN];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->ruins.dense[idx];
-}
-
-WarForestComponent* we_getForestComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_FOREST];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->forests.dense[idx];
-}
-
-WarStateMachineComponent* we_getStateMachineComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_STATE_MACHINE];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->stateMachines.dense[idx];
-}
-
-WarUIComponent* we_getUIComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_UI];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->uis.dense[idx];
-}
-
-WarTextComponent* we_getTextComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_TEXT];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->texts.dense[idx];
-}
-
-WarRectComponent* we_getRectComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_RECT];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->rects.dense[idx];
-}
-
-WarButtonComponent* we_getButtonComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_BUTTON];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->buttons.dense[idx];
-}
-
-WarAudioComponent* we_getAudioComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_AUDIO];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->audios.dense[idx];
-}
-
-WarCursorComponent* we_getCursorComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_CURSOR];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->cursors.dense[idx];
-}
-
-WarProjectileComponent* we_getProjectileComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_PROJECTILE];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->projectiles.dense[idx];
-}
-
-WarPoisonCloudComponent* we_getPoisonCloudComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_POISON_CLOUD];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->poisonClouds.dense[idx];
-}
-
-WarSightComponent* we_getSightComponent(WarContext* context, const WarEntity* entity)
-{
-    if (!entity) return NULL;
-    u16 idx = entity->components[COMP_SIGHT];
-    if (idx == INVALID_COMP_INDEX) return NULL;
-    WarEntityManager* manager = we_getEntityManager(context);
-    return &manager->sights.dense[idx];
-}
+GET_COMPONENT_FUNC(Transform, COMP_TRANSFORM, transforms)
+GET_COMPONENT_FUNC(Sprite, COMP_SPRITE, sprites)
+GET_COMPONENT_FUNC(Unit, COMP_UNIT, units)
+GET_COMPONENT_FUNC(Animations, COMP_ANIMATIONS, animations)
+GET_COMPONENT_FUNC(Road, COMP_ROAD, roads)
+GET_COMPONENT_FUNC(Wall, COMP_WALL, walls)
+GET_COMPONENT_FUNC(Ruin, COMP_RUIN, ruins)
+GET_COMPONENT_FUNC(Forest, COMP_FOREST, forests)
+GET_COMPONENT_FUNC(StateMachine, COMP_STATE_MACHINE, stateMachines)
+GET_COMPONENT_FUNC(UI, COMP_UI, uis)
+GET_COMPONENT_FUNC(Text, COMP_TEXT, texts)
+GET_COMPONENT_FUNC(Rect, COMP_RECT, rects)
+GET_COMPONENT_FUNC(Button, COMP_BUTTON, buttons)
+GET_COMPONENT_FUNC(Audio, COMP_AUDIO, audios)
+GET_COMPONENT_FUNC(Cursor, COMP_CURSOR, cursors)
+GET_COMPONENT_FUNC(Projectile, COMP_PROJECTILE, projectiles)
+GET_COMPONENT_FUNC(PoisonCloud, COMP_POISON_CLOUD, poisonClouds)
+GET_COMPONENT_FUNC(Sight, COMP_SIGHT, sights)
 
 WarTransformComponent* we_addTransformComponent(WarContext* context, WarEntity* entity, WarTransformComponent params)
 {
@@ -1524,8 +1383,6 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
         WarEntityManager* manager = &map->entityManager;
         WarEntityList* list = WarUnitMapGet(&manager->unitsByType, type);
         WarEntityListAdd(list, entity);
-
-        map->grid.dirty = true;
     }
 
     TracyCZoneEnd(ctx);
@@ -1843,12 +1700,6 @@ void we_removeEntity(WarContext* context, WarEntity* entity)
     // Free the flat-pool slot and return it for reuse
     *entity = (WarEntity){0};
     manager->entityCount--;
-
-    WarMap* map = context->map;
-    if (map)
-    {
-        map->grid.dirty = true;
-    }
 
     TracyCZoneEnd(ctx);
 }
@@ -3138,25 +2989,6 @@ void we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance, WarEn
     assert(nearUnits);
 
     TracyCZoneN(ctx, "GetNearUnits", 1);
-
-    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-    for(s32 i = 0; i < units->count; i++)
-    {
-        WarEntity* other = units->items[i];
-        if (other && wu_tileInRange(context, other, tilePosition, distance))
-        {
-            WarEntityListAdd(nearUnits, other);
-        }
-    }
-
-    TracyCZoneEnd(ctx);
-}
-
-void we_getNearUnits2(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits)
-{
-    assert(nearUnits);
-
-    TracyCZoneN(ctx, "GetNearUnits2", 1);
 
     WarMap* map = context->map;
     assert(map);

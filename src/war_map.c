@@ -121,8 +121,8 @@ static void castDebugPoisonCloud(WarContext* context, vec2 targetTile)
 
     WarEntity* poisonCloud = we_createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
     we_addPoisonCloudComponent(context, poisonCloud, WAR_POISON_CLOUD_COMPONENT_INIT(
-        .position = targetTile,
-        .time     = stats->time,
+        .tile = targetTile,
+        .time = stats->time,
     ));
     we_addAnimationsComponent(context, poisonCloud);
 
@@ -2593,7 +2593,7 @@ static bool updatePoisonCloud(WarContext* context, WarEntity* entity)
     {
         WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
         WarEntityListInit(nearUnits, wm_frameAllocator());
-        we_getNearUnits(context, poisonCloud->position, 2, nearUnits);
+        we_getNearUnits(context, poisonCloud->tile, 2, nearUnits);
 
         for (s32 i = 0; i < nearUnits->count; i++)
         {
@@ -3041,8 +3041,6 @@ void wmap_updateMap(WarContext* context)
 
     updateSelectionGroups(context);
 
-    updateDebugRenderShortcuts(context);
-
     wai_updateAIPlayers(context);
 
     wst_processStateMachinePendingOps(context);
@@ -3065,6 +3063,18 @@ void wmap_updateMap(WarContext* context)
     wst_updateRepairingStates(context);
     wst_updateCastStates(context);
     wst_updateWaitStates(context);
+
+    updateTreesEdit(context);
+    updateRoadsEdit(context);
+    updateWallsEdit(context);
+    updateRuinsEdit(context);
+    updateRainOfFireEdit(context);
+    updatePoisonCloudEdit(context);
+    updateRaiseDeadEdit(context);
+    updateAddUnit(context);
+
+    wgrid_build(context);
+
     updateActions(context);
     wanim_updateAnimations(context);
     updateProjectiles(context);
@@ -3079,17 +3089,9 @@ void wmap_updateMap(WarContext* context)
     updateCommandFromRightClick(context);
     updateStatus(context);
 
-    updateTreesEdit(context);
-    updateRoadsEdit(context);
-    updateWallsEdit(context);
-    updateRuinsEdit(context);
-    updateRainOfFireEdit(context);
-    updatePoisonCloudEdit(context);
-    updateRaiseDeadEdit(context);
-    updateAddUnit(context);
-
     refreshSelectedUnitNearUnitsDebug(context);
 
+    updateDebugRenderShortcuts(context);
     updateFlowFieldDebug(context);
 
     updateObjectives(context);
@@ -3315,7 +3317,7 @@ static void renderNearUnitsDebug(WarContext* context)
 
     if (context->debugRender.flags[WAR_DEBUG_RENDER_SPATIAL_GRID])
     {
-        // Highlight exactly the grid cells that we_getNearUnits2 visits.
+        // Highlight exactly the grid cells that we_getNearUnits visits.
         // Uses the same floorf-based bounds as the query so the highlighted
         // cells match the yellow bounding box as tightly as possible.
         s32 gxMin = MAX(0,                     (s32)floorf((targetTile.x - (f32)distance) / MAP_GRID_TILE_SIZE));
@@ -3336,7 +3338,7 @@ static void renderNearUnitsDebug(WarContext* context)
         }
     }
 
-    // Replay we_getNearUnits2 to get current results — no stored result arrays needed.
+    // Replay we_getNearUnits to get current results — no stored result arrays needed.
     WarEntityList nearUnits;
     WarEntityListInit(&nearUnits, wm_frameAllocator());
     we_getNearUnits(context, targetTile, distance, &nearUnits);

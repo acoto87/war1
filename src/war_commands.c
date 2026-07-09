@@ -68,21 +68,28 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
                     if(wst_isMoving(context, entity))
                     {
                         WarStateMove* moveState = wst_getMoveState(context, entity);
-                        moveState->waypoints[moveState->waypointsCount] = targetPosition;
-                        moveState->waypointsCount++;
+                        if (moveState->waypointsCount < arrayLength(moveState->waypoints))
+                        {
+                            moveState->waypoints[moveState->waypointsCount] = targetPosition;
+                            moveState->waypointsCount++;
+                        }
                     }
 
                     WarStatePatrol* patrolState = wst_getPatrolState(context, entity);
-                    if (patrolState->waypointsCount < 64)
+                    if (patrolState->waypointsCount < arrayLength(patrolState->waypoints))
                     {
-                        patrolState->waypoints[patrolState->waypointsCount++] = targetPosition;
+                        patrolState->waypoints[patrolState->waypointsCount] = targetPosition;
+                        patrolState->waypointsCount++;
                     }
                 }
                 else if(wst_isMoving(context, entity) && !wst_isAttacking(context, entity))
                 {
                     WarStateMove* moveState = wst_getMoveState(context, entity);
-                    moveState->waypoints[moveState->waypointsCount] = targetPosition;
-                    moveState->waypointsCount++;
+                    if (moveState->waypointsCount < arrayLength(moveState->waypoints))
+                    {
+                        moveState->waypoints[moveState->waypointsCount] = targetPosition;
+                        moveState->waypointsCount++;
+                    }
                 }
                 else
                 {
