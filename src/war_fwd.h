@@ -137,9 +137,6 @@ typedef struct _WarUnitCommandMapping WarUnitCommandMapping;
 struct _WarUnitCommandData;
 typedef struct _WarUnitCommandData WarUnitCommandData;
 
-struct _WarMapNode;
-typedef struct _WarMapNode WarMapNode;
-
 struct _WarMapPath;
 typedef struct _WarMapPath WarMapPath;
 

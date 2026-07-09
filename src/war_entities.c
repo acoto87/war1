@@ -1992,8 +1992,8 @@ s32 renderCompareUnits(const WarEntity* e1, const WarEntity* e2, void* userdata)
         return 1;
     }
 
-    vec2 p1 = wu_getUnitPosition(context, (WarEntity*)e1, false);
-    vec2 p2 = wu_getUnitPosition(context, (WarEntity*)e2, false);
+    vec2 p1 = wu_getUnitPosition(context, (WarEntity*)e1);
+    vec2 p2 = wu_getUnitPosition(context, (WarEntity*)e2);
 
     if (p1.y != p2.y)
     {
@@ -3098,7 +3098,7 @@ bool we_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h)
             s32 yy = y + dy;
             if (inRange(xx, 0, MAP_TILES_WIDTH) && inRange(yy, 0, MAP_TILES_HEIGHT))
             {
-                if (!isEmpty(&map->finder, xx, yy) || wmap_isTileUnkown(map, xx, yy))
+                if (!wpath_isEmpty(&map->finder, xx, yy) || wmap_isTileUnknown(map, xx, yy))
                 {
                     return false;
                 }
@@ -3197,7 +3197,7 @@ WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity)
 {
     TracyCZoneN(ctx, "GetNearEnemy", 1);
 
-    vec2 position = wu_getUnitCenterPosition(context, entity, true);
+    vec2 tile = wu_getUnitCenterTile(context, entity);
 
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for(s32 i = 0; i < units->count; i++)
@@ -3212,7 +3212,7 @@ WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity)
                     continue;
             }
 
-            if (wu_tileInRange(context, other, position, NEAR_ENEMY_RADIUS))
+            if (wu_tileInRange(context, other, tile, NEAR_ENEMY_RADIUS))
             {
                 TracyCZoneEnd(ctx);
                 return other;
@@ -3319,7 +3319,7 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
             wst_resetState(context, entity, (WarStateBase*)collapseState);
 
 #ifndef WAR_EDITOR_BUILD
-            vec2 position = wu_getUnitCenterPosition(context, entity, false);
+            vec2 position = wu_getUnitCenterPosition(context, entity);
             wa_createAudioRandomWithPosition(context, CREATE_AUDIO_ARGS_INIT(.randomFromId = WAR_BUILDING_COLLAPSE_1, .randomToId = WAR_BUILDING_COLLAPSE_3, .position = position, .hasPosition = true, .loop = false));
 #endif
         }
@@ -3329,7 +3329,7 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
             wst_resetState(context, entity, (WarStateBase*)deathState);
 
 #ifndef WAR_EDITOR_BUILD
-            vec2 position = wu_getUnitCenterPosition(context, entity, false);
+            vec2 position = wu_getUnitCenterPosition(context, entity);
 
             if (unit->type == WAR_UNIT_SCORPION || unit->type == WAR_UNIT_SPIDER)
             {
@@ -3394,8 +3394,8 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
         // it will consume mana, at 2 per shot.
         if (we_decreaseUnitMana(context, entity, 2))
         {
-            vec2 origin = wu_getUnitCenterPosition(context, entity, false);
-            vec2 target = wu_getUnitCenterPosition(context, targetEntity, false);
+            vec2 origin = wu_getUnitCenterPosition(context, entity);
+            vec2 target = wu_getUnitCenterPosition(context, targetEntity);
             WarProjectileType projectileType = wu_getProjectileType(unit->type);
             wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
         }
@@ -3408,8 +3408,8 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
     }
     else
     {
-        vec2 origin = wu_getUnitCenterPosition(context, entity, false);
-        vec2 target = wu_getUnitCenterPosition(context, targetEntity, false);
+        vec2 origin = wu_getUnitCenterPosition(context, entity);
+        vec2 target = wu_getUnitCenterPosition(context, targetEntity);
         WarProjectileType projectileType = wu_getProjectileType(unit->type);
         wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
     }
@@ -3428,7 +3428,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
         // it will consume mana, at 2 per shot.
         if (we_decreaseUnitMana(context, entity, 2))
         {
-            vec2 origin = wu_getUnitCenterPosition(context, entity, false);
+            vec2 origin = wu_getUnitCenterPosition(context, entity);
             vec2 target = wmap_tileToMapCoordinatesV(vec2i(piece->tilex, piece->tiley), true);
             WarProjectileType projectileType = wu_getProjectileType(unit->type);
             wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
@@ -3442,7 +3442,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
     }
     else
     {
-        vec2 origin = wu_getUnitCenterPosition(context, entity, false);
+        vec2 origin = wu_getUnitCenterPosition(context, entity);
         vec2 target = wmap_tileToMapCoordinatesV(vec2i(piece->tilex, piece->tiley), true);
         WarProjectileType projectileType = wu_getProjectileType(unit->type);
         wproj_createProjectile(context, projectileType, entity->id, targetEntity->id, origin, target);
@@ -3521,7 +3521,7 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
             wst_resetState(context, goldmine, (WarStateBase*)collapseState);
 
 #ifndef WAR_EDITOR_BUILD
-            vec2 position = wu_getUnitCenterPosition(context, goldmine, false);
+            vec2 position = wu_getUnitCenterPosition(context, goldmine);
             wa_createAudioRandomWithPosition(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_BUILDING_COLLAPSE_1, .randomToId=WAR_BUILDING_COLLAPSE_3, .position=position, .hasPosition=true, .loop=false));
 #endif
         }

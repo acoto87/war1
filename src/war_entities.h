@@ -607,7 +607,7 @@ void we_determineRuinTypes(WarContext* context, WarEntity* entity);
 
 // Trees
 bool we_hasTreeAtPosition(WarContext* context, WarEntity* forest, s32 x, s32 y);
-WarTree* we_getTreeAtPosition(WarContext* context, WarEntity* forest, s32 x, s32 y);
+WarTree* we_getTreeAtTile(WarContext* context, WarEntity* forest, s32 x, s32 y);
 void we_determineTreeTiles(WarContext* context, WarEntity* forest);
 void we_determineAllTreeTiles(WarContext* context);
 WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position);

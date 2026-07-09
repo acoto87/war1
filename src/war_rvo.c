@@ -204,7 +204,7 @@ s32 wrvo_gatherNeighbours(
                 if (other->id == selfId) continue;
                 if (!we_isComponentEnabled(context, other, COMP_UNIT)) continue;
 
-                vec2 oPos = wu_getUnitCenterPosition(context, other, false);
+                vec2 oPos = wu_getUnitCenterPosition(context, other);
                 f32  dx   = oPos.x - centrePixel.x;
                 f32  dy   = oPos.y - centrePixel.y;
                 if (dx*dx + dy*dy > radiusPx*radiusPx) continue;

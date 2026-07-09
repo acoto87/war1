@@ -45,7 +45,7 @@ void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-    setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+    wpath_setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
 
@@ -73,16 +73,13 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
         vec2 unitSize = wu_getUnitSize(context, entity);
         vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-        setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
-        // remove the current sprite...
         we_removeSpriteComponent(context, entity);
 
-        // ...and add the sprite for the construction of the building
         const WarBuildingData* buildingData = wu_getBuildingData(unit->type);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->buildingResource));
 
-        // set the action to NONE because the sprite changes will be handled by this state
         wact_setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
 
         unit->building = true;
@@ -109,7 +106,6 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         return;
     }
 
-    // if there is no worker building the building, don't advance build time
     if (s->workerId <= 0)
     {
         TracyCZoneEnd(ctx);
@@ -118,7 +114,6 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
     f32 buildSpeed = context->gameDeltaTime;
 
-    // if hurry up cheat is enabled, speed up the build time by 5000%
     if (map->hurryUp)
     {
         buildSpeed *= CHEAT_SPEED_UP_FACTOR;
@@ -126,7 +121,6 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
     s->buildTime += buildSpeed;
 
-    // if the building is finished...
     if (s->buildTime >= s->totalBuildTime)
     {
         unit->buildPercent = 1;
@@ -135,15 +129,12 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         WarEntity* worker = we_findEntity(context, s->workerId);
         assert(worker);
 
-        // ...find an empty position to put it
-        vec2 position = wu_getUnitCenterPosition(context, entity, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-        wu_setUnitCenterPosition(context, worker, spawnPosition, true);
+        vec2 tile = wu_getUnitCenterTile(context, entity);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        wu_setUnitCenterTile(context, worker, spawnTile);
 
-        // remove the building sprite...
         we_removeSpriteComponent(context, entity);
 
-        // ...and add the normal sprite of the building
         const WarUnitData* buildingData = wu_getUnitData(unit->type);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->resourceIndex));
 

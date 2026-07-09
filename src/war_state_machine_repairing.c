@@ -34,8 +34,8 @@ void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* s
     WarMap* map = context->map;
 
     vec2 unitSize = wu_getUnitSize(context, entity);
-    vec2 position = wu_getUnitCenterPosition(context, entity, true);
-    setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+    vec2 tile = wu_getUnitCenterTile(context, entity);
+    wpath_setFreeTiles(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y);
 
     TracyCZoneEnd(ctx);
 }
@@ -93,12 +93,12 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         }
         else
         {
+            vec2 tile = wu_getUnitCenterTile(context, entity);
+            vec2 targetTile = wu_getUnitCenterTile(context, building);
             vec2 unitSize = wu_getUnitSize(context, entity);
-            vec2 position = wu_getUnitCenterPosition(context, entity, true);
-            vec2 targetPosition = wu_getUnitCenterPosition(context, building, true);
 
-            setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-            wu_setUnitDirectionFromDiff(context, entity, targetPosition.x - position.x, targetPosition.y - position.y);
+            wpath_setStaticEntity(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+            wu_setUnitDirectionFromDiff(context, entity, targetTile.x - tile.x, targetTile.y - tile.y);
             wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
         }
 
@@ -116,10 +116,9 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         {
             we_enableComponent(context, entity, COMP_SPRITE);
 
-            // find a valid spawn position for the unit
-            vec2 position = wu_getUnitCenterPosition(context, entity, true);
-            vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-            wu_setUnitCenterPosition(context, entity, spawnPosition, true);
+            vec2 tile = wu_getUnitCenterTile(context, entity);
+            vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+            wu_setUnitCenterTile(context, entity, spawnTile);
         }
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
@@ -172,10 +171,9 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
     {
         we_enableComponent(context, entity, COMP_SPRITE);
 
-        // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(context, entity, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
+        vec2 tile = wu_getUnitCenterTile(context, entity);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        wu_setUnitCenterTile(context, entity, spawnTile);
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
         wst_replaceState(context, entity, (WarStateBase*)idleState);

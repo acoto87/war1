@@ -962,9 +962,9 @@ void wst_leaveState(WarContext* context, WarEntity* entity, WarStateBase* state)
     TracyCZoneEnd(ctx);
 }
 
-void wst_processStateMachineTransitions(WarContext* context)
+void wst_processStateMachinePendingOps(WarContext* context)
 {
-    TracyCZoneN(ctx, "wst_processStateMachineTransitions", true);
+    TracyCZoneN(ctx, "wst_processStateMachinePendingOps", true);
 
     WarEntityManager* manager = we_getEntityManager(context);
     assert(manager);

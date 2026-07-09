@@ -52,7 +52,7 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
     // if the goldmine is not in range, go to it
     if (!wu_unitInRange(context, entity, goldmine, stats->range))
     {
-        WarStateFollow* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats->range);
+        WarStateFollow* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats->range * MEGA_TILE_WIDTH);
         wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;

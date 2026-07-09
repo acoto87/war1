@@ -79,7 +79,7 @@ static void updateArrivalDecay(WarContext* context, WarEntity* entity, WarStateM
 
     if (state->waypointsIndex >= state->waypointsCount - 1)
     {
-        vec2 position = wu_getUnitCenterPosition(context, entity, false);
+        vec2 position = wu_getUnitCenterPosition(context, entity);
         vec2 goalPosition = state->waypoints[state->waypointsCount - 1];
 
         f32 distToGoalSq = vec2_distanceSqr(position, goalPosition);
@@ -129,7 +129,7 @@ static void updatePreferredVelocity(WarContext* context, WarEntity* entity, WarS
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-    vec2 position = wu_getUnitCenterPosition(context, entity, false);
+    vec2 position = wu_getUnitCenterPosition(context, entity);
     vec2 tile = wmap_mapToTileCoordinatesV(position);
 
     vec2 nextPosition = state->waypoints[state->waypointsIndex + 1];
@@ -187,7 +187,7 @@ static void updateAdjustedVelocity(WarContext* context, WarEntity* entity, WarSt
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-    vec2 position = wu_getUnitCenterPosition(context, entity, false);
+    vec2 position = wu_getUnitCenterPosition(context, entity);
     f32 speed = (f32)stats->speeds[unit->speed];
 
 #define SEARCH_RADIUS_PX (MEGA_TILE_WIDTH * 5.0f) // ~5 tiles
@@ -237,7 +237,7 @@ static void updatePosition(WarContext* context, WarEntity* entity, WarStateMove*
         return;
     }
 
-    vec2 position = wu_getUnitCenterPosition(context, entity, false);
+    vec2 position = wu_getUnitCenterPosition(context, entity);
     vec2 nextPosition = state->waypoints[state->waypointsIndex + 1];
 
     // Overshoot clamp: if step would carry us past the waypoint, snap to it.
@@ -251,13 +251,13 @@ static void updatePosition(WarContext* context, WarEntity* entity, WarStateMove*
     vec2 newPosition = vec2_addv(position, step);
     wu_setUnitDirection(context, entity, wu_getDirectionFromDiff(state->rvoAdjustedVelocity.x, state->rvoAdjustedVelocity.y));
     wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(context, entity));
-    wu_setUnitCenterPosition(context, entity, newPosition, false);
+    wu_setUnitCenterPosition(context, entity, newPosition);
 
     f32 distanceSq = vec2_distanceSqr(newPosition, nextPosition);
     if (distanceSq < MOVE_EPSILON * MOVE_EPSILON)
     {
         newPosition = nextPosition;
-        wu_setUnitCenterPosition(context, entity, newPosition, false);
+        wu_setUnitCenterPosition(context, entity, newPosition);
 
         state->waypointsIndex++;
 
@@ -355,8 +355,8 @@ void wst_updateMoveStates(WarContext* context)
             WarEntity* enemy = we_getAttacker(context, entity);
             if (enemy && wu_areEnemies(context, entity, enemy) && wu_canAttack(context, entity, enemy))
             {
-                vec2 enemyPosition = wu_getUnitPosition(context, enemy, true);
-                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
+                vec2 enemyTile = wu_getUnitTile(context, enemy);
+                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyTile);
                 wst_pushState(context, entity, (WarStateBase*)attackState);
             }
         }

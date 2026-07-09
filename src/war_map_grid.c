@@ -74,7 +74,7 @@ void wgrid_build(WarContext* context)
             continue; // Skip collapsed and collapsing building
         }
 
-        vec2 entityTile = wu_getUnitCenterPosition(context, entity, true);
+        vec2 entityTile = wu_getUnitCenterTile(context, entity);
         vec2 gridTile = wgrid_tileFromMapTile(entityTile);
         s32 cellIndex = wgrid_getTileIndex(gridTile);
 

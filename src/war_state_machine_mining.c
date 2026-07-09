@@ -88,10 +88,9 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
     // so, this unit get nothing
     if (!goldmine)
     {
-        // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(context, entity, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
+        vec2 tile = wu_getUnitCenterTile(context, entity);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        wu_setUnitCenterTile(context, entity, spawnTile);
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
         wst_replaceState(context, entity, (WarStateBase*)idleState);
@@ -102,9 +101,9 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
     if (wst_isCollapsing(context, goldmine) || wst_isGoingToCollapse(context, goldmine))
     {
         // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(context, goldmine, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
+        vec2 tile = wu_getUnitCenterTile(context, goldmine);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        wu_setUnitCenterTile(context, entity, spawnTile);
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
         wst_replaceState(context, entity, (WarStateBase*)idleState);
@@ -123,9 +122,9 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
         }
 
         // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(context, goldmine, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
+        vec2 tile = wu_getUnitCenterTile(context, goldmine);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        wu_setUnitCenterTile(context, entity, spawnTile);
 
         // set the carrying gold sprites
         const WarWorkerData* workerData = wu_getWorkerData(unit->type);

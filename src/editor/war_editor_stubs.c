@@ -116,7 +116,7 @@ bool wmap_isUnitPartiallyVisible(WarContext* context, WarMap* map, WarEntity* en
     return true;
 }
 
-bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y)
+bool wmap_isTileUnknown(WarMap* map, s32 x, s32 y)
 {
     (void)map;
     (void)x;

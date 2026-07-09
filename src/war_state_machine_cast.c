@@ -61,14 +61,14 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
     {
         if(!wu_tileInRange(context, entity, targetTile, stats->range))
         {
-            WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
+            WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range * MEGA_TILE_WIDTH);
             wst_pushState(context, entity, (WarStateBase*)followState);
             TracyCZoneEnd(ctx);
             return;
         }
     }
 
-    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     wu_setUnitDirectionFromDiff(context, entity, targetTile.x - position.x, targetTile.y - position.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
@@ -104,7 +104,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     we_increaseUnitHp(context, targetEntity, hpToRestore);
                     we_decreaseUnitMana(context, entity, manaToSpend);
 
-                    vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
+                    vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity);
 
                     WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                     we_addAnimationsComponent(context, animEntity);
@@ -156,7 +156,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         targetUnit->invisible = true;
                         targetUnit->invisibilityTime = stats->time;
 
-                        vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
+                        vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity);
 
                         WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                         we_addAnimationsComponent(context, animEntity);
@@ -176,7 +176,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
             {
                 if (we_decreaseUnitMana(context, entity, stats->manaCost))
                 {
-                    vec2 targetTilePosition = wmap_tileToMapCoordinatesV(targetTile, true);
+                    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
                     s32 radius = 2 * MEGA_TILE_WIDTH;
 
                     s32 projectilesCount = 5;
@@ -184,7 +184,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     {
                         f32 offsetx = randomf(-radius, radius);
                         f32 offsety = randomf(-radius, radius);
-                        vec2 target = vec2_addv(targetTilePosition, vec2f(offsetx, offsety));
+                        vec2 target = vec2_addv(targetPosition, vec2f(offsetx, offsety));
 
                         offsety = randomf(MEGA_TILE_WIDTH, MEGA_TILE_WIDTH * 4);
                         vec2 origin = vec2f(target.x, map->camera.viewport.y - offsety);
@@ -214,17 +214,25 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                     {
                         if (we_decreaseUnitMana(context, entity, stats->manaCost))
                         {
-                            vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, true);
-                            WarEntity* skeleton = we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=WAR_UNIT_SKELETON, .x=(s32)targetPosition.x, .y=(s32)targetPosition.y, .player=unit->player, .resourceKind=WAR_RESOURCE_NONE, .amount=0, .addToMap=true));
-                            we_setInitialIdleState(context, skeleton);
+                            vec2 targetEntityTile = wu_getUnitCenterTile(context, targetEntity);
+                            vec2 targetEntityPosition = wu_getUnitCenterPosition(context, targetEntity);
 
-                            targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
+                            WarEntity* skeleton = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
+                                .type=WAR_UNIT_SKELETON,
+                                .x=(s32)targetEntityTile.x,
+                                .y=(s32)targetEntityTile.y,
+                                .player=unit->player,
+                                .resourceKind=WAR_RESOURCE_NONE,
+                                .amount=0,
+                                .addToMap=true
+                            ));
+                            we_setInitialIdleState(context, skeleton);
 
                             WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                             we_addAnimationsComponent(context, animEntity);
 
-                            wanim_createSpellAnimation(context, animEntity, targetPosition);
-                            wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
+                            wanim_createSpellAnimation(context, animEntity, targetEntityPosition);
+                            wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetEntityPosition, .hasPosition=true, .loop=false));
 
                             we_removeEntityById(context, targetEntity->id);
                         }
@@ -253,7 +261,7 @@ void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state
                         targetUnit->invulnerable = true;
                         targetUnit->invulnerabilityTime = stats->time;
 
-                        vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
+                        vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity);
 
                         WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
                         we_addAnimationsComponent(context, animEntity);

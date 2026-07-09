@@ -42,7 +42,7 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-    setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+    wpath_setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
 
     unit->building = false;
 
@@ -66,7 +66,7 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 
         vec2 unitSize = wu_getUnitSize(context, entity);
         vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-        setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
 
         unit->building = true;
         unit->buildPercent = 0;
@@ -86,7 +86,6 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 
     f32 trainSpeed = context->gameDeltaTime;
 
-    // if hurry up cheat is enabled, speed up the train time by 5000%
     if (map->hurryUp)
     {
         trainSpeed *= CHEAT_SPEED_UP_FACTOR;
@@ -94,12 +93,10 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 
     s->buildTime += trainSpeed;
 
-    // if the building is finished...
     if (s->buildTime >= s->totalBuildTime)
     {
         unit->buildPercent = 1;
 
-        // ...create the unit
         WarEntity* unitToBuild = we_createDude(context, CREATE_UNIT_ARGS_INIT(
             .type=s->unitToBuild,
             .x=0, .y=0,
@@ -107,10 +104,9 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
             .isGoingToTrain=false
         ));
 
-        // ...find an empty position to put it
-        vec2 position = wu_getUnitCenterPosition(context, entity, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-        wu_setUnitCenterPosition(context, unitToBuild, spawnPosition, true);
+        vec2 tile = wu_getUnitCenterTile(context, entity);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        wu_setUnitCenterTile(context, unitToBuild, spawnTile);
         we_setInitialIdleState(context, unitToBuild);
 
         wst_popState(context, entity);

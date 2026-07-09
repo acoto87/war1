@@ -59,9 +59,9 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     if (!wu_unitInRange(context, entity, townHall, stats->range))
     {
-        vec2 targetTile = wu_unitPointOnTarget(context, entity, townHall);
+        vec2 targetTile = wu_unitTileOnTarget(context, entity, townHall);
 
-        WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats->range);
+        WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats->range * MEGA_TILE_WIDTH);
         wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
@@ -70,9 +70,9 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     if (s->insideBuilding)
     {
         // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(context, townHall, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
+        vec2 tile = wu_getUnitCenterTile(context, townHall);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        wu_setUnitCenterTile(context, entity, spawnTile);
 
         const WarUnitData* unitData = wu_getUnitData(unit->type);
         we_removeSpriteComponent(context, entity);

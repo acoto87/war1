@@ -35,18 +35,20 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
 {
     TracyCZoneN(ctx, "wst_updateChoppingState", true);
 
+    WarMap* map = context->map;
+    assert(map);
+
     WarStateChopping* s = (WarStateChopping*)state;
 
     if (!state->initialized)
     {
-        WarMap* map = context->map;
-
+        vec2 unitTile = wu_getUnitCenterTile(context, entity);
         vec2 unitSize = wu_getUnitSize(context, entity);
-        vec2 position = wu_getUnitCenterPosition(context, entity, true);
         vec2 treePosition = s->position;
+        vec2 treeTile = wmap_mapToTileCoordinatesV(treePosition);
 
-        setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(context, entity, treePosition.x - position.x, treePosition.y - position.y);
+        wpath_setStaticEntity(&map->finder, (s32)unitTile.x, (s32)unitTile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        wu_setUnitDirectionFromDiff(context, entity, treeTile.x - unitTile.x, treeTile.y - unitTile.y);
         wact_setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 
         state->initialized = true;
@@ -69,7 +71,8 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
     }
 
     vec2 treePosition = s->position;
-    WarTree* tree = we_getTreeAtPosition(context, forest, (s32)treePosition.x, (s32)treePosition.y);
+    vec2 treeTile = wmap_mapToTileCoordinatesV(treePosition);
+    WarTree* tree = we_getTreeAtTile(context, forest, (s32)treeTile.x, (s32)treeTile.y);
 
     if (!tree || tree->amount == 0)
     {

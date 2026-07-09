@@ -38,7 +38,6 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     assert(unit);
 
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
-    vec2 position = wu_getUnitCenterPosition(context, entity, true);
 
     WarEntity* forest = we_findEntity(context, (WarEntityId)s->forestId);
 
@@ -52,11 +51,12 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     }
 
     vec2 treePosition = s->position;
-    WarTree* tree = we_getTreeAtPosition(context, forest, (s32)treePosition.x, (s32)treePosition.y);
+    vec2 treeTile = wmap_mapToTileCoordinatesV(treePosition);
+    WarTree* tree = we_getTreeAtTile(context, forest, (s32)treeTile.x, (s32)treeTile.y);
 
-    if (!tree || tree->amount == 0 || !wpath_isPositionAccesible(&map->finder, treePosition))
+    if (!tree || tree->amount == 0 || !wpath_isTileAccesible(&map->finder, treePosition))
     {
-        tree = we_findAccesibleTree(context, forest, treePosition);
+        tree = we_findAccesibleTree(context, forest, treeTile);
 
         // if there is no more nearby tree, go idle
         if (!tree)
@@ -67,13 +67,15 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
             return;
         }
 
-        treePosition = vec2i(tree->tilex, tree->tiley);
+        treeTile = vec2i(tree->tilex, tree->tiley);
+        treePosition = wmap_tileToMapCoordinatesV(treeTile, true);
         s->position = treePosition;
     }
 
     // if the tree is not in range, go to it
-    if (!wu_tileInRange(context, entity, treePosition, stats->range))
+    if (!wu_tileInRange(context, entity, treeTile, stats->range))
     {
+        vec2 position = wu_getUnitCenterPosition(context, entity);
         WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition));
         wst_pushState(context, entity, (WarStateBase*)moveState);
         TracyCZoneEnd(ctx);

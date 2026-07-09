@@ -26,7 +26,7 @@ static inline void consumeCommand(WarMap* map, WarUnitCommand* command)
     command->type = WAR_COMMAND_NONE;
 }
 
-void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
+void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
 {
     TracyCZoneN(ctx, "wcmd_executeMoveCommand", 1);
 
@@ -44,7 +44,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
         return;
     }
 
-    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
+    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPosition);
     WarMapFlowField* flowField = wpath_computeFlowField(finder, (s32)targetTile.x, (s32)targetTile.y);
     if (!flowField)
     {
@@ -53,9 +53,7 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
         return;
     }
 
-    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
-
-    for(s32 i = 0; i < selEntitiesCount; i++)
+        for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
         WarEntity* entity = we_findEntity(context, entityId);
@@ -88,15 +86,15 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPoint)
                 }
                 else
                 {
-                    vec2 entityTile = wu_getUnitCenterPosition(context, entity, true);
-                    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, entityTile, targetPosition));
+                    vec2 position = wu_getUnitCenterPosition(context, entity);
+                    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
                     wst_resetState(context, entity, (WarStateBase*)moveState);
                 }
             }
             else
             {
-                vec2 entityTile = wu_getUnitCenterPosition(context, entity, true);
-                WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, entityTile, targetPosition));
+                vec2 position = wu_getUnitCenterPosition(context, entity);
+                WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
                 wst_resetState(context, entity, (WarStateBase*)moveState);
             }
 
@@ -128,7 +126,7 @@ void wcmd_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
 
         if (wu_isFriendlyUnit(context, entity))
         {
-            WarStateFollow* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, 1);
+            WarStateFollow* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, MEGA_TILE_WIDTH);
             wst_resetState(context, entity, (WarStateBase*)followState);
 
             goingToFollow = true;
@@ -170,6 +168,8 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
 
     bool goingToHarvest = false;
 
+    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
+
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
     {
@@ -196,14 +196,14 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
                             : WAR_RESOURCE_GOLD;
                         deliverState->sourceId = targetEntity->id;
                         if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
-                            deliverState->sourcePosition = targetTile;
+                            deliverState->sourcePosition = targetPosition;
                         wst_resetState(context, entity, (WarStateBase*)deliverState);
                     }
                 }
                 else
                 {
                     WarStateBase* gatherGoldOrWoodState = isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST)
-                        ? (WarStateBase*)wst_createGatherWoodState(context, entity, targetEntity->id, targetTile)
+                        ? (WarStateBase*)wst_createGatherWoodState(context, entity, targetEntity->id, targetPosition)
                         : (WarStateBase*)wst_createGatherGoldState(context, entity, targetEntity->id);
 
                     wst_resetState(context, entity, (WarStateBase*)gatherGoldOrWoodState);
@@ -213,8 +213,8 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
             }
             else if (wu_isDudeUnit(context, entity))
             {
-                vec2 position = wu_getUnitCenterPosition(context, entity, true);
-                WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position,  targetTile));
+                vec2 position = wu_getUnitCenterPosition(context, entity);
+                WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
                 wst_resetState(context, entity, (WarStateBase*)moveState);
 
                 goingToHarvest = true;
@@ -262,7 +262,7 @@ void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
             }
             else if (wu_isDudeUnit(context, entity))
             {
-                WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, VEC2_ZERO, 1);
+                WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, VEC2_ZERO, MEGA_TILE_WIDTH);
                 wst_resetState(context, entity, (WarStateBase*)followState);
 
                 goingToDeliver = true;
@@ -341,13 +341,13 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
 
             while (we_decreaseUnitMana(context, entity, stats->manaCost))
             {
-                vec2 position = wu_getUnitCenterPosition(context, entity, true);
-                vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
+                vec2 tile = wu_getUnitCenterTile(context, entity);
+                vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
 
                 WarEntity* summonedUnit = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
                     .type = spellMapping->mappedType,
-                    .x = (s32)spawnPosition.x,
-                    .y = (s32)spawnPosition.y,
+                    .x = (s32)spawnTile.x,
+                    .y = (s32)spawnTile.y,
                     .player = unit->player,
                     .resourceKind = WAR_RESOURCE_NONE,
                     .amount = 0,
@@ -355,13 +355,11 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
                 ));
                 we_setInitialIdleState(context, summonedUnit);
 
-
                 vec2 unitSize = wu_getUnitSize(context, summonedUnit);
-                setStaticEntity(&map->finder, (s32)spawnPosition.x, (s32)spawnPosition.y,
-                                (s32)unitSize.x, (s32)unitSize.y, summonedUnit->id);
+                wpath_setStaticEntity(&map->finder, (s32)spawnTile.x, (s32)spawnTile.y, (s32)unitSize.x, (s32)unitSize.y, summonedUnit->id);
 
                 WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
-                wanim_createSpellAnimation(context, animEntity, wmap_tileToMapCoordinatesV(spawnPosition, true));
+                wanim_createSpellAnimation(context, animEntity, wmap_tileToMapCoordinatesV(spawnTile, true));
 
                 casted = true;
             }
@@ -551,7 +549,7 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
                     }
                     else if (wu_isWorkerUnit(context, entity))
                     {
-                        WarStateFollow* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, 1);
+                        WarStateFollow* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, MEGA_TILE_WIDTH);
                         wst_resetState(context, entity, (WarStateBase*)followState);
                     }
                 }
@@ -626,7 +624,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
@@ -639,7 +637,7 @@ bool wcmd_executeCommand(WarContext* context)
                         }
                         else if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                         {
-                            if (!wmap_isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y))
+                            if (!wmap_isTileUnknown(map, (s32)targetTile.x, (s32)targetTile.y))
                             {
                                 wcmd_executeHarvestCommand(context, targetEntity, targetTile);
                             }
@@ -684,7 +682,7 @@ bool wcmd_executeCommand(WarContext* context)
                     if (wmap_isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
                         wmap_isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                        WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                         WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                         if (targetEntity && wu_isBuildingUnit(context, targetEntity))
                         {
@@ -708,7 +706,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
@@ -1058,7 +1056,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeHealingCommand(context, targetEntity, targetTile);
@@ -1078,7 +1076,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeInvisiblityCommand(context, targetEntity, targetTile);
@@ -1098,7 +1096,7 @@ bool wcmd_executeCommand(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
                     wcmd_executeUnholyArmorCommand(context, targetEntity, targetTile);

@@ -81,13 +81,13 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // if the target entity is an unit the instead of using the tile where
         // the player click, use a point on the target unit that is closer to
         // the attacking unit
-        targetTile = wu_unitPointOnTarget(context, entity, targetEntity);
+        targetTile = wu_unitTileOnTarget(context, entity, targetEntity);
     }
 
     // if the unit is not in range to attack, chase it
     if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats->range))
     {
-        WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
+        WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range * MEGA_TILE_WIDTH);
         wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
@@ -95,7 +95,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
     if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats->range))
     {
-        WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range);
+        WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range * MEGA_TILE_WIDTH);
         wst_pushState(context, entity, (WarStateBase*)followState);
         TracyCZoneEnd(ctx);
         return;
@@ -111,7 +111,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
     wu_setUnitDirectionFromDiff(context, entity, targetTile.x - position.x, targetTile.y - position.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
@@ -146,7 +146,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
 
                 if (context->gameTime - unit->lastAttackSoundGameTime >= MIN_ATTACK_SOUND_INTERVAL)
                 {
-                    vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
+                    vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity);
                     wa_playAttackSound(context, targetPosition, action->lastSoundStep);
                     unit->lastAttackSoundGameTime = context->gameTime;
                 }

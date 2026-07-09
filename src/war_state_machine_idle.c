@@ -22,6 +22,9 @@ void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_leaveIdleState", true);
 
+    WarMap* map = context->map;
+    assert(map);
+
     if (!state->initialized)
     {
         TracyCZoneEnd(ctx);
@@ -30,10 +33,9 @@ void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
 
     if (wu_isUnit(entity))
     {
-        WarMap* map = context->map;
         vec2 unitSize = wu_getUnitSize(context, entity);
-        vec2 position = wu_getUnitPosition(context, entity, true);
-        setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+        vec2 tile = wu_getUnitTile(context, entity);
+        wpath_setFreeTiles(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y);
     }
 
     TracyCZoneEnd(ctx);
@@ -51,9 +53,9 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
     {
         if (wu_isUnit(entity))
         {
+            vec2 tile = wu_getUnitTile(context, entity);
             vec2 unitSize = wu_getUnitSize(context, entity);
-            vec2 position = wu_getUnitPosition(context, entity, true);
-            setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+            wpath_setStaticEntity(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
             wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
         }
         state->initialized = true;
@@ -82,8 +84,8 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             WarEntity* enemy = we_getNearEnemy(context, entity);
             if (enemy)
             {
-                vec2 enemyPosition = wu_getUnitPosition(context, enemy, true);
-                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
+                vec2 enemyTile = wu_getUnitTile(context, enemy);
+                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyTile);
                 wst_replaceState(context, entity, (WarStateBase*)attackState);
             }
         }
@@ -101,9 +103,9 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             WarWallPiece* piece = &wall->pieces.items[i];
             s32 hpPercent = PERCENTABI(piece->hp, piece->maxhp);
             if (hpPercent <= 0)
-                setFreeTiles(&map->finder, piece->tilex, piece->tiley, 1, 1);
+                wpath_setFreeTiles(&map->finder, piece->tilex, piece->tiley, 1, 1);
             else
-                setStaticEntity(&map->finder, piece->tilex, piece->tiley, 1, 1, entity->id);
+                wpath_setStaticEntity(&map->finder, piece->tilex, piece->tiley, 1, 1, entity->id);
         }
     }
 

@@ -39,7 +39,7 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
 
         vec2 unitSize = wu_getUnitSize(context, entity);
         vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-        setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+        wpath_setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
         wact_setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
         wmap_removeEntityFromSelection(context, entity->id);
 
@@ -55,15 +55,15 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
     if (!wu_isCorpseUnit(context, entity) && !wu_isCatapultUnit(context, entity) &&
         !wu_isSummonUnit(context, entity) && !wu_isSkeletonUnit(context, entity))
     {
-        vec2 position = wu_getUnitCenterPosition(context, entity, true);
+        vec2 tile = wu_getUnitCenterTile(context, entity);
 
         WarUnitType corpseType = wu_getUnitRace(context, entity) == WAR_RACE_ORCS
             ? WAR_UNIT_ORC_CORPSE : WAR_UNIT_HUMAN_CORPSE;
 
         WarEntity* corpse = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
             .type=corpseType,
-            .x=(s32)position.x,
-            .y=(s32)position.y,
+            .x=(s32)tile.x,
+            .y=(s32)tile.y,
             .player=4,
             .resourceKind=WAR_RESOURCE_NONE,
             .amount=0,

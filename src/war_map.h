@@ -231,10 +231,10 @@ bool wmap_isUnitPartiallyVisible(WarContext* context, WarMap* map, WarEntity* en
 bool wmap_isUnitVisible(WarContext* context, WarMap* map, WarEntity* entity);
 bool wmap_isUnitPartiallyFog(WarContext* context, WarMap* map, WarEntity* entity);
 bool wmap_isUnitFog(WarContext* context, WarMap* map, WarEntity* entity);
-bool wmap_isUnitPartiallyUnkown(WarContext* context, WarMap* map, WarEntity* entity);
+bool wmap_isUnitPartiallyUnknown(WarContext* context, WarMap* map, WarEntity* entity);
 bool wmap_isUnitUnknown(WarContext* context, WarMap* map, WarEntity* entity);
 
-bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y);
+bool wmap_isTileUnknown(WarMap* map, s32 x, s32 y);
 bool wmap_isTileFog(WarMap* map, s32 x, s32 y);
 bool wmap_isTileVisible(WarMap* map, s32 x, s32 y);
 bool wmap_isPositionVisible(WarMap* map, vec2 position);

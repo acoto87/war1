@@ -55,7 +55,7 @@ void wst_updateCollapseState(WarContext* context, WarEntity* entity, WarState* s
         we_addRuinsPieces(context, ruins, (s32)position.x, (s32)position.y, (s32)unitSize.x);
         we_determineRuinTypes(context, ruins);
 
-        setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+        wpath_setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
         wmap_removeEntityFromSelection(context, entity->id);
 
         state->initialized = true;

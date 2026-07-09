@@ -70,17 +70,15 @@ struct _WarStatePatrol
 struct _WarStateFollow
 {
     WarStateBase base;
-    // the follow state can follow an entity or a point
-    s32  targetEntityId;
-    vec2 targetTile;
-    // the range distance (in tiles) in which the follower stops
-    s32  distance;
+    WarEntityId targetEntityId;
+    vec2 targetPosition;
+    s32 targetDistance;
 };
 
 struct _WarStateAttack
 {
     WarStateBase base;
-    s32  targetEntityId;
+    WarEntityId targetEntityId;
     vec2 targetTile;
 };
 
@@ -93,19 +91,22 @@ struct _WarStateGold
 struct _WarStateMining
 {
     WarStateBase base;
-    s32 goldmineId; f32 miningTime;
+    s32 goldmineId;
+    f32 miningTime;
 };
 
 struct _WarStateWood
 {
     WarStateBase base;
-    s32 forestId; vec2 position;
+    s32 forestId;
+    vec2 position;
 };
 
 struct _WarStateChopping
 {
     WarStateBase base;
-    s32 forestId; vec2 position;
+    s32 forestId;
+    vec2 position;
 };
 
 struct _WarStateDeliver
@@ -217,7 +218,7 @@ WarStateRef    wst_refOf(WarContext* context, const WarStateBase* state);
 WarStateIdle*      wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround);
 WarStateMove*      wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
 WarStatePatrol*    wst_createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
-WarStateFollow*    wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 distance);
+WarStateFollow*    wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile, s32 targetDistance);
 WarStateAttack*    wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile);
 WarStateDeath*     wst_createDeathState(WarContext* context, WarEntity* entity);
 WarStateCollapse*  wst_createCollapseState(WarContext* context, WarEntity* entity);
@@ -370,7 +371,7 @@ void wst_updateRepairingStates(WarContext* context);
 void wst_updateCastStates    (WarContext* context);
 void wst_updateWaitStates    (WarContext* context);
 
-void wst_processStateMachineTransitions(WarContext* context);
+void wst_processStateMachinePendingOps(WarContext* context);
 
 void wst_leaveState(WarContext* context, WarEntity* entity, WarStateBase* state);
 
