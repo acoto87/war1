@@ -73,9 +73,7 @@ void wcheatp_setDebugText(WarContext* context, StringView text)
 
     if (text.data && text.length > 0)
     {
-        bool ok = wstr_assign(&cheatStatus->debugText, text);
-        assert(ok);
-        cheatStatus->debugTextActive = true;
+        cheatStatus->debugTextActive = wstr_assign(&cheatStatus->debugText, text);
     }
     else
     {

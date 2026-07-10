@@ -35,9 +35,6 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
 
     WarStateFollow* s = (WarStateFollow*)state;
 
-    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-    assert(sm);
-
     vec2 start = wu_getUnitCenterPosition(context, entity);
     vec2 end = s->targetPosition;
 

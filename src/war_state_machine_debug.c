@@ -327,6 +327,7 @@ void wstdbg_updateDebugText(WarContext* context)
                 : "UNKNOWN";
             offset = appendf(buffer, (s32)sizeof(buffer), offset, "%-10s ", stateName);
             offset = appendStateDetail(context, state, buffer, (s32)sizeof(buffer), offset);
+            offset = appendf(buffer, (s32)sizeof(buffer), offset, "\n");
         }
     }
 
