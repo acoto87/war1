@@ -1031,6 +1031,19 @@ static void renderHUD(WarContext* context)
                 .text = wstr_view(&cheatStatus->feedbackText)
             ));
     }
+    else if (cheatStatus->enabled && cheatStatus->debugTextActive && cheatStatus->debugText.data)
+    {
+        imui_text(context, "txtDebugFeedback",
+            CREATE_UI_TEXT_ARGS_INIT(
+                .position  = vec2_addv(bottomPanel, vec2i(15, -36)),
+                .boundings = vec2i(context->originalWindowWidth - 15, context->originalWindowHeight),
+                .fontIndex = 1,
+                .fontSize  = 6,
+                .fontColor = WAR_COLOR_YELLOW,
+                .multiline = true,
+                .text = wstr_view(&cheatStatus->debugText)
+            ));
+    }
 
     TracyCZoneEnd(ctx);
 }

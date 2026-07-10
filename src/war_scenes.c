@@ -32,6 +32,8 @@ void wsc_freeScene(WarScene* scene)
     WarUnitMapFree(&manager->unitsByType);
     WarEntityIdMapFree(&manager->entitiesById);
     WarEntityListFree(&manager->uiEntities);
+
+    wstr_free(scene->cheatStatus.debugText);
 }
 
 void wsc_enterScene(WarContext* context)

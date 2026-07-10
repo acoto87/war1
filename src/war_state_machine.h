@@ -85,34 +85,34 @@ struct _WarStateAttack
 struct _WarStateGold
 {
     WarStateBase base;
-    s32 goldmineId;
+    WarEntityId goldmineId;
 };
 
 struct _WarStateMining
 {
     WarStateBase base;
-    s32 goldmineId;
+    WarEntityId goldmineId;
     f32 miningTime;
 };
 
 struct _WarStateWood
 {
     WarStateBase base;
-    s32 forestId;
+    WarEntityId forestId;
     vec2 position;
 };
 
 struct _WarStateChopping
 {
     WarStateBase base;
-    s32 forestId;
+    WarEntityId forestId;
     vec2 position;
 };
 
 struct _WarStateDeliver
 {
     WarStateBase base;
-    s32 townHallId;
+    WarEntityId townHallId;
     bool insideBuilding;
     bool cycle;             // if true, resume gathering after delivery
     WarResourceKind sourceKind; // resource type to gather after delivery

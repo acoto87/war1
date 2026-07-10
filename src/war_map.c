@@ -19,6 +19,7 @@
 #include "war_resources.h"
 #include "war_sprites.h"
 #include "war_state_machine.h"
+#include "war_state_machine_debug.h"
 #include "war_units.h"
 #include "war_pathfinder.h"
 #include "war_rvo.h"
@@ -1084,6 +1085,8 @@ void wmap_freeMap(WarContext* context, WarMap* map)
     {
         WarEntityIdListFree(&map->selectionGroups[i]);
     }
+
+    wstr_free(map->status.cheatStatus.debugText);
 }
 
 void wmap_enterMap(WarContext* context)
@@ -1501,6 +1504,7 @@ static void updateDebugRenderShortcuts(WarContext* context)
         { WAR_KEY_J, WAR_DEBUG_RENDER_PROJECTILES      },
         { WAR_KEY_W, WAR_DEBUG_RENDER_FLOW_FIELD       },
         { WAR_KEY_R, WAR_DEBUG_RENDER_RVO              },
+        { WAR_KEY_T, WAR_DEBUG_RENDER_STATE_MACHINE    },
     };
 
     for (s32 i = 0; i < arrayLength(shortcuts); i++)
@@ -3087,6 +3091,7 @@ void wmap_updateMap(WarContext* context)
 
     updateCommandFromRightClick(context);
     updateStatus(context);
+    wstdbg_updateDebugText(context);
 
     refreshSelectedUnitNearUnitsDebug(context);
 
@@ -3111,6 +3116,7 @@ void wmap_updateMapPaused(WarContext* context)
     updateViewport(context);
     updateDebugRenderShortcuts(context);
     updateStatus(context);
+    wstdbg_updateDebugText(context);
 }
 
 static void renderTerrain(WarContext* context)
@@ -3290,6 +3296,252 @@ static void renderSpatialGrid(WarContext* context)
         vec2 p1 = wmap_tileToMapCoordinatesV(vec2i(0, y * MAP_GRID_TILE_SIZE), false);
         vec2 p2 = wmap_tileToMapCoordinatesV(vec2i(MAP_TILES_WIDTH, y * MAP_GRID_TILE_SIZE), false);
         wr_strokeLine(context, p1, p2, WAR_COLOR_RGB(0, 255, 255));
+    }
+}
+
+static void renderStateMachineDebugLine(WarContext* context, vec2 start, vec2 end, WarColor color)
+{
+    if (vec2_lengthSqr(vec2_subv(end, start)) > 0.001f)
+    {
+        wr_strokeLine(context, start, end, color);
+    }
+}
+
+static void renderStateMachineDebugMarker(WarContext* context, vec2 position, WarColor color)
+{
+    rect marker = rectf(position.x - 2.0f, position.y - 2.0f, 4.0f, 4.0f);
+    wr_fillRect(context, marker, WAR_COLOR_RGBA(color.r, color.g, color.b, 96));
+    wr_strokeRect(context, marker, color);
+}
+
+static void renderStateMachineDebugPath(WarContext* context, vec2* points, s32 count, WarColor color)
+{
+    for (s32 i = 1; i < count; i++)
+    {
+        renderStateMachineDebugLine(context, points[i - 1], points[i], color);
+    }
+
+    for (s32 i = 0; i < count; i++)
+    {
+        renderStateMachineDebugMarker(context, points[i], color);
+    }
+}
+
+static void renderStateMachineDebugLabel(WarContext* context, StringView text, vec2 position, WarColor color)
+{
+    WarFontParams params = {0};
+    params.fontIndex = 0;
+    params.fontSize = 6.0f;
+    params.fontColor = color;
+    params.fontSprite = context->fontSprites[0];
+    params.fontData = getFontData(0);
+
+    wfont_renderSingleSpriteText(context, text, position.x, position.y, params);
+}
+
+static void renderStateMachineDebugIdle(WarContext* context, WarEntity* entity)
+{
+    vec2 center = wu_getUnitCenterPosition(context, entity);
+    f32 radiusPx = (f32)NEAR_ENEMY_RADIUS * (f32)MEGA_TILE_WIDTH;
+    rect area = rectf(center.x - radiusPx, center.y - radiusPx, radiusPx * 2.0f, radiusPx * 2.0f);
+    wr_strokeRect(context, area, WAR_COLOR_YELLOW);
+
+    WarEntity* enemy = we_getNearEnemy(context, entity);
+    if (enemy)
+    {
+        vec2 enemyPosition = wu_getUnitCenterPosition(context, enemy);
+        renderStateMachineDebugLine(context, center, enemyPosition, WAR_COLOR_YELLOW);
+        renderStateMachineDebugMarker(context, enemyPosition, WAR_COLOR_YELLOW);
+    }
+}
+
+static void renderStateMachineDebugMove(WarContext* context, WarEntity* entity, WarStateMove* move)
+{
+    NOT_USED(entity);
+
+    if (!move || move->waypointsCount <= 1)
+        return;
+
+    renderStateMachineDebugPath(context, move->waypoints, move->waypointsCount, WAR_COLOR_RGB(0, 255, 255));
+}
+
+static void renderStateMachineDebugPatrol(WarContext* context, WarEntity* entity, WarStatePatrol* patrol)
+{
+    NOT_USED(entity);
+
+    if (!patrol || patrol->waypointsCount <= 1)
+        return;
+
+    renderStateMachineDebugPath(context, patrol->waypoints, patrol->waypointsCount, WAR_COLOR_RGB(255, 255, 0));
+}
+
+static void renderStateMachineDebugFollow(WarContext* context, WarEntity* entity, WarStateFollow* follow)
+{
+    if (!follow)
+        return;
+
+    vec2 start = wu_getUnitCenterPosition(context, entity);
+    vec2 end = follow->targetPosition;
+
+    WarEntity* targetEntity = follow->targetEntityId ? we_findEntity(context, follow->targetEntityId) : NULL;
+    if (targetEntity && wu_isUnit(targetEntity))
+    {
+        end = wu_getUnitCenterPosition(context, targetEntity);
+    }
+
+    renderStateMachineDebugLine(context, start, end, WAR_COLOR_RGB(255, 128, 0));
+    renderStateMachineDebugMarker(context, end, WAR_COLOR_RGB(255, 128, 0));
+
+    if (follow->targetDistance > 0)
+    {
+        rect followArea = rectf(end.x - (f32)follow->targetDistance, end.y - (f32)follow->targetDistance,
+                                (f32)follow->targetDistance * 2.0f, (f32)follow->targetDistance * 2.0f);
+        wr_strokeRect(context, followArea, WAR_COLOR_RGB(255, 128, 0));
+    }
+}
+
+static void renderStateMachineDebugAttack(WarContext* context, WarEntity* entity, WarStateAttack* attack)
+{
+    if (!attack)
+        return;
+
+    vec2 start = wu_getUnitCenterPosition(context, entity);
+    vec2 end = attack->targetPosition;
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    const WarUnitStats* stats = unit ? wu_getUnitStats(unit->type) : NULL;
+    if (stats)
+    {
+        f32 rangePx = (f32)stats->range * (f32)MEGA_TILE_WIDTH;
+        rect attackArea = rectf(start.x - rangePx, start.y - rangePx, rangePx * 2.0f, rangePx * 2.0f);
+        wr_strokeRect(context, attackArea, WAR_COLOR_RGB(255, 0, 255));
+    }
+
+    WarEntity* targetEntity = attack->targetEntityId ? we_findEntity(context, attack->targetEntityId) : NULL;
+    if (targetEntity && wu_isUnit(targetEntity))
+    {
+        end = wu_getUnitCenterPosition(context, targetEntity);
+    }
+
+    renderStateMachineDebugLine(context, start, end, WAR_COLOR_RGB(255, 0, 255));
+    renderStateMachineDebugMarker(context, end, WAR_COLOR_RGB(255, 0, 255));
+}
+
+static void renderStateMachineDebugResourceFlow(WarContext* context, WarEntity* entity, WarStateBase* state)
+{
+    if (!state || !entity)
+        return;
+
+    vec2 start = wu_getUnitCenterPosition(context, entity);
+    WarColor flowColor = WAR_COLOR_RGB(0, 255, 0);
+
+    switch (state->type)
+    {
+        case WAR_STATE_GOLD:
+        case WAR_STATE_MINING:
+        {
+            WarStateGold* gold = (WarStateGold*)state;
+            WarEntity* sourceEntity = we_findEntity(context, gold->goldmineId);
+            if (sourceEntity)
+            {
+                vec2 end = wu_getUnitCenterPosition(context, sourceEntity);
+                renderStateMachineDebugLine(context, start, end, flowColor);
+                renderStateMachineDebugMarker(context, end, flowColor);
+                renderStateMachineDebugLabel(context, wsv_fromCString("GOLD"), vec2f((start.x + end.x) * 0.5f, (start.y + end.y) * 0.5f), flowColor);
+            }
+            break;
+        }
+        case WAR_STATE_WOOD:
+        case WAR_STATE_CHOPPING:
+        {
+            WarStateWood* wood = (WarStateWood*)state;
+            vec2 end = wood->position;
+
+            renderStateMachineDebugLine(context, start, end, WAR_COLOR_RGB(255, 255, 0));
+            renderStateMachineDebugMarker(context, end, WAR_COLOR_RGB(255, 255, 0));
+            renderStateMachineDebugLabel(context, wsv_fromCString("WOOD"), vec2f((start.x + end.x) * 0.5f, (start.y + end.y) * 0.5f), WAR_COLOR_RGB(255, 255, 0));
+            break;
+        }
+        case WAR_STATE_DELIVER:
+        {
+            WarStateDeliver* deliver = (WarStateDeliver*)state;
+            WarEntity* townHall = we_findEntity(context, (WarEntityId)deliver->townHallId);
+            if (townHall)
+            {
+                vec2 end = wu_getUnitCenterPosition(context, townHall);
+                renderStateMachineDebugLine(context, start, end, WAR_COLOR_RGB(0, 255, 255));
+                renderStateMachineDebugMarker(context, end, WAR_COLOR_RGB(0, 255, 255));
+                renderStateMachineDebugLabel(context, wsv_fromCString("DELIVER"), vec2f((start.x + end.x) * 0.5f, (start.y + end.y) * 0.5f), WAR_COLOR_RGB(0, 255, 255));
+            }
+
+            if (deliver->cycle)
+            {
+                vec2 sourcePosition = deliver->sourcePosition;
+
+                if (deliver->sourceKind == WAR_RESOURCE_GOLD)
+                {
+                    WarEntity* sourceEntity = we_findEntity(context, deliver->sourceId);
+                    if (sourceEntity)
+                    {
+                        sourcePosition = wu_getUnitCenterPosition(context, sourceEntity);
+                    }
+                }
+
+                if (deliver->sourceKind != WAR_RESOURCE_NONE)
+                {
+                    vec2 sourceEnd = sourcePosition;
+                    if (townHall)
+                    {
+                        sourceEnd = wu_getUnitCenterPosition(context, townHall);
+                    }
+                    renderStateMachineDebugLine(context, start, sourcePosition, WAR_COLOR_RGB(255, 255, 255));
+                    renderStateMachineDebugMarker(context, sourcePosition, WAR_COLOR_RGB(255, 255, 255));
+                }
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+static void renderStateMachineDebug(WarContext* context)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_STATE_MACHINE])
+        return;
+
+    WarMap* map = context->map;
+    if (!map || map->selectedEntities.count != 1)
+        return;
+
+    WarEntity* entity = we_findEntity(context, map->selectedEntities.items[0]);
+    if (!entity || !wu_isUnit(entity))
+        return;
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    if (!sm || sm->depth <= 0)
+        return;
+
+    WarStateBase* state = wst_currentState(context, entity);
+    if (!state)
+        return;
+
+    switch (state->type)
+    {
+        case WAR_STATE_IDLE: renderStateMachineDebugIdle(context, entity); break;
+        case WAR_STATE_MOVE: renderStateMachineDebugMove(context, entity, (WarStateMove*)state); break;
+        case WAR_STATE_PATROL: renderStateMachineDebugPatrol(context, entity, (WarStatePatrol*)state); break;
+        case WAR_STATE_FOLLOW: renderStateMachineDebugFollow(context, entity, (WarStateFollow*)state); break;
+        case WAR_STATE_ATTACK: renderStateMachineDebugAttack(context, entity, (WarStateAttack*)state); break;
+        case WAR_STATE_GOLD:
+        case WAR_STATE_MINING:
+        case WAR_STATE_WOOD:
+        case WAR_STATE_CHOPPING:
+        case WAR_STATE_DELIVER:
+            renderStateMachineDebugResourceFlow(context, entity, state);
+            break;
+        default:
+            break;
     }
 }
 
@@ -3541,6 +3793,7 @@ static void renderMapPanel(WarContext *context)
     renderSpatialGrid(context);
     renderFlowField(context);
     renderNearUnitsDebug(context);
+    renderStateMachineDebug(context);
 
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     we_renderUnitSelection(context);

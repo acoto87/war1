@@ -40,8 +40,6 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
     WarEntity* forest = we_findEntity(context, (WarEntityId)s->forestId);
-
-    // if the forest doesn't exists, go idle
     if (!forest)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
@@ -54,11 +52,9 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     vec2 treeTile = wmap_mapToTileCoordinatesV(treePosition);
     WarTree* tree = we_getTreeAtTile(context, forest, (s32)treeTile.x, (s32)treeTile.y);
 
-    if (!tree || tree->amount == 0 || !wpath_isTileAccesible(&map->finder, treePosition))
+    if (!tree || tree->amount == 0 || !wpath_isTileAccesible(&map->finder, (s32)treeTile.x, (s32)treeTile.y))
     {
         tree = we_findAccesibleTree(context, forest, treeTile);
-
-        // if there is no more nearby tree, go idle
         if (!tree)
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
@@ -72,7 +68,6 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
         s->position = treePosition;
     }
 
-    // if the tree is not in range, go to it
     if (!wu_tileInRange(context, entity, treeTile, stats->range))
     {
         vec2 position = wu_getUnitCenterPosition(context, entity);
@@ -82,7 +77,6 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
         return;
     }
 
-    // the unit arrive to the tree, go chopping
     WarStateChopping* choppingState = wst_createChoppingState(context, entity, forest->id, treePosition);
     wst_replaceState(context, entity, (WarStateBase*)choppingState);
 

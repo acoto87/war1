@@ -264,13 +264,6 @@ void wmm_handleGameOverContinue(WarContext* context, WarEntity* entity)
         return;
     }
 
-    if (map->custom)
-    {
-        WarScene* scene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
-        wg_setNextScene(context, scene, 1.0f);
-        return;
-    }
-
     if (map->result == WAR_LEVEL_RESULT_WIN)
     {
         WarScene* scene = wsc_createScene(context, WAR_SCENE_BRIEFING);

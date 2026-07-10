@@ -70,7 +70,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
     {
         // find a valid spawn position for the unit
         vec2 tile = wu_getUnitCenterTile(context, townHall);
-        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, (s32)tile.x, (s32)tile.y);
         wu_setUnitCenterTile(context, entity, spawnTile);
 
         const WarUnitData* unitData = wu_getUnitData(unit->type);

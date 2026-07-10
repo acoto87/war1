@@ -130,7 +130,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         assert(worker);
 
         vec2 tile = wu_getUnitCenterTile(context, entity);
-        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, (s32)tile.x, (s32)tile.y);
         wu_setUnitCenterTile(context, worker, spawnTile);
 
         we_removeSpriteComponent(context, entity);

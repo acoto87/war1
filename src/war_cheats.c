@@ -53,6 +53,7 @@ static const char* debugRenderFlagNames[WAR_DEBUG_RENDER_COUNT] =
     "projectiles",
     "flow-field",
     "rvo",
+    "state-machine",
 };
 
 static const char* debugRenderFlagShortcuts[WAR_DEBUG_RENDER_COUNT] =
@@ -68,6 +69,7 @@ static const char* debugRenderFlagShortcuts[WAR_DEBUG_RENDER_COUNT] =
     "Ctrl+Shift+J",
     "Ctrl+Shift+W",
     "Ctrl+Shift+R",
+    "Ctrl+Shift+T",
 };
 
 void wcheat_applyCheat(WarContext* context, StringView text)

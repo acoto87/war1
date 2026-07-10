@@ -349,7 +349,7 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
             while (we_decreaseUnitMana(context, entity, stats->manaCost))
             {
                 vec2 tile = wu_getUnitCenterTile(context, entity);
-                vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+                vec2 spawnTile = wpath_findEmptyTile(&map->finder, (s32)tile.x, (s32)tile.y);
 
                 WarEntity* summonedUnit = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
                     .type = spellMapping->mappedType,

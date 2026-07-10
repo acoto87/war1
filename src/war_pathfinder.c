@@ -446,7 +446,7 @@ vec2 wpath_flowFieldSample(WarMapFlowField* flowField, s32 x, s32 y)
     }
 
     u8 dir = flowField->dirs[fieldIndex];
-    if (dir < 0 || dir >= WAR_DIRECTION_COUNT)
+    if (dir >= WAR_DIRECTION_COUNT)
     {
         return vec2i(0, 0);
     }
@@ -456,23 +456,22 @@ vec2 wpath_flowFieldSample(WarMapFlowField* flowField, s32 x, s32 y)
     return vec2_normalize(result);
 }
 
-vec2 wpath_findEmptyTile(WarPathFinder* finder, vec2 tile)
+vec2 wpath_findEmptyTile(WarPathFinder* finder, s32 x, s32 y)
 {
-    if (wpath_isEmpty(finder, (s32)tile.x, (s32)tile.y))
-        return tile;
+    if (wpath_isEmpty(finder, x, y))
+        return vec2i(x, y);
 
     // TODO: BFS, see if we can statically allocate this list
     Vec2List positions;
     Vec2ListInit(&positions, wm_frameAllocator());
-    Vec2ListAdd(&positions, tile);
+    Vec2ListAdd(&positions, vec2i(x, y));
 
     for(s32 i = 0; i < positions.count; i++)
     {
         vec2 currentPosition = positions.items[i];
         if (wpath_isEmpty(finder, (s32)currentPosition.x, (s32)currentPosition.y))
         {
-            tile = currentPosition;
-            break;
+            return currentPosition;
         }
 
         for(s32 d = 0; d < wpath_dirC; d++)
@@ -490,15 +489,15 @@ vec2 wpath_findEmptyTile(WarPathFinder* finder, vec2 tile)
 
     Vec2ListFree(&positions);
 
-    return tile;
+    return vec2i(x, y);
 }
 
-bool wpath_isTileAccesible(WarPathFinder* finder, vec2 tile)
+bool wpath_isTileAccesible(WarPathFinder* finder, s32 x, s32 y)
 {
     for(s32 d = 0; d < wpath_dirC; d++)
     {
-        s32 xx = (s32)tile.x + wpath_dirX[d];
-        s32 yy = (s32)tile.y + wpath_dirY[d];
+        s32 xx = x + wpath_dirX[d];
+        s32 yy = y + wpath_dirY[d];
         if (inRange(xx, 0, MAP_TILES_WIDTH) && inRange(yy, 0, MAP_TILES_HEIGHT))
         {
             if (wpath_isEmpty(finder, xx, yy))

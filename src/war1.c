@@ -257,6 +257,7 @@ int main(int argc, char** argv)
 #include "war_state_machine_repairing.c"
 #include "war_state_machine_cast.c"
 #include "war_state_machine.c"
+#include "war_state_machine_debug.c"
 #include "war_campaigns.c"
 #include "war_cheats.c"
 #include "war_map_menu.c"

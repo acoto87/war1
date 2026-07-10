@@ -117,7 +117,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
             we_enableComponent(context, entity, COMP_SPRITE);
 
             vec2 tile = wu_getUnitCenterTile(context, entity);
-            vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+            vec2 spawnTile = wpath_findEmptyTile(&map->finder, (s32)tile.x, (s32)tile.y);
             wu_setUnitCenterTile(context, entity, spawnTile);
         }
 
@@ -172,7 +172,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         we_enableComponent(context, entity, COMP_SPRITE);
 
         vec2 tile = wu_getUnitCenterTile(context, entity);
-        vec2 spawnTile = wpath_findEmptyTile(&map->finder, tile);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, (s32)tile.x, (s32)tile.y);
         wu_setUnitCenterTile(context, entity, spawnTile);
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);

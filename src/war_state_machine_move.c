@@ -18,6 +18,7 @@ WarStateMove* wst_createMoveState(WarContext* context, WarEntity* entity, s32 po
 
     const s32 count = MIN(positionCount, arrayLength(state->waypoints));
     memcpy(state->waypoints, positions, count * sizeof(vec2));
+    state->waypointsIndex = 0;
     state->waypointsCount = count;
 
     TracyCZoneEnd(ctx);
@@ -41,17 +42,6 @@ void wst_leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
 
     s->rvoVelocity = VEC2_ZERO;
 
-    // s->rvoPreferredVelocity = VEC2_ZERO;
-    // s->rvoPosition          = VEC2_ZERO;
-    // s->rvoRadius            = 0.0f;
-    // s->rvoNumCandidates     = 0;
-    // s->rvoBestIndex         = 0;
-    // for (s32 i = 0; i < RVO_MAX_CANDIDATES; i++)
-    // {
-    //     s->rvoCandidates[i]            = VEC2_ZERO;
-    //     s->rvoCandidateHadCollision[i] = false;
-    // }
-
     TracyCZoneEnd(ctx);
 }
 
@@ -66,19 +56,12 @@ void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state
     TracyCZoneEnd(ctx);
 }
 
-
 static void updateArrivalDecay(WarContext* context, WarEntity* entity, WarStateMove* state)
 {
     TracyCZoneN(ctx, "UpdateArrivalDecay", 1);
 
     assert(entity && wu_isUnit(entity));
     assert(state->base.type == WAR_STATE_MOVE);
-
-    if (state->waypointsCount <= 1)
-    {
-        TracyCZoneEnd(ctx);
-        return;
-    }
 
     if (state->waypointsIndex >= state->waypointsCount - 1)
     {
