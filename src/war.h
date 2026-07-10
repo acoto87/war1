@@ -27,8 +27,6 @@
 
 #define FOG_OF_WAR_UPDATE_TIME 1.0f
 
-
-
 #define DATAWAR_FILE_PATH "./DATA.WAR"
 #define ONLINE_DEMO_DATAWAR_FILE_URL "http://ia801608.us.archive.org/view_archive.php?archive=/11/items/WarcraftOrcsHumansDemo/WCRFT.ZIP&file=DEMODATA%2FDATA.WAR"
 
@@ -108,6 +106,11 @@
 #define MAX_RENDER_STATE_STACK 32
 
 #define METRIC_SAMPLE_COUNT 64
+
+#define MIN_ACK_SOUND_INTERVAL 0.15f // 150 ms
+#define MIN_ATTACK_SOUND_INTERVAL 0.25f // 250 ms
+
+#define WAR_STATE_STACK_DEPTH 4
 
 #define isRetail(context) ((context)->warFile->type == WAR_FILE_TYPE_RETAIL)
 #define isDemo(context) ((context)->warFile->type == WAR_FILE_TYPE_DEMO)

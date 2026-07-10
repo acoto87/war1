@@ -62,6 +62,26 @@ void wcheatp_setCheatsFeedback(WarContext* context, String feedbackText)
     }
 }
 
+void wcheatp_setDebugText(WarContext* context, StringView text)
+{
+    WarScene* scene = context->scene;
+    WarMap* map = context->map;
+    assert(scene || map);
+
+    WarCheatStatus* cheatStatus = scene
+        ? &scene->cheatStatus : &map->status.cheatStatus;
+
+    if (text.data && text.length > 0)
+    {
+        cheatStatus->debugTextActive = wstr_assign(&cheatStatus->debugText, text);
+    }
+    else
+    {
+        cheatStatus->debugTextActive = false;
+        wstr_clear(&cheatStatus->debugText);
+    }
+}
+
 void wcheatp_createCheatsPanel(WarContext* context)
 {
     WarScene* scene = context->scene;
@@ -245,6 +265,19 @@ void wcheatp_renderCheatsPanel(WarContext* context)
                 .fontSize  = 8,
                 .fontColor = WAR_COLOR_YELLOW,
                 .text = wstr_view(&cheatStatus->feedbackText)
+            ));
+    }
+    else if (cheatStatus->debugTextActive && cheatStatus->debugText.data)
+    {
+        imui_text(context, "txtDebugFeedback",
+            CREATE_UI_TEXT_ARGS_INIT(
+                .position  = vec2i(10, 20),
+                .boundings = vec2i(context->originalWindowWidth, context->originalWindowHeight),
+                .fontIndex = 1,
+                .fontSize  = 8,
+                .fontColor = WAR_COLOR_YELLOW,
+                .multiline = true,
+                .text = wstr_view(&cheatStatus->debugText)
             ));
     }
 }

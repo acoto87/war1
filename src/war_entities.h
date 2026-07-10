@@ -156,6 +156,9 @@ struct _WarUnitComponent
     f32 invisibilityTime;
     // time remainder (in seconds) until the unit invulnerability ceases
     f32 invulnerabilityTime;
+
+    // game-time of last attack sound played
+    f64 lastAttackSoundGameTime;
 };
 
 #define WAR_UNIT_COMPONENT_INIT_CONST(...) {                  \
@@ -218,17 +221,22 @@ struct _WarForestComponent
 
 struct _WarStateMachineComponent
 {
-    WarState* currentState;
-    WarState* nextState;
-    bool leaveState;
-    bool enterState;
+    // The state stack (bottom-to-top). stack[depth-1] is the active state.
+    WarStateRef stack[WAR_STATE_STACK_DEPTH];
+    u8          depth;
+
+    // Deferred transition request (processed in batch at end of frame)
+    WarStateRef pendingRef;
+    u8          pendingOp;
+    bool        leaveCurrent;
 };
 
 #define WAR_STATE_MACHINE_COMPONENT_INIT_CONST(...) { \
-    .currentState   = NULL,                            \
-    .nextState      = NULL,                            \
-    .leaveState = false,                               \
-    .enterState = false,                               \
+    .stack        = {0},                               \
+    .depth        = 0,                                 \
+    .pendingRef   = WAR_STATE_REF_INVALID,             \
+    .pendingOp    = WAR_FSM_OP_NONE,                   \
+    .leaveCurrent = false,                             \
     __VA_ARGS__                                        \
 }
 #define WAR_STATE_MACHINE_COMPONENT_INIT(...) ((WarStateMachineComponent)WAR_STATE_MACHINE_COMPONENT_INIT_CONST(__VA_ARGS__))
@@ -358,14 +366,14 @@ struct _WarProjectileComponent
 
 struct _WarPoisonCloudComponent
 {
-    vec2 position;
+    vec2 tile;
     f32 time; // time in seconds left of the spell
     f32 damageTime; // time in seconds left to inflict damage
     String animName;
 };
 
 #define WAR_POISON_CLOUD_COMPONENT_INIT_CONST(...) { \
-    .position   = {0},                               \
+    .tile       = {0},                               \
     .time       = 0,                                 \
     .damageTime = 0,                                 \
     .animName   = {0},                               \
@@ -421,6 +429,40 @@ DEFINE_COMPONENT_STORAGE(WarProjectileStorage, WarProjectileComponent);
 DEFINE_COMPONENT_STORAGE(WarPoisonCloudStorage, WarPoisonCloudComponent);
 DEFINE_COMPONENT_STORAGE(WarSightStorage, WarSightComponent);
 
+// Per-type dense state arrays (Option A restructure). One homogeneous array
+// per WarStateType; references between states use WarStateRef (type, idx).
+#define MAX_STATES_PER_TYPE 512
+
+struct _WarStateStorage
+{
+    // --- Dense arrays per type ---
+    WarStateIdle      idle[MAX_STATES_PER_TYPE];
+    WarStateMove      move[MAX_STATES_PER_TYPE];
+    WarStatePatrol    patrol[MAX_STATES_PER_TYPE];
+    WarStateFollow    follow[MAX_STATES_PER_TYPE];
+    WarStateAttack    attack[MAX_STATES_PER_TYPE];
+    WarStateGold      gold[MAX_STATES_PER_TYPE];
+    WarStateMining    mining[MAX_STATES_PER_TYPE];
+    WarStateWood      wood[MAX_STATES_PER_TYPE];
+    WarStateChopping  chopping[MAX_STATES_PER_TYPE];
+    WarStateDeliver   deliver[MAX_STATES_PER_TYPE];
+    WarStateDeath     death[MAX_STATES_PER_TYPE];
+    WarStateCollapse  collapse[MAX_STATES_PER_TYPE];
+    WarStateTrain     train[MAX_STATES_PER_TYPE];
+    WarStateUpgrade   upgrade[MAX_STATES_PER_TYPE];
+    WarStateBuild     build[MAX_STATES_PER_TYPE];
+    WarStateRepair    repair[MAX_STATES_PER_TYPE];
+    WarStateRepairing repairing[MAX_STATES_PER_TYPE];
+    WarStateCast      cast[MAX_STATES_PER_TYPE];
+    WarStateWait      wait[MAX_STATES_PER_TYPE];
+
+    // --- Per-type occupancy and free-lists (LIFO) ---
+    bool occupied[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
+    s32  freeLists[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
+    s32  freeCounts[WAR_STATE_COUNT];
+    s32  activeCounts[WAR_STATE_COUNT];
+};
+
 struct _WarEntityManager
 {
     // --- Entity pool (flat array, slot 0 reserved/empty) ---
@@ -444,6 +486,7 @@ struct _WarEntityManager
     WarRuinStorage         ruins;
     WarForestStorage       forests;
     WarStateMachineStorage stateMachines;
+    WarStateStorage        stateStorage;
     WarUIStorage           uis;
     WarTextStorage         texts;
     WarRectStorage         rects;
@@ -479,60 +522,44 @@ WarProjectileComponent*   we_getProjectileComponent(WarContext* context, const W
 WarPoisonCloudComponent*  we_getPoisonCloudComponent(WarContext* context, const WarEntity* entity);
 WarSightComponent*        we_getSightComponent(WarContext* context, const WarEntity* entity);
 
-WarTransformComponent* we_addTransformComponent(WarContext* context, WarEntity* entity, WarTransformComponent params);
-void we_removeTransformComponent(WarContext* context, WarEntity* entity);
-
-WarSpriteComponent* we_addSpriteComponent(WarContext* context, WarEntity* entity, WarSpriteComponent params);
-WarSpriteComponent* we_addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef);
-void we_removeSpriteComponent(WarContext* context, WarEntity* entity);
-
-WarUnitComponent* we_addUnitComponent(WarContext* context, WarEntity* entity, WarUnitComponent params);
-void we_removeUnitComponent(WarContext* context, WarEntity* entity);
-
-WarRoadComponent* we_addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces);
-void we_removeRoadComponent(WarContext* context, WarEntity* entity);
-
-WarWallComponent* we_addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList pieces);
-void we_removeWallComponent(WarContext* context, WarEntity* entity);
-
-WarRuinComponent* we_addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces);
-void we_removeRuinComponent(WarContext* context, WarEntity* entity);
-
-WarForestComponent* we_addForestComponent(WarContext* context, WarEntity* entity, WarTreeList trees);
-void we_removeForestComponent(WarContext* context, WarEntity* entity);
-
+WarTransformComponent*    we_addTransformComponent(WarContext* context, WarEntity* entity, WarTransformComponent params);
+WarSpriteComponent*       we_addSpriteComponent(WarContext* context, WarEntity* entity, WarSpriteComponent params);
+WarSpriteComponent*       we_addSpriteComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef spriteResourceRef);
+WarUnitComponent*         we_addUnitComponent(WarContext* context, WarEntity* entity, WarUnitComponent params);
+WarRoadComponent*         we_addRoadComponent(WarContext* context, WarEntity* entity, WarRoadPieceList pieces);
+WarWallComponent*         we_addWallComponent(WarContext* context, WarEntity* entity, WarWallPieceList pieces);
+WarRuinComponent*         we_addRuinComponent(WarContext* context, WarEntity* entity, WarRuinPieceList pieces);
+WarForestComponent*       we_addForestComponent(WarContext* context, WarEntity* entity, WarTreeList trees);
 WarStateMachineComponent* we_addStateMachineComponent(WarContext* context, WarEntity* entity);
+WarAnimationsComponent*   we_addAnimationsComponent(WarContext* context, WarEntity* entity);
+WarUIComponent*           we_addUIComponent(WarContext* context, WarEntity* entity, String name);
+WarTextComponent*         we_addTextComponent(WarContext* context, WarEntity* entity, WarTextComponent params);
+WarRectComponent*         we_addRectComponent(WarContext* context, WarEntity* entity, WarRectComponent params);
+WarButtonComponent*       we_addButtonComponent(WarContext* context, WarEntity* entity, WarButtonComponent params);
+WarButtonComponent*       we_addButtonComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef normalRef, WarSpriteResourceRef pressedRef);
+WarAudioComponent*        we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioComponent params);
+WarCursorComponent*       we_addCursorComponent(WarContext* context, WarEntity* entity, WarCursorComponent params);
+WarProjectileComponent*   we_addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileComponent params);
+WarPoisonCloudComponent*  we_addPoisonCloudComponent(WarContext* context, WarEntity* entity, WarPoisonCloudComponent params);
+WarSightComponent*        we_addSightComponent(WarContext* context, WarEntity* entity, WarSightComponent params);
+
+void we_removeTransformComponent(WarContext* context, WarEntity* entity);
+void we_removeSpriteComponent(WarContext* context, WarEntity* entity);
+void we_removeUnitComponent(WarContext* context, WarEntity* entity);
+void we_removeRoadComponent(WarContext* context, WarEntity* entity);
+void we_removeWallComponent(WarContext* context, WarEntity* entity);
+void we_removeRuinComponent(WarContext* context, WarEntity* entity);
+void we_removeForestComponent(WarContext* context, WarEntity* entity);
 void we_removeStateMachineComponent(WarContext* context, WarEntity* entity);
-
-WarAnimationsComponent* we_addAnimationsComponent(WarContext* context, WarEntity* entity);
 void we_removeAnimationsComponent(WarContext* context, WarEntity* entity);
-
-WarUIComponent* we_addUIComponent(WarContext* context, WarEntity* entity, String name);
 void we_removeUIComponent(WarContext* context, WarEntity* entity);
-
-WarTextComponent* we_addTextComponent(WarContext* context, WarEntity* entity, WarTextComponent params);
 void we_removeTextComponent(WarContext* context, WarEntity* entity);
-
-WarRectComponent* we_addRectComponent(WarContext* context, WarEntity* entity, WarRectComponent params);
 void we_removeRectComponent(WarContext* context, WarEntity* entity);
-
-WarButtonComponent* we_addButtonComponent(WarContext* context, WarEntity* entity, WarButtonComponent params);
-WarButtonComponent* we_addButtonComponentFromResource(WarContext* context, WarEntity* entity, WarSpriteResourceRef normalRef, WarSpriteResourceRef pressedRef);
 void we_removeButtonComponent(WarContext* context, WarEntity* entity);
-
-WarAudioComponent* we_addAudioComponent(WarContext* context, WarEntity* entity, WarAudioComponent params);
 void we_removeAudioComponent(WarContext* context, WarEntity* entity);
-
-WarCursorComponent* we_addCursorComponent(WarContext* context, WarEntity* entity, WarCursorComponent params);
 void we_removeCursorComponent(WarContext* context, WarEntity* entity);
-
-WarProjectileComponent* we_addProjectileComponent(WarContext* context, WarEntity* entity, WarProjectileComponent params);
 void we_removeProjectileComponent(WarContext* context, WarEntity* entity);
-
-WarPoisonCloudComponent* we_addPoisonCloudComponent(WarContext* context, WarEntity* entity, WarPoisonCloudComponent params);
 void we_removePoisonCloudComponent(WarContext* context, WarEntity* entity);
-
-WarSightComponent* we_addSightComponent(WarContext* context, WarEntity* entity, WarSightComponent params);
 void we_removeSightComponent(WarContext* context, WarEntity* entity);
 
 // Roads
@@ -564,10 +591,10 @@ void we_determineRuinTypes(WarContext* context, WarEntity* entity);
 
 // Trees
 bool we_hasTreeAtPosition(WarContext* context, WarEntity* forest, s32 x, s32 y);
-WarTree* we_getTreeAtPosition(WarContext* context, WarEntity* forest, s32 x, s32 y);
+WarTree* we_getTreeAtTile(WarContext* context, WarEntity* forest, s32 x, s32 y);
 void we_determineTreeTiles(WarContext* context, WarEntity* forest);
 void we_determineAllTreeTiles(WarContext* context);
-WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 position);
+WarTree* we_findAccesibleTree(WarContext* context, WarEntity* forest, vec2 tile);
 void we_plantTree(WarContext* context, WarEntity* forest, s32 x, s32 y);
 bool we_validTree(WarContext* context, WarEntity* forest, WarTree* tree);
 s32 we_chopTree(WarContext* context, WarEntity* forest, WarTree* tree, s32 amount);
@@ -640,7 +667,6 @@ bool we_checkRectToBuild(WarContext* context, s32 x, s32 y, s32 w, s32 h);
 bool we_checkTileToBuild(WarContext* context, WarUnitType buildingToBuild, s32 x, s32 y);
 bool we_checkTileToBuildRoadOrWall(WarContext* context, s32 x, s32 y);
 void we_getNearUnits(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits);
-void we_getNearUnits2(WarContext* context, vec2 tilePosition, s32 distance, WarEntityList* nearUnits);
 WarEntity* we_getNearEnemy(WarContext* context, WarEntity* entity);
 bool we_isBeingAttackedBy(WarContext* context, WarEntity* entity, WarEntity* other);
 bool we_isBeingAttacked(WarContext* context, WarEntity* entity);

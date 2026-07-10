@@ -277,7 +277,7 @@ rect rect_expand(rect r, f32 dx, f32 dy)
     return r;
 }
 
-vec2 get_closestPointOnRect(vec2 p, rect r)
+vec2 rect_closestPointOnRect(rect r, vec2 p)
 {
     f32 left = r.x;
     f32 top = r.y;

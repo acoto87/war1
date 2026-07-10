@@ -1,10 +1,11 @@
-#include "war_map.h"
-
 #include <assert.h>
+#include <float.h>
 
+#include "TracyC.h"
 #include "shl/memzone.h"
 #include "shl/wstr.h"
 
+#include "war_map.h"
 #include "war_actions.h"
 #include "war_animations.h"
 #include "war_audio.h"
@@ -18,8 +19,10 @@
 #include "war_resources.h"
 #include "war_sprites.h"
 #include "war_state_machine.h"
+#include "war_state_machine_debug.h"
 #include "war_units.h"
 #include "war_pathfinder.h"
+#include "war_rvo.h"
 
 #define MAP_SELECTION_DRAG_THRESHOLD 3.0f
 
@@ -85,7 +88,8 @@ static void refreshSelectedUnitNearUnitsDebug(WarContext* context)
         return;
     }
 
-    setNearUnitsDebugParams(context, wu_getUnitCenterPosition(context, entity, true), NEAR_ENEMY_RADIUS);
+    vec2 tile = wu_getUnitCenterTile(context, entity);
+    setNearUnitsDebugParams(context, tile, NEAR_ENEMY_RADIUS);
 }
 
 static void castDebugRainOfFire(WarContext* context, vec2 targetTile)
@@ -118,8 +122,8 @@ static void castDebugPoisonCloud(WarContext* context, vec2 targetTile)
 
     WarEntity* poisonCloud = we_createEntity(context, WAR_ENTITY_TYPE_POISON_CLOUD, true);
     we_addPoisonCloudComponent(context, poisonCloud, WAR_POISON_CLOUD_COMPONENT_INIT(
-        .position = targetTile,
-        .time     = stats->time,
+        .tile = targetTile,
+        .time = stats->time,
     ));
     we_addAnimationsComponent(context, poisonCloud);
 
@@ -144,11 +148,13 @@ static void castDebugRaiseDead(WarContext* context, vec2 targetTile)
         WarEntity* targetEntity = nearUnits.items[i];
         if (targetEntity && wu_isCorpseUnit(context, targetEntity))
         {
-            vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, true);
+            vec2 targetEntityTile = wu_getUnitCenterTile(context, targetEntity);
+            vec2 targetEntityPosition = wu_getUnitCenterPosition(context, targetEntity);
+
             WarEntity* skeleton = we_createUnit(context, CREATE_UNIT_ARGS_INIT(
                 .type=WAR_UNIT_SKELETON,
-                .x=(s32)targetPosition.x,
-                .y=(s32)targetPosition.y,
+                .x=(s32)targetEntityTile.x,
+                .y=(s32)targetEntityTile.y,
                 .player=0,
                 .resourceKind=WAR_RESOURCE_NONE,
                 .amount=0,
@@ -156,13 +162,11 @@ static void castDebugRaiseDead(WarContext* context, vec2 targetTile)
             ));
             we_setInitialIdleState(context, skeleton);
 
-            targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
-
             WarEntity* animEntity = we_createEntity(context, WAR_ENTITY_TYPE_ANIMATION, true);
             we_addAnimationsComponent(context, animEntity);
 
-            wanim_createSpellAnimation(context, animEntity, targetPosition);
-            wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetPosition, .hasPosition=true, .loop=false));
+            wanim_createSpellAnimation(context, animEntity, targetEntityPosition);
+            wa_createAudioWithPosition(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_NORMAL_SPELL, .position=targetEntityPosition, .hasPosition=true, .loop=false));
 
             we_removeEntityById(context, targetEntity->id);
         }
@@ -182,7 +186,7 @@ static void initCamera(WarMap *map, WarResource *levelInfo)
 
 static void initPathFinder(WarMap* map, WarResource* levelPassable)
 {
-    map->finder = wpath_initPathFinder(PATH_FINDING_ASTAR, levelPassable->levelPassable.data);
+    map->finder = wpath_initPathFinder(levelPassable->levelPassable.data);
 }
 
 static void initBlackSprite(WarContext* context, WarMap* map)
@@ -201,7 +205,7 @@ static void setInitialTileState(WarMap* map)
     {
         WarMapTile* tile = &map->tiles[i];
 
-        tile->state = MAP_TILE_STATE_UNKOWN;
+        tile->state = MAP_TILE_STATE_UNKNOWN;
         tile->type = WAR_FOG_PIECE_NONE;
         tile->boundary = WAR_FOG_BOUNDARY_NONE;
     }
@@ -323,7 +327,7 @@ static void createForestEntities(WarContext* context, WarMap* map, WarResource* 
             for (s32 treeIndex = 0; treeIndex < trees.count; treeIndex++)
             {
                 WarTree* tree = &trees.items[treeIndex];
-                setStaticEntity(&map->finder, tree->tilex, tree->tiley, 1, 1, forest->id);
+                wpath_setStaticEntity(&map->finder, tree->tilex, tree->tiley, 1, 1, forest->id);
             }
 
             we_determineTreeTiles(context, forest);
@@ -378,8 +382,8 @@ static void createStartingWalls(WarContext* context, WarMap* map, WarResource* l
 
     we_addStateMachineComponent(context, wall);
 
-    WarState* idleState = wst_createIdleState(context, wall, false);
-    wst_changeNextState(context, wall, idleState, true, true);
+    WarStateIdle* idleState = wst_createIdleState(context, wall, false);
+    wst_resetState(context, wall, (WarStateBase*)idleState);
 
     map->editing.wall = wall;
 }
@@ -625,7 +629,7 @@ void wmap_setUnitMapTileState(WarContext* context, WarMap* map, WarEntity* entit
     assert(wu_isUnit(entity));
 
     s32 sight = wu_getUnitSightRange(context, entity);
-    vec2 position = wu_getUnitPosition(context, entity, true);
+    vec2 position = wu_getUnitTile(context, entity);
     vec2 unitSize = wu_getUnitSize(context, entity);
     rect unitRect = rectv(position, unitSize);
     unitRect = rect_expand(unitRect, (f32)sight, (f32)sight);
@@ -639,7 +643,7 @@ bool wmap_isTileInState(WarMap* map, s32 x, s32 y, WarMapTileState state)
     {
         switch (state)
         {
-            case MAP_TILE_STATE_UNKOWN: return false;
+            case MAP_TILE_STATE_UNKNOWN: return false;
             case MAP_TILE_STATE_FOG: return false;
             case MAP_TILE_STATE_VISIBLE: return true;
             default:
@@ -660,7 +664,7 @@ bool wmap_isAnyTileInStates(WarMap* map, s32 startX, s32 startY, s32 width, s32 
     {
         switch (state)
         {
-            case MAP_TILE_STATE_UNKOWN: return false;
+            case MAP_TILE_STATE_UNKNOWN: return false;
             case MAP_TILE_STATE_FOG: return false;
             case MAP_TILE_STATE_VISIBLE: return true;
             default:
@@ -708,8 +712,8 @@ bool wmap_isAnyUnitTileInStates(WarContext* context, WarMap* map, WarEntity* ent
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    vec2 position = wu_getUnitPosition(context, entity, true);
-    return wmap_isAnyTileInStates(map, (s32)position.x, (s32)position.y, unit->sizex, unit->sizey, state);
+    vec2 tile = wu_getUnitTile(context, entity);
+    return wmap_isAnyTileInStates(map, (s32)tile.x, (s32)tile.y, unit->sizex, unit->sizey, state);
 }
 
 bool wmap_areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32 height, WarMapTileState state)
@@ -718,7 +722,7 @@ bool wmap_areAllTilesInState(WarMap* map, s32 startX, s32 startY, s32 width, s32
     {
         switch (state)
         {
-            case MAP_TILE_STATE_UNKOWN: return false;
+            case MAP_TILE_STATE_UNKNOWN: return false;
             case MAP_TILE_STATE_FOG: return false;
             case MAP_TILE_STATE_VISIBLE: return true;
             default:
@@ -766,8 +770,8 @@ bool wmap_areAllUnitTilesInState(WarContext* context, WarMap* map, WarEntity* en
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    vec2 position = wu_getUnitPosition(context, entity, true);
-    return wmap_areAllTilesInState(map, (s32)position.x, (s32)position.y, unit->sizex, unit->sizey, state);
+    vec2 tile = wu_getUnitTile(context, entity);
+    return wmap_areAllTilesInState(map, (s32)tile.x, (s32)tile.y, unit->sizex, unit->sizey, state);
 }
 
 bool wmap_isUnitPartiallyVisible(WarContext* context, WarMap* map, WarEntity* entity)
@@ -790,19 +794,19 @@ bool wmap_isUnitFog(WarContext* context, WarMap* map, WarEntity* entity)
     return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_FOG);
 }
 
-bool wmap_isUnitPartiallyUnkown(WarContext* context, WarMap* map, WarEntity* entity)
+bool wmap_isUnitPartiallyUnknown(WarContext* context, WarMap* map, WarEntity* entity)
 {
-    return wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_UNKOWN);
+    return wmap_isAnyUnitTileInStates(context, map, entity, MAP_TILE_STATE_UNKNOWN);
 }
 
 bool wmap_isUnitUnknown(WarContext* context, WarMap* map, WarEntity* entity)
 {
-    return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_UNKOWN);
+    return wmap_areAllUnitTilesInState(context, map, entity, MAP_TILE_STATE_UNKNOWN);
 }
 
-bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y)
+bool wmap_isTileUnknown(WarMap* map, s32 x, s32 y)
 {
-    return wmap_isTileInState(map, x, y, MAP_TILE_STATE_UNKOWN);
+    return wmap_isTileInState(map, x, y, MAP_TILE_STATE_UNKNOWN);
 }
 
 bool wmap_isTileFog(WarMap* map, s32 x, s32 y)
@@ -967,8 +971,10 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
     levelInfo->levelInfo.startEntitiesCount = 0;
 
     if (!levelInfo->levelInfo.startEntities)
+    {
         levelInfo->levelInfo.startEntities = (WarLevelUnit*)wm_alloc(MAX_ENTITIES_COUNT * sizeof(WarLevelUnit));
-    assert(levelInfo->levelInfo.startEntities);
+        assert(levelInfo->levelInfo.startEntities);
+    }
 
     levelInfo->levelInfo.races[0] = yourRace;
     levelInfo->levelInfo.races[1] = enemyRace;
@@ -984,7 +990,7 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
         startUnit->type = startUnitConf->type;
         startUnit->player = startUnitConf->player;
         startUnit->resourceKind = WAR_RESOURCE_GOLD;
-        startUnit->amount = randomi(20000, 30000);
+        startUnit->amount = (u16)randomi(20000, 30000);
 
         levelInfo->levelInfo.startEntitiesCount++;
     }
@@ -1051,6 +1057,7 @@ bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
         return false;
     }
 
+    map->custom = true;
     wg_setNextMap(context, map, 0.0f);
 
     logInfo("wmap_loadCustomMap: loaded '%.*s' (entities=%u, tilesetType=%d)",
@@ -1078,6 +1085,8 @@ void wmap_freeMap(WarContext* context, WarMap* map)
     {
         WarEntityIdListFree(&map->selectionGroups[i]);
     }
+
+    wstr_free(map->status.cheatStatus.debugText);
 }
 
 void wmap_enterMap(WarContext* context)
@@ -1494,6 +1503,8 @@ static void updateDebugRenderShortcuts(WarContext* context)
         { WAR_KEY_F, WAR_DEBUG_RENDER_FONT             },
         { WAR_KEY_J, WAR_DEBUG_RENDER_PROJECTILES      },
         { WAR_KEY_W, WAR_DEBUG_RENDER_FLOW_FIELD       },
+        { WAR_KEY_R, WAR_DEBUG_RENDER_RVO              },
+        { WAR_KEY_T, WAR_DEBUG_RENDER_STATE_MACHINE    },
     };
 
     for (s32 i = 0; i < arrayLength(shortcuts); i++)
@@ -1580,7 +1591,7 @@ static void updateTreesEdit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntityId entityId = getTileEntityId(&map->finder, x, y);
+            WarEntityId entityId = wpath_getTileEntityId(&map->finder, x, y);
             WarEntity* entity = we_findEntity(context, entityId);
             if (!entity)
             {
@@ -1591,7 +1602,7 @@ static void updateTreesEdit(WarContext* context)
             }
             else if (entity->type == WAR_ENTITY_TYPE_FOREST)
             {
-                WarTree* tree = we_getTreeAtPosition(context, entity, x, y);
+                WarTree* tree = we_getTreeAtTile(context, entity, x, y);
                 if (tree)
                 {
                     we_chopTree(context, entity, tree, TREE_MAX_WOOD);
@@ -1668,7 +1679,7 @@ static void updateWallsEdit(WarContext* context)
             }
             else
             {
-                setFreeTiles(&map->finder, piece->tilex, piece->tiley, 1, 1);
+                wpath_setFreeTiles(&map->finder, piece->tilex, piece->tiley, 1, 1);
 
                 we_removeWallPiece(context, wall, piece);
                 we_determineWallTypes(context, wall);
@@ -1785,7 +1796,7 @@ static void updateAddUnit(WarContext* context)
             s32 x = (s32)pointerPos.x;
             s32 y = (s32)pointerPos.y;
 
-            WarEntityId entityId = getTileEntityId(&map->finder, x, y);
+            WarEntityId entityId = wpath_getTileEntityId(&map->finder, x, y);
             if (!entityId)
             {
                 WarRace addingUnitRace = wu_getUnitTypeRace(map->editing.pendingUnitType);
@@ -1964,7 +1975,7 @@ void updateCommandFromRightClick(WarContext* context)
                     vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
                     vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
 
-                    WarEntityId targetEntityId = getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
                     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
                     if (targetEntity)
                     {
@@ -2002,7 +2013,7 @@ void updateCommandFromRightClick(WarContext* context)
                             {
                                 if (wu_isEnemyUnit(context, targetEntity))
                                 {
-                                    wcmd_executeAttackCommand(context, targetEntity, targetTile);
+                                    wcmd_executeAttackCommand(context, targetEntity, targetPoint);
                                 }
                                 else
                                 {
@@ -2024,7 +2035,7 @@ void updateCommandFromRightClick(WarContext* context)
                         {
                             if (wu_isEnemyUnit(context, targetEntity))
                             {
-                                wcmd_executeAttackCommand(context, targetEntity, targetTile);
+                                wcmd_executeAttackCommand(context, targetEntity, targetPoint);
                             }
                             else
                             {
@@ -2194,8 +2205,8 @@ static void updateStatus(WarContext* context)
             {
                 if (wst_isTraining(context, selectedEntity) || wst_isGoingToTrain(context, selectedEntity))
                 {
-                    WarState* trainState = wst_getTrainState(context, selectedEntity);
-                    WarUnitType unitToBuild = trainState->train.unitToBuild;
+                    WarStateTrain* trainState = wst_getTrainState(context, selectedEntity);
+                    WarUnitType unitToBuild = trainState->unitToBuild;
                     const WarUnitCommandMapping* commandMapping = wu_getCommandMappingFromUnitType(unitToBuild);
                     const WarUnitCommandBaseData* commandData = wu_getCommandBaseData(commandMapping->type);
 
@@ -2203,8 +2214,8 @@ static void updateStatus(WarContext* context)
                 }
                 else if (wst_isUpgrading(context, selectedEntity) || wst_isGoingToUpgrade(context, selectedEntity))
                 {
-                    WarState* upgradeState = wst_getUpgradeState(context, selectedEntity);
-                    WarUpgradeType upgradeToBuild = upgradeState->upgrade.upgradeToBuild;
+                    WarStateUpgrade* upgradeState = wst_getUpgradeState(context, selectedEntity);
+                    WarUpgradeType upgradeToBuild = upgradeState->upgradeToBuild;
                     const WarUnitCommandMapping* commandMapping = wu_getCommandMappingFromUpgradeType(upgradeToBuild);
                     const WarUnitCommandBaseData* commandData = wu_getCommandBaseData(commandMapping->type);
 
@@ -2377,13 +2388,13 @@ static void updateMapCursor(WarContext* context)
                             wui_changeCursorType(context, WAR_CURSOR_YELLOW_CROSSHAIR);
                         }
                         else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_FOREST) &&
-                                 !wmap_isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
+                                 !wmap_isTileUnknown(map, (s32)targetTile.x, (s32)targetTile.y) &&
                                  wu_isWorkerUnit(context, selectedEntity))
                         {
                             wui_changeCursorType(context, WAR_CURSOR_YELLOW_CROSSHAIR);
                         }
                         else if (isEntityOfType(entityUnderCursor, WAR_ENTITY_TYPE_WALL) &&
-                                 !wmap_isTileUnkown(map, (s32)targetTile.x, (s32)targetTile.y) &&
+                                 !wmap_isTileUnknown(map, (s32)targetTile.x, (s32)targetTile.y) &&
                                  wu_isWarriorUnit(context, selectedEntity) &&
                                  wu_canAttack(context, selectedEntity, entityUnderCursor))
                         {
@@ -2483,25 +2494,6 @@ static void updateMapCursor(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-static void updateStateMachines(WarContext* context)
-{
-    TracyCZoneN(ctx, "UpdateStateMachines", 1);
-
-    WarEntityManager* manager = we_getEntityManager(context);
-    assert(manager);
-
-    for(s32 i = 0; i < MAX_ENTITIES_COUNT; i++)
-    {
-        WarEntity* entity = &manager->entities[i];
-        if (entity->id != 0)
-        {
-            wst_updateStateMachine(context, entity);
-        }
-    }
-
-    TracyCZoneEnd(ctx);
-}
-
 static void updateActions(WarContext* context)
 {
     TracyCZoneN(ctx, "UpdateActions", 1);
@@ -2561,10 +2553,10 @@ static void updateMagic(WarContext* context)
                     // when the mana runs out the summoned units will die
                     if (unit->mana == 0)
                     {
-                        vec2 position = wu_getUnitCenterPosition(context, entity, false);
+                        vec2 position = wu_getUnitCenterPosition(context, entity);
 
-                        WarState* deathState = wst_createDeathState(context, entity);
-                        wst_changeNextState(context, entity, deathState, true, true);
+                        WarStateDeath* deathState = wst_createDeathState(context, entity);
+                        wst_resetState(context, entity, (WarStateBase*)deathState);
 
                         if (unit->type == WAR_UNIT_SCORPION || unit->type == WAR_UNIT_SPIDER)
                         {
@@ -2605,7 +2597,7 @@ static bool updatePoisonCloud(WarContext* context, WarEntity* entity)
     {
         WarEntityList* nearUnits = (WarEntityList*)wm_allocFrame(sizeof(WarEntityList));
         WarEntityListInit(nearUnits, wm_frameAllocator());
-        we_getNearUnits(context, poisonCloud->position, 2, nearUnits);
+        we_getNearUnits(context, poisonCloud->tile, 2, nearUnits);
 
         for (s32 i = 0; i < nearUnits->count; i++)
         {
@@ -2754,11 +2746,8 @@ void updateFoW(WarContext* context)
             WarUnitComponent* unit = we_getUnitComponent(context, entity);
             assert(unit);
 
-            vec2 position = wu_getUnitCenterPosition(context, entity, true);
-            vec2 unitSize = wu_getUnitSize(context, entity);
             s32 sight = wu_getUnitSightRange(context, entity);
-
-            rect unitRect = rectv(position, unitSize);
+            rect unitRect = wu_getUnitRectTiles(context, entity);
             unitRect = rect_expand(unitRect, (f32)sight, (f32)sight);
 
             if (wu_isBuildingUnit(context, entity))
@@ -2771,29 +2760,33 @@ void updateFoW(WarContext* context)
             wmap_setMapTileState(map, (s32)unitRect.x, (s32)unitRect.y, (s32)unitRect.width, (s32)unitRect.height, MAP_TILE_STATE_VISIBLE);
 
             // reveal the attack target of the unit
-            WarEntity* targetEntity = we_getAttackTarget(context, entity);
-            if (targetEntity)
+            WarStateAttack* attackState = wst_getAttackState(context, entity);
+            if (attackState)
             {
-                const WarUnitStats* stats = wu_getUnitStats(unit->type);
-
-                if (wu_isUnit(targetEntity))
+                WarEntity* targetEntity = we_findEntity(context, attackState->targetEntityId);
+                if (targetEntity)
                 {
-                    if (wu_unitInRange(context, entity, targetEntity, stats->range))
-                    {
-                        wmap_setUnitMapTileState(context, map, targetEntity, MAP_TILE_STATE_VISIBLE);
-                    }
-                }
-                else if (wu_isWall(targetEntity))
-                {
-                    WarState* attackState = wst_getAttackState(context, entity);
-                    vec2 targetTile = attackState->attack.targetTile;
+                    const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-                    if (wu_tileInRange(context, entity, targetTile, stats->range))
+                    if (wu_isUnit(targetEntity))
                     {
-                        WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
-                        if (piece)
+                        if (wu_unitInRange(context, entity, targetEntity, stats->range))
                         {
-                            wmap_setMapTileState(map, (s32)targetTile.x, (s32)targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                            wmap_setUnitMapTileState(context, map, targetEntity, MAP_TILE_STATE_VISIBLE);
+                        }
+                    }
+                    else if (wu_isWall(targetEntity))
+                    {
+                        vec2 targetPosition = attackState->targetPosition;
+                        vec2 targetTile = wmap_mapToTileCoordinatesV(targetPosition);
+
+                        if (wu_tileInRange(context, entity, targetTile, stats->range))
+                        {
+                            WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
+                            if (piece)
+                            {
+                                wmap_setMapTileState(map, (s32)targetTile.x, (s32)targetTile.y, 1, 1, MAP_TILE_STATE_VISIBLE);
+                            }
                         }
                     }
                 }
@@ -2803,12 +2796,7 @@ void updateFoW(WarContext* context)
             WarEntity* attacker = we_getAttacker(context, entity);
             if (attacker)
             {
-                // if the attacker is the same the unit is attacking to
-                // don't change tile state because already happened above
-                if (!targetEntity || attacker->id != targetEntity->id)
-                {
-                    wmap_setUnitMapTileState(context, map, attacker, MAP_TILE_STATE_VISIBLE);
-                }
+                wmap_setUnitMapTileState(context, map, attacker, MAP_TILE_STATE_VISIBLE);
             }
         }
     }
@@ -3056,13 +3044,41 @@ void wmap_updateMap(WarContext* context)
 
     updateSelectionGroups(context);
 
-    updateDebugRenderShortcuts(context);
-
     wai_updateAIPlayers(context);
 
-    updateStateMachines(context);
+    wst_processStateMachinePendingOps(context);
+    wst_updateIdleStates(context);
+    wst_updateMoveStates(context);
+    wst_updatePatrolStates(context);
+    wst_updateFollowStates(context);
+    wst_updateAttackStates(context);
+    wst_updateGoldStates(context);
+    wst_updateMiningStates(context);
+    wst_updateWoodStates(context);
+    wst_updateChoppingStates(context);
+    wst_updateDeliverStates(context);
+    wst_updateDeathStates(context);
+    wst_updateCollapseStates(context);
+    wst_updateTrainStates(context);
+    wst_updateUpgradeStates(context);
+    wst_updateBuildStates(context);
+    wst_updateRepairStates(context);
+    wst_updateRepairingStates(context);
+    wst_updateCastStates(context);
+    wst_updateWaitStates(context);
+
+    updateTreesEdit(context);
+    updateRoadsEdit(context);
+    updateWallsEdit(context);
+    updateRuinsEdit(context);
+    updateRainOfFireEdit(context);
+    updatePoisonCloudEdit(context);
+    updateRaiseDeadEdit(context);
+    updateAddUnit(context);
+
+    wgrid_build(context);
+
     updateActions(context);
-    wgrid_rebuildIfDirty(context);
     wanim_updateAnimations(context);
     updateProjectiles(context);
     updateMagic(context);
@@ -3075,18 +3091,11 @@ void wmap_updateMap(WarContext* context)
 
     updateCommandFromRightClick(context);
     updateStatus(context);
-
-    updateTreesEdit(context);
-    updateRoadsEdit(context);
-    updateWallsEdit(context);
-    updateRuinsEdit(context);
-    updateRainOfFireEdit(context);
-    updatePoisonCloudEdit(context);
-    updateRaiseDeadEdit(context);
-    updateAddUnit(context);
+    wstdbg_updateDebugText(context);
 
     refreshSelectedUnitNearUnitsDebug(context);
 
+    updateDebugRenderShortcuts(context);
     updateFlowFieldDebug(context);
 
     updateObjectives(context);
@@ -3107,6 +3116,7 @@ void wmap_updateMapPaused(WarContext* context)
     updateViewport(context);
     updateDebugRenderShortcuts(context);
     updateStatus(context);
+    wstdbg_updateDebugText(context);
 }
 
 static void renderTerrain(WarContext* context)
@@ -3182,7 +3192,7 @@ static void renderFoW(WarContext* context)
                 wr_subImage(context, map->sprite.texture, rs, rd, VEC2_ONE);
             }
 
-            if (tile->state == MAP_TILE_STATE_UNKOWN)
+            if (tile->state == MAP_TILE_STATE_UNKNOWN)
             {
                 rect rs = recti(0, 0, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 rect rd = recti(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT, MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
@@ -3228,53 +3238,6 @@ static void renderFoW(WarContext* context)
     TracyCZoneEnd(ctx);
 }
 
-static void renderUnitPaths(WarContext* context)
-{
-    if (!context->debugRender.flags[WAR_DEBUG_RENDER_UNIT_PATHS])
-        return;
-
-    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
-    for(s32 i = 0; i < units->count; i++)
-    {
-        WarEntity *entity = units->items[i];
-        if (entity)
-        {
-            WarState* moveState = wst_getDirectState(context, entity, WAR_STATE_MOVE);
-            if (moveState)
-            {
-                Vec2List positions = moveState->move.positions;
-                for(s32 k = moveState->move.positionIndex; k < positions.count; k++)
-                {
-                    vec2 pos = wmap_tileToMapCoordinatesV(positions.items[k], true);
-                    pos = vec2_subv(pos, vec2i(2, 2));
-                    wr_fillRect(context, rectv(pos, vec2i(4, 4)), wr_getColorFromList(entity->id));
-                }
-
-                s32 index = moveState->move.pathNodeIndex;
-                WarMapPath path = moveState->move.path;
-
-                if (index >= 0)
-                {
-                    vec2 prevPos = VEC2_ZERO;
-                    for(s32 k = 0; k < path.nodes.count; k++)
-                    {
-                        vec2 pos = wmap_tileToMapCoordinatesV(path.nodes.items[k], true);
-
-                        if (k > 0)
-                        {
-                            wr_strokeLine(context, prevPos, pos, wr_getColorFromList(entity->id));
-                        }
-
-                        wr_fillRect(context, rectv(pos, VEC2_ONE), k == index ? WAR_COLOR_RGB(255, 0, 255) : WAR_COLOR_RGB(255, 255, 0));
-
-                        prevPos = pos;
-                    }
-                }
-            }
-        }
-    }
-}
-
 static void renderPassableInfo(WarContext* context)
 {
     if (!context->debugRender.flags[WAR_DEBUG_RENDER_PASSABLE_INFO])
@@ -3286,17 +3249,11 @@ static void renderPassableInfo(WarContext* context)
     {
         for(s32 x = 0; x < MAP_TILES_WIDTH; x++)
         {
-            if (isStatic(&map->finder, x, y))
+            if (wpath_isStatic(&map->finder, x, y))
             {
                 vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
                 vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
                 wr_fillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 0, 0, 100));
-            }
-            else if(isDynamic(&map->finder, x, y))
-            {
-                vec2 pos = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT);
-                vec2 size = vec2i(MEGA_TILE_WIDTH, MEGA_TILE_HEIGHT);
-                wr_fillRect(context, rectv(pos, size), WAR_COLOR_RGBA(255, 150, 100, 100));
             }
         }
     }
@@ -3342,6 +3299,252 @@ static void renderSpatialGrid(WarContext* context)
     }
 }
 
+static void renderStateMachineDebugLine(WarContext* context, vec2 start, vec2 end, WarColor color)
+{
+    if (vec2_lengthSqr(vec2_subv(end, start)) > 0.001f)
+    {
+        wr_strokeLine(context, start, end, color);
+    }
+}
+
+static void renderStateMachineDebugMarker(WarContext* context, vec2 position, WarColor color)
+{
+    rect marker = rectf(position.x - 2.0f, position.y - 2.0f, 4.0f, 4.0f);
+    wr_fillRect(context, marker, WAR_COLOR_RGBA(color.r, color.g, color.b, 96));
+    wr_strokeRect(context, marker, color);
+}
+
+static void renderStateMachineDebugPath(WarContext* context, vec2* points, s32 count, WarColor color)
+{
+    for (s32 i = 1; i < count; i++)
+    {
+        renderStateMachineDebugLine(context, points[i - 1], points[i], color);
+    }
+
+    for (s32 i = 0; i < count; i++)
+    {
+        renderStateMachineDebugMarker(context, points[i], color);
+    }
+}
+
+static void renderStateMachineDebugLabel(WarContext* context, StringView text, vec2 position, WarColor color)
+{
+    WarFontParams params = {0};
+    params.fontIndex = 0;
+    params.fontSize = 6.0f;
+    params.fontColor = color;
+    params.fontSprite = context->fontSprites[0];
+    params.fontData = getFontData(0);
+
+    wfont_renderSingleSpriteText(context, text, position.x, position.y, params);
+}
+
+static void renderStateMachineDebugIdle(WarContext* context, WarEntity* entity)
+{
+    vec2 center = wu_getUnitCenterPosition(context, entity);
+    f32 radiusPx = (f32)NEAR_ENEMY_RADIUS * (f32)MEGA_TILE_WIDTH;
+    rect area = rectf(center.x - radiusPx, center.y - radiusPx, radiusPx * 2.0f, radiusPx * 2.0f);
+    wr_strokeRect(context, area, WAR_COLOR_YELLOW);
+
+    WarEntity* enemy = we_getNearEnemy(context, entity);
+    if (enemy)
+    {
+        vec2 enemyPosition = wu_getUnitCenterPosition(context, enemy);
+        renderStateMachineDebugLine(context, center, enemyPosition, WAR_COLOR_YELLOW);
+        renderStateMachineDebugMarker(context, enemyPosition, WAR_COLOR_YELLOW);
+    }
+}
+
+static void renderStateMachineDebugMove(WarContext* context, WarEntity* entity, WarStateMove* move)
+{
+    NOT_USED(entity);
+
+    if (!move || move->waypointsCount <= 1)
+        return;
+
+    renderStateMachineDebugPath(context, move->waypoints, move->waypointsCount, WAR_COLOR_RGB(0, 255, 255));
+}
+
+static void renderStateMachineDebugPatrol(WarContext* context, WarEntity* entity, WarStatePatrol* patrol)
+{
+    NOT_USED(entity);
+
+    if (!patrol || patrol->waypointsCount <= 1)
+        return;
+
+    renderStateMachineDebugPath(context, patrol->waypoints, patrol->waypointsCount, WAR_COLOR_RGB(255, 255, 0));
+}
+
+static void renderStateMachineDebugFollow(WarContext* context, WarEntity* entity, WarStateFollow* follow)
+{
+    if (!follow)
+        return;
+
+    vec2 start = wu_getUnitCenterPosition(context, entity);
+    vec2 end = follow->targetPosition;
+
+    WarEntity* targetEntity = follow->targetEntityId ? we_findEntity(context, follow->targetEntityId) : NULL;
+    if (targetEntity && wu_isUnit(targetEntity))
+    {
+        end = wu_getUnitCenterPosition(context, targetEntity);
+    }
+
+    renderStateMachineDebugLine(context, start, end, WAR_COLOR_RGB(255, 128, 0));
+    renderStateMachineDebugMarker(context, end, WAR_COLOR_RGB(255, 128, 0));
+
+    if (follow->targetDistance > 0)
+    {
+        rect followArea = rectf(end.x - (f32)follow->targetDistance, end.y - (f32)follow->targetDistance,
+                                (f32)follow->targetDistance * 2.0f, (f32)follow->targetDistance * 2.0f);
+        wr_strokeRect(context, followArea, WAR_COLOR_RGB(255, 128, 0));
+    }
+}
+
+static void renderStateMachineDebugAttack(WarContext* context, WarEntity* entity, WarStateAttack* attack)
+{
+    if (!attack)
+        return;
+
+    vec2 start = wu_getUnitCenterPosition(context, entity);
+    vec2 end = attack->targetPosition;
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    const WarUnitStats* stats = unit ? wu_getUnitStats(unit->type) : NULL;
+    if (stats)
+    {
+        f32 rangePx = (f32)stats->range * (f32)MEGA_TILE_WIDTH;
+        rect attackArea = rectf(start.x - rangePx, start.y - rangePx, rangePx * 2.0f, rangePx * 2.0f);
+        wr_strokeRect(context, attackArea, WAR_COLOR_RGB(255, 0, 255));
+    }
+
+    WarEntity* targetEntity = attack->targetEntityId ? we_findEntity(context, attack->targetEntityId) : NULL;
+    if (targetEntity && wu_isUnit(targetEntity))
+    {
+        end = wu_getUnitCenterPosition(context, targetEntity);
+    }
+
+    renderStateMachineDebugLine(context, start, end, WAR_COLOR_RGB(255, 0, 255));
+    renderStateMachineDebugMarker(context, end, WAR_COLOR_RGB(255, 0, 255));
+}
+
+static void renderStateMachineDebugResourceFlow(WarContext* context, WarEntity* entity, WarStateBase* state)
+{
+    if (!state || !entity)
+        return;
+
+    vec2 start = wu_getUnitCenterPosition(context, entity);
+    WarColor flowColor = WAR_COLOR_RGB(0, 255, 0);
+
+    switch (state->type)
+    {
+        case WAR_STATE_GOLD:
+        case WAR_STATE_MINING:
+        {
+            WarStateGold* gold = (WarStateGold*)state;
+            WarEntity* sourceEntity = we_findEntity(context, gold->goldmineId);
+            if (sourceEntity)
+            {
+                vec2 end = wu_getUnitCenterPosition(context, sourceEntity);
+                renderStateMachineDebugLine(context, start, end, flowColor);
+                renderStateMachineDebugMarker(context, end, flowColor);
+                renderStateMachineDebugLabel(context, wsv_fromCString("GOLD"), vec2f((start.x + end.x) * 0.5f, (start.y + end.y) * 0.5f), flowColor);
+            }
+            break;
+        }
+        case WAR_STATE_WOOD:
+        case WAR_STATE_CHOPPING:
+        {
+            WarStateWood* wood = (WarStateWood*)state;
+            vec2 end = wood->position;
+
+            renderStateMachineDebugLine(context, start, end, WAR_COLOR_RGB(255, 255, 0));
+            renderStateMachineDebugMarker(context, end, WAR_COLOR_RGB(255, 255, 0));
+            renderStateMachineDebugLabel(context, wsv_fromCString("WOOD"), vec2f((start.x + end.x) * 0.5f, (start.y + end.y) * 0.5f), WAR_COLOR_RGB(255, 255, 0));
+            break;
+        }
+        case WAR_STATE_DELIVER:
+        {
+            WarStateDeliver* deliver = (WarStateDeliver*)state;
+            WarEntity* townHall = we_findEntity(context, (WarEntityId)deliver->townHallId);
+            if (townHall)
+            {
+                vec2 end = wu_getUnitCenterPosition(context, townHall);
+                renderStateMachineDebugLine(context, start, end, WAR_COLOR_RGB(0, 255, 255));
+                renderStateMachineDebugMarker(context, end, WAR_COLOR_RGB(0, 255, 255));
+                renderStateMachineDebugLabel(context, wsv_fromCString("DELIVER"), vec2f((start.x + end.x) * 0.5f, (start.y + end.y) * 0.5f), WAR_COLOR_RGB(0, 255, 255));
+            }
+
+            if (deliver->cycle)
+            {
+                vec2 sourcePosition = deliver->sourcePosition;
+
+                if (deliver->sourceKind == WAR_RESOURCE_GOLD)
+                {
+                    WarEntity* sourceEntity = we_findEntity(context, deliver->sourceId);
+                    if (sourceEntity)
+                    {
+                        sourcePosition = wu_getUnitCenterPosition(context, sourceEntity);
+                    }
+                }
+
+                if (deliver->sourceKind != WAR_RESOURCE_NONE)
+                {
+                    vec2 sourceEnd = sourcePosition;
+                    if (townHall)
+                    {
+                        sourceEnd = wu_getUnitCenterPosition(context, townHall);
+                    }
+                    renderStateMachineDebugLine(context, start, sourcePosition, WAR_COLOR_RGB(255, 255, 255));
+                    renderStateMachineDebugMarker(context, sourcePosition, WAR_COLOR_RGB(255, 255, 255));
+                }
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+static void renderStateMachineDebug(WarContext* context)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_STATE_MACHINE])
+        return;
+
+    WarMap* map = context->map;
+    if (!map || map->selectedEntities.count != 1)
+        return;
+
+    WarEntity* entity = we_findEntity(context, map->selectedEntities.items[0]);
+    if (!entity || !wu_isUnit(entity))
+        return;
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    if (!sm || sm->depth <= 0)
+        return;
+
+    WarStateBase* state = wst_currentState(context, entity);
+    if (!state)
+        return;
+
+    switch (state->type)
+    {
+        case WAR_STATE_IDLE: renderStateMachineDebugIdle(context, entity); break;
+        case WAR_STATE_MOVE: renderStateMachineDebugMove(context, entity, (WarStateMove*)state); break;
+        case WAR_STATE_PATROL: renderStateMachineDebugPatrol(context, entity, (WarStatePatrol*)state); break;
+        case WAR_STATE_FOLLOW: renderStateMachineDebugFollow(context, entity, (WarStateFollow*)state); break;
+        case WAR_STATE_ATTACK: renderStateMachineDebugAttack(context, entity, (WarStateAttack*)state); break;
+        case WAR_STATE_GOLD:
+        case WAR_STATE_MINING:
+        case WAR_STATE_WOOD:
+        case WAR_STATE_CHOPPING:
+        case WAR_STATE_DELIVER:
+            renderStateMachineDebugResourceFlow(context, entity, state);
+            break;
+        default:
+            break;
+    }
+}
+
 static void renderNearUnitsDebug(WarContext* context)
 {
     if (!context->debugRender.flags[WAR_DEBUG_RENDER_NEAR_UNITS])
@@ -3365,7 +3568,7 @@ static void renderNearUnitsDebug(WarContext* context)
 
     if (context->debugRender.flags[WAR_DEBUG_RENDER_SPATIAL_GRID])
     {
-        // Highlight exactly the grid cells that we_getNearUnits2 visits.
+        // Highlight exactly the grid cells that we_getNearUnits visits.
         // Uses the same floorf-based bounds as the query so the highlighted
         // cells match the yellow bounding box as tightly as possible.
         s32 gxMin = MAX(0,                     (s32)floorf((targetTile.x - (f32)distance) / MAP_GRID_TILE_SIZE));
@@ -3386,7 +3589,7 @@ static void renderNearUnitsDebug(WarContext* context)
         }
     }
 
-    // Replay we_getNearUnits2 to get current results — no stored result arrays needed.
+    // Replay we_getNearUnits to get current results — no stored result arrays needed.
     WarEntityList nearUnits;
     WarEntityListInit(&nearUnits, wm_frameAllocator());
     we_getNearUnits(context, targetTile, distance, &nearUnits);
@@ -3414,6 +3617,9 @@ static void renderFlowField(WarContext* context)
 
     WarMap* map = context->map;
 
+    if (!map->debug.flowField)
+        return;
+
     s32 startX = (s32)(map->camera.viewport.x / MEGA_TILE_WIDTH);
     s32 startY = (s32)(map->camera.viewport.y / MEGA_TILE_HEIGHT);
     s32 endX = (s32)((map->camera.viewport.x + map->camera.viewport.width) / MEGA_TILE_WIDTH) + 1;
@@ -3438,10 +3644,10 @@ static void renderFlowField(WarContext* context)
             if (x == map->debug.flowFieldX && y == map->debug.flowFieldY)
                 continue;
 
-            if (isStatic(&map->finder, x, y))
+            if (wpath_isStatic(&map->finder, x, y))
                 continue;
 
-            WarDirection dir = (WarDirection)map->debug.flowField.dirs[y * MAP_TILES_WIDTH + x];
+            WarDirection dir = (WarDirection)map->debug.flowField->dirs[y * MAP_TILES_WIDTH + x];
             if (dir < WAR_DIRECTION_NORTH || dir >= WAR_DIRECTION_COUNT)
                 continue;
 
@@ -3468,6 +3674,103 @@ static void renderFlowField(WarContext* context)
     }
 }
 
+static void renderRvoDebug(WarContext* context)
+{
+    if (!context->debugRender.flags[WAR_DEBUG_RENDER_RVO])
+        return;
+
+    TracyCZoneN(ctx, "RenderRvoDebug", 1);
+
+#define CANDIDATE_DRAW_SCALE 1.0f
+#define ARROW_HEAD_LEN 3.0f
+#define DOT_RADIUS_PX 1.5f
+#define BEST_DOT_RADIUS_PX 3.0f
+
+    WarColor radiusColor   = WAR_COLOR_RGBA(255, 255, 255, 64);
+    WarColor rvoVelColor   = WAR_COLOR_RGB(0, 255, 0);
+    WarColor prefVelColor  = WAR_COLOR_RGB(255, 255, 0);
+    WarColor cleanColor    = WAR_COLOR_RGB(255, 255, 255);
+    WarColor penaltyColor  = WAR_COLOR_RGB(255, 0, 0);
+    WarColor bestColor     = WAR_COLOR_RGB(0, 255, 0);
+
+    WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
+    for (s32 i = 0; i < units->count; i++)
+    {
+        WarEntity* entity = units->items[i];
+        if (!entity || entity->id < 0) continue;
+
+        WarStateMove* moveState = wst_getMoveState(context, entity);
+        if (!moveState) continue;
+        if (moveState->rvoNumCandidates <= 0) continue;
+
+        vec2 pos    = moveState->rvoPosition;
+        f32  radius = moveState->rvoRadius;
+
+        // rect radiusRect = rectf(
+        //     pos.x - radius, pos.y - radius,
+        //     radius * 2.0f,  radius * 2.0f
+        // );
+        // wr_strokeRect(context, radiusRect, radiusColor);
+
+        if (vec2_lengthSqr(moveState->rvoVelocity) > 0.01f)
+        {
+            vec2 rvoEnd = vec2f(
+                pos.x + moveState->rvoVelocity.x * CANDIDATE_DRAW_SCALE,
+                pos.y + moveState->rvoVelocity.y * CANDIDATE_DRAW_SCALE
+            );
+            wr_strokeLine(context, pos, rvoEnd, rvoVelColor);
+            f32 angle = atan2f(moveState->rvoVelocity.y, moveState->rvoVelocity.x);
+            vec2 h1 = vec2f(rvoEnd.x - ARROW_HEAD_LEN * cosf(angle - PI / 6.0f),
+                            rvoEnd.y - ARROW_HEAD_LEN * sinf(angle - PI / 6.0f));
+            vec2 h2 = vec2f(rvoEnd.x - ARROW_HEAD_LEN * cosf(angle + PI / 6.0f),
+                            rvoEnd.y - ARROW_HEAD_LEN * sinf(angle + PI / 6.0f));
+            wr_strokeLine(context, rvoEnd, h1, rvoVelColor);
+            wr_strokeLine(context, rvoEnd, h2, rvoVelColor);
+        }
+
+        if (vec2_lengthSqr(moveState->rvoPreferredVelocity) > 0.01f)
+        {
+            vec2 prefEnd = vec2f(
+                pos.x + moveState->rvoPreferredVelocity.x * CANDIDATE_DRAW_SCALE,
+                pos.y + moveState->rvoPreferredVelocity.y * CANDIDATE_DRAW_SCALE
+            );
+            wr_strokeLine(context, pos, prefEnd, prefVelColor);
+            f32 angle = atan2f(moveState->rvoPreferredVelocity.y, moveState->rvoPreferredVelocity.x);
+            vec2 h1 = vec2f(prefEnd.x - ARROW_HEAD_LEN * cosf(angle - PI / 6.0f),
+                            prefEnd.y - ARROW_HEAD_LEN * sinf(angle - PI / 6.0f));
+            vec2 h2 = vec2f(prefEnd.x - ARROW_HEAD_LEN * cosf(angle + PI / 6.0f),
+                            prefEnd.y - ARROW_HEAD_LEN * sinf(angle + PI / 6.0f));
+            wr_strokeLine(context, prefEnd, h1, prefVelColor);
+            wr_strokeLine(context, prefEnd, h2, prefVelColor);
+        }
+
+        // s32 n = moveState->rvoNumCandidates;
+        // for (s32 c = 0; c < n; c++)
+        // {
+        //     vec2 cv = moveState->rvoCandidates[c];
+        //     vec2 dot = vec2f(pos.x + cv.x * CANDIDATE_DRAW_SCALE,
+        //                      pos.y + cv.y * CANDIDATE_DRAW_SCALE);
+        //     rect r = rectf(dot.x - DOT_RADIUS_PX, dot.y - DOT_RADIUS_PX,
+        //                    DOT_RADIUS_PX * 2.0f, DOT_RADIUS_PX * 2.0f);
+        //     WarColor col = moveState->rvoCandidateHadCollision[c] ? penaltyColor : cleanColor;
+        //     wr_fillRect(context, r, col);
+        // }
+
+        // if (moveState->rvoBestIndex >= 0 &&
+        //     moveState->rvoBestIndex < n)
+        // {
+        //     vec2 cv = moveState->rvoCandidates[moveState->rvoBestIndex];
+        //     vec2 dot = vec2f(pos.x + cv.x * CANDIDATE_DRAW_SCALE,
+        //                      pos.y + cv.y * CANDIDATE_DRAW_SCALE);
+        //     rect r = rectf(dot.x - BEST_DOT_RADIUS_PX, dot.y - BEST_DOT_RADIUS_PX,
+        //                    BEST_DOT_RADIUS_PX * 2.0f, BEST_DOT_RADIUS_PX * 2.0f);
+        //     wr_fillRect(context, r, bestColor);
+        // }
+    }
+
+    TracyCZoneEnd(ctx);
+}
+
 static void renderMapPanel(WarContext *context)
 {
     TracyCZoneN(ctx, "RenderMapPanel", 1);
@@ -3485,18 +3788,21 @@ static void renderMapPanel(WarContext *context)
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_WALL);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_FOREST);
 
-    renderUnitPaths(context);
     renderPassableInfo(context);
     renderMapGrid(context);
     renderSpatialGrid(context);
     renderFlowField(context);
     renderNearUnitsDebug(context);
+    renderStateMachineDebug(context);
 
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     we_renderUnitSelection(context);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_PROJECTILE);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_POISON_CLOUD);
     we_renderEntitiesOfType(context, WAR_ENTITY_TYPE_ANIMATION);
+
+    renderRvoDebug(context);
+
     renderFoW(context);
 
     wr_restore(context);

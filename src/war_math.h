@@ -106,5 +106,5 @@ rect rect_scalef(rect r, f32 scale);
 rect rect_translatef(rect r, f32 x, f32 y);
 vec2 rect_center(rect r);
 rect rect_expand(rect r, f32 dx, f32 dy);
-vec2 get_closestPointOnRect(vec2 p, rect r);
+vec2 rect_closestPointOnRect(rect r, vec2 p);
 void rect_print(rect r);

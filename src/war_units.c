@@ -392,17 +392,17 @@ static_assert(arrayLength(spellMappings) == 4, "spellMappings array size does no
 
 const WarUnitCommandBaseData commandsBaseData[] =
 {
-    { WAR_COMMAND_NONE,                     NULL,                   WAR_KEY_NONE,      -1, 1, WSV_INIT(""),                             WSV_INIT("") },
+    { WAR_COMMAND_NONE,                     NULL,                        WAR_KEY_NONE,      -1, 1, WSV_INIT(""),                             WSV_INIT("") },
 
     // unit commands
-    { WAR_COMMAND_MOVE,                     move,                   WAR_KEY_M,          0, 1, WSV_INIT("MOVE"),                         WSV_INIT("") },
+    { WAR_COMMAND_MOVE,                     move,                        WAR_KEY_M,          0, 1, WSV_INIT("MOVE"),                         WSV_INIT("") },
     { WAR_COMMAND_STOP,                     wcmd_stop,                   WAR_KEY_S,          0, 1, WSV_INIT("STOP"),                         WSV_INIT("") },
     { WAR_COMMAND_HARVEST,                  wcmd_harvest,                WAR_KEY_H,          0, 1, WSV_INIT("HARVEST LUMBER/MINE GOLD"),     WSV_INIT("") },
-    { WAR_COMMAND_DELIVER,                  deliver,                WAR_KEY_T,         16, 1, WSV_INIT("RETURN GOODS TO TOWN HALL"),    WSV_INIT("") },
-    { WAR_COMMAND_REPAIR,                   repair,                 WAR_KEY_R,          0, 1, WSV_INIT("REPAIR"),                       WSV_INIT("") },
+    { WAR_COMMAND_DELIVER,                  deliver,                     WAR_KEY_T,         16, 1, WSV_INIT("RETURN GOODS TO TOWN HALL"),    WSV_INIT("") },
+    { WAR_COMMAND_REPAIR,                   repair,                      WAR_KEY_R,          0, 1, WSV_INIT("REPAIR"),                       WSV_INIT("") },
     { WAR_COMMAND_BUILD_BASIC,              wcmd_buildBasic,             WAR_KEY_B,          0, 1, WSV_INIT("BUILD BASIC STRUCTURE"),        WSV_INIT("") },
     { WAR_COMMAND_BUILD_ADVANCED,           wcmd_buildAdvanced,          WAR_KEY_A,          6, 1, WSV_INIT("BUILD ADVANCED STRUCTURE"),     WSV_INIT("") },
-    { WAR_COMMAND_ATTACK,                   attack,                 WAR_KEY_A,          0, 1, WSV_INIT("ATTACK"),                       WSV_INIT("") },
+    { WAR_COMMAND_ATTACK,                   attack,                      WAR_KEY_A,          0, 1, WSV_INIT("ATTACK"),                       WSV_INIT("") },
 
     // train commands
     { WAR_COMMAND_TRAIN_FOOTMAN,            wcmd_trainFootman,           WAR_KEY_F,          6, 1, WSV_INIT("TRAIN FOOTMAN"),                WSV_INIT("TRAINING A FOOTMAN")        },
@@ -1432,22 +1432,35 @@ rect wu_getUnitRect(WarContext* context, WarEntity* entity)
 {
     assert(wu_isUnit(entity));
 
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    return rectv(transform->position, wu_getUnitSpriteSize(context, entity));
+    vec2 position = wu_getUnitPosition(context, entity);
+    vec2 size = wu_getUnitSpriteSize(context, entity);
+    return rectv(position, size);
 }
 
-vec2 wu_getUnitPosition(WarContext* context, WarEntity* entity, bool inTiles)
+rect wu_getUnitRectTiles(WarContext* context, WarEntity* entity)
+{
+    assert(wu_isUnit(entity));
+
+    vec2 tile = wu_getUnitTile(context, entity);
+    vec2 size = wu_getUnitSize(context, entity);
+    return rectv(tile, size);
+}
+
+vec2 wu_getUnitPosition(WarContext* context, WarEntity* entity)
 {
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
 
-    vec2 position = transform->position;
-    return inTiles ? wmap_mapToTileCoordinatesV(position) : position;
+    return transform->position;
 }
 
-vec2 wu_getUnitCenterPosition(WarContext* context, WarEntity* entity, bool inTiles)
+vec2 wu_getUnitTile(WarContext* context, WarEntity* entity)
+{
+    vec2 position = wu_getUnitPosition(context, entity);
+    return wmap_mapToTileCoordinatesV(position);
+}
+
+vec2 wu_getUnitCenterPosition(WarContext* context, WarEntity* entity)
 {
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
@@ -1455,47 +1468,43 @@ vec2 wu_getUnitCenterPosition(WarContext* context, WarEntity* entity, bool inTil
     vec2 spriteSize = wu_getUnitSpriteSize(context, entity);
     vec2 unitCenter = vec2_half(spriteSize);
     vec2 position = vec2_addv(transform->position, unitCenter);
-    return inTiles ? wmap_mapToTileCoordinatesV(position) : position;
+    return position;
 }
 
-void wu_setUnitPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles)
+vec2 wu_getUnitCenterTile(WarContext* context, WarEntity* entity)
 {
-    if (inTiles)
-    {
-        position = wmap_tileToMapCoordinatesV(position, true);
-    }
+    vec2 position = wu_getUnitCenterPosition(context, entity);
+    return wmap_mapToTileCoordinatesV(position);
+}
 
+void wu_setUnitPosition(WarContext* context, WarEntity* entity, vec2 position)
+{
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
 
     transform->position = position;
-
-    WarMap* map = context->map;
-    if (map)
-    {
-        map->grid.dirty = true;
-    }
 }
 
-void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 position, bool inTiles)
+void wu_setUnitTile(WarContext* context, WarEntity* entity, vec2 tile)
 {
-    if (inTiles)
-    {
-        position = wmap_tileToMapCoordinatesV(position, true);
-    }
+    vec2 position = wmap_tileToMapCoordinatesV(tile, true);
+    wu_setUnitPosition(context, entity, position);
+}
 
+void wu_setUnitCenterPosition(WarContext* context, WarEntity* entity, vec2 position)
+{
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
 
     vec2 spriteSize = wu_getUnitSpriteSize(context, entity);
     vec2 unitCenter = vec2_half(spriteSize);
     transform->position = vec2_subv(position, unitCenter);
+}
 
-    WarMap* map = context->map;
-    if (map)
-    {
-        map->grid.dirty = true;
-    }
+void wu_setUnitCenterTile(WarContext* context, WarEntity* entity, vec2 tile)
+{
+    vec2 position = wmap_tileToMapCoordinatesV(tile, true);
+    wu_setUnitCenterPosition(context, entity, position);
 }
 
 WarDirection wu_getUnitDirection(WarContext* context, WarEntity* entity)
@@ -1560,29 +1569,32 @@ f32 wu_getUnitActionScale(WarContext* context, WarEntity* entity)
     return 1 - unit->speed * 0.1f;
 }
 
+vec2 wu_unitTileOnTarget(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
+{
+    assert(wu_isUnit(entity));
+    assert(wu_isUnit(targetEntity));
+
+    vec2 tile = wu_getUnitCenterTile(context, entity);
+    rect targetRect = wu_getUnitRectTiles(context, targetEntity);
+    return rect_closestPointOnRect(targetRect, tile);
+}
+
 vec2 wu_unitPointOnTarget(WarContext* context, WarEntity* entity, WarEntity* targetEntity)
 {
     assert(wu_isUnit(entity));
     assert(wu_isUnit(targetEntity));
 
-    vec2 position = wu_getUnitCenterPosition(context, entity, true);
-
-    WarTransformComponent* targetTransform = we_getTransformComponent(context, targetEntity);
-    assert(targetTransform);
-
-    vec2 targetPosition = wmap_mapToTileCoordinatesV(targetTransform->position);
-    vec2 unitSize = wu_getUnitSize(context, targetEntity);
-    rect unitRect = rectv(targetPosition, unitSize);
-
-    return get_closestPointOnRect(position, unitRect);
+    vec2 position = wu_getUnitCenterPosition(context, entity);
+    rect targetRect = wu_getUnitRect(context, targetEntity);
+    return rect_closestPointOnRect(targetRect, position);
 }
 
-s32 wu_entityTileDistance(WarContext* context, WarEntity* entity, vec2 targetPosition)
+s32 wu_entityTileDistance(WarContext* context, WarEntity* entity, vec2 targetTile)
 {
     assert(wu_isUnit(entity));
 
-    vec2 position = wu_getUnitCenterPosition(context, entity, true);
-    f32 distance = vec2_distanceInTiles(position, targetPosition);
+    vec2 tile = wu_getUnitCenterTile(context, entity);
+    f32 distance = vec2_distanceInTiles(tile, targetTile);
     return (s32)distance;
 }
 
@@ -1599,8 +1611,8 @@ s32 wu_unitDistanceInTiles(WarContext* context, WarEntity* entity, WarEntity* ta
     assert(wu_isUnit(entity));
     assert(wu_isUnit(targetEntity));
 
-    vec2 pointOnTarget = wu_unitPointOnTarget(context, entity, targetEntity);
-    return wu_entityTileDistance(context, entity, pointOnTarget);
+    vec2 tileOnTarget = wu_unitTileOnTarget(context, entity, targetEntity);
+    return wu_entityTileDistance(context, entity, tileOnTarget);
 }
 
 bool wu_unitInRange(WarContext* context, WarEntity* entity, WarEntity* targetEntity, s32 range)

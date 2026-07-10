@@ -122,13 +122,13 @@ struct _WarMapCommandPanel
 
 struct _WarMapDebug
 {
-    WarMapFlowField flowField;
+    WarMapFlowField* flowField;
     s32 flowFieldX;
     s32 flowFieldY;
 
     // Parameters for the WAR_DEBUG_RENDER_NEAR_UNITS overlay.
     // Set each frame by the selection probe or by cheat edit-mode handlers.
-    // The render path replays we_getNearUnits2 from these to compute results.
+    // The render path replays we_getNearUnits from these to compute results.
     bool nearUnitsEnabled;
     vec2 nearUnitsTargetTile;
     s32  nearUnitsDistance;
@@ -154,6 +154,9 @@ struct _WarMap
 
     s32 levelInfoIndex;
     f32 objectivesTime;
+
+    // real-time of last acknowledgement sound
+    f64 lastAcknowledgementRealTime;
 
     WarMapSettings settings;
     WarMapSettings pendingSettings;
@@ -228,10 +231,10 @@ bool wmap_isUnitPartiallyVisible(WarContext* context, WarMap* map, WarEntity* en
 bool wmap_isUnitVisible(WarContext* context, WarMap* map, WarEntity* entity);
 bool wmap_isUnitPartiallyFog(WarContext* context, WarMap* map, WarEntity* entity);
 bool wmap_isUnitFog(WarContext* context, WarMap* map, WarEntity* entity);
-bool wmap_isUnitPartiallyUnkown(WarContext* context, WarMap* map, WarEntity* entity);
+bool wmap_isUnitPartiallyUnknown(WarContext* context, WarMap* map, WarEntity* entity);
 bool wmap_isUnitUnknown(WarContext* context, WarMap* map, WarEntity* entity);
 
-bool wmap_isTileUnkown(WarMap* map, s32 x, s32 y);
+bool wmap_isTileUnknown(WarMap* map, s32 x, s32 y);
 bool wmap_isTileFog(WarMap* map, s32 x, s32 y);
 bool wmap_isTileVisible(WarMap* map, s32 x, s32 y);
 bool wmap_isPositionVisible(WarMap* map, vec2 position);

@@ -1,28 +1,44 @@
 #include "war_state_machine.h"
 
-WarState* wst_createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId)
-{
-    WarState* state = wst_createState(context, entity, WAR_STATE_DELIVER);
-    state->deliver.townHallId = townHallId;
-    return state;
-}
+#include "TracyC.h"
 
-void wst_enterDeliverState(WarContext* context, WarEntity* entity, WarState* state)
+WarStateDeliver* wst_createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId)
 {
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
+    TracyCZoneN(ctx, "wst_createDeliverState", true);
+
+    WarStateRef ref = wst_allocState(context, WAR_STATE_DELIVER, entity->id);
+    WarStateDeliver* state = (WarStateDeliver*)wst_deref(context, ref);
+    state->townHallId = townHallId;
+    state->insideBuilding = false;
+    state->cycle = false;
+    state->sourceKind = WAR_RESOURCE_NONE;
+    state->sourceId = 0;
+    state->sourcePosition = VEC2_ZERO;
+
+    TracyCZoneEnd(ctx);
+    return state;
 }
 
 void wst_leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveDeliverState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateDeliverState", true);
+
+    WarStateDeliver* s = (WarStateDeliver*)state;
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    assert(sm);
+
     WarMap* map = context->map;
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
@@ -30,43 +46,61 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-    WarEntity* townHall = we_findEntity(context, (WarEntityId)state->deliver.townHallId);
+    WarEntity* townHall = we_findEntity(context, (WarEntityId)s->townHallId);
 
     // if the town hall doesn't exists (or other units attacking it), go idle
     if (!townHall)
     {
-        WarState* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, idleState, true, true);
+        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
     if (!wu_unitInRange(context, entity, townHall, stats->range))
     {
-        vec2 targetTile = wu_unitPointOnTarget(context, entity, townHall);
-
-        WarState* followState = wst_createFollowState(context, entity, townHall->id, targetTile, stats->range);
-        followState->nextState = state;
-        wst_changeNextState(context, entity, followState, false, true);
+        vec2 targetPosition = wu_unitPointOnTarget(context, entity, townHall);
+        WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, targetPosition, stats->range * MEGA_TILE_WIDTH);
+        wst_pushState(context, entity, (WarStateBase*)followState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
-    if (state->deliver.insideBuilding)
+    if (s->insideBuilding)
     {
         // find a valid spawn position for the unit
-        vec2 position = wu_getUnitCenterPosition(context, townHall, true);
-        vec2 spawnPosition = wpath_findEmptyPosition(&map->finder, position);
-        wu_setUnitCenterPosition(context, entity, spawnPosition, true);
+        vec2 tile = wu_getUnitCenterTile(context, townHall);
+        vec2 spawnTile = wpath_findEmptyTile(&map->finder, (s32)tile.x, (s32)tile.y);
+        wu_setUnitCenterTile(context, entity, spawnTile);
 
         const WarUnitData* unitData = wu_getUnitData(unit->type);
         we_removeSpriteComponent(context, entity);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(unitData->resourceIndex));
 
-        if (!wst_changeStateNextState(context, entity, state))
+        if (s->cycle)
         {
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
+            if (s->sourceKind == WAR_RESOURCE_GOLD)
+            {
+                WarStateGold* gatherGoldState = wst_createGatherGoldState(context, entity, s->sourceId);
+                wst_replaceState(context, entity, (WarStateBase*)gatherGoldState);
+            }
+            else
+            {
+                WarStateWood* gatherWoodState = wst_createGatherWoodState(context, entity, s->sourceId, s->sourcePosition);
+                wst_replaceState(context, entity, (WarStateBase*)gatherWoodState);
+            }
+        }
+        else if (sm->depth > 1)
+        {
+            wst_popState(context, entity);
+        }
+        else
+        {
+            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+            wst_replaceState(context, entity, (WarStateBase*)idleState);
         }
 
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -84,7 +118,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     // the unit arrive to the townhall, so now the unit go inside the building for some time to simulate the depositing
     // then need go back to the goldmine/trees.
-    state->deliver.insideBuilding = true;
+    s->insideBuilding = true;
 
     we_disableComponent(context, entity, COMP_SPRITE);
 
@@ -94,11 +128,43 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     // simulate the time inside the townhall
     state->delay = wmap_getMapScaledTime(context, 1.0f);
+
+    TracyCZoneEnd(ctx);
 }
 
-void wst_freeDeliverState(WarContext* context, WarState* state)
+
+void wst_updateDeliverStates(WarContext* context)
 {
-    NOT_USED(context);
-    NOT_USED(state);
-}
+    TracyCZoneN(ctx, "wst_updateDeliverStates", true);
 
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateDeliver*      states  = storage->deliver;
+    bool*             occupied = storage->occupied[WAR_STATE_DELIVER];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateDeliver*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_DELIVER || sm->stack[sm->depth - 1].idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateDeliverState(context, entity, (WarStateBase*)state);
+    }
+
+    TracyCZoneEnd(ctx);
+}

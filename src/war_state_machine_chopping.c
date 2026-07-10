@@ -5,56 +5,80 @@
 #include "war_units.h"
 #include "war_map.h"
 
-WarState* wst_createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
+#include "TracyC.h"
+
+WarStateChopping* wst_createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position)
 {
-    WarState* state = wst_createState(context, entity, WAR_STATE_CHOPPING);
-    state->chop.forestId = forestId;
-    state->chop.position = position;
+    TracyCZoneN(ctx, "wst_createChoppingState", true);
+
+    WarStateRef ref = wst_allocState(context, WAR_STATE_CHOPPING, entity->id);
+    WarStateChopping* state = (WarStateChopping*)wst_deref(context, ref);
+    state->forestId = forestId;
+    state->position = position;
+
+    TracyCZoneEnd(ctx);
     return state;
-}
-
-void wst_enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    WarMap* map = context->map;
-
-    vec2 unitSize = wu_getUnitSize(context, entity);
-    vec2 position = wu_getUnitCenterPosition(context, entity, true);
-    vec2 treePosition = state->chop.position;
-
-    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    wu_setUnitDirectionFromDiff(context, entity, treePosition.x - position.x, treePosition.y - position.y);
-    wact_setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 }
 
 void wst_leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveChoppingState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateChoppingState", true);
+
+    WarMap* map = context->map;
+    assert(map);
+
+    WarStateChopping* s = (WarStateChopping*)state;
+
+    if (!state->initialized)
+    {
+        vec2 unitTile = wu_getUnitCenterTile(context, entity);
+        vec2 unitSize = wu_getUnitSize(context, entity);
+        vec2 treePosition = s->position;
+        vec2 treeTile = wmap_mapToTileCoordinatesV(treePosition);
+
+        wpath_setStaticEntity(&map->finder, (s32)unitTile.x, (s32)unitTile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        wu_setUnitDirectionFromDiff(context, entity, treeTile.x - unitTile.x, treeTile.y - unitTile.y);
+        wact_setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
+
+        state->initialized = true;
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    WarEntity* forest = we_findEntity(context, (WarEntityId)state->chop.forestId);
+    WarEntity* forest = we_findEntity(context, (WarEntityId)s->forestId);
 
     // if the forest doesn't exists, go idle
     if (!forest)
     {
-        WarState* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, idleState, true, true);
+        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
-    vec2 treePosition = state->chop.position;
-    WarTree* tree = we_getTreeAtPosition(context, forest, (s32)treePosition.x, (s32)treePosition.y);
+    vec2 treePosition = s->position;
+    vec2 treeTile = wmap_mapToTileCoordinatesV(treePosition);
+    WarTree* tree = we_getTreeAtTile(context, forest, (s32)treeTile.x, (s32)treeTile.y);
 
     if (!tree || tree->amount == 0)
     {
-        WarState* gatherWoodState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
-        wst_changeNextState(context, entity, gatherWoodState, true, true);
+        WarStateWood* gatherWoodState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
+        wst_replaceState(context, entity, (WarStateBase*)gatherWoodState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -69,11 +93,10 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
 
         if (action->lastSoundStep == WAR_ACTION_STEP_SOUND_CHOPPING)
         {
-            vec2 targetPosition = wmap_tileToMapCoordinatesV(treePosition, true);
             wa_createAudioRandomWithPosition(context, CREATE_AUDIO_ARGS_INIT(
                 .randomFromId=WAR_TREE_CHOPPING_1,
                 .randomToId=WAR_TREE_CHOPPING_4,
-                .position=targetPosition,
+                .position=treePosition,
                 .hasPosition=true,
                 .loop=false
             ));
@@ -94,24 +117,61 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
             // if the town hall doesn't exists (it could be under attack and get destroyed), go idle
             if (!townHall)
             {
-                WarState* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, idleState, true, true);
+                WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+                wst_replaceState(context, entity, (WarStateBase*)idleState);
+                TracyCZoneEnd(ctx);
                 return;
             }
 
-            WarState* deliverState = wst_createDeliverState(context, entity, townHall->id);
-            deliverState->nextState = wst_createGatherWoodState(context, entity, forest->id, treePosition);
-            wst_changeNextState(context, entity, deliverState, true, true);
+            WarStateDeliver* deliverState = wst_createDeliverState(context, entity, townHall->id);
+            deliverState->cycle = true;
+            deliverState->sourceKind = WAR_RESOURCE_WOOD;
+            deliverState->sourceId = forest->id;
+            deliverState->sourcePosition = treePosition;
+            wst_replaceState(context, entity, (WarStateBase*)deliverState);
         }
 
         // this is not the more elegant solution, but the actions and the state machine have to comunicate somehow
         action->lastActionStep = WAR_ACTION_STEP_NONE;
         action->lastSoundStep =  WAR_ACTION_STEP_NONE;
     }
+
+    TracyCZoneEnd(ctx);
 }
 
-void wst_freeChoppingState(WarContext* context, WarState* state)
+
+void wst_updateChoppingStates(WarContext* context)
 {
-    NOT_USED(context);
-    NOT_USED(state);
+    TracyCZoneN(ctx, "wst_updateChoppingStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateChopping*      states  = storage->chopping;
+    bool*             occupied = storage->occupied[WAR_STATE_CHOPPING];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateChopping*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_CHOPPING || sm->stack[sm->depth - 1].idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateChoppingState(context, entity, (WarStateBase*)state);
+    }
+
+    TracyCZoneEnd(ctx);
 }

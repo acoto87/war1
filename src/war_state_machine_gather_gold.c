@@ -1,62 +1,103 @@
 ﻿#include "war_state_machine.h"
 
-WarState* wst_createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
-{
-    WarState* state = wst_createState(context, entity, WAR_STATE_GOLD);
-    state->gold.goldmineId = goldmineId;
-    return state;
-}
+#include "TracyC.h"
 
-void wst_enterGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
+WarStateGold* wst_createGatherGoldState(WarContext* context, WarEntity* entity, WarEntityId goldmineId)
 {
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
+    TracyCZoneN(ctx, "wst_createGatherGoldState", true);
+
+    WarStateRef ref = wst_allocState(context, WAR_STATE_GOLD, entity->id);
+    WarStateGold* state = (WarStateGold*)wst_deref(context, ref);
+    state->goldmineId = goldmineId;
+
+    TracyCZoneEnd(ctx);
+    return state;
 }
 
 void wst_leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveGatherGoldState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateGatherGoldState", true);
+
+    WarStateGold* s = (WarStateGold*)state;
+
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-    WarEntity* goldmine = we_findEntity(context, (WarEntityId)state->gold.goldmineId);
+    WarEntity* goldmine = we_findEntity(context, (WarEntityId)s->goldmineId);
 
     // if the goldmine doesn't exists (it could ran out of gold, or other units attacking it), go idle
     // if the unit was already mining, and the gold mine ran out of gold, then another unit previouly got all the remaining gold
     // so, this unit get nothing
     if (!goldmine || wst_isCollapsing(context, goldmine) || wst_isGoingToCollapse(context, goldmine))
     {
-        WarState* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, idleState, true, true);
+        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
     // if the goldmine is not in range, go to it
     if (!wu_unitInRange(context, entity, goldmine, stats->range))
     {
-        WarState* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats->range);
-        followState->nextState = state;
-        wst_changeNextState(context, entity, followState, false, true);
+        WarStateFollow* followState = wst_createFollowState(context, entity, goldmine->id, VEC2_ZERO, stats->range * MEGA_TILE_WIDTH);
+        wst_pushState(context, entity, (WarStateBase*)followState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
     // the unit arrive to the goldmine, go mining
-    WarState* miningState = wst_createMiningState(context, entity, goldmine->id);
-    wst_changeNextState(context, entity, miningState, true, true);
+    WarStateMining* miningState = wst_createMiningState(context, entity, goldmine->id);
+    wst_replaceState(context, entity, (WarStateBase*)miningState);
+
+    TracyCZoneEnd(ctx);
 }
 
-void wst_freeGatherGoldState(WarContext* context, WarState* state)
+
+void wst_updateGoldStates(WarContext* context)
 {
-    NOT_USED(context);
-    NOT_USED(state);
-}
+    TracyCZoneN(ctx, "wst_updateGoldStates", true);
 
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateGold*      states  = storage->gold;
+    bool*             occupied = storage->occupied[WAR_STATE_GOLD];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateGold*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_GOLD || sm->stack[sm->depth - 1].idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateGatherGoldState(context, entity, (WarStateBase*)state);
+    }
+
+    TracyCZoneEnd(ctx);
+}

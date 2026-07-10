@@ -23,6 +23,8 @@ struct _WarCheatStatus
     bool feedback;
     f64 feedbackEndRealTime;
     String feedbackText;
+    bool debugTextActive;
+    String debugText;
     // X offset (relative to panel.x + 2) of the blinking cursor rect.
     // Written by the update function; read by the render function.
     // Negative value means cursor is not visible.
@@ -78,6 +80,7 @@ void wcheat_applyDebugRenderCheat(WarContext* context, StringView argument);
 // ui
 void wcheatp_setCheatsPanelVisible(WarContext* context, bool visible);
 void wcheatp_setCheatsFeedback(WarContext* context, String feedbackText);
+void wcheatp_setDebugText(WarContext* context, StringView text);
 void wcheatp_createCheatsPanel(WarContext* context);
 void wcheatp_setCheatText(WarContext* context, String text);
 void wcheatp_updateCheatsPanel(WarContext* context);

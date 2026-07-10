@@ -7,9 +7,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <time.h>
 #include <math.h>
 #include <string.h>
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -130,8 +128,6 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    srand((unsigned int)time(NULL));
-
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
@@ -240,6 +236,7 @@ int main(int argc, char** argv)
 #include "war_projectiles.c"
 #include "war_entities.c"
 #include "war_pathfinder.c"
+#include "war_rvo.c"
 #include "war_state_machine_idle.c"
 #include "war_state_machine_move.c"
 #include "war_state_machine_follow.c"
@@ -260,6 +257,7 @@ int main(int argc, char** argv)
 #include "war_state_machine_repairing.c"
 #include "war_state_machine_cast.c"
 #include "war_state_machine.c"
+#include "war_state_machine_debug.c"
 #include "war_campaigns.c"
 #include "war_cheats.c"
 #include "war_map_menu.c"

@@ -1,51 +1,60 @@
 #include "war_state_machine.h"
 
+#include "war.h"
 #include "war_map.h"
 #include "war_actions.h"
 #include "war_audio.h"
 #include "war_units.h"
 
-WarState* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetTile)
-{
-    WarState* state = wst_createState(context, entity, WAR_STATE_ATTACK);
-    state->attack.targetEntityId = targetEntityId;
-    state->attack.targetTile = targetTile;
-    return state;
-}
+#include "TracyC.h"
 
-void wst_enterAttackState(WarContext* context, WarEntity* entity, WarState* state)
+WarStateAttack* wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition)
 {
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
+    TracyCZoneN(ctx, "wst_createAttackState", true);
+
+    WarStateRef ref = wst_allocState(context, WAR_STATE_ATTACK, entity->id);
+    WarStateAttack* state = (WarStateAttack*)wst_deref(context, ref);
+    state->targetEntityId = targetEntityId;
+    state->targetPosition = targetPosition;
+
+    TracyCZoneEnd(ctx);
+    return state;
 }
 
 void wst_leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leaveAttackState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_updateAttackState", true);
+
+    WarStateAttack* s = (WarStateAttack*)state;
+
     WarMap* map = context->map;
+    assert(map);
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
+    vec2 position = wu_getUnitCenterPosition(context, entity);
+    vec2 unitTile = wu_getUnitCenterTile(context, entity);
     vec2 unitSize = wu_getUnitSize(context, entity);
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
-
-    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
 
     const WarUnitStats* stats = wu_getUnitStats(unit->type);
 
-    WarEntityId targetEntityId = (WarEntityId)state->attack.targetEntityId;
+    WarEntityId targetEntityId = (WarEntityId)s->targetEntityId;
     WarEntity* targetEntity = we_findEntity(context, targetEntityId);
 
-    vec2 targetTile = state->attack.targetTile;
+    vec2 targetPosition = s->targetPosition;
+    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPosition);
 
     // if the entity to attack doesn't exists, go to the attacking point or go idle
     if (!targetEntity)
@@ -55,15 +64,15 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // of the attacking unit is greater
         if(!wu_tileInRange(context, entity, targetTile, 1))
         {
-            WarState* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetTile));
-            moveState->nextState = state;
-            moveState->move.checkForAttacks = true;
-            wst_changeNextState(context, entity, moveState, false, true);
+            WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
+            moveState->checkForAttacks = true;
+            wst_pushState(context, entity, (WarStateBase*)moveState);
+            TracyCZoneEnd(ctx);
             return;
         }
 
-        WarState* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, idleState, true, true);
+        wst_popState(context, entity);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -72,23 +81,24 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // if the target entity is an unit the instead of using the tile where
         // the player click, use a point on the target unit that is closer to
         // the attacking unit
-        targetTile = wu_unitPointOnTarget(context, entity, targetEntity);
+        targetPosition = wu_unitPointOnTarget(context, entity, targetEntity);
+        targetTile = wmap_mapToTileCoordinatesV(targetPosition);
     }
 
     // if the unit is not in range to attack, chase it
     if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats->range))
     {
-        WarState* followState = wst_createFollowState(context, entity, targetEntityId, targetTile, stats->range);
-        followState->nextState = state;
-        wst_changeNextState(context, entity, followState, false, true);
+        WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetPosition, stats->range * MEGA_TILE_WIDTH);
+        wst_pushState(context, entity, (WarStateBase*)followState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
     if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats->range))
     {
-        WarState* followState = wst_createFollowState(context, entity, 0, targetTile, stats->range);
-        followState->nextState = state;
-        wst_changeNextState(context, entity, followState, false, true);
+        WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetPosition, stats->range * MEGA_TILE_WIDTH);
+        wst_pushState(context, entity, (WarStateBase*)followState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
@@ -96,14 +106,14 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     // wcmd_stop the attacking for a moment until the unit come out again
     if (wst_isInsideBuilding(context, targetEntity))
     {
-        WarState* waitState = wst_createWaitState(context, entity, 1.0f);
-        waitState->nextState = state;
-        wst_changeNextState(context, entity, waitState, false, true);
+        WarStateWait* waitState = wst_createWaitState(context, entity, 1.0f);
+        wst_pushState(context, entity, (WarStateBase*)waitState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
-    setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-    wu_setUnitDirectionFromDiff(context, entity, targetTile.x - position.x, targetTile.y - position.y);
+    wpath_setStaticEntity(&map->finder, (s32)unitTile.x, (s32)unitTile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    wu_setUnitDirectionFromDiff(context, entity, targetTile.x - unitTile.x, targetTile.y - unitTile.y);
     wact_setAction(context, entity, WAR_ACTION_TYPE_ATTACK, false, 1.0f);
 
     WarUnitAction* action = &unit->actions[unit->actionType];
@@ -122,8 +132,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             if (wst_isDead(context, targetEntity) || wst_isGoingToDie(context, targetEntity) ||
                 wst_isCollapsing(context, targetEntity) || wst_isGoingToCollapse(context, targetEntity))
             {
-                WarState* idleState = wst_createIdleState(context, entity, true);
-                wst_changeNextState(context, entity, idleState, true, true);
+                wst_popState(context, entity);
             }
             else
             {
@@ -136,13 +145,17 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                     we_meleeAttack(context, entity, targetEntity);
                 }
 
-                vec2 targetPosition = wu_getUnitCenterPosition(context, targetEntity, false);
-                wa_playAttackSound(context, targetPosition, action->lastSoundStep);
+                if (context->gameTime - unit->lastAttackSoundGameTime >= MIN_ATTACK_SOUND_INTERVAL)
+                {
+                    vec2 targetEntityPosition = wu_getUnitCenterPosition(context, targetEntity);
+                    wa_playAttackSound(context, targetEntityPosition, action->lastSoundStep);
+                    unit->lastAttackSoundGameTime = context->gameTime;
+                }
             }
         }
         else if(wu_isWall(targetEntity))
         {
-                WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
+            WarWallPiece* piece = we_getWallPieceAtPosition(context, targetEntity, (s32)targetTile.x, (s32)targetTile.y);
             if (piece)
             {
                 // if the piece of the wall the unit is attacking has no more hit points, go to idle.
@@ -150,8 +163,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 // one of them could destroy the piece, so the other should wcmd_stop doing further damage.
                 if (piece->hp == 0)
                 {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
+                    wst_popState(context, entity);
                 }
                 else
                 {
@@ -164,8 +176,12 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                         we_meleeWallAttack(context, entity, targetEntity, piece);
                     }
 
-                    vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
-                    wa_playAttackSound(context, targetPosition, action->lastSoundStep);
+                    if (context->gameTime - unit->lastAttackSoundGameTime >= MIN_ATTACK_SOUND_INTERVAL)
+                    {
+                        vec2 targetEntityPosition = wmap_tileToMapCoordinatesV(targetTile, true);
+                        wa_playAttackSound(context, targetEntityPosition, action->lastSoundStep);
+                        unit->lastAttackSoundGameTime = context->gameTime;
+                    }
                 }
             }
         }
@@ -174,10 +190,43 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         action->lastActionStep = WAR_ACTION_STEP_NONE;
         action->lastSoundStep =  WAR_ACTION_STEP_NONE;
     }
+
+    TracyCZoneEnd(ctx);
 }
 
-void wst_freeAttackState(WarContext* context, WarState* state)
+
+void wst_updateAttackStates(WarContext* context)
 {
-    NOT_USED(context);
-    NOT_USED(state);
+    TracyCZoneN(ctx, "wst_updateAttackStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStateAttack*      states  = storage->attack;
+    bool*             occupied = storage->occupied[WAR_STATE_ATTACK];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStateAttack*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_ATTACK || sm->stack[sm->depth - 1].idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updateAttackState(context, entity, (WarStateBase*)state);
+    }
+
+    TracyCZoneEnd(ctx);
 }

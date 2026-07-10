@@ -731,7 +731,14 @@ WarEntity* wa_playBuildingSelectionSound(WarContext* context, WarEntity* entity)
 
 WarEntity* wa_playAcknowledgementSound(WarContext* context, WarPlayerInfo* player)
 {
-    return isHumanPlayer(player)
-        ? wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_HUMAN_ACKNOWLEDGEMENT_1, .randomToId=WAR_HUMAN_ACKNOWLEDGEMENT_2, .loop=false))
-        : wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_ORC_ACKNOWLEDGEMENT_1, .randomToId=WAR_ORC_ACKNOWLEDGEMENT_4, .loop=false));
+    WarMap* map = context->map;
+    if (map && context->realTime - map->lastAcknowledgementRealTime >= MIN_ACK_SOUND_INTERVAL)
+    {
+        map->lastAcknowledgementRealTime = context->realTime;
+        return isHumanPlayer(player)
+            ? wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_HUMAN_ACKNOWLEDGEMENT_1, .randomToId=WAR_HUMAN_ACKNOWLEDGEMENT_2, .loop=false))
+            : wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_ORC_ACKNOWLEDGEMENT_1, .randomToId=WAR_ORC_ACKNOWLEDGEMENT_4, .loop=false));
+    }
+
+    return NULL;
 }

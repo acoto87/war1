@@ -1,75 +1,122 @@
+#include <string.h>
+
 #include "war_state_machine.h"
 
-WarState* wst_createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
+#include "TracyC.h"
+
+WarStatePatrol* wst_createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
-    WarState* state = wst_createState(context, entity, WAR_STATE_PATROL);
-    state->patrol.dir = 1;
-    Vec2ListInit(&state->patrol.positions, wm_globalAllocator());
-    Vec2ListAddRange(&state->patrol.positions, positionCount, positions);
+    TracyCZoneN(ctx, "wst_createPatrolState", true);
+
+    WarStateRef ref = wst_allocState(context, WAR_STATE_PATROL, entity->id);
+    WarStatePatrol* state = (WarStatePatrol*)wst_deref(context, ref);
+    state->dir = 1;
+    state->waypointsIndex = 0;
+    state->waypointsCount = MIN(positionCount, 64);
+    memcpy(state->waypoints, positions, state->waypointsCount * sizeof(vec2));
+
+    TracyCZoneEnd(ctx);
     return state;
-}
-
-void wst_enterPatrolState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    if (state->patrol.positions.count <= 1)
-    {
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
-        }
-
-        return;
-    }
-
-    WarState* moveState = wst_createMoveState(context, entity, state->patrol.positions.count, Vec2ListToArray(&state->patrol.positions));
-    moveState->nextState = state;
-    wst_changeNextState(context, entity, moveState, false, true);
 }
 
 void wst_leavePatrolState(WarContext* context, WarEntity* entity, WarState* state)
 {
+    TracyCZoneN(ctx, "wst_leavePatrolState", true);
+
     NOT_USED(context);
     NOT_USED(entity);
     NOT_USED(state);
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    Vec2List positions = state->patrol.positions;
+    TracyCZoneN(ctx, "wst_updatePatrolState", true);
 
-    // if the unit isn't where is suppose to be, then there must have been a problem in the move, so abort and go idle
-    WarTransformComponent* transform = we_getTransformComponent(context, entity);
-    assert(transform);
+    WarStatePatrol* s = (WarStatePatrol*)state;
 
-    vec2 actualPosition = wmap_mapToTileCoordinatesV(transform->position);
-    vec2 shouldBeAt = positions.items[positions.count - 1];
-
-    f32 distance = vec2_distance(actualPosition, shouldBeAt);
-    if (distance >= MOVE_EPSILON)
+    if (!state->initialized)
     {
-        WarState* idleState = wst_createIdleState(context, entity, true);
-        wst_changeNextState(context, entity, idleState, true, true);
+        state->initialized = true;
 
+        if (s->waypointsCount <= 1)
+        {
+            wst_popState(context, entity);
+            TracyCZoneEnd(ctx);
+            return;
+        }
+
+        WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
+        wst_pushState(context, entity, (WarStateBase*)moveState);
+        TracyCZoneEnd(ctx);
         return;
     }
 
-    // otherwise, reverse the positions list and go to the move state again
-    state->patrol.dir *= -1;
-    Vec2ListReverse(&state->patrol.positions);
+    // if the unit isn't where is suppose to be, then there must have been a problem in the move, so abort and go idle
+    vec2 actualPosition = wu_getUnitCenterPosition(context, entity);
+    vec2 shouldBeAt = s->waypoints[s->waypointsCount - 1];
 
-    vec2* positionsToMove = Vec2ListToArray(&state->patrol.positions);
+    f32 distanceSq = vec2_distanceSqr(actualPosition, shouldBeAt);
+    if (distanceSq >= MOVE_EPSILON * MOVE_EPSILON)
+    {
+        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState);
 
-    WarState* moveState = wst_createMoveState(context, entity, state->patrol.positions.count, positionsToMove);
-    moveState->nextState = state;
-    wst_changeNextState(context, entity, moveState, false, true);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
-    wm_free(positionsToMove);
+    // otherwise, reverse the waypoints array and go to the move state again
+    s->dir *= -1;
+
+    // reverse the waypoints in-place
+    for (s32 i = 0; i < s->waypointsCount / 2; i++)
+    {
+        vec2 temp = s->waypoints[i];
+        s->waypoints[i] = s->waypoints[s->waypointsCount - 1 - i];
+        s->waypoints[s->waypointsCount - 1 - i] = temp;
+    }
+
+    WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
+    wst_pushState(context, entity, (WarStateBase*)moveState);
+
+    TracyCZoneEnd(ctx);
 }
 
-void wst_freePatrolState(WarContext* context, WarState* state)
-{
-    NOT_USED(context);
 
-    Vec2ListFree(&state->patrol.positions);
+void wst_updatePatrolStates(WarContext* context)
+{
+    TracyCZoneN(ctx, "wst_updatePatrolStates", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    WarStateStorage*  storage = &manager->stateStorage;
+    WarStatePatrol*      states  = storage->patrol;
+    bool*             occupied = storage->occupied[WAR_STATE_PATROL];
+
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+
+        WarStatePatrol*  state  = &states[i];
+        WarEntity*    entity = we_findEntity(context, state->base.entityId);
+        if (!entity) continue;
+
+        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        assert(sm);
+
+        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_PATROL || sm->stack[sm->depth - 1].idx != i) continue;
+
+        if (state->base.delay > 0)
+        {
+            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
+            state->base.delay = 0;
+        }
+        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+
+        wst_updatePatrolState(context, entity, (WarStateBase*)state);
+    }
+
+    TracyCZoneEnd(ctx);
 }

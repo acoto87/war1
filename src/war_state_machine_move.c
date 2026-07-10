@@ -1,264 +1,417 @@
-#include "war_state_machine.h"
+#include <string.h>
+#include <float.h>
 
+#include "TracyC.h"
+
+#include "war_state_machine.h"
 #include "war_actions.h"
 #include "war_units.h"
+#include "war_rvo.h"
+#include "war_map.h"
 
-WarState* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
+WarStateMove* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
 {
-    WarState* state = wst_createState(context, entity, WAR_STATE_MOVE);
-    Vec2ListInit(&state->move.positions, wm_globalAllocator());
-    Vec2ListAddRange(&state->move.positions, positionCount, positions);
+    TracyCZoneN(ctx, "wst_createMoveState", true);
+
+    WarStateRef ref = wst_allocState(context, WAR_STATE_MOVE, entity->id);
+    WarStateMove* state = (WarStateMove*)wst_deref(context, ref);
+
+    const s32 count = MIN(positionCount, arrayLength(state->waypoints));
+    memcpy(state->waypoints, positions, count * sizeof(vec2));
+    state->waypointsIndex = 0;
+    state->waypointsCount = count;
+
+    TracyCZoneEnd(ctx);
     return state;
-}
-
-void wst_enterMoveState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(context, entity);
-
-    if (state->move.positions.count <= 1)
-    {
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
-        }
-
-        return;
-    }
-
-    state->move.positionIndex = 0;
-    state->move.pathNodeIndex = 0;
-    state->move.waitCount = 0;
-
-    vec2 start = state->move.positions.items[state->move.positionIndex];
-    vec2 end = state->move.positions.items[state->move.positionIndex + 1];
-
-    WarMapPath path = state->move.path = wpath_findPath(&map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
-
-    // if the is no path to the next position, go to idle
-    if (path.nodes.count <= 1)
-    {
-        if (!wst_changeStateNextState(context, entity, state))
-        {
-            WarState* idleState = wst_createIdleState(context, entity, true);
-            wst_changeNextState(context, entity, idleState, true, true);
-        }
-
-        return;
-    }
-
-    vec2 currentNode = path.nodes.items[state->move.pathNodeIndex];
-    setDynamicEntity(&map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-
-    vec2 nextNode = path.nodes.items[state->move.pathNodeIndex + 1];
-    setDynamicEntity(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-
-    wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-    wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(context, entity));
 }
 
 void wst_leaveMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-    vec2 unitSize = wu_getUnitSize(context, entity);
-    WarMapPath* path = &state->move.path;
+    TracyCZoneN(ctx, "wst_leaveMoveState", true);
 
-    if (inRange(state->move.pathNodeIndex, 0, path->nodes.count))
+    if (!state->initialized)
     {
-        vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
-        if (isDynamicOfEntity(&map->finder, (s32)currentNode.x, (s32)currentNode.y, entity->id))
-            setFreeTiles(&map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
+        TracyCZoneEnd(ctx);
+        return;
     }
 
-    if (inRange(state->move.pathNodeIndex + 1, 0, path->nodes.count))
-    {
-        vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-        if (isDynamicOfEntity(&map->finder, (s32)nextNode.x, (s32)nextNode.y, entity->id))
-            setFreeTiles(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
-    }
+    WarStateMove* s = (WarStateMove*)state;
+
+    NOT_USED(context);
+    NOT_USED(entity);
+
+    s->rvoVelocity = VEC2_ZERO;
+
+    TracyCZoneEnd(ctx);
 }
 
 void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    WarMap* map = context->map;
-    WarMapPath* path = &state->move.path;
+    TracyCZoneN(ctx, "wst_updateMoveState", true);
 
-    assert(path->nodes.count > 1);
-    assert(inRange(state->move.pathNodeIndex, 0, path->nodes.count - 1));
+    NOT_USED(context);
+    NOT_USED(entity);
+    NOT_USED(state);
 
-    WarUnitComponent* unit = we_getUnitComponent(context, entity);
-    assert(unit);
+    TracyCZoneEnd(ctx);
+}
 
-    const WarUnitStats* stats = wu_getUnitStats(unit->type);
-    vec2 unitSize = wu_getUnitSize(context, entity);
+static void updateArrivalDecay(WarContext* context, WarEntity* entity, WarStateMove* state)
+{
+    TracyCZoneN(ctx, "UpdateArrivalDecay", 1);
 
-    vec2 currentNode = path->nodes.items[state->move.pathNodeIndex];
-    vec2 nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
+    assert(entity && wu_isUnit(entity));
+    assert(state->base.type == WAR_STATE_MOVE);
 
-    if (state->move.checkForAttacks)
+    if (state->waypointsIndex >= state->waypointsCount - 1)
     {
-        WarEntity* enemy = we_getAttacker(context, entity);
-        if (enemy && wu_areEnemies(context, entity, enemy) && wu_canAttack(context, entity, enemy))
+        vec2 position = wu_getUnitCenterPosition(context, entity);
+        vec2 goalPosition = state->waypoints[state->waypointsCount - 1];
+
+        f32 distToGoalSq = vec2_distanceSqr(position, goalPosition);
+
+#define RVO_SETTLE_PROGRESS_SQ    16.0f                    // must improve by 4 px to count
+#define RVO_SETTLE_GOAL_RADIUS    (MEGA_TILE_WIDTH * 2.0f) // 32 px = 2 tiles
+#define RVO_SETTLE_TIME_THRESHOLD 1.0f                     // game-seconds before giving up
+
+        // Reset the timer whenever we get meaningfully closer to the goal.
+        if (distToGoalSq < state->closestGoalDistSq - RVO_SETTLE_PROGRESS_SQ)
         {
-            vec2 enemyPosition = wu_getUnitPosition(context, enemy, true);
-            WarState* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
-            wst_changeNextState(context, entity, attackState, true, true);
-
-            return;
-        }
-    }
-
-    // if this unit is waiting
-    if (state->move.waitCount > 0)
-    {
-        if (!isEmpty(&map->finder, (s32)nextNode.x, (s32)nextNode.y))
-        {
-            // wait for a number of times before re-route
-            if (state->move.waitCount < MOVE_WAIT_INTENTS)
-            {
-                state->move.waitCount++;
-
-                WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
-                waitState->nextState = state;
-                wst_changeNextState(context, entity, waitState, false, true);
-
-                return;
-            }
-
-            state->move.waitCount = 0;
-
-            // if there is no re-routing possible, go to idle
-            if (!wpath_reRoutePath(&map->finder, path, state->move.pathNodeIndex, path->nodes.count - 1))
-            {
-                if (!wst_changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
+            state->closestGoalDistSq = distToGoalSq;
+            state->settleTimer       = 0.0f;
         }
         else
         {
-            state->move.waitCount = 0;
+            state->settleTimer += context->gameDeltaTime;
         }
 
-        setDynamicEntity(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
-        wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(context, entity));
+        // Settle within the goal radius AND stuck for long enough -> idle.
+        if (distToGoalSq <= RVO_SETTLE_GOAL_RADIUS * RVO_SETTLE_GOAL_RADIUS &&
+            state->settleTimer >= RVO_SETTLE_TIME_THRESHOLD)
+        {
+            wst_popState(context, entity);
+        }
     }
 
-    vec2 position = wu_getUnitCenterPosition(context, entity, false);
-    vec2 target = wmap_tileToMapCoordinatesV(nextNode, true);
+    TracyCZoneEnd(ctx);
+}
 
-    vec2 direction = vec2_subv(target, position);
-    f32 directionLength = vec2_length(direction);
+static void updatePreferredVelocity(WarContext* context, WarEntity* entity, WarStateMove* state)
+{
+    TracyCZoneN(ctx, "UpdatePreferredVelocity", 1);
 
-    f32 speed = (f32)stats->speeds[unit->speed];
-    vec2 step = vec2_mulf(vec2_normalize(direction), speed * context->gameDeltaTime);
-    f32 stepLength = vec2_length(step);
+    assert(entity && wu_isUnit(entity));
+    assert(state->base.type == WAR_STATE_MOVE);
 
-    if (directionLength < stepLength)
+    if (state->waypointsIndex >= state->waypointsCount - 1)
     {
-        step = direction;
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    WarMap* map = context->map;
+    assert(map);
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    const WarUnitStats* stats = wu_getUnitStats(unit->type);
+
+    vec2 position = wu_getUnitCenterPosition(context, entity);
+    vec2 tile = wmap_mapToTileCoordinatesV(position);
+
+    vec2 nextPosition = state->waypoints[state->waypointsIndex + 1];
+    vec2 nextTile = wmap_mapToTileCoordinatesV(nextPosition);
+
+    WarMapFlowField* flowField = wpath_ensureFlowField(&map->finder, (s32)nextTile.x, (s32)nextTile.y);
+    if (flowField)
+    {
+        vec2 direction = wpath_flowFieldSample(flowField, (s32)tile.x, (s32)tile.y);
+
+        // If the flow field is zero (a.k.a. reaching to the goal tile),
+        // fall back to a direct vector to the next waypoint.
+        if (vec2_lengthSqr(direction) < 0.0001f)
+        {
+            direction = vec2_subv(nextPosition, position);
+            direction = vec2_normalize(direction);
+        }
+
+        f32 speed = (f32)stats->speeds[unit->speed];
+        vec2 preferredVelocity = vec2_mulf(direction, speed);
+
+        if (state->waypointsIndex >= state->waypointsCount - 1)
+        {
+#define RVO_ARRIVAL_SLOWDOWN_RADIUS (MEGA_TILE_WIDTH * 3.0f)  // 48 px = 3 tiles
+#define RVO_ARRIVAL_MIN_SCALE       0.25f
+
+            vec2 goalPosition = state->waypoints[state->waypointsCount - 1];
+            f32 distToGoalSq = vec2_distanceSqr(position, goalPosition);
+            if (distToGoalSq < RVO_ARRIVAL_SLOWDOWN_RADIUS * RVO_ARRIVAL_SLOWDOWN_RADIUS)
+            {
+                f32 distToGoal = sqrtf(distToGoalSq);
+                f32 scale = distToGoal / RVO_ARRIVAL_SLOWDOWN_RADIUS;
+                scale = MAX(scale, RVO_ARRIVAL_MIN_SCALE);
+                preferredVelocity = vec2_mulf(preferredVelocity, scale);
+            }
+        }
+
+        state->rvoPreferredVelocity = preferredVelocity;
+    }
+    else
+    {
+        wst_popState(context, entity);
+    }
+
+    TracyCZoneEnd(ctx);
+}
+
+static void updateAdjustedVelocity(WarContext* context, WarEntity* entity, WarStateMove* state)
+{
+    TracyCZoneN(ctx, "UpdateAdjustedVelocity", 1);
+
+    assert(entity && wu_isUnit(entity));
+    assert(state->base.type == WAR_STATE_MOVE);
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    const WarUnitStats* stats = wu_getUnitStats(unit->type);
+
+    vec2 position = wu_getUnitCenterPosition(context, entity);
+    f32 speed = (f32)stats->speeds[unit->speed];
+
+#define SEARCH_RADIUS_PX (MEGA_TILE_WIDTH * 5.0f) // ~5 tiles
+#define MY_RADIUS_PX (MEGA_TILE_WIDTH * 0.45f)    // ~0.5 tiles
+
+    WarRvoNeighbour neighbours[RVO_MAX_NB];
+    s32 numNeighbours = wrvo_gatherNeighbours(context, entity->id, position, SEARCH_RADIUS_PX, neighbours);
+
+    vec2  candidates[RVO_MAX_CANDIDATES];
+    bool  hadCollision[RVO_MAX_CANDIDATES] = { 0 };
+    s32   numCandidates = 0;
+    s32   bestIndex     = 0;
+
+    vec2 adjustedVelocity = wrvo_computeNewVelocity(
+        state->rvoPreferredVelocity,
+        position, state->rvoVelocity, MY_RADIUS_PX,
+        speed,
+        context->gameDeltaTime,
+        neighbours, numNeighbours,
+        candidates, &numCandidates, &bestIndex, hadCollision
+    );
+
+    state->rvoAdjustedVelocity = adjustedVelocity;
+    state->rvoPosition         = position;
+    state->rvoRadius           = MY_RADIUS_PX;
+    state->rvoNumCandidates    = numCandidates;
+    state->rvoBestIndex        = bestIndex;
+    for (s32 i = 0; i < numCandidates; i++)
+    {
+        state->rvoCandidates[i]            = candidates[i];
+        state->rvoCandidateHadCollision[i] = hadCollision[i];
+    }
+
+    TracyCZoneEnd(ctx);
+}
+
+static void updatePosition(WarContext* context, WarEntity* entity, WarStateMove* state)
+{
+    TracyCZoneN(ctx, "UpdatePosition", 1);
+
+    assert(entity && wu_isUnit(entity));
+    assert(state->base.type == WAR_STATE_MOVE);
+
+    if (state->waypointsIndex >= state->waypointsCount - 1)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    vec2 position = wu_getUnitCenterPosition(context, entity);
+    vec2 nextPosition = state->waypoints[state->waypointsIndex + 1];
+
+    // Overshoot clamp: if step would carry us past the waypoint, snap to it.
+    vec2 step = vec2_mulf(state->rvoAdjustedVelocity, context->gameDeltaTime);
+    vec2 toNext = vec2_subv(nextPosition, position);
+    if (vec2_lengthSqr(step) > vec2_lengthSqr(toNext))
+    {
+        step = toNext;
     }
 
     vec2 newPosition = vec2_addv(position, step);
-    wu_setUnitCenterPosition(context, entity, newPosition, false);
+    wu_setUnitDirection(context, entity, wu_getDirectionFromDiff(state->rvoAdjustedVelocity.x, state->rvoAdjustedVelocity.y));
+    wact_setAction(context, entity, WAR_ACTION_TYPE_WALK, false, wu_getUnitActionScale(context, entity));
+    wu_setUnitCenterPosition(context, entity, newPosition);
 
-    f32 distance = vec2_distance(newPosition, target);
-    if (distance < MOVE_EPSILON)
+    f32 distanceSq = vec2_distanceSqr(newPosition, nextPosition);
+    if (distanceSq < MOVE_EPSILON * MOVE_EPSILON)
     {
-        newPosition = target;
-        wu_setUnitCenterPosition(context, entity, newPosition, false);
+        newPosition = nextPosition;
+        wu_setUnitCenterPosition(context, entity, newPosition);
 
-        setFreeTiles(&map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y);
-        setFreeTiles(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y);
+        state->waypointsIndex++;
 
-        state->move.pathNodeIndex++;
-
-        // if there is no more path nodes to check, go to idle
-        if (state->move.pathNodeIndex >= path->nodes.count - 1)
+        if (state->waypointsIndex >= state->waypointsCount - 1)
         {
-            state->move.positionIndex++;
+            state->rvoVelocity = VEC2_ZERO;
+            state->settleTimer = 0.0f;
+            state->closestGoalDistSq = FLT_MAX;
 
-            // if this is no more segments, go to idle
-            if (state->move.positionIndex >= state->move.positions.count - 1)
-            {
-                if (!wst_changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
-                }
+            state->rvoPreferredVelocity = VEC2_ZERO;
+            state->rvoPosition = VEC2_ZERO;
+            state->rvoRadius = 0.0f;
+            state->rvoNumCandidates = 0;
+            state->rvoBestIndex = 0;
+            memset(state->rvoCandidates, 0, sizeof(state->rvoCandidates));
+            memset(state->rvoCandidateHadCollision, 0, sizeof(state->rvoCandidateHadCollision));
 
-                return;
-            }
-
-            // free the previous path and check if there is a new one
-            Vec2ListFree(&path->nodes);
-
-            vec2 start = state->move.positions.items[state->move.positionIndex];
-            vec2 end = state->move.positions.items[state->move.positionIndex + 1];
-
-            *path = wpath_findPath(&map->finder, (s32)start.x, (s32)start.y, (s32)end.x, (s32)end.y);
-
-            // if there is no path for the next segment, go to idle
-            if (path->nodes.count <= 1)
-            {
-                if (!wst_changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            state->move.pathNodeIndex = 0;
+            wst_popState(context, entity);
         }
-
-        currentNode = path->nodes.items[state->move.pathNodeIndex];
-        setDynamicEntity(&map->finder, (s32)currentNode.x, (s32)currentNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-
-        nextNode = path->nodes.items[state->move.pathNodeIndex + 1];
-
-        // if the next node is occupied, check if the unit have to wait to re-route if necessary
-        if (!isEmpty(&map->finder, (s32)nextNode.x, (s32)nextNode.y))
-        {
-            // if the next node is occupied but is the last one, don't wait to re-route, go idle
-            if (state->move.pathNodeIndex + 1 == path->nodes.count - 1)
-            {
-                if (!wst_changeStateNextState(context, entity, state))
-                {
-                    WarState* idleState = wst_createIdleState(context, entity, true);
-                    wst_changeNextState(context, entity, idleState, true, true);
-                }
-
-                return;
-            }
-
-            state->move.waitCount++;
-
-            WarState* waitState = wst_createWaitState(context, entity, wmap_getMapScaledTime(context, MOVE_WAIT_TIME));
-            waitState->nextState = state;
-            wst_changeNextState(context, entity, waitState, false, true);
-
-            return;
-        }
-
-        setDynamicEntity(&map->finder, (s32)nextNode.x, (s32)nextNode.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(context, entity, nextNode.x - currentNode.x, nextNode.y - currentNode.y);
     }
+
+    TracyCZoneEnd(ctx);
 }
 
-void wst_freeMoveState(WarContext* context, WarState* state)
+void wst_updateMoveStates(WarContext* context)
 {
-    NOT_USED(context);
+    TracyCZoneN(ctx, "UpdateMovement", 1);
 
-    Vec2ListFree(&state->move.positions);
-    Vec2ListFree(&state->move.path.nodes);
+    WarEntityManager* manager = we_getEntityManager(context);
+    assert(manager);
+
+    WarStateStorage* storage = &manager->stateStorage;
+    WarStateMove* moveStates = storage->move;
+    bool* occupied = storage->occupied[WAR_STATE_MOVE];
+
+    // 1. Initialize newly-created MOVE states before the first RVO pass.
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+        WarStateMove* state = &moveStates[i];
+        if (state->base.initialized) continue;
+
+        WarEntity* entity = we_findEntity(context, state->base.entityId);
+        if (!entity || !wu_isUnit(entity)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+
+        state->base.initialized = true;
+
+        if (state->waypointsCount <= 1)
+        {
+            wst_popState(context, entity);
+            continue;
+        }
+
+        state->waypointsIndex = 0;
+        state->rvoVelocity = VEC2_ZERO;
+        state->settleTimer = 0.0f;
+        state->closestGoalDistSq = FLT_MAX;
+    }
+
+    // 2. Reset the RVO velocity for all units to their current velocity.
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+        WarStateMove* state = &moveStates[i];
+        WarEntity* entity = we_findEntity(context, state->base.entityId);
+        if (!entity || !wu_isUnit(entity)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        state->rvoPreferredVelocity = VEC2_ZERO;
+        state->rvoPosition = VEC2_ZERO;
+        state->rvoRadius = 0.0f;
+        state->rvoNumCandidates = 0;
+        state->rvoBestIndex = 0;
+        memset(state->rvoCandidates, 0, sizeof(state->rvoCandidates));
+        memset(state->rvoCandidateHadCollision, 0, sizeof(state->rvoCandidateHadCollision));
+    }
+
+    // 3. Check for attacks before doing any RVO calculations.
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+        WarStateMove* state = &moveStates[i];
+        WarEntity* entity = we_findEntity(context, state->base.entityId);
+        if (!entity || !wu_isUnit(entity)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+
+        if (state->checkForAttacks)
+        {
+            WarEntity* enemy = we_getAttacker(context, entity);
+            if (enemy && wu_areEnemies(context, entity, enemy) && wu_canAttack(context, entity, enemy))
+            {
+                vec2 enemyPosition = wu_getUnitPosition(context, enemy);
+                WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
+                wst_pushState(context, entity, (WarStateBase*)attackState);
+            }
+        }
+    }
+
+    // 4. Update already-arrived units to zero velocity.
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+        WarStateMove* state = &moveStates[i];
+        WarEntity* entity = we_findEntity(context, state->base.entityId);
+        if (!entity || !wu_isUnit(entity)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        updateArrivalDecay(context, entity, state);
+    }
+
+    // 5. Update preferred velocities for all units.
+    for(s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+        WarStateMove* state = &moveStates[i];
+        WarEntity* entity = we_findEntity(context, state->base.entityId);
+        if (!entity || !wu_isUnit(entity)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        updatePreferredVelocity(context, entity, state);
+    }
+
+    // 6. Update adjusted velocities from RVO calculations for all units.
+    for(s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+        WarStateMove* state = &moveStates[i];
+        WarEntity* entity = we_findEntity(context, state->base.entityId);
+        if (!entity || !wu_isUnit(entity)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        updateAdjustedVelocity(context, entity, state);
+    }
+
+    // 7. Update positions based on the adjusted velocities.
+    for(s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+        WarStateMove* state = &moveStates[i];
+        WarEntity* entity = we_findEntity(context, state->base.entityId);
+        if (!entity || !wu_isUnit(entity)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        updatePosition(context, entity, state);
+    }
+
+    // 8. Update rvoVelocity for all units (after position updates).
+    for(s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (!occupied[i]) continue;
+        WarStateMove* state = &moveStates[i];
+        WarEntity* entity = we_findEntity(context, state->base.entityId);
+        if (!entity || !wu_isUnit(entity)) continue;
+
+        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        state->rvoVelocity = state->rvoAdjustedVelocity;
+    }
+
+    TracyCZoneEnd(ctx);
 }

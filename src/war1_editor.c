@@ -29,9 +29,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <time.h>
 #include <math.h>
 #include <string.h>
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -165,8 +163,6 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    srand((unsigned int)time(NULL));
-
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
 
     WarEditorContext* ctx = (WarEditorContext*)wm_alloc(sizeof(WarEditorContext));
@@ -211,6 +207,7 @@ int main(int argc, char **argv)
 #include "war_projectiles.h"  // forward-declare before war_entities.c calls wproj_createProjectile
 #include "war_entities.c"
 #include "war_actions.c"      // defines wact_* and __frameCountToSeconds (used by state machines)
+#include "war_map_grid.c"
 #include "war_pathfinder.c"
 #include "war_state_machine_idle.c"
 #include "war_state_machine_move.c"

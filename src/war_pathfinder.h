@@ -10,19 +10,10 @@
 #include "war_math.h"
 #include "war_collections.h"
 
-struct _WarMapNode
-{
-    s32 id;     // id of the node
-    s32 x, y;   // the coordinates of the node
-    s32 level;  // the length of the path from the start to this node
-    s32 parent; // the previous node in the path from start to end passing through this node
-    s32 gScore; // the cost from the start to this node
-    s32 fScore; // the cost from start to end passing through this node
-};
-
 struct _WarMapPath
 {
-    Vec2List nodes;
+    vec2 nodes[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+    s32 count;
 };
 
 struct _WarMapFlowField
@@ -33,39 +24,25 @@ struct _WarMapFlowField
 
 struct _WarPathFinder
 {
-    PathFindingType type;
     u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
+    WarMapFlowField* fields[MAP_TILES_WIDTH * MAP_TILES_HEIGHT];
 };
 
-// NOTE: this value is the distance squared to avoid dynamic units
-// so if the dynamic entity at a distance squared less than this value,
-// treat it like a static one, so the unit can get around it and the risk of
-// overlapping units is less
-#define DISTANCE_SQR_AVOID_DYNAMIC_POSITIONS 2.0f
-
-#define WarMapNodeEmpty (WarMapNode){0}
-
-shlDeclareList(WarMapNodeList, WarMapNode)
-shlDeclareBinaryHeap(WarMapNodeHeap, WarMapNode)
-shlDeclareMap(WarMapNodeMap, s32, WarMapNode)
-
-WarPathFinder wpath_initPathFinder(PathFindingType type, u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT]);
+WarPathFinder wpath_initPathFinder(u16 data[MAP_TILES_WIDTH * MAP_TILES_HEIGHT]);
 bool wpath_isInside(s32 x, s32 y);
-WarMapPath wpath_findPath(WarPathFinder* finder, s32 startX, s32 startY, s32 endX, s32 endY);
-WarMapFlowField wpath_computeFlowField(WarPathFinder* finder, s32 x, s32 y);
-bool wpath_reRoutePath(WarPathFinder* finder, WarMapPath* path, s32 fromIndex, s32 toIndex);
-vec2 wpath_findEmptyPosition(WarPathFinder* finder, vec2 position);
-bool wpath_isPositionAccesible(WarPathFinder* finder, vec2 position);
+void wpath_astar(WarPathFinder* finder, s32 startX, s32 startY, s32 endX, s32 endY, WarMapPath* path);
+void wpath_flowField(WarPathFinder* finder, s32 x, s32 y, WarMapFlowField* flowField);
+WarMapFlowField* wpath_computeFlowField(WarPathFinder* finder, s32 x, s32 y);
+WarMapFlowField* wpath_getFlowField(WarPathFinder* finder, s32 x, s32 y);
+WarMapFlowField* wpath_ensureFlowField(WarPathFinder* finder, s32 x, s32 y);
+vec2 wpath_flowFieldSample(WarMapFlowField* flowField, s32 x, s32 y);
+vec2 wpath_findEmptyTile(WarPathFinder* finder, s32 x, s32 y);
+bool wpath_isTileAccesible(WarPathFinder* finder, s32 x, s32 y);
 u16 wpath_getTileValue(WarPathFinder* finder, s32 x, s32 y);
+WarPathFinderDataType wpath_getTileValueType(WarPathFinder* finder, s32 x, s32 y);
+WarEntityId wpath_getTileEntityId(WarPathFinder* finder, s32 x, s32 y);
 void wpath_setTilesValue(WarPathFinder* finder, s32 startX, s32 startY, s32 width, s32 height, u16 value);
-
-#define setFreeTiles(finder, startX, startY, width, height) wpath_setTilesValue(finder, startX, startY, width, height, PATH_FINDER_DATA_EMPTY)
-#define setDynamicEntity(finder, startX, startY, width, height, id) wpath_setTilesValue(finder, startX, startY, width, height, (id << 4) | PATH_FINDER_DATA_DYNAMIC)
-#define setStaticEntity(finder, startX, startY, width, height, id) wpath_setTilesValue(finder, startX, startY, width, height, (id << 4) | PATH_FINDER_DATA_STATIC)
-
-#define getTileValueType(finder, x, y) (wpath_getTileValue(finder, x, y) & 0x000F)
-#define getTileEntityId(finder, x, y) ((wpath_getTileValue(finder, x, y) & 0xFFF0) >> 4)
-#define isEmpty(finder, x, y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_EMPTY)
-#define isStatic(finder, x, y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_STATIC)
-#define isDynamic(finder, x,  y) (getTileValueType(finder, x, y) == PATH_FINDER_DATA_DYNAMIC)
-#define isDynamicOfEntity(finder, x, y, id) (getTileEntityId(finder, x, y) == id)
+void wpath_setFreeTiles(WarPathFinder* finder, s32 startX, s32 startY, s32 width, s32 height);
+void wpath_setStaticEntity(WarPathFinder* finder, s32 startX, s32 startY, s32 width, s32 height, WarEntityId id);
+bool wpath_isEmpty(WarPathFinder* finder, s32 x, s32 y);
+bool wpath_isStatic(WarPathFinder* finder, s32 x, s32 y);

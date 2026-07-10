@@ -46,13 +46,14 @@ static const char* debugRenderFlagNames[WAR_DEBUG_RENDER_COUNT] =
     "spatial-grid",
     "near-units",
     "passable-info",
-    "unit-paths",
     "unit-info",
     "unit-animations",
     "map-animations",
     "font",
     "projectiles",
     "flow-field",
+    "rvo",
+    "state-machine",
 };
 
 static const char* debugRenderFlagShortcuts[WAR_DEBUG_RENDER_COUNT] =
@@ -61,13 +62,14 @@ static const char* debugRenderFlagShortcuts[WAR_DEBUG_RENDER_COUNT] =
     "Ctrl+Shift+S",
     "Ctrl+Shift+N",
     "Ctrl+Shift+P",
-    "(none)",
     "Ctrl+Shift+I",
     "Ctrl+Shift+U",
     "Ctrl+Shift+A",
     "Ctrl+Shift+F",
     "Ctrl+Shift+J",
     "Ctrl+Shift+W",
+    "Ctrl+Shift+R",
+    "Ctrl+Shift+T",
 };
 
 void wcheat_applyCheat(WarContext* context, StringView text)

@@ -640,12 +640,6 @@ typedef enum _WarUnitActionStatus
     WAR_ACTION_FINISHED,
 } WarUnitActionStatus;
 
-typedef enum _PathFindingType
-{
-    PATH_FINDING_BFS,
-    PATH_FINDING_ASTAR
-} PathFindingType;
-
 typedef enum _WarPathFinderDataType
 {
     PATH_FINDER_DATA_EMPTY = 0,
@@ -677,6 +671,15 @@ typedef enum _WarStateType
 
     WAR_STATE_COUNT
 } WarStateType;
+
+typedef enum
+{
+    WAR_FSM_OP_NONE = 0,
+    WAR_FSM_OP_PUSH,
+    WAR_FSM_OP_POP,
+    WAR_FSM_OP_REPLACE,
+    WAR_FSM_OP_RESET,
+} WarFsmOp;
 
 typedef enum _WarTextAlignment
 {
@@ -1026,7 +1029,7 @@ typedef enum _WarUnitPortraits
 
 typedef enum _WarMapTileState
 {
-    MAP_TILE_STATE_UNKOWN = 1,
+    MAP_TILE_STATE_UNKNOWN = 1,
     MAP_TILE_STATE_FOG = 2,
     MAP_TILE_STATE_VISIBLE = 4
 } WarMapTileState;
@@ -1177,5 +1180,7 @@ typedef enum _WarDebugRenderFlag
     WAR_DEBUG_RENDER_FONT,
     WAR_DEBUG_RENDER_PROJECTILES,
     WAR_DEBUG_RENDER_FLOW_FIELD,
+    WAR_DEBUG_RENDER_RVO,
+    WAR_DEBUG_RENDER_STATE_MACHINE,
     WAR_DEBUG_RENDER_COUNT
 } WarDebugRenderFlag;

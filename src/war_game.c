@@ -355,10 +355,6 @@ bool wg_initGame(WarContext* context)
     context->transitionEndRealTime = 0.0;
     context->cheatsEnabled = true;
 
-    // Debug render defaults — match the old compile-time #define defaults.
-    context->debugRender.flags[WAR_DEBUG_RENDER_MAP_GRID]   = true;
-    context->debugRender.flags[WAR_DEBUG_RENDER_FLOW_FIELD] = true;
-
     context->__mutex = SDL_CreateMutex();
 
     SDL_HideCursor();
