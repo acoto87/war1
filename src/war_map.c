@@ -3489,10 +3489,9 @@ static void renderStateMachineDebugResourceFlow(WarContext* context, WarEntity* 
 
                 if (deliver->sourceKind != WAR_RESOURCE_NONE)
                 {
-                    vec2 sourceEnd = sourcePosition;
                     if (townHall)
                     {
-                        sourceEnd = wu_getUnitCenterPosition(context, townHall);
+                        sourcePosition = wu_getUnitCenterPosition(context, townHall);
                     }
                     renderStateMachineDebugLine(context, start, sourcePosition, WAR_COLOR_RGB(255, 255, 255));
                     renderStateMachineDebugMarker(context, sourcePosition, WAR_COLOR_RGB(255, 255, 255));
@@ -3704,7 +3703,7 @@ static void renderRvoDebug(WarContext* context)
         if (moveState->rvoNumCandidates <= 0) continue;
 
         vec2 pos    = moveState->rvoPosition;
-        f32  radius = moveState->rvoRadius;
+        // f32  radius = moveState->rvoRadius;
 
         // rect radiusRect = rectf(
         //     pos.x - radius, pos.y - radius,
