@@ -14,7 +14,18 @@ WarStateMove* wst_createMoveState(WarContext* context, WarEntity* entity, s32 po
     TracyCZoneN(ctx, "wst_createMoveState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_MOVE, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateMove* state = (WarStateMove*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
 
     const s32 count = MIN(positionCount, arrayLength(state->waypoints));
     memcpy(state->waypoints, positions, count * sizeof(vec2));
@@ -89,7 +100,7 @@ static void updateArrivalDecay(WarContext* context, WarEntity* entity, WarStateM
         if (distToGoalSq <= RVO_SETTLE_GOAL_RADIUS * RVO_SETTLE_GOAL_RADIUS &&
             state->settleTimer >= RVO_SETTLE_TIME_THRESHOLD)
         {
-            wst_popState(context, entity);
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
         }
     }
 
@@ -157,7 +168,7 @@ static void updatePreferredVelocity(WarContext* context, WarEntity* entity, WarS
     }
     else
     {
-        wst_popState(context, entity);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
     }
 
     TracyCZoneEnd(ctx);
@@ -261,7 +272,7 @@ static void updatePosition(WarContext* context, WarEntity* entity, WarStateMove*
             memset(state->rvoCandidates, 0, sizeof(state->rvoCandidates));
             memset(state->rvoCandidateHadCollision, 0, sizeof(state->rvoCandidateHadCollision));
 
-            wst_popState(context, entity);
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
         }
     }
 
@@ -289,14 +300,13 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
 
         state->base.initialized = true;
 
         if (state->waypointsCount <= 1)
         {
-            wst_popState(context, entity);
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
             continue;
         }
 
@@ -314,8 +324,8 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+
         state->rvoPreferredVelocity = VEC2_ZERO;
         state->rvoPosition = VEC2_ZERO;
         state->rvoRadius = 0.0f;
@@ -333,8 +343,7 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
 
         if (state->checkForAttacks)
         {
@@ -343,7 +352,7 @@ void wst_updateMoveStates(WarContext* context)
             {
                 vec2 enemyPosition = wu_getUnitPosition(context, enemy);
                 WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
-                wst_pushState(context, entity, (WarStateBase*)attackState);
+                wst_pushState(context, entity, (WarStateBase*)attackState, WAR_TRANSITION_CAUSE_AUTONOMOUS);
             }
         }
     }
@@ -356,8 +365,8 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+
         updateArrivalDecay(context, entity, state);
     }
 
@@ -369,8 +378,8 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+
         updatePreferredVelocity(context, entity, state);
     }
 
@@ -382,8 +391,8 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+
         updateAdjustedVelocity(context, entity, state);
     }
 
@@ -395,8 +404,8 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+
         updatePosition(context, entity, state);
     }
 
@@ -408,8 +417,8 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        if (!sm || sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_MOVE || sm->stack[sm->depth - 1].idx != i) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+
         state->rvoVelocity = state->rvoAdjustedVelocity;
     }
 

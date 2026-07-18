@@ -635,11 +635,31 @@ void we_removeStateMachineComponent(WarContext* context, WarEntity* entity)
     {
         WarStateRef ref = comp->stack[d];
         if (WAR_STATE_REF_IS_VALID(ref))
+        {
             wst_leaveState(context, entity, wst_deref(context, ref));
+        }
     }
 
-    if (WAR_STATE_REF_IS_VALID(comp->pendingRef))
-        wst_freeStateRef(context, comp->pendingRef);
+    for (s32 d = 0; d < WAR_STATE_STACK_DEPTH; d++)
+    {
+        comp->stack[d] = WAR_STATE_REF_INVALID;
+    }
+    comp->depth = 0;
+
+    WarStateRef pendingRef = comp->pending.stateRef;
+    WarStateRef cancellationTargetRef = comp->pending.cancellationTargetRef;
+    comp->pending = (WarTransitionRequest){
+        .stateRef = WAR_STATE_REF_INVALID,
+        .cancellationTargetRef = WAR_STATE_REF_INVALID
+    };
+    if (WAR_STATE_REF_IS_VALID(pendingRef))
+    {
+        wst_freeStateRef(context, pendingRef);
+    }
+    if (WAR_STATE_REF_IS_VALID(cancellationTargetRef))
+    {
+        wst_freeStateRef(context, cancellationTargetRef);
+    }
 
     u16 lastIdx = (u16)(store->count - 1);
     if (idx != lastIdx)
@@ -1317,6 +1337,12 @@ WarEntity* we_createUnit(WarContext* context, const CreateUnitArgs* args)
     const WarUnitData* unitData = wu_getUnitData(type);
 
     WarEntity* entity = we_createEntity(context, WAR_ENTITY_TYPE_UNIT, addToMap);
+    if (!entity)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     we_addTransformComponent(context, entity, WAR_TRANSFORM_COMPONENT_INIT(
         .position = vec2i(x * MEGA_TILE_WIDTH, y * MEGA_TILE_HEIGHT)
     ));
@@ -1412,12 +1438,20 @@ WarEntity* we_createBuilding(WarContext* context, const CreateUnitArgs* args)
     assert(wu_isBuildingUnitType(type));
 
     WarEntity* entity = we_createUnit(context, CREATE_UNIT_ARGS_INIT(.type=type, .x=x, .y=y, .player=player, .addToMap=true));
+    if (!entity)
+    {
+        return NULL;
+    }
 
     if (isGoingToBuild)
     {
         const WarBuildingStats* stats = wu_getBuildingStats(type);
-        WarStateBuild* buildState = wst_createBuildState(context, entity, (f32)stats->buildTime);
-        wst_resetState(context, entity, (WarStateBase*)buildState);
+        WarStateBuild* buildState = wst_createBuildState(context, entity, (f32)stats->buildTime, stats->goldCost, stats->woodCost);
+        if (!buildState || !wst_resetState(context, entity, (WarStateBase*)buildState, WAR_TRANSITION_CAUSE_INITIALIZATION))
+        {
+            we_removeEntity(context, entity);
+            return NULL;
+        }
     }
     else
     {
@@ -1430,7 +1464,7 @@ WarEntity* we_createBuilding(WarContext* context, const CreateUnitArgs* args)
 void we_setInitialIdleState(WarContext* context, WarEntity* entity)
 {
     WarStateIdle* idleState = wst_createIdleState(context, entity, wu_isDudeUnit(context, entity));
-    wst_resetState(context, entity, (WarStateBase*)idleState);
+    wst_resetState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_INITIALIZATION);
 }
 
 WarEntity* we_findEntity(WarContext* context, WarEntityId id)
@@ -1660,7 +1694,11 @@ void we_removeEntity(WarContext* context, WarEntity* entity)
             unitType = uc->type;
     }
 
-    // Strip all 18 components (dense storage, each is a no-op if absent)
+    // State leave callbacks may require transform, unit, action, or other
+    // components, so tear down the state machine before stripping any of them.
+    we_removeStateMachineComponent(context, entity);
+
+    // Strip all remaining components (dense storage, each is a no-op if absent)
     we_removeTransformComponent(context, entity);
     we_removeSpriteComponent(context, entity);
     we_removeUnitComponent(context, entity);
@@ -1668,7 +1706,6 @@ void we_removeEntity(WarContext* context, WarEntity* entity)
     we_removeWallComponent(context, entity);
     we_removeRuinComponent(context, entity);
     we_removeForestComponent(context, entity);
-    we_removeStateMachineComponent(context, entity);
     we_removeAnimationsComponent(context, entity);
     we_removeUIComponent(context, entity);
     we_removeTextComponent(context, entity);
@@ -3148,7 +3185,7 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
         if (wu_isBuildingUnit(context, entity))
         {
             WarStateCollapse* collapseState = wst_createCollapseState(context, entity);
-            wst_resetState(context, entity, (WarStateBase*)collapseState);
+            wst_resetState(context, entity, (WarStateBase*)collapseState, WAR_TRANSITION_CAUSE_LIFECYCLE);
 
 #ifndef WAR_EDITOR_BUILD
             vec2 position = wu_getUnitCenterPosition(context, entity);
@@ -3158,7 +3195,7 @@ void we_takeDamage(WarContext* context, WarEntity *entity, s32 minDamage, s32 rn
         else
         {
             WarStateDeath* deathState = wst_createDeathState(context, entity);
-            wst_resetState(context, entity, (WarStateBase*)deathState);
+            wst_resetState(context, entity, (WarStateBase*)deathState, WAR_TRANSITION_CAUSE_LIFECYCLE);
 
 #ifndef WAR_EDITOR_BUILD
             vec2 position = wu_getUnitCenterPosition(context, entity);
@@ -3235,7 +3272,7 @@ void we_rangeAttack(WarContext* context, WarEntity* entity, WarEntity* targetEnt
         {
             // wcmd_stop attacking if the magic unit rans out of mana
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_resetState(context, entity, (WarStateBase*)idleState);
+            wst_resetState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
         }
     }
     else
@@ -3269,7 +3306,7 @@ void we_rangeWallAttack(WarContext* context, WarEntity* entity, WarEntity* targe
         {
             // wcmd_stop attacking if the magic unit rans out of mana
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_resetState(context, entity, (WarStateBase*)idleState);
+            wst_resetState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
         }
     }
     else
@@ -3350,7 +3387,7 @@ s32 mine(WarContext* context, WarEntity* goldmine, s32 amount)
         if (!wst_isCollapsing(context, goldmine) && !wst_isGoingToCollapse(context, goldmine))
         {
             WarStateCollapse* collapseState = wst_createCollapseState(context, goldmine);
-            wst_resetState(context, goldmine, (WarStateBase*)collapseState);
+            wst_resetState(context, goldmine, (WarStateBase*)collapseState, WAR_TRANSITION_CAUSE_LIFECYCLE);
 
 #ifndef WAR_EDITOR_BUILD
             vec2 position = wu_getUnitCenterPosition(context, goldmine);

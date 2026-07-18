@@ -9,7 +9,19 @@ WarStatePatrol* wst_createPatrolState(WarContext* context, WarEntity* entity, s3
     TracyCZoneN(ctx, "wst_createPatrolState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_PATROL, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStatePatrol* state = (WarStatePatrol*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->dir = 1;
     state->waypointsIndex = 0;
     state->waypointsCount = MIN(positionCount, 64);
@@ -42,13 +54,13 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
 
         if (s->waypointsCount <= 1)
         {
-            wst_popState(context, entity);
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
             TracyCZoneEnd(ctx);
             return;
         }
 
         WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
-        wst_pushState(context, entity, (WarStateBase*)moveState);
+        wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -61,7 +73,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     if (distanceSq >= MOVE_EPSILON * MOVE_EPSILON)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_replaceState(context, entity, (WarStateBase*)idleState);
+        wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
 
         TracyCZoneEnd(ctx);
         return;
@@ -79,7 +91,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     }
 
     WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
-    wst_pushState(context, entity, (WarStateBase*)moveState);
+    wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
 
     TracyCZoneEnd(ctx);
 }
@@ -102,18 +114,8 @@ void wst_updatePatrolStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_PATROL || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updatePatrolState(context, entity, (WarStateBase*)state);
     }

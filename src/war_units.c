@@ -1714,19 +1714,18 @@ bool wu_canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntit
 
     if (wu_isWarriorUnit(context, entity) && !wst_isDead(context, entity) && !wst_isGoingToDie(context, entity))
     {
-        if (wu_isUnit(targetEntity))
-        {
-            if (!wst_isDead(context, targetEntity) &&
-                !wst_isGoingToDie(context, targetEntity) &&
-                !wu_isCorpseUnit(context, targetEntity) &&
-                !wst_isCollapsing(context, entity) &&
-                !wst_isGoingToCollapse(context, entity))
-            {
-                return true;
-            }
-        }
-        else if (wu_isWall(targetEntity))
+        if (wu_isWall(targetEntity))
             return true;
+
+        if (wu_isUnit(targetEntity) &&
+            !wst_isDead(context, targetEntity) &&
+            !wst_isGoingToDie(context, targetEntity) &&
+            !wu_isCorpseUnit(context, targetEntity) &&
+            !wst_isCollapsing(context, entity) &&
+            !wst_isGoingToCollapse(context, entity))
+        {
+            return true;
+        }
     }
 
     return false;

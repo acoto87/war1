@@ -53,5 +53,8 @@ WarAICommand* wai_createUnitRequest(WarContext* context, WarPlayerInfo* aiPlayer
 WarAICommand* wai_createWaitForUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType, s32 count);
 WarAICommand* wai_createSleepForTime(WarContext* context, WarPlayerInfo* aiPlayer, f32 time);
 
+void wai_applyUnitRequestProgress(WarAICommand* command);
+bool wai_executeRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command);
+
 void wai_initAIPlayers(WarContext* context);
 void wai_updateAIPlayers(WarContext* context);

@@ -67,6 +67,23 @@ WarAICommand* wai_createSleepForTime(WarContext* context, WarPlayerInfo* aiPlaye
     return sleep;
 }
 
+void wai_applyUnitRequestProgress(WarAICommand* command)
+{
+    if (!command ||
+        command->type != WAR_AI_COMMAND_REQUEST ||
+        command->request.count <= 0)
+    {
+        return;
+    }
+
+    command->status = WAR_AI_COMMAND_STATUS_STARTED;
+    command->request.count--;
+    if (command->request.count == 0)
+    {
+        command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
+    }
+}
+
 typedef struct
 {
     s32 index;
@@ -127,10 +144,37 @@ void wai_initAIPlayers(WarContext* context)
     wai_initAIPlayer(context, &map->players[1]);
 }
 
-bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType unitType)
+static bool wai_hasUnresolvedTrainRequest(WarContext* context, WarAICommand* command)
 {
+    WarEntityManager* manager = we_getEntityManager(context);
+    if (!manager)
+    {
+        return false;
+    }
+
+    WarStateStorage* storage = &manager->stateStorage;
+    for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
+    {
+        if (storage->occupied[WAR_STATE_TRAIN][i] &&
+            storage->train[i].aiCommand == command)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarAICommand* command)
+{
+    WarUnitType unitType = command->request.unitType;
     if (wu_isDudeUnitType(unitType))
     {
+        if (wai_hasUnresolvedTrainRequest(context, command))
+        {
+            return false;
+        }
+
         const WarUnitStats* stats = wu_getUnitStats(unitType);
         if (!we_enoughPlayerResources(context, aiPlayer, stats->goldCost, stats->woodCost))
         {
@@ -159,15 +203,18 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarUnitType
 
                     if (unit->player == aiPlayer->index)
                     {
-                        if (!wst_isTraining(context, entity) && !wst_isUpgrading(context, entity))
+                        if (!wst_isTraining(context, entity) &&
+                            !wst_isGoingToTrain(context, entity) &&
+                            !wst_isUpgrading(context, entity) &&
+                            !wst_isGoingToUpgrade(context, entity))
                         {
-                            if (we_decreasePlayerResources(context, aiPlayer, stats->goldCost, stats->woodCost))
+                            WarStateTrain* trainState = wst_createTrainState(context, entity, unitType, (f32)stats->buildTime, stats->goldCost, stats->woodCost, command);
+                            if (!trainState)
                             {
-                                WarStateTrain* trainState = wst_createTrainState(context, entity, unitType, (f32)stats->buildTime);
-                                wst_resetState(context, entity, (WarStateBase*)trainState);
+                                return false;
                             }
 
-                            return true;
+                            return wst_resetState(context, entity, (WarStateBase*)trainState, WAR_TRANSITION_CAUSE_AI_ORDER);
                         }
                     }
                 }
@@ -200,14 +247,10 @@ bool wai_executeRequestAICommand(WarContext* context, WarPlayerInfo* aiPlayer, W
 {
     command->status = WAR_AI_COMMAND_STATUS_STARTED;
 
-    if (wai_tryCreateUnit(context, aiPlayer, command->request.unitType))
+    if (wai_tryCreateUnit(context, aiPlayer, command) &&
+        !wu_isDudeUnitType(command->request.unitType))
     {
-        command->request.count--;
-
-        if (command->request.count == 0)
-        {
-            command->status = WAR_AI_COMMAND_STATUS_COMPLETED;
-        }
+        wai_applyUnitRequestProgress(command);
     }
 
     return true;

@@ -4,6 +4,7 @@
 
 #include "shl/memzone.h"
 
+#include "war_fwd.h"
 #include "war_alloc.h"
 #include "war_actions.h"
 #include "war_entities.h"
@@ -106,17 +107,19 @@ void wt_shutdown(WarTestContext* test)
     wm_allocFree();
 }
 
-void wt_step(WarTestContext* test)
+void wt_updateGameTime(WarTestContext* test)
+{
+    WarContext* context = test->context;
+    context->gameDeltaTime = test->fixedDeltaTime;
+    context->gameTime += (f64)test->fixedDeltaTime;
+}
+
+void wt_updateStateMachines(WarTestContext* test)
 {
     WarContext* context = test->context;
 
-    context->gameDeltaTime = test->fixedDeltaTime;
-    context->gameTime += (f64)test->fixedDeltaTime;
+    wt_buildGrid(test);
 
-    // Process pending transitions from the previous tick
-    wst_processStateMachinePendingOps(context);
-
-    // Update all state types in the same order as wmap_updateMap
     wst_updateIdleStates(context);
     wst_updateMoveStates(context);
     wst_updatePatrolStates(context);
@@ -136,14 +139,49 @@ void wt_step(WarTestContext* test)
     wst_updateRepairingStates(context);
     wst_updateCastStates(context);
     wst_updateWaitStates(context);
+}
 
-    wgrid_build(context);
+void wt_applyPendingTransitions(WarTestContext* test)
+{
+    WarContext* context = test->context;
+    wst_processStateMachinePendingOps(context);
+}
 
-    // Reset per-frame allocator
-    if (frameZone)
-        mz_reset(frameZone);
-
+void wt_advanceTick(WarTestContext* test)
+{
+    if (frameZone) mz_reset(frameZone);
     test->simulationTick++;
+}
+
+void wt_setUnitCenterPosition(WarTestContext* test, WarEntity* unit, vec2 position)
+{
+    WarContext* context = test->context;
+    wu_setUnitCenterPosition(context, unit, position);
+}
+
+void wt_setUnitVelocity(WarTestContext* test, WarEntity* unit, vec2 velocity)
+{
+    WarContext* context = test->context;
+    WarStateMove* moveState = wst_getMoveState(context, unit);
+    if (!moveState) return;
+    moveState->rvoPreferredVelocity = velocity;
+    moveState->rvoAdjustedVelocity = velocity;
+    moveState->rvoVelocity = velocity;
+}
+
+void wt_buildGrid(WarTestContext* test)
+{
+    WarContext* context = test->context;
+    wgrid_build(context);
+}
+
+void wt_step(WarTestContext* test)
+{
+    wt_updateGameTime(test);
+    wt_applyPendingTransitions(test);
+    wt_updateStateMachines(test);
+    wt_buildGrid(test);
+    wt_advanceTick(test);
 }
 
 void wt_stepTicks(WarTestContext* test, u32 ticks)
@@ -254,4 +292,11 @@ WarStateType wt_stateAt(WarTestContext* test, WarEntity* entity, u8 stackIndex)
 bool wt_stackContains(WarTestContext* test, WarEntity* entity, WarStateType type)
 {
     return wst_hasStateInStack(test->context, entity, type);
+}
+
+WarTransitionRequest* wt_activeTransition(WarTestContext* test, WarEntity* entity)
+{
+    WarStateMachineComponent* sm = we_getStateMachineComponent(test->context, entity);
+    assert(sm);
+    return &sm->pending;
 }

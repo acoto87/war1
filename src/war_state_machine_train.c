@@ -2,20 +2,39 @@
 
 #include "war_state_machine.h"
 
+#include "war_ai.h"
 #include "war_audio.h"
 
 #include "TracyC.h"
 
-WarStateTrain* wst_createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime)
+WarStateTrain* wst_createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime, s32 goldCost, s32 woodCost, WarAICommand* aiCommand)
 {
     TracyCZoneN(ctx, "wst_createTrainState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_TRAIN, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateTrain* state = (WarStateTrain*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->unitToBuild = unitToBuild;
     state->buildTime = 0;
     state->totalBuildTime = buildTime;
+    state->goldCost = goldCost;
+    state->woodCost = woodCost;
+    state->aiCommand = aiCommand;
+    state->transactionApplied = false;
+    state->outputCommitted = false;
     state->cancelled = false;
+    state->alreadyRefunded = false;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -25,17 +44,34 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
 {
     TracyCZoneN(ctx, "wst_leaveTrainState", true);
 
-    if (!state->initialized)
+    WarStateTrain* trainState = (WarStateTrain*)state;
+    WarUnitComponent* unit = NULL;
+
+    if (trainState->cancelled &&
+        trainState->transactionApplied &&
+        !trainState->outputCommitted &&
+        !trainState->alreadyRefunded)
+    {
+        unit = we_getUnitComponent(context, entity);
+        assert(unit);
+
+        WarPlayerInfo* player = &context->map->players[unit->player];
+        trainState->alreadyRefunded = true;
+        we_increasePlayerResources(context, player, trainState->goldCost, trainState->woodCost);
+    }
+
+    if (!trainState->transactionApplied)
     {
         TracyCZoneEnd(ctx);
         return;
     }
 
-    NOT_USED(state);
-
     WarMap* map = context->map;
-    WarUnitComponent* unit = we_getUnitComponent(context, entity);
-    assert(unit);
+    if (!unit)
+    {
+        unit = we_getUnitComponent(context, entity);
+        assert(unit);
+    }
 
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
@@ -47,6 +83,24 @@ void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state
     unit->building = false;
 
     TracyCZoneEnd(ctx);
+}
+
+static bool wst_applyTrainTransaction(WarContext* context, WarUnitComponent* unit, WarStateTrain* state)
+{
+    WarPlayerInfo* player = &context->map->players[unit->player];
+    if (!we_decreasePlayerResources(context, player, state->goldCost, state->woodCost))
+    {
+        return false;
+    }
+
+    state->transactionApplied = true;
+    if (state->aiCommand)
+    {
+        wai_applyUnitRequestProgress(state->aiCommand);
+        state->aiCommand = NULL;
+    }
+
+    return true;
 }
 
 void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* state)
@@ -61,6 +115,15 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
 
     if (!state->initialized)
     {
+        state->initialized = true;
+        if (!wst_applyTrainTransaction(context, unit, s))
+        {
+            s->cancelled = true;
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+            TracyCZoneEnd(ctx);
+            return;
+        }
+
         WarTransformComponent* transform = we_getTransformComponent(context, entity);
         assert(transform);
 
@@ -71,14 +134,13 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         unit->building = true;
         unit->buildPercent = 0;
 
-        state->initialized = true;
         TracyCZoneEnd(ctx);
         return;
     }
 
     if (s->cancelled)
     {
-        wst_popState(context, entity);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
 
         TracyCZoneEnd(ctx);
         return;
@@ -109,7 +171,9 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         wu_setUnitCenterTile(context, unitToBuild, spawnTile);
         we_setInitialIdleState(context, unitToBuild);
 
-        wst_popState(context, entity);
+        s->outputCommitted = true;
+
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
 
         if (unit->player == 0)
         {
@@ -144,18 +208,8 @@ void wst_updateTrainStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_TRAIN || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateTrainState(context, entity, (WarStateBase*)state);
     }

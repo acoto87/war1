@@ -11,7 +11,19 @@ WarStateIdle* wst_createIdleState(WarContext* context, WarEntity* entity, bool l
     TracyCZoneN(ctx, "wst_createIdleState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_IDLE, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateIdle* state = (WarStateIdle*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->lookAround = lookAround;
 
     TracyCZoneEnd(ctx);
@@ -86,7 +98,7 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
             {
                 vec2 enemyPosition = wu_getUnitPosition(context, enemy);
                 WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
-                wst_replaceState(context, entity, (WarStateBase*)attackState);
+                wst_replaceState(context, entity, (WarStateBase*)attackState, WAR_TRANSITION_CAUSE_AUTONOMOUS);
             }
         }
 
@@ -129,18 +141,8 @@ void wst_updateIdleStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_IDLE || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateIdleState(context, entity, (WarStateBase*)state);
     }

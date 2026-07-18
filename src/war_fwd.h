@@ -149,6 +149,9 @@ typedef struct _WarPathFinder WarPathFinder;
 struct _WarStateRef;
 typedef struct _WarStateRef WarStateRef;
 
+struct _WarTransitionRequest;
+typedef struct _WarTransitionRequest WarTransitionRequest;
+
 struct _WarStateBase;
 typedef struct _WarStateBase WarStateBase;
 typedef WarStateBase WarState;

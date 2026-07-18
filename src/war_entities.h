@@ -226,18 +226,19 @@ struct _WarStateMachineComponent
     u8          depth;
 
     // Deferred transition request (processed in batch at end of frame)
-    WarStateRef pendingRef;
-    u8          pendingOp;
-    bool        leaveCurrent;
+    WarTransitionRequest pending;
+    u64 nextTransitionSequence;
 };
 
 #define WAR_STATE_MACHINE_COMPONENT_INIT_CONST(...) { \
-    .stack        = {0},                               \
-    .depth        = 0,                                 \
-    .pendingRef   = WAR_STATE_REF_INVALID,             \
-    .pendingOp    = WAR_FSM_OP_NONE,                   \
-    .leaveCurrent = false,                             \
-    __VA_ARGS__                                        \
+    .stack        = {0},                              \
+    .depth        = 0,                                \
+    .pending      = {                                      \
+        .stateRef = WAR_STATE_REF_INVALID,                 \
+        .cancellationTargetRef = WAR_STATE_REF_INVALID     \
+    },                                                     \
+    .nextTransitionSequence = 0,                      \
+    __VA_ARGS__                                       \
 }
 #define WAR_STATE_MACHINE_COMPONENT_INIT(...) ((WarStateMachineComponent)WAR_STATE_MACHINE_COMPONENT_INIT_CONST(__VA_ARGS__))
 
@@ -456,7 +457,8 @@ struct _WarStateStorage
     WarStateCast      cast[MAX_STATES_PER_TYPE];
     WarStateWait      wait[MAX_STATES_PER_TYPE];
 
-    // --- Per-type occupancy and free-lists (LIFO) ---
+    // --- Per-type generations, occupancy, and free-lists (LIFO) ---
+    u32  generations[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
     bool occupied[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
     s32  freeLists[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
     s32  freeCounts[WAR_STATE_COUNT];

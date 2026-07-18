@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "war_state_machine.h"
@@ -108,20 +109,99 @@ static const size_t stateTypeSizes[WAR_STATE_COUNT] =
     sizeof(WarStateWait),
 };
 
+static bool wst_isStateTypeValid(WarStateType type)
+{
+    return type >= WAR_STATE_IDLE && type < WAR_STATE_COUNT;
+}
+
+static bool wst_stateRefsEqual(WarStateRef left, WarStateRef right)
+{
+    return left.type == right.type &&
+           left.idx == right.idx &&
+           left.generation == right.generation;
+}
+
+static bool wst_isAllocatedStateRef(const WarStateStorage* storage, WarStateRef ref)
+{
+    if (!wst_isStateTypeValid(ref.type))
+    {
+        return false;
+    }
+
+    if (ref.idx < 0 || ref.idx >= MAX_STATES_PER_TYPE || ref.generation == 0)
+    {
+        return false;
+    }
+
+    return storage->occupied[ref.type][ref.idx] &&
+           storage->generations[ref.type][ref.idx] == ref.generation;
+}
+
+static bool wst_isStateRefOwned(WarContext* context, WarStateRef ref);
+
 WarStateBase* wst_deref(WarContext* context, WarStateRef ref)
 {
-    if (!WAR_STATE_REF_IS_VALID(ref)) return NULL;
-    WarStateStorage* s = &we_getEntityManager(context)->stateStorage;
+    WarEntityManager* manager = we_getEntityManager(context);
+    if (!manager)
+    {
+        return NULL;
+    }
+
+    WarStateStorage* s = &manager->stateStorage;
+    if (!wst_isAllocatedStateRef(s, ref))
+    {
+        return NULL;
+    }
+
     char* base = (char*)wst_getTypeArray(s, ref.type);
     return (WarStateBase*)(base + (size_t)ref.idx * stateTypeSizes[ref.type]);
 }
 
 WarStateRef wst_refOf(WarContext* context, const WarStateBase* state)
 {
-    WarStateStorage* s = &we_getEntityManager(context)->stateStorage;
+    if (!state || !wst_isStateTypeValid(state->type))
+    {
+        return WAR_STATE_REF_INVALID;
+    }
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    if (!manager)
+    {
+        return WAR_STATE_REF_INVALID;
+    }
+
+    WarStateStorage* s = &manager->stateStorage;
     char* arrayBase = (char*)wst_getTypeArray(s, state->type);
-    s32 idx = (s32)(((const char*)state - arrayBase) / (s32)stateTypeSizes[state->type]);
-    return (WarStateRef){ state->type, idx };
+    const uintptr_t arrayAddress = (uintptr_t)arrayBase;
+    const uintptr_t stateAddress = (uintptr_t)state;
+    const size_t stateSize = stateTypeSizes[state->type];
+    const size_t arraySize = stateSize * MAX_STATES_PER_TYPE;
+
+    if (stateAddress < arrayAddress || stateAddress >= arrayAddress + arraySize)
+    {
+        return WAR_STATE_REF_INVALID;
+    }
+
+    const size_t offset = (size_t)(stateAddress - arrayAddress);
+    if (offset % stateSize != 0)
+    {
+        return WAR_STATE_REF_INVALID;
+    }
+
+    const s32 idx = (s32)(offset / stateSize);
+    WarStateRef ref =
+    {
+        .type = state->type,
+        .idx = idx,
+        .generation = s->generations[state->type][idx]
+    };
+
+    if (!wst_isAllocatedStateRef(s, ref))
+    {
+        return WAR_STATE_REF_INVALID;
+    }
+
+    return ref;
 }
 
 void wst_initStorage(WarStateStorage* s)
@@ -132,7 +212,10 @@ void wst_initStorage(WarStateStorage* s)
     {
         s->freeCounts[t] = MAX_STATES_PER_TYPE;
         for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
-            s->freeLists[t][i] = MAX_STATES_PER_TYPE - 1 - i; // LIFO
+        {
+            s->generations[t][i] = 1;
+            s->freeLists[t][i] = MAX_STATES_PER_TYPE - 1 - i;
+        }
     }
 }
 
@@ -140,10 +223,45 @@ WarStateRef wst_allocState(WarContext* context, WarStateType type, WarEntityId e
 {
     TracyCZoneN(ctx, "wst_allocState", true);
 
-    WarStateStorage* s = &we_getEntityManager(context)->stateStorage;
-    assert(s->freeCounts[type] > 0 && "State storage exhausted for type");
+    if (!wst_isStateTypeValid(type))
+    {
+        logError("Unknown state type %d in wst_allocState", type);
+        TracyCZoneEnd(ctx);
+        return WAR_STATE_REF_INVALID;
+    }
 
-    s32 idx = s->freeLists[type][--s->freeCounts[type]];
+    WarEntityManager* manager = we_getEntityManager(context);
+    if (!manager)
+    {
+        TracyCZoneEnd(ctx);
+        return WAR_STATE_REF_INVALID;
+    }
+
+    WarStateStorage* s = &manager->stateStorage;
+    if (s->freeCounts[type] <= 0)
+    {
+        logWarning("State storage exhausted for type %d", type);
+        TracyCZoneEnd(ctx);
+        return WAR_STATE_REF_INVALID;
+    }
+
+    if (s->freeCounts[type] > MAX_STATES_PER_TYPE)
+    {
+        logError("Corrupt state free count for type %d", type);
+        TracyCZoneEnd(ctx);
+        return WAR_STATE_REF_INVALID;
+    }
+
+    const s32 freeListIndex = s->freeCounts[type] - 1;
+    const s32 idx = s->freeLists[type][freeListIndex];
+    if (idx < 0 || idx >= MAX_STATES_PER_TYPE || s->occupied[type][idx])
+    {
+        logError("Corrupt state free-list for type %d", type);
+        TracyCZoneEnd(ctx);
+        return WAR_STATE_REF_INVALID;
+    }
+
+    s->freeCounts[type] = freeListIndex;
     s->occupied[type][idx] = true;
     s->activeCounts[type]++;
 
@@ -153,141 +271,471 @@ WarStateRef wst_allocState(WarContext* context, WarStateType type, WarEntityId e
     state->entityId = entityId;
 
     TracyCZoneEnd(ctx);
-    return (WarStateRef){ type, idx };
+    return (WarStateRef)
+    {
+        .type = type,
+        .idx = idx,
+        .generation = s->generations[type][idx]
+    };
+}
+
+static void wst_releaseStateRef(WarContext* context, WarStateRef ref)
+{
+    TracyCZoneN(ctx, "wst_releaseStateRef", true);
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    if (!manager)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    WarStateStorage* s = &manager->stateStorage;
+    if (!wst_isAllocatedStateRef(s, ref))
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    if (s->freeCounts[ref.type] >= MAX_STATES_PER_TYPE ||
+        s->activeCounts[ref.type] <= 0)
+    {
+        logError("Corrupt state counts for type %d", ref.type);
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    s->occupied[ref.type][ref.idx] = false;
+    s->generations[ref.type][ref.idx]++;
+    if (s->generations[ref.type][ref.idx] == 0)
+    {
+        s->generations[ref.type][ref.idx] = 1;
+    }
+    s->freeLists[ref.type][s->freeCounts[ref.type]] = ref.idx;
+    s->freeCounts[ref.type]++;
+    s->activeCounts[ref.type]--;
+
+    TracyCZoneEnd(ctx);
+}
+
+static bool wst_shouldReplacePending(const WarTransitionRequest* pending, const WarTransitionRequest* request)
+{
+    if (pending->operation == WAR_STATE_OP_NONE)
+    {
+        return true;
+    }
+
+    if (request->cause != pending->cause)
+    {
+        return request->cause > pending->cause;
+    }
+
+    bool pendingHasState = pending->operation == WAR_STATE_OP_PUSH ||
+                           pending->operation == WAR_STATE_OP_REPLACE ||
+                           pending->operation == WAR_STATE_OP_RESET;
+    bool pendingIsTransactional = pending->stateRef.type == WAR_STATE_TRAIN ||
+                                  pending->stateRef.type == WAR_STATE_UPGRADE ||
+                                  pending->stateRef.type == WAR_STATE_BUILD;
+
+    // A player can cancel the exact transaction that its earlier order would
+    // commit. Other equal-priority requests still keep first-submitted order.
+    if (request->cause == WAR_TRANSITION_CAUSE_PLAYER_ORDER &&
+        request->cancellation &&
+        pendingHasState &&
+        pendingIsTransactional &&
+        wst_stateRefsEqual(request->cancellationTargetRef, pending->stateRef))
+    {
+        return true;
+    }
+
+    // Requests are sequenced at submission, so an equal-priority request is
+    // always later even when the per-entity sequence counter wraps.
+    return false;
+}
+
+static bool wst_operationHasState(WarStateOp operation)
+{
+    return operation == WAR_STATE_OP_PUSH ||
+           operation == WAR_STATE_OP_REPLACE ||
+           operation == WAR_STATE_OP_RESET;
+}
+
+static bool wst_isTransactionalStateType(WarStateType type)
+{
+    return type == WAR_STATE_TRAIN ||
+           type == WAR_STATE_UPGRADE ||
+           type == WAR_STATE_BUILD;
+}
+
+static bool wst_isTransitionCauseValid(WarTransitionCause cause)
+{
+    switch (cause)
+    {
+        case WAR_TRANSITION_CAUSE_INITIALIZATION:
+        case WAR_TRANSITION_CAUSE_COMPLETION:
+        case WAR_TRANSITION_CAUSE_AUTONOMOUS:
+        case WAR_TRANSITION_CAUSE_AI_ORDER:
+        case WAR_TRANSITION_CAUSE_PLAYER_ORDER:
+        case WAR_TRANSITION_CAUSE_STATUS:
+        case WAR_TRANSITION_CAUSE_SCRIPT:
+        case WAR_TRANSITION_CAUSE_LIFECYCLE:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool wst_isCanonicalInvalidRef(WarStateRef ref)
+{
+    return wst_stateRefsEqual(ref, WAR_STATE_REF_INVALID);
+}
+
+static bool wst_isStateRefOnMachineStack(const WarStateMachineComponent* sm, WarStateRef ref)
+{
+    const u8 depth = MIN(sm->depth, WAR_STATE_STACK_DEPTH);
+    for (u8 d = 0; d < depth; d++)
+    {
+        if (wst_stateRefsEqual(sm->stack[d], ref))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool wst_isStateRefOnStack(WarContext* context, WarStateRef ref)
+{
+    WarEntityManager* manager = we_getEntityManager(context);
+    if (!manager)
+    {
+        return false;
+    }
+
+    WarStateMachineStorage* stateMachines = &manager->stateMachines;
+    for (s32 i = 0; i < stateMachines->count; i++)
+    {
+        WarStateMachineComponent* sm = &stateMachines->dense[i];
+        if (wst_isStateRefOnMachineStack(sm, ref))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool wst_isStateRefPendingElsewhere(WarContext* context, const WarStateMachineComponent* owner, WarStateRef ref)
+{
+    WarEntityManager* manager = we_getEntityManager(context);
+    if (!manager)
+    {
+        return false;
+    }
+
+    WarStateMachineStorage* stateMachines = &manager->stateMachines;
+    for (s32 i = 0; i < stateMachines->count; i++)
+    {
+        WarStateMachineComponent* sm = &stateMachines->dense[i];
+        if (sm != owner &&
+            sm->pending.operation != WAR_STATE_OP_NONE &&
+            (wst_stateRefsEqual(sm->pending.stateRef, ref) ||
+             wst_stateRefsEqual(sm->pending.cancellationTargetRef, ref)))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool wst_isStateRefOwned(WarContext* context, WarStateRef ref)
+{
+    if (wst_isStateRefOnStack(context, ref))
+    {
+        return true;
+    }
+
+    WarEntityManager* manager = we_getEntityManager(context);
+    if (!manager)
+    {
+        return false;
+    }
+
+    WarStateMachineStorage* stateMachines = &manager->stateMachines;
+    for (s32 i = 0; i < stateMachines->count; i++)
+    {
+        WarStateMachineComponent* sm = &stateMachines->dense[i];
+        if (sm->pending.operation != WAR_STATE_OP_NONE &&
+            (wst_stateRefsEqual(sm->pending.stateRef, ref) ||
+             wst_stateRefsEqual(sm->pending.cancellationTargetRef, ref)))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void wst_freeStateRef(WarContext* context, WarStateRef ref)
 {
     TracyCZoneN(ctx, "wst_freeStateRef", true);
 
-    if (!WAR_STATE_REF_IS_VALID(ref))
+    if (!wst_isStateRefOwned(context, ref))
     {
-        TracyCZoneEnd(ctx);
+        wst_releaseStateRef(context, ref);
+    }
+
+    TracyCZoneEnd(ctx);
+}
+
+static void wst_freeUnownedStateRef(WarContext* context, WarStateRef ref)
+{
+    if (!wst_deref(context, ref) || wst_isStateRefOwned(context, ref))
+    {
         return;
     }
 
-    if (!inRange(ref.type, WAR_STATE_IDLE, WAR_STATE_COUNT))
+    wst_releaseStateRef(context, ref);
+}
+
+static void wst_freeUnownedTransitionRefs(WarContext* context, const WarTransitionRequest* request)
+{
+    wst_freeUnownedStateRef(context, request->stateRef);
+    if (!wst_stateRefsEqual(request->cancellationTargetRef, request->stateRef))
     {
-        logError("Unknown state type %d in wst_freeStateRef", ref.type);
-        TracyCZoneEnd(ctx);
-        return;
+        wst_freeUnownedStateRef(context, request->cancellationTargetRef);
+    }
+}
+
+static bool wst_isCancellationTargetValid(WarContext* context, WarEntity* entity, WarStateMachineComponent* sm, const WarTransitionRequest* request)
+{
+    if (!request->cancellation)
+    {
+        return !WAR_STATE_REF_IS_VALID(request->cancellationTargetRef);
     }
 
-    WarStateStorage* s = &we_getEntityManager(context)->stateStorage;
-    assert(wst_deref(context, ref) != NULL);
-
-    // Idempotent: the slot may already have been freed.
-    if (!s->occupied[ref.type][ref.idx])
+    if (request->operation != WAR_STATE_OP_RESET ||
+        !WAR_STATE_REF_IS_VALID(request->cancellationTargetRef) ||
+        !wst_isTransactionalStateType(request->cancellationTargetRef.type) ||
+        wst_stateRefsEqual(request->stateRef, request->cancellationTargetRef))
     {
-        TracyCZoneEnd(ctx);
-        return;
+        return false;
     }
 
-    s->occupied[ref.type][ref.idx] = false;
-    s->freeLists[ref.type][s->freeCounts[ref.type]++] = ref.idx;
-    s->activeCounts[ref.type]--;
-
-    TracyCZoneEnd(ctx);
-}
-
-static void wst_clearPendingState(WarContext* context, WarStateMachineComponent* sm)
-{
-    if (WAR_STATE_REF_IS_VALID(sm->pendingRef))
+    WarStateBase* target = wst_deref(context, request->cancellationTargetRef);
+    if (!target || target->entityId != entity->id)
     {
-        // The pending state was never active, so just free its slot.
-        wst_freeStateRef(context, sm->pendingRef);
-        sm->pendingRef = WAR_STATE_REF_INVALID;
-    }
-    sm->pendingOp = WAR_FSM_OP_NONE;
-    sm->leaveCurrent = false;
-}
-
-void wst_pushState(WarContext* context, WarEntity* entity, WarStateBase* state)
-{
-    TracyCZoneN(ctx, "wst_pushState", true);
-
-    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-    assert(sm);
-
-    wst_clearPendingState(context, sm);
-
-    if (sm->depth >= WAR_STATE_STACK_DEPTH)
-    {
-        logWarning("State stack overflow for entity %d; replacing top state", entity->id);
-        wst_replaceState(context, entity, state);
-        TracyCZoneEnd(ctx);
-        return;
+        return false;
     }
 
-    sm->pendingRef = wst_refOf(context, state);
-    sm->pendingOp = WAR_FSM_OP_PUSH;
-    sm->leaveCurrent = false;
-
-    TracyCZoneEnd(ctx);
+    return wst_isStateRefOnMachineStack(sm, request->cancellationTargetRef) ||
+           wst_stateRefsEqual(sm->pending.stateRef, request->cancellationTargetRef) ||
+           wst_stateRefsEqual(sm->pending.cancellationTargetRef, request->cancellationTargetRef);
 }
 
-void wst_popState(WarContext* context, WarEntity* entity)
+static bool wst_isTransitionRequestValid(WarContext* context, WarEntity* entity, WarStateMachineComponent* sm, const WarTransitionRequest* request)
 {
-    TracyCZoneN(ctx, "wst_popState", true);
+    if (!wst_isTransitionCauseValid(request->cause))
+    {
+        return false;
+    }
 
-    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-    assert(sm);
-    assert(sm->depth > 0);
+    if (!wst_isCancellationTargetValid(context, entity, sm, request))
+    {
+        return false;
+    }
 
-    wst_clearPendingState(context, sm);
+    if (request->operation == WAR_STATE_OP_POP)
+    {
+        return wst_isCanonicalInvalidRef(request->stateRef);
+    }
 
-    sm->pendingOp = WAR_FSM_OP_POP;
-    sm->leaveCurrent = true;
+    if (!wst_operationHasState(request->operation))
+    {
+        return false;
+    }
 
-    TracyCZoneEnd(ctx);
+    WarStateBase* state = wst_deref(context, request->stateRef);
+    if (!state || state->entityId != entity->id)
+    {
+        return false;
+    }
+
+    if (wst_isStateRefOnStack(context, request->stateRef))
+    {
+        return false;
+    }
+
+    return !wst_isStateRefPendingElsewhere(context, sm, request->stateRef);
 }
 
-void wst_replaceState(WarContext* context, WarEntity* entity, WarStateBase* state)
+bool wst_submitTransition(WarContext* context, WarEntity* entity, WarTransitionRequest request)
 {
-    TracyCZoneN(ctx, "wst_replaceState", true);
+    if (!entity)
+    {
+        wst_freeUnownedTransitionRefs(context, &request);
+        return false;
+    }
 
     WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-    assert(sm);
-    assert(sm->depth > 0);
+    if (!sm)
+    {
+        wst_freeUnownedTransitionRefs(context, &request);
+        return false;
+    }
 
-    wst_clearPendingState(context, sm);
+    if (!wst_isTransitionRequestValid(context, entity, sm, &request))
+    {
+        wst_freeUnownedTransitionRefs(context, &request);
+        return false;
+    }
 
-    sm->pendingRef = wst_refOf(context, state);
-    sm->pendingOp = WAR_FSM_OP_REPLACE;
-    sm->leaveCurrent = true;
+    request.sequence = sm->nextTransitionSequence;
+    sm->nextTransitionSequence++;
 
-    TracyCZoneEnd(ctx);
+    WarTransitionRequest* pending = &sm->pending;
+
+    // WarTransitionCause values carry priority. The pending request wins ties;
+    // sequence records per-entity submission order.
+    if (wst_shouldReplacePending(pending, &request))
+    {
+        WarTransitionRequest replaced = *pending;
+        *pending = request;
+        wst_freeUnownedTransitionRefs(context, &replaced);
+        return true;
+    }
+
+    wst_freeUnownedTransitionRefs(context, &request);
+    return false;
 }
 
-void wst_resetState(WarContext* context, WarEntity* entity, WarStateBase* state)
+bool wst_pushState(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause)
 {
-    TracyCZoneN(ctx, "wst_resetState", true);
+    if (!state)
+    {
+        return false;
+    }
+
+    return wst_submitTransition(context, entity, (WarTransitionRequest){
+        .stateRef = wst_refOf(context, state),
+        .cancellationTargetRef = WAR_STATE_REF_INVALID,
+        .operation = WAR_STATE_OP_PUSH,
+        .cause = cause
+    });
+}
+
+bool wst_popState(WarContext* context, WarEntity* entity, WarTransitionCause cause)
+{
+    return wst_submitTransition(context, entity, (WarTransitionRequest){
+        .stateRef = WAR_STATE_REF_INVALID,
+        .cancellationTargetRef = WAR_STATE_REF_INVALID,
+        .operation = WAR_STATE_OP_POP,
+        .cause = cause
+    });
+}
+
+bool wst_replaceState(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause)
+{
+    if (!state)
+    {
+        return false;
+    }
+
+    return wst_submitTransition(context, entity, (WarTransitionRequest){
+        .stateRef = wst_refOf(context, state),
+        .cancellationTargetRef = WAR_STATE_REF_INVALID,
+        .operation = WAR_STATE_OP_REPLACE,
+        .cause = cause
+    });
+}
+
+bool wst_resetState(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause)
+{
+    if (!state)
+    {
+        return false;
+    }
+
+    return wst_submitTransition(context, entity, (WarTransitionRequest){
+        .stateRef = wst_refOf(context, state),
+        .cancellationTargetRef = WAR_STATE_REF_INVALID,
+        .operation = WAR_STATE_OP_RESET,
+        .cause = cause
+    });
+}
+
+static WarStateRef wst_findCancellationTarget(WarContext* context, WarStateMachineComponent* sm)
+{
+    const u8 depth = MIN(sm->depth, WAR_STATE_STACK_DEPTH);
+    for (s32 i = (s32)depth - 1; i >= 0; i--)
+    {
+        WarStateRef ref = sm->stack[i];
+        if (wst_isTransactionalStateType(ref.type) && wst_deref(context, ref))
+        {
+            return ref;
+        }
+    }
+
+    WarTransitionRequest* pending = &sm->pending;
+    if (wst_operationHasState(pending->operation) &&
+        wst_isTransactionalStateType(pending->stateRef.type) &&
+        wst_deref(context, pending->stateRef))
+    {
+        return pending->stateRef;
+    }
+
+    if (pending->cancellation &&
+        wst_isTransactionalStateType(pending->cancellationTargetRef.type) &&
+        wst_deref(context, pending->cancellationTargetRef))
+    {
+        return pending->cancellationTargetRef;
+    }
+
+    return WAR_STATE_REF_INVALID;
+}
+
+bool wst_resetStateForCancellation(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause)
+{
+    if (!state)
+    {
+        return false;
+    }
+
+    if (!entity)
+    {
+        wst_freeStateRef(context, wst_refOf(context, state));
+        return false;
+    }
 
     WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-    assert(sm);
+    if (!sm)
+    {
+        wst_freeStateRef(context, wst_refOf(context, state));
+        return false;
+    }
 
-    wst_clearPendingState(context, sm);
-
-    sm->pendingRef = wst_refOf(context, state);
-    sm->pendingOp = WAR_FSM_OP_RESET;
-    sm->leaveCurrent = true;
-
-    TracyCZoneEnd(ctx);
+    WarStateRef cancellationTargetRef = wst_findCancellationTarget(context, sm);
+    return wst_submitTransition(context, entity, (WarTransitionRequest)
+    {
+        .stateRef = wst_refOf(context, state),
+        .cancellationTargetRef = cancellationTargetRef,
+        .operation = WAR_STATE_OP_RESET,
+        .cause = cause,
+        .cancellation = true
+    });
 }
 
 WarStateBase* wst_currentState(WarContext* context, WarEntity* entity)
 {
-    TracyCZoneN(ctx, "wst_currentState", true);
-
     WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-    assert(sm);
+    if (!sm || sm->depth == 0) return NULL;
+    return wst_deref(context, sm->stack[sm->depth - 1]);
+}
 
-    WarStateBase* result = NULL;
-    if (sm->depth > 0)
-        result = wst_deref(context, sm->stack[sm->depth - 1]);
-
-    TracyCZoneEnd(ctx);
-    return result;
+bool wst_isCurrentState(WarContext* context, WarEntity* entity, WarState* state)
+{
+    return wst_currentState(context, entity) == state;
 }
 
 bool wst_hasStateInStack(WarContext* context, WarEntity* entity, WarStateType type)
@@ -299,7 +747,7 @@ bool wst_hasStateInStack(WarContext* context, WarEntity* entity, WarStateType ty
 
     for (u8 i = 0; i < sm->depth; i++)
     {
-        if (sm->stack[i].type == type)
+        if (sm->stack[i].type == type && wst_deref(context, sm->stack[i]))
         {
             TracyCZoneEnd(ctx);
             return true;
@@ -323,6 +771,16 @@ WarStateBase* wst_peekAt(WarContext* context, WarEntity* entity, u8 index)
 
     TracyCZoneEnd(ctx);
     return result;
+}
+
+bool wst_isNextUpdateTime(WarContext* context, WarState* state)
+{
+    if (state->delay > 0)
+    {
+        state->nextUpdateGameTime = context->gameTime + state->delay;
+        state->delay = 0;
+    }
+    return context->gameTime >= state->nextUpdateGameTime;
 }
 
 WarStateBase* wst_getState(WarContext* context, WarEntity* entity, WarStateType type)
@@ -366,578 +824,82 @@ WarStateBase* wst_getDirectState(WarContext* context, WarEntity* entity, WarStat
     return result;
 }
 
-WarStateIdle* wst_getIdleState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getIdleState", true);
-
-    WarStateIdle* result = (WarStateIdle*)wst_getDirectState(context, entity, WAR_STATE_IDLE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateMove* wst_getMoveState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getMoveState", true);
-
-    WarStateMove* result = (WarStateMove*)wst_getState(context, entity, WAR_STATE_MOVE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStatePatrol* wst_getPatrolState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getPatrolState", true);
-
-    WarStatePatrol* result = (WarStatePatrol*)wst_getState(context, entity, WAR_STATE_PATROL);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateFollow* wst_getFollowState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getFollowState", true);
-
-    WarStateFollow* result = (WarStateFollow*)wst_getState(context, entity, WAR_STATE_FOLLOW);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateAttack* wst_getAttackState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getAttackState", true);
-
-    WarStateAttack* result = (WarStateAttack*)wst_getState(context, entity, WAR_STATE_ATTACK);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateDeath* wst_getDeathState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getDeathState", true);
-
-    WarStateDeath* result = (WarStateDeath*)wst_getState(context, entity, WAR_STATE_DEATH);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateCollapse* wst_getCollapseState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getCollapseState", true);
-
-    WarStateCollapse* result = (WarStateCollapse*)wst_getState(context, entity, WAR_STATE_COLLAPSE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateGold* wst_getGatherGoldState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getGatherGoldState", true);
-
-    WarStateGold* result = (WarStateGold*)wst_getState(context, entity, WAR_STATE_GOLD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateMining* wst_getMiningState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getMiningState", true);
-
-    WarStateMining* result = (WarStateMining*)wst_getState(context, entity, WAR_STATE_MINING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateWood* wst_getGatherWoodState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getGatherWoodState", true);
-
-    WarStateWood* result = (WarStateWood*)wst_getState(context, entity, WAR_STATE_WOOD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateChopping* wst_getChoppingState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getChoppingState", true);
-
-    WarStateChopping* result = (WarStateChopping*)wst_getState(context, entity, WAR_STATE_CHOPPING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateDeliver* wst_getDeliverState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getDeliverState", true);
-
-    WarStateDeliver* result = (WarStateDeliver*)wst_getState(context, entity, WAR_STATE_DELIVER);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateTrain* wst_getTrainState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getTrainState", true);
-
-    WarStateTrain* result = (WarStateTrain*)wst_getState(context, entity, WAR_STATE_TRAIN);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateUpgrade* wst_getUpgradeState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getUpgradeState", true);
-
-    WarStateUpgrade* result = (WarStateUpgrade*)wst_getState(context, entity, WAR_STATE_UPGRADE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateBuild* wst_getBuildState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getBuildState", true);
-
-    WarStateBuild* result = (WarStateBuild*)wst_getState(context, entity, WAR_STATE_BUILD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateRepair* wst_getRepairState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getRepairState", true);
-
-    WarStateRepair* result = (WarStateRepair*)wst_getState(context, entity, WAR_STATE_REPAIR);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateRepairing* wst_getRepairingState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getRepairingState", true);
-
-    WarStateRepairing* result = (WarStateRepairing*)wst_getState(context, entity, WAR_STATE_REPAIRING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-WarStateCast* wst_getCastState(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_getCastState", true);
-
-    WarStateCast* result = (WarStateCast*)wst_getState(context, entity, WAR_STATE_CAST);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
+WarStateIdle* wst_getIdleState(WarContext* context, WarEntity* entity) { return (WarStateIdle*)wst_getDirectState(context, entity, WAR_STATE_IDLE); }
+WarStateMove* wst_getMoveState(WarContext* context, WarEntity* entity) { return (WarStateMove*)wst_getState(context, entity, WAR_STATE_MOVE); }
+WarStatePatrol* wst_getPatrolState(WarContext* context, WarEntity* entity) { return (WarStatePatrol*)wst_getState(context, entity, WAR_STATE_PATROL); }
+WarStateFollow* wst_getFollowState(WarContext* context, WarEntity* entity) { return (WarStateFollow*)wst_getState(context, entity, WAR_STATE_FOLLOW); }
+WarStateAttack* wst_getAttackState(WarContext* context, WarEntity* entity) { return (WarStateAttack*)wst_getState(context, entity, WAR_STATE_ATTACK); }
+WarStateDeath* wst_getDeathState(WarContext* context, WarEntity* entity) { return (WarStateDeath*)wst_getState(context, entity, WAR_STATE_DEATH); }
+WarStateCollapse* wst_getCollapseState(WarContext* context, WarEntity* entity) { return (WarStateCollapse*)wst_getState(context, entity, WAR_STATE_COLLAPSE); }
+WarStateGold* wst_getGatherGoldState(WarContext* context, WarEntity* entity) { return (WarStateGold*)wst_getState(context, entity, WAR_STATE_GOLD); }
+WarStateMining* wst_getMiningState(WarContext* context, WarEntity* entity) { return (WarStateMining*)wst_getState(context, entity, WAR_STATE_MINING); }
+WarStateWood* wst_getGatherWoodState(WarContext* context, WarEntity* entity) { return (WarStateWood*)wst_getState(context, entity, WAR_STATE_WOOD); }
+WarStateChopping* wst_getChoppingState(WarContext* context, WarEntity* entity) { return (WarStateChopping*)wst_getState(context, entity, WAR_STATE_CHOPPING); }
+WarStateDeliver* wst_getDeliverState(WarContext* context, WarEntity* entity) { return (WarStateDeliver*)wst_getState(context, entity, WAR_STATE_DELIVER); }
+WarStateTrain* wst_getTrainState(WarContext* context, WarEntity* entity) { return (WarStateTrain*)wst_getState(context, entity, WAR_STATE_TRAIN); }
+WarStateUpgrade* wst_getUpgradeState(WarContext* context, WarEntity* entity) { return (WarStateUpgrade*)wst_getState(context, entity, WAR_STATE_UPGRADE); }
+WarStateBuild* wst_getBuildState(WarContext* context, WarEntity* entity) { return (WarStateBuild*)wst_getState(context, entity, WAR_STATE_BUILD); }
+WarStateRepair* wst_getRepairState(WarContext* context, WarEntity* entity) { return (WarStateRepair*)wst_getState(context, entity, WAR_STATE_REPAIR); }
+WarStateRepairing* wst_getRepairingState(WarContext* context, WarEntity* entity) { return (WarStateRepairing*)wst_getState(context, entity, WAR_STATE_REPAIRING); }
+WarStateCast* wst_getCastState(WarContext* context, WarEntity* entity) { return (WarStateCast*)wst_getState(context, entity, WAR_STATE_CAST); }
 
 bool wst_hasState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    TracyCZoneN(ctx, "wst_hasState", true);
-
-    bool result = wst_getState(context, entity, type) != NULL;
-
-    TracyCZoneEnd(ctx);
-    return result;
+    return wst_getState(context, entity, type) != NULL;
 }
 
 bool wst_hasDirectState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    TracyCZoneN(ctx, "wst_hasDirectState", true);
-
-    bool result = wst_getDirectState(context, entity, type) != NULL;
-
-    TracyCZoneEnd(ctx);
-    return result;
+    return wst_getDirectState(context, entity, type) != NULL;
 }
 
 bool wst_hasNextState(WarContext* context, WarEntity* entity, WarStateType type)
 {
-    TracyCZoneN(ctx, "wst_hasNextState", true);
-
     WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
     assert(sm);
 
-    bool result = WAR_STATE_REF_IS_VALID(sm->pendingRef) && sm->pendingRef.type == type;
-
-    TracyCZoneEnd(ctx);
-    return result;
+    WarTransitionRequest* pending = &sm->pending;
+    return wst_operationHasState(pending->operation) &&
+           pending->stateRef.type == type &&
+           wst_deref(context, pending->stateRef) != NULL;
 }
 
-bool wst_isIdle(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isIdle", true);
-
-    bool result = wst_hasDirectState(context, entity, WAR_STATE_IDLE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isMoving(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isMoving", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_MOVE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isPatrolling(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isPatrolling", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_PATROL);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isFollowing(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isFollowing", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_FOLLOW);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isAttacking(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isAttacking", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_ATTACK);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isDead(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isDead", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_DEATH);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isCollapsing(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isCollapsing", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_COLLAPSE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGatheringGold(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGatheringGold", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_GOLD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isMining(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isMining", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_MINING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGatheringWood(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGatheringWood", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_WOOD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isChopping(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isChopping", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_CHOPPING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isDelivering(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isDelivering", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_DELIVER);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isTraining(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isTraining", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_TRAIN);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isUpgrading(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isUpgrading", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_UPGRADE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isBuilding(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isBuilding", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_BUILD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isRepairing(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isRepairing", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_REPAIR);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isRepairing2(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isRepairing2", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_REPAIRING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isCasting(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isCasting", true);
-
-    bool result = wst_hasState(context, entity, WAR_STATE_CAST);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToIdle(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToIdle", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_IDLE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToMove(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToMove", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_MOVE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToPatrol(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToPatrol", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_PATROL);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToFollow(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToFollow", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_FOLLOW);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToAttack(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToAttack", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_ATTACK);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToDie(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToDie", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_DEATH);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToCollapse(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToCollapse", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_COLLAPSE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToGatherGold(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToGatherGold", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_GOLD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToMine(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToMine", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_MINING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToGatherWood(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToGatherWood", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_WOOD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToChop(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToChop", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_CHOPPING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToDeliver(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToDeliver", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_DELIVER);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToTrain(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToTrain", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_TRAIN);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToUpgrade(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToUpgrade", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_UPGRADE);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToBuild(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToBuild", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_BUILD);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToRepair(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToRepair", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_REPAIR);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToRepair2(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToRepair2", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_REPAIRING);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
-
-bool wst_isGoingToCast(WarContext* context, WarEntity* entity)
-{
-    TracyCZoneN(ctx, "wst_isGoingToCast", true);
-
-    bool result = wst_hasNextState(context, entity, WAR_STATE_CAST);
-
-    TracyCZoneEnd(ctx);
-    return result;
-}
+bool wst_isIdle(WarContext* context, WarEntity* entity) { return wst_hasDirectState(context, entity, WAR_STATE_IDLE); }
+bool wst_isMoving(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_MOVE); }
+bool wst_isPatrolling(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_PATROL); }
+bool wst_isFollowing(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_FOLLOW); }
+bool wst_isAttacking(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_ATTACK); }
+bool wst_isDead(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_DEATH); }
+bool wst_isCollapsing(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_COLLAPSE); }
+bool wst_isGatheringGold(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_GOLD); }
+bool wst_isMining(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_MINING); }
+bool wst_isGatheringWood(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_WOOD); }
+bool wst_isChopping(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_CHOPPING); }
+bool wst_isDelivering(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_DELIVER); }
+bool wst_isTraining(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_TRAIN); }
+bool wst_isUpgrading(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_UPGRADE); }
+bool wst_isBuilding(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_BUILD); }
+bool wst_isRepairing(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_REPAIR); }
+bool wst_isRepairing2(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_REPAIRING); }
+bool wst_isCasting(WarContext* context, WarEntity* entity) { return wst_hasState(context, entity, WAR_STATE_CAST); }
+bool wst_isGoingToIdle(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_IDLE); }
+bool wst_isGoingToMove(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_MOVE); }
+bool wst_isGoingToPatrol(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_PATROL); }
+bool wst_isGoingToFollow(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_FOLLOW); }
+bool wst_isGoingToAttack(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_ATTACK); }
+bool wst_isGoingToDie(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_DEATH); }
+bool wst_isGoingToCollapse(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_COLLAPSE); }
+bool wst_isGoingToGatherGold(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_GOLD); }
+bool wst_isGoingToMine(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_MINING); }
+bool wst_isGoingToGatherWood(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_WOOD); }
+bool wst_isGoingToChop(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_CHOPPING); }
+bool wst_isGoingToDeliver(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_DELIVER); }
+bool wst_isGoingToTrain(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_TRAIN); }
+bool wst_isGoingToUpgrade(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_UPGRADE); }
+bool wst_isGoingToBuild(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_BUILD); }
+bool wst_isGoingToRepair(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_REPAIR); }
+bool wst_isGoingToRepair2(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_REPAIRING); }
+bool wst_isGoingToCast(WarContext* context, WarEntity* entity) { return wst_hasNextState(context, entity, WAR_STATE_CAST); }
 
 void wst_leaveState(WarContext* context, WarEntity* entity, WarStateBase* state)
 {
@@ -956,10 +918,98 @@ void wst_leaveState(WarContext* context, WarEntity* entity, WarStateBase* state)
         return;
     }
 
+    const WarStateRef ref = wst_refOf(context, state);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
     stateDescriptors[state->type].leaveFunc(context, entity, state);
-    wst_freeStateRef(context, wst_refOf(context, state));
+    wst_releaseStateRef(context, ref);
 
     TracyCZoneEnd(ctx);
+}
+
+static bool wst_installIdleState(WarContext* context, WarEntity* entity, WarStateMachineComponent* sm)
+{
+    WarStateIdle* idle = wst_createIdleState(context, entity, true);
+    if (!idle)
+    {
+        logError("Unable to restore IDLE state for entity %d", entity->id);
+        return false;
+    }
+
+    WarStateRef idleRef = wst_refOf(context, (WarStateBase*)idle);
+    if (!WAR_STATE_REF_IS_VALID(idleRef))
+    {
+        return false;
+    }
+
+    sm->stack[0] = idleRef;
+    sm->depth = 1;
+    return true;
+}
+
+static bool wst_commitCancellation(WarContext* context, WarEntity* entity, WarStateMachineComponent* sm, const WarTransitionRequest* request)
+{
+    if (!request->cancellation)
+    {
+        return true;
+    }
+
+    WarStateBase* target = wst_deref(context, request->cancellationTargetRef);
+    if (!target || target->entityId != entity->id || !wst_isTransactionalStateType(target->type))
+    {
+        return false;
+    }
+
+    switch (target->type)
+    {
+        case WAR_STATE_TRAIN:
+            ((WarStateTrain*)target)->cancelled = true;
+            break;
+        case WAR_STATE_UPGRADE:
+            ((WarStateUpgrade*)target)->cancelled = true;
+            break;
+        case WAR_STATE_BUILD:
+            ((WarStateBuild*)target)->cancelled = true;
+            break;
+        default:
+            return false;
+    }
+
+    if (!wst_isStateRefOnMachineStack(sm, request->cancellationTargetRef))
+    {
+        wst_leaveState(context, entity, target);
+    }
+
+    return true;
+}
+
+static void wst_resolveCommittedBuildCancellation(WarContext* context, WarStateMachineComponent* sm, WarTransitionRequest* request)
+{
+    if (!request->cancellation ||
+        request->cancellationTargetRef.type != WAR_STATE_BUILD ||
+        !wst_isStateRefOnMachineStack(sm, request->cancellationTargetRef))
+    {
+        return;
+    }
+
+    WarStateBuild* build = (WarStateBuild*)wst_deref(context, request->cancellationTargetRef);
+    if (!build || !build->outputCommitted)
+    {
+        return;
+    }
+
+    WarStateRef cancellationOutcomeRef = request->stateRef;
+    request->stateRef = WAR_STATE_REF_INVALID;
+    request->cancellationTargetRef = WAR_STATE_REF_INVALID;
+    request->operation = WAR_STATE_OP_POP;
+    request->cause = WAR_TRANSITION_CAUSE_COMPLETION;
+    request->cancellation = false;
+
+    wst_freeUnownedStateRef(context, cancellationOutcomeRef);
 }
 
 void wst_processStateMachinePendingOps(WarContext* context)
@@ -978,60 +1028,125 @@ void wst_processStateMachinePendingOps(WarContext* context)
         WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
         assert(sm);
 
-        if (sm->pendingOp == WAR_FSM_OP_NONE) continue;
-
-        switch (sm->pendingOp)
+        WarTransitionRequest* pending = &sm->pending;
+        if (pending->operation == WAR_STATE_OP_NONE)
         {
-            case WAR_FSM_OP_PUSH:
+            continue;
+        }
+
+        WarTransitionRequest request = *pending;
+        *pending = (WarTransitionRequest)
+        {
+            .stateRef = WAR_STATE_REF_INVALID,
+            .cancellationTargetRef = WAR_STATE_REF_INVALID
+        };
+
+        if (sm->depth > WAR_STATE_STACK_DEPTH)
+        {
+            logError("Invalid state stack depth %d for entity %d", sm->depth, entity->id);
+            sm->depth = WAR_STATE_STACK_DEPTH;
+        }
+
+        if (wst_operationHasState(request.operation))
+        {
+            WarStateBase* candidate = wst_deref(context, request.stateRef);
+            if (!candidate || candidate->entityId != entity->id)
             {
-                assert(sm->depth < WAR_STATE_STACK_DEPTH);
-                sm->stack[sm->depth] = sm->pendingRef;
-                sm->depth++;
+                wst_freeUnownedTransitionRefs(context, &request);
+                continue;
+            }
+        }
+
+        wst_resolveCommittedBuildCancellation(context, sm, &request);
+
+        if (!wst_commitCancellation(context, entity, sm, &request))
+        {
+            wst_freeUnownedTransitionRefs(context, &request);
+            continue;
+        }
+
+        switch (request.operation)
+        {
+            case WAR_STATE_OP_PUSH:
+            {
+                if (sm->depth < WAR_STATE_STACK_DEPTH)
+                {
+                    sm->stack[sm->depth] = request.stateRef;
+                    sm->depth++;
+                }
+                else
+                {
+                    // Preserve the historical overflow behavior: a PUSH on a
+                    // full stack safely replaces only the active top state.
+                    assert(sm->depth == WAR_STATE_STACK_DEPTH);
+                    WarStateRef topRef = sm->stack[sm->depth - 1];
+                    WarStateBase* top = wst_deref(context, topRef);
+                    if (top)
+                    {
+                        wst_leaveState(context, entity, top);
+                    }
+                    sm->stack[sm->depth - 1] = request.stateRef;
+                }
                 break;
             }
-            case WAR_FSM_OP_POP:
+            case WAR_STATE_OP_POP:
             {
-                assert(sm->depth > 0);
-                WarStateRef topRef = sm->stack[sm->depth - 1];
-                WarStateBase* top = wst_deref(context, topRef);
-                if (sm->leaveCurrent && top)
-                    wst_leaveState(context, entity, top);
-                sm->depth--;
+                if (sm->depth > 0)
+                {
+                    WarStateRef topRef = sm->stack[sm->depth - 1];
+                    WarStateBase* top = wst_deref(context, topRef);
+                    if (top)
+                    {
+                        wst_leaveState(context, entity, top);
+                    }
+                    sm->depth--;
+                    sm->stack[sm->depth] = WAR_STATE_REF_INVALID;
+                }
+
                 if (sm->depth == 0)
                 {
-                    WarStateIdle* idle = wst_createIdleState(context, entity, true);
-                    sm->stack[0] = wst_refOf(context, (WarStateBase*)idle);
+                    // POP on an empty stack is defined as restoring IDLE.
+                    wst_installIdleState(context, entity, sm);
+                }
+                break;
+            }
+            case WAR_STATE_OP_REPLACE:
+            {
+                if (sm->depth > 0)
+                {
+                    WarStateRef topRef = sm->stack[sm->depth - 1];
+                    WarStateBase* top = wst_deref(context, topRef);
+                    if (top)
+                    {
+                        wst_leaveState(context, entity, top);
+                    }
+                    sm->stack[sm->depth - 1] = request.stateRef;
+                }
+                else
+                {
+                    // REPLACE on an empty stack installs the candidate.
+                    sm->stack[0] = request.stateRef;
                     sm->depth = 1;
                 }
                 break;
             }
-            case WAR_FSM_OP_REPLACE:
-            {
-                assert(sm->depth > 0);
-                WarStateRef topRef = sm->stack[sm->depth - 1];
-                WarStateBase* top = wst_deref(context, topRef);
-                if (sm->leaveCurrent && top)
-                    wst_leaveState(context, entity, top);
-                sm->stack[sm->depth - 1] = sm->pendingRef;
-                break;
-            }
-            case WAR_FSM_OP_RESET:
+            case WAR_STATE_OP_RESET:
             {
                 for (s32 d = (s32)sm->depth - 1; d >= 0; d--)
                 {
                     WarStateBase* s = wst_deref(context, sm->stack[d]);
                     if (s) wst_leaveState(context, entity, s);
+                    sm->stack[d] = WAR_STATE_REF_INVALID;
                 }
-                sm->stack[0] = sm->pendingRef;
+                sm->stack[0] = request.stateRef;
                 sm->depth = 1;
                 break;
             }
-            default: break;
+            default:
+                wst_freeUnownedTransitionRefs(context, &request);
+                break;
         }
-
-        sm->pendingOp    = WAR_FSM_OP_NONE;
-        sm->pendingRef   = WAR_STATE_REF_INVALID;
-        sm->leaveCurrent = false;
+        wst_freeUnownedStateRef(context, request.cancellationTargetRef);
     }
 
     TracyCZoneEnd(ctx);

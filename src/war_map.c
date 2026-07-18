@@ -383,7 +383,7 @@ static void createStartingWalls(WarContext* context, WarMap* map, WarResource* l
     we_addStateMachineComponent(context, wall);
 
     WarStateIdle* idleState = wst_createIdleState(context, wall, false);
-    wst_resetState(context, wall, (WarStateBase*)idleState);
+    wst_resetState(context, wall, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_INITIALIZATION);
 
     map->editing.wall = wall;
 }
@@ -566,8 +566,8 @@ vec2 wmap_tileToMapCoordinatesV(vec2 v, bool centeredInTile)
 
     if (centeredInTile)
     {
-        v.x += MEGA_TILE_WIDTH/2;
-        v.y += MEGA_TILE_HEIGHT/2;
+        v.x += MINI_TILE_WIDTH;
+        v.y += MINI_TILE_HEIGHT;
     }
 
     return v;
@@ -2556,7 +2556,7 @@ static void updateMagic(WarContext* context)
                         vec2 position = wu_getUnitCenterPosition(context, entity);
 
                         WarStateDeath* deathState = wst_createDeathState(context, entity);
-                        wst_resetState(context, entity, (WarStateBase*)deathState);
+                        wst_resetState(context, entity, (WarStateBase*)deathState, WAR_TRANSITION_CAUSE_LIFECYCLE);
 
                         if (unit->type == WAR_UNIT_SCORPION || unit->type == WAR_UNIT_SPIDER)
                         {

@@ -331,31 +331,27 @@ void wstdbg_updateDebugText(WarContext* context)
         }
     }
 
-    if (sm->pendingOp != WAR_FSM_OP_NONE)
+    WarTransitionRequest* pending = &sm->pending;
+
+    if (pending->operation != WAR_STATE_OP_NONE)
     {
-        switch (sm->pendingOp)
+        switch (pending->operation)
         {
-        case WAR_FSM_OP_POP:
+        case WAR_STATE_OP_POP:
             offset = appendf(buffer, (s32)sizeof(buffer), offset, "pending: >>POP\n");
             break;
-        case WAR_FSM_OP_PUSH:
-        case WAR_FSM_OP_REPLACE:
-        case WAR_FSM_OP_RESET:
-            if (WAR_STATE_REF_IS_VALID(sm->pendingRef))
+        case WAR_STATE_OP_PUSH:
+        case WAR_STATE_OP_REPLACE:
+        case WAR_STATE_OP_RESET:
+            if (WAR_STATE_REF_IS_VALID(pending->stateRef))
             {
-                const char* pendingName = sm->pendingRef.type >= WAR_STATE_IDLE && sm->pendingRef.type < WAR_STATE_COUNT
-                    ? stateTypeNames[sm->pendingRef.type]
-                    : "UNKNOWN";
-                offset = appendf(buffer, (s32)sizeof(buffer), offset,
-                    "pending: >>%s -> %s\n",
-                    fsmOpNames[sm->pendingOp],
-                    pendingName);
+                const char* pendingName = pending->stateRef.type >= WAR_STATE_IDLE && pending->stateRef.type < WAR_STATE_COUNT
+                    ? stateTypeNames[pending->stateRef.type] : "UNKNOWN";
+                offset = appendf(buffer, (s32)sizeof(buffer), offset, "pending: >>%s -> %s\n", fsmOpNames[pending->operation], pendingName);
             }
             else
             {
-                offset = appendf(buffer, (s32)sizeof(buffer), offset,
-                    "pending: >>%s\n",
-                    fsmOpNames[sm->pendingOp]);
+                offset = appendf(buffer, (s32)sizeof(buffer), offset, "pending: >>%s\n", fsmOpNames[pending->operation]);
             }
             break;
         default:

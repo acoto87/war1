@@ -2,16 +2,33 @@
 
 #include "TracyC.h"
 
-WarStateUpgrade* wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime)
+WarStateUpgrade* wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime, s32 goldCost, s32 woodCost)
 {
     TracyCZoneN(ctx, "wst_createUpgradeState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_UPGRADE, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateUpgrade* state = (WarStateUpgrade*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->upgradeToBuild = upgradeToBuild;
     state->buildTime = 0;
     state->totalBuildTime = buildTime;
+    state->goldCost = goldCost;
+    state->woodCost = woodCost;
+    state->transactionApplied = false;
+    state->outputCommitted = false;
     state->cancelled = false;
+    state->alreadyRefunded = false;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -21,17 +38,34 @@ void wst_leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* sta
 {
     TracyCZoneN(ctx, "wst_leaveUpgradeState", true);
 
-    if (!state->initialized)
+    WarStateUpgrade* upgradeState = (WarStateUpgrade*)state;
+    WarUnitComponent* unit = NULL;
+
+    if (upgradeState->cancelled &&
+        upgradeState->transactionApplied &&
+        !upgradeState->outputCommitted &&
+        !upgradeState->alreadyRefunded)
+    {
+        unit = we_getUnitComponent(context, entity);
+        assert(unit);
+
+        WarPlayerInfo* player = &context->map->players[unit->player];
+        upgradeState->alreadyRefunded = true;
+        we_increasePlayerResources(context, player, upgradeState->goldCost, upgradeState->woodCost);
+    }
+
+    if (!upgradeState->transactionApplied)
     {
         TracyCZoneEnd(ctx);
         return;
     }
 
-    NOT_USED(state);
-
     WarMap* map = context->map;
-    WarUnitComponent* unit = we_getUnitComponent(context, entity);
-    assert(unit);
+    if (!unit)
+    {
+        unit = we_getUnitComponent(context, entity);
+        assert(unit);
+    }
 
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
@@ -45,6 +79,18 @@ void wst_leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* sta
     TracyCZoneEnd(ctx);
 }
 
+static bool wst_applyUpgradeTransaction(WarContext* context, WarUnitComponent* unit, WarStateUpgrade* state)
+{
+    WarPlayerInfo* player = &context->map->players[unit->player];
+    if (!we_decreasePlayerResources(context, player, state->goldCost, state->woodCost))
+    {
+        return false;
+    }
+
+    state->transactionApplied = true;
+    return true;
+}
+
 void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateUpgradeState", true);
@@ -52,12 +98,21 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
     WarStateUpgrade* s = (WarStateUpgrade*)state;
 
     WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
+    WarPlayerInfo* player = &map->players[unit->player];
 
     if (!state->initialized)
     {
+        state->initialized = true;
+        if (!wst_applyUpgradeTransaction(context, unit, s))
+        {
+            s->cancelled = true;
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+            TracyCZoneEnd(ctx);
+            return;
+        }
+
         WarTransformComponent* transform = we_getTransformComponent(context, entity);
         assert(transform);
 
@@ -68,14 +123,13 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
         unit->building = true;
         unit->buildPercent = 0;
 
-        state->initialized = true;
         TracyCZoneEnd(ctx);
         return;
     }
 
     if (s->cancelled)
     {
-        wst_popState(context, entity);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
 
         TracyCZoneEnd(ctx);
         return;
@@ -99,8 +153,9 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
         // increase the level of the upgrade
         we_increaseUpgradeLevel(context, player, s->upgradeToBuild);
         assert(checkUpgradeLevel(player, s->upgradeToBuild));
+        s->outputCommitted = true;
 
-        wst_popState(context, entity);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
 
         TracyCZoneEnd(ctx);
         return;
@@ -129,18 +184,8 @@ void wst_updateUpgradeStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_UPGRADE || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateUpgradeState(context, entity, (WarStateBase*)state);
     }

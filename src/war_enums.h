@@ -674,12 +674,34 @@ typedef enum _WarStateType
 
 typedef enum
 {
-    WAR_FSM_OP_NONE = 0,
-    WAR_FSM_OP_PUSH,
-    WAR_FSM_OP_POP,
-    WAR_FSM_OP_REPLACE,
-    WAR_FSM_OP_RESET,
-} WarFsmOp;
+    WAR_STATE_OP_NONE = 0,
+    WAR_STATE_OP_PUSH,
+    WAR_STATE_OP_POP,
+    WAR_STATE_OP_REPLACE,
+    WAR_STATE_OP_RESET,
+} WarStateOp;
+
+typedef enum WarTransitionCause
+{
+    WAR_TRANSITION_CAUSE_NONE           =  0, // No transition is requested.
+    WAR_TRANSITION_CAUSE_INITIALIZATION =  5, // A fresh entity installs its initial behavior before it has an active state (e.g., a newly spawned unit requests IDLE).
+    WAR_TRANSITION_CAUSE_COMPLETION     = 10, // The active state finished its normal task and requests the next transition (e.g., MOVE reaches its destination and pops).
+    WAR_TRANSITION_CAUSE_AUTONOMOUS     = 20, // The entity reacts automatically without a direct player or AI order (e.g., an idle warrior spots an enemy and pushes ATTACK).
+    WAR_TRANSITION_CAUSE_AI_ORDER       = 30, // An AI controller issues an explicit order to one of its entities (e.g., the AI commands a worker to gather wood).
+    WAR_TRANSITION_CAUSE_PLAYER_ORDER   = 40, // The player issues an explicit command that normally replaces existing behavior (e.g., right-clicking the ground resets the stack to MOVE).
+    WAR_TRANSITION_CAUSE_STATUS         = 50, // A temporary gameplay effect interrupts or restricts the entity’s current behavior (e.g., a stun cancels CAST or suspends movement).
+    WAR_TRANSITION_CAUSE_SCRIPT         = 60, // A scenario, cutscene, trigger, or mission script forces a behavior change (e.g., a campaign trigger orders units to retreat).
+    WAR_TRANSITION_CAUSE_LIFECYCLE      = 70, // The entity enters a fundamental lifecycle transition that outranks normal behavior (e.g., lethal damage resets the stack to DEATH).
+} WarTransitionCause;
+
+static_assert(WAR_TRANSITION_CAUSE_INITIALIZATION > WAR_TRANSITION_CAUSE_NONE, "Initialization must outrank no transition");
+static_assert(WAR_TRANSITION_CAUSE_COMPLETION > WAR_TRANSITION_CAUSE_INITIALIZATION, "State completion must outrank initialization");
+static_assert(WAR_TRANSITION_CAUSE_AUTONOMOUS > WAR_TRANSITION_CAUSE_COMPLETION, "Autonomous reactions must outrank state completion");
+static_assert(WAR_TRANSITION_CAUSE_AI_ORDER > WAR_TRANSITION_CAUSE_AUTONOMOUS, "AI orders must outrank autonomous reactions");
+static_assert(WAR_TRANSITION_CAUSE_PLAYER_ORDER > WAR_TRANSITION_CAUSE_AI_ORDER, "Player orders must outrank AI orders");
+static_assert(WAR_TRANSITION_CAUSE_STATUS > WAR_TRANSITION_CAUSE_PLAYER_ORDER, "Status effects must outrank player orders");
+static_assert(WAR_TRANSITION_CAUSE_SCRIPT > WAR_TRANSITION_CAUSE_STATUS, "Scripted events must outrank status effects");
+static_assert(WAR_TRANSITION_CAUSE_LIFECYCLE > WAR_TRANSITION_CAUSE_SCRIPT, "Lifecycle transitions must outrank scripted events");
 
 typedef enum _WarTextAlignment
 {

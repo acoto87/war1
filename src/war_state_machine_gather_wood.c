@@ -7,7 +7,19 @@ WarStateWood* wst_createGatherWoodState(WarContext* context, WarEntity* entity, 
     TracyCZoneN(ctx, "wst_createGatherWoodState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_WOOD, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateWood* state = (WarStateWood*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->forestId = forestId;
     state->position = position;
 
@@ -43,7 +55,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     if (!forest)
     {
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_replaceState(context, entity, (WarStateBase*)idleState);
+        wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -58,7 +70,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
         if (!tree)
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_replaceState(context, entity, (WarStateBase*)idleState);
+            wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
             TracyCZoneEnd(ctx);
             return;
         }
@@ -72,13 +84,13 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     {
         vec2 position = wu_getUnitCenterPosition(context, entity);
         WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition));
-        wst_pushState(context, entity, (WarStateBase*)moveState);
+        wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
         TracyCZoneEnd(ctx);
         return;
     }
 
     WarStateChopping* choppingState = wst_createChoppingState(context, entity, forest->id, treePosition);
-    wst_replaceState(context, entity, (WarStateBase*)choppingState);
+    wst_replaceState(context, entity, (WarStateBase*)choppingState, WAR_TRANSITION_CAUSE_COMPLETION);
 
     TracyCZoneEnd(ctx);
 }
@@ -101,18 +113,8 @@ void wst_updateWoodStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_WOOD || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateGatherWoodState(context, entity, (WarStateBase*)state);
     }

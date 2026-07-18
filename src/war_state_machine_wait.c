@@ -9,7 +9,19 @@ WarStateWait* wst_createWaitState(WarContext* context, WarEntity* entity, f32 wa
     TracyCZoneN(ctx, "wst_createWaitState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_WAIT, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateWait* state = (WarStateWait*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->waitEndGameTime = context->gameTime + waitTime;
 
     TracyCZoneEnd(ctx);
@@ -65,12 +77,11 @@ void wst_updateWaitState(WarContext* context, WarEntity* entity, WarState* state
 
     if (context->gameTime >= s->waitEndGameTime)
     {
-        wst_popState(context, entity);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
     }
 
     TracyCZoneEnd(ctx);
 }
-
 
 void wst_updateWaitStates(WarContext* context)
 {
@@ -78,8 +89,8 @@ void wst_updateWaitStates(WarContext* context)
 
     WarEntityManager* manager = we_getEntityManager(context);
     WarStateStorage*  storage = &manager->stateStorage;
-    WarStateWait*      states  = storage->wait;
-    bool*             occupied = storage->occupied[WAR_STATE_WAIT];
+    WarStateWait*      states = storage->wait;
+    bool*            occupied = storage->occupied[WAR_STATE_WAIT];
 
     for (s32 i = 0; i < MAX_STATES_PER_TYPE; i++)
     {
@@ -89,18 +100,8 @@ void wst_updateWaitStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_WAIT || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateWaitState(context, entity, (WarStateBase*)state);
     }

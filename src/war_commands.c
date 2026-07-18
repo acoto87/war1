@@ -26,6 +26,44 @@ static inline void consumeCommand(WarMap* map, WarUnitCommand* command)
     command->type = WAR_COMMAND_NONE;
 }
 
+static bool wcmd_tryPlaceBuilding(WarContext* context, WarEntity* worker, WarPlayerInfo* player, WarUnitType buildingType, vec2 targetTile, const WarBuildingStats* stats)
+{
+    if (!we_decreasePlayerResources(context, player, stats->goldCost, stats->woodCost))
+    {
+        return false;
+    }
+
+    WarEntity* building = we_createBuilding(context, CREATE_UNIT_ARGS_INIT(
+        .type = buildingType,
+        .x = (s32)targetTile.x,
+        .y = (s32)targetTile.y,
+        .player = player->index,
+        .isGoingToBuild = true
+    ));
+    if (!building)
+    {
+        we_increasePlayerResources(context, player, stats->goldCost, stats->woodCost);
+        return false;
+    }
+
+    WarStateRepair* repairState = wst_createRepairState(context, worker, building->id);
+    if (!repairState)
+    {
+        we_removeEntity(context, building);
+        we_increasePlayerResources(context, player, stats->goldCost, stats->woodCost);
+        return false;
+    }
+
+    if (!wst_resetState(context, worker, (WarStateBase*)repairState, WAR_TRANSITION_CAUSE_PLAYER_ORDER))
+    {
+        we_removeEntity(context, building);
+        we_increasePlayerResources(context, player, stats->goldCost, stats->woodCost);
+        return false;
+    }
+
+    return true;
+}
+
 void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
 {
     TracyCZoneN(ctx, "wcmd_executeMoveCommand", 1);
@@ -95,14 +133,14 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
                 {
                     vec2 position = wu_getUnitCenterPosition(context, entity);
                     WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
-                    wst_resetState(context, entity, (WarStateBase*)moveState);
+                    wst_resetState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
                 }
             }
             else
             {
                 vec2 position = wu_getUnitCenterPosition(context, entity);
                 WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
-                wst_resetState(context, entity, (WarStateBase*)moveState);
+                wst_resetState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
 
             goingToMove = true;
@@ -134,7 +172,7 @@ void wcmd_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
         if (wu_isFriendlyUnit(context, entity))
         {
             WarStateFollow* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, MEGA_TILE_WIDTH);
-            wst_resetState(context, entity, (WarStateBase*)followState);
+            wst_resetState(context, entity, (WarStateBase*)followState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
             goingToFollow = true;
         }
@@ -160,7 +198,7 @@ void wcmd_executeStopCommand(WarContext* context)
         if (wu_isFriendlyUnit(context, entity))
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_resetState(context, entity, (WarStateBase*)idleState);
+            wst_resetState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
         }
     }
 }
@@ -204,7 +242,7 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
                         deliverState->sourceId = targetEntity->id;
                         if (isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST))
                             deliverState->sourcePosition = targetPosition;
-                        wst_resetState(context, entity, (WarStateBase*)deliverState);
+                        wst_resetState(context, entity, (WarStateBase*)deliverState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
                     }
                 }
                 else
@@ -213,7 +251,7 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
                         ? (WarStateBase*)wst_createGatherWoodState(context, entity, targetEntity->id, targetPosition)
                         : (WarStateBase*)wst_createGatherGoldState(context, entity, targetEntity->id);
 
-                    wst_resetState(context, entity, (WarStateBase*)gatherGoldOrWoodState);
+                    wst_resetState(context, entity, (WarStateBase*)gatherGoldOrWoodState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
                 }
 
                 goingToHarvest = true;
@@ -222,7 +260,7 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
             {
                 vec2 position = wu_getUnitCenterPosition(context, entity);
                 WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
-                wst_resetState(context, entity, (WarStateBase*)moveState);
+                wst_resetState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
                 goingToHarvest = true;
             }
@@ -263,14 +301,14 @@ void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
             if (wu_isWorkerUnit(context, entity) && wu_isCarryingResources(context, entity))
             {
                 WarStateDeliver* deliverState = wst_createDeliverState(context, entity, townHall->id);
-                wst_resetState(context, entity, (WarStateBase*)deliverState);
+                wst_resetState(context, entity, (WarStateBase*)deliverState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
                 goingToDeliver = true;
             }
             else if (wu_isDudeUnit(context, entity))
             {
                 WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, VEC2_ZERO, MEGA_TILE_WIDTH);
-                wst_resetState(context, entity, (WarStateBase*)followState);
+                wst_resetState(context, entity, (WarStateBase*)followState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
                 goingToDeliver = true;
             }
@@ -308,7 +346,7 @@ void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
             if (wu_isWorkerUnit(context, entity))
             {
                 WarStateRepair* repairState = wst_createRepairState(context, entity, targetEntity->id);
-                wst_resetState(context, entity, (WarStateBase*)repairState);
+                wst_resetState(context, entity, (WarStateBase*)repairState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
                 goingToRepair = true;
             }
@@ -393,7 +431,7 @@ void wcmd_executeRainOfFireCommand(WarContext* context, vec2 targetPosition)
         if (wu_isConjurerOrWarlockUnit(context, entity))
         {
             WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetPosition);
-            wst_resetState(context, entity, (WarStateBase*)castState);
+            wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
         }
     }
 }
@@ -412,7 +450,7 @@ void wcmd_executePoisonCloudCommand(WarContext* context, vec2 targetPosition)
         if (wu_isConjurerOrWarlockUnit(context, entity))
         {
             WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetPosition);
-            wst_resetState(context, entity, (WarStateBase*)castState);
+            wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
         }
     }
 }
@@ -436,7 +474,7 @@ void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, ve
                 if (entity->id != targetEntity->id)
                 {
                     WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_HEALING, targetEntity->id, targetPosition);
-                    wst_resetState(context, entity, (WarStateBase*)castState);
+                    wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
                 }
             }
         }
@@ -459,7 +497,7 @@ void wcmd_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity
             if (wu_isClericOrNecrolyteUnit(context, entity))
             {
                 WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetPosition);
-                wst_resetState(context, entity, (WarStateBase*)castState);
+                wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
         }
     }
@@ -481,7 +519,7 @@ void wcmd_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity
             if (wu_isClericOrNecrolyteUnit(context, entity))
             {
                 WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetPosition);
-                wst_resetState(context, entity, (WarStateBase*)castState);
+                wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
         }
     }
@@ -501,7 +539,7 @@ void wcmd_executeRaiseDeadCommand(WarContext* context, vec2 targetPosition)
         if (wu_isClericOrNecrolyteUnit(context, entity))
         {
             WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetPosition);
-            wst_resetState(context, entity, (WarStateBase*)castState);
+            wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
         }
     }
 }
@@ -521,7 +559,7 @@ void wcmd_executeSightCommand(WarContext* context, vec2 targetPosition)
         {
             WarSpellType spellType = wu_isHumanUnit(context, entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
             WarStateCast* castState = wst_createCastState(context, entity, spellType, 0, targetPosition);
-            wst_resetState(context, entity, (WarStateBase*)castState);
+            wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
         }
     }
 }
@@ -550,21 +588,21 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
                     if (wu_canAttack(context, entity, targetEntity))
                     {
                         WarStateAttack* attackState = wst_createAttackState(context, entity, targetEntity->id, targetPosition);
-                        wst_resetState(context, entity, (WarStateBase*)attackState);
+                        wst_resetState(context, entity, (WarStateBase*)attackState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
                         playSound = true;
                     }
                     else if (wu_isWorkerUnit(context, entity))
                     {
                         WarStateFollow* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, MEGA_TILE_WIDTH);
-                        wst_resetState(context, entity, (WarStateBase*)followState);
+                        wst_resetState(context, entity, (WarStateBase*)followState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
                     }
                 }
             }
             else
             {
                 WarStateAttack* attackState = wst_createAttackState(context, entity, 0, targetPosition);
-                wst_resetState(context, entity, (WarStateBase*)attackState);
+                wst_resetState(context, entity, (WarStateBase*)attackState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
                 playSound = true;
             }
@@ -780,10 +818,10 @@ bool wcmd_executeCommand(WarContext* context)
 
             const WarUnitStats* stats = wu_getUnitStats(unitToTrain);
             if (we_checkFarmFood(context, player) &&
-                we_decreasePlayerResources(context, player, stats->goldCost, stats->woodCost))
+                we_enoughPlayerResources(context, player, stats->goldCost, stats->woodCost))
             {
-                WarStateTrain* trainState = wst_createTrainState(context, selectedEntity, unitToTrain, (f32)stats->buildTime);
-                wst_resetState(context, selectedEntity, (WarStateBase*)trainState);
+                WarStateTrain* trainState = wst_createTrainState(context, selectedEntity, unitToTrain, (f32)stats->buildTime, stats->goldCost, stats->woodCost, NULL);
+                wst_resetState(context, selectedEntity, (WarStateBase*)trainState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
 
             consumeCommand(map, command);
@@ -828,10 +866,10 @@ bool wcmd_executeCommand(WarContext* context)
 
             const WarUpgradeStats* stats = wu_getUpgradeStats(upgradeToBuild);
             s32 level = getUpgradeLevel(player, upgradeToBuild);
-            if (we_decreasePlayerResources(context, player, stats->goldCost[level], 0))
+            if (we_enoughPlayerResources(context, player, stats->goldCost[level], 0))
             {
-                WarStateUpgrade* upgradeState = wst_createUpgradeState(context, selectedEntity, upgradeToBuild, (f32)stats->buildTime);
-                wst_resetState(context, selectedEntity, (WarStateBase*)upgradeState);
+                WarStateUpgrade* upgradeState = wst_createUpgradeState(context, selectedEntity, upgradeToBuild, (f32)stats->buildTime, stats->goldCost[level], 0);
+                wst_resetState(context, selectedEntity, (WarStateBase*)upgradeState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
 
             consumeCommand(map, command);
@@ -872,18 +910,8 @@ bool wcmd_executeCommand(WarContext* context)
                     const WarBuildingStats* stats = wu_getBuildingStats(buildingToBuild);
                     if (we_checkTileToBuild(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y))
                     {
-                        if (we_decreasePlayerResources(context, player, stats->goldCost, stats->woodCost))
+                        if (wcmd_tryPlaceBuilding(context, worker, player, buildingToBuild, targetTile, stats))
                         {
-                            WarEntity* building = we_createBuilding(context, CREATE_UNIT_ARGS_INIT(
-                                .type=buildingToBuild,
-                                .x=(s32)targetTile.x,
-                                .y=(s32)targetTile.y,
-                                .player=0,
-                                .isGoingToBuild=true
-                            ));
-                            WarStateRepair* repairState = wst_createRepairState(context, worker, building->id);
-                            wst_resetState(context, worker, (WarStateBase*)repairState);
-
                             consumeCommand(map, command);
                         }
                     }
@@ -1399,7 +1427,6 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
     NOT_USED(entity);
 
     WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
 
     map->commandState.command.type = WAR_COMMAND_NONE;
 
@@ -1411,42 +1438,20 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
 
         if (wu_isBuildingUnit(context, selectedEntity))
         {
-            WarUnitComponent* unit =  we_getUnitComponent(context, selectedEntity);
-            assert(unit);
-
             if (wst_isBuilding(context, selectedEntity) || wst_isGoingToBuild(context, selectedEntity))
             {
-                const WarBuildingStats* stats = wu_getBuildingStats(unit->type);
-                we_increasePlayerResources(context, player, stats->goldCost, stats->woodCost);
-
                 WarStateCollapse* collapseState = wst_createCollapseState(context, selectedEntity);
-                wst_resetState(context, selectedEntity, (WarStateBase*)collapseState);
-
-                wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(.randomFromId=WAR_BUILDING_COLLAPSE_1, .randomToId=WAR_BUILDING_COLLAPSE_3, .loop=false));
+                wst_resetStateForCancellation(context, selectedEntity, (WarStateBase*)collapseState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
-            else if (unit->building)
+            else if (wst_isTraining(context, selectedEntity) || wst_isGoingToTrain(context, selectedEntity))
             {
-                if (wst_isTraining(context, selectedEntity) || wst_isGoingToTrain(context, selectedEntity))
-                {
-                    WarStateTrain* trainState = wst_getTrainState(context, selectedEntity);
-                    WarUnitType unitToBuild = trainState->unitToBuild;
-
-                    const WarUnitStats* stats = wu_getUnitStats(unitToBuild);
-                    we_increasePlayerResources(context, player, stats->goldCost, stats->woodCost);
-                }
-                else if (wst_isUpgrading(context, selectedEntity) || wst_isGoingToUpgrade(context, selectedEntity))
-                {
-                    WarStateUpgrade* upgradeState = wst_getUpgradeState(context, selectedEntity);
-                    WarUpgradeType upgradeToBuild = upgradeState->upgradeToBuild;
-                    assert(hasRemainingUpgrade(player, upgradeToBuild));
-
-                    s32 upgradeLevel = getUpgradeLevel(player, upgradeToBuild);
-                    const WarUpgradeStats* stats = wu_getUpgradeStats(upgradeToBuild);
-                    we_increasePlayerResources(context, player, stats->goldCost[upgradeLevel], 0);
-                }
-
                 WarStateIdle* idleState = wst_createIdleState(context, selectedEntity, false);
-                wst_resetState(context, selectedEntity, (WarStateBase*)idleState);
+                wst_resetStateForCancellation(context, selectedEntity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+            }
+            else if (wst_isUpgrading(context, selectedEntity) || wst_isGoingToUpgrade(context, selectedEntity))
+            {
+                WarStateIdle* idleState = wst_createIdleState(context, selectedEntity, false);
+                wst_resetStateForCancellation(context, selectedEntity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
         }
     }
