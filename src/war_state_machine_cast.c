@@ -35,17 +35,6 @@ WarStateCast* wst_createCastState(WarContext* context, WarEntity* entity, WarSpe
     return state;
 }
 
-void wst_leaveCastState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveCastState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateCastState", true);

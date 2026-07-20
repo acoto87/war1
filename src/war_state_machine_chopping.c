@@ -32,13 +32,23 @@ WarStateChopping* wst_createChoppingState(WarContext* context, WarEntity* entity
     return state;
 }
 
-void wst_leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterChoppingState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    TracyCZoneN(ctx, "wst_leaveChoppingState", true);
+    TracyCZoneN(ctx, "wst_enterChoppingState", true);
 
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
+    WarMap* map = context->map;
+    assert(map);
+
+    WarStateChopping* s = (WarStateChopping*)state;
+
+    vec2 unitTile = wu_getUnitCenterTile(context, entity);
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 treePosition = s->position;
+    vec2 treeTile = wmap_mapToTileCoordinatesV(treePosition);
+
+    wpath_setStaticEntity(&map->finder, (s32)unitTile.x, (s32)unitTile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    wu_setUnitDirectionFromDiff(context, entity, treeTile.x - unitTile.x, treeTile.y - unitTile.y);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
 
     TracyCZoneEnd(ctx);
 }
@@ -51,22 +61,6 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
     assert(map);
 
     WarStateChopping* s = (WarStateChopping*)state;
-
-    if (!state->initialized)
-    {
-        vec2 unitTile = wu_getUnitCenterTile(context, entity);
-        vec2 unitSize = wu_getUnitSize(context, entity);
-        vec2 treePosition = s->position;
-        vec2 treeTile = wmap_mapToTileCoordinatesV(treePosition);
-
-        wpath_setStaticEntity(&map->finder, (s32)unitTile.x, (s32)unitTile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wu_setUnitDirectionFromDiff(context, entity, treeTile.x - unitTile.x, treeTile.y - unitTile.y);
-        wact_setAction(context, entity, WAR_ACTION_TYPE_HARVEST, true, 1.0f);
-
-        state->initialized = true;
-        TracyCZoneEnd(ctx);
-        return;
-    }
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);

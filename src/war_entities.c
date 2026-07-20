@@ -636,7 +636,7 @@ void we_removeStateMachineComponent(WarContext* context, WarEntity* entity)
         WarStateRef ref = comp->stack[d];
         if (WAR_STATE_REF_IS_VALID(ref))
         {
-            wst_leaveState(context, entity, wst_deref(context, ref));
+            wst_exitState(context, entity, wst_deref(context, ref), WAR_STATE_EXIT_REMOVED);
         }
     }
 

@@ -26,17 +26,6 @@ WarStateRepair* wst_createRepairState(WarContext* context, WarEntity* entity, Wa
     return state;
 }
 
-void wst_leaveRepairState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveRepairState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateRepairState", true);
@@ -75,7 +64,6 @@ void wst_updateRepairState(WarContext* context, WarEntity* entity, WarState* sta
 
     TracyCZoneEnd(ctx);
 }
-
 
 void wst_updateRepairStates(WarContext* context)
 {

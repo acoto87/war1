@@ -383,11 +383,14 @@ bool wg_initGame(WarContext* context)
 
         if (context->customMapPath[0] != '\0')
         {
-            if (!wmap_loadCustomMap(context, wsv_fromCString(context->customMapPath)))
+            WarMap* map = wmap_loadCustomMap(context, wsv_fromCString(context->customMapPath));
+            if (!map)
             {
                 logError("Could not load custom map: %s", context->customMapPath);
                 return false;
             }
+
+            wg_setNextMap(context, map, 0.0f);
         }
         else if (context->skipIntro)
         {

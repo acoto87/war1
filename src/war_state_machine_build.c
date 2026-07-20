@@ -42,46 +42,69 @@ WarStateBuild* wst_createBuildState(WarContext* context, WarEntity* entity, f32 
     return state;
 }
 
-void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    TracyCZoneN(ctx, "wst_leaveBuildState", true);
+    TracyCZoneN(ctx, "wst_enterBuildState", true);
 
-    WarStateBuild* buildState = (WarStateBuild*)state;
-    WarUnitComponent* unit = NULL;
+    NOT_USED(state);
 
-    if (buildState->cancelled &&
-        buildState->transactionApplied &&
-        !buildState->outputCommitted &&
-        !buildState->alreadyRefunded)
+    WarMap* map = context->map;
+    assert(map);
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
+    wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+
+    we_removeSpriteComponent(context, entity);
+
+    const WarBuildingData* buildingData = wu_getBuildingData(unit->type);
+    we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->buildingResource));
+
+    wact_setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
+
+    unit->building = true;
+    unit->buildPercent = 0;
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_exitBuildState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason)
+{
+    TracyCZoneN(ctx, "wst_exitBuildState", true);
+
+    NOT_USED(reason);
+
+    WarMap* map = context->map;
+    assert(map);
+
+    WarStateBuild* s = (WarStateBuild*)state;
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    if (s->cancelled &&
+        s->transactionApplied &&
+        !s->outputCommitted &&
+        !s->alreadyRefunded)
     {
-        unit = we_getUnitComponent(context, entity);
-        assert(unit);
-
         WarPlayerInfo* player = &context->map->players[unit->player];
-        buildState->alreadyRefunded = true;
-        we_increasePlayerResources(context, player, buildState->goldCost, buildState->woodCost);
+        s->alreadyRefunded = true;
+        we_increasePlayerResources(context, player, s->goldCost, s->woodCost);
     }
 
-    if (buildState->cancelled && !buildState->outputCommitted)
+    if (s->cancelled && !s->outputCommitted)
     {
         wa_createAudioRandom(context, CREATE_AUDIO_ARGS_INIT(
             .randomFromId=WAR_BUILDING_COLLAPSE_1,
             .randomToId=WAR_BUILDING_COLLAPSE_3,
             .loop=false
         ));
-    }
-
-    if (!state->initialized)
-    {
-        TracyCZoneEnd(ctx);
-        return;
-    }
-
-    WarMap* map = context->map;
-    if (!unit)
-    {
-        unit = we_getUnitComponent(context, entity);
-        assert(unit);
     }
 
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
@@ -110,33 +133,9 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    if (!state->initialized)
-    {
-        WarTransformComponent* transform = we_getTransformComponent(context, entity);
-        assert(transform);
-
-        vec2 unitSize = wu_getUnitSize(context, entity);
-        vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-        wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-
-        we_removeSpriteComponent(context, entity);
-
-        const WarBuildingData* buildingData = wu_getBuildingData(unit->type);
-        we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->buildingResource));
-
-        wact_setAction(context, entity, WAR_ACTION_TYPE_NONE, true, 1.0f);
-
-        unit->building = true;
-        unit->buildPercent = 0;
-
-        state->initialized = true;
-        TracyCZoneEnd(ctx);
-        return;
-    }
-
     if (s->outputCommitted)
     {
-        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -145,7 +144,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
     {
         if (sm->depth > 1)
         {
-            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_CANCELLED);
         }
         else
         {
@@ -194,7 +193,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
         const WarUnitData* buildingData = wu_getUnitData(unit->type);
         we_addSpriteComponentFromResource(context, entity, imageResourceRef(buildingData->resourceIndex));
 
-        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
 
         if (unit->player == 0)
         {

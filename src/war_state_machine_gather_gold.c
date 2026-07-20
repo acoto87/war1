@@ -26,17 +26,6 @@ WarStateGold* wst_createGatherGoldState(WarContext* context, WarEntity* entity, 
     return state;
 }
 
-void wst_leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveGatherGoldState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateGatherGoldState", true);
@@ -76,7 +65,6 @@ void wst_updateGatherGoldState(WarContext* context, WarEntity* entity, WarState*
 
     TracyCZoneEnd(ctx);
 }
-
 
 void wst_updateGoldStates(WarContext* context)
 {

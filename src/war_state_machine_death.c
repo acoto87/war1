@@ -26,13 +26,24 @@ WarStateDeath* wst_createDeathState(WarContext* context, WarEntity* entity)
     return state;
 }
 
-void wst_leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    TracyCZoneN(ctx, "wst_leaveDeathState", true);
+    TracyCZoneN(ctx, "wst_enterDeathState", true);
 
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
+    WarMap* map = context->map;
+    assert(map);
+
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
+    wpath_setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
+    wmap_removeEntityFromSelection(context, entity->id);
+
+    s32 deathDuration = wact_getActionDuration(context, entity, WAR_ACTION_TYPE_DEATH);
+    state->nextUpdateGameTime = context->gameTime + wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration));
 
     TracyCZoneEnd(ctx);
 }
@@ -41,25 +52,10 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
 {
     TracyCZoneN(ctx, "wst_updateDeathState", true);
 
+    NOT_USED(state);
+
     WarMap* map = context->map;
-
-    if (!state->initialized)
-    {
-        WarTransformComponent* transform = we_getTransformComponent(context, entity);
-        assert(transform);
-
-        vec2 unitSize = wu_getUnitSize(context, entity);
-        vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-        wpath_setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
-        wact_setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
-        wmap_removeEntityFromSelection(context, entity->id);
-
-        s32 deathDuration = wact_getActionDuration(context, entity, WAR_ACTION_TYPE_DEATH);
-        state->nextUpdateGameTime = context->gameTime + wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration));
-        state->initialized = true;
-        TracyCZoneEnd(ctx);
-        return;
-    }
+    assert(map);
 
     // when this state updates there will have pass the time of the death animation,
     // using the delay field of the states

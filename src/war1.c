@@ -128,7 +128,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    SDL_SetLogPriorities(SDL_LOG_PRIORITY_DEBUG);
+    wlog_init(SDL_LOG_PRIORITY_DEBUG);
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {

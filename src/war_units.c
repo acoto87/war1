@@ -1927,11 +1927,7 @@ WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race)
             case WAR_UNIT_KENNEL: return WAR_UNIT_STABLE;
             case WAR_UNIT_BLACKSMITH_ORCS: return WAR_UNIT_BLACKSMITH_HUMANS;
             case WAR_UNIT_ORC_CORPSE: return WAR_UNIT_HUMAN_CORPSE;
-            default:
-            {
-                logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
-                return type;
-            }
+            default: return type;
         }
     }
 
@@ -1955,15 +1951,11 @@ WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race)
             case WAR_UNIT_STABLE: return WAR_UNIT_KENNEL;
             case WAR_UNIT_BLACKSMITH_HUMANS: return WAR_UNIT_BLACKSMITH_ORCS;
             case WAR_UNIT_HUMAN_CORPSE: return WAR_UNIT_ORC_CORPSE;
-            default:
-            {
-                logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
-                return type;
-            }
+            default: return type;
         }
     }
 
-    logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
+    logWarning("Trying to get type %d for race %d, returning %d", type, race, type);
     return type;
 }
 

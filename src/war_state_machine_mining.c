@@ -27,20 +27,33 @@ WarStateMining* wst_createMiningState(WarContext* context, WarEntity* entity, Wa
     return state;
 }
 
-void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterMiningState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    TracyCZoneN(ctx, "wst_leaveMiningState", true);
+    TracyCZoneN(ctx, "wst_enterMiningState", true);
 
-    if (!state->initialized)
-    {
-        TracyCZoneEnd(ctx);
-        return;
-    }
+    WarStateMining* s = (WarStateMining*)state;
+
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    assert(unit);
+
+    s->miningTime = 2.0f;
+
+    we_removeSpriteComponent(context, entity);
+    wact_resetAction(context, entity, unit->actionType);
+    wmap_removeEntityFromSelection(context, entity->id);
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_exitMiningState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason)
+{
+    TracyCZoneN(ctx, "wst_exitMiningState", true);
 
     WarStateMining* s = (WarStateMining*)state;
 
     NOT_USED(context);
     NOT_USED(entity);
+    NOT_USED(reason);
 
     WarEntity* goldmine = we_findEntity(context, (WarEntityId)s->goldmineId);
 
@@ -73,25 +86,6 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
     WarMap* map = context->map;
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
-
-    if (!state->initialized)
-    {
-        // remove the sprite to simulate the mining process
-        we_removeSpriteComponent(context, entity);
-
-        // reset the current action to stop any movement or attack action
-        wact_resetAction(context, entity, unit->actionType);
-
-        // set the mining time
-        s->miningTime = 2.0f;
-
-        // remove the unit from selection to avoid the player giving it orders while inside the mine
-        wmap_removeEntityFromSelection(context, entity->id);
-
-        state->initialized = true;
-        TracyCZoneEnd(ctx);
-        return;
-    }
 
     WarEntity* goldmine = we_findEntity(context, (WarEntityId)s->goldmineId);
 
@@ -165,7 +159,6 @@ void wst_updateMiningState(WarContext* context, WarEntity* entity, WarState* sta
 
     TracyCZoneEnd(ctx);
 }
-
 
 void wst_updateMiningStates(WarContext* context)
 {

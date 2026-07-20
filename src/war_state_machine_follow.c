@@ -30,17 +30,6 @@ WarStateFollow* wst_createFollowState(WarContext* context, WarEntity* entity, Wa
     return state;
 }
 
-void wst_leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveFollowState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateFollowState", true);
@@ -57,7 +46,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         {
             // if the target entity doesn't exist anymore, pop to resume any
             // previous behavior, or fall back to idle if the stack empties.
-            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_TARGET_INVALID);
 
             TracyCZoneEnd(ctx);
             return;
@@ -82,7 +71,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     // or wait briefly and resume following if this is the bottom state.
     if (distanceSq <= s->targetDistance * s->targetDistance)
     {
-        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
 
         TracyCZoneEnd(ctx);
         return;

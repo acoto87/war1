@@ -1051,7 +1051,7 @@ static bool build_test_with_gnu_like(const Build_Options *options)
         }
     }
 
-    return true;
+    return nob_copy_directory_recursively("tests/maps", output_dir);
 }
 
 static bool build_test_with_msvc(const Build_Options *options)
@@ -1123,7 +1123,7 @@ static bool build_test_with_msvc(const Build_Options *options)
         return false;
     }
 
-    return true;
+    return nob_copy_directory_recursively("tests/maps", output_dir);
 }
 
 static bool build_test(const Build_Options *options)

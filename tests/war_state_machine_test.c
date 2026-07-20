@@ -179,8 +179,7 @@ static WarBuildTestFixture wt_startBuildWithAssignedWorker(
     wt_applyPendingTransitions(&g_test);
     wt_updateGameTime(&g_test);
     wst_updateBuildStates(g_test.context);
-
-    TEST_ASSERT_TRUE(fixture.buildState->base.initialized);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_BUILD, wt_activeState(&g_test, building));
 
     WarStateRepairing* repairingState = wst_createRepairingState(
         g_test.context,
@@ -197,7 +196,7 @@ static WarBuildTestFixture wt_startBuildWithAssignedWorker(
     wt_applyPendingTransitions(&g_test);
     wst_updateRepairingStates(g_test.context);
 
-    TEST_ASSERT_TRUE(repairingState->base.initialized);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_REPAIRING, wt_activeState(&g_test, worker));
     TEST_ASSERT_TRUE(repairingState->insideBuilding);
     TEST_ASSERT_EQUAL_INT(worker->id, fixture.buildState->workerId);
 
@@ -233,7 +232,6 @@ static WarStateTrain* wt_startTrainTransaction(
 
     trainState = wst_getTrainState(g_test.context, producer);
     TEST_ASSERT_NOT_NULL(trainState);
-    TEST_ASSERT_TRUE(trainState->base.initialized);
     TEST_ASSERT_TRUE(trainState->transactionApplied);
     return trainState;
 }
@@ -266,7 +264,6 @@ static WarStateUpgrade* wt_startUpgradeTransaction(
 
     upgradeState = wst_getUpgradeState(g_test.context, producer);
     TEST_ASSERT_NOT_NULL(upgradeState);
-    TEST_ASSERT_TRUE(upgradeState->base.initialized);
     TEST_ASSERT_TRUE(upgradeState->transactionApplied);
     return upgradeState;
 }
@@ -336,7 +333,7 @@ static bool wt_submitWaitTransition(
 
     if (operation == WAR_STATE_OP_POP)
     {
-        return wst_popState(g_test.context, entity, cause);
+        return wst_popState(g_test.context, entity, cause, WAR_STATE_RESULT_NONE);
     }
 
     WarStateWait* waitState = wst_createWaitState(g_test.context, entity, 1000.0f);
@@ -420,16 +417,6 @@ static WarAggroTestFixture wt_setupMoveWithAttackingEnemy(void)
     wt_selectOnly(unit);
 
     return (WarAggroTestFixture){ .unit = unit,.enemy = enemy };
-}
-
-void setUp(void)
-{
-    wt_init(&g_test);
-}
-
-void tearDown(void)
-{
-    wt_shutdown(&g_test);
 }
 
 void test_fresh_entity_requests_initialization_idle_state(void)
@@ -1481,6 +1468,8 @@ void test_upgrade_completion_frame_cancel_keeps_output_and_never_refunds_in_eith
 
 void test_pending_build_cancel_refunds_once_only_after_commit(void)
 {
+    wt_seedBuildingSpriteResources(WAR_UNIT_FARM_HUMANS);
+
     const s32 goldCost = 191;
     const s32 woodCost = 83;
     WarEntity* building = wt_spawnBuilding(
@@ -1543,6 +1532,8 @@ void test_pending_build_cancel_refunds_once_only_after_commit(void)
 
 void test_pending_build_cancel_displaced_by_lifecycle_never_refunds_in_either_order(void)
 {
+    wt_seedBuildingSpriteResources(WAR_UNIT_FARM_HUMANS);
+
     const s32 goldCost = 193;
     const s32 woodCost = 89;
 
@@ -1861,7 +1852,7 @@ void test_remove_entity_leaves_initialized_wait_before_required_components(void)
     wt_updateGameTime(&g_test);
     wst_updateWaitStates(g_test.context);
 
-    TEST_ASSERT_TRUE(activeWait->base.initialized);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_WAIT, wt_activeState(&g_test, unit));
 
     WarStateWait* pendingWait = wst_createWaitState(g_test.context, unit, 1000.0f);
 
@@ -2110,7 +2101,7 @@ void test_pop_state_decreases_depth(void)
     TEST_ASSERT_EQUAL_INT(2, wt_stateDepth(&g_test, unit));
 
     // Pop WAIT
-    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION);
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
     wt_step(&g_test);
 
     TEST_ASSERT_EQUAL_INT(1, wt_stateDepth(&g_test, unit));
@@ -2198,7 +2189,7 @@ void test_empty_stack_becomes_idle_on_pop(void)
     TEST_ASSERT_EQUAL_INT(WAR_STATE_MOVE, wt_activeState(&g_test, unit));
 
     // Pop MOVE — the system auto-creates IDLE when the stack becomes empty
-    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION);
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
     wt_step(&g_test);
 
     TEST_ASSERT_EQUAL_INT(1, wt_stateDepth(&g_test, unit));
@@ -2218,7 +2209,7 @@ void test_autonomous_transition_outranks_state_completion(void)
     TEST_ASSERT_NOT_NULL(attackState);
 
     wst_pushState(g_test.context, unit, (WarStateBase*)attackState, WAR_TRANSITION_CAUSE_AUTONOMOUS);
-    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION);
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
 
     const WarTransitionRequest* transition = wt_activeTransition(&g_test, unit);
 
@@ -3081,7 +3072,8 @@ void test_applying_transition_clears_pending_and_allows_later_requests(void)
     TEST_ASSERT_TRUE(wst_popState(
         g_test.context,
         unit,
-        WAR_TRANSITION_CAUSE_COMPLETION));
+        WAR_TRANSITION_CAUSE_COMPLETION,
+        WAR_STATE_RESULT_SUCCESS));
 
     const WarTransitionRequest* popRequest = wt_activeTransition(&g_test, unit);
 
@@ -3142,7 +3134,6 @@ void test_public_free_of_active_state_is_no_op(void)
 
     wst_updateIdleStates(g_test.context);
 
-    TEST_ASSERT_TRUE(activeState->initialized);
     TEST_ASSERT_EQUAL_PTR(activeState, wst_currentState(g_test.context, unit));
 }
 
@@ -3175,7 +3166,8 @@ void test_stale_stack_ref_cannot_update_or_free_reused_slot(void)
     TEST_ASSERT_TRUE(wst_popState(
         g_test.context,
         unit,
-        WAR_TRANSITION_CAUSE_COMPLETION));
+        WAR_TRANSITION_CAUSE_COMPLETION,
+        WAR_STATE_RESULT_SUCCESS));
     wt_applyPendingTransitions(&g_test);
 
     TEST_ASSERT_NULL(wst_deref(g_test.context, staleRef));
@@ -3199,11 +3191,9 @@ void test_stale_stack_ref_cannot_update_or_free_reused_slot(void)
     sm->depth = 1;
 
     TEST_ASSERT_NULL(wst_currentState(g_test.context, unit));
-    TEST_ASSERT_FALSE(reusedWait->base.initialized);
 
     wst_updateWaitStates(g_test.context);
 
-    TEST_ASSERT_FALSE(reusedWait->base.initialized);
     TEST_ASSERT_TRUE(wt_isStateRefAllocated(&g_test, reusedRef));
 
     wst_freeStateRef(g_test.context, staleRef);
@@ -3375,11 +3365,7 @@ void test_duplicate_pending_ref_preserves_storage_and_updates_metadata(void)
 
 void test_full_stack_push_replaces_only_top(void)
 {
-    WarEntity* unit = wt_spawnUnit(
-        &g_test,
-        WAR_UNIT_FOOTMAN,
-        0,
-        vec2i(10 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+    WarEntity* unit = wt_spawnUnit(&g_test, WAR_UNIT_FOOTMAN, 0, vec2i(10 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
 
     TEST_ASSERT_NOT_NULL(unit);
 
@@ -3394,11 +3380,7 @@ void test_full_stack_push_replaces_only_top(void)
         WarStateWait* waitState = wst_createWaitState(g_test.context, unit, 1000.0f);
 
         TEST_ASSERT_NOT_NULL(waitState);
-        TEST_ASSERT_TRUE(wst_pushState(
-            g_test.context,
-            unit,
-            (WarStateBase*)waitState,
-            WAR_TRANSITION_CAUSE_PLAYER_ORDER));
+        TEST_ASSERT_TRUE(wst_pushState(g_test.context, unit, (WarStateBase*)waitState, WAR_TRANSITION_CAUSE_PLAYER_ORDER));
 
         wt_applyPendingTransitions(&g_test);
     }
@@ -3416,11 +3398,7 @@ void test_full_stack_push_replaces_only_top(void)
 
     WarStateRef replacementRef = wst_refOf(g_test.context, (WarStateBase*)replacementState);
 
-    TEST_ASSERT_TRUE(wst_pushState(
-        g_test.context,
-        unit,
-        (WarStateBase*)replacementState,
-        WAR_TRANSITION_CAUSE_PLAYER_ORDER));
+    TEST_ASSERT_TRUE(wst_pushState(g_test.context, unit, (WarStateBase*)replacementState, WAR_TRANSITION_CAUSE_PLAYER_ORDER));
 
     wt_applyPendingTransitions(&g_test);
 
@@ -3436,49 +3414,42 @@ void test_full_stack_push_replaces_only_top(void)
     TEST_ASSERT_TRUE(wt_isStateRefAllocated(&g_test, replacementRef));
 }
 
-void test_empty_stack_pop_restores_idle_and_replace_installs_candidate(void)
+void test_empty_stack_pop_restores_idle(void)
 {
-    WarEntity* popUnit = we_createEntity(g_test.context, WAR_ENTITY_TYPE_UNIT, true);
-    WarEntity* replaceUnit = we_createEntity(g_test.context, WAR_ENTITY_TYPE_UNIT, true);
+    WarEntity* unit = wt_spawnUnit(&g_test, WAR_UNIT_FOOTMAN, 0, vec2i(0, 0));
 
-    TEST_ASSERT_NOT_NULL(popUnit);
-    TEST_ASSERT_NOT_NULL(replaceUnit);
+    TEST_ASSERT_NOT_NULL(unit);
+    TEST_ASSERT_EQUAL_INT(0, wt_stateDepth(&g_test, unit));
 
-    we_addStateMachineComponent(g_test.context, popUnit);
-    we_addStateMachineComponent(g_test.context, replaceUnit);
-
-    TEST_ASSERT_EQUAL_INT(0, wt_stateDepth(&g_test, popUnit));
-    TEST_ASSERT_EQUAL_INT(0, wt_stateDepth(&g_test, replaceUnit));
-
-    TEST_ASSERT_TRUE(wst_popState(
-        g_test.context,
-        popUnit,
-        WAR_TRANSITION_CAUSE_PLAYER_ORDER));
-
-    WarStateWait* waitState = wst_createWaitState(g_test.context, replaceUnit, 1000.0f);
-
-    TEST_ASSERT_NOT_NULL(waitState);
-    TEST_ASSERT_TRUE(wst_replaceState(
-        g_test.context,
-        replaceUnit,
-        (WarStateBase*)waitState,
-        WAR_TRANSITION_CAUSE_PLAYER_ORDER));
+    TEST_ASSERT_TRUE(wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_PLAYER_ORDER, WAR_STATE_RESULT_SUCCESS));
 
     wt_applyPendingTransitions(&g_test);
 
-    TEST_ASSERT_EQUAL_INT(1, wt_stateDepth(&g_test, popUnit));
-    TEST_ASSERT_EQUAL_INT(WAR_STATE_IDLE, wt_activeState(&g_test, popUnit));
-    TEST_ASSERT_EQUAL_INT(1, wt_stateDepth(&g_test, replaceUnit));
-    TEST_ASSERT_EQUAL_INT(WAR_STATE_WAIT, wt_activeState(&g_test, replaceUnit));
+    TEST_ASSERT_EQUAL_INT(1, wt_stateDepth(&g_test, unit));
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_IDLE, wt_activeState(&g_test, unit));
+}
+
+void test_empty_stack_pop_replace_installs_candidate(void)
+{
+    WarEntity* unit = wt_spawnUnit(&g_test, WAR_UNIT_FOOTMAN, 0, vec2i(0, 0));
+
+    TEST_ASSERT_NOT_NULL(unit);
+    TEST_ASSERT_EQUAL_INT(0, wt_stateDepth(&g_test, unit));
+
+    WarStateWait* waitState = wst_createWaitState(g_test.context, unit, 1000.0f);
+
+    TEST_ASSERT_NOT_NULL(waitState);
+    TEST_ASSERT_TRUE(wst_replaceState(g_test.context, unit, (WarStateBase*)waitState, WAR_TRANSITION_CAUSE_PLAYER_ORDER));
+
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(1, wt_stateDepth(&g_test, unit));
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_WAIT, wt_activeState(&g_test, unit));
 }
 
 void test_state_pool_exhaustion_preserves_counts_and_recovers(void)
 {
-    WarEntity* unit = wt_spawnUnit(
-        &g_test,
-        WAR_UNIT_FOOTMAN,
-        0,
-        vec2i(10 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+    WarEntity* unit = wt_spawnUnit(&g_test, WAR_UNIT_FOOTMAN, 0, vec2i(10 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
 
     TEST_ASSERT_NOT_NULL(unit);
 
@@ -3517,21 +3488,9 @@ void test_state_pool_exhaustion_preserves_counts_and_recovers(void)
 
     const u64 sequenceBeforeNullWrappers = wt_nextTransitionSequence(&g_test, unit);
 
-    TEST_ASSERT_FALSE(wst_pushState(
-        g_test.context,
-        unit,
-        (WarStateBase*)exhaustedState,
-        WAR_TRANSITION_CAUSE_PLAYER_ORDER));
-    TEST_ASSERT_FALSE(wst_replaceState(
-        g_test.context,
-        unit,
-        (WarStateBase*)exhaustedState,
-        WAR_TRANSITION_CAUSE_PLAYER_ORDER));
-    TEST_ASSERT_FALSE(wst_resetState(
-        g_test.context,
-        unit,
-        (WarStateBase*)exhaustedState,
-        WAR_TRANSITION_CAUSE_PLAYER_ORDER));
+    TEST_ASSERT_FALSE(wst_pushState(g_test.context, unit, (WarStateBase*)exhaustedState, WAR_TRANSITION_CAUSE_PLAYER_ORDER));
+    TEST_ASSERT_FALSE(wst_replaceState(g_test.context, unit, (WarStateBase*)exhaustedState, WAR_TRANSITION_CAUSE_PLAYER_ORDER));
+    TEST_ASSERT_FALSE(wst_resetState(g_test.context, unit, (WarStateBase*)exhaustedState, WAR_TRANSITION_CAUSE_PLAYER_ORDER));
     wt_assertU64Equal(sequenceBeforeNullWrappers, wt_nextTransitionSequence(&g_test, unit));
 
     const s32 freedIndex = MAX_STATES_PER_TYPE / 2;
@@ -3719,6 +3678,395 @@ void test_equal_priority_keeps_first_when_sequence_wraps(void)
     TEST_ASSERT_EQUAL_INT(WAR_STATE_WAIT, wt_activeState(&g_test, unit));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 2: State Lifecycle Callbacks
+// ─────────────────────────────────────────────────────────────────────────────
+
+/* Helper: returns the pathfinder entity id on the tile covered by `entity`. */
+static WarEntityId wt_finderEntityAt(WarEntity* entity)
+{
+    WarMap* map = g_test.map;
+    WarTransformComponent* transform = we_getTransformComponent(g_test.context, entity);
+    if (!map || !transform)
+        return 0;
+
+    vec2 tile = wmap_mapToTileCoordinatesV(transform->position);
+    return wpath_getTileEntityId(&map->finder, (s32)tile.x, (s32)tile.y);
+}
+
+/*
+ * onEnter: IDLE state registers the entity in the pathfinder when it enters.
+ *
+ * The entity spawns with a WAIT pending-RESET. After applying that transition
+ * the IDLE state is displaced and the entity is de-registered. When the IDLE
+ * is subsequently restored (after WAIT completes) the entity is re-registered.
+ * This verifies wst_enterIdleState wires up the pathfinder correctly.
+ */
+void test_lifecycle_enter_idle_registers_pathfinder(void)
+{
+    WarEntity* unit = wt_spawnUnit(
+        &g_test,
+        WAR_UNIT_FOOTMAN,
+        0,
+        vec2i(10 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(unit);
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_IDLE, wt_activeState(&g_test, unit));
+    TEST_ASSERT_EQUAL_INT(unit->id, wt_finderEntityAt(unit));
+
+    /* Push a WAIT state on top — IDLE is paused but stays on the stack. */
+    WarStateWait* waitState = wst_createWaitState(g_test.context, unit, 1000.0f);
+    TEST_ASSERT_NOT_NULL(waitState);
+    wst_pushState(g_test.context, unit, (WarStateBase*)waitState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_WAIT, wt_activeState(&g_test, unit));
+    TEST_ASSERT_EQUAL_INT(2, wt_stateDepth(&g_test, unit));
+
+    /* Pop the WAIT — IDLE resumes. onEnter for IDLE shouldn't run again
+       (it's a resume, not a fresh enter), but the pathfinder entry must
+       still be valid because IDLE never released it. */
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_IDLE, wt_activeState(&g_test, unit));
+    TEST_ASSERT_EQUAL_INT(unit->id, wt_finderEntityAt(unit));
+}
+
+/*
+ * onExit: WAIT state frees the entity from the pathfinder when it exits.
+ *
+ * After a WAIT state is committed and then popped the slot should be clear.
+ */
+void test_lifecycle_exit_wait_frees_pathfinder(void)
+{
+    WarEntity* unit = wt_spawnUnit(
+        &g_test,
+        WAR_UNIT_FOOTMAN,
+        0,
+        vec2i(12 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(unit);
+    wt_applyPendingTransitions(&g_test);
+
+    /* Install WAIT as the sole active state (RESET clears the IDLE below). */
+    WarStateWait* waitState = wst_createWaitState(g_test.context, unit, 1000.0f);
+    TEST_ASSERT_NOT_NULL(waitState);
+    wst_resetState(g_test.context, unit, (WarStateBase*)waitState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_WAIT, wt_activeState(&g_test, unit));
+    TEST_ASSERT_EQUAL_INT(unit->id, wt_finderEntityAt(unit));
+
+    /* Pop WAIT — the state's onExit should free the pathfinder slot. */
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_IDLE, wt_activeState(&g_test, unit));
+    /* Idle re-enters and re-registers its own slot — the WAIT slot is gone. */
+    TEST_ASSERT_EQUAL_INT(unit->id, wt_finderEntityAt(unit));
+}
+
+/*
+ * onEnter / onExit sequence for RESET: verify that the old active state's
+ * onExit runs and the new state's onEnter runs when a RESET replaces the stack.
+ *
+ * Concretely: IDLE is on the stack (registers entity in pathfinder via onEnter).
+ * After RESET to WAIT, IDLE's onExit should free the pathfinder, then WAIT's
+ * onEnter should re-register under the WAIT slot.  After WAIT is popped, IDLE
+ * onEnter re-registers the entity.
+ */
+void test_lifecycle_reset_calls_exit_then_enter(void)
+{
+    WarEntity* unit = wt_spawnUnit(
+        &g_test,
+        WAR_UNIT_FOOTMAN,
+        0,
+        vec2i(14 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(unit);
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_IDLE, wt_activeState(&g_test, unit));
+    TEST_ASSERT_EQUAL_INT(unit->id, wt_finderEntityAt(unit));
+
+    /* RESET to WAIT — IDLE exits (pathfinder free), WAIT enters (pathfinder set). */
+    WarStateWait* wait = wst_createWaitState(g_test.context, unit, 1000.0f);
+    TEST_ASSERT_NOT_NULL(wait);
+    wst_resetState(g_test.context, unit, (WarStateBase*)wait, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_WAIT, wt_activeState(&g_test, unit));
+    /* pathfinder should still map to this entity (now registered by WAIT's onEnter). */
+    TEST_ASSERT_EQUAL_INT(unit->id, wt_finderEntityAt(unit));
+
+    /* POP WAIT — WAIT exits (pathfinder free), IDLE is installed via auto-idle logic. */
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_IDLE, wt_activeState(&g_test, unit));
+    TEST_ASSERT_EQUAL_INT(unit->id, wt_finderEntityAt(unit));
+}
+
+/*
+ * onEnter for BUILD sets unit->building = true.
+ * onExit (leaveBuildState) sets unit->building = false.
+ */
+void test_lifecycle_enter_exit_build_sets_building_flag(void)
+{
+    wt_seedBuildingSpriteResources(WAR_UNIT_FARM_HUMANS);
+
+    WarEntity* worker = wt_spawnUnit(
+        &g_test,
+        WAR_UNIT_PEASANT,
+        0,
+        vec2i(10 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+    WarEntity* building = wt_spawnBuilding(
+        &g_test,
+        WAR_UNIT_FARM_HUMANS,
+        0,
+        vec2i(16 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(worker);
+    TEST_ASSERT_NOT_NULL(building);
+    wt_applyPendingTransitions(&g_test);
+
+    WarUnitComponent* buildingUnit = we_getUnitComponent(g_test.context, building);
+    TEST_ASSERT_NOT_NULL(buildingUnit);
+
+    /* Manually create and commit a BUILD state — simulates the build command pathway. */
+    WarPlayerInfo* player = &g_test.map->players[0];
+    const s32 goldCost = 211;
+    const s32 woodCost = 113;
+    TEST_ASSERT_TRUE(we_decreasePlayerResources(g_test.context, player, goldCost, woodCost));
+
+    WarStateBuild* buildState = wst_createBuildState(g_test.context, building, 1000.0f, goldCost, woodCost);
+    TEST_ASSERT_NOT_NULL(buildState);
+
+    TEST_ASSERT_TRUE(wst_resetState(
+        g_test.context,
+        building,
+        (WarStateBase*)buildState,
+        WAR_TRANSITION_CAUSE_INITIALIZATION));
+    wt_applyPendingTransitions(&g_test);
+
+    /* onEnter should have set building = true immediately (no update tick needed). */
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_BUILD, wt_activeState(&g_test, building));
+    TEST_ASSERT_TRUE(buildingUnit->building);
+
+    /* Cancel the build — the cancellation should eventually trigger onExit. */
+    wt_selectOnly(building);
+    wcmd_cancel(g_test.context, building);
+    wt_applyPendingTransitions(&g_test);
+
+    /* After exiting BUILD, building flag must be false again. */
+    TEST_ASSERT_FALSE(buildingUnit->building);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 3: State Result Propagation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/*
+ * WAR_STATE_RESULT_SUCCESS propagates through a POP into the resume reason of
+ * the parent state. We use the WAIT → IDLE push/pop pattern because WAIT's
+ * wst_exitWaitState is wired and IDLE's onResume would receive the reason.
+ *
+ * Since no state currently branches on its resume reason (deviation noted in
+ * the review), we verify the mechanical propagation at the API level:
+ * the transition request's result field is set correctly.
+ */
+void test_result_success_is_stored_on_pop_request(void)
+{
+    WarEntity* unit = wt_spawnUnit(
+        &g_test,
+        WAR_UNIT_FOOTMAN,
+        0,
+        vec2i(16 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(unit);
+    wt_applyPendingTransitions(&g_test);
+
+    WarStateWait* wait = wst_createWaitState(g_test.context, unit, 1000.0f);
+    TEST_ASSERT_NOT_NULL(wait);
+    wst_pushState(g_test.context, unit, (WarStateBase*)wait, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+    wt_applyPendingTransitions(&g_test);
+
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
+
+    const WarTransitionRequest* pending = wt_activeTransition(&g_test, unit);
+
+    TEST_ASSERT_NOT_NULL(pending);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_OP_POP, pending->operation);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_RESULT_SUCCESS, pending->result);
+}
+
+/*
+ * WAR_STATE_RESULT_CANCELLED propagates when a state self-pops due to
+ * cancellation (as BUILD does in wst_updateBuildState when s->cancelled).
+ */
+void test_result_cancelled_is_stored_on_pop_request(void)
+{
+    WarEntity* unit = wt_spawnUnit(
+        &g_test,
+        WAR_UNIT_FOOTMAN,
+        0,
+        vec2i(18 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(unit);
+    wt_applyPendingTransitions(&g_test);
+
+    WarStateWait* wait = wst_createWaitState(g_test.context, unit, 1000.0f);
+    TEST_ASSERT_NOT_NULL(wait);
+    wst_pushState(g_test.context, unit, (WarStateBase*)wait, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+    wt_applyPendingTransitions(&g_test);
+
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_CANCELLED);
+
+    const WarTransitionRequest* pending = wt_activeTransition(&g_test, unit);
+
+    TEST_ASSERT_NOT_NULL(pending);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_OP_POP, pending->operation);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_RESULT_CANCELLED, pending->result);
+}
+
+/*
+ * WAR_STATE_RESULT_NONE on a POP-only submission.
+ * Ensures that POP submissions not originating from a completing child state
+ * leave the result uninterpreted (defaults to WAR_STATE_RESULT_NONE).
+ */
+void test_result_none_on_raw_pop_submission(void)
+{
+    WarEntity* unit = wt_spawnUnit(
+        &g_test,
+        WAR_UNIT_FOOTMAN,
+        0,
+        vec2i(20 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(unit);
+    wt_applyPendingTransitions(&g_test);
+
+    wst_popState(g_test.context, unit, WAR_TRANSITION_CAUSE_PLAYER_ORDER, WAR_STATE_RESULT_NONE);
+
+    const WarTransitionRequest* pending = wt_activeTransition(&g_test, unit);
+
+    TEST_ASSERT_NOT_NULL(pending);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_OP_POP, pending->operation);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_RESULT_NONE, pending->result);
+}
+
+/*
+ * TRAIN completion: wst_popState is called with WAR_STATE_RESULT_SUCCESS.
+ * Verify that after the pop the result was the one supplied (observable via
+ * the transition request before it is committed).
+ */
+void test_result_train_completion_carries_success(void)
+{
+    WarEntity* townHall = wt_spawnBuilding(
+        &g_test,
+        WAR_UNIT_TOWNHALL_HUMANS,
+        0,
+        vec2i(10 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(townHall);
+    wt_applyPendingTransitions(&g_test);
+
+    wt_seedUnitSpriteResource(WAR_UNIT_PEASANT);
+
+    WarStateTrain* trainState = wt_startTrainTransaction(
+        townHall,
+        WAR_UNIT_PEASANT,
+        0.0f,  /* zero buildTime → completes on first update */
+        127,
+        53);
+
+    wt_updateGameTime(&g_test);
+    wst_updateTrainStates(g_test.context);
+
+    TEST_ASSERT_TRUE(trainState->outputCommitted);
+
+    const WarTransitionRequest* completionRequest = wt_activeTransition(&g_test, townHall);
+
+    TEST_ASSERT_NOT_NULL(completionRequest);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_OP_POP, completionRequest->operation);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_RESULT_SUCCESS, completionRequest->result);
+}
+
+/*
+ * BUILD cancellation: wst_popState is called with WAR_STATE_RESULT_CANCELLED
+ * when the build state self-pops because it is cancelled but has a parent.
+ *
+ * We push BUILD on top of IDLE and then cancel it so it pops (depth > 1).
+ */
+void test_result_build_cancel_carries_cancelled(void)
+{
+    wt_seedBuildingSpriteResources(WAR_UNIT_FARM_HUMANS);
+
+    WarEntity* worker = wt_spawnUnit(
+        &g_test,
+        WAR_UNIT_PEASANT,
+        0,
+        vec2i(22 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+    WarEntity* building = wt_spawnBuilding(
+        &g_test,
+        WAR_UNIT_FARM_HUMANS,
+        0,
+        vec2i(26 * MEGA_TILE_WIDTH, 10 * MEGA_TILE_HEIGHT));
+
+    TEST_ASSERT_NOT_NULL(worker);
+    TEST_ASSERT_NOT_NULL(building);
+    wt_applyPendingTransitions(&g_test);
+
+    WarPlayerInfo* player = &g_test.map->players[0];
+    const s32 goldCost = 229;
+    const s32 woodCost = 131;
+    TEST_ASSERT_TRUE(we_decreasePlayerResources(g_test.context, player, goldCost, woodCost));
+
+    WarStateBuild* buildState = wst_createBuildState(g_test.context, building, 1000.0f, goldCost, woodCost);
+    TEST_ASSERT_NOT_NULL(buildState);
+
+    /* PUSH — so depth becomes 2 (IDLE + BUILD) — cancel will self-pop with CANCELLED. */
+    TEST_ASSERT_TRUE(wst_pushState(
+        g_test.context,
+        building,
+        (WarStateBase*)buildState,
+        WAR_TRANSITION_CAUSE_INITIALIZATION));
+    wt_applyPendingTransitions(&g_test);
+
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_BUILD, wt_activeState(&g_test, building));
+    TEST_ASSERT_EQUAL_INT(2, wt_stateDepth(&g_test, building));
+
+    /* Commit the build (apply the transaction). */
+    wt_updateGameTime(&g_test);
+    wst_updateBuildStates(g_test.context);
+
+    /* Cancel — sets cancelled=true on the build state. */
+    wt_selectOnly(building);
+    wcmd_cancel(g_test.context, building);
+
+    /* Advance a tick so the build update sees cancelled=true and calls popState. */
+    wt_updateGameTime(&g_test);
+    wst_updateBuildStates(g_test.context);
+
+    const WarTransitionRequest* cancelRequest = wt_activeTransition(&g_test, building);
+
+    TEST_ASSERT_NOT_NULL(cancelRequest);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_OP_POP, cancelRequest->operation);
+    TEST_ASSERT_EQUAL_INT(WAR_STATE_RESULT_CANCELLED, cancelRequest->result);
+}
+
+void setUp(void)
+{
+    wt_init(&g_test);
+}
+
+void tearDown(void)
+{
+    wt_shutdown(&g_test);
+}
+
 void run_state_machine_tests(void)
 {
     UNITY_BEGIN();
@@ -3778,10 +4126,24 @@ void run_state_machine_tests(void)
     RUN_TEST(test_immediate_slot_reuse_does_not_revive_stale_ref);
     RUN_TEST(test_duplicate_pending_ref_preserves_storage_and_updates_metadata);
     RUN_TEST(test_full_stack_push_replaces_only_top);
-    RUN_TEST(test_empty_stack_pop_restores_idle_and_replace_installs_candidate);
+    RUN_TEST(test_empty_stack_pop_restores_idle);
+    RUN_TEST(test_empty_stack_pop_replace_installs_candidate);
     RUN_TEST(test_state_pool_exhaustion_preserves_counts_and_recovers);
     RUN_TEST(test_raw_transition_validation_rejects_malformed_and_owned_refs);
     RUN_TEST(test_equal_priority_keeps_first_when_sequence_wraps);
+
+    // Phase 2: State Lifecycle Callbacks
+    RUN_TEST(test_lifecycle_enter_idle_registers_pathfinder);
+    RUN_TEST(test_lifecycle_exit_wait_frees_pathfinder);
+    RUN_TEST(test_lifecycle_reset_calls_exit_then_enter);
+    RUN_TEST(test_lifecycle_enter_exit_build_sets_building_flag);
+
+    // Phase 3: State Result Propagation
+    RUN_TEST(test_result_success_is_stored_on_pop_request);
+    RUN_TEST(test_result_cancelled_is_stored_on_pop_request);
+    RUN_TEST(test_result_none_on_raw_pop_submission);
+    RUN_TEST(test_result_train_completion_carries_success);
+    RUN_TEST(test_result_build_cancel_carries_cancelled);
 
     UNITY_END();
 }

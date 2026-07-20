@@ -1,8 +1,7 @@
-﻿#include "war_state_machine.h"
+﻿#include "TracyC.h"
 
+#include "war_state_machine.h"
 #include "war_actions.h"
-
-#include "TracyC.h"
 
 WarStateWait* wst_createWaitState(WarContext* context, WarEntity* entity, f32 waitTime)
 {
@@ -28,19 +27,35 @@ WarStateWait* wst_createWaitState(WarContext* context, WarEntity* entity, f32 wa
     return state;
 }
 
-void wst_leaveWaitState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterWaitState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    TracyCZoneN(ctx, "wst_leaveWaitState", true);
-
-    if (!state->initialized)
-    {
-        TracyCZoneEnd(ctx);
-        return;
-    }
+    TracyCZoneN(ctx, "wst_enterWaitState", true);
 
     NOT_USED(state);
 
     WarMap* map = context->map;
+    assert(map);
+
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
+    wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_exitWaitState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason)
+{
+    TracyCZoneN(ctx, "wst_exitWaitState", true);
+
+    NOT_USED(state);
+    NOT_USED(reason);
+
+    WarMap* map = context->map;
+    assert(map);
 
     WarTransformComponent* transform = we_getTransformComponent(context, entity);
     assert(transform);
@@ -58,26 +73,9 @@ void wst_updateWaitState(WarContext* context, WarEntity* entity, WarState* state
 
     WarStateWait* s = (WarStateWait*)state;
 
-    if (!state->initialized)
-    {
-        WarMap* map = context->map;
-
-        WarTransformComponent* transform = we_getTransformComponent(context, entity);
-        assert(transform);
-
-        vec2 unitSize = wu_getUnitSize(context, entity);
-        vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-        wpath_setStaticEntity(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-        wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
-
-        state->initialized = true;
-        TracyCZoneEnd(ctx);
-        return;
-    }
-
     if (context->gameTime >= s->waitEndGameTime)
     {
-        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
     }
 
     TracyCZoneEnd(ctx);

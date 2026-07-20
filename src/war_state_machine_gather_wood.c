@@ -27,17 +27,6 @@ WarStateWood* wst_createGatherWoodState(WarContext* context, WarEntity* entity, 
     return state;
 }
 
-void wst_leaveGatherWoodState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveGatherWoodState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateGatherWoodState", true);

@@ -31,13 +31,21 @@ WarStatePatrol* wst_createPatrolState(WarContext* context, WarEntity* entity, s3
     return state;
 }
 
-void wst_leavePatrolState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterPatrolState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    TracyCZoneN(ctx, "wst_leavePatrolState", true);
+    TracyCZoneN(ctx, "wst_enterPatrolState", true);
 
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
+    WarStatePatrol* s = (WarStatePatrol*)state;
+
+    if (s->waypointsCount <= 1)
+    {
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_NO_DESTINATION);
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
+    WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
+    wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
 
     TracyCZoneEnd(ctx);
 }
@@ -47,23 +55,6 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
     TracyCZoneN(ctx, "wst_updatePatrolState", true);
 
     WarStatePatrol* s = (WarStatePatrol*)state;
-
-    if (!state->initialized)
-    {
-        state->initialized = true;
-
-        if (s->waypointsCount <= 1)
-        {
-            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
-            TracyCZoneEnd(ctx);
-            return;
-        }
-
-        WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
-        wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
-        TracyCZoneEnd(ctx);
-        return;
-    }
 
     // if the unit isn't where is suppose to be, then there must have been a problem in the move, so abort and go idle
     vec2 actualPosition = wu_getUnitCenterPosition(context, entity);
@@ -95,7 +86,6 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
 
     TracyCZoneEnd(ctx);
 }
-
 
 void wst_updatePatrolStates(WarContext* context)
 {

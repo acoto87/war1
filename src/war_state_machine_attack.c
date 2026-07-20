@@ -33,17 +33,6 @@ WarStateAttack* wst_createAttackState(WarContext* context, WarEntity* entity, Wa
     return state;
 }
 
-void wst_leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveAttackState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateAttackState", true);
@@ -86,7 +75,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             return;
         }
 
-        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -147,7 +136,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             if (wst_isDead(context, targetEntity) || wst_isGoingToDie(context, targetEntity) ||
                 wst_isCollapsing(context, targetEntity) || wst_isGoingToCollapse(context, targetEntity))
             {
-                wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+                wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
             }
             else
             {
@@ -178,7 +167,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 // one of them could destroy the piece, so the other should wcmd_stop doing further damage.
                 if (piece->hp == 0)
                 {
-                    wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+                    wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
                 }
                 else
                 {

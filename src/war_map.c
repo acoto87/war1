@@ -1018,7 +1018,7 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
     return map;
 }
 
-bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
+WarMap* wmap_loadCustomMap(WarContext* context, StringView mapPath)
 {
     // Resource indices for the three tilesets (forest=0, swamp=1, dungeon=2).
     static const s32 tilesetResourceIndices[] = { 189, 192, 195 };
@@ -1035,7 +1035,7 @@ bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
     if (!wfile_loadWarMapFile(mapPath, levelInfoRes, visualInfoRes, passableInfoRes))
     {
         logError("wmap_loadCustomMap: wfile_loadWarMapFile failed for '%.*s'", (s32)mapPath.length, mapPath.data);
-        return false;
+        return NULL;
     }
 
     levelInfoRes->type = WAR_RESOURCE_TYPE_LEVEL_INFO;
@@ -1054,18 +1054,17 @@ bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
     if (!map)
     {
         logError("wmap_loadCustomMap: wmap_createMap failed for '%.*s'", (s32)mapPath.length, mapPath.data);
-        return false;
+        return NULL;
     }
 
     map->custom = true;
-    wg_setNextMap(context, map, 0.0f);
 
-    logInfo("wmap_loadCustomMap: loaded '%.*s' (entities=%u, tilesetType=%d)",
+    logDebug("wmap_loadCustomMap: loaded '%.*s' (entities=%u, tilesetType=%d)",
             (s32)mapPath.length, mapPath.data,
             levelInfoRes->levelInfo.startEntitiesCount,
             (s32)levelInfoRes->levelInfo.tilesetType);
 
-    return true;
+    return map;
 }
 
 void wmap_freeMap(WarContext* context, WarMap* map)
@@ -3046,7 +3045,7 @@ void wmap_updateMap(WarContext* context)
 
     wai_updateAIPlayers(context);
 
-    wst_processStateMachinePendingOps(context);
+    wst_processPendingTransitions(context);
     wst_updateIdleStates(context);
     wst_updateMoveStates(context);
     wst_updatePatrolStates(context);

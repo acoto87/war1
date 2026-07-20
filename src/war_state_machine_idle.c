@@ -30,18 +30,36 @@ WarStateIdle* wst_createIdleState(WarContext* context, WarEntity* entity, bool l
     return state;
 }
 
-void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterIdleState(WarContext* context, WarEntity* entity, WarStateBase* state)
 {
-    TracyCZoneN(ctx, "wst_leaveIdleState", true);
+    TracyCZoneN(ctx, "wst_onEnterIdleState", true);
+
+    NOT_USED(entity);
+    NOT_USED(state);
 
     WarMap* map = context->map;
     assert(map);
 
-    if (!state->initialized)
+    if (wu_isUnit(entity))
     {
-        TracyCZoneEnd(ctx);
-        return;
+        vec2 tile = wu_getUnitTile(context, entity);
+        vec2 unitSize = wu_getUnitSize(context, entity);
+        wpath_setStaticEntity(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_exitIdleState(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateExitReason reason)
+{
+    TracyCZoneN(ctx, "wst_exitIdleState", true);
+
+    NOT_USED(state);
+    NOT_USED(reason);
+
+    WarMap* map = context->map;
+    assert(map);
 
     if (wu_isUnit(entity))
     {
@@ -60,18 +78,6 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
     WarMap* map = context->map;
 
     WarStateIdle* s = (WarStateIdle*)state;
-
-    if (!state->initialized)
-    {
-        if (wu_isUnit(entity))
-        {
-            vec2 tile = wu_getUnitTile(context, entity);
-            vec2 unitSize = wu_getUnitSize(context, entity);
-            wpath_setStaticEntity(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-            wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
-        }
-        state->initialized = true;
-    }
 
     if (wu_isUnit(entity))
     {

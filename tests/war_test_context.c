@@ -28,6 +28,8 @@ void wt_init(WarTestContext* test)
         return;
     }
 
+    wlog_init(SDL_LOG_PRIORITY_INFO);
+
     test->fixedDeltaTime = WAR_TEST_DELTA_TIME;
     test->simulationTick = 0;
 
@@ -49,7 +51,15 @@ void wt_init(WarTestContext* test)
     context->musicEnabled = false;
     context->soundEnabled = false;
 
-    WarMap* map = (WarMap*)wm_alloc(sizeof(WarMap));
+    if (!wg_loadDataFile(context))
+    {
+        logError("wt_init: failed to load DATA.WAR file");
+        wm_free(context);
+        wm_allocFree();
+        return;
+    }
+
+    WarMap* map = wmap_loadCustomMap(context, wsv_fromCString("ff_open_field_01.w1m"));
     if (!map)
     {
         logError("wt_init: failed to allocate WarMap");
@@ -57,7 +67,7 @@ void wt_init(WarTestContext* test)
         wm_allocFree();
         return;
     }
-    memset(map, 0, sizeof(WarMap));
+
     test->map = map;
     context->map = map;
 
@@ -85,6 +95,8 @@ void wt_init(WarTestContext* test)
     map->fowEnabled = false;
 
     wact_initUnitActionDefs();
+
+    wmap_enterMap(context);
 }
 
 void wt_shutdown(WarTestContext* test)
@@ -144,7 +156,7 @@ void wt_updateStateMachines(WarTestContext* test)
 void wt_applyPendingTransitions(WarTestContext* test)
 {
     WarContext* context = test->context;
-    wst_processStateMachinePendingOps(context);
+    wst_processPendingTransitions(context);
 }
 
 void wt_advanceTick(WarTestContext* test)

@@ -31,17 +31,6 @@ WarStateDeliver* wst_createDeliverState(WarContext* context, WarEntity* entity, 
     return state;
 }
 
-void wst_leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveDeliverState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
-}
-
 void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateDeliverState", true);
@@ -104,7 +93,7 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
         }
         else if (sm->depth > 1)
         {
-            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION);
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
         }
         else
         {

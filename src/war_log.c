@@ -3,6 +3,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+void wlog_init(SDL_LogPriority priority)
+{
+    SDL_SetLogPriority(SDL_LOG_CATEGORY_APPLICATION, priority);
+}
+
 void wlog_log(SDL_LogPriority priority, const char* file, int line, const char* fmt, ...)
 {
     // Find short filename by stripping directory prefix
