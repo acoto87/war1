@@ -35,6 +35,34 @@ WarStateCast* wst_createCastState(WarContext* context, WarEntity* entity, WarSpe
     return state;
 }
 
+bool wst_canInterruptCast(WarContext* context, WarEntity* entity, WarStateBase* state, WarInterruptKind interrupt)
+{
+    NOT_USED(context);
+    NOT_USED(entity);
+
+    WarStateCast* s = (WarStateCast*)state;
+
+    switch (s->spellType)
+    {
+        case WAR_SPELL_RAIN_OF_FIRE:
+            return interrupt & (WAR_INTERRUPT_PLAYER_ORDER | WAR_INTERRUPT_AI_ORDER | WAR_INTERRUPT_STATUS | WAR_INTERRUPT_SCRIPT | WAR_INTERRUPT_LIFECYCLE);
+        case WAR_SPELL_HEALING:
+        case WAR_SPELL_FAR_SIGHT:
+        case WAR_SPELL_INVISIBILITY:
+        case WAR_SPELL_POISON_CLOUD:
+        case WAR_SPELL_RAISE_DEAD:
+        case WAR_SPELL_DARK_VISION:
+        case WAR_SPELL_UNHOLY_ARMOR:
+        case WAR_SUMMON_SPIDER:
+        case WAR_SUMMON_SCORPION:
+        case WAR_SUMMON_DAEMON:
+        case WAR_SUMMON_WATER_ELEMENTAL:
+            return true;
+    }
+
+    return false;
+}
+
 void wst_updateCastState(WarContext* context, WarEntity* entity, WarState* state)
 {
     TracyCZoneN(ctx, "wst_updateCastState", true);

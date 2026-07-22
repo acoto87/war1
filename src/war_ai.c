@@ -208,13 +208,12 @@ bool wai_tryCreateUnit(WarContext* context, WarPlayerInfo* aiPlayer, WarAIComman
                             !wst_isUpgrading(context, entity) &&
                             !wst_isGoingToUpgrade(context, entity))
                         {
-                            WarStateTrain* trainState = wst_createTrainState(context, entity, unitType, (f32)stats->buildTime, stats->goldCost, stats->woodCost, command);
-                            if (!trainState)
+                            if (wst_canSubmitTransition(context, entity, WAR_INTERRUPT_AI_ORDER))
                             {
-                                return false;
+                                WarStateTrain* trainState = wst_createTrainState(context, entity, unitType, (f32)stats->buildTime, stats->goldCost, stats->woodCost, command);
+                                return wst_resetState(context, entity, (WarStateBase*)trainState, WAR_TRANSITION_CAUSE_AI_ORDER);
                             }
 
-                            return wst_resetState(context, entity, (WarStateBase*)trainState, WAR_TRANSITION_CAUSE_AI_ORDER);
                         }
                     }
                 }

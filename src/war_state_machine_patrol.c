@@ -44,7 +44,7 @@ void wst_enterPatrolState(WarContext* context, WarEntity* entity, WarState* stat
         return;
     }
 
-    WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
+    WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints, true);
     wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
 
     TracyCZoneEnd(ctx);
@@ -81,7 +81,7 @@ void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* sta
         s->waypoints[s->waypointsCount - 1 - i] = temp;
     }
 
-    WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints);
+    WarStateMove* moveState = wst_createMoveState(context, entity, s->waypointsCount, s->waypoints, true);
     wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
 
     TracyCZoneEnd(ctx);

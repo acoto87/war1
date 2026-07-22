@@ -35,7 +35,7 @@ static WarStateMove* wt_createMoveTo(WarEntity* unit, vec2 destination)
     vec2 startPosition = wu_getUnitCenterPosition(g_test.context, unit);
     vec2 waypoints[] = { startPosition, destination };
 
-    return wst_createMoveState(g_test.context, unit, arrayLength(waypoints), waypoints);
+    return wst_createMoveState(g_test.context, unit, arrayLength(waypoints), waypoints, false);
 }
 
 static void wt_selectOnly(WarEntity* entity)

@@ -241,6 +241,8 @@ typedef struct
     bool (*validate)(WarContext* context, WarEntity* entity, WarStateBase* state);
     void (*onResume)(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateResumeReason reason);
     void (*onExit)(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateExitReason reason);
+    bool (*canInterrupt)(WarContext* context, WarEntity* entity, WarStateBase* state, WarInterruptKind interrupt);
+    u32 defaultInterruptMask;
 } WarStateDescriptor;
 
 WarStateRef    wst_allocState(WarContext* context, WarStateType type, WarEntityId entityId);
@@ -249,7 +251,7 @@ WarStateBase*  wst_deref(WarContext* context, WarStateRef ref);
 WarStateRef    wst_refOf(WarContext* context, const WarStateBase* state);
 
 WarStateIdle*      wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround);
-WarStateMove*      wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
+WarStateMove*      wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[], bool checkForAttacks);
 WarStatePatrol*    wst_createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
 WarStateFollow*    wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition, s32 targetDistance);
 WarStateAttack*    wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition);
@@ -268,6 +270,7 @@ WarStateRepair*    wst_createRepairState(WarContext* context, WarEntity* entity,
 WarStateRepairing* wst_createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
 WarStateCast*      wst_createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetPosition);
 
+bool wst_canSubmitTransition(WarContext* context, WarEntity* entity, WarInterruptKind interrupt);
 bool wst_submitTransition(WarContext* context, WarEntity* entity, WarTransitionRequest request);
 bool wst_pushState(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause);
 bool wst_popState(WarContext* context, WarEntity* entity, WarTransitionCause cause, WarStateResult result);
@@ -369,6 +372,8 @@ void wst_exitUpgradeState(WarContext* context, WarEntity* entity, WarState* stat
 void wst_exitBuildState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
 void wst_exitRepairingState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
 void wst_exitWaitState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
+
+bool wst_canInterruptCast(WarContext* context, WarEntity* entity, WarStateBase* state, WarInterruptKind interrupt);
 
 void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state);
 void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* state);

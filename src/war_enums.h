@@ -684,14 +684,14 @@ typedef enum
 typedef enum WarTransitionCause
 {
     WAR_TRANSITION_CAUSE_NONE           =  0, // No transition is requested.
-    WAR_TRANSITION_CAUSE_INITIALIZATION =  5, // A fresh entity installs its initial behavior before it has an active state (e.g., a newly spawned unit requests IDLE).
-    WAR_TRANSITION_CAUSE_COMPLETION     = 10, // The active state finished its normal task and requests the next transition (e.g., MOVE reaches its destination and pops).
-    WAR_TRANSITION_CAUSE_AUTONOMOUS     = 20, // The entity reacts automatically without a direct player or AI order (e.g., an idle warrior spots an enemy and pushes ATTACK).
-    WAR_TRANSITION_CAUSE_AI_ORDER       = 30, // An AI controller issues an explicit order to one of its entities (e.g., the AI commands a worker to gather wood).
-    WAR_TRANSITION_CAUSE_PLAYER_ORDER   = 40, // The player issues an explicit command that normally replaces existing behavior (e.g., right-clicking the ground resets the stack to MOVE).
-    WAR_TRANSITION_CAUSE_STATUS         = 50, // A temporary gameplay effect interrupts or restricts the entity’s current behavior (e.g., a stun cancels CAST or suspends movement).
-    WAR_TRANSITION_CAUSE_SCRIPT         = 60, // A scenario, cutscene, trigger, or mission script forces a behavior change (e.g., a campaign trigger orders units to retreat).
-    WAR_TRANSITION_CAUSE_LIFECYCLE      = 70, // The entity enters a fundamental lifecycle transition that outranks normal behavior (e.g., lethal damage resets the stack to DEATH).
+    WAR_TRANSITION_CAUSE_INITIALIZATION = 10, // A fresh entity installs its initial behavior before it has an active state (e.g., a newly spawned unit requests IDLE).
+    WAR_TRANSITION_CAUSE_COMPLETION     = 20, // The active state finished its normal task and requests the next transition (e.g., MOVE reaches its destination and pops).
+    WAR_TRANSITION_CAUSE_AUTONOMOUS     = 30, // The entity reacts automatically without a direct player or AI order (e.g., an idle warrior spots an enemy and pushes ATTACK).
+    WAR_TRANSITION_CAUSE_AI_ORDER       = 40, // An AI controller issues an explicit order to one of its entities (e.g., the AI commands a worker to gather wood).
+    WAR_TRANSITION_CAUSE_PLAYER_ORDER   = 50, // The player issues an explicit command that normally replaces existing behavior (e.g., right-clicking the ground resets the stack to MOVE).
+    WAR_TRANSITION_CAUSE_STATUS         = 60, // A temporary gameplay effect interrupts or restricts the entity’s current behavior (e.g., a stun cancels CAST or suspends movement).
+    WAR_TRANSITION_CAUSE_SCRIPT         = 70, // A scenario, cutscene, trigger, or mission script forces a behavior change (e.g., a campaign trigger orders units to retreat).
+    WAR_TRANSITION_CAUSE_LIFECYCLE      = 80, // The entity enters a fundamental lifecycle transition that outranks normal behavior (e.g., lethal damage resets the stack to DEATH).
 } WarTransitionCause;
 
 static_assert(WAR_TRANSITION_CAUSE_INITIALIZATION > WAR_TRANSITION_CAUSE_NONE, "Initialization must outrank no transition");
@@ -702,6 +702,23 @@ static_assert(WAR_TRANSITION_CAUSE_PLAYER_ORDER > WAR_TRANSITION_CAUSE_AI_ORDER,
 static_assert(WAR_TRANSITION_CAUSE_STATUS > WAR_TRANSITION_CAUSE_PLAYER_ORDER, "Status effects must outrank player orders");
 static_assert(WAR_TRANSITION_CAUSE_SCRIPT > WAR_TRANSITION_CAUSE_STATUS, "Scripted events must outrank status effects");
 static_assert(WAR_TRANSITION_CAUSE_LIFECYCLE > WAR_TRANSITION_CAUSE_SCRIPT, "Lifecycle transitions must outrank scripted events");
+
+typedef enum WarInterruptKind
+{
+    WAR_INTERRUPT_PLAYER_ORDER = 1 << 0,
+    WAR_INTERRUPT_AI_ORDER     = 1 << 1,
+    WAR_INTERRUPT_AUTONOMOUS   = 1 << 2,
+    WAR_INTERRUPT_STATUS       = 1 << 3,
+    WAR_INTERRUPT_SCRIPT       = 1 << 4,
+    WAR_INTERRUPT_LIFECYCLE    = 1 << 5,
+    WAR_INTERRUPT_ALL          =
+        WAR_INTERRUPT_PLAYER_ORDER |
+        WAR_INTERRUPT_AI_ORDER |
+        WAR_INTERRUPT_AUTONOMOUS |
+        WAR_INTERRUPT_STATUS |
+        WAR_INTERRUPT_SCRIPT |
+        WAR_INTERRUPT_LIFECYCLE
+} WarInterruptKind;
 
 typedef enum WarStatePauseReason
 {

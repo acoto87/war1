@@ -28,6 +28,11 @@ static inline void consumeCommand(WarMap* map, WarUnitCommand* command)
 
 static bool wcmd_tryPlaceBuilding(WarContext* context, WarEntity* worker, WarPlayerInfo* player, WarUnitType buildingType, vec2 targetTile, const WarBuildingStats* stats)
 {
+    if (!wst_canSubmitTransition(context, worker, WAR_INTERRUPT_PLAYER_ORDER))
+    {
+        return false;
+    }
+
     if (!we_decreasePlayerResources(context, player, stats->goldCost, stats->woodCost))
     {
         return false;
@@ -99,6 +104,11 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
 
         if (wu_isDudeUnit(context, entity) && wu_isFriendlyUnit(context, entity))
         {
+            if (!wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
+            {
+                continue;
+            }
+
             if (isKeyHeld(input, WAR_KEY_SHIFT))
             {
                 if (wst_isPatrolling(context, entity))
@@ -132,14 +142,14 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
                 else
                 {
                     vec2 position = wu_getUnitCenterPosition(context, entity);
-                    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
+                    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition), false);
                     wst_resetState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
                 }
             }
             else
             {
                 vec2 position = wu_getUnitCenterPosition(context, entity);
-                WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
+                WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition), false);
                 wst_resetState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
 
@@ -169,7 +179,8 @@ void wcmd_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isFriendlyUnit(context, entity))
+        if (wu_isFriendlyUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             WarStateFollow* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, MEGA_TILE_WIDTH);
             wst_resetState(context, entity, (WarStateBase*)followState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
@@ -195,7 +206,8 @@ void wcmd_executeStopCommand(WarContext* context)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isFriendlyUnit(context, entity))
+        if (wu_isFriendlyUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             WarStateIdle* idleState = wst_createIdleState(context, entity, true);
             wst_resetState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
@@ -222,7 +234,8 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isFriendlyUnit(context, entity))
+        if (wu_isFriendlyUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             if (wu_isWorkerUnit(context, entity))
             {
@@ -259,7 +272,7 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
             else if (wu_isDudeUnit(context, entity))
             {
                 vec2 position = wu_getUnitCenterPosition(context, entity);
-                WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
+                WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition), false);
                 wst_resetState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
                 goingToHarvest = true;
@@ -287,7 +300,8 @@ void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isFriendlyUnit(context, entity))
+        if (wu_isFriendlyUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             WarEntity* townHall = targetEntity;
             if (!townHall)
@@ -335,7 +349,8 @@ void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isFriendlyUnit(context, entity))
+        if (wu_isFriendlyUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             // the unit can't repair itself
             if (entity->id == targetEntity->id)
@@ -372,7 +387,8 @@ void wcmd_executeSummonCommand(WarContext* context, WarUnitCommandType summonTyp
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isConjurerOrWarlockUnit(context, entity))
+        if (wu_isConjurerOrWarlockUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             WarUnitComponent* unit = we_getUnitComponent(context, entity);
 
@@ -428,7 +444,8 @@ void wcmd_executeRainOfFireCommand(WarContext* context, vec2 targetPosition)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isConjurerOrWarlockUnit(context, entity))
+        if (wu_isConjurerOrWarlockUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_RAIN_OF_FIRE, 0, targetPosition);
             wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
@@ -447,7 +464,8 @@ void wcmd_executePoisonCloudCommand(WarContext* context, vec2 targetPosition)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isConjurerOrWarlockUnit(context, entity))
+        if (wu_isConjurerOrWarlockUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_POISON_CLOUD, 0, targetPosition);
             wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
@@ -468,7 +486,8 @@ void wcmd_executeHealingCommand(WarContext* context, WarEntity* targetEntity, ve
             WarEntity* entity = we_findEntity(context, entityId);
             assert(entity);
 
-            if (wu_isClericOrNecrolyteUnit(context, entity))
+            if (wu_isClericOrNecrolyteUnit(context, entity) &&
+                wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
             {
                 // the unit can't heal itself
                 if (entity->id != targetEntity->id)
@@ -494,7 +513,8 @@ void wcmd_executeInvisiblityCommand(WarContext* context, WarEntity* targetEntity
             WarEntity* entity = we_findEntity(context, entityId);
             assert(entity);
 
-            if (wu_isClericOrNecrolyteUnit(context, entity))
+            if (wu_isClericOrNecrolyteUnit(context, entity) &&
+                wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
             {
                 WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_INVISIBILITY, targetEntity->id, targetPosition);
                 wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
@@ -516,7 +536,8 @@ void wcmd_executeUnholyArmorCommand(WarContext* context, WarEntity* targetEntity
             WarEntity* entity = we_findEntity(context, entityId);
             assert(entity);
 
-            if (wu_isClericOrNecrolyteUnit(context, entity))
+            if (wu_isClericOrNecrolyteUnit(context, entity) &&
+                wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
             {
                 WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_UNHOLY_ARMOR, targetEntity->id, targetPosition);
                 wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
@@ -536,7 +557,8 @@ void wcmd_executeRaiseDeadCommand(WarContext* context, vec2 targetPosition)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isClericOrNecrolyteUnit(context, entity))
+        if (wu_isClericOrNecrolyteUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             WarStateCast* castState = wst_createCastState(context, entity, WAR_SPELL_RAISE_DEAD, 0, targetPosition);
             wst_resetState(context, entity, (WarStateBase*)castState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
@@ -555,7 +577,8 @@ void wcmd_executeSightCommand(WarContext* context, vec2 targetPosition)
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isClericOrNecrolyteUnit(context, entity))
+        if (wu_isClericOrNecrolyteUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             WarSpellType spellType = wu_isHumanUnit(context, entity) ? WAR_SPELL_FAR_SIGHT : WAR_SPELL_DARK_VISION;
             WarStateCast* castState = wst_createCastState(context, entity, spellType, 0, targetPosition);
@@ -578,7 +601,8 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
         WarEntity* entity = we_findEntity(context, entityId);
         assert(entity);
 
-        if (wu_isFriendlyUnit(context, entity))
+        if (wu_isFriendlyUnit(context, entity) &&
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             if (targetEntity)
             {
@@ -816,12 +840,15 @@ bool wcmd_executeCommand(WarContext* context)
             NOT_USED(buildingUnit);
             NOT_USED(selectedUnit);
 
-            const WarUnitStats* stats = wu_getUnitStats(unitToTrain);
-            if (we_checkFarmFood(context, player) &&
-                we_enoughPlayerResources(context, player, stats->goldCost, stats->woodCost))
+            if (wst_canSubmitTransition(context, selectedEntity, WAR_INTERRUPT_PLAYER_ORDER))
             {
-                WarStateTrain* trainState = wst_createTrainState(context, selectedEntity, unitToTrain, (f32)stats->buildTime, stats->goldCost, stats->woodCost, NULL);
-                wst_resetState(context, selectedEntity, (WarStateBase*)trainState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+                const WarUnitStats* stats = wu_getUnitStats(unitToTrain);
+                if (we_checkFarmFood(context, player) &&
+                    we_enoughPlayerResources(context, player, stats->goldCost, stats->woodCost))
+                {
+                    WarStateTrain* trainState = wst_createTrainState(context, selectedEntity, unitToTrain, (f32)stats->buildTime, stats->goldCost, stats->woodCost, NULL);
+                    wst_resetState(context, selectedEntity, (WarStateBase*)trainState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+                }
             }
 
             consumeCommand(map, command);
@@ -862,14 +889,17 @@ bool wcmd_executeCommand(WarContext* context)
             NOT_USED(buildingUnit);
             NOT_USED(selectedUnit);
 
-            assert(hasRemainingUpgrade(player, upgradeToBuild));
-
-            const WarUpgradeStats* stats = wu_getUpgradeStats(upgradeToBuild);
-            s32 level = getUpgradeLevel(player, upgradeToBuild);
-            if (we_enoughPlayerResources(context, player, stats->goldCost[level], 0))
+            if (wst_canSubmitTransition(context, selectedEntity, WAR_INTERRUPT_PLAYER_ORDER))
             {
-                WarStateUpgrade* upgradeState = wst_createUpgradeState(context, selectedEntity, upgradeToBuild, (f32)stats->buildTime, stats->goldCost[level], 0);
-                wst_resetState(context, selectedEntity, (WarStateBase*)upgradeState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+                assert(hasRemainingUpgrade(player, upgradeToBuild));
+
+                const WarUpgradeStats* stats = wu_getUpgradeStats(upgradeToBuild);
+                s32 level = getUpgradeLevel(player, upgradeToBuild);
+                if (we_enoughPlayerResources(context, player, stats->goldCost[level], 0))
+                {
+                    WarStateUpgrade* upgradeState = wst_createUpgradeState(context, selectedEntity, upgradeToBuild, (f32)stats->buildTime, stats->goldCost[level], 0);
+                    wst_resetState(context, selectedEntity, (WarStateBase*)upgradeState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+                }
             }
 
             consumeCommand(map, command);
@@ -1436,7 +1466,8 @@ void wcmd_cancel(WarContext* context, WarEntity* entity)
         WarEntity* selectedEntity = we_findEntity(context, selectedEntityId);
         assert(selectedEntity);
 
-        if (wu_isBuildingUnit(context, selectedEntity))
+        if (wu_isBuildingUnit(context, selectedEntity) &&
+            wst_canSubmitTransition(context, selectedEntity, WAR_INTERRUPT_PLAYER_ORDER))
         {
             if (wst_isBuilding(context, selectedEntity) || wst_isGoingToBuild(context, selectedEntity))
             {

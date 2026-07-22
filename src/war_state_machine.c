@@ -8,25 +8,25 @@
 
 WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
 {
-    { WAR_STATE_IDLE,       wst_enterIdleState,      NULL, NULL, NULL, wst_exitIdleState      },
-    { WAR_STATE_MOVE,       NULL,                    NULL, NULL, NULL, wst_exitMoveState      },
-    { WAR_STATE_PATROL,     wst_enterPatrolState,    NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_FOLLOW,     NULL,                    NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_ATTACK,     NULL,                    NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_GOLD,       NULL,                    NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_MINING,     wst_enterMiningState,    NULL, NULL, NULL, wst_exitMiningState    },
-    { WAR_STATE_WOOD,       NULL,                    NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_CHOPPING,   wst_enterChoppingState,  NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_DELIVER,    NULL,                    NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_DEATH,      wst_enterDeathState,     NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_COLLAPSE,   wst_enterCollapseState,  NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_TRAIN,      wst_enterTrainState,     NULL, NULL, NULL, wst_exitTrainState     },
-    { WAR_STATE_UPGRADE,    wst_enterUpgradeState,   NULL, NULL, NULL, wst_exitUpgradeState   },
-    { WAR_STATE_BUILD,      wst_enterBuildState,     NULL, NULL, NULL, wst_exitBuildState    },
-    { WAR_STATE_REPAIR,     NULL,                    NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_REPAIRING,  wst_enterRepairingState, NULL, NULL, NULL, wst_exitRepairingState },
-    { WAR_STATE_CAST,       NULL,                    NULL, NULL, NULL, NULL                   },
-    { WAR_STATE_WAIT,       wst_enterWaitState,      NULL, NULL, NULL, wst_exitWaitState      },
+    { WAR_STATE_IDLE,       wst_enterIdleState,      NULL, NULL, NULL, wst_exitIdleState,      NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_MOVE,       NULL,                    NULL, NULL, NULL, wst_exitMoveState,      NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_PATROL,     wst_enterPatrolState,    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_FOLLOW,     NULL,                    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_ATTACK,     NULL,                    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_PLAYER_ORDER | WAR_INTERRUPT_AI_ORDER | WAR_INTERRUPT_STATUS | WAR_INTERRUPT_SCRIPT | WAR_INTERRUPT_LIFECYCLE },
+    { WAR_STATE_GOLD,       NULL,                    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_MINING,     wst_enterMiningState,    NULL, NULL, NULL, wst_exitMiningState,    NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_WOOD,       NULL,                    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_CHOPPING,   wst_enterChoppingState,  NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_DELIVER,    NULL,                    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_DEATH,      wst_enterDeathState,     NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_LIFECYCLE },
+    { WAR_STATE_COLLAPSE,   wst_enterCollapseState,  NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_LIFECYCLE },
+    { WAR_STATE_TRAIN,      wst_enterTrainState,     NULL, NULL, NULL, wst_exitTrainState,     NULL, WAR_INTERRUPT_PLAYER_ORDER | WAR_INTERRUPT_AI_ORDER | WAR_INTERRUPT_LIFECYCLE },
+    { WAR_STATE_UPGRADE,    wst_enterUpgradeState,   NULL, NULL, NULL, wst_exitUpgradeState,   NULL, WAR_INTERRUPT_PLAYER_ORDER | WAR_INTERRUPT_AI_ORDER | WAR_INTERRUPT_LIFECYCLE },
+    { WAR_STATE_BUILD,      wst_enterBuildState,     NULL, NULL, NULL, wst_exitBuildState,     NULL, WAR_INTERRUPT_PLAYER_ORDER | WAR_INTERRUPT_AI_ORDER | WAR_INTERRUPT_STATUS | WAR_INTERRUPT_SCRIPT | WAR_INTERRUPT_LIFECYCLE },
+    { WAR_STATE_REPAIR,     NULL,                    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_REPAIRING,  wst_enterRepairingState, NULL, NULL, NULL, wst_exitRepairingState, NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_CAST,       NULL,                    NULL, NULL, NULL, NULL,                   NULL, 0 },
+    { WAR_STATE_WAIT,       wst_enterWaitState,      NULL, NULL, NULL, wst_exitWaitState,      NULL, WAR_INTERRUPT_ALL },
 };
 
 static WarStateDescriptor* wst_getDescriptor(WarStateType type)
@@ -576,6 +576,40 @@ static bool wst_isTransitionRequestValid(WarContext* context, WarEntity* entity,
     return !wst_isStateRefPendingElsewhere(context, sm, request->stateRef);
 }
 
+bool wst_canSubmitTransition(WarContext* context, WarEntity* entity, WarInterruptKind interrupt)
+{
+    if (!context || !entity)
+    {
+        return false;
+    }
+
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    if (!sm || sm->depth == 0 || sm->depth > WAR_STATE_STACK_DEPTH)
+    {
+        return false;
+    }
+
+    WarStateRef activeStateRef = sm->stack[sm->depth - 1];
+    WarStateBase* activeState = wst_deref(context, activeStateRef);
+    if (!activeState)
+    {
+        return false;
+    }
+
+    WarStateDescriptor* activeStateDesc = wst_getDescriptor(activeStateRef.type);
+    if (!activeStateDesc)
+    {
+        return false;
+    }
+
+    if (activeStateDesc->canInterrupt)
+    {
+        return activeStateDesc->canInterrupt(context, entity, activeState, interrupt);
+    }
+
+    return (activeStateDesc->defaultInterruptMask & (u32)interrupt) != 0;
+}
+
 bool wst_submitTransition(WarContext* context, WarEntity* entity, WarTransitionRequest request)
 {
     if (!entity)
@@ -602,8 +636,6 @@ bool wst_submitTransition(WarContext* context, WarEntity* entity, WarTransitionR
 
     WarTransitionRequest* pending = &sm->pending;
 
-    // WarTransitionCause values carry priority. The pending request wins ties;
-    // sequence records per-entity submission order.
     if (wst_shouldReplacePending(pending, &request))
     {
         WarTransitionRequest replaced = *pending;
@@ -918,8 +950,9 @@ void wst_enterState(WarContext* context, WarEntity* entity, WarStateBase* state)
         return;
     }
 
-    if (stateDescriptors[state->type].onEnter)
-        stateDescriptors[state->type].onEnter(context, entity, state);
+    WarStateDescriptor* descriptor = wst_getDescriptor(state->type);
+    if (descriptor->onEnter)
+        descriptor->onEnter(context, entity, state);
 
     TracyCZoneEnd(ctx);
 }
@@ -948,8 +981,9 @@ void wst_pauseState(WarContext* context, WarEntity* entity, WarStateBase* state,
         return;
     }
 
-    if (stateDescriptors[state->type].onPause)
-        stateDescriptors[state->type].onPause(context, entity, state, reason);
+    WarStateDescriptor* descriptor = wst_getDescriptor(state->type);
+    if (descriptor->onPause)
+        descriptor->onPause(context, entity, state, reason);
 
     TracyCZoneEnd(ctx);
 }
@@ -978,9 +1012,8 @@ bool wst_validateState(WarContext* context, WarEntity* entity, WarStateBase* sta
         return false;
     }
 
-    bool result = stateDescriptors[state->type].validate
-        ? stateDescriptors[state->type].validate(context, entity, state)
-        : true;
+    WarStateDescriptor* descriptor = wst_getDescriptor(state->type);
+    bool result = !descriptor->validate || descriptor->validate(context, entity, state);
 
     TracyCZoneEnd(ctx);
 
@@ -1011,8 +1044,9 @@ void wst_resumeState(WarContext* context, WarEntity* entity, WarStateBase* state
         return;
     }
 
-    if (stateDescriptors[state->type].onResume)
-        stateDescriptors[state->type].onResume(context, entity, state, reason);
+    WarStateDescriptor* descriptor = wst_getDescriptor(state->type);
+    if (descriptor->onResume)
+        descriptor->onResume(context, entity, state, reason);
 
     TracyCZoneEnd(ctx);
 }
@@ -1041,8 +1075,9 @@ void wst_exitState(WarContext* context, WarEntity* entity, WarStateBase* state, 
         return;
     }
 
-    if (stateDescriptors[state->type].onExit)
-        stateDescriptors[state->type].onExit(context, entity, state, reason);
+    WarStateDescriptor* descriptor = wst_getDescriptor(state->type);
+    if (descriptor->onExit)
+        descriptor->onExit(context, entity, state, reason);
 
     wst_releaseStateRef(context, ref);
 

@@ -77,7 +77,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         return;
     }
 
-    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, start, end));
+    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, start, end), false);
     wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
 
     TracyCZoneEnd(ctx);

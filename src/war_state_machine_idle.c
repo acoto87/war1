@@ -100,7 +100,7 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
         if (wu_isWarriorUnit(context, entity))
         {
             WarEntity* enemy = we_getNearEnemy(context, entity);
-            if (enemy)
+            if (enemy && wst_canSubmitTransition(context, entity, WAR_INTERRUPT_AUTONOMOUS))
             {
                 vec2 enemyPosition = wu_getUnitPosition(context, enemy);
                 WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);

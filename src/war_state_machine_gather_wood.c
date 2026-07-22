@@ -72,7 +72,7 @@ void wst_updateGatherWoodState(WarContext* context, WarEntity* entity, WarState*
     if (!wu_tileInRange(context, entity, treeTile, stats->range))
     {
         vec2 position = wu_getUnitCenterPosition(context, entity);
-        WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition));
+        WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, treePosition), false);
         wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
         TracyCZoneEnd(ctx);
         return;

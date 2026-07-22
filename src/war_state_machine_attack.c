@@ -65,11 +65,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // of the attacking unit is greater
         if(!wu_tileInRange(context, entity, targetTile, 1))
         {
-            WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
-            if (moveState)
-            {
-                moveState->checkForAttacks = true;
-            }
+            WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition), true);
             wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
             TracyCZoneEnd(ctx);
             return;
@@ -89,7 +85,6 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         targetTile = wmap_mapToTileCoordinatesV(targetPosition);
     }
 
-    // if the unit is not in range to attack, chase it
     if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats->range))
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetPosition, stats->range * MEGA_TILE_WIDTH);

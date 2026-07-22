@@ -9,7 +9,7 @@
 #include "war_rvo.h"
 #include "war_map.h"
 
-WarStateMove* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[])
+WarStateMove* wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[], bool checkForAttacks)
 {
     TracyCZoneN(ctx, "wst_createMoveState", true);
 
@@ -31,6 +31,7 @@ WarStateMove* wst_createMoveState(WarContext* context, WarEntity* entity, s32 po
     memcpy(state->waypoints, positions, count * sizeof(vec2));
     state->waypointsIndex = 0;
     state->waypointsCount = count;
+    state->checkForAttacks = checkForAttacks;
 
     TracyCZoneEnd(ctx);
     return state;
@@ -325,7 +326,8 @@ void wst_updateMoveStates(WarContext* context)
         if (state->checkForAttacks)
         {
             WarEntity* enemy = we_getAttacker(context, entity);
-            if (enemy && wu_areEnemies(context, entity, enemy) && wu_canAttack(context, entity, enemy))
+            if (enemy && wu_areEnemies(context, entity, enemy) && wu_canAttack(context, entity, enemy) &&
+                wst_canSubmitTransition(context, entity, WAR_INTERRUPT_AUTONOMOUS))
             {
                 vec2 enemyPosition = wu_getUnitPosition(context, enemy);
                 WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
