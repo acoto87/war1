@@ -3520,7 +3520,7 @@ static void renderStateMachineDebug(WarContext* context)
     if (!sm || sm->depth <= 0)
         return;
 
-    WarStateBase* state = wst_currentState(context, entity);
+    WarStateBase* state = wst_getActiveState(context, entity);
     if (!state)
         return;
 

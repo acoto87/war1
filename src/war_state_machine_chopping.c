@@ -163,7 +163,7 @@ void wst_updateChoppingStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
         if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateChoppingState(context, entity, (WarStateBase*)state);

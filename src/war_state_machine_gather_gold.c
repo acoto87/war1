@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 #include "TracyC.h"
 
@@ -83,7 +83,7 @@ void wst_updateGoldStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
         if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateGatherGoldState(context, entity, (WarStateBase*)state);

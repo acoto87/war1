@@ -278,16 +278,43 @@ bool wst_replaceState(WarContext* context, WarEntity* entity, WarStateBase* stat
 bool wst_resetState(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause);
 bool wst_resetStateForCancellation(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause);
 
-WarStateBase* wst_currentState(WarContext* context, WarEntity* entity);
-bool          wst_isCurrentState(WarContext* context, WarEntity* entity, WarState* state);
-bool          wst_hasStateInStack(WarContext* context, WarEntity* entity, WarStateType type);
+// --- Active-state queries ---
+// Active-state = what the entity is executing right now (top of stack).
+// Use these for rendering, collision, command gating, and AI decisions.
+WarStateBase* wst_getActiveState(WarContext* context, WarEntity* entity);
+WarStateBase* wst_getActiveStateOfType(WarContext* context, WarEntity* entity, WarStateType type);
+bool          wst_isActiveState(WarContext* context, WarEntity* entity, WarStateType type);
 WarStateBase* wst_peekAt(WarContext* context, WarEntity* entity, u8 index);
+
+// --- Stack-membership queries ---
+// Stack membership = the state exists anywhere in the stack, active or paused.
+// Use these when you need retained context below a child state.
+WarStateBase* wst_findStateInStack(WarContext* context, WarEntity* entity, WarStateType type);
+bool          wst_containsState(WarContext* context, WarEntity* entity, WarStateType type);
 
 bool wst_isNextUpdateTime(WarContext* context, WarState* state);
 
-WarStateBase* wst_getState(WarContext* context, WarEntity* entity, WarStateType type);
-WarStateBase* wst_getDirectState(WarContext* context, WarEntity* entity, WarStateType type);
+// --- Typed active-state accessors ---
+WarStateIdle*      wst_getActiveIdleState(WarContext* context, WarEntity* entity);
+WarStateMove*      wst_getActiveMoveState(WarContext* context, WarEntity* entity);
+WarStatePatrol*    wst_getActivePatrolState(WarContext* context, WarEntity* entity);
+WarStateFollow*    wst_getActiveFollowState(WarContext* context, WarEntity* entity);
+WarStateAttack*    wst_getActiveAttackState(WarContext* context, WarEntity* entity);
+WarStateDeath*     wst_getActiveDeathState(WarContext* context, WarEntity* entity);
+WarStateCollapse*  wst_getActiveCollapseState(WarContext* context, WarEntity* entity);
+WarStateGold*      wst_getActiveGatherGoldState(WarContext* context, WarEntity* entity);
+WarStateMining*    wst_getActiveMiningState(WarContext* context, WarEntity* entity);
+WarStateWood*      wst_getActiveGatherWoodState(WarContext* context, WarEntity* entity);
+WarStateChopping*  wst_getActiveChoppingState(WarContext* context, WarEntity* entity);
+WarStateDeliver*   wst_getActiveDeliverState(WarContext* context, WarEntity* entity);
+WarStateTrain*     wst_getActiveTrainState(WarContext* context, WarEntity* entity);
+WarStateUpgrade*   wst_getActiveUpgradeState(WarContext* context, WarEntity* entity);
+WarStateBuild*     wst_getActiveBuildState(WarContext* context, WarEntity* entity);
+WarStateRepair*    wst_getActiveRepairState(WarContext* context, WarEntity* entity);
+WarStateRepairing* wst_getActiveRepairingState(WarContext* context, WarEntity* entity);
+WarStateCast*      wst_getActiveCastState(WarContext* context, WarEntity* entity);
 
+// --- Typed stack-membership accessors ---
 WarStateIdle*      wst_getIdleState(WarContext* context, WarEntity* entity);
 WarStateMove*      wst_getMoveState(WarContext* context, WarEntity* entity);
 WarStatePatrol*    wst_getPatrolState(WarContext* context, WarEntity* entity);
@@ -307,10 +334,20 @@ WarStateRepair*    wst_getRepairState(WarContext* context, WarEntity* entity);
 WarStateRepairing* wst_getRepairingState(WarContext* context, WarEntity* entity);
 WarStateCast*      wst_getCastState(WarContext* context, WarEntity* entity);
 
-bool wst_hasState(WarContext* context, WarEntity* entity, WarStateType type);
-bool wst_hasDirectState(WarContext* context, WarEntity* entity, WarStateType type);
-
+// --- Active-state boolean predicates ---
 bool wst_isIdle(WarContext* context, WarEntity* entity);
+bool wst_isActivelyMoving(WarContext* context, WarEntity* entity);
+bool wst_isActivelyPatrolling(WarContext* context, WarEntity* entity);
+bool wst_isActivelyFollowing(WarContext* context, WarEntity* entity);
+bool wst_isActivelyAttacking(WarContext* context, WarEntity* entity);
+bool wst_isActivelyMining(WarContext* context, WarEntity* entity);
+bool wst_isActivelyChopping(WarContext* context, WarEntity* entity);
+bool wst_isActivelyDelivering(WarContext* context, WarEntity* entity);
+bool wst_isActivelyCasting(WarContext* context, WarEntity* entity);
+bool wst_isActivelyRepairing(WarContext* context, WarEntity* entity);
+bool wst_isActivelyRepairing2(WarContext* context, WarEntity* entity);
+
+// --- Stack-membership boolean predicates ---
 bool wst_isMoving(WarContext* context, WarEntity* entity);
 bool wst_isPatrolling(WarContext* context, WarEntity* entity);
 bool wst_isFollowing(WarContext* context, WarEntity* entity);

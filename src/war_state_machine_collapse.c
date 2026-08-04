@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 #include "shl/wstr.h"
 
@@ -90,7 +90,7 @@ void wst_updateCollapseStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
         if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateCollapseState(context, entity, (WarStateBase*)state);

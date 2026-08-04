@@ -302,7 +302,7 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
 
         state->rvoPreferredVelocity = VEC2_ZERO;
         state->rvoPosition = VEC2_ZERO;
@@ -321,7 +321,7 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
 
         if (state->checkForAttacks)
         {
@@ -344,7 +344,7 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
 
         updateArrivalDecay(context, entity, state);
     }
@@ -357,7 +357,7 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
 
         updatePreferredVelocity(context, entity, state);
     }
@@ -370,7 +370,7 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
 
         updateAdjustedVelocity(context, entity, state);
     }
@@ -383,7 +383,7 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
 
         updatePosition(context, entity, state);
     }
@@ -396,7 +396,7 @@ void wst_updateMoveStates(WarContext* context)
         WarEntity* entity = we_findEntity(context, state->base.entityId);
         if (!entity || !wu_isUnit(entity)) continue;
 
-        if (!wst_isCurrentState(context, entity, (WarStateBase*)state)) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
 
         state->rvoVelocity = state->rvoAdjustedVelocity;
     }
