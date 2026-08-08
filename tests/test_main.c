@@ -9,7 +9,6 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <math.h>
-#include <string.h>
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
 #ifndef F_OK
@@ -176,26 +175,50 @@
 #include "war_ai.c"
 #include "war_game.c"
 
+// Globals shared with the included test files.
+// Defined before the include block so WAR_TEST_FILTER sees it.
+const char* g_test_filter = NULL;
+
 // --- Test files ---
 #include "war_test_context.c"
 #include "war_state_machine_test.c"
 
-// --- Test runner ---
-int g_tests_run = 0;
-int g_tests_passed = 0;
-int g_tests_failed = 0;
+static int parse_test_args(int argc, char** argv)
+{
+    for (int i = 1; i < argc; i++)
+    {
+        if (wsv_equals(wsv_fromCString(argv[i]), WSV_LITERAL("--filter")))
+        {
+            if (i + 1 >= argc)
+            {
+                fprintf(stderr, "missing value after --filter\n");
+                return 1;
+            }
+            g_test_filter = argv[++i];
+        }
+        else
+        {
+            fprintf(stderr, "unknown argument: %s\n", argv[i]);
+            return 1;
+        }
+    }
+    return 0;
+}
 
 int main(int argc, char** argv)
 {
-    (void)argc;
-    (void)argv;
+    if (parse_test_args(argc, argv) != 0)
+    {
+        return 1;
+    }
 
     printf("=== War1-C FSM Test Harness ===\n");
 
-    run_state_machine_tests();
+    if (g_test_filter)
+    {
+        printf("Filter: %s\n", g_test_filter);
+    }
 
-    printf("\n=== Results: %d passed, %d failed, %d total ===\n",
-           g_tests_passed, g_tests_failed, g_tests_run);
-
-    return g_tests_failed > 0 ? 1 : 0;
+    const int failures = run_state_machine_tests();
+    return failures > 0 ? 1 : 0;
 }

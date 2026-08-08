@@ -2,6 +2,19 @@
 
 #include "unity/unity.h"
 
+extern const char* g_test_filter;
+
+// Gate each test by the --filter substring (g_test_filter is set by main).
+// Calls UnityDefaultTestRun directly so this macro body does not invoke
+// itself; that lets a blanket WAR_TEST_FILTER rewrite target callsites only.
+#define WAR_TEST_FILTER(func) \
+    do { \
+        if (!g_test_filter || wsv_find(wsv_fromCString(#func), wsv_fromCString(g_test_filter)) != WSV_NPOS) \
+        { \
+            UnityDefaultTestRun(func, #func, __LINE__); \
+        } \
+    } while (0)
+
 #include "war_ai.h"
 #include "war_alloc.h"
 #include "war_commands.h"
@@ -4396,99 +4409,99 @@ void tearDown(void)
     wt_shutdown(&g_test);
 }
 
-void run_state_machine_tests(void)
+int run_state_machine_tests(void)
 {
     UNITY_BEGIN();
 
     // State Machine Basics
-    RUN_TEST(test_fresh_entity_requests_initialization_idle_state);
-    RUN_TEST(test_player_order_beats_uncommitted_initialization);
-    RUN_TEST(test_lethal_damage_beats_uncommitted_initialization);
-    RUN_TEST(test_ai_training_request_uses_ai_order);
-    RUN_TEST(test_ai_train_then_lifecycle_charges_and_progresses_zero_times);
-    RUN_TEST(test_lifecycle_then_ai_train_charges_and_progresses_zero_times);
-    RUN_TEST(test_upgrade_then_lifecycle_charges_zero_times);
-    RUN_TEST(test_lifecycle_then_upgrade_charges_zero_times);
-    RUN_TEST(test_committed_ai_train_applies_cost_and_progress_once);
-    RUN_TEST(test_committed_upgrade_applies_cost_once);
-    RUN_TEST(test_committed_ai_train_without_resources_terminates_without_progress);
-    RUN_TEST(test_pending_train_cancel_commits_idle_without_charging);
-    RUN_TEST(test_pending_upgrade_cancel_commits_idle_without_charging);
-    RUN_TEST(test_transaction_cancel_does_not_displace_lifecycle_or_unrelated_player_order);
-    RUN_TEST(test_train_cancel_refunds_once_only_after_commit);
-    RUN_TEST(test_train_cancel_displaced_by_lifecycle_never_refunds_in_either_order);
-    RUN_TEST(test_train_completion_frame_cancel_keeps_output_and_never_refunds_in_either_order);
-    RUN_TEST(test_upgrade_cancel_refunds_once_only_after_commit);
-    RUN_TEST(test_upgrade_cancel_displaced_by_lifecycle_never_refunds_in_either_order);
-    RUN_TEST(test_upgrade_completion_frame_cancel_keeps_output_and_never_refunds_in_either_order);
-    RUN_TEST(test_pending_build_cancel_refunds_once_only_after_commit);
-    RUN_TEST(test_pending_build_cancel_displaced_by_lifecycle_never_refunds_in_either_order);
-    RUN_TEST(test_build_completion_frame_cancel_keeps_output_without_collapse_in_either_order);
-    RUN_TEST(test_removing_assigned_worker_clears_build_backlink_and_pauses_building);
-    RUN_TEST(test_build_placement_build_state_exhaustion_rolls_back_atomically);
-    RUN_TEST(test_remove_entity_leaves_initialized_wait_before_required_components);
-    RUN_TEST(test_remove_entity_releases_active_train_and_pending_state_without_refund);
-    RUN_TEST(test_remove_one_of_two_state_machines_preserves_swapped_dense_invariants);
-    RUN_TEST(test_push_state_increases_depth);
-    RUN_TEST(test_pop_state_decreases_depth);
-    RUN_TEST(test_reset_state_clears_stack);
-    RUN_TEST(test_stack_contains_query);
-    RUN_TEST(test_step_ticks_advances_simulation);
-    RUN_TEST(test_empty_stack_becomes_idle_on_pop);
+    WAR_TEST_FILTER(test_fresh_entity_requests_initialization_idle_state);
+    WAR_TEST_FILTER(test_player_order_beats_uncommitted_initialization);
+    WAR_TEST_FILTER(test_lethal_damage_beats_uncommitted_initialization);
+    WAR_TEST_FILTER(test_ai_training_request_uses_ai_order);
+    WAR_TEST_FILTER(test_ai_train_then_lifecycle_charges_and_progresses_zero_times);
+    WAR_TEST_FILTER(test_lifecycle_then_ai_train_charges_and_progresses_zero_times);
+    WAR_TEST_FILTER(test_upgrade_then_lifecycle_charges_zero_times);
+    WAR_TEST_FILTER(test_lifecycle_then_upgrade_charges_zero_times);
+    WAR_TEST_FILTER(test_committed_ai_train_applies_cost_and_progress_once);
+    WAR_TEST_FILTER(test_committed_upgrade_applies_cost_once);
+    WAR_TEST_FILTER(test_committed_ai_train_without_resources_terminates_without_progress);
+    WAR_TEST_FILTER(test_pending_train_cancel_commits_idle_without_charging);
+    WAR_TEST_FILTER(test_pending_upgrade_cancel_commits_idle_without_charging);
+    WAR_TEST_FILTER(test_transaction_cancel_does_not_displace_lifecycle_or_unrelated_player_order);
+    WAR_TEST_FILTER(test_train_cancel_refunds_once_only_after_commit);
+    WAR_TEST_FILTER(test_train_cancel_displaced_by_lifecycle_never_refunds_in_either_order);
+    WAR_TEST_FILTER(test_train_completion_frame_cancel_keeps_output_and_never_refunds_in_either_order);
+    WAR_TEST_FILTER(test_upgrade_cancel_refunds_once_only_after_commit);
+    WAR_TEST_FILTER(test_upgrade_cancel_displaced_by_lifecycle_never_refunds_in_either_order);
+    WAR_TEST_FILTER(test_upgrade_completion_frame_cancel_keeps_output_and_never_refunds_in_either_order);
+    WAR_TEST_FILTER(test_pending_build_cancel_refunds_once_only_after_commit);
+    WAR_TEST_FILTER(test_pending_build_cancel_displaced_by_lifecycle_never_refunds_in_either_order);
+    WAR_TEST_FILTER(test_build_completion_frame_cancel_keeps_output_without_collapse_in_either_order);
+    WAR_TEST_FILTER(test_removing_assigned_worker_clears_build_backlink_and_pauses_building);
+    WAR_TEST_FILTER(test_build_placement_build_state_exhaustion_rolls_back_atomically);
+    WAR_TEST_FILTER(test_remove_entity_leaves_initialized_wait_before_required_components);
+    WAR_TEST_FILTER(test_remove_entity_releases_active_train_and_pending_state_without_refund);
+    WAR_TEST_FILTER(test_remove_one_of_two_state_machines_preserves_swapped_dense_invariants);
+    WAR_TEST_FILTER(test_push_state_increases_depth);
+    WAR_TEST_FILTER(test_pop_state_decreases_depth);
+    WAR_TEST_FILTER(test_reset_state_clears_stack);
+    WAR_TEST_FILTER(test_stack_contains_query);
+    WAR_TEST_FILTER(test_step_ticks_advances_simulation);
+    WAR_TEST_FILTER(test_empty_stack_becomes_idle_on_pop);
 
     // State Machine Transitions
-    RUN_TEST(test_autonomous_transition_outranks_state_completion);
-    RUN_TEST(test_move_eventually_completes);
-    RUN_TEST(test_competing_attack_and_completion);
-    RUN_TEST(test_player_move_command_outranks_aggro_when_aggro_is_submitted_first);
-    RUN_TEST(test_player_move_command_outranks_aggro_when_player_move_is_submitted_first);
-    RUN_TEST(test_lethal_damage_outranks_move_command_when_move_is_submitted_first);
-    RUN_TEST(test_lethal_damage_outranks_move_command_when_death_is_submitted_first);
-    RUN_TEST(test_equal_priority_keeps_first_submitted_request);
-    RUN_TEST(test_equal_priority_result_is_independent_of_unrelated_entity_order);
-    RUN_TEST(test_transition_cause_priority_is_submission_order_independent);
-    RUN_TEST(test_equal_priority_keeps_first_across_operation_combinations);
-    RUN_TEST(test_each_submission_consumes_only_its_entity_sequence);
-    RUN_TEST(test_applying_transition_clears_pending_and_allows_later_requests);
-    RUN_TEST(test_public_free_of_active_state_is_no_op);
-    RUN_TEST(test_stale_stack_ref_cannot_update_or_free_reused_slot);
-    RUN_TEST(test_immediate_slot_reuse_does_not_revive_stale_ref);
-    RUN_TEST(test_duplicate_pending_ref_preserves_storage_and_updates_metadata);
-    RUN_TEST(test_full_stack_push_replaces_only_top);
-    RUN_TEST(test_empty_stack_pop_restores_idle);
-    RUN_TEST(test_empty_stack_pop_replace_installs_candidate);
-    RUN_TEST(test_state_pool_exhaustion_preserves_counts_and_recovers);
-    RUN_TEST(test_raw_transition_validation_rejects_malformed_and_owned_refs);
-    RUN_TEST(test_equal_priority_keeps_first_when_sequence_wraps);
+    WAR_TEST_FILTER(test_autonomous_transition_outranks_state_completion);
+    WAR_TEST_FILTER(test_move_eventually_completes);
+    WAR_TEST_FILTER(test_competing_attack_and_completion);
+    WAR_TEST_FILTER(test_player_move_command_outranks_aggro_when_aggro_is_submitted_first);
+    WAR_TEST_FILTER(test_player_move_command_outranks_aggro_when_player_move_is_submitted_first);
+    WAR_TEST_FILTER(test_lethal_damage_outranks_move_command_when_move_is_submitted_first);
+    WAR_TEST_FILTER(test_lethal_damage_outranks_move_command_when_death_is_submitted_first);
+    WAR_TEST_FILTER(test_equal_priority_keeps_first_submitted_request);
+    WAR_TEST_FILTER(test_equal_priority_result_is_independent_of_unrelated_entity_order);
+    WAR_TEST_FILTER(test_transition_cause_priority_is_submission_order_independent);
+    WAR_TEST_FILTER(test_equal_priority_keeps_first_across_operation_combinations);
+    WAR_TEST_FILTER(test_each_submission_consumes_only_its_entity_sequence);
+    WAR_TEST_FILTER(test_applying_transition_clears_pending_and_allows_later_requests);
+    WAR_TEST_FILTER(test_public_free_of_active_state_is_no_op);
+    WAR_TEST_FILTER(test_stale_stack_ref_cannot_update_or_free_reused_slot);
+    WAR_TEST_FILTER(test_immediate_slot_reuse_does_not_revive_stale_ref);
+    WAR_TEST_FILTER(test_duplicate_pending_ref_preserves_storage_and_updates_metadata);
+    WAR_TEST_FILTER(test_full_stack_push_replaces_only_top);
+    WAR_TEST_FILTER(test_empty_stack_pop_restores_idle);
+    WAR_TEST_FILTER(test_empty_stack_pop_replace_installs_candidate);
+    WAR_TEST_FILTER(test_state_pool_exhaustion_preserves_counts_and_recovers);
+    WAR_TEST_FILTER(test_raw_transition_validation_rejects_malformed_and_owned_refs);
+    WAR_TEST_FILTER(test_equal_priority_keeps_first_when_sequence_wraps);
 
     // State Lifecycle Callbacks
-    RUN_TEST(test_lifecycle_enter_idle_registers_pathfinder);
-    RUN_TEST(test_lifecycle_exit_wait_frees_pathfinder);
-    RUN_TEST(test_lifecycle_reset_calls_exit_then_enter);
-    RUN_TEST(test_lifecycle_enter_exit_build_sets_building_flag);
+    WAR_TEST_FILTER(test_lifecycle_enter_idle_registers_pathfinder);
+    WAR_TEST_FILTER(test_lifecycle_exit_wait_frees_pathfinder);
+    WAR_TEST_FILTER(test_lifecycle_reset_calls_exit_then_enter);
+    WAR_TEST_FILTER(test_lifecycle_enter_exit_build_sets_building_flag);
 
     // State Result Propagation
-    RUN_TEST(test_result_success_is_stored_on_pop_request);
-    RUN_TEST(test_result_cancelled_is_stored_on_pop_request);
-    RUN_TEST(test_result_none_on_raw_pop_submission);
-    RUN_TEST(test_result_train_completion_carries_success);
-    RUN_TEST(test_result_build_cancel_carries_cancelled);
+    WAR_TEST_FILTER(test_result_success_is_stored_on_pop_request);
+    WAR_TEST_FILTER(test_result_cancelled_is_stored_on_pop_request);
+    WAR_TEST_FILTER(test_result_none_on_raw_pop_submission);
+    WAR_TEST_FILTER(test_result_train_completion_carries_success);
+    WAR_TEST_FILTER(test_result_build_cancel_carries_cancelled);
 
     // Economic player ownership
-    RUN_TEST(test_ai_worker_gold_deposit_credits_ai_player_only);
-    RUN_TEST(test_ai_worker_repair_deducts_from_ai_player_only);
-    RUN_TEST(test_ai_building_upgrade_advances_ai_player_only);
+    WAR_TEST_FILTER(test_ai_worker_gold_deposit_credits_ai_player_only);
+    WAR_TEST_FILTER(test_ai_worker_repair_deducts_from_ai_player_only);
+    WAR_TEST_FILTER(test_ai_building_upgrade_advances_ai_player_only);
 
     // Fix MOVE arrival slowdown
-    RUN_TEST(test_move_arrival_slowdown);
+    WAR_TEST_FILTER(test_move_arrival_slowdown);
 
     // MOVE staged stuck recovery
-    RUN_TEST(test_move_blocked_far_from_target_uses_staged_recovery);
-    RUN_TEST(test_move_blocked_next_to_target_returns_blocked);
-    RUN_TEST(test_move_progress_after_temporary_block_resets_recovery);
-    RUN_TEST(test_move_slow_meaningful_progress_does_not_block);
-    RUN_TEST(test_move_goal_change_resets_recovery);
-    RUN_TEST(test_blocked_child_move_resumes_parent);
+    WAR_TEST_FILTER(test_move_blocked_far_from_target_uses_staged_recovery);
+    WAR_TEST_FILTER(test_move_blocked_next_to_target_returns_blocked);
+    WAR_TEST_FILTER(test_move_progress_after_temporary_block_resets_recovery);
+    WAR_TEST_FILTER(test_move_slow_meaningful_progress_does_not_block);
+    WAR_TEST_FILTER(test_move_goal_change_resets_recovery);
+WAR_TEST_FILTER(test_blocked_child_move_resumes_parent);
 
-    UNITY_END();
+    return UNITY_END();
 }
