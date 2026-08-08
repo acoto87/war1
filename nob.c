@@ -27,6 +27,7 @@ typedef enum {
     COMMAND_RUN,
     COMMAND_EDITOR,
     COMMAND_RUN_EDITOR,
+    COMMAND_TEST,
 } Command;
 
 typedef struct {
@@ -37,6 +38,8 @@ typedef struct {
     bool check_only;
     bool profile;           // enable Tracy profiler instrumentation
     bool build_before_run;  // set when build flags are passed alongside 'run'
+    bool sanitize;          // enable ASan + UBSan (test command, GCC/Clang only)
+    const char *test_filter; // substring filter for test names
     int app_argc;           // extra args forwarded to the war1 executable (after --)
     char **app_argv;
 } Build_Options;
@@ -128,6 +131,23 @@ static const char *editor_binary_path(Target target)
     }
 }
 
+static const char *test_binary_path(Target target)
+{
+    const char *output_dir = target_output_dir(target);
+    switch (target) {
+        case TARGET_WIN32:
+        case TARGET_WIN64:
+            return nob_temp_sprintf("%s/war1_test.exe", output_dir);
+
+        case TARGET_LINUX64:
+        case TARGET_ARM64:
+            return nob_temp_sprintf("%s/war1_test", output_dir);
+
+        default:
+            return NULL;
+    }
+}
+
 static bool target_is_windows(Target target)
 {
     return target == TARGET_WIN32 || target == TARGET_WIN64;
@@ -170,7 +190,7 @@ static Toolchain default_toolchain(void)
 
 static void usage(const char *program)
 {
-    printf("Usage: %s [build|run|editor] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile] [-- <app args>]\n", program);
+    printf("Usage: %s [build|run|editor|test] [--cc <gcc|clang|msvc>] [--target <linux64|arm64|win32|win64>] [--debug|--release] [--check] [--profile] [--sanitize] [--filter <substring>] [-- <app args>]\n", program);
     printf("\n");
     printf("Examples:\n");
     printf("  %s build --cc gcc --target linux64\n", program);
@@ -184,6 +204,9 @@ static void usage(const char *program)
     printf("  %s editor --cc gcc --target linux64\n", program);
     printf("  %s run editor --target win64\n", program);
     printf("  %s run editor --cc msvc --target win64 --debug\n", program);
+    printf("  %s test --cc msvc --target win64\n", program);
+    printf("  %s test --cc gcc --target linux64 --sanitize\n", program);
+    printf("  %s test --cc clang --target linux64 --sanitize --filter transition\n", program);
     printf("  %s run -- --map 5 --skip-intro\n", program);
 }
 
@@ -264,6 +287,12 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
             continue;
         }
 
+        if (!command_consumed && strcmp(arg, "test") == 0) {
+            options->command = COMMAND_TEST;
+            command_consumed = true;
+            continue;
+        }
+
         command_consumed = true;
 
         if (strcmp(arg, "--cc") == 0) {
@@ -320,6 +349,21 @@ static bool parse_args(int argc, char **argv, Build_Options *options)
         if (strcmp(arg, "--profile") == 0) {
             options->profile = true;
             if (options->command == COMMAND_RUN || options->command == COMMAND_RUN_EDITOR) options->build_before_run = true;
+            continue;
+        }
+
+        if (strcmp(arg, "--sanitize") == 0) {
+            options->sanitize = true;
+            continue;
+        }
+
+        if (strcmp(arg, "--filter") == 0) {
+            if (argc <= 0) {
+                nob_log(NOB_ERROR, "missing value after --filter");
+                usage(program);
+                return false;
+            }
+            options->test_filter = nob_shift_args(&argc, &argv);
             continue;
         }
 
@@ -926,6 +970,213 @@ static bool run_editor_project(const Build_Options *options)
     return nob_cmd_run(&cmd);
 }
 
+static bool build_test_with_gnu_like(const Build_Options *options)
+{
+    const char *binary_path = test_binary_path(options->target);
+    const char *output_dir = target_output_dir(options->target);
+
+    if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    if (!clear_build_outputs(options, "war1_test")) {
+        nob_log(NOB_ERROR, "Could not clear previous test outputs");
+        return false;
+    }
+
+    Nob_Cmd cmd = {0};
+    nob_cmd_append(&cmd,
+                   toolchain_program(options->toolchain),
+                   "-std=c11",
+                   "-Wall",
+                   "-Wno-misleading-indentation",
+                   "-Wpedantic",
+                   "-Ideps/include",
+                   "-Isrc",
+                   "-Itests");
+
+    if (options->debug) {
+        nob_cmd_append(&cmd, "-g", "-D__DEBUG__=1", "-DSHL_MZ_DEBUG");
+    } else {
+        nob_cmd_append(&cmd, "-O2");
+    }
+
+    if (options->sanitize) {
+        nob_cmd_append(&cmd,
+                       "-fsanitize=address,undefined",
+                       "-fno-omit-frame-pointer",
+                       "-g");
+    }
+
+    nob_cmd_append(&cmd,
+                   "tests/test_main.c",
+                   "deps/include/unity/unity.c",
+                   "-o",
+                   binary_path,
+                   nob_temp_sprintf("-L%s", target_library_dir(options->target)));
+
+    if (target_is_windows(options->target)) {
+        nob_cmd_append(&cmd, "-lSDL3", "-lws2_32");
+        if (options->toolchain == TOOLCHAIN_GCC) {
+            nob_cmd_append(&cmd, "-static-libgcc");
+        }
+    } else {
+        nob_cmd_append(&cmd, "-lSDL3", "-lpthread", "-lm", "-ldl", "-Wl,-rpath,$ORIGIN");
+        if (options->target == TARGET_LINUX64) {
+            nob_cmd_append(&cmd, "-no-pie");
+        }
+    }
+
+    if (!nob_cmd_run(&cmd)) {
+        return false;
+    }
+
+    // Copy SDL3 shared library next to the test binary so it can find it
+    if (target_is_windows(options->target)) {
+        const char *dll_path = nob_temp_sprintf("%s/SDL3.dll", target_library_dir(options->target));
+        const char *dll_copy_path = nob_temp_sprintf("%s/SDL3.dll", output_dir);
+        if (!nob_copy_file(dll_path, dll_copy_path)) {
+            return false;
+        }
+    } else {
+        const char *lib_dir = target_library_dir(options->target);
+        const char *so_names[] = { "libSDL3.so.0.5.0", "libSDL3.so.0", "libSDL3.so" };
+        for (size_t i = 0; i < NOB_ARRAY_LEN(so_names); i++) {
+            const char *src = nob_temp_sprintf("%s/%s", lib_dir, so_names[i]);
+            const char *dst = nob_temp_sprintf("%s/%s", output_dir, so_names[i]);
+            if (!nob_copy_file(src, dst)) {
+                return false;
+            }
+        }
+    }
+
+    return nob_copy_directory_recursively("tests/maps", output_dir);
+}
+
+static bool build_test_with_msvc(const Build_Options *options)
+{
+    if (!host_is_windows()) {
+        nob_log(NOB_ERROR, "msvc builds are only supported when running nob on Windows");
+        return false;
+    }
+
+    if (!target_is_windows(options->target)) {
+        nob_log(NOB_ERROR, "msvc builds require a Windows target");
+        return false;
+    }
+
+    if (!ensure_output_dirs(options->target)) {
+        nob_log(NOB_ERROR, "Could not create output directories");
+        return false;
+    }
+
+    if (!clear_build_outputs(options, "war1_test")) {
+        nob_log(NOB_ERROR, "Could not clear previous test outputs");
+        return false;
+    }
+
+    const char *output_dir = target_output_dir(options->target);
+    const char *lib_dir = target_library_dir(options->target);
+
+    Nob_Cmd cmd = {0};
+    nob_cmd_append(&cmd,
+                   toolchain_program(options->toolchain),
+                   "/nologo",
+                   "/TC",
+                   "/std:c11",
+                   "/W4",
+                   "/D_CRT_SECURE_NO_WARNINGS",
+                   "/Ideps/include",
+                   "/Isrc",
+                   "/Itests");
+
+    if (options->debug) {
+        nob_cmd_append(&cmd, "/Zi", "/D__DEBUG__=1", "/DSHL_MZ_DEBUG");
+    } else {
+        nob_cmd_append(&cmd, "/Zi", "/O2", "/DNDEBUG");
+    }
+
+    if (options->sanitize) {
+        nob_cmd_append(&cmd, "/fsanitize=address");
+    }
+
+    nob_cmd_append(&cmd,
+                   "tests/test_main.c",
+                   "deps/include/unity/unity.c",
+                   nob_temp_sprintf("/Fe:%s", test_binary_path(options->target)),
+                   nob_temp_sprintf("/Fo:%s/", output_dir),
+                   "/link",
+                   nob_temp_sprintf("/LIBPATH:%s", lib_dir),
+                   "SDL3.lib",
+                   "shell32.lib",
+                   "ws2_32.lib");
+
+    if (!nob_cmd_run(&cmd)) {
+        return false;
+    }
+
+    // Copy SDL3.dll next to the test binary
+    const char *dll_path = nob_temp_sprintf("%s/SDL3.dll", lib_dir);
+    const char *dll_copy_path = nob_temp_sprintf("%s/SDL3.dll", output_dir);
+    if (!nob_copy_file(dll_path, dll_copy_path)) {
+        return false;
+    }
+
+    return nob_copy_directory_recursively("tests/maps", output_dir);
+}
+
+static bool build_test(const Build_Options *options)
+{
+    nob_log(NOB_INFO,
+            "Building test target=%s toolchain=%s mode=%s%s%s",
+            target_name(options->target),
+            toolchain_name(options->toolchain),
+            options->debug ? "debug" : "release",
+            options->sanitize ? " +sanitize" : "",
+            options->test_filter ? " +filter" : "");
+
+    switch (options->toolchain) {
+        case TOOLCHAIN_GCC:
+        case TOOLCHAIN_CLANG:
+            return build_test_with_gnu_like(options);
+
+        case TOOLCHAIN_MSVC:
+            return build_test_with_msvc(options);
+
+        default:
+            nob_log(NOB_ERROR, "unsupported toolchain");
+            return false;
+    }
+}
+
+static bool run_test(const Build_Options *options)
+{
+    if (target_is_windows(options->target) && !host_is_windows()) {
+        nob_log(NOB_ERROR, "Cannot run a Windows binary on a non-Windows host");
+        return false;
+    }
+
+    const char *output_dir = target_output_dir(options->target);
+    const char *binary = target_is_windows(options->target) ? "war1_test.exe" : "./war1_test";
+
+    nob_log(NOB_INFO, "Changing directory to: %s", output_dir);
+
+    if (!nob_set_current_dir(output_dir)) {
+        nob_log(NOB_ERROR, "Could not change to directory: %s", output_dir);
+        return false;
+    }
+
+    nob_log(NOB_INFO, "Running: %s", binary);
+
+    Nob_Cmd cmd = {0};
+    nob_cmd_append(&cmd, binary);
+    if (options->test_filter) {
+        nob_cmd_append(&cmd, "--filter", options->test_filter);
+    }
+    return nob_cmd_run(&cmd);
+}
+
 int main(int argc, char **argv)
 {
     NOB_GO_REBUILD_URSELF(argc, argv);
@@ -938,6 +1189,8 @@ int main(int argc, char **argv)
         .check_only     = false,
         .profile        = false,
         .build_before_run = false,
+        .sanitize       = false,
+        .test_filter    = NULL,
     };
 
     if (!parse_args(argc, argv, &options)) {
@@ -962,6 +1215,10 @@ int main(int argc, char **argv)
                 if (!build_editor(&options)) return 1;
             }
             if (!run_editor_project(&options)) return 1;
+            break;
+        case COMMAND_TEST:
+            if (!build_test(&options)) return 1;
+            if (!run_test(&options)) return 1;
             break;
         default:
             nob_log(NOB_ERROR, "unknown command");

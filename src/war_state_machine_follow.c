@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 #include "war_units.h"
 
@@ -9,24 +9,25 @@ WarStateFollow* wst_createFollowState(WarContext* context, WarEntity* entity, Wa
     TracyCZoneN(ctx, "wst_createFollowState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_FOLLOW, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateFollow* state = (WarStateFollow*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->targetEntityId = targetEntityId;
     state->targetPosition = targetPosition;
     state->targetDistance = targetDistance;
 
     TracyCZoneEnd(ctx);
     return state;
-}
-
-void wst_leaveFollowState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveFollowState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
 }
 
 void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* state)
@@ -45,7 +46,7 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
         {
             // if the target entity doesn't exist anymore, pop to resume any
             // previous behavior, or fall back to idle if the stack empties.
-            wst_popState(context, entity);
+            wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_TARGET_INVALID);
 
             TracyCZoneEnd(ctx);
             return;
@@ -70,14 +71,14 @@ void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* sta
     // or wait briefly and resume following if this is the bottom state.
     if (distanceSq <= s->targetDistance * s->targetDistance)
     {
-        wst_popState(context, entity);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
 
         TracyCZoneEnd(ctx);
         return;
     }
 
-    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, start, end));
-    wst_pushState(context, entity, (WarStateBase*)moveState);
+    WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, start, end), false);
+    wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
 
     TracyCZoneEnd(ctx);
 }
@@ -100,18 +101,8 @@ void wst_updateFollowStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_FOLLOW || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateFollowState(context, entity, (WarStateBase*)state);
     }

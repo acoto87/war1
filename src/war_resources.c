@@ -1112,7 +1112,7 @@ void wres_loadResource(WarContext *context, DatabaseEntry *entry)
 
         default:
         {
-            logInfo("DB entries of type %d aren't handled yet.", entry->type);
+            logDebug("DB entries of type %d aren't handled yet.", entry->type);
             break;
         }
     }

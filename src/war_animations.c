@@ -112,7 +112,7 @@ s32 wanim_findAnimationIndex(WarContext* context, WarEntity* entity, StringView 
 
 void wanim_removeAnimation(WarContext* context, WarEntity* entity, StringView name)
 {
-    logInfo("Trying to remove animation: %s", name);
+    logDebug("Trying to remove animation: %.*s", (s32)name.length, name.data);
 
     s32 index = wanim_findAnimationIndex(context, entity, name);
     if (index >= 0)

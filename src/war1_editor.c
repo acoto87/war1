@@ -229,6 +229,8 @@ int main(int argc, char **argv)
 #include "war_state_machine_repairing.c"
 #include "war_state_machine_cast.c"
 #include "war_state_machine.c"
+#include "war_ai.c"
+#include "war_rvo.c"
 
 // -------------------------------------------------------------------------
 // Editor-only source files

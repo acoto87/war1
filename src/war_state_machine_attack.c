@@ -13,23 +13,24 @@ WarStateAttack* wst_createAttackState(WarContext* context, WarEntity* entity, Wa
     TracyCZoneN(ctx, "wst_createAttackState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_ATTACK, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateAttack* state = (WarStateAttack*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->targetEntityId = targetEntityId;
     state->targetPosition = targetPosition;
 
     TracyCZoneEnd(ctx);
     return state;
-}
-
-void wst_leaveAttackState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZoneN(ctx, "wst_leaveAttackState", true);
-
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
-
-    TracyCZoneEnd(ctx);
 }
 
 void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* state)
@@ -64,14 +65,13 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         // of the attacking unit is greater
         if(!wu_tileInRange(context, entity, targetTile, 1))
         {
-            WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition));
-            moveState->checkForAttacks = true;
-            wst_pushState(context, entity, (WarStateBase*)moveState);
+            WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition), true);
+            wst_pushState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_COMPLETION);
             TracyCZoneEnd(ctx);
             return;
         }
 
-        wst_popState(context, entity);
+        wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -85,11 +85,10 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
         targetTile = wmap_mapToTileCoordinatesV(targetPosition);
     }
 
-    // if the unit is not in range to attack, chase it
     if (wu_isUnit(targetEntity) && !wu_unitInRange(context, entity, targetEntity, stats->range))
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, targetEntityId, targetPosition, stats->range * MEGA_TILE_WIDTH);
-        wst_pushState(context, entity, (WarStateBase*)followState);
+        wst_pushState(context, entity, (WarStateBase*)followState, WAR_TRANSITION_CAUSE_COMPLETION);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -97,7 +96,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     if(wu_isWall(targetEntity) && !wu_tileInRange(context, entity, targetTile, stats->range))
     {
         WarStateFollow* followState = wst_createFollowState(context, entity, 0, targetPosition, stats->range * MEGA_TILE_WIDTH);
-        wst_pushState(context, entity, (WarStateBase*)followState);
+        wst_pushState(context, entity, (WarStateBase*)followState, WAR_TRANSITION_CAUSE_COMPLETION);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -107,7 +106,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
     if (wst_isInsideBuilding(context, targetEntity))
     {
         WarStateWait* waitState = wst_createWaitState(context, entity, 1.0f);
-        wst_pushState(context, entity, (WarStateBase*)waitState);
+        wst_pushState(context, entity, (WarStateBase*)waitState, WAR_TRANSITION_CAUSE_COMPLETION);
         TracyCZoneEnd(ctx);
         return;
     }
@@ -132,7 +131,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
             if (wst_isDead(context, targetEntity) || wst_isGoingToDie(context, targetEntity) ||
                 wst_isCollapsing(context, targetEntity) || wst_isGoingToCollapse(context, targetEntity))
             {
-                wst_popState(context, entity);
+                wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
             }
             else
             {
@@ -163,7 +162,7 @@ void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* sta
                 // one of them could destroy the piece, so the other should wcmd_stop doing further damage.
                 if (piece->hp == 0)
                 {
-                    wst_popState(context, entity);
+                    wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_SUCCESS);
                 }
                 else
                 {
@@ -212,18 +211,8 @@ void wst_updateAttackStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_ATTACK || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateAttackState(context, entity, (WarStateBase*)state);
     }

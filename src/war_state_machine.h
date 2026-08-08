@@ -15,24 +15,45 @@
 struct _WarStateRef
 {
     WarStateType type;
-    s32          idx;
+    s32 idx;
+    u32 generation;
 };
 
-#define WAR_STATE_REF_INVALID  ((WarStateRef){ INVALID_STATE_TYPE, INVALID_STATE_IDX })
-#define WAR_STATE_REF_IS_VALID(r) ((r).type != INVALID_STATE_TYPE)
+struct _WarTransitionRequest
+{
+    WarStateRef stateRef;
+    WarStateRef cancellationTargetRef;
+    WarStateOp  operation;
+    WarStateResult result;
+    WarTransitionCause cause;
+    u64  sequence;
+    bool cancellation;
+};
+
+#define WAR_STATE_REF_INVALID  ((WarStateRef){ INVALID_STATE_TYPE, INVALID_STATE_IDX, 0 })
+#define WAR_STATE_REF_IS_VALID(r) \
+    ((r).type >= WAR_STATE_IDLE && (r).type < WAR_STATE_COUNT && (r).idx >= 0 && (r).generation != 0)
 
 struct _WarStateBase
 {
     WarStateType type;
     WarEntityId  entityId;
-    f64          nextUpdateGameTime;
-    f32          delay;
-    bool         initialized;     // false until first update call
+    f64  nextUpdateGameTime;
+    f32  delay;
 };
 
 struct _WarStateIdle
 {
-    WarStateBase base; bool lookAround;
+    WarStateBase base;
+    bool lookAround;
+};
+
+struct _WarMoveProgress
+{
+    f32 bestDistanceSq;
+    f32 noProgressTime;
+    f32 lowVelocityTime;
+    u8 recoveryAttempt;
 };
 
 struct _WarStateMove
@@ -44,9 +65,11 @@ struct _WarStateMove
 
     bool checkForAttacks;
 
-    vec2 rvoVelocity;       // last frame's RVO output, pixels/sec
-    f32  settleTimer;        // seconds without progress toward final goal
-    f32  closestGoalDistSq;  // best squared distance to final goal achieved
+    vec2 rvoVelocity; // last frame's RVO output, pixels/sec
+
+    WarMoveProgress progress;
+    vec2 progressGoalPosition;
+    s32  progressWaypointIndex;
 
     vec2 rvoPreferredVelocity;
     vec2 rvoAdjustedVelocity;
@@ -136,7 +159,13 @@ struct _WarStateTrain
     WarUnitType unitToBuild;
     f32 buildTime;
     f32 totalBuildTime;
+    s32 goldCost;
+    s32 woodCost;
+    WarAICommand* aiCommand;
+    bool transactionApplied;
+    bool outputCommitted;
     bool cancelled;
+    bool alreadyRefunded;
 };
 
 struct _WarStateUpgrade
@@ -145,7 +174,12 @@ struct _WarStateUpgrade
     WarUpgradeType upgradeToBuild;
     f32 buildTime;
     f32 totalBuildTime;
+    s32 goldCost;
+    s32 woodCost;
+    bool transactionApplied;
+    bool outputCommitted;
     bool cancelled;
+    bool alreadyRefunded;
 };
 
 struct _WarStateBuild
@@ -154,7 +188,12 @@ struct _WarStateBuild
     WarEntityId workerId;
     f32 buildTime;
     f32 totalBuildTime;
+    s32 goldCost;
+    s32 woodCost;
+    bool transactionApplied;
+    bool outputCommitted;
     bool cancelled;
+    bool alreadyRefunded;
 };
 
 struct _WarStateRepair
@@ -207,7 +246,13 @@ static_assert(offsetof(WarStateWait,      base) == 0, "WarStateBase must be the 
 typedef struct
 {
     WarStateType type;
-    void (*leaveFunc)(WarContext* context, WarEntity* entity, WarStateBase* state);
+    void (*onEnter)(WarContext* context, WarEntity* entity, WarStateBase* state);
+    void (*onPause)(WarContext* context, WarEntity* entity, WarStateBase* state, WarStatePauseReason reason);
+    bool (*validate)(WarContext* context, WarEntity* entity, WarStateBase* state);
+    void (*onResume)(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateResumeReason reason);
+    void (*onExit)(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateExitReason reason);
+    bool (*canInterrupt)(WarContext* context, WarEntity* entity, WarStateBase* state, WarInterruptKind interrupt);
+    u32 defaultInterruptMask;
 } WarStateDescriptor;
 
 WarStateRef    wst_allocState(WarContext* context, WarStateType type, WarEntityId entityId);
@@ -216,7 +261,7 @@ WarStateBase*  wst_deref(WarContext* context, WarStateRef ref);
 WarStateRef    wst_refOf(WarContext* context, const WarStateBase* state);
 
 WarStateIdle*      wst_createIdleState(WarContext* context, WarEntity* entity, bool lookAround);
-WarStateMove*      wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
+WarStateMove*      wst_createMoveState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[], bool checkForAttacks);
 WarStatePatrol*    wst_createPatrolState(WarContext* context, WarEntity* entity, s32 positionCount, vec2 positions[]);
 WarStateFollow*    wst_createFollowState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition, s32 targetDistance);
 WarStateAttack*    wst_createAttackState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 targetPosition);
@@ -228,25 +273,58 @@ WarStateMining*    wst_createMiningState(WarContext* context, WarEntity* entity,
 WarStateWood*      wst_createGatherWoodState(WarContext* context, WarEntity* entity, WarEntityId targetEntityId, vec2 position);
 WarStateChopping*  wst_createChoppingState(WarContext* context, WarEntity* entity, WarEntityId forestId, vec2 position);
 WarStateDeliver*   wst_createDeliverState(WarContext* context, WarEntity* entity, WarEntityId townHallId);
-WarStateTrain*     wst_createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime);
-WarStateUpgrade*   wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime);
-WarStateBuild*     wst_createBuildState(WarContext* context, WarEntity* entity, f32 buildTime);
+WarStateTrain*     wst_createTrainState(WarContext* context, WarEntity* entity, WarUnitType unitToBuild, f32 buildTime, s32 goldCost, s32 woodCost, WarAICommand* aiCommand);
+WarStateUpgrade*   wst_createUpgradeState(WarContext* context, WarEntity* entity, WarUpgradeType upgradeToBuild, f32 buildTime, s32 goldCost, s32 woodCost);
+WarStateBuild*     wst_createBuildState(WarContext* context, WarEntity* entity, f32 buildTime, s32 goldCost, s32 woodCost);
 WarStateRepair*    wst_createRepairState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
 WarStateRepairing* wst_createRepairingState(WarContext* context, WarEntity* entity, WarEntityId buildingId);
 WarStateCast*      wst_createCastState(WarContext* context, WarEntity* entity, WarSpellType spellType, WarEntityId targetEntityId, vec2 targetPosition);
 
-void wst_pushState(WarContext* context, WarEntity* entity, WarStateBase* state);
-void wst_popState(WarContext* context, WarEntity* entity);
-void wst_replaceState(WarContext* context, WarEntity* entity, WarStateBase* state);
-void wst_resetState(WarContext* context, WarEntity* entity, WarStateBase* state);
+bool wst_canSubmitTransition(WarContext* context, WarEntity* entity, WarInterruptKind interrupt);
+bool wst_submitTransition(WarContext* context, WarEntity* entity, WarTransitionRequest request);
+bool wst_pushState(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause);
+bool wst_popState(WarContext* context, WarEntity* entity, WarTransitionCause cause, WarStateResult result);
+bool wst_replaceState(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause);
+bool wst_resetState(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause);
+bool wst_resetStateForCancellation(WarContext* context, WarEntity* entity, WarStateBase* state, WarTransitionCause cause);
 
-WarStateBase* wst_currentState(WarContext* context, WarEntity* entity);
-bool          wst_hasStateInStack(WarContext* context, WarEntity* entity, WarStateType type);
+// --- Active-state queries ---
+// Active-state = what the entity is executing right now (top of stack).
+// Use these for rendering, collision, command gating, and AI decisions.
+WarStateBase* wst_getActiveState(WarContext* context, WarEntity* entity);
+WarStateBase* wst_getActiveStateOfType(WarContext* context, WarEntity* entity, WarStateType type);
+bool          wst_isActiveState(WarContext* context, WarEntity* entity, WarStateType type);
 WarStateBase* wst_peekAt(WarContext* context, WarEntity* entity, u8 index);
 
-WarStateBase* wst_getState(WarContext* context, WarEntity* entity, WarStateType type);
-WarStateBase* wst_getDirectState(WarContext* context, WarEntity* entity, WarStateType type);
+// --- Stack-membership queries ---
+// Stack membership = the state exists anywhere in the stack, active or paused.
+// Use these when you need retained context below a child state.
+WarStateBase* wst_findStateInStack(WarContext* context, WarEntity* entity, WarStateType type);
+bool          wst_containsState(WarContext* context, WarEntity* entity, WarStateType type);
 
+bool wst_isNextUpdateTime(WarContext* context, WarState* state);
+
+// --- Typed active-state accessors ---
+WarStateIdle*      wst_getActiveIdleState(WarContext* context, WarEntity* entity);
+WarStateMove*      wst_getActiveMoveState(WarContext* context, WarEntity* entity);
+WarStatePatrol*    wst_getActivePatrolState(WarContext* context, WarEntity* entity);
+WarStateFollow*    wst_getActiveFollowState(WarContext* context, WarEntity* entity);
+WarStateAttack*    wst_getActiveAttackState(WarContext* context, WarEntity* entity);
+WarStateDeath*     wst_getActiveDeathState(WarContext* context, WarEntity* entity);
+WarStateCollapse*  wst_getActiveCollapseState(WarContext* context, WarEntity* entity);
+WarStateGold*      wst_getActiveGatherGoldState(WarContext* context, WarEntity* entity);
+WarStateMining*    wst_getActiveMiningState(WarContext* context, WarEntity* entity);
+WarStateWood*      wst_getActiveGatherWoodState(WarContext* context, WarEntity* entity);
+WarStateChopping*  wst_getActiveChoppingState(WarContext* context, WarEntity* entity);
+WarStateDeliver*   wst_getActiveDeliverState(WarContext* context, WarEntity* entity);
+WarStateTrain*     wst_getActiveTrainState(WarContext* context, WarEntity* entity);
+WarStateUpgrade*   wst_getActiveUpgradeState(WarContext* context, WarEntity* entity);
+WarStateBuild*     wst_getActiveBuildState(WarContext* context, WarEntity* entity);
+WarStateRepair*    wst_getActiveRepairState(WarContext* context, WarEntity* entity);
+WarStateRepairing* wst_getActiveRepairingState(WarContext* context, WarEntity* entity);
+WarStateCast*      wst_getActiveCastState(WarContext* context, WarEntity* entity);
+
+// --- Typed stack-membership accessors ---
 WarStateIdle*      wst_getIdleState(WarContext* context, WarEntity* entity);
 WarStateMove*      wst_getMoveState(WarContext* context, WarEntity* entity);
 WarStatePatrol*    wst_getPatrolState(WarContext* context, WarEntity* entity);
@@ -266,10 +344,20 @@ WarStateRepair*    wst_getRepairState(WarContext* context, WarEntity* entity);
 WarStateRepairing* wst_getRepairingState(WarContext* context, WarEntity* entity);
 WarStateCast*      wst_getCastState(WarContext* context, WarEntity* entity);
 
-bool wst_hasState(WarContext* context, WarEntity* entity, WarStateType type);
-bool wst_hasDirectState(WarContext* context, WarEntity* entity, WarStateType type);
-
+// --- Active-state boolean predicates ---
 bool wst_isIdle(WarContext* context, WarEntity* entity);
+bool wst_isActivelyMoving(WarContext* context, WarEntity* entity);
+bool wst_isActivelyPatrolling(WarContext* context, WarEntity* entity);
+bool wst_isActivelyFollowing(WarContext* context, WarEntity* entity);
+bool wst_isActivelyAttacking(WarContext* context, WarEntity* entity);
+bool wst_isActivelyMining(WarContext* context, WarEntity* entity);
+bool wst_isActivelyChopping(WarContext* context, WarEntity* entity);
+bool wst_isActivelyDelivering(WarContext* context, WarEntity* entity);
+bool wst_isActivelyCasting(WarContext* context, WarEntity* entity);
+bool wst_isActivelyRepairing(WarContext* context, WarEntity* entity);
+bool wst_isActivelyRepairing2(WarContext* context, WarEntity* entity);
+
+// --- Stack-membership boolean predicates ---
 bool wst_isMoving(WarContext* context, WarEntity* entity);
 bool wst_isPatrolling(WarContext* context, WarEntity* entity);
 bool wst_isFollowing(WarContext* context, WarEntity* entity);
@@ -288,7 +376,7 @@ bool wst_isRepairing(WarContext* context, WarEntity* entity);
 bool wst_isRepairing2(WarContext* context, WarEntity* entity);
 bool wst_isCasting(WarContext* context, WarEntity* entity);
 
-bool wst_hasNextState(WarContext* context, WarEntity* entity, WarStateType type);
+bool wst_hasPendingState(WarContext* context, WarEntity* entity, WarStateType type);
 
 bool wst_isGoingToIdle(WarContext* context, WarEntity* entity);
 bool wst_isGoingToMove(WarContext* context, WarEntity* entity);
@@ -311,28 +399,30 @@ bool wst_isGoingToCast(WarContext* context, WarEntity* entity);
 
 bool wst_isInsideBuilding(WarContext* context, WarEntity* entity);
 
-void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveMoveState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leavePatrolState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveFollowState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveAttackState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveGatherGoldState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveMiningState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveGatherWoodState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveChoppingState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveDeliverState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveDeathState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveCollapseState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveTrainState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveUpgradeState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveBuildState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveRepairState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveCastState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_leaveWaitState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterIdleState(WarContext* context, WarEntity* entity, WarStateBase* state);
+void wst_enterPatrolState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterMiningState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterChoppingState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterDeathState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterCollapseState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterTrainState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterUpgradeState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterBuildState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* state);
+void wst_enterWaitState(WarContext* context, WarEntity* entity, WarState* state);
+
+void wst_exitIdleState(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateExitReason reason);
+void wst_exitMoveState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
+void wst_exitMiningState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
+void wst_exitTrainState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
+void wst_exitUpgradeState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
+void wst_exitBuildState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
+void wst_exitRepairingState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
+void wst_exitWaitState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason);
+
+bool wst_canInterruptCast(WarContext* context, WarEntity* entity, WarStateBase* state, WarInterruptKind interrupt);
 
 void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state);
-void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state);
 void wst_updatePatrolState(WarContext* context, WarEntity* entity, WarState* state);
 void wst_updateFollowState(WarContext* context, WarEntity* entity, WarState* state);
 void wst_updateAttackState(WarContext* context, WarEntity* entity, WarState* state);
@@ -371,8 +461,12 @@ void wst_updateRepairingStates(WarContext* context);
 void wst_updateCastStates    (WarContext* context);
 void wst_updateWaitStates    (WarContext* context);
 
-void wst_processStateMachinePendingOps(WarContext* context);
+void wst_processPendingTransitions(WarContext* context);
 
-void wst_leaveState(WarContext* context, WarEntity* entity, WarStateBase* state);
+void wst_enterState(WarContext* context, WarEntity* entity, WarStateBase* state);
+void wst_pauseState(WarContext* context, WarEntity* entity, WarStateBase* state, WarStatePauseReason reason);
+bool wst_validateState(WarContext* context, WarEntity* entity, WarStateBase* state);
+void wst_resumeState(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateResumeReason reason);
+void wst_exitState(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateExitReason reason);
 
 void wst_initStorage(WarStateStorage* s);

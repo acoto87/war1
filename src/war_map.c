@@ -383,7 +383,7 @@ static void createStartingWalls(WarContext* context, WarMap* map, WarResource* l
     we_addStateMachineComponent(context, wall);
 
     WarStateIdle* idleState = wst_createIdleState(context, wall, false);
-    wst_resetState(context, wall, (WarStateBase*)idleState);
+    wst_resetState(context, wall, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_INITIALIZATION);
 
     map->editing.wall = wall;
 }
@@ -395,15 +395,22 @@ static void createRuinEntity(WarContext* context, WarMap* map)
 
 static void initPlayersInfo(WarMap* map, WarResource* levelInfo)
 {
+    map->playersCount = 0;
+
     for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
     {
         WarPlayerInfo* player = &map->players[i];
 
         player->index = (u8)i;
         player->race = levelInfo->levelInfo.races[i];
-        player->gold = 4000; // levelInfo->levelInfo.gold[i];
-        player->wood = 4000; // levelInfo->levelInfo.lumber[i];
+        player->gold = levelInfo->levelInfo.gold[i];
+        player->wood = levelInfo->levelInfo.lumber[i];
         player->godMode = false;
+
+        if (player->race != WAR_RACE_NEUTRAL)
+        {
+            map->playersCount++;
+        }
 
         for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
         {
@@ -566,8 +573,8 @@ vec2 wmap_tileToMapCoordinatesV(vec2 v, bool centeredInTile)
 
     if (centeredInTile)
     {
-        v.x += MEGA_TILE_WIDTH/2;
-        v.y += MEGA_TILE_HEIGHT/2;
+        v.x += MINI_TILE_WIDTH;
+        v.y += MINI_TILE_HEIGHT;
     }
 
     return v;
@@ -1018,7 +1025,7 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
     return map;
 }
 
-bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
+WarMap* wmap_loadCustomMap(WarContext* context, StringView mapPath)
 {
     // Resource indices for the three tilesets (forest=0, swamp=1, dungeon=2).
     static const s32 tilesetResourceIndices[] = { 189, 192, 195 };
@@ -1035,7 +1042,7 @@ bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
     if (!wfile_loadWarMapFile(mapPath, levelInfoRes, visualInfoRes, passableInfoRes))
     {
         logError("wmap_loadCustomMap: wfile_loadWarMapFile failed for '%.*s'", (s32)mapPath.length, mapPath.data);
-        return false;
+        return NULL;
     }
 
     levelInfoRes->type = WAR_RESOURCE_TYPE_LEVEL_INFO;
@@ -1054,18 +1061,17 @@ bool wmap_loadCustomMap(WarContext* context, StringView mapPath)
     if (!map)
     {
         logError("wmap_loadCustomMap: wmap_createMap failed for '%.*s'", (s32)mapPath.length, mapPath.data);
-        return false;
+        return NULL;
     }
 
     map->custom = true;
-    wg_setNextMap(context, map, 0.0f);
 
-    logInfo("wmap_loadCustomMap: loaded '%.*s' (entities=%u, tilesetType=%d)",
+    logDebug("wmap_loadCustomMap: loaded '%.*s' (entities=%u, tilesetType=%d)",
             (s32)mapPath.length, mapPath.data,
             levelInfoRes->levelInfo.startEntitiesCount,
             (s32)levelInfoRes->levelInfo.tilesetType);
 
-    return true;
+    return map;
 }
 
 void wmap_freeMap(WarContext* context, WarMap* map)
@@ -1781,6 +1787,8 @@ static void updateRaiseDeadEdit(WarContext* context)
 static void updateAddUnit(WarContext* context)
 {
     WarMap* map = context->map;
+    assert(map);
+
     WarInput* input = &context->input;
 
     if (map->editing.mode != WAR_MAP_EDIT_MODE_ADD_UNIT)
@@ -1800,7 +1808,7 @@ static void updateAddUnit(WarContext* context)
             if (!entityId)
             {
                 WarRace addingUnitRace = wu_getUnitTypeRace(map->editing.pendingUnitType);
-                for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
+                for (s32 i = 0; i < map->playersCount; i++)
                 {
                     if (map->players[i].race == addingUnitRace)
                     {
@@ -2556,7 +2564,7 @@ static void updateMagic(WarContext* context)
                         vec2 position = wu_getUnitCenterPosition(context, entity);
 
                         WarStateDeath* deathState = wst_createDeathState(context, entity);
-                        wst_resetState(context, entity, (WarStateBase*)deathState);
+                        wst_resetState(context, entity, (WarStateBase*)deathState, WAR_TRANSITION_CAUSE_LIFECYCLE);
 
                         if (unit->type == WAR_UNIT_SCORPION || unit->type == WAR_UNIT_SPIDER)
                         {
@@ -3046,7 +3054,7 @@ void wmap_updateMap(WarContext* context)
 
     wai_updateAIPlayers(context);
 
-    wst_processStateMachinePendingOps(context);
+    wst_processPendingTransitions(context);
     wst_updateIdleStates(context);
     wst_updateMoveStates(context);
     wst_updatePatrolStates(context);
@@ -3489,10 +3497,9 @@ static void renderStateMachineDebugResourceFlow(WarContext* context, WarEntity* 
 
                 if (deliver->sourceKind != WAR_RESOURCE_NONE)
                 {
-                    vec2 sourceEnd = sourcePosition;
                     if (townHall)
                     {
-                        sourceEnd = wu_getUnitCenterPosition(context, townHall);
+                        sourcePosition = wu_getUnitCenterPosition(context, townHall);
                     }
                     renderStateMachineDebugLine(context, start, sourcePosition, WAR_COLOR_RGB(255, 255, 255));
                     renderStateMachineDebugMarker(context, sourcePosition, WAR_COLOR_RGB(255, 255, 255));
@@ -3522,7 +3529,7 @@ static void renderStateMachineDebug(WarContext* context)
     if (!sm || sm->depth <= 0)
         return;
 
-    WarStateBase* state = wst_currentState(context, entity);
+    WarStateBase* state = wst_getActiveState(context, entity);
     if (!state)
         return;
 
@@ -3686,12 +3693,12 @@ static void renderRvoDebug(WarContext* context)
 #define DOT_RADIUS_PX 1.5f
 #define BEST_DOT_RADIUS_PX 3.0f
 
-    WarColor radiusColor   = WAR_COLOR_RGBA(255, 255, 255, 64);
+    // WarColor radiusColor   = WAR_COLOR_RGBA(255, 255, 255, 64);
     WarColor rvoVelColor   = WAR_COLOR_RGB(0, 255, 0);
     WarColor prefVelColor  = WAR_COLOR_RGB(255, 255, 0);
-    WarColor cleanColor    = WAR_COLOR_RGB(255, 255, 255);
-    WarColor penaltyColor  = WAR_COLOR_RGB(255, 0, 0);
-    WarColor bestColor     = WAR_COLOR_RGB(0, 255, 0);
+    // WarColor cleanColor    = WAR_COLOR_RGB(255, 255, 255);
+    // WarColor penaltyColor  = WAR_COLOR_RGB(255, 0, 0);
+    // WarColor bestColor     = WAR_COLOR_RGB(0, 255, 0);
 
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)
@@ -3704,7 +3711,7 @@ static void renderRvoDebug(WarContext* context)
         if (moveState->rvoNumCandidates <= 0) continue;
 
         vec2 pos    = moveState->rvoPosition;
-        f32  radius = moveState->rvoRadius;
+        // f32  radius = moveState->rvoRadius;
 
         // rect radiusRect = rectf(
         //     pos.x - radius, pos.y - radius,

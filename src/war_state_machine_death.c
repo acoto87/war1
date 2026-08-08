@@ -1,4 +1,4 @@
-﻿#include "war_state_machine.h"
+#include "war_state_machine.h"
 
 #include "war_actions.h"
 
@@ -9,19 +9,41 @@ WarStateDeath* wst_createDeathState(WarContext* context, WarEntity* entity)
     TracyCZoneN(ctx, "wst_createDeathState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_DEATH, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateDeath* state = (WarStateDeath*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
 
     TracyCZoneEnd(ctx);
     return state;
 }
 
-void wst_leaveDeathState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterDeathState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    TracyCZoneN(ctx, "wst_leaveDeathState", true);
+    TracyCZoneN(ctx, "wst_enterDeathState", true);
 
-    NOT_USED(context);
-    NOT_USED(entity);
-    NOT_USED(state);
+    WarMap* map = context->map;
+    assert(map);
+
+    WarTransformComponent* transform = we_getTransformComponent(context, entity);
+    assert(transform);
+
+    vec2 unitSize = wu_getUnitSize(context, entity);
+    vec2 position = wmap_mapToTileCoordinatesV(transform->position);
+    wpath_setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
+    wact_setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
+    wmap_removeEntityFromSelection(context, entity->id);
+
+    s32 deathDuration = wact_getActionDuration(context, entity, WAR_ACTION_TYPE_DEATH);
+    state->nextUpdateGameTime = context->gameTime + wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration));
 
     TracyCZoneEnd(ctx);
 }
@@ -30,25 +52,7 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
 {
     TracyCZoneN(ctx, "wst_updateDeathState", true);
 
-    WarMap* map = context->map;
-
-    if (!state->initialized)
-    {
-        WarTransformComponent* transform = we_getTransformComponent(context, entity);
-        assert(transform);
-
-        vec2 unitSize = wu_getUnitSize(context, entity);
-        vec2 position = wmap_mapToTileCoordinatesV(transform->position);
-        wpath_setFreeTiles(&map->finder, (s32)position.x, (s32)position.y, (s32)unitSize.x, (s32)unitSize.y);
-        wact_setAction(context, entity, WAR_ACTION_TYPE_DEATH, true, 1.0f);
-        wmap_removeEntityFromSelection(context, entity->id);
-
-        s32 deathDuration = wact_getActionDuration(context, entity, WAR_ACTION_TYPE_DEATH);
-        state->nextUpdateGameTime = context->gameTime + wmap_getMapScaledTime(context, __frameCountToSeconds(deathDuration));
-        state->initialized = true;
-        TracyCZoneEnd(ctx);
-        return;
-    }
+    NOT_USED(state);
 
     // when this state updates there will have pass the time of the death animation,
     // using the delay field of the states
@@ -73,7 +77,7 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
         wu_setUnitDirection(context, corpse, wu_getUnitDirection(context, entity));
 
         WarStateDeath* deathState = wst_createDeathState(context, corpse);
-        wst_resetState(context, corpse, (WarStateBase*)deathState);
+        wst_resetState(context, corpse, (WarStateBase*)deathState, WAR_TRANSITION_CAUSE_LIFECYCLE);
     }
 
     we_removeEntityById(context, entity->id);
@@ -99,18 +103,8 @@ void wst_updateDeathStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_DEATH || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateDeathState(context, entity, (WarStateBase*)state);
     }

@@ -674,12 +674,94 @@ typedef enum _WarStateType
 
 typedef enum
 {
-    WAR_FSM_OP_NONE = 0,
-    WAR_FSM_OP_PUSH,
-    WAR_FSM_OP_POP,
-    WAR_FSM_OP_REPLACE,
-    WAR_FSM_OP_RESET,
-} WarFsmOp;
+    WAR_STATE_OP_NONE = 0,
+    WAR_STATE_OP_PUSH,
+    WAR_STATE_OP_POP,
+    WAR_STATE_OP_REPLACE,
+    WAR_STATE_OP_RESET,
+} WarStateOp;
+
+typedef enum WarTransitionCause
+{
+    WAR_TRANSITION_CAUSE_NONE           =  0, // No transition is requested.
+    WAR_TRANSITION_CAUSE_INITIALIZATION = 10, // A fresh entity installs its initial behavior before it has an active state (e.g., a newly spawned unit requests IDLE).
+    WAR_TRANSITION_CAUSE_COMPLETION     = 20, // The active state finished its normal task and requests the next transition (e.g., MOVE reaches its destination and pops).
+    WAR_TRANSITION_CAUSE_AUTONOMOUS     = 30, // The entity reacts automatically without a direct player or AI order (e.g., an idle warrior spots an enemy and pushes ATTACK).
+    WAR_TRANSITION_CAUSE_AI_ORDER       = 40, // An AI controller issues an explicit order to one of its entities (e.g., the AI commands a worker to gather wood).
+    WAR_TRANSITION_CAUSE_PLAYER_ORDER   = 50, // The player issues an explicit command that normally replaces existing behavior (e.g., right-clicking the ground resets the stack to MOVE).
+    WAR_TRANSITION_CAUSE_STATUS         = 60, // A temporary gameplay effect interrupts or restricts the entity’s current behavior (e.g., a stun cancels CAST or suspends movement).
+    WAR_TRANSITION_CAUSE_SCRIPT         = 70, // A scenario, cutscene, trigger, or mission script forces a behavior change (e.g., a campaign trigger orders units to retreat).
+    WAR_TRANSITION_CAUSE_LIFECYCLE      = 80, // The entity enters a fundamental lifecycle transition that outranks normal behavior (e.g., lethal damage resets the stack to DEATH).
+} WarTransitionCause;
+
+static_assert(WAR_TRANSITION_CAUSE_INITIALIZATION > WAR_TRANSITION_CAUSE_NONE, "Initialization must outrank no transition");
+static_assert(WAR_TRANSITION_CAUSE_COMPLETION > WAR_TRANSITION_CAUSE_INITIALIZATION, "State completion must outrank initialization");
+static_assert(WAR_TRANSITION_CAUSE_AUTONOMOUS > WAR_TRANSITION_CAUSE_COMPLETION, "Autonomous reactions must outrank state completion");
+static_assert(WAR_TRANSITION_CAUSE_AI_ORDER > WAR_TRANSITION_CAUSE_AUTONOMOUS, "AI orders must outrank autonomous reactions");
+static_assert(WAR_TRANSITION_CAUSE_PLAYER_ORDER > WAR_TRANSITION_CAUSE_AI_ORDER, "Player orders must outrank AI orders");
+static_assert(WAR_TRANSITION_CAUSE_STATUS > WAR_TRANSITION_CAUSE_PLAYER_ORDER, "Status effects must outrank player orders");
+static_assert(WAR_TRANSITION_CAUSE_SCRIPT > WAR_TRANSITION_CAUSE_STATUS, "Scripted events must outrank status effects");
+static_assert(WAR_TRANSITION_CAUSE_LIFECYCLE > WAR_TRANSITION_CAUSE_SCRIPT, "Lifecycle transitions must outrank scripted events");
+
+typedef enum WarInterruptKind
+{
+    WAR_INTERRUPT_PLAYER_ORDER = 1 << 0,
+    WAR_INTERRUPT_AI_ORDER     = 1 << 1,
+    WAR_INTERRUPT_AUTONOMOUS   = 1 << 2,
+    WAR_INTERRUPT_STATUS       = 1 << 3,
+    WAR_INTERRUPT_SCRIPT       = 1 << 4,
+    WAR_INTERRUPT_LIFECYCLE    = 1 << 5,
+    WAR_INTERRUPT_ALL          =
+        WAR_INTERRUPT_PLAYER_ORDER |
+        WAR_INTERRUPT_AI_ORDER |
+        WAR_INTERRUPT_AUTONOMOUS |
+        WAR_INTERRUPT_STATUS |
+        WAR_INTERRUPT_SCRIPT |
+        WAR_INTERRUPT_LIFECYCLE
+} WarInterruptKind;
+
+typedef enum WarStatePauseReason
+{
+    WAR_STATE_PAUSE_CHILD_PUSHED,
+    WAR_STATE_PAUSE_STATUS,
+    WAR_STATE_PAUSE_SCRIPT
+} WarStatePauseReason;
+
+typedef enum WarStateResumeReason
+{
+    WAR_STATE_RESUME_CHILD_SUCCESS,
+    WAR_STATE_RESUME_CHILD_FAILURE,
+    WAR_STATE_RESUME_STATUS_ENDED,
+    WAR_STATE_RESUME_SCRIPT_ENDED
+} WarStateResumeReason;
+
+typedef enum WarStateExitReason
+{
+    WAR_STATE_EXIT_COMPLETED,
+    WAR_STATE_EXIT_CANCELLED,
+    WAR_STATE_EXIT_REPLACED,
+    WAR_STATE_EXIT_RESET_BY_COMMAND,
+    WAR_STATE_EXIT_TARGET_INVALID,
+    WAR_STATE_EXIT_ENTITY_DIED,
+    WAR_STATE_EXIT_CONTAINER_DESTROYED,
+    WAR_STATE_EXIT_REMOVED,
+    WAR_STATE_EXIT_FAILED
+} WarStateExitReason;
+
+typedef enum WarStateResult
+{
+    WAR_STATE_RESULT_NONE,
+    WAR_STATE_RESULT_SUCCESS,
+    WAR_STATE_RESULT_CANCELLED,
+    WAR_STATE_RESULT_TARGET_INVALID,
+    WAR_STATE_RESULT_TARGET_HIDDEN,
+    WAR_STATE_RESULT_BLOCKED,
+    WAR_STATE_RESULT_NO_PATH,
+    WAR_STATE_RESULT_NO_RESOURCE,
+    WAR_STATE_RESULT_NO_DESTINATION,
+    WAR_STATE_RESULT_INTERRUPTED,
+    WAR_STATE_RESULT_CONTAINER_DESTROYED
+} WarStateResult;
 
 typedef enum _WarTextAlignment
 {

@@ -181,6 +181,7 @@ struct _WarMap
     WarMapCommandPanel commandPanel;
     WarMapDebug debug;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
+    s32 playersCount;
     WarMapStatus status;
 
     bool hurryUp;
@@ -188,9 +189,8 @@ struct _WarMap
 };
 
 WarMap* wmap_createMap(WarContext *context, s32 levelInfoIndex);
+WarMap* wmap_loadCustomMap(WarContext* context, StringView mapPath);
 void wmap_freeMap(WarContext* context, WarMap* map);
-
-bool wmap_loadCustomMap(WarContext* context, StringView mapPath);
 
 void wmap_enterMap(WarContext *context);
 void wmap_updateMap(WarContext* context);

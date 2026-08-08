@@ -149,6 +149,9 @@ typedef struct _WarPathFinder WarPathFinder;
 struct _WarStateRef;
 typedef struct _WarStateRef WarStateRef;
 
+struct _WarTransitionRequest;
+typedef struct _WarTransitionRequest WarTransitionRequest;
+
 struct _WarStateBase;
 typedef struct _WarStateBase WarStateBase;
 typedef WarStateBase WarState;
@@ -158,6 +161,9 @@ typedef struct _WarStateIdle WarStateIdle;
 
 struct _WarStateMove;
 typedef struct _WarStateMove WarStateMove;
+
+struct _WarMoveProgress;
+typedef struct _WarMoveProgress WarMoveProgress;
 
 struct _WarStatePatrol;
 typedef struct _WarStatePatrol WarStatePatrol;

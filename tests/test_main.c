@@ -1,4 +1,4 @@
-#ifdef _MSC_VER
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
@@ -9,7 +9,6 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <math.h>
-#include <string.h>
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <io.h>
 #ifndef F_OK
@@ -28,7 +27,6 @@
 #define strncasecmp _strnicmp
 #endif
 
-// #define NDEBUG // define this to deactivate assertions
 #include <assert.h>
 
 #include "SDL3/SDL.h"
@@ -44,7 +42,6 @@
 
 #include "war_alloc.h"
 
-// https://github.com/schellingb/TinySoundFont
 #define TSF_MALLOC(sz) wm_allocAudio(sz)
 #define TSF_REALLOC(p,sz) wm_reallocAudio((p),(sz))
 #define TSF_FREE(p) wm_free(p)
@@ -116,104 +113,7 @@
 #include "war.h"
 #include "war_game.h"
 
-#define PERM_SIZE (536870912ULL) // 512 MB
-#define FRAME_SIZE (4194304ULL)  // 4 MB
-#define AUDIO_SIZE (33554432ULL)  // 32 MB
-
-int main(int argc, char** argv)
-{
-    if (!wm_allocInit(PERM_SIZE, FRAME_SIZE, AUDIO_SIZE))
-    {
-        logError("Failed to initialize memory allocators!");
-        return -1;
-    }
-
-    wlog_init(SDL_LOG_PRIORITY_DEBUG);
-
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
-    {
-        logError("Error initializing SDL: %s", SDL_GetError());
-        wm_allocFree();
-        return -1;
-    }
-
-    WarContext* context = (WarContext*)wm_alloc(sizeof(WarContext));
-    if (!context)
-    {
-        logError("Failed to allocate WarContext!");
-        wm_allocFree();
-        SDL_Quit();
-        return -1;
-    }
-
-    // Parse command-line arguments.
-    for (int i = 1; i < argc; i++)
-    {
-        StringView arg = wsv_fromCString(argv[i]);
-        if (wsv_equals(arg, WSV_LITERAL("--skip-intro")))
-        {
-            context->skipIntro = true;
-        }
-        else if ((wsv_equals(arg, WSV_LITERAL("--map")) ||
-                  wsv_equals(arg, WSV_LITERAL("-m"))) && i + 1 < argc)
-        {
-            SDL_strlcpy(context->customMapPath, argv[i + 1], sizeof(context->customMapPath));
-            logInfo("Custom map path: %s", context->customMapPath);
-            i++; // consume value
-        }
-    }
-
-    if (!wg_initGame(context))
-    {
-        logError("Can't initialize the game!");
-        wm_allocFree();
-        SDL_Quit();
-        return -1;
-    }
-
-    bool running = true;
-
-    while (running)
-    {
-        wg_beginFrame(context);
-        wg_beginInputFrame(context);
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            wg_processGameEvent(context, &event);
-
-            if (event.type == SDL_EVENT_QUIT)
-            {
-                running = false;
-            }
-        }
-
-        wstr_setFormat(
-            &context->windowTitle,
-            "War 1: %.2fs at %d avg fps (%.4fs) - Wait time: %.4fs - Frames: %d - Transition Delay: %.4fs",
-            context->realTime,
-            context->fpsMetric.avg,
-            ns2s(context->frameTimeMetric.avg),
-            ns2s(context->waitTimeMetric.avg),
-            context->frameCount,
-            MAX(context->transitionEndRealTime - context->realTime, 0.0)
-        );
-        SDL_SetWindowTitle(context->window, wstr_cstr(&context->windowTitle));
-
-        wg_updateGame(context);
-        wg_renderGame(context);
-        wg_presentGame(context);
-        TracyCFrameMark
-
-        context->frameCount++;
-    }
-
-    wg_quitGame(context);
-    wm_allocFree();
-	return 0;
-}
-
+// --- Unity build: all game source files (same set as war1.c) ---
 #include "war_log.c"
 #include "war_alloc.c"
 #include "war_math.c"
@@ -274,3 +174,51 @@ int main(int argc, char** argv)
 #include "war_imui.c"
 #include "war_ai.c"
 #include "war_game.c"
+
+// Globals shared with the included test files.
+// Defined before the include block so WAR_TEST_FILTER sees it.
+const char* g_test_filter = NULL;
+
+// --- Test files ---
+#include "war_test_context.c"
+#include "war_state_machine_test.c"
+
+static int parse_test_args(int argc, char** argv)
+{
+    for (int i = 1; i < argc; i++)
+    {
+        if (wsv_equals(wsv_fromCString(argv[i]), WSV_LITERAL("--filter")))
+        {
+            if (i + 1 >= argc)
+            {
+                fprintf(stderr, "missing value after --filter\n");
+                return 1;
+            }
+            g_test_filter = argv[++i];
+        }
+        else
+        {
+            fprintf(stderr, "unknown argument: %s\n", argv[i]);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int main(int argc, char** argv)
+{
+    if (parse_test_args(argc, argv) != 0)
+    {
+        return 1;
+    }
+
+    printf("=== War1-C FSM Test Harness ===\n");
+
+    if (g_test_filter)
+    {
+        printf("Filter: %s\n", g_test_filter);
+    }
+
+    const int failures = run_state_machine_tests();
+    return failures > 0 ? 1 : 0;
+}

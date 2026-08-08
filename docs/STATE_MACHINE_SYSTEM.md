@@ -1,711 +1,693 @@
 # State Machine Subsystem
 
-**Module Prefix:** `wst_`  
-**Primary Files:** `war_state_machine.h`, `war_state_machine.c`, `war_state_machine_*.c`  
-**Language:** C99/C11  
+**Module prefix:** `wst_`
 
----
+**Primary files:** `src/war_state_machine.h`, `src/war_state_machine.c`, `src/war_state_machine_*.c`
+
+**Storage:** `WarStateMachineComponent` and `WarStateStorage` in `src/war_entities.h`
+
+**Tests:** `tests/war_state_machine_test.c`, `tests/war_test_context.c`
 
 ## Overview
 
-The State Machine subsystem is the behavioral backbone of the War1-C game engine. It manages the lifecycle of every entity in the game—units (peons, footmen), buildings (townhalls, barracks, goldmines), walls, and towers—by orchestrating their behavior through a hierarchical, composable state system.
+The War1-C finite state machine is a fixed-capacity pushdown behavior system. Units and buildings retain behavior as a stack of typed state references:
 
-Each entity maintains a **state stack**: a linear chain of states that can be queued and transitioned smoothly. The engine supports 19 distinct state types (Idle, Move, Attack, Mining, Building, etc.), each with pluggable enter/update/leave/free callbacks. The subsystem is built on **Data-Oriented Design (DOD)** principles with **minimal dynamic allocation at runtime**—all state objects are allocated once at state creation and freed at state exit.
-
-### Pipeline Position
-
-```
-Game Loop (main update)
-    └─> Entity Update
-            └─> State Machine Update (per entity)
-                    └─> State Callbacks (enter, update, leave)
-                            └─> Sub-systems (pathfinding, animations, audio, etc.)
+```text
+stack[0]  root order or persistent behavior
+stack[1]  temporary child task
+stack[2]  nested child task
+stack[3]  active top state
 ```
 
-The state machine is called once per frame for each enabled entity. It coordinates state transitions, time-based updates, and resource cleanup.
+Only the top state is active. Lower states remain allocated but paused until their child pops. This supports behavior such as:
 
----
+```text
+PATROL
+  MOVE
 
-## Memory & State Management
+ATTACK
+  FOLLOW
+    MOVE
 
-### Fixed-Size State Objects
+GOLD
+  FOLLOW
+    MOVE
+```
 
-All states inherit from a base `WarState` structure that holds:
-- **Type** (`WarStateType`): Identifies which state handlers to invoke.
-- **Entity ID** (`s32 entityId`): Backlink to the owning entity.
-- **Timing** (`nextUpdateTime`, `delay`): For throttled state updates.
-- **State Chain** (`nextState*`): Single-level pointer for queuing the next state.
-- **State Data** (anonymous union): Type-specific fields (max 248 bytes for 256-byte total struct).
+The subsystem is data-oriented:
 
-### Memory Layout & Alignment
+- Each state type has its own fixed pool of 512 typed objects.
+- Entities store `WarStateRef` values rather than persistent raw state pointers.
+- References include a generation to reject stale slots after reuse.
+- Each entity has a fixed stack depth of four.
+- Each entity retains one deferred transition request, not a transition queue.
+- State updates run in global type-oriented batches rather than through one per-entity dispatcher.
+
+Direct player and AI orders usually `RESET` the stack. Temporary tasks usually `PUSH` and later `POP`. `REPLACE` changes only the active top while preserving lower context.
+
+## Core Data Model
+
+### State Base and Typed States
+
+Every concrete state starts with `WarStateBase`:
 
 ```c
-struct _WarState
+struct _WarStateBase
 {
-    WarStateType type;           // 4 bytes
-    s32 entityId;                // 4 bytes
-    f32 nextUpdateTime;          // 4 bytes
-    f32 delay;                   // 4 bytes
-    struct _WarState* nextState; // 8 bytes
-    union { ... } [state data];  // up to 248 bytes
-};
-// Total: 256 bytes (cache-friendly, single allocation per state)
-```
-
-**Key Design Decisions:**
-- **Single allocation per state**: `wst_createState()` allocates one `WarState` struct. Nested data structures (arrays, lists) are allocated inside the union if needed.
-- **State data is union-based**: Each state type uses only the fields it needs. Unused union members are padding, trading memory size for allocation simplicity.
-- **No object pools**: States are allocated on-demand and freed at transition. The system expects moderate churn (unit state changes every few frames).
-- **Arena allocation optional**: The codebase can use `wm_alloc()` / `wm_free()` which may wrap arena allocators if configured.
-
-### State Lifecycle
-
-1. **Creation**: `wst_createXxxState()` allocates and initializes state.
-2. **Queuing**: `wst_changeNextState()` queues state to transition next frame.
-3. **Entry**: `wst_enterState()` is called when the state becomes current (setup, animation start, etc.).
-4. **Update**: `wst_updateXxxState()` is called each frame (logic, decision-making, transitions).
-5. **Exit**: `wst_leaveState()` is called when transitioning away (cleanup, cleanup, disable collision, etc.).
-6. **Free**: `wst_freeState()` deallocates the state and any nested lists/arrays.
-
----
-
-## Core API / Functions
-
-### State Creation
-
-#### `WarState* wst_createState(WarContext* context, WarEntity* entity, WarStateType type)`
-
-Generic state factory. Rarely called directly; use type-specific creators instead.
-
-**Inputs:**
-- `context`: Game context (time, map, entities).
-- `entity`: Entity that will own this state.
-- `type`: `WarStateType` enum (e.g., `WAR_STATE_IDLE`).
-
-**Returns:** Heap-allocated `WarState*`.
-
-**Side Effects:** Allocates memory; entity is not yet updated.
-
-**Performance:** O(1), single malloc.
-
----
-
-#### Type-Specific Creators
-
-**Motion:**
-- `WarState* wst_createMoveState(WarContext* ctx, WarEntity* entity, s32 posCount, vec2 positions[])`
-  - Allocates `vec2List` inside the move state.
-  - Positions: waypoints to traverse in order.
-  
-- `WarState* wst_createPatrolState(WarContext* ctx, WarEntity* entity, s32 posCount, vec2 positions[])`
-  - Allocates `vec2List` for cyclic patrol points.
-
-- `WarState* wst_createFollowState(WarContext* ctx, WarEntity* entity, WarEntityId targetId, vec2 targetTile, s32 distance)`
-  - Follows an entity or a fixed tile position.
-  - `distance`: Range at which follower stops.
-
-**Combat:**
-- `WarState* wst_createAttackState(WarContext* ctx, WarEntity* entity, WarEntityId targetId, vec2 targetTile)`
-  - Target can be entity or tile; entity takes precedence if both exist.
-
-**Resource Gathering:**
-- `WarState* wst_createGatherGoldState(WarContext* ctx, WarEntity* entity, WarEntityId goldmineId)`
-- `WarState* wst_createMiningState(WarContext* ctx, WarEntity* entity, WarEntityId goldmineId)`
-  - Mining includes active harvesting inside the building.
-- `WarState* wst_createGatherWoodState(WarContext* ctx, WarEntity* entity, WarEntityId forestId, vec2 position)`
-- `WarState* wst_createChoppingState(WarContext* ctx, WarEntity* entity, WarEntityId forestId, vec2 position)`
-- `WarState* wst_createDeliverState(WarContext* ctx, WarEntity* entity, WarEntityId townHallId)`
-
-**Building & Training:**
-- `WarState* wst_createTrainState(WarContext* ctx, WarEntity* entity, WarUnitType unit, f32 buildTime)`
-  - Building creates units in a building. Allocates inside the state.
-- `WarState* wst_createUpgradeState(WarContext* ctx, WarEntity* entity, WarUpgradeType upgrade, f32 buildTime)`
-- `WarState* wst_createBuildState(WarContext* ctx, WarEntity* entity, f32 buildTime)`
-  - Worker building a new structure.
-- `WarState* wst_createRepairState(WarContext* ctx, WarEntity* entity, WarEntityId buildingId)`
-- `WarState* wst_createRepairingState(WarContext* ctx, WarEntity* entity, WarEntityId buildingId)`
-
-**Special:**
-- `WarState* wst_createDeathState(WarContext* ctx, WarEntity* entity)`
-- `WarState* wst_createCollapseState(WarContext* ctx, WarEntity* entity)`
-  - Building destruction sequence.
-- `WarState* wst_createWaitState(WarContext* ctx, WarEntity* entity, f32 waitTime)`
-  - Pause for specified duration.
-- `WarState* wst_createCastState(WarContext* ctx, WarEntity* entity, WarSpellType spell, WarEntityId targetId, vec2 targetTile)`
-
----
-
-### State Transition & Query
-
-#### `void wst_changeNextState(WarContext* ctx, WarEntity* entity, WarState* state, bool callLeave, bool callEnter)`
-
-Queue a state transition. Does not immediately change state—transitions happen at the start of `wst_updateStateMachine()`.
-
-**Inputs:**
-- `state`: The state to queue.
-- `callLeave`: Call `leave` callback on current state before transition.
-- `callEnter`: Call `enter` callback on the new state after transition.
-
-**Side Effects:** Modifies entity's state machine component; may queue multiple states in a chain.
-
-**Performance:** O(1).
-
----
-
-#### `bool wst_changeStateNextState(WarContext* ctx, WarEntity* entity, WarState* state)`
-
-Promote `state->nextState` (if it exists) to the next state to transition.
-
-**Returns:** `true` if a chained state was promoted; `false` if `state->nextState` is NULL.
-
-**Usage Pattern:** Often called from within a state's update logic to implement chained behaviors (e.g., "after move, attack").
-
----
-
-#### `WarState* wst_getState(WarEntity* entity, WarStateType type)`
-
-Search the state chain (current + queued) for the first matching state.
-
-**Returns:** Pointer to state or NULL if not found.
-
-**Performance:** O(n) where n = state chain depth (typically 1–3).
-
----
-
-#### `WarState* wst_getDirectState(WarEntity* entity, WarStateType type)`
-
-Get the **current** state if its type matches.
-
-**Returns:** Current state if type matches, else NULL.
-
-**Performance:** O(1).
-
----
-
-#### `WarState* wst_getNextState(WarEntity* entity, WarStateType type)`
-
-Get the **queued next** state if its type matches.
-
-**Returns:** Next state if type matches, else NULL.
-
-**Performance:** O(1).
-
----
-
-#### Query Macros
-
-```c
-// Convenience macros for common queries:
-#define getIdleState(e)        wst_getDirectState(e, WAR_STATE_IDLE)
-#define getMoveState(e)        wst_getState(e, WAR_STATE_MOVE)
-#define getAttackState(e)      wst_getState(e, WAR_STATE_ATTACK)
-#define isIdle(e)              wst_hasDirectState(e, WAR_STATE_IDLE)
-#define isMoving(e)            wst_hasState(e, WAR_STATE_MOVE)
-#define isAttacking(e)         wst_hasState(e, WAR_STATE_ATTACK)
-#define isGoingToAttack(e)     wst_hasNextState(e, WAR_STATE_ATTACK)
-#define setDelay(s, seconds)   ((s)->delay = (seconds))
-```
-
----
-
-### State Machine Update
-
-#### `void wst_updateStateMachine(WarContext* ctx, WarEntity* entity)`
-
-**Primary update entry point.** Called once per frame per entity.
-
-**Workflow:**
-1. If state machine is disabled, skip.
-2. Process all queued state transitions (while `stateMachine->nextState` exists):
-   - Call `leave` callback on current state (if `wst_leaveState` flag is true).
-   - Swap current ← next.
-   - Call `enter` callback on new current state (if `wst_enterState` flag is true).
-3. If current state has a `delay` > 0, schedule its next update (`nextUpdateTime = now + delay`).
-4. If `now >= nextUpdateTime`, call the `update` callback.
-
-**Side Effects:** Mutates entity state; calls callbacks; may trigger cascading updates.
-
-**Performance:** O(d + 1) where d = transition depth. Typically O(1) per frame.
-
-**Key Insight:** The `delay` field throttles state updates without skipping them. Useful for animation frames, AI decision intervals, etc.
-
----
-
-#### `void wst_enterState(WarContext* ctx, WarEntity* entity, WarState* state)`
-
-Dispatch to the appropriate enter handler based on state type.
-
-**Inputs:**
-- `state`: State being entered.
-
-**Side Effects:** Invokes `stateDescriptors[state->type].enterStateFunc()`.
-
-**Performance:** O(1) (function pointer lookup).
-
----
-
-#### `void wst_leaveState(WarContext* ctx, WarEntity* entity, WarState* state)`
-
-Dispatch to the appropriate leave handler, then free the state.
-
-**Inputs:**
-- `state`: State being exited (can be NULL; no-op if so).
-
-**Side Effects:**
-- Calls leave handler.
-- Calls `wst_freeState()` to clean up.
-
-**Performance:** O(1) + cleanup cost.
-
----
-
-#### `void wst_freeState(WarContext* ctx, WarState* state)`
-
-Recursively free state and its chained next states.
-
-**Side Effects:**
-- Calls `freeStateFunc` for the state type.
-- Recursively frees `state->nextState`.
-- Deallocates the state struct itself.
-
-**Performance:** O(n) where n = state chain depth.
-
----
-
-### Query Helpers
-
-#### `bool wst_isInsideBuilding(WarEntity* entity)`
-
-Check if entity is currently inside a building (mining, delivering, repairing inside).
-
-**Returns:** `true` if entity is in mining, delivering, or repairing state and marked `insideBuilding`.
-
-**Usage:** Attacking units use this to pause attacks while targets are inside.
-
----
-
-## Data Structures
-
-### `WarState` (256 bytes)
-
-Core state object containing shared fields and a type-specific union.
-
-```c
-struct _WarState
-{
-    WarStateType type;                  // 4 bytes: state identifier
-    s32 entityId;                       // 4 bytes: owning entity ID
-    f32 nextUpdateTime;                 // 4 bytes: earliest time for next update
-    f32 delay;                          // 4 bytes: delay before next update (seconds)
-    struct _WarState* nextState;        // 8 bytes: chained next state (for queued transitions)
-
-    union                               // 224 bytes: state-specific data
-    {
-        struct { bool lookAround; } idle;
-        struct { s32 posIdx; vec2List positions; s32 pathIdx; WarMapPath path; s32 waitCnt; bool checkAttacks; } move;
-        struct { s32 posIdx; vec2List positions; s32 dir; } patrol;
-        struct { s32 targetId; vec2 targetTile; s32 distance; } follow;
-        struct { f32 waitTime; } wait;
-        struct { s32 targetId; vec2 targetTile; } attack;
-        struct { s32 goldmineId; } gold;
-        struct { s32 goldmineId; f32 miningTime; } mine;
-        struct { s32 forestId; vec2 position; } wood;
-        struct { s32 forestId; vec2 position; } chop;
-        struct { s32 townHallId; bool insideBuilding; } deliver;
-        struct { WarUnitType unit; f32 buildTime; f32 totalBuildTime; bool cancelled; } train;
-        struct { WarUpgradeType upgrade; f32 buildTime; f32 totalBuildTime; bool cancelled; } upgrade;
-        struct { WarEntityId workerId; f32 buildTime; f32 totalBuildTime; bool cancelled; } build;
-        struct { WarEntityId buildingId; } repair;
-        struct { WarEntityId buildingId; bool insideBuilding; } repairing;
-        struct { WarSpellType spell; WarEntityId targetId; vec2 targetTile; } cast;
-    };
+    WarStateType type;
+    WarEntityId  entityId;
+    f64 nextUpdateGameTime;
+    f32 delay;
 };
 ```
 
-**Alignment:** 8-byte aligned (pointers require it).
+Concrete types embed the base as their first field:
 
-**Cache Locality:** Fixed 256-byte size ensures predictable cache line usage.
+```c
+struct _WarStateFollow
+{
+    WarStateBase base;
+    WarEntityId targetEntityId;
+    vec2 targetPosition;
+    s32 targetDistance;
+};
+```
 
----
+Static assertions in `war_state_machine.h` enforce that `base` is at offset zero. There is no common union and no `nextState` pointer.
 
-### `WarStateDescriptor`
+### State References
 
-Callback table for a state type.
+```c
+struct _WarStateRef
+{
+    WarStateType type;
+    s32 idx;
+    u32 generation;
+};
+```
+
+`WAR_STATE_REF_INVALID` is the canonical empty reference. `WAR_STATE_REF_IS_VALID(ref)` checks only the shape of a reference. Use `wst_deref()` to verify bounds, occupancy, and generation before accessing the state.
+
+Important ownership rules:
+
+- Store `WarStateRef` for retained ownership or deferred work.
+- A raw pointer returned by a creator is convenient only while the slot is known to remain allocated.
+- `wst_deref()` returns `NULL` for stale or released references.
+- Releasing a slot increments its generation and skips generation zero.
+- `wst_refOf()` accepts only an allocated, exactly aligned object in the correct typed pool.
+
+### Per-Type State Pools
+
+`WarStateStorage` contains one array per state type:
+
+```c
+#define MAX_STATES_PER_TYPE 512
+
+struct _WarStateStorage
+{
+    WarStateIdle      idle[MAX_STATES_PER_TYPE];
+    WarStateMove      move[MAX_STATES_PER_TYPE];
+    /* ... one array for every state type ... */
+    WarStateWait      wait[MAX_STATES_PER_TYPE];
+
+    u32  generations[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
+    bool occupied[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
+    s32  freeLists[WAR_STATE_COUNT][MAX_STATES_PER_TYPE];
+    s32  freeCounts[WAR_STATE_COUNT];
+    s32  activeCounts[WAR_STATE_COUNT];
+};
+```
+
+Allocation and release are O(1):
+
+- `wst_allocState()` pops a per-type free-list slot, zeroes the concrete object, and initializes its base.
+- Pool exhaustion logs a warning and returns `WAR_STATE_REF_INVALID`.
+- Type-specific creators return `NULL` when allocation fails.
+- Release marks the slot free, advances its generation, and pushes it onto the free list.
+- `activeCounts[type]` counts allocated slots, including active, paused, pending, and temporarily unowned states.
+
+`wst_freeStateRef()` is ownership-aware. It does not release a reference while that reference is on any entity stack or retained by a pending transition.
+
+### State Machine Component
+
+```c
+struct _WarStateMachineComponent
+{
+    WarStateRef stack[WAR_STATE_STACK_DEPTH];
+    u8 depth;
+
+    WarTransitionRequest pending;
+    u64 nextTransitionSequence;
+};
+```
+
+The active state is `stack[depth - 1]`. Stack indices are bottom-to-top. `WAR_STATE_STACK_DEPTH` is currently four.
+
+## State Catalog
+
+There are 19 state types.
+
+| State | Purpose | Registered lifecycle hooks |
+|---|---|---|
+| `WAR_STATE_IDLE` | Stand still and optionally acquire enemies | enter, exit |
+| `WAR_STATE_MOVE` | Traverse inline waypoints with flow fields and RVO | enter, exit |
+| `WAR_STATE_PATROL` | Retain a cyclic patrol order and push MOVE children | enter |
+| `WAR_STATE_FOLLOW` | Approach an entity or stored position | none |
+| `WAR_STATE_ATTACK` | Attack an entity or position; push range helpers | none |
+| `WAR_STATE_GOLD` | Begin or resume a gold gathering cycle | none |
+| `WAR_STATE_MINING` | Extract gold while inside a mine | enter, exit |
+| `WAR_STATE_WOOD` | Move toward a selected tree | none |
+| `WAR_STATE_CHOPPING` | Harvest wood at a tree | enter |
+| `WAR_STATE_DELIVER` | Return carried resources to a depot | none |
+| `WAR_STATE_DEATH` | Unit death sequence and removal | enter |
+| `WAR_STATE_COLLAPSE` | Building collapse sequence and removal | enter |
+| `WAR_STATE_TRAIN` | Transactional unit production | enter, exit |
+| `WAR_STATE_UPGRADE` | Transactional research | enter, exit |
+| `WAR_STATE_BUILD` | Transactional construction progress | enter, exit |
+| `WAR_STATE_REPAIR` | Approach a building to repair | none |
+| `WAR_STATE_REPAIRING` | Repair or construct from inside a building | enter, exit |
+| `WAR_STATE_CAST` | Approach and execute a spell | none registered |
+| `WAR_STATE_WAIT` | Wait until an absolute game time | enter, exit |
+
+Creator declarations are in `war_state_machine.h`. All creators return typed pointers, for example:
+
+```c
+WarStateMove* wst_createMoveState(
+    WarContext* context,
+    WarEntity* entity,
+    s32 positionCount,
+    vec2 positions[],
+    bool checkForAttacks);
+
+WarStateTrain* wst_createTrainState(
+    WarContext* context,
+    WarEntity* entity,
+    WarUnitType unitToBuild,
+    f32 buildTime,
+    s32 goldCost,
+    s32 woodCost,
+    WarAICommand* aiCommand);
+```
+
+MOVE and PATROL store up to 64 waypoints inline. They do not allocate waypoint lists.
+
+## Lifecycle Descriptor
+
+Lifecycle behavior is registered in `stateDescriptors`:
 
 ```c
 typedef struct
 {
     WarStateType type;
-    void (*enterStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
-    void (*leaveStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
-    void (*updateStateFunc)(WarContext* context, WarEntity* entity, WarState* state);
-    void (*freeStateFunc)(WarContext* context, WarState* state);
+    void (*onEnter)(WarContext*, WarEntity*, WarStateBase*);
+    void (*onPause)(WarContext*, WarEntity*, WarStateBase*, WarStatePauseReason);
+    bool (*validate)(WarContext*, WarEntity*, WarStateBase*);
+    void (*onResume)(WarContext*, WarEntity*, WarStateBase*, WarStateResumeReason);
+    void (*onExit)(WarContext*, WarEntity*, WarStateBase*, WarStateExitReason);
+    bool (*canInterrupt)(WarContext*, WarEntity*, WarStateBase*, WarInterruptKind);
+    u32 defaultInterruptMask;
 } WarStateDescriptor;
 ```
 
-**Instantiation:** Global array `stateDescriptors[WAR_STATE_COUNT]` populated in `war_state_machine.c`.
+Lifecycle dispatch functions are:
 
----
+- `wst_enterState()`
+- `wst_pauseState()`
+- `wst_validateState()`
+- `wst_resumeState()`
+- `wst_exitState()`
 
-### `WarStateMachineComponent`
+`wst_exitState()` invokes the optional exit callback and then releases the state slot. Rejected, displaced, and removal-time pending candidates are released directly because they never entered. A pending TRAIN, UPGRADE, or BUILD selected for transactional cancellation is an exception: cancellation deliberately exits it so transaction cleanup and refunds can run.
 
-Entity component holding current and queued states.
+Current implementation status:
+
+- Enter and exit hooks are registered only for the states listed in the catalog.
+- All current `onPause`, `validate`, and `onResume` descriptor entries are `NULL`.
+- State updates are not descriptor callbacks. Each type has a dedicated batch updater.
+- Exit reasons are passed to registered callbacks, but current exit implementations do not branch on them.
+- PUSH calls validation before installing a child. REPLACE and RESET currently do not validate candidates.
+
+## Deferred Transitions
+
+### Transition Request
 
 ```c
-// Pseudo-code; defined in war_entities.h
-struct WarStateMachineComponent
+struct _WarTransitionRequest
 {
-    bool enabled;
-    WarState* currentState;
-    WarState* nextState;
-    bool wst_leaveState;
-    bool wst_enterState;
+    WarStateRef stateRef;
+    WarStateRef cancellationTargetRef;
+    WarStateOp operation;
+    WarStateResult result;
+    WarTransitionCause cause;
+    u64 sequence;
+    bool cancellation;
 };
 ```
 
-**Fields:**
-- `enabled`: Gate state machine updates.
-- `currentState`: Active state.
-- `nextState`: State queued for transition.
-- `wst_leaveState`, `wst_enterState`: Flags controlling callback invocation.
-
----
-
-## State Types (19 Total)
-
-| State | Enum | Purpose | Union Field |
-|-------|------|---------|-------------|
-| Idle | `WAR_STATE_IDLE` | Unit standing still, looking around | `idle` |
-| Move | `WAR_STATE_MOVE` | Unit traversing waypoints | `move` |
-| Patrol | `WAR_STATE_PATROL` | Unit cycling patrol points | `patrol` |
-| Follow | `WAR_STATE_FOLLOW` | Unit chasing target entity/tile | `follow` |
-| Attack | `WAR_STATE_ATTACK` | Unit in combat | `attack` |
-| Gather Gold | `WAR_STATE_GOLD` | Worker moving to goldmine | `gold` |
-| Mining | `WAR_STATE_MINING` | Worker extracting gold inside | `mine` |
-| Gather Wood | `WAR_STATE_WOOD` | Worker moving to forest | `wood` |
-| Chopping | `WAR_STATE_CHOP` | Worker harvesting wood | `chop` |
-| Deliver | `WAR_STATE_DELIVER` | Worker returning to townhall | `deliver` |
-| Death | `WAR_STATE_DEATH` | Unit dying sequence | (none) |
-| Collapse | `WAR_STATE_COLLAPSE` | Building destruction sequence | (none) |
-| Train | `WAR_STATE_TRAIN` | Building training a unit | `train` |
-| Upgrade | `WAR_STATE_UPGRADE` | Building researching upgrade | `upgrade` |
-| Build | `WAR_STATE_BUILD` | Worker constructing building | `build` |
-| Repair | `WAR_STATE_REPAIR` | Worker moving to building to repair | `repair` |
-| Repairing | `WAR_STATE_REPAIRING` | Worker repairing building | `repairing` |
-| Cast | `WAR_STATE_CAST` | Unit casting spell | `cast` |
-| Wait | `WAR_STATE_WAIT` | Unit paused for duration | `wait` |
-
----
-
-## Usage Examples
-
-### Example 1: Command Unit to Move
+The public wrappers are:
 
 ```c
-// Player clicks map tile; commander creates a move state.
-WarState* moveState = wst_createMoveState(
+bool wst_pushState(WarContext*, WarEntity*, WarStateBase*, WarTransitionCause);
+bool wst_popState(WarContext*, WarEntity*, WarTransitionCause, WarStateResult);
+bool wst_replaceState(WarContext*, WarEntity*, WarStateBase*, WarTransitionCause);
+bool wst_resetState(WarContext*, WarEntity*, WarStateBase*, WarTransitionCause);
+bool wst_resetStateForCancellation(
+    WarContext*, WarEntity*, WarStateBase*, WarTransitionCause);
+```
+
+These functions submit requests. They do not immediately mutate the stack. `wst_processPendingTransitions()` consumes at most one request per enabled entity each time it runs.
+
+Before creating a state for an interrupting command or reaction, call:
+
+```c
+bool wst_canSubmitTransition(
+    WarContext* context,
+    WarEntity* entity,
+    WarInterruptKind interrupt);
+```
+
+The check is advisory: raw `wst_submitTransition()` does not enforce the interrupt mask itself. Command and autonomous code must perform the check before allocating the candidate.
+
+### Causes and Priority
+
+Cause values are the arbitration priority:
+
+| Cause | Priority | Typical producer |
+|---|---:|---|
+| `WAR_TRANSITION_CAUSE_INITIALIZATION` | 10 | Initial IDLE installation |
+| `WAR_TRANSITION_CAUSE_COMPLETION` | 20 | State success or failure |
+| `WAR_TRANSITION_CAUSE_AUTONOMOUS` | 30 | Aggro or automatic reaction |
+| `WAR_TRANSITION_CAUSE_AI_ORDER` | 40 | Explicit AI command |
+| `WAR_TRANSITION_CAUSE_PLAYER_ORDER` | 50 | Explicit player command |
+| `WAR_TRANSITION_CAUSE_STATUS` | 60 | Status interruption |
+| `WAR_TRANSITION_CAUSE_SCRIPT` | 70 | Scenario or forced script |
+| `WAR_TRANSITION_CAUSE_LIFECYCLE` | 80 | Death, collapse, removal-related behavior |
+
+Arbitration rules:
+
+- An empty pending slot accepts the request.
+- A higher cause replaces a lower cause.
+- Equal causes keep the first submitted request.
+- A player cancellation may replace the exact pending TRAIN, UPGRADE, or BUILD transaction it targets.
+- Rejected or displaced unowned candidate states are released automatically.
+- Every valid submission consumes the entity-local sequence number, even if it loses arbitration.
+- Sequence is deterministic metadata; it is not currently used as the equal-priority tiebreaker.
+
+A `true` return means that the request became pending. It does not mean the transition has already committed.
+
+### Operation Semantics
+
+#### PUSH
+
+Use PUSH for a temporary child task that should return to its parent:
+
+1. Validate the child.
+2. Pause the current top with `WAR_STATE_PAUSE_CHILD_PUSHED`.
+3. Append and enter the child.
+
+At full depth, the current implementation replaces only the active top while preserving the lower three entries. Treat this as an abnormal capacity condition and do not design behavior that depends on it. Do not PUSH onto an intentionally empty stack; use REPLACE or RESET.
+
+#### POP
+
+Use POP when the active state finishes:
+
+1. Map the result to an exit reason.
+2. Exit and release the top.
+3. Resume the parent with child success or child failure.
+4. If the stack becomes empty, attempt to allocate and enter a default IDLE state. IDLE pool exhaustion can leave the machine empty.
+
+Every POP must specify a `WarStateResult`.
+
+#### REPLACE
+
+Use REPLACE to change only the active top while retaining lower context:
+
+1. Exit and release the current top with `WAR_STATE_EXIT_REPLACED`.
+2. Preserve the existing depth and lower entries.
+3. Install and enter the replacement.
+
+REPLACE on an empty stack installs the candidate as the root.
+
+#### RESET
+
+Use RESET for a new root order or lifecycle transition:
+
+1. Exit and release all states from top to bottom.
+2. Install the candidate at depth one.
+3. Enter the new root.
+
+Player and AI commands normally reset the old behavior stack. Lifecycle causes outrank ordinary commands through transition arbitration.
+
+## State Results
+
+POP results are defined by `WarStateResult`:
+
+```text
+NONE
+SUCCESS
+CANCELLED
+TARGET_INVALID
+TARGET_HIDDEN
+BLOCKED
+NO_PATH
+NO_RESOURCE
+NO_DESTINATION
+INTERRUPTED
+CONTAINER_DESTROYED
+```
+
+Current mapping:
+
+- `SUCCESS` maps to `WAR_STATE_EXIT_COMPLETED` and child-success resume.
+- `CANCELLED` maps to `WAR_STATE_EXIT_CANCELLED`.
+- Invalid or hidden targets map to `WAR_STATE_EXIT_TARGET_INVALID`.
+- Blocked, no path, no resource, no destination, and interrupted map to `WAR_STATE_EXIT_FAILED`.
+- Container destruction maps to `WAR_STATE_EXIT_CONTAINER_DESTROYED`.
+- `NONE` maps to `WAR_STATE_EXIT_FAILED`.
+- Every non-success result maps to child-failure resume.
+
+The exact result exists in the pending POP request but is not retained after commit. Parent resume currently receives only success or failure, and no state currently registers an `onResume` callback.
+
+## Interruption Policy
+
+`wst_canSubmitTransition()` evaluates the active descriptor's custom callback, when present, or its default interrupt mask.
+
+Current default policy:
+
+- IDLE, MOVE, PATROL, FOLLOW, gathering states, repair states, and WAIT accept all interrupt kinds.
+- ATTACK rejects autonomous interruption but accepts player, AI, status, script, and lifecycle interruption.
+- DEATH and COLLAPSE accept lifecycle interruption only.
+- TRAIN and UPGRADE accept player, AI, and lifecycle interruption.
+- BUILD accepts player, AI, status, script, and lifecycle interruption.
+- CAST currently has mask zero.
+
+`wst_canInterruptCast()` contains spell-specific logic but is not currently registered in the CAST descriptor. Through the descriptor path, CAST is therefore non-interruptible.
+
+## Query APIs
+
+The API deliberately distinguishes what the entity is doing now from context retained below a child.
+
+### Active Top
+
+```c
+WarStateBase* wst_getActiveState(WarContext*, WarEntity*);
+WarStateBase* wst_getActiveStateOfType(WarContext*, WarEntity*, WarStateType);
+bool wst_isActiveState(WarContext*, WarEntity*, WarStateType);
+WarStateBase* wst_peekAt(WarContext*, WarEntity*, u8 stackIndex);
+```
+
+Use active queries for rendering, collision, command gating, and behavior decisions.
+
+Typed examples:
+
+```c
+WarStateMove* wst_getActiveMoveState(context, entity);
+bool wst_isActivelyMoving(context, entity);
+bool wst_isActivelyAttacking(context, entity);
+```
+
+### Stack Membership
+
+```c
+WarStateBase* wst_findStateInStack(WarContext*, WarEntity*, WarStateType);
+bool wst_containsState(WarContext*, WarEntity*, WarStateType);
+```
+
+Use stack membership when retained parent context matters.
+
+Typed examples such as `wst_getMoveState()` and predicates such as `wst_isMoving()` search the stack, including paused states. `wst_getIdleState()` is a current exception: despite its placement with stack helpers, it checks only the active state. Use `wst_findStateInStack(..., WAR_STATE_IDLE)` when paused IDLE membership matters.
+
+Pending helpers such as `wst_isGoingToMove()` inspect candidate-bearing PUSH, REPLACE, and RESET requests. A pending POP has no candidate state type.
+
+## Update Architecture
+
+Production does not call a per-entity `wst_updateStateMachine()` function. `war_map.c` runs this sequence:
+
+1. Input and selection processing.
+2. AI command processing.
+3. `wst_processPendingTransitions()`.
+4. One batch updater for each state type.
+5. Spatial-grid, action, animation, projectile, spell, and related updates.
+
+State batches run in enum order:
+
+```text
+IDLE, MOVE, PATROL, FOLLOW, ATTACK,
+GOLD, MINING, WOOD, CHOPPING, DELIVER,
+DEATH, COLLAPSE, TRAIN, UPGRADE, BUILD,
+REPAIR, REPAIRING, CAST, WAIT
+```
+
+Consequences:
+
+- A transition already pending before the transition pass can enter and update in the same frame.
+- A transition submitted by a state update normally commits on the next frame.
+- Only the exact active top state updates. Paused states remain allocated but are skipped.
+- Ordinary batch updaters scan their type's 512 slots, test occupancy, resolve the owner, check active pointer identity, and apply delay scheduling.
+- `delay` is converted into `nextUpdateGameTime` by `wst_isNextUpdateTime()` and then cleared.
+- MOVE is a coordinated multi-pass batch and does not use `wst_isNextUpdateTime()`.
+
+Transition processing skips disabled state-machine components. Current type batch loops do not independently test the enabled flag, so disabling a component does not reliably pause an already active state.
+
+## MOVE and Staged Stuck Recovery
+
+MOVE uses inline waypoints, destination flow fields, sampled RVO, final-arrival slowdown, and staged recovery.
+
+The seven MOVE subpasses are:
+
+1. Clear per-frame RVO diagnostics.
+2. Submit eligible autonomous ATTACK reactions.
+3. Compute preferred velocities from flow fields.
+4. Gather neighbors and compute adjusted RVO velocities.
+5. Integrate positions and detect waypoint arrival.
+6. Track progress and perform staged recovery.
+7. Retain adjusted velocity for the next RVO update.
+
+Final-segment preferred speed scales down inside three map tiles, with a minimum scale of 0.25. Position integration clamps an overshooting step to the waypoint.
+
+`WarMoveProgress` stores:
+
+```c
+struct _WarMoveProgress
+{
+    f32 bestDistanceSq;
+    f32 noProgressTime;
+    f32 lowVelocityTime;
+    u8 recoveryAttempt;
+};
+```
+
+Recovery behavior:
+
+- A waypoint or goal-position change resets progress tracking.
+- Improving the best linear distance by at least four pixels resets both timers and the recovery attempt.
+- At 0.5 seconds without meaningful progress, MOVE recomputes the destination flow field.
+- At 1.5 seconds, MOVE enables stronger avoidance by increasing its RVO radius from `0.45` to `0.60` map tiles.
+- At 3.0 seconds, MOVE zeroes its velocities and requests POP with `WAR_STATE_RESULT_BLOCKED`.
+- A root MOVE that pops falls back to IDLE.
+- A child MOVE pops back to its parent with child-failure resume semantics.
+- `lowVelocityTime` is currently diagnostic; recovery thresholds use `noProgressTime`.
+
+Terminal outcomes:
+
+- Fewer than two waypoints: `NO_DESTINATION`.
+- Missing flow field: `NO_PATH`.
+- Final waypoint reached: `SUCCESS`.
+- Three seconds without meaningful progress: `BLOCKED`.
+
+The FSM debug text displays MOVE waypoint progress, retained velocity, stuck time, and recovery stage.
+
+## Transactional States and Cancellation
+
+TRAIN, UPGRADE, and BUILD retain explicit transaction fields for costs, output commitment, cancellation, and one-time refunds.
+
+Use `wst_resetStateForCancellation()` for their cancellation path. It can target a transactional state already on the stack or still pending. Cancellation marks the transaction before applying the replacement RESET. A pending transactional target is exited even though it never entered so its refund logic can run.
+
+Refunds occur only when all conditions hold:
+
+```text
+cancelled
+transactionApplied
+output not committed
+not already refunded
+```
+
+Do not infer refunds from a generic exit reason. The state-specific transaction flags enforce exactly-once behavior.
+
+Committed BUILD output has a completion-wins exception. If cancellation targets an on-stack BUILD whose output is already committed, transition processing discards the cancellation replacement and rewrites the request to a completion POP so the completed building is preserved. The rewritten POP currently retains result `NONE`, which maps to failed-exit and child-failure resume semantics.
+
+## Entity Removal
+
+Entity removal tears down the FSM before unit, transform, action, and related components because exit callbacks may need those components.
+
+State-machine removal:
+
+1. Exits and releases stacked states top-to-bottom with `WAR_STATE_EXIT_REMOVED`.
+2. Clears the stack and depth.
+3. Releases pending candidate and cancellation references.
+4. Removes the component from dense storage and repairs the swapped owner's component index.
+
+Pending states were never entered, so they are released without exit callbacks. Removal is not automatically a transactional cancellation or refund.
+
+## Canonical Usage
+
+### Player Move Resets the Root Order
+
+```c
+if (!wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
+{
+    return;
+}
+
+vec2 position = wu_getUnitCenterPosition(context, entity);
+WarStateMove* move = wst_createMoveState(
     context,
-    unit,
+    entity,
     2,
-    (vec2[]){ unitCurrentPos, targetTile }
-);
-wst_changeNextState(context, unit, moveState, true, true);  // Leave idle, enter move
+    arrayArg(vec2, position, targetPosition),
+    false);
+
+if (move)
+{
+    wst_resetState(
+        context,
+        entity,
+        (WarStateBase*)move,
+        WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+}
 ```
 
-**Flow:**
-1. State is queued.
-2. Next `wst_updateStateMachine()` call:
-   - Leaves idle state (animation stop, collision free).
-   - Enters move state (pathfinding, collision set, walk animation).
-3. Each frame, move state's update is called to advance along path.
-4. When destination reached, automatically transitions to idle.
-
----
-
-### Example 2: Attack with Fallback
+### Push a Temporary Child
 
 ```c
-// Attacker targets enemy.
-WarState* attackState = wst_createAttackState(context, attacker, enemy->id, enemyPos);
-wst_changeNextState(context, attacker, attackState, true, true);
+WarStateFollow* follow = wst_createFollowState(
+    context,
+    entity,
+    targetEntityId,
+    targetPosition,
+    desiredDistance);
 
-// In attack state's update:
-if (!wu_unitInRange(attacker, enemy, range))
+if (follow)
 {
-    // Out of range: queue follow as next state, with attack as fallback.
-    WarState* followState = wst_createFollowState(context, attacker, enemy->id, enemyPos, range);
-    followState->nextState = attackState;  // Restore attack after follow
-    wst_changeNextState(context, attacker, followState, false, true);  // Enter follow
+    wst_pushState(
+        context,
+        entity,
+        (WarStateBase*)follow,
+        WAR_TRANSITION_CAUSE_COMPLETION);
 }
 ```
 
-**Flow:** Attack → Follow (because out of range) → Attack (once in range).
-
----
-
-### Example 3: Gather Gold Workflow
+### Pop with an Explicit Result
 
 ```c
-// Worker ordered to gather gold from goldmine.
-WarState* gatherState = wst_createGatherGoldState(context, worker, goldmine->id);
-wst_changeNextState(context, worker, gatherState, true, true);
-
-// In gather gold state's update:
-// 1. Check if goldmine is in range.
-// 2. If not, queue follow state with gather as next (chained).
-// 3. If yes, transition to mining state.
-// In mining state's update:
-// 4. Extract gold; when full or goldmine empty, transition to deliver.
-// In deliver state:
-// 5. Move to townhall; unload; go back to gather gold (loop).
+wst_popState(
+    context,
+    entity,
+    WAR_TRANSITION_CAUSE_COMPLETION,
+    WAR_STATE_RESULT_TARGET_INVALID);
 ```
 
----
-
-### Example 4: State Machine in Game Loop
+### Replace Only the Active State
 
 ```c
-// Main game loop (simplified).
-void gameUpdate(WarContext* context)
+WarStateMining* mining = wst_createMiningState(context, entity, goldmine->id);
+if (mining)
 {
-    // ... input, physics, etc.
-
-    // Update all entities' state machines.
-    for (s32 i = 0; i < context->entities.count; i++)
-    {
-        WarEntity* entity = &context->entities.items[i];
-        if (entity->alive)
-        {
-            wst_updateStateMachine(context, entity);
-        }
-    }
-
-    // ... rendering, audio, etc.
+    wst_replaceState(
+        context,
+        entity,
+        (WarStateBase*)mining,
+        WAR_TRANSITION_CAUSE_COMPLETION);
 }
 ```
 
----
+Once a valid candidate has been submitted, do not manually free it when submission loses. Transition submission releases rejected or displaced unowned candidates.
 
-## Dependencies
+## Debugging and Tests
 
-### Internal Modules
+Press `Ctrl+Shift+T` in a map to toggle state-machine debug rendering. With exactly one entity selected, the debug panel shows:
 
-- **`war_entities.h`** – Entity and component definitions.
-- **`war_units.h`** – Unit queries (position, stats, animation).
-- **`war_map.h`** – Pathfinding, tile collision, map coordinate conversion.
-- **`war_pathfinder.h`** – A* pathfinding, obstacle queries.
-- **`war_actions.h`** – Animation and action system integration.
-- **`war_math.h`** – Vector math, utility macros.
-- **`war_alloc.h`** – Memory allocation (`wm_alloc`, `wm_free`).
-- **`war_log.h`** – Logging utilities.
+- Entity name and ID.
+- Stack depth and entries from top to bottom.
+- State-specific details.
+- Pending operation and candidate.
 
-### External Modules
+World-space overlays visualize active IDLE, MOVE, PATROL, FOLLOW, ATTACK, and resource-flow states.
 
-- **`shl/list.h`** – Generic list container for state chaining.
-- **`shl/array.h`** – Generic array for position lists in move/patrol states.
+The FSM test harness uses a fixed 30 Hz timestep. Run the required game compile-check:
 
----
-
-## State Implementation Pattern
-
-Each state type (e.g., `war_state_machine_idle.c`) follows a template:
-
-```c
-// 1. Creator
-WarState* wst_createXxxState(WarContext* context, WarEntity* entity, ...)
-{
-    WarState* state = wst_createState(context, entity, WAR_STATE_XXX);
-    state->xxx.field1 = value1;
-    state->xxx.field2 = value2;
-    return state;
-}
-
-// 2. Enter (initialization)
-void wst_enterXxxState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    // Set up collision, animation, initial data.
-}
-
-// 3. Leave (cleanup)
-void wst_leaveXxxState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    // Restore collision, stop animation, clean up temporary data.
-}
-
-// 4. Update (per-frame logic)
-void wst_updateXxxState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    // Decision logic, state transitions, effect application.
-    // Use setDelay(state, duration) to throttle next update.
-}
-
-// 5. Free (resource deallocation)
-void wst_freeXxxState(WarContext* context, WarState* state)
-{
-    // Free any nested allocations (e.g., vec2List in move state).
-}
+```sh
+nob.exe build --cc msvc --target win64 --check
 ```
 
----
+The test command runs from `build/<target>` and does not copy `DATA.WAR`. Before testing a clean target directory, either run a full game build without `--check` or copy `assets/DATA.WAR` into `build/<target>`.
 
-## Performance Considerations
+Then run the tests:
 
-### Tight Inner Loop Avoidance
-
-- **Don't call state update inside nested loops.** State machine is called once per entity per frame. Calling it multiple times per frame creates redundant work.
-- State delays (`setDelay()`) are preferred over manual frame counting; the engine handles throttling.
-
-### Update Frequency Optimization
-
-```c
-// Good: throttle expensive updates with delay.
-void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    // Do expensive search (every frame if no delay set).
-    WarEntity* enemy = we_getNearEnemy(context, entity);
-    
-    // Throttle to 20 frames (at 60 FPS ≈ 333ms).
-    state->delay = 0.33f;
-}
+```sh
+nob.exe test --cc msvc --target win64
 ```
 
-### State Chain Depth
+The test suite covers transition arbitration, generational references, pool exhaustion, lifecycle calls, transactional cancellation, economic ownership, MOVE completion, arrival slowdown, and staged stuck recovery.
 
-- State chains are kept shallow (typically 1–3 levels: idle → move → attack).
-- Deep chains (>10) degrade performance slightly due to linked-list traversal in `wst_getState()`.
+Current harness caveats:
 
-### Memory Efficiency
+- The test fixture updates actions before FSM states, while production updates actions after FSM states.
+- `--filter` is forwarded by `nob` but currently ignored by `tests/test_main.c`.
+- Inspect Unity's printed test summary; the test process's aggregate counters are not currently wired to Unity failures.
 
-- `WarState` is 256 bytes; allocated per state change, freed at transition.
-- No object pooling; relies on allocator efficiency (may use arenas).
-- Union-based state data avoids over-allocation for simple states.
+## Adding a New State Type
 
-### Callback Overhead
+Adding a state touches every ordinal-indexed registry. Keep enum order, descriptor order, pool mapping, and size tables synchronized.
 
-- All state callbacks are O(1) lookups (function pointers from `stateDescriptors` array).
-- No virtual function dispatch or RTTI; stateless branching.
+1. Add `WAR_STATE_<NAME>` before `WAR_STATE_COUNT` in `src/war_enums.h`.
+2. Add the forward declaration and typedef in `src/war_fwd.h`.
+3. Define `WarState<Name>` in `src/war_state_machine.h` with `WarStateBase base` first.
+4. Add a zero-offset static assertion for the concrete type.
+5. Add a 512-entry typed array to `WarStateStorage` in `src/war_entities.h`.
+6. Add the descriptor row in `stateDescriptors` in exact enum order.
+7. Add the type to `wst_getTypeArray()` and `stateTypeSizes` in `src/war_state_machine.c`.
+8. Declare the creator, applicable lifecycle hooks, and update APIs in `src/war_state_machine.h`. Ordinary states use a single-state updater plus a batch updater; coordinated states such as MOVE may use only a custom batch updater.
+9. Create `src/war_state_machine_<name>.c`. Do not create a private state header unless there is a concrete need.
+10. Make the creator allocate with `wst_allocState()`, check the reference, dereference it, initialize fields, and return the typed pointer.
+11. Make the batch updater scan only its occupied pool slots and update only the active state. Use `wst_isNextUpdateTime()` unless coordinated global subpasses are required.
+12. Add the production update pass in `src/war_map.c`.
+13. Add the state name and useful details to `src/war_state_machine_debug.c`; add world visualization when useful.
+14. Include the new `.c` before `war_state_machine.c` in `src/war1.c`, `src/war1_editor.c`, and `tests/test_main.c`.
+15. Add the update pass to `tests/war_test_context.c`.
+16. Add and register tests in `tests/war_state_machine_test.c`.
+17. Run the required game compile-check, the editor compile-check, and the FSM tests.
 
----
+Never add a new unity-build state source to `nob.c`.
 
-## Debugging & Inspection
+When the state is included by the editor unity entry point, also verify:
 
-### Logging State Changes
-
-States can log transitions by inspecting callbacks:
-
-```c
-void logStateChange(WarEntity* entity, WarState* oldState, WarState* newState)
-{
-    const char* oldName = getStateTypeName(oldState ? oldState->type : WAR_STATE_IDLE);
-    const char* newName = getStateTypeName(newState->type);
-    logInfo("Entity %d: %s -> %s", entity->id, oldName, newName);
-}
+```sh
+nob.exe editor --cc msvc --target win64 --check
 ```
 
-### State Inspection in Debugger
+## Current Limitations
 
-```c
-// Example in GDB:
-(gdb) p entity->stateMachine.currentState->type
-$1 = WAR_STATE_MOVE
+The current implementation intentionally documents these incomplete areas rather than presenting the planned architecture as finished:
 
-(gdb) p entity->stateMachine.currentState->move.positionIndex
-$2 = 2
-
-(gdb) p entity->stateMachine.nextState
-$3 = (WarState *) 0x0  // NULL: no transition queued
-```
-
-### Profiling State Updates
-
-States can be instrumented with Tracy for profiling:
-
-```c
-void wst_updateMoveState(WarContext* context, WarEntity* entity, WarState* state)
-{
-    TracyCZone(ctx, 1);
-    // ... move logic ...
-    TracyCZoneEnd(ctx);
-}
-```
-
----
-
-## Key Design Insights
-
-1. **State Queuing, Not Immediate Transition:** Calling `wst_changeNextState()` doesn't immediately change state. This prevents reentrancy issues and ensures callbacks are called in the correct order.
-
-2. **Delay Throttling:** The `delay` field enables light animation-frame-based scheduling without explicit counters. Useful for pacing AI decisions or animation updates.
-
-3. **Chained States & Fallback:** States can queue a "next state" before transitioning. Example: Attack → Follow (if out of range) → Attack again. This chains behavior naturally.
-
-4. **Minimal Leave/Enter Flags:** The `wst_leaveState` and `wst_enterState` booleans give callers fine-grained control. Some transitions (e.g., move → attack) skip leaving the previous state to preserve animation momentum.
-
-5. **Union-Based Data:** All state data fit in a 256-byte union. This is a design constraint but ensures predictable memory layout and cache efficiency.
-
-6. **Global Descriptor Array:** All state types are registered in a global `stateDescriptors[]` array. Adding a new state requires adding one row to the array and implementing the five callback functions.
-
----
-
-## Extending the State Machine
-
-### Adding a New State Type
-
-1. **Define the enum** in `war_log.h`:
-   ```c
-   enum WarStateType {
-       // ... existing states ...
-       WAR_STATE_CUSTOM = X,
-       WAR_STATE_COUNT
-   };
-   ```
-
-2. **Add union field** in `war_state_machine.h`:
-   ```c
-   struct _WarState {
-       // ...
-       union {
-           // ... existing ...
-           struct {
-               s32 customField1;
-               f32 customField2;
-           } custom;
-       };
-   };
-   ```
-
-3. **Create file** `war_state_machine_custom.c`:
-   ```c
-   WarState* wst_createCustomState(...) { ... }
-   void wst_enterCustomState(...) { ... }
-   void wst_leaveCustomState(...) { ... }
-   void wst_updateCustomState(...) { ... }
-   void wst_freeCustomState(...) { ... }
-   ```
-
-4. **Register in descriptor** in `war_state_machine.c`:
-   ```c
-   WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] = {
-       // ...
-       { WAR_STATE_CUSTOM, wst_enterCustomState, wst_leaveCustomState, wst_updateCustomState, wst_freeCustomState },
-   };
-   ```
-
-5. **Include in `war_state_machine.h`** forward declarations for the new callbacks.
-
-6. **Include** `war_state_machine_custom.c` in `war_state_machine.h` (unity build).
-
----
+- Pause, validate, and resume callback slots exist, but no state registers them.
+- Parents receive only child success or failure, not the exact `WarStateResult`.
+- Interrupt masks are advisory unless callers use `wst_canSubmitTransition()`.
+- CAST's custom interrupt function is implemented but not registered.
+- Full-stack PUSH replaces the active top rather than rejecting the request.
+- Status and script causes exist, but there is no complete status subsystem using them yet.
+- Inside-building behavior is still inferred from MINING, DELIVER, and REPAIRING stack state rather than a dedicated occupancy component.
 
 ## Summary
 
-The State Machine subsystem is a **lightweight, data-oriented hierarchical state management system** optimized for game entity behavior. It uses **fixed-size allocations**, **no object pooling**, and **pluggable callbacks** to manage 19 state types across units, buildings, and environmental objects. The design prioritizes **simplicity, predictability, and cache locality** while supporting complex behavioral chains and smooth transitions.
+The War1-C FSM is a pooled, type-batched pushdown behavior system. Its defining invariants are:
 
-Key strengths:
-- **Zero dynamic allocation per frame** (states allocated at transition, freed at exit).
-- **O(1) state dispatch** via function pointer arrays.
-- **Simple callback model** (enter, update, leave, free).
-- **Composable state chains** for fallback behaviors.
-- **Throttled updates** via delay field, no manual frame counting.
+- Typed fixed pools, not per-state heap allocation.
+- Generational `WarStateRef` ownership, not retained raw pointers.
+- A fixed bottom-to-top stack with one active top.
+- One deferred request per entity with explicit cause priority.
+- PUSH for temporary children, POP with explicit results, REPLACE for the active top, and RESET for new root orders.
+- Separate active-state and stack-membership queries.
+- Global per-type update passes, with MOVE using coordinated RVO subpasses.
 
-Minimal overhead and tight integration with pathfinding, animation, collision, and audio systems make it suitable for real-time RTS gameplay with dozens of concurrent entities.
+Code that follows these invariants preserves parent behavior, avoids stale-state access, and keeps transition outcomes deterministic across update passes.

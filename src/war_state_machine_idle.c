@@ -11,25 +11,55 @@ WarStateIdle* wst_createIdleState(WarContext* context, WarEntity* entity, bool l
     TracyCZoneN(ctx, "wst_createIdleState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_IDLE, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateIdle* state = (WarStateIdle*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->lookAround = lookAround;
 
     TracyCZoneEnd(ctx);
     return state;
 }
 
-void wst_leaveIdleState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterIdleState(WarContext* context, WarEntity* entity, WarStateBase* state)
 {
-    TracyCZoneN(ctx, "wst_leaveIdleState", true);
+    TracyCZoneN(ctx, "wst_onEnterIdleState", true);
+
+    NOT_USED(entity);
+    NOT_USED(state);
 
     WarMap* map = context->map;
     assert(map);
 
-    if (!state->initialized)
+    if (wu_isUnit(entity))
     {
-        TracyCZoneEnd(ctx);
-        return;
+        vec2 tile = wu_getUnitTile(context, entity);
+        vec2 unitSize = wu_getUnitSize(context, entity);
+        wpath_setStaticEntity(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
     }
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_exitIdleState(WarContext* context, WarEntity* entity, WarStateBase* state, WarStateExitReason reason)
+{
+    TracyCZoneN(ctx, "wst_exitIdleState", true);
+
+    NOT_USED(state);
+    NOT_USED(reason);
+
+    WarMap* map = context->map;
+    assert(map);
 
     if (wu_isUnit(entity))
     {
@@ -48,18 +78,6 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
     WarMap* map = context->map;
 
     WarStateIdle* s = (WarStateIdle*)state;
-
-    if (!state->initialized)
-    {
-        if (wu_isUnit(entity))
-        {
-            vec2 tile = wu_getUnitTile(context, entity);
-            vec2 unitSize = wu_getUnitSize(context, entity);
-            wpath_setStaticEntity(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-            wact_setAction(context, entity, WAR_ACTION_TYPE_IDLE, true, 1.0f);
-        }
-        state->initialized = true;
-    }
 
     if (wu_isUnit(entity))
     {
@@ -82,11 +100,11 @@ void wst_updateIdleState(WarContext* context, WarEntity* entity, WarState* state
         if (wu_isWarriorUnit(context, entity))
         {
             WarEntity* enemy = we_getNearEnemy(context, entity);
-            if (enemy)
+            if (enemy && wst_canSubmitTransition(context, entity, WAR_INTERRUPT_AUTONOMOUS))
             {
                 vec2 enemyPosition = wu_getUnitPosition(context, enemy);
                 WarStateAttack* attackState = wst_createAttackState(context, entity, enemy->id, enemyPosition);
-                wst_replaceState(context, entity, (WarStateBase*)attackState);
+                wst_replaceState(context, entity, (WarStateBase*)attackState, WAR_TRANSITION_CAUSE_AUTONOMOUS);
             }
         }
 
@@ -129,18 +147,8 @@ void wst_updateIdleStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_IDLE || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateIdleState(context, entity, (WarStateBase*)state);
     }

@@ -2,6 +2,7 @@
 
 #include "SDL3/SDL.h"
 
+void wlog_init(SDL_LogPriority priority);
 void wlog_log(SDL_LogPriority priority, const char* file, int line, const char* fmt, ...);
 
 #define logCritical(...) wlog_log(SDL_LOG_PRIORITY_CRITICAL, __FILE__, __LINE__, __VA_ARGS__)

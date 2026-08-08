@@ -11,7 +11,19 @@ WarStateRepairing* wst_createRepairingState(WarContext* context, WarEntity* enti
     TracyCZoneN(ctx, "wst_createRepairingState", true);
 
     WarStateRef ref = wst_allocState(context, WAR_STATE_REPAIRING, entity->id);
+    if (!WAR_STATE_REF_IS_VALID(ref))
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     WarStateRepairing* state = (WarStateRepairing*)wst_deref(context, ref);
+    if (!state)
+    {
+        TracyCZoneEnd(ctx);
+        return NULL;
+    }
+
     state->buildingId = buildingId;
     state->insideBuilding = false;
 
@@ -19,19 +31,85 @@ WarStateRepairing* wst_createRepairingState(WarContext* context, WarEntity* enti
     return state;
 }
 
-void wst_leaveRepairingState(WarContext* context, WarEntity* entity, WarState* state)
+void wst_enterRepairingState(WarContext* context, WarEntity* entity, WarState* state)
 {
-    TracyCZoneN(ctx, "wst_leaveRepairingState", true);
+    TracyCZoneN(ctx, "wst_enterRepairingState", true);
 
-    if (!state->initialized)
+    WarMap* map = context->map;
+    assert(map);
+
+    WarStateRepairing* s = (WarStateRepairing*)state;
+
+    WarEntity* building = we_findEntity(context, s->buildingId);
+
+    // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
+    if (!building || wst_isCollapsing(context, building) || wst_isGoingToCollapse(context, building))
     {
+        WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+        wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
+
         TracyCZoneEnd(ctx);
         return;
     }
 
-    NOT_USED(state);
+    // if the building needs to be built, enter the building and build it
+    if (wst_isBuilding(context, building) || wst_isGoingToBuild(context, building))
+    {
+        WarStateBuild* buildState = wst_getBuildState(context, building);
+        assert(buildState);
+
+        // if there is already someone building it, go idle
+        if (buildState->workerId)
+        {
+            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
+            wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
+
+            TracyCZoneEnd(ctx);
+            return;
+        }
+
+        we_disableComponent(context, entity, COMP_SPRITE);
+
+        // set the unit as inside the building
+        s->insideBuilding = true;
+
+        // set up that this worker is the one building the building
+        buildState->workerId = entity->id;
+    }
+    else
+    {
+        vec2 tile = wu_getUnitCenterTile(context, entity);
+        vec2 targetTile = wu_getUnitCenterTile(context, building);
+        vec2 unitSize = wu_getUnitSize(context, entity);
+
+        wpath_setStaticEntity(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
+        wu_setUnitDirectionFromDiff(context, entity, targetTile.x - tile.x, targetTile.y - tile.y);
+        wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
+    }
+
+    TracyCZoneEnd(ctx);
+}
+
+void wst_exitRepairingState(WarContext* context, WarEntity* entity, WarState* state, WarStateExitReason reason)
+{
+    TracyCZoneN(ctx, "wst_exitRepairingState", true);
+
+    NOT_USED(reason);
 
     WarMap* map = context->map;
+    assert(map);
+
+    WarStateRepairing* s = (WarStateRepairing*)state;
+
+    WarEntity* building = we_findEntity(context, s->buildingId);
+    if (building)
+    {
+        WarStateBuild* buildState = wst_getBuildState(context, building);
+        if (buildState && buildState->workerId == entity->id)
+        {
+            buildState->workerId = 0;
+        }
+    }
 
     vec2 unitSize = wu_getUnitSize(context, entity);
     vec2 tile = wu_getUnitCenterTile(context, entity);
@@ -44,68 +122,13 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
 {
     TracyCZoneN(ctx, "wst_updateRepairingState", true);
 
+    WarMap* map = context->map;
+    assert(map);
+
     WarStateRepairing* s = (WarStateRepairing*)state;
 
-    WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
-
-    if (!state->initialized)
-    {
-        WarEntity* building = we_findEntity(context, s->buildingId);
-
-        // if the building doesn't exists or is collapsing (it could be attacked by other units), go idle
-        if (!building || wst_isCollapsing(context, building) || wst_isGoingToCollapse(context, building))
-        {
-            WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-            wst_replaceState(context, entity, (WarStateBase*)idleState);
-
-            state->initialized = true;
-            TracyCZoneEnd(ctx);
-            return;
-        }
-
-        // if the building needs to be built, enter the building and build it
-        if (wst_isBuilding(context, building) || wst_isGoingToBuild(context, building))
-        {
-            WarStateBuild* buildState = wst_getBuildState(context, building);
-            assert(buildState);
-
-            // if there is already someone building it, go idle
-            if (buildState->workerId)
-            {
-                WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_replaceState(context, entity, (WarStateBase*)idleState);
-
-                state->initialized = true;
-                TracyCZoneEnd(ctx);
-                return;
-            }
-
-            we_disableComponent(context, entity, COMP_SPRITE);
-
-            // set the unit as inside the building
-            s->insideBuilding = true;
-
-            // set up that this worker is the one building the building
-            buildState->workerId = entity->id;
-        }
-        else
-        {
-            vec2 tile = wu_getUnitCenterTile(context, entity);
-            vec2 targetTile = wu_getUnitCenterTile(context, building);
-            vec2 unitSize = wu_getUnitSize(context, entity);
-
-            wpath_setStaticEntity(&map->finder, (s32)tile.x, (s32)tile.y, (s32)unitSize.x, (s32)unitSize.y, entity->id);
-            wu_setUnitDirectionFromDiff(context, entity, targetTile.x - tile.x, targetTile.y - tile.y);
-            wact_setAction(context, entity, WAR_ACTION_TYPE_REPAIR, true, 1.0f);
-        }
-
-        state->initialized = true;
-        TracyCZoneEnd(ctx);
-        return;
-    }
 
     WarEntity* building = we_findEntity(context, s->buildingId);
 
@@ -122,7 +145,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         }
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_replaceState(context, entity, (WarStateBase*)idleState);
+        wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
 
         TracyCZoneEnd(ctx);
         return;
@@ -135,10 +158,11 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         WarUnitAction* action = &unit->actions[unit->actionType];
         if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
         {
+            WarPlayerInfo* player = wu_getOwningPlayer(context, entity);
             if (!we_decreasePlayerResources(context, player, 1, 1))
             {
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_replaceState(context, entity, (WarStateBase*)idleState);
+                wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
                 TracyCZoneEnd(ctx);
                 return;
             }
@@ -161,7 +185,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
                 buildingUnit->hp = buildingUnit->maxhp;
 
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-                wst_replaceState(context, entity, (WarStateBase*)idleState);
+                wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
             }
 
             action->lastActionStep = WAR_ACTION_STEP_NONE;
@@ -176,12 +200,11 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         wu_setUnitCenterTile(context, entity, spawnTile);
 
         WarStateIdle* idleState = wst_createIdleState(context, entity, true);
-        wst_replaceState(context, entity, (WarStateBase*)idleState);
+        wst_replaceState(context, entity, (WarStateBase*)idleState, WAR_TRANSITION_CAUSE_COMPLETION);
     }
 
     TracyCZoneEnd(ctx);
 }
-
 
 void wst_updateRepairingStates(WarContext* context)
 {
@@ -200,18 +223,8 @@ void wst_updateRepairingStates(WarContext* context)
         WarEntity*    entity = we_findEntity(context, state->base.entityId);
         if (!entity) continue;
 
-        if (!we_isComponentEnabled(context, entity, COMP_STATE_MACHINE)) continue;
-        WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-        assert(sm);
-
-        if (sm->depth == 0 || sm->stack[sm->depth - 1].type != WAR_STATE_REPAIRING || sm->stack[sm->depth - 1].idx != i) continue;
-
-        if (state->base.delay > 0)
-        {
-            state->base.nextUpdateGameTime = context->gameTime + state->base.delay;
-            state->base.delay = 0;
-        }
-        if (context->gameTime < state->base.nextUpdateGameTime) continue;
+        if (wst_getActiveState(context, entity) != (WarStateBase*)state) continue;
+        if (!wst_isNextUpdateTime(context, (WarStateBase*)state)) continue;
 
         wst_updateRepairingState(context, entity, (WarStateBase*)state);
     }

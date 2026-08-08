@@ -373,6 +373,8 @@ s32 wu_unitDistanceInTiles(WarContext* context, WarEntity* entity, WarEntity* ta
 bool wu_unitInRange(WarContext* context, WarEntity* entity, WarEntity* targetEntity, s32 range);
 bool wu_isCarryingResources(WarContext* context, WarEntity* entity);
 s32 wu_getUnitSightRange(WarContext* context, WarEntity* entity);
+WarPlayerInfo* wu_getOwningPlayer(WarContext* context, WarEntity* entity);
+bool wu_canRepairEntity(WarContext* context, WarEntity* worker, WarEntity* target);
 
 bool wu_displayUnitOnMinimap(WarContext* context, WarEntity* entity);
 WarColor wu_getUnitColorOnMinimap(WarContext* context, WarEntity* entity);

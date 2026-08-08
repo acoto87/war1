@@ -1679,11 +1679,9 @@ bool wu_isEnemyUnit(WarContext* context, WarEntity* entity)
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
-    if (!unit)
-        return false;
 
-    if (unit->player == player->index)
-        return false;
+    if (!unit) return false;
+    if (unit->player == player->index) return false;
 
     WarPlayerInfo* otherPlayer = &map->players[unit->player];
     return !isNeutralPlayer(otherPlayer);
@@ -1695,14 +1693,10 @@ bool wu_areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 
     WarUnitComponent* unit1 = we_getUnitComponent(context, entity1);
     WarUnitComponent* unit2 = we_getUnitComponent(context, entity2);
-    if (!unit1 || !unit2)
-        return false;
 
-	if (entity1->id == entity2->id)
-		return false;
-
-    if (unit1->player == unit2->player)
-        return false;
+    if (!unit1 || !unit2) return false;
+	if (entity1->id == entity2->id) return false;
+    if (unit1->player == unit2->player) return false;
 
     WarPlayerInfo* otherPlayer = &map->players[unit2->player];
     return !isNeutralPlayer(otherPlayer);
@@ -1714,19 +1708,18 @@ bool wu_canAttack(WarContext* context, WarEntity* entity, WarEntity* targetEntit
 
     if (wu_isWarriorUnit(context, entity) && !wst_isDead(context, entity) && !wst_isGoingToDie(context, entity))
     {
-        if (wu_isUnit(targetEntity))
-        {
-            if (!wst_isDead(context, targetEntity) &&
-                !wst_isGoingToDie(context, targetEntity) &&
-                !wu_isCorpseUnit(context, targetEntity) &&
-                !wst_isCollapsing(context, entity) &&
-                !wst_isGoingToCollapse(context, entity))
-            {
-                return true;
-            }
-        }
-        else if (wu_isWall(targetEntity))
+        if (wu_isWall(targetEntity))
             return true;
+
+        if (wu_isUnit(targetEntity) &&
+            !wst_isDead(context, targetEntity) &&
+            !wst_isGoingToDie(context, targetEntity) &&
+            !wu_isCorpseUnit(context, targetEntity) &&
+            !wst_isCollapsing(context, entity) &&
+            !wst_isGoingToCollapse(context, entity))
+        {
+            return true;
+        }
     }
 
     return false;
@@ -1803,6 +1796,29 @@ bool wu_playerHasUnit(WarContext* context, u8 player, WarUnitType unitType)
 bool wu_playerHasBuilding(WarContext* context, u8 player, WarUnitType unitType)
 {
     return wu_getNumberOfBuildingsOfType(context, player, unitType, true) > 0;
+}
+
+WarPlayerInfo* wu_getOwningPlayer(WarContext* context, WarEntity* entity)
+{
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    if (!unit)
+    {
+        return NULL;
+    }
+
+    WarMap* map = context->map;
+
+    if (!inRange(unit->player, 0, map->playersCount))
+    {
+        return NULL;
+    }
+
+    return &map->players[unit->player];
+}
+
+bool wu_canRepairEntity(WarContext* context, WarEntity* worker, WarEntity* target)
+{
+    return wu_getOwningPlayer(context, worker) == wu_getOwningPlayer(context, target);
 }
 
 bool wu_isValidUnitType(WarUnitType type)
@@ -1928,11 +1944,7 @@ WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race)
             case WAR_UNIT_KENNEL: return WAR_UNIT_STABLE;
             case WAR_UNIT_BLACKSMITH_ORCS: return WAR_UNIT_BLACKSMITH_HUMANS;
             case WAR_UNIT_ORC_CORPSE: return WAR_UNIT_HUMAN_CORPSE;
-            default:
-            {
-                logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
-                return type;
-            }
+            default: return type;
         }
     }
 
@@ -1956,15 +1968,11 @@ WarUnitType wu_getUnitTypeForRace(WarUnitType type, WarRace race)
             case WAR_UNIT_STABLE: return WAR_UNIT_KENNEL;
             case WAR_UNIT_BLACKSMITH_HUMANS: return WAR_UNIT_BLACKSMITH_ORCS;
             case WAR_UNIT_HUMAN_CORPSE: return WAR_UNIT_ORC_CORPSE;
-            default:
-            {
-                logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
-                return type;
-            }
+            default: return type;
         }
     }
 
-    logInfo("Trying to get type %d for race %d, returning %d", type, race, type);
+    logWarning("Trying to get type %d for race %d, returning %d", type, race, type);
     return type;
 }
 
@@ -1974,16 +1982,20 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
     assert(wu_isUnit(entity));
 
     WarMap* map = context->map;
-    WarUnitCommand* command = &map->commandState.command;
-    WarPlayerInfo* player = &map->players[0];
+    assert(map);
+
+    WarPlayerInfo* player = wu_getOwningPlayer(context, entity);
+    assert(player);
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    if (player->race != wu_getUnitRace(context, entity))
+    if (player->race != wu_getUnitTypeRace(unit->type))
     {
         return;
     }
+
+    WarUnitCommand* command = &map->commandState.command;
 
     switch (unit->type)
     {
@@ -2597,8 +2609,8 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
 
 WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType)
 {
-    WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
+    WarPlayerInfo* player = wu_getOwningPlayer(context, entity);
+    assert(player);
 
     const WarUnitCommandBaseData* commandBaseData = wu_getCommandBaseData(commandType);
 
