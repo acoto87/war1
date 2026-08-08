@@ -82,7 +82,14 @@ void wt_init(WarTestContext* test)
     memset(passableData, 0, sizeof(passableData));
     map->finder = wpath_initPathFinder(passableData);
 
-    // Initialize players
+    map->playing = true;
+    map->fowEnabled = false;
+
+    wact_initUnitActionDefs();
+
+    wmap_enterMap(context);
+
+    // Initialize players AFTER wmap_enterMap so level info doesn't overwrite gold/wood/race
     for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
     {
         map->players[i].index = (u8)i;
@@ -90,13 +97,7 @@ void wt_init(WarTestContext* test)
         map->players[i].gold = 5000;
         map->players[i].wood = 5000;
     }
-
-    map->playing = true;
-    map->fowEnabled = false;
-
-    wact_initUnitActionDefs();
-
-    wmap_enterMap(context);
+    map->playersCount = MAX_PLAYERS_COUNT;
 }
 
 void wt_shutdown(WarTestContext* test)
@@ -191,6 +192,20 @@ void wt_step(WarTestContext* test)
 {
     wt_updateGameTime(test);
     wt_applyPendingTransitions(test);
+
+    WarEntityList* units = we_getEntitiesOfType(test->context, WAR_ENTITY_TYPE_UNIT);
+    if (units)
+    {
+        for (s32 i = 0; i < units->count; i++)
+        {
+            WarEntity* entity = units->items[i];
+            if (entity)
+            {
+                wact_updateAction(test->context, entity);
+            }
+        }
+    }
+
     wt_updateStateMachines(test);
     wt_buildGrid(test);
     wt_advanceTick(test);
@@ -303,7 +318,7 @@ WarStateType wt_stateAt(WarTestContext* test, WarEntity* entity, u8 stackIndex)
 
 bool wt_stackContains(WarTestContext* test, WarEntity* entity, WarStateType type)
 {
-    return wst_hasStateInStack(test->context, entity, type);
+    return wst_containsState(test->context, entity, type);
 }
 
 WarTransitionRequest* wt_activeTransition(WarTestContext* test, WarEntity* entity)

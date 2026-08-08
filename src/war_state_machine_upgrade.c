@@ -138,7 +138,12 @@ void wst_updateUpgradeState(WarContext* context, WarEntity* entity, WarState* st
     if (s->cancelled)
     {
         wst_popState(context, entity, WAR_TRANSITION_CAUSE_COMPLETION, WAR_STATE_RESULT_CANCELLED);
+        TracyCZoneEnd(ctx);
+        return;
+    }
 
+    if (s->outputCommitted)
+    {
         TracyCZoneEnd(ctx);
         return;
     }

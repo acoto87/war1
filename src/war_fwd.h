@@ -162,6 +162,9 @@ typedef struct _WarStateIdle WarStateIdle;
 struct _WarStateMove;
 typedef struct _WarStateMove WarStateMove;
 
+struct _WarMoveProgress;
+typedef struct _WarMoveProgress WarMoveProgress;
+
 struct _WarStatePatrol;
 typedef struct _WarStatePatrol WarStatePatrol;
 

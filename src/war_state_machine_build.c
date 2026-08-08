@@ -123,13 +123,14 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 {
     TracyCZoneN(ctx, "wst_updateBuildState", true);
 
+    WarMap* map = context->map;
+    assert(map);
+
     WarStateBuild* s = (WarStateBuild*)state;
 
     WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
     assert(sm);
 
-    WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
@@ -197,6 +198,7 @@ void wst_updateBuildState(WarContext* context, WarEntity* entity, WarState* stat
 
         if (unit->player == 0)
         {
+            WarPlayerInfo* player = &map->players[0];
             WarAudioId audioId = isHumanPlayer(player) ? WAR_HUMAN_WORK_COMPLETE : WAR_ORC_WORK_COMPLETE;
             wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=audioId, .loop=false));
         }

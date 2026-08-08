@@ -54,6 +54,13 @@ void wst_exitWaitState(WarContext* context, WarEntity* entity, WarState* state, 
     NOT_USED(state);
     NOT_USED(reason);
 
+    WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
+    if (sm && sm->depth > 0)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
     WarMap* map = context->map;
     assert(map);
 

@@ -1679,11 +1679,9 @@ bool wu_isEnemyUnit(WarContext* context, WarEntity* entity)
     WarPlayerInfo* player = &map->players[0];
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
-    if (!unit)
-        return false;
 
-    if (unit->player == player->index)
-        return false;
+    if (!unit) return false;
+    if (unit->player == player->index) return false;
 
     WarPlayerInfo* otherPlayer = &map->players[unit->player];
     return !isNeutralPlayer(otherPlayer);
@@ -1695,14 +1693,10 @@ bool wu_areEnemies(WarContext* context, WarEntity* entity1, WarEntity* entity2)
 
     WarUnitComponent* unit1 = we_getUnitComponent(context, entity1);
     WarUnitComponent* unit2 = we_getUnitComponent(context, entity2);
-    if (!unit1 || !unit2)
-        return false;
 
-	if (entity1->id == entity2->id)
-		return false;
-
-    if (unit1->player == unit2->player)
-        return false;
+    if (!unit1 || !unit2) return false;
+	if (entity1->id == entity2->id) return false;
+    if (unit1->player == unit2->player) return false;
 
     WarPlayerInfo* otherPlayer = &map->players[unit2->player];
     return !isNeutralPlayer(otherPlayer);
@@ -1802,6 +1796,29 @@ bool wu_playerHasUnit(WarContext* context, u8 player, WarUnitType unitType)
 bool wu_playerHasBuilding(WarContext* context, u8 player, WarUnitType unitType)
 {
     return wu_getNumberOfBuildingsOfType(context, player, unitType, true) > 0;
+}
+
+WarPlayerInfo* wu_getOwningPlayer(WarContext* context, WarEntity* entity)
+{
+    WarUnitComponent* unit = we_getUnitComponent(context, entity);
+    if (!unit)
+    {
+        return NULL;
+    }
+
+    WarMap* map = context->map;
+
+    if (!inRange(unit->player, 0, map->playersCount))
+    {
+        return NULL;
+    }
+
+    return &map->players[unit->player];
+}
+
+bool wu_canRepairEntity(WarContext* context, WarEntity* worker, WarEntity* target)
+{
+    return wu_getOwningPlayer(context, worker) == wu_getOwningPlayer(context, target);
 }
 
 bool wu_isValidUnitType(WarUnitType type)
@@ -1965,16 +1982,20 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
     assert(wu_isUnit(entity));
 
     WarMap* map = context->map;
-    WarUnitCommand* command = &map->commandState.command;
-    WarPlayerInfo* player = &map->players[0];
+    assert(map);
+
+    WarPlayerInfo* player = wu_getOwningPlayer(context, entity);
+    assert(player);
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
-    if (player->race != wu_getUnitRace(context, entity))
+    if (player->race != wu_getUnitTypeRace(unit->type))
     {
         return;
     }
+
+    WarUnitCommand* command = &map->commandState.command;
 
     switch (unit->type)
     {
@@ -2588,8 +2609,8 @@ void wu_getUnitCommands(WarContext* context, WarEntity* entity, WarUnitCommandTy
 
 WarUnitCommandData wu_getUnitCommandData(WarContext* context, WarEntity* entity, WarUnitCommandType commandType)
 {
-    WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
+    WarPlayerInfo* player = wu_getOwningPlayer(context, entity);
+    assert(player);
 
     const WarUnitCommandBaseData* commandBaseData = wu_getCommandBaseData(commandType);
 

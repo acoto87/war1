@@ -152,6 +152,12 @@ void wst_updateTrainState(WarContext* context, WarEntity* entity, WarState* stat
         return;
     }
 
+    if (s->outputCommitted)
+    {
+        TracyCZoneEnd(ctx);
+        return;
+    }
+
     f32 trainSpeed = context->gameDeltaTime;
 
     if (map->hurryUp)

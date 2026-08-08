@@ -127,8 +127,6 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
 
     WarStateRepairing* s = (WarStateRepairing*)state;
 
-    WarPlayerInfo* player = &map->players[0];
-
     WarUnitComponent* unit = we_getUnitComponent(context, entity);
     assert(unit);
 
@@ -160,6 +158,7 @@ void wst_updateRepairingState(WarContext* context, WarEntity* entity, WarState* 
         WarUnitAction* action = &unit->actions[unit->actionType];
         if (action->lastActionStep == WAR_ACTION_STEP_ATTACK)
         {
+            WarPlayerInfo* player = wu_getOwningPlayer(context, entity);
             if (!we_decreasePlayerResources(context, player, 1, 1))
             {
                 WarStateIdle* idleState = wst_createIdleState(context, entity, true);

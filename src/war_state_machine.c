@@ -9,7 +9,7 @@
 WarStateDescriptor stateDescriptors[WAR_STATE_COUNT] =
 {
     { WAR_STATE_IDLE,       wst_enterIdleState,      NULL, NULL, NULL, wst_exitIdleState,      NULL, WAR_INTERRUPT_ALL },
-    { WAR_STATE_MOVE,       NULL,                    NULL, NULL, NULL, wst_exitMoveState,      NULL, WAR_INTERRUPT_ALL },
+    { WAR_STATE_MOVE,       wst_enterMoveState,      NULL, NULL, NULL, wst_exitMoveState,      NULL, WAR_INTERRUPT_ALL },
     { WAR_STATE_PATROL,     wst_enterPatrolState,    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
     { WAR_STATE_FOLLOW,     NULL,                    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_ALL },
     { WAR_STATE_ATTACK,     NULL,                    NULL, NULL, NULL, NULL,                   NULL, WAR_INTERRUPT_PLAYER_ORDER | WAR_INTERRUPT_AI_ORDER | WAR_INTERRUPT_STATUS | WAR_INTERRUPT_SCRIPT | WAR_INTERRUPT_LIFECYCLE },
@@ -584,9 +584,14 @@ bool wst_canSubmitTransition(WarContext* context, WarEntity* entity, WarInterrup
     }
 
     WarStateMachineComponent* sm = we_getStateMachineComponent(context, entity);
-    if (!sm || sm->depth == 0 || sm->depth > WAR_STATE_STACK_DEPTH)
+    if (!sm || sm->depth > WAR_STATE_STACK_DEPTH)
     {
         return false;
+    }
+
+    if (sm->depth == 0)
+    {
+        return true;
     }
 
     WarStateRef activeStateRef = sm->stack[sm->depth - 1];

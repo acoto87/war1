@@ -107,11 +107,13 @@ void wst_updateDeliverState(WarContext* context, WarEntity* entity, WarState* st
 
     if (unit->resourceKind == WAR_RESOURCE_GOLD)
     {
-        we_increasePlayerResources(context, &map->players[0], unit->amount, 0);
+        WarPlayerInfo* player = wu_getOwningPlayer(context, entity);
+        we_increasePlayerResources(context, player, unit->amount, 0);
     }
     else if (unit->resourceKind == WAR_RESOURCE_WOOD)
     {
-        we_increasePlayerResources(context, &map->players[0], 0, unit->amount);
+        WarPlayerInfo* player = wu_getOwningPlayer(context, entity);
+        we_increasePlayerResources(context, player, 0, unit->amount);
     }
 
     unit->resourceKind = WAR_RESOURCE_NONE;

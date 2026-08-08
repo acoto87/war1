@@ -181,6 +181,7 @@ struct _WarMap
     WarMapCommandPanel commandPanel;
     WarMapDebug debug;
     WarPlayerInfo players[MAX_PLAYERS_COUNT];
+    s32 playersCount;
     WarMapStatus status;
 
     bool hurryUp;

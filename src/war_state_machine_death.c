@@ -54,9 +54,6 @@ void wst_updateDeathState(WarContext* context, WarEntity* entity, WarState* stat
 
     NOT_USED(state);
 
-    WarMap* map = context->map;
-    assert(map);
-
     // when this state updates there will have pass the time of the death animation,
     // using the delay field of the states
     if (!wu_isCorpseUnit(context, entity) && !wu_isCatapultUnit(context, entity) &&

@@ -57,9 +57,6 @@ void wst_updateChoppingState(WarContext* context, WarEntity* entity, WarState* s
 {
     TracyCZoneN(ctx, "wst_updateChoppingState", true);
 
-    WarMap* map = context->map;
-    assert(map);
-
     WarStateChopping* s = (WarStateChopping*)state;
 
     WarUnitComponent* unit = we_getUnitComponent(context, entity);

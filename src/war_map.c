@@ -395,15 +395,22 @@ static void createRuinEntity(WarContext* context, WarMap* map)
 
 static void initPlayersInfo(WarMap* map, WarResource* levelInfo)
 {
+    map->playersCount = 0;
+
     for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
     {
         WarPlayerInfo* player = &map->players[i];
 
         player->index = (u8)i;
         player->race = levelInfo->levelInfo.races[i];
-        player->gold = 4000; // levelInfo->levelInfo.gold[i];
-        player->wood = 4000; // levelInfo->levelInfo.lumber[i];
+        player->gold = levelInfo->levelInfo.gold[i];
+        player->wood = levelInfo->levelInfo.lumber[i];
         player->godMode = false;
+
+        if (player->race != WAR_RACE_NEUTRAL)
+        {
+            map->playersCount++;
+        }
 
         for (s32 j = 0; j < MAX_FEATURES_COUNT; j++)
         {
@@ -1780,6 +1787,8 @@ static void updateRaiseDeadEdit(WarContext* context)
 static void updateAddUnit(WarContext* context)
 {
     WarMap* map = context->map;
+    assert(map);
+
     WarInput* input = &context->input;
 
     if (map->editing.mode != WAR_MAP_EDIT_MODE_ADD_UNIT)
@@ -1799,7 +1808,7 @@ static void updateAddUnit(WarContext* context)
             if (!entityId)
             {
                 WarRace addingUnitRace = wu_getUnitTypeRace(map->editing.pendingUnitType);
-                for (s32 i = 0; i < MAX_PLAYERS_COUNT; i++)
+                for (s32 i = 0; i < map->playersCount; i++)
                 {
                     if (map->players[i].race == addingUnitRace)
                     {
@@ -3684,12 +3693,12 @@ static void renderRvoDebug(WarContext* context)
 #define DOT_RADIUS_PX 1.5f
 #define BEST_DOT_RADIUS_PX 3.0f
 
-    WarColor radiusColor   = WAR_COLOR_RGBA(255, 255, 255, 64);
+    // WarColor radiusColor   = WAR_COLOR_RGBA(255, 255, 255, 64);
     WarColor rvoVelColor   = WAR_COLOR_RGB(0, 255, 0);
     WarColor prefVelColor  = WAR_COLOR_RGB(255, 255, 0);
-    WarColor cleanColor    = WAR_COLOR_RGB(255, 255, 255);
-    WarColor penaltyColor  = WAR_COLOR_RGB(255, 0, 0);
-    WarColor bestColor     = WAR_COLOR_RGB(0, 255, 0);
+    // WarColor cleanColor    = WAR_COLOR_RGB(255, 255, 255);
+    // WarColor penaltyColor  = WAR_COLOR_RGB(255, 0, 0);
+    // WarColor bestColor     = WAR_COLOR_RGB(0, 255, 0);
 
     WarEntityList* units = we_getEntitiesOfType(context, WAR_ENTITY_TYPE_UNIT);
     for (s32 i = 0; i < units->count; i++)

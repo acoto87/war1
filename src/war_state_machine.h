@@ -48,6 +48,14 @@ struct _WarStateIdle
     bool lookAround;
 };
 
+struct _WarMoveProgress
+{
+    f32 bestDistanceSq;
+    f32 noProgressTime;
+    f32 lowVelocityTime;
+    u8 recoveryAttempt;
+};
+
 struct _WarStateMove
 {
     WarStateBase base;
@@ -57,9 +65,11 @@ struct _WarStateMove
 
     bool checkForAttacks;
 
-    vec2 rvoVelocity;        // last frame's RVO output, pixels/sec
-    f32  settleTimer;        // seconds without progress toward final goal
-    f32  closestGoalDistSq;  // best squared distance to final goal achieved
+    vec2 rvoVelocity; // last frame's RVO output, pixels/sec
+
+    WarMoveProgress progress;
+    vec2 progressGoalPosition;
+    s32  progressWaypointIndex;
 
     vec2 rvoPreferredVelocity;
     vec2 rvoAdjustedVelocity;

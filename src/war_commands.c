@@ -75,7 +75,6 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
 
     WarMap* map = context->map;
     WarInput* input = &context->input;
-    WarPlayerInfo* player = &map->players[0];
     WarPathFinder* finder = &map->finder;
 
     bool goingToMove = false;
@@ -96,7 +95,9 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
         return;
     }
 
-        for(s32 i = 0; i < selEntitiesCount; i++)
+    WarPlayerInfo* player = NULL;
+
+    for(s32 i = 0; i < selEntitiesCount; i++)
     {
         WarEntityId entityId = map->selectedEntities.items[i];
         WarEntity* entity = we_findEntity(context, entityId);
@@ -153,12 +154,18 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
                 wst_resetState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
             }
 
+            if (!player)
+            {
+                player = wu_getOwningPlayer(context, entity);
+            }
+
             goingToMove = true;
         }
     }
 
     if (goingToMove)
     {
+        assert(player);
         wa_playAcknowledgementSound(context, player);
     }
 
@@ -168,9 +175,9 @@ void wcmd_executeMoveCommand(WarContext* context, vec2 targetPosition)
 void wcmd_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
 
     bool goingToFollow = false;
+    WarPlayerInfo* player = NULL;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for (s32 i = 0; i < selEntitiesCount; i++)
@@ -185,12 +192,18 @@ void wcmd_executeFollowCommand(WarContext* context, WarEntity* targetEntity)
             WarStateFollow* followState = wst_createFollowState(context, entity, targetEntity->id, VEC2_ZERO, MEGA_TILE_WIDTH);
             wst_resetState(context, entity, (WarStateBase*)followState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
+            if (!player)
+            {
+                player = wu_getOwningPlayer(context, entity);
+            }
+
             goingToFollow = true;
         }
     }
 
     if (goingToFollow)
     {
+        assert(player);
         wa_playAcknowledgementSound(context, player);
     }
 }
@@ -218,14 +231,13 @@ void wcmd_executeStopCommand(WarContext* context)
 void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, vec2 targetTile)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
 
     assert(wu_isUnitOfType(context, targetEntity, WAR_UNIT_GOLDMINE) ||
            isEntityOfType(targetEntity, WAR_ENTITY_TYPE_FOREST));
 
     bool goingToHarvest = false;
-
     vec2 targetPosition = wmap_tileToMapCoordinatesV(targetTile, true);
+    WarPlayerInfo* player = NULL;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -267,6 +279,11 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
                     wst_resetState(context, entity, (WarStateBase*)gatherGoldOrWoodState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
                 }
 
+                if (!player)
+                {
+                    player = wu_getOwningPlayer(context, entity);
+                }
+
                 goingToHarvest = true;
             }
             else if (wu_isDudeUnit(context, entity))
@@ -275,6 +292,11 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
                 WarStateMove* moveState = wst_createMoveState(context, entity, 2, arrayArg(vec2, position, targetPosition), false);
                 wst_resetState(context, entity, (WarStateBase*)moveState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
+                if (!player)
+                {
+                    player = wu_getOwningPlayer(context, entity);
+                }
+
                 goingToHarvest = true;
             }
         }
@@ -282,6 +304,7 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
 
     if (goingToHarvest)
     {
+        assert(player);
         wa_playAcknowledgementSound(context, player);
     }
 }
@@ -289,9 +312,9 @@ void wcmd_executeHarvestCommand(WarContext* context, WarEntity* targetEntity, ve
 void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
 
     bool goingToDeliver = false;
+    WarPlayerInfo* player = NULL;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -317,12 +340,22 @@ void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
                 WarStateDeliver* deliverState = wst_createDeliverState(context, entity, townHall->id);
                 wst_resetState(context, entity, (WarStateBase*)deliverState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
+                if (!player)
+                {
+                    player = wu_getOwningPlayer(context, entity);
+                }
+
                 goingToDeliver = true;
             }
             else if (wu_isDudeUnit(context, entity))
             {
                 WarStateFollow* followState = wst_createFollowState(context, entity, townHall->id, VEC2_ZERO, MEGA_TILE_WIDTH);
                 wst_resetState(context, entity, (WarStateBase*)followState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
+
+                if (!player)
+                {
+                    player = wu_getOwningPlayer(context, entity);
+                }
 
                 goingToDeliver = true;
             }
@@ -331,6 +364,7 @@ void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
 
     if (goingToDeliver)
     {
+        assert(player);
         wa_playAcknowledgementSound(context, player);
     }
 }
@@ -338,9 +372,9 @@ void wcmd_executeDeliverCommand(WarContext* context, WarEntity* targetEntity)
 void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
 
     bool goingToRepair = false;
+    WarPlayerInfo* player = NULL;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -350,7 +384,8 @@ void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
         assert(entity);
 
         if (wu_isFriendlyUnit(context, entity) &&
-            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER))
+            wst_canSubmitTransition(context, entity, WAR_INTERRUPT_PLAYER_ORDER) &&
+            wu_canRepairEntity(context, entity, targetEntity))
         {
             // the unit can't repair itself
             if (entity->id == targetEntity->id)
@@ -363,6 +398,11 @@ void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
                 WarStateRepair* repairState = wst_createRepairState(context, entity, targetEntity->id);
                 wst_resetState(context, entity, (WarStateBase*)repairState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
+                if (!player)
+                {
+                    player = wu_getOwningPlayer(context, entity);
+                }
+
                 goingToRepair = true;
             }
         }
@@ -370,6 +410,7 @@ void wcmd_executeRepairCommand(WarContext* context, WarEntity* targetEntity)
 
     if (goingToRepair)
     {
+        assert(player);
         wa_playAcknowledgementSound(context, player);
     }
 }
@@ -590,9 +631,9 @@ void wcmd_executeSightCommand(WarContext* context, vec2 targetPosition)
 void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec2 targetPosition)
 {
     WarMap* map = context->map;
-    WarPlayerInfo* player = &map->players[0];
 
-    bool playSound = false;
+    bool isGoingToAttack  = false;
+    WarPlayerInfo* player = NULL;
 
     s32 selEntitiesCount = map->selectedEntities.count;
     for(s32 i = 0; i < selEntitiesCount; i++)
@@ -614,7 +655,12 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
                         WarStateAttack* attackState = wst_createAttackState(context, entity, targetEntity->id, targetPosition);
                         wst_resetState(context, entity, (WarStateBase*)attackState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
-                        playSound = true;
+                        if (!player)
+                        {
+                            player = wu_getOwningPlayer(context, entity);
+                        }
+
+                        isGoingToAttack = true;
                     }
                     else if (wu_isWorkerUnit(context, entity))
                     {
@@ -628,13 +674,19 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
                 WarStateAttack* attackState = wst_createAttackState(context, entity, 0, targetPosition);
                 wst_resetState(context, entity, (WarStateBase*)attackState, WAR_TRANSITION_CAUSE_PLAYER_ORDER);
 
-                playSound = true;
+                if (!player)
+                {
+                    player = wu_getOwningPlayer(context, entity);
+                }
+
+                isGoingToAttack = true;
             }
         }
     }
 
-    if (playSound)
+    if (isGoingToAttack)
     {
+        assert(player);
         wa_playAcknowledgementSound(context, player);
     }
 }
@@ -642,8 +694,9 @@ void wcmd_executeAttackCommand(WarContext* context, WarEntity* targetEntity, vec
 bool wcmd_executeCommand(WarContext* context)
 {
     WarMap* map = context->map;
+    assert(map);
+
     WarInput* input = &context->input;
-    WarPlayerInfo* player = &map->players[0];
     WarUnitCommand* command = &map->commandState.command;
 
     if (command->type == WAR_COMMAND_NONE)
@@ -742,26 +795,24 @@ bool wcmd_executeCommand(WarContext* context)
         }
         case WAR_COMMAND_REPAIR:
         {
-            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT) &&
+                rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
             {
-                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
+                vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
+                if (wmap_isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
+                    wmap_isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
                 {
-                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-                    if (wmap_isTileVisible(map, (s32)targetTile.x, (s32)targetTile.y) ||
-                        wmap_isTileFog(map, (s32)targetTile.x, (s32)targetTile.y))
+                    WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
+                    WarEntity* targetEntity = we_findEntity(context, targetEntityId);
+                    if (targetEntity && wu_isBuildingUnit(context, targetEntity))
                     {
-                        WarEntityId targetEntityId = wpath_getTileEntityId(&map->finder, (s32)targetTile.x, (s32)targetTile.y);
-                        WarEntity* targetEntity = we_findEntity(context, targetEntityId);
-                        if (targetEntity && wu_isBuildingUnit(context, targetEntity))
-                        {
-                            wcmd_executeRepairCommand(context, targetEntity);
-                        }
+                        wcmd_executeRepairCommand(context, targetEntity);
                     }
-
-                    consumeCommand(map, command);
-                    return true;
                 }
+
+                consumeCommand(map, command);
+                return true;
             }
 
             return false;
@@ -842,6 +893,9 @@ bool wcmd_executeCommand(WarContext* context)
 
             if (wst_canSubmitTransition(context, selectedEntity, WAR_INTERRUPT_PLAYER_ORDER))
             {
+                WarPlayerInfo* player = wu_getOwningPlayer(context, selectedEntity);
+                assert(player);
+
                 const WarUnitStats* stats = wu_getUnitStats(unitToTrain);
                 if (we_checkFarmFood(context, player) &&
                     we_enoughPlayerResources(context, player, stats->goldCost, stats->woodCost))
@@ -875,22 +929,17 @@ bool wcmd_executeCommand(WarContext* context)
         case WAR_COMMAND_UPGRADE_INVISIBILITY:
         case WAR_COMMAND_UPGRADE_UNHOLY_ARMOR:
         {
-            WarUpgradeType upgradeToBuild = command->upgrade.upgradeToBuild;
-            WarUnitType buildingUnit = command->upgrade.buildingUnit;
-
             assert(map->selectedEntities.count == 1);
 
             WarEntity* selectedEntity = we_findEntity(context, map->selectedEntities.items[0]);
             assert(selectedEntity && wu_isBuildingUnit(context, selectedEntity));
 
-            WarUnitComponent* selectedUnit = we_getUnitComponent(context, selectedEntity);
-            assert(selectedUnit);
-            assert(selectedUnit->type == buildingUnit);
-            NOT_USED(buildingUnit);
-            NOT_USED(selectedUnit);
-
             if (wst_canSubmitTransition(context, selectedEntity, WAR_INTERRUPT_PLAYER_ORDER))
             {
+                WarUpgradeType upgradeToBuild = command->upgrade.upgradeToBuild;
+
+                WarPlayerInfo* player = wu_getOwningPlayer(context, selectedEntity);
+                assert(player);
                 assert(hasRemainingUpgrade(player, upgradeToBuild));
 
                 const WarUpgradeStats* stats = wu_getUpgradeStats(upgradeToBuild);
@@ -922,134 +971,137 @@ bool wcmd_executeCommand(WarContext* context)
         case WAR_COMMAND_BUILD_BLACKSMITH_HUMANS:
         case WAR_COMMAND_BUILD_BLACKSMITH_ORCS:
         {
-            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT) &&
+                rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
             {
-                if(rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
+                assert(map->selectedEntities.count > 0);
+
+                WarEntityId workerId = map->selectedEntities.items[0];
+                WarEntity* worker = we_findEntity(context, workerId);
+                assert(worker);
+
+                vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
+
+                WarUnitType buildingToBuild = command->build.buildingToBuild;
+
+                const WarBuildingStats* stats = wu_getBuildingStats(buildingToBuild);
+                if (we_checkTileToBuild(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y))
                 {
-                    assert(map->selectedEntities.count > 0);
+                    WarPlayerInfo* player = wu_getOwningPlayer(context, worker);
+                    assert(player);
 
-                    WarEntityId workerId = map->selectedEntities.items[0];
-                    WarEntity* worker = we_findEntity(context, workerId);
-                    assert(worker);
-
-                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-
-                    WarUnitType buildingToBuild = command->build.buildingToBuild;
-
-                    const WarBuildingStats* stats = wu_getBuildingStats(buildingToBuild);
-                    if (we_checkTileToBuild(context, buildingToBuild, (s32)targetTile.x, (s32)targetTile.y))
+                    if (wcmd_tryPlaceBuilding(context, worker, player, buildingToBuild, targetTile, stats))
                     {
-                        if (wcmd_tryPlaceBuilding(context, worker, player, buildingToBuild, targetTile, stats))
-                        {
-                            consumeCommand(map, command);
-                        }
+                        consumeCommand(map, command);
                     }
-                    else
-                    {
-                        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
-                    }
-
-                    return true;
                 }
+                else
+                {
+                    wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
+                }
+
+                return true;
             }
 
             return false;
         }
         case WAR_COMMAND_BUILD_WALL:
         {
-            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT) &&
+                rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
             {
-                if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
+                assert(map->selectedEntities.count > 0);
+
+                WarEntityId townHallId = map->selectedEntities.items[0];
+                WarEntity* townHall = we_findEntity(context, townHallId);
+                assert(townHall);
+
+                WarPlayerInfo* player = wu_getOwningPlayer(context, townHall);
+                assert(player);
+
+                WarUnitType townHallType = wu_getTownHallOfRace(player->race);
+                assert(wu_isUnitOfType(context, townHall, townHallType));
+                NOT_USED(townHall);
+                NOT_USED(townHallType);
+
+                vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
+
+                if (we_checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
                 {
-                    assert(map->selectedEntities.count > 0);
-
-                    WarEntityId townHallId = map->selectedEntities.items[0];
-                    WarEntity* townHall = we_findEntity(context, townHallId);
-                    assert(townHall);
-
-                    WarUnitType townHallType = wu_getTownHallOfRace(player->race);
-                    assert(wu_isUnitOfType(context, townHall, townHallType));
-                    NOT_USED(townHall);
-                    NOT_USED(townHallType);
-
-                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-
-                    if (we_checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
+                    if (we_decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
                     {
-                        if (we_decreasePlayerResources(context, player, WAR_WALL_GOLD_COST, WAR_WALL_WOOD_COST))
-                        {
-                            WarEntity* wall = map->editing.wall;
-                            WarWallPiece* piece = we_addWallPiece(context, wall, (s32)targetTile.x, (s32)targetTile.y, 0);
-                            piece->hp = WAR_WALL_MAX_HP;
-                            piece->maxhp = WAR_WALL_MAX_HP;
+                        WarEntity* wall = map->editing.wall;
+                        WarWallPiece* piece = we_addWallPiece(context, wall, (s32)targetTile.x, (s32)targetTile.y, 0);
+                        piece->hp = WAR_WALL_MAX_HP;
+                        piece->maxhp = WAR_WALL_MAX_HP;
 
-                            we_determineWallTypes(context, wall);
+                        we_determineWallTypes(context, wall);
 
-                            // don't reset the current command if the player is building
-                            // roads or walls, to allow rapid construction of those structures
-                            //
-                            // consumeCommand(map, command);
+                        // don't reset the current command if the player is building
+                        // roads or walls, to allow rapid construction of those structures
+                        //
+                        // consumeCommand(map, command);
 
-                            wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_BUILD_ROAD, .loop=false));
-                        }
+                        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_BUILD_ROAD, .loop=false));
                     }
-                    else
-                    {
-                        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
-                    }
-
-                    return true;
                 }
+                else
+                {
+                    wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
+                }
+
+                return true;
             }
 
             return false;
         }
         case WAR_COMMAND_BUILD_ROAD:
         {
-            if (isButtonJustPressed(input, WAR_MOUSE_LEFT))
+            if (isButtonJustPressed(input, WAR_MOUSE_LEFT) &&
+                rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
             {
-                if (rect_containsf(map->ui.mapPanel, input->pos.x, input->pos.y))
+                assert(map->selectedEntities.count > 0);
+
+                WarEntityId townHallId = map->selectedEntities.items[0];
+                WarEntity* townHall = we_findEntity(context, townHallId);
+                assert(townHall);
+
+                WarPlayerInfo* player = wu_getOwningPlayer(context, townHall);
+                assert(player);
+
+                WarUnitType townHallType = wu_getTownHallOfRace(player->race);
+                assert(wu_isUnitOfType(context, townHall, townHallType));
+                NOT_USED(townHall);
+                NOT_USED(townHallType);
+
+                vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
+                vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
+
+                if (we_checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
                 {
-                    assert(map->selectedEntities.count > 0);
-
-                    WarEntityId townHallId = map->selectedEntities.items[0];
-                    WarEntity* townHall = we_findEntity(context, townHallId);
-                    assert(townHall);
-
-                    WarUnitType townHallType = wu_getTownHallOfRace(player->race);
-                    assert(wu_isUnitOfType(context, townHall, townHallType));
-                    NOT_USED(townHall);
-                    NOT_USED(townHallType);
-
-                    vec2 targetPoint = wmap_screenToMapCoordinatesV(context, input->pos);
-                    vec2 targetTile = wmap_mapToTileCoordinatesV(targetPoint);
-
-                    if (we_checkTileToBuildRoadOrWall(context, (s32)targetTile.x, (s32)targetTile.y))
+                    if (we_decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
                     {
-                        if (we_decreasePlayerResources(context, player, WAR_ROAD_GOLD_COST, WAR_ROAD_WOOD_COST))
-                        {
-                            WarEntity* road = map->editing.road;
-                            we_addRoadPiece(context, road, (s32)targetTile.x, (s32)targetTile.y, 0);
+                        WarEntity* road = map->editing.road;
+                        we_addRoadPiece(context, road, (s32)targetTile.x, (s32)targetTile.y, 0);
 
-                            we_determineRoadTypes(context, road);
+                        we_determineRoadTypes(context, road);
 
-                            // don't reset the current command if the player is building
-                            // roads or walls, to allow rapid construction of those structures
-                            //
-                            // consumeCommand(map, command);
+                        // don't reset the current command if the player is building
+                        // roads or walls, to allow rapid construction of those structures
+                        //
+                        // consumeCommand(map, command);
 
-                            wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_BUILD_ROAD, .loop=false));
-                        }
+                        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_BUILD_ROAD, .loop=false));
                     }
-                    else
-                    {
-                        wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
-                    }
-
-                    return true;
                 }
+                else
+                {
+                    wa_createAudio(context, CREATE_AUDIO_ARGS_INIT(.audioId=WAR_UI_CANCEL, .loop=false));
+                }
+
+                return true;
             }
 
             return false;

@@ -112,10 +112,11 @@ static s32 appendStateDetail(WarContext* context, WarStateBase* state, char* buf
         {
             WarStateMove* move = (WarStateMove*)state;
             return appendf(buffer, bufferLen, offset,
-                "wp=%d/%d vel=(%.1f,%.1f) set=%.1fs",
+                "wp=%d/%d vel=(%.1f,%.1f) stuck=%.1fs recovery=%d",
                 move->waypointsIndex, move->waypointsCount,
                 move->rvoVelocity.x, move->rvoVelocity.y,
-                move->settleTimer);
+                move->progress.noProgressTime,
+                move->progress.recoveryAttempt);
         }
         case WAR_STATE_PATROL:
         {
