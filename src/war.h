@@ -4,8 +4,9 @@
 #include <stdlib.h>
 
 #include "war_color.h"
-#include "war_math.h"
 #include "war_fwd.h"
+#include "war_launch.h"
+#include "war_math.h"
 
 #define FRAMES_PER_SECONDS 60
 #define SECONDS_PER_FRAME (1.0f/FRAMES_PER_SECONDS)
@@ -314,13 +315,7 @@ struct _WarContext
 
     WarImuiState imui;
 
-    // Path to a .w1m map file to load instead of the normal intro sequence.
-    // Set from the --map <path> command-line argument before wg_initGame is called.
-    char customMapPath[512];
-
-    // When true, skip the Blizzard intro and go straight to the main menu.
-    // Set from the --skip-intro command-line argument before wg_initGame is called.
-    bool skipIntro;
+    WarLaunchConfig launch;
 };
 
 void wg_setGlobalScale(WarContext* context, f32 scale);

@@ -2,19 +2,6 @@
 
 #include "unity/unity.h"
 
-extern const char* g_test_filter;
-
-// Gate each test by the --filter substring (g_test_filter is set by main).
-// Calls UnityDefaultTestRun directly so this macro body does not invoke
-// itself; that lets a blanket WAR_TEST_FILTER rewrite target callsites only.
-#define WAR_TEST_FILTER(func) \
-    do { \
-        if (!g_test_filter || wsv_find(wsv_fromCString(#func), wsv_fromCString(g_test_filter)) != WSV_NPOS) \
-        { \
-            UnityDefaultTestRun(func, #func, __LINE__); \
-        } \
-    } while (0)
-
 #include "war_ai.h"
 #include "war_alloc.h"
 #include "war_commands.h"
@@ -4412,6 +4399,9 @@ void tearDown(void)
 int run_state_machine_tests(void)
 {
     UNITY_BEGIN();
+
+    run_launch_tests();
+    Unity.TestFile = __FILE__;
 
     // State Machine Basics
     WAR_TEST_FILTER(test_fresh_entity_requests_initialization_idle_state);

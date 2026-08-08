@@ -207,7 +207,8 @@ static void usage(const char *program)
     printf("  %s test --cc msvc --target win64\n", program);
     printf("  %s test --cc gcc --target linux64 --sanitize\n", program);
     printf("  %s test --cc clang --target linux64 --sanitize --filter transition\n", program);
-    printf("  %s run -- --map 5 --skip-intro\n", program);
+    printf("  %s run -- --race human --mission 3\n", program);
+    printf("  %s run -- --mission custom --map forest_1 --gold 1000 --wood 1000\n", program);
 }
 
 static bool parse_toolchain(const char *value, Toolchain *toolchain)

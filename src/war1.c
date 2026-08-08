@@ -146,21 +146,11 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    // Parse command-line arguments.
-    for (int i = 1; i < argc; i++)
+    if (!wg_parseCommandLine(context, argc, argv))
     {
-        StringView arg = wsv_fromCString(argv[i]);
-        if (wsv_equals(arg, WSV_LITERAL("--skip-intro")))
-        {
-            context->skipIntro = true;
-        }
-        else if ((wsv_equals(arg, WSV_LITERAL("--map")) ||
-                  wsv_equals(arg, WSV_LITERAL("-m"))) && i + 1 < argc)
-        {
-            SDL_strlcpy(context->customMapPath, argv[i + 1], sizeof(context->customMapPath));
-            logInfo("Custom map path: %s", context->customMapPath);
-            i++; // consume value
-        }
+        wm_allocFree();
+        SDL_Quit();
+        return -1;
     }
 
     if (!wg_initGame(context))

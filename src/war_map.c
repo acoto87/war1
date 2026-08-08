@@ -177,8 +177,20 @@ static void castDebugRaiseDead(WarContext* context, vec2 targetTile)
 
 static void initCamera(WarMap *map, WarResource *levelInfo)
 {
-    s32 startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
-    s32 startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
+    s32 startX;
+    s32 startY;
+    if (map->hasCustomCameraStart)
+    {
+        startX = map->customCameraCenterX - MAP_VIEWPORT_WIDTH / 2;
+        startY = map->customCameraCenterY - MAP_VIEWPORT_HEIGHT / 2;
+        startX = CLAMP(startX, 0, MAP_WIDTH - MAP_VIEWPORT_WIDTH);
+        startY = CLAMP(startY, 0, MAP_HEIGHT - MAP_VIEWPORT_HEIGHT);
+    }
+    else
+    {
+        startX = levelInfo->levelInfo.startX * MEGA_TILE_WIDTH;
+        startY = levelInfo->levelInfo.startY * MEGA_TILE_HEIGHT;
+    }
     map->camera.viewport = recti(startX, startY, MAP_VIEWPORT_WIDTH, MAP_VIEWPORT_HEIGHT);
     map->camera.isScrolling = false;
     map->camera.wasScrolling = false;
@@ -406,6 +418,18 @@ static void initPlayersInfo(WarMap* map, WarResource* levelInfo)
         player->gold = levelInfo->levelInfo.gold[i];
         player->wood = levelInfo->levelInfo.lumber[i];
         player->godMode = false;
+
+        if (map->customGame.enabled && i < 2)
+        {
+            if (map->customGame.hasGold)
+            {
+                player->gold = map->customGame.gold;
+            }
+            if (map->customGame.hasWood)
+            {
+                player->wood = map->customGame.wood;
+            }
+        }
 
         if (player->race != WAR_RACE_NEUTRAL)
         {
@@ -967,9 +991,33 @@ WarMap* wmap_createMap(WarContext* context, s32 levelInfoIndex)
     return map;
 }
 
-WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yourRace, WarRace enemyRace)
+static s32 customGameRandom(s32 min, s32 max, bool seeded, u64* randomState)
 {
+    return min + (seeded ? SDL_rand_r(randomState, max - min) : SDL_rand(max - min));
+}
+
+static WarRace resolveCustomGameRace(WarRace race, bool seeded, u64* randomState)
+{
+    if (race != WAR_RACE_NEUTRAL)
+    {
+        return race;
+    }
+    return customGameRandom(0, 2, seeded, randomState) == 0 ? WAR_RACE_HUMANS : WAR_RACE_ORCS;
+}
+
+WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, const WarCustomGameOptions* options)
+{
+    assert(options);
+
     WarMap* map = wmap_createMap(context, levelInfoIndex);
+    map->customGame = *options;
+    map->customGame.enabled = true;
+
+    u64 randomState = options->seed;
+    WarRace playerRace = resolveCustomGameRace(options->playerRace, options->hasSeed, &randomState);
+    WarRace enemyRace = resolveCustomGameRace(options->enemyRace, options->hasSeed, &randomState);
+    map->customGame.playerRace = playerRace;
+    map->customGame.enemyRace = enemyRace;
 
     WarResource* levelInfo = wres_getOrCreateResource(context, levelInfoIndex);
     assert(levelInfo && levelInfo->type == WAR_RESOURCE_TYPE_LEVEL_INFO && levelInfo->levelInfo.customMap);
@@ -983,7 +1031,7 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
         assert(levelInfo->levelInfo.startEntities);
     }
 
-    levelInfo->levelInfo.races[0] = yourRace;
+    levelInfo->levelInfo.races[0] = playerRace;
     levelInfo->levelInfo.races[1] = enemyRace;
 
     for (s32 i = 0; i < (s32)levelInfo->levelInfo.startGoldminesCount; i++)
@@ -997,14 +1045,20 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
         startUnit->type = startUnitConf->type;
         startUnit->player = startUnitConf->player;
         startUnit->resourceKind = WAR_RESOURCE_GOLD;
-        startUnit->amount = (u16)randomi(20000, 30000);
+        startUnit->amount = (u16)customGameRandom(20000, 30000, options->hasSeed, &randomState);
 
         levelInfo->levelInfo.startEntitiesCount++;
     }
 
-    s32 configurationIndex = randomi(0, (s32)levelInfo->levelInfo.startConfigurationsCount);
+    s32 configurationIndex = customGameRandom(
+        0, (s32)levelInfo->levelInfo.startConfigurationsCount, options->hasSeed, &randomState);
+    map->customGame.startConfigurationIndex = configurationIndex;
     WarCustomMapConfiguration* configuration = &levelInfo->levelInfo.startConfigurations[configurationIndex];
     assert(configuration->startEntities);
+
+    bool foundPlayerStart = false;
+    bool foundPlayerTownHall = false;
+    WarUnitType playerTownHall = wu_getTownHallOfRace(playerRace);
 
     for (s32 i = 0; i < (s32)configuration->startEntitiesCount; i++)
     {
@@ -1016,11 +1070,26 @@ WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, WarRace yo
         startUnit->y = startUnitConf->y;
         startUnit->player = startUnitConf->player;
         startUnit->type = startUnit->player == 0
-            ? wu_getUnitTypeForRace(startUnitConf->type, yourRace)
+            ? wu_getUnitTypeForRace(startUnitConf->type, playerRace)
             : wu_getUnitTypeForRace(startUnitConf->type, enemyRace);
+
+        if (startUnit->player == 0 && (!foundPlayerStart || startUnit->type == playerTownHall))
+        {
+            const WarUnitData* unitData = wu_getUnitData(startUnit->type);
+            map->customCameraCenterX = startUnit->x * MEGA_TILE_WIDTH + unitData->sizex * MEGA_TILE_WIDTH / 2;
+            map->customCameraCenterY = startUnit->y * MEGA_TILE_HEIGHT + unitData->sizey * MEGA_TILE_HEIGHT / 2;
+            foundPlayerStart = true;
+            foundPlayerTownHall = startUnit->type == playerTownHall;
+        }
 
         levelInfo->levelInfo.startEntitiesCount++;
     }
+
+    map->hasCustomCameraStart = foundPlayerStart;
+
+    logInfo("Custom map setup: map=%d playerRace=%d enemyRace=%d configuration=%d%s",
+            levelInfoIndex, playerRace, enemyRace, configurationIndex,
+            foundPlayerTownHall ? "" : " (camera fallback)");
 
     return map;
 }

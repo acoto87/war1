@@ -13,3 +13,4 @@ struct _WarCampaignMapData
 };
 
 WarCampaignMapData wcamp_getCampaignData(WarCampaignMapType type);
+bool wcamp_tryGetMapType(WarRace race, s32 mission, WarCampaignMapType* mapType);

@@ -226,9 +226,14 @@ void wmm_handleRestartRestart(WarContext* context, WarEntity* entity)
 {
     NOT_USED(entity);
 
-    s32 levelInfoIndex = context->map->levelInfoIndex;
+    WarMap* currentMap = context->map;
+    s32 levelInfoIndex = currentMap->levelInfoIndex;
 
     WarMap* map = wmap_createMap(context, levelInfoIndex);
+    map->customGame = currentMap->customGame;
+    map->hasCustomCameraStart = currentMap->hasCustomCameraStart;
+    map->customCameraCenterX = currentMap->customCameraCenterX;
+    map->customCameraCenterY = currentMap->customCameraCenterY;
     wg_setNextMap(context, map, 1.0f);
 }
 
