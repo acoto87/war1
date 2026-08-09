@@ -94,8 +94,10 @@ void wsc_updateSceneDownload(WarContext* context)
         }
         case WAR_SCENE_DOWNLOAD_FILE_LOADED:
         {
-            WarScene* nextScene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
-            wg_setNextScene(context, nextScene, 0.0f);
+            if (!wg_setStartupDestination(context))
+            {
+                SDL_PushEvent(&(SDL_Event){ .type = SDL_EVENT_QUIT });
+            }
 
             break;
         }

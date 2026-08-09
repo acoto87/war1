@@ -4,6 +4,7 @@
 #include "war_campaigns.h"
 #include "war_cheats.h"
 #include "war_entities.h"
+#include "war_launch.h"
 #include "war_resources.h"
 #include "war_map_grid.h"
 
@@ -154,6 +155,10 @@ struct _WarMap
 
     s32 levelInfoIndex;
     f32 objectivesTime;
+    WarCustomGameOptions customGame;
+    bool hasCustomCameraStart;
+    s32 customCameraCenterX;
+    s32 customCameraCenterY;
 
     // real-time of last acknowledgement sound
     f64 lastAcknowledgementRealTime;
@@ -189,6 +194,7 @@ struct _WarMap
 };
 
 WarMap* wmap_createMap(WarContext *context, s32 levelInfoIndex);
+WarMap* wmap_createCustomMap(WarContext* context, s32 levelInfoIndex, const WarCustomGameOptions* options);
 WarMap* wmap_loadCustomMap(WarContext* context, StringView mapPath);
 void wmap_freeMap(WarContext* context, WarMap* map);
 

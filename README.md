@@ -94,6 +94,32 @@ If you don't own the original game and want to try it with the demo version, jus
 
 If you want to check were that file comes from, it's from here: https://archive.org/details/WarcraftOrcsHumansDemo. If you click SEE ALL in the DOWNLOADS section you will see a WCRFT.ZIP (View Contents) entry, just click on View Contents and there is a line with the DATA.WAR file of the demo version.
 
+### Direct mission launch
+
+Start a campaign mission immediately, skipping its briefing. The race is random when omitted:
+
+```sh
+nob.exe run -- --race human --mission 3
+nob.exe run -- --mission 3
+```
+
+Start a predefined custom game:
+
+```sh
+nob.exe run -- --mission custom --map forest_1
+nob.exe run -- --race human --enemy-race orc --mission custom --map forest_1 --gold 1000 --wood 1000 --seed 42
+```
+
+For predefined custom games, `--race` and `--enemy-race` accept `human`, `orc`, or `random` and both default to random. `--gold` and `--wood` set the same starting amount for both players. `--seed` makes the random races, starting configuration, and goldmine amounts reproducible.
+
+Predefined map names are `forest_1` through `forest_7`, `swamp_1` through `swamp_7`, and `dungeon_1` through `dungeon_7`. Each also has a `_big_enemy` variant, such as `forest_1_big_enemy`.
+
+Without `--mission custom`, `--map` keeps its existing meaning and loads an external `.w1m` file:
+
+```sh
+nob.exe run -- --map maps/example.w1m
+```
+
 ## Libraries used
 
 * [SDL3](https://libsdl.org/): A cross-platform development library designed to provide low-level access to audio, keyboard, mouse, joystick, and graphics hardware.

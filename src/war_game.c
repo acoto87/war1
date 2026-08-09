@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 
 #if defined(_MSC_VER)
 #include <intrin.h>
@@ -135,6 +136,312 @@ static WarKeys getWarKeyFromSDLKey(SDL_Keycode key)
         case SDLK_RALT: return WAR_KEY_ALT;
         default: return WAR_KEY_NONE;
     }
+}
+
+static bool parseLaunchRace(StringView value, WarRace* race)
+{
+    if (wsv_equalsIgnoreCase(value, WSV_LITERAL("human")))
+    {
+        *race = WAR_RACE_HUMANS;
+        return true;
+    }
+    if (wsv_equalsIgnoreCase(value, WSV_LITERAL("orc")))
+    {
+        *race = WAR_RACE_ORCS;
+        return true;
+    }
+    if (wsv_equalsIgnoreCase(value, WSV_LITERAL("random")))
+    {
+        *race = WAR_RACE_NEUTRAL;
+        return true;
+    }
+    return false;
+}
+
+static bool parseDecimalU64(StringView value, u64* result)
+{
+    if (value.length == 0)
+    {
+        return false;
+    }
+
+    u64 parsed = 0;
+    for (size_t i = 0; i < value.length; i++)
+    {
+        char c = value.data[i];
+        if (c < '0' || c > '9')
+        {
+            return false;
+        }
+
+        u64 digit = (u64)(c - '0');
+        if (parsed > (UINT64_MAX - digit) / 10)
+        {
+            return false;
+        }
+        parsed = parsed * 10 + digit;
+    }
+
+    *result = parsed;
+    return true;
+}
+
+static bool parseDecimalS32(StringView value, s32* result)
+{
+    u64 parsed = 0;
+    if (!parseDecimalU64(value, &parsed) || parsed > INT32_MAX)
+    {
+        return false;
+    }
+    *result = (s32)parsed;
+    return true;
+}
+
+bool wg_parseCommandLine(WarContext* context, int argc, char** argv)
+{
+    assert(context);
+
+    memset(&context->launch, 0, sizeof(context->launch));
+    context->launch.campaignRace = WAR_RACE_NEUTRAL;
+    context->launch.customGame.playerRace = WAR_RACE_NEUTRAL;
+    context->launch.customGame.enemyRace = WAR_RACE_NEUTRAL;
+    context->launch.customGame.startConfigurationIndex = -1;
+
+    bool missionSet = false;
+    bool customMission = false;
+    bool mapSet = false;
+    bool raceSet = false;
+    bool enemyRaceSet = false;
+    bool goldSet = false;
+    bool woodSet = false;
+    bool seedSet = false;
+
+    for (s32 i = 1; i < argc; i++)
+    {
+        StringView arg = wsv_fromCString(argv[i]);
+        if (wsv_equals(arg, WSV_LITERAL("--skip-intro")))
+        {
+            context->launch.skipIntro = true;
+        }
+        else if (wsv_equals(arg, WSV_LITERAL("--race")))
+        {
+            if (++i >= argc || !parseLaunchRace(wsv_fromCString(argv[i]), &context->launch.campaignRace))
+            {
+                logError("--race requires human, orc, or random.");
+                return false;
+            }
+            context->launch.customGame.playerRace = context->launch.campaignRace;
+            raceSet = true;
+        }
+        else if (wsv_equals(arg, WSV_LITERAL("--enemy-race")))
+        {
+            if (++i >= argc || !parseLaunchRace(wsv_fromCString(argv[i]), &context->launch.customGame.enemyRace))
+            {
+                logError("--enemy-race requires human, orc, or random.");
+                return false;
+            }
+            enemyRaceSet = true;
+        }
+        else if (wsv_equals(arg, WSV_LITERAL("--mission")))
+        {
+            if (++i >= argc)
+            {
+                logError("Missing value after --mission.");
+                return false;
+            }
+
+            StringView value = wsv_fromCString(argv[i]);
+            customMission = false;
+            if (wsv_equalsIgnoreCase(value, WSV_LITERAL("custom")))
+            {
+                customMission = true;
+            }
+            else if (!parseDecimalS32(value, &context->launch.campaignMission) ||
+                     context->launch.campaignMission < 1 || context->launch.campaignMission > 12)
+            {
+                logError("--mission requires custom or a number from 1 to 12.");
+                return false;
+            }
+            missionSet = true;
+        }
+        else if (wsv_equals(arg, WSV_LITERAL("--map")) || wsv_equals(arg, WSV_LITERAL("-m")))
+        {
+            if (++i >= argc)
+            {
+                logError("Missing value after %.*s.", (s32)arg.length, arg.data);
+                return false;
+            }
+            if (SDL_strlen(argv[i]) >= sizeof(context->launch.mapValue))
+            {
+                logError("Map value is too long.");
+                return false;
+            }
+            SDL_strlcpy(context->launch.mapValue, argv[i], sizeof(context->launch.mapValue));
+            mapSet = true;
+        }
+        else if (wsv_equals(arg, WSV_LITERAL("--gold")) || wsv_equals(arg, WSV_LITERAL("--wood")))
+        {
+            s32 value = 0;
+            if (++i >= argc || !parseDecimalS32(wsv_fromCString(argv[i]), &value))
+            {
+                logError("%.*s requires a non-negative integer.", (s32)arg.length, arg.data);
+                return false;
+            }
+
+            if (wsv_equals(arg, WSV_LITERAL("--gold")))
+            {
+                context->launch.customGame.hasGold = true;
+                context->launch.customGame.gold = value;
+                goldSet = true;
+            }
+            else
+            {
+                context->launch.customGame.hasWood = true;
+                context->launch.customGame.wood = value;
+                woodSet = true;
+            }
+        }
+        else if (wsv_equals(arg, WSV_LITERAL("--seed")))
+        {
+            u64 value = 0;
+            if (++i >= argc || !parseDecimalU64(wsv_fromCString(argv[i]), &value))
+            {
+                logError("--seed requires a non-negative integer.");
+                return false;
+            }
+            context->launch.customGame.hasSeed = true;
+            context->launch.customGame.seed = value;
+            seedSet = true;
+        }
+        else
+        {
+            logError("Unknown command-line option: %.*s", (s32)arg.length, arg.data);
+            return false;
+        }
+    }
+
+    if (missionSet && customMission)
+    {
+        if (!mapSet)
+        {
+            logError("--mission custom requires --map <predefined-name>.");
+            return false;
+        }
+        if (!wres_tryGetPredefinedCustomMapIndex(
+                wsv_fromCString(context->launch.mapValue), &context->launch.customMapIndex))
+        {
+            logError("Unknown predefined custom map: %s", context->launch.mapValue);
+            return false;
+        }
+
+        context->launch.mode = WAR_LAUNCH_PREDEFINED_CUSTOM;
+        context->launch.customGame.enabled = true;
+        return true;
+    }
+
+    if (missionSet)
+    {
+        if (mapSet || enemyRaceSet || goldSet || woodSet || seedSet)
+        {
+            logError("Campaign missions do not accept --map, --enemy-race, --gold, --wood, or --seed.");
+            return false;
+        }
+        context->launch.mode = WAR_LAUNCH_CAMPAIGN;
+        return true;
+    }
+
+    if (mapSet)
+    {
+        if (raceSet || enemyRaceSet || goldSet || woodSet || seedSet)
+        {
+            logError("External map files do not accept race, resource, or seed overrides.");
+            return false;
+        }
+        context->launch.mode = WAR_LAUNCH_MAP_FILE;
+        return true;
+    }
+
+    if (raceSet || enemyRaceSet || goldSet || woodSet || seedSet)
+    {
+        logError("Race, resource, and seed options require --mission custom or a campaign mission.");
+        return false;
+    }
+
+    return true;
+}
+
+bool wg_setStartupDestination(WarContext* context)
+{
+    WarLaunchConfig* launch = &context->launch;
+    switch (launch->mode)
+    {
+        case WAR_LAUNCH_MAP_FILE:
+        {
+            WarMap* map = wmap_loadCustomMap(context, wsv_fromCString(launch->mapValue));
+            if (!map)
+            {
+                logError("Could not load custom map file: %s", launch->mapValue);
+                return false;
+            }
+            wg_setNextMap(context, map, 0.0f);
+            return true;
+        }
+
+        case WAR_LAUNCH_CAMPAIGN:
+        {
+            WarRace race = launch->campaignRace;
+            if (race == WAR_RACE_NEUTRAL)
+            {
+                race = SDL_rand(2) == 0 ? WAR_RACE_HUMANS : WAR_RACE_ORCS;
+            }
+
+            WarCampaignMapType mapType;
+            if (!wcamp_tryGetMapType(race, launch->campaignMission, &mapType))
+            {
+                logError("Invalid campaign selection: race=%d mission=%d", race, launch->campaignMission);
+                return false;
+            }
+
+            WarResource* levelInfo = wres_getOrCreateResource(context, mapType);
+            if (levelInfo->type != WAR_RESOURCE_TYPE_LEVEL_INFO)
+            {
+                logError("Campaign mission is unavailable in this DATA.WAR: race=%s mission=%d",
+                         race == WAR_RACE_HUMANS ? "human" : "orc", launch->campaignMission);
+                return false;
+            }
+
+            launch->campaignRace = race;
+            WarMap* map = wmap_createMap(context, mapType);
+            wg_setNextMap(context, map, 0.0f);
+            return true;
+        }
+
+        case WAR_LAUNCH_PREDEFINED_CUSTOM:
+        {
+            WarResource* levelInfo = wres_getOrCreateResource(context, launch->customMapIndex);
+            if (levelInfo->type != WAR_RESOURCE_TYPE_LEVEL_INFO || !levelInfo->levelInfo.customMap)
+            {
+                logError("Predefined custom map is unavailable in this DATA.WAR: %s", launch->mapValue);
+                return false;
+            }
+
+            WarMap* map = wmap_createCustomMap(context, launch->customMapIndex, &launch->customGame);
+            launch->customGame = map->customGame;
+            wg_setNextMap(context, map, 0.0f);
+            return true;
+        }
+
+        case WAR_LAUNCH_DEFAULT:
+        {
+            WarSceneType sceneType = launch->skipIntro ? WAR_SCENE_MAIN_MENU : WAR_SCENE_BLIZZARD;
+            WarScene* scene = wsc_createScene(context, sceneType);
+            wg_setNextScene(context, scene, 0.0f);
+            return true;
+        }
+    }
+
+    logError("Unknown launch mode: %d", launch->mode);
+    return false;
 }
 
 static void appendCheatTextInput(WarContext* context, StringView text)
@@ -381,26 +688,9 @@ bool wg_initGame(WarContext* context)
             return false;
         }
 
-        if (context->customMapPath[0] != '\0')
+        if (!wg_setStartupDestination(context))
         {
-            WarMap* map = wmap_loadCustomMap(context, wsv_fromCString(context->customMapPath));
-            if (!map)
-            {
-                logError("Could not load custom map: %s", context->customMapPath);
-                return false;
-            }
-
-            wg_setNextMap(context, map, 0.0f);
-        }
-        else if (context->skipIntro)
-        {
-            WarScene* scene = wsc_createScene(context, WAR_SCENE_MAIN_MENU);
-            wg_setNextScene(context, scene, 0.0f);
-        }
-        else
-        {
-            WarScene* scene = wsc_createScene(context, WAR_SCENE_BLIZZARD);
-            wg_setNextScene(context, scene, 0.0f);
+            return false;
         }
     }
     else

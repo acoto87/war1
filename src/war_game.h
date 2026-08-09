@@ -6,6 +6,8 @@
 #include "war_fwd.h"
 
 bool wg_initGame(WarContext* context);
+bool wg_parseCommandLine(WarContext* context, int argc, char** argv);
+bool wg_setStartupDestination(WarContext* context);
 void wg_quitGame(WarContext* context);
 bool wg_loadDataFile(WarContext* context);
 void wg_setWindowSize(WarContext* context, s32 width, s32 height);

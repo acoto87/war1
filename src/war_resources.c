@@ -46,6 +46,25 @@ WarResource* wres_getOrCreateResource(WarContext* context, s32 index)
     return resource;
 }
 
+bool wres_tryGetPredefinedCustomMapIndex(StringView name, s32* index)
+{
+    for (s32 i = 0; i < (s32)arrayLength(assets); i++)
+    {
+        DatabaseEntry* entry = &assets[i];
+        if (entry->type == DB_ENTRY_TYPE_LEVEL_INFO && entry->param2 == 1 &&
+            wsv_equalsIgnoreCase(name, wsv_fromCString(entry->name)))
+        {
+            if (index)
+            {
+                *index = entry->index;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void wres_getPalette(WarContext* context, s32 palette1Index, s32 palette2Index, u8 *paletteData)
 {
     memset(paletteData, 0, PALETTE_LENGTH);

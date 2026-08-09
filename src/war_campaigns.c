@@ -361,6 +361,21 @@ static const WarCampaignMapRawData campaignsData[] =
     }
 };
 
+bool wcamp_tryGetMapType(WarRace race, s32 mission, WarCampaignMapType* mapType)
+{
+    if (!mapType || mission < 1 || mission > 12 ||
+        (race != WAR_RACE_HUMANS && race != WAR_RACE_ORCS))
+    {
+        return false;
+    }
+
+    WarCampaignMapType firstMap = race == WAR_RACE_HUMANS
+        ? WAR_CAMPAIGN_HUMANS_01
+        : WAR_CAMPAIGN_ORCS_01;
+    *mapType = (WarCampaignMapType)(firstMap + 2 * (mission - 1));
+    return true;
+}
+
 WarCampaignMapData wcamp_getCampaignData(WarCampaignMapType type)
 {
     s32 index = 0;

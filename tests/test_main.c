@@ -113,6 +113,17 @@
 #include "war.h"
 #include "war_game.h"
 
+// Globals shared with the included test files.
+const char* g_test_filter = NULL;
+
+#define WAR_TEST_FILTER(func) \
+    do { \
+        if (!g_test_filter || wsv_find(wsv_fromCString(#func), wsv_fromCString(g_test_filter)) != WSV_NPOS) \
+        { \
+            UnityDefaultTestRun(func, #func, __LINE__); \
+        } \
+    } while (0)
+
 // --- Unity build: all game source files (same set as war1.c) ---
 #include "war_log.c"
 #include "war_alloc.c"
@@ -175,12 +186,9 @@
 #include "war_ai.c"
 #include "war_game.c"
 
-// Globals shared with the included test files.
-// Defined before the include block so WAR_TEST_FILTER sees it.
-const char* g_test_filter = NULL;
-
 // --- Test files ---
 #include "war_test_context.c"
+#include "war_launch_test.c"
 #include "war_state_machine_test.c"
 
 static int parse_test_args(int argc, char** argv)
